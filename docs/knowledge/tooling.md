@@ -17,3 +17,7 @@ Until STACK-012 picks the test stack, TypeScript packages test with `node --test
 ## Biome config migrations
 
 Biome 2.5 deprecated `"recommended": true` under `linter.rules` in favour of `"preset": "recommended"`. Run `pnpm biome migrate --write` after upgrading Biome and check that `pnpm check` prints no info diagnostics.
+
+## astral-sh/setup-uv has no major version tag
+
+`actions/checkout@v7` and similar resolve, but `astral-sh/setup-uv@v10` fails with "unable to find version". Astral only publishes full tags, so pin `astral-sh/setup-uv@v10.2.0` and bump it on purpose. Source: FOUND-001 CI run 37534541225.
