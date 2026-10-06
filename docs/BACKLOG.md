@@ -365,7 +365,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   `apps/api` and `workers/*` as uv workspace members with shared `packages/py-common` for settings, logging, tenancy context and audit helpers.
   Done when Ruff, the type checker and pytest run from the root and in CI.
 
-- [ ] FOUND-006 · Lint, format and pre-commit hooks
+- [x] FOUND-006 · Lint, format and pre-commit hooks
   Done when a pre-commit or lefthook config runs Biome, type-aware Oxlint, Ruff and secret scanning on staged files, and CI runs the same checks.
 
 - [ ] FOUND-007 · CI pipeline for pull requests
