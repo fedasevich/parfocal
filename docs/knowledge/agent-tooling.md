@@ -23,7 +23,7 @@ No secrets here. Secrets live in `.env` locally and in GitHub environments for C
 | Service | Resource | Notes |
 |---|---|---|
 | Cloudflare | Account `ecd7fda10e3d9ff42ecc86cb43073fcd` | Workers on the free plan for now. R2 subscription active |
-| Cloudflare | Zone `parfocal.eu` | Nameservers `hunts.ns.cloudflare.com` and `stella.ns.cloudflare.com`, set at the registrar Endora (admin.endora.cz). An unused `pathocal.eu` zone from a typo can be deleted |
+| Cloudflare | Zone `parfocal.eu` | Active since 2026-10-06. Nameservers `hunts.ns.cloudflare.com` and `stella.ns.cloudflare.com`, set at the registrar Endora (admin.endora.cz). An unused `pathocal.eu` zone from a typo can be deleted |
 | Cloudflare R2 | Buckets `parfocal-dev`, `parfocal-staging`, `parfocal-prod` | Managed by `infra/tofu`. Public access off. Token "parfocal-dev local" has Object Read & Write on `parfocal-dev` only |
 | Cloudflare R2 | Bucket `parfocal-tfstate` | Encrypted OpenTofu state. Created by hand |
 | Cloudflare | Account token `parfocal-tofu` | Used by `infra/tofu`. See [infra.md](infra.md) |

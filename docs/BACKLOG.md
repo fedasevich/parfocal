@@ -206,8 +206,8 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: Vitest with React Testing Library, Playwright (E2E and component tests), Storybook 9 with interaction and visual tests, MSW for API mocks, Chromatic or Playwright snapshots for visual regression. Default: Vitest, RTL, MSW, Playwright for E2E and visual, Storybook as the component catalogue.
   Done when the ADR covers how WebGPU and WebGL tests run in CI (headed Chromium on a GPU runner versus SwiftShader) with a spike that renders one Viv tile in CI and compares it to a golden image.
 
-- [ ] STACK-013 · Package manager, monorepo orchestration, lint and format
-  Candidates: pnpm workspaces with Turborepo, Nx, Moon. Lint and format: Biome, ESLint flat config with typescript-eslint plus Prettier, Oxlint. Default: pnpm and Turborepo, Biome for format and lint plus typescript-eslint for type-aware rules that Biome lacks.
+- [x] STACK-013 · Package manager, monorepo orchestration, lint and format
+  Candidates: pnpm workspaces with Turborepo, Nx, Moon. Lint and format: Biome, ESLint flat config with typescript-eslint plus Prettier, Oxlint. Default: pnpm and Turborepo, Biome for format and lint plus typescript-eslint for type-aware rules that Biome lacks. Decided in [ADR 0006](adr/0006-monorepo-tooling.md): TypeScript 7 with type-aware Oxlint instead of typescript-eslint, which does not support TypeScript 7.
   Done when the ADR records cache strategy for CI and how Python tasks join the same task graph.
 
 - [ ] STACK-014 · Command palette, drag and drop, hotkeys
@@ -234,8 +234,8 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ### Backend
 
-- [ ] STACK-018 · Python version, packaging and tooling
-  Candidates: Python 3.13 or 3.14, uv for environments and lockfiles, Ruff for lint and format, pyright or basedpyright or ty for types, pytest. Default: Python 3.13 (wheel availability for the ML stack decides), uv, Ruff, basedpyright in strict mode for the API and standard for ML code, pytest with pytest-asyncio.
+- [x] STACK-018 · Python version, packaging and tooling
+  Candidates: Python 3.13 or 3.14, uv for environments and lockfiles, Ruff for lint and format, pyright or basedpyright or ty for types, pytest. Default: Python 3.13 (wheel availability for the ML stack decides), uv, Ruff, basedpyright in strict mode for the API and standard for ML code, pytest with pytest-asyncio. Decided in [ADR 0007](adr/0007-python-tooling.md): Python 3.14, because the whole stack now has 3.14 wheels.
   Done when the ADR confirms the scientific stack (torch, openslide, tifffile, zarr) has wheels for the chosen version on Linux x86_64 and aarch64.
   Refs doc 12 (MONAI Label had no 3.14 wheels).
 
@@ -366,7 +366,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when Ruff, the type checker and pytest run from the root and in CI.
 
 - [ ] FOUND-006 · Lint, format and pre-commit hooks
-  Done when a pre-commit or lefthook config runs Biome, Ruff and secret scanning on staged files, and CI runs the same checks.
+  Done when a pre-commit or lefthook config runs Biome, type-aware Oxlint, Ruff and secret scanning on staged files, and CI runs the same checks.
 
 - [ ] FOUND-007 · CI pipeline for pull requests
   Jobs for install with cache, lint, typecheck, unit tests for TS and Python, API contract check, build of web and API images. Turborepo remote cache if allowed.
