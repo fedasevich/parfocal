@@ -350,11 +350,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when `pnpm install` and `uv sync` succeed from a clean clone and a smoke test in each package passes.
   Depends on STACK-013, STACK-018.
 
-- [ ] FOUND-002 · Project agent guide and docs memory system
+- [x] FOUND-002 · Project agent guide and docs memory system
   Write `AGENTS.md` (imported by `CLAUDE.md`) with the backlog workflow (read the task, read the POC refs, write the tests, tick the box), the docs memory system (log, ADRs, results, knowledge, consolidation), the writing rules, the "never touch the POC" rule and the Definition of Done. See ADR 0001.
   Done when the files are committed and linked from the README.
 
-- [ ] FOUND-003 · ADR template and index
+- [x] FOUND-003 · ADR template and index
   Done when `docs/adr/0000-template.md` and an index exist and a CI check fails if an ADR is missing its status field.
 
 - [ ] FOUND-004 · TypeScript configuration
