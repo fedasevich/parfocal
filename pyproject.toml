@@ -1,0 +1,5 @@
+[tool.uv.workspace]
+members = ["apps/api", "workers/*"]
+
+[dependency-groups]
+dev = ["pytest>=9.1,<10"]

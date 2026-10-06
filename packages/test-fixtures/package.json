@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/test-fixtures",
+  "description": "Slide fixtures for tests and the scripts that fetch them",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

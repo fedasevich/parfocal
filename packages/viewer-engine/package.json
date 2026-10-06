@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/viewer-engine",
+  "description": "Framework-free viewer engine: camera, tiles, overlays, workers",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

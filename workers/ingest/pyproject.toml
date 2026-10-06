@@ -1,0 +1,10 @@
+[project]
+name = "parfocal-ingest"
+version = "0.0.0"
+description = "Slide validation, indexing and thumbnails"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"

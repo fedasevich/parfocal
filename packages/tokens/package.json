@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/tokens",
+  "description": "Design tokens as CSS custom properties and TypeScript constants",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

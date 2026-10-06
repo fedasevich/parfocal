@@ -68,7 +68,7 @@ Consolidate when a milestone closes, when the user asks, or when the log has gai
 | `docs/results/` | Spike numbers, benchmarks, perf baselines, ML evaluations, user studies |
 | `docs/knowledge/` | Durable lessons, gotchas and how things work, by topic |
 
-The code layout (`apps/web`, `apps/api`, `apps/edge`, `workers/*`, `packages/*`, `infra/`) arrives with FOUND-001. Update this table when it does.
+The code lives in `apps/web`, `apps/edge` and `packages/*` (TypeScript), `apps/api` and `workers/*` (Python) and `infra/tofu` (OpenTofu). The root [README](README.md) describes each folder and the commands to install, test and check.
 
 ## Decision records
 

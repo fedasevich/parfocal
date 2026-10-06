@@ -1,0 +1,8 @@
+{
+  "name": "@parfocal/ml",
+  "description": "GPU inference and training jobs",
+  "private": true,
+  "scripts": {
+    "test": "uv run --package parfocal-ml pytest tests -q"
+  }
+}

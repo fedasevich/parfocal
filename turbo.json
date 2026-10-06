@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "agentGuidance": false,
+  "globalEnv": ["APP_ENV"],
+  "tasks": {
+    "typecheck": {
+      "outputs": []
+    },
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/uv.lock"],
+      "outputs": []
+    }
+  }
+}

@@ -12,3 +12,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Running every service locally | [local-dev.md](local-dev.md) |
 | MCP servers and CLIs for each service | [agent-tooling.md](agent-tooling.md) |
 | OpenTofu setup, credentials and gotchas | [infra.md](infra.md) |
+| pnpm, Turborepo, Biome, TypeScript and uv in this repository | [tooling.md](tooling.md) |

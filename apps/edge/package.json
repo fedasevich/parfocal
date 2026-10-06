@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/edge",
+  "description": "The Cloudflare Worker router, tile gateway and Durable Objects",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

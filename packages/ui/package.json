@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/ui",
+  "description": "Shared React components built on the design tokens",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

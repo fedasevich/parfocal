@@ -1,0 +1,8 @@
+{
+  "name": "@parfocal/api",
+  "description": "FastAPI backend",
+  "private": true,
+  "scripts": {
+    "test": "uv run --package parfocal-api pytest tests -q"
+  }
+}

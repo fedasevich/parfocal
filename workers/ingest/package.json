@@ -1,0 +1,8 @@
+{
+  "name": "@parfocal/ingest",
+  "description": "Slide validation, indexing and thumbnails",
+  "private": true,
+  "scripts": {
+    "test": "uv run --package parfocal-ingest pytest tests -q"
+  }
+}

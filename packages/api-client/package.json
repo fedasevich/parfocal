@@ -1,0 +1,13 @@
+{
+  "name": "@parfocal/api-client",
+  "description": "Typed API client generated from the backend OpenAPI schema",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

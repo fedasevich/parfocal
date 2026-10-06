@@ -17,8 +17,8 @@ jobs:
       run:
         working-directory: infra/tofu
     steps:
-      - uses: actions/checkout@v5
-      - uses: opentofu/setup-opentofu@v1
+      - uses: actions/checkout@v7
+      - uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: 1.13.x
       - run: tofu fmt -check -recursive
