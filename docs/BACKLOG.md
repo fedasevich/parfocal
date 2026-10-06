@@ -325,9 +325,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: cloud KMS with envelope encryption, HashiCorp Vault or OpenBao, External Secrets Operator for Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): application-level envelope encryption. Per-tenant data keys are wrapped by a master key held as a Modal secret, and sensitive columns are AES-GCM encrypted in FastAPI. Moving the master key to a KMS is a trigger before real PHI. Runtime secrets live in Modal secrets, Wrangler secrets and GitHub environments.
   Done when the ADR defines key rotation and how a tenant's data becomes unreadable after crypto-shredding on erasure.
 
-- [ ] STACK-038 · CI provider and runners
+- [x] STACK-038 · CI provider and runners
   Candidates: GitHub Actions with hosted runners plus a self-hosted GPU runner, GitLab CI, Buildkite. Default: GitHub Actions, plus one GPU runner for golden-image, WebGPU and perf suites.
   Done when the ADR lists which suites run on every pull request, nightly and before release.
+  Decided in [ADR 0010](adr/0010-ci-runners-and-suites.md): hosted Linux for every pull request, and a self-hosted Mac GPU runner nightly and before release, never on pull requests.
 
 - [ ] STACK-039 · Resumable upload protocol
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
@@ -2506,6 +2507,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] TEST-017 · Flaky test management
   Quarantine with an issue link and an expiry date.
   Done when quarantined tests are reported weekly.
+
+- [ ] TEST-018 · Self-hosted Mac GPU runner
+  Register a GitHub Actions runner on the owner's Mac with the labels `self-hosted`, `macOS`, `gpu`, running as a separate macOS user. A `gpu-nightly` workflow runs on `schedule` and `workflow_dispatch` from `main` only, launches headed Chrome with WebGPU, and reports a missed night. Follow the rules in [ADR 0010](adr/0010-ci-runners-and-suites.md).
+  Done when the nightly workflow runs one real-GPU golden test on the runner, a test proves no `pull_request` workflow can target the runner's labels, and outside contributors need approval before workflows run.
+  Depends on STACK-012, SKEL-006.
 
 ---
 
