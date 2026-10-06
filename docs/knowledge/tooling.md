@@ -53,3 +53,11 @@ Oxlint's type-aware engine, like editors, picks the `tsconfig.json` nearest to a
 ## pnpm warns about blocked build scripts
 
 pnpm 12 does not run dependency install scripts unless they are allowed, and prints "to run scripts" after installs. lefthook does not need its install script because the root `prepare` script runs `lefthook install`.
+
+## pnpm 12 fails CI on unapproved build scripts
+
+Locally pnpm only warns about ignored dependency build scripts, but in CI it stops with `ERR_PNPM_IGNORED_BUILDS`. Every dependency with an install script needs an explicit decision in `allowBuilds` in `pnpm-workspace.yaml`, made with `pnpm approve-builds <pkg>` or `pnpm approve-builds '!<pkg>'`. lefthook is denied because the root `prepare` script installs the hooks. Source: FOUND-006 CI run 37536244555.
+
+## pnpm 12 holds back brand-new releases
+
+pnpm 12 applies a minimum release age before it installs a version, as a supply-chain safeguard. Pinning a version published the same day adds an entry to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`, as happened with `@cloudflare/workers-types@5.20261006.1`. Review these entries and remove them once the version is old enough.
