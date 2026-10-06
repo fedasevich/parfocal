@@ -358,7 +358,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when `docs/adr/0000-template.md` and an index exist and a CI check fails if an ADR is missing its status field.
 
 - [ ] FOUND-004 · TypeScript configuration
-  Strict mode, project references across packages, path aliases, separate configs for workers.
+  Strict mode, shared source across packages instead of project references ([ADR 0008](adr/0008-typescript-internal-packages.md)), path aliases, separate configs for workers.
   Done when `pnpm typecheck` covers every package and a deliberately broken import fails CI.
 
 - [ ] FOUND-005 · Python project layout and tooling

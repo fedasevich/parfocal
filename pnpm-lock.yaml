@@ -181,9 +181,26 @@ importers:
 
   apps/api: {}
 
-  apps/edge: {}
+  apps/edge:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: 5.20261006.1
+        version: 5.20261006.1
 
-  apps/web: {}
+  apps/web:
+    dependencies:
+      '@parfocal/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@parfocal/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
+      '@parfocal/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@parfocal/viewer-engine':
+        specifier: workspace:*
+        version: link:../../packages/viewer-engine
 
   packages/api-client: {}
 
@@ -191,7 +208,11 @@ importers:
 
   packages/tokens: {}
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      '@parfocal/tokens':
+        specifier: workspace:*
+        version: link:../tokens
 
   packages/viewer-engine: {}
 
@@ -257,6 +278,9 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@cloudflare/workers-types@5.20261006.1':
+    resolution: {integrity: sha512-5OclwQK1d8f5LCPvOlyldC3ryKLUa4nLXegcgPZeUxAPudczQ9xujJDdpS2Tenp7JqbBLW3OgGciHJmuc7QShg==}
 
   '@turbo/darwin-64@2.11.7':
     resolution: {integrity: sha512-Z2LFOxwbiJueD1miByXJS/BrW21vv6YaQXZustty5jEX4vQYw6zyh101Sz1QO7WG0mqBzKagZ/DoAeeujI0/Sw==}
@@ -459,6 +483,8 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.5.15':
     optional: true
+
+  '@cloudflare/workers-types@5.20261006.1': {}
 
   '@turbo/darwin-64@2.11.7':
     optional: true

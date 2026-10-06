@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "es2024",
-    "lib": ["es2024", "dom", "dom.iterable"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "strict": true,
@@ -13,6 +12,6 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": []
   }
 }

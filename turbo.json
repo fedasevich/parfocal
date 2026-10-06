@@ -4,11 +4,13 @@
   "globalEnv": ["APP_ENV"],
   "tasks": {
     "typecheck": {
-      "outputs": []
+      "outputs": [],
+      "dependsOn": ["^typecheck"]
     },
     "test": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/uv.lock"],
-      "outputs": []
+      "outputs": [],
+      "dependsOn": ["^typecheck"]
     }
   }
 }

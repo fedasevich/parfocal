@@ -7,7 +7,16 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "test": "node --test \"test/**/*.test.ts\""
+  },
+  "imports": {
+    "#*": "./src/*"
+  },
+  "dependencies": {
+    "@parfocal/api-client": "workspace:*",
+    "@parfocal/tokens": "workspace:*",
+    "@parfocal/ui": "workspace:*",
+    "@parfocal/viewer-engine": "workspace:*"
   }
 }

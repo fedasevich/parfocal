@@ -33,3 +33,4 @@ jobs:
       - run: uv sync --all-packages --locked
       - run: pnpm check
       - run: pnpm turbo run typecheck test --cache-dir=.turbo/cache
+      - run: pnpm test:guards

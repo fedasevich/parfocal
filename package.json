@@ -10,7 +10,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "check": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "test:guards": "node --test \"scripts/*.test.ts\""
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
