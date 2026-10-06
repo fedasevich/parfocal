@@ -345,7 +345,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Re-check STACK-013, STACK-018 and STACK-038 against current releases and record anything that changed.
   Done when an ADR exists or the existing ADRs are confirmed.
 
-- [ ] FOUND-001 · Monorepo skeleton
+- [x] FOUND-001 · Monorepo skeleton
   Create `apps/web`, `apps/api`, `apps/edge` (router Worker and Durable Objects), `workers/ingest`, `workers/ml`, `packages/viewer-engine`, `packages/ui`, `packages/api-client`, `packages/tokens`, `packages/test-fixtures`, `infra/`, `docs/adr/`. Root README explains the layout.
   Done when `pnpm install` and `uv sync` succeed from a clean clone and a smoke test in each package passes.
   Depends on STACK-013, STACK-018.

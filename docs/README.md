@@ -6,13 +6,13 @@ Last consolidated: 2026-10-06
 
 ## Where we are now
 
-The prototypes are approved for a production build and the planning is done. [BACKLOG.md](BACKLOG.md) holds 520 tasks in 37 epics from an empty repository to a pilot-ready product. The decisions taken during planning are recorded as the baseline in [ADR 0002](adr/0002-planning-baseline.md). The platform is decided in [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. The pilot uses public slides with fake identities and optimises for cost. The STACK slots now carry these defaults but each still needs its spike. The repository `fedasevich/parfocal` holds the docs and the ADR check in CI, and no application code yet. The accounts are provisioned and listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
+The prototypes are approved for a production build and the planning is done. [BACKLOG.md](BACKLOG.md) holds 520 tasks in 37 epics from an empty repository to a pilot-ready product. The decisions taken during planning are recorded as the baseline in [ADR 0002](adr/0002-planning-baseline.md). The platform is decided in [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. The pilot uses public slides with fake identities and optimises for cost. The STACK slots now carry these defaults but each still needs its spike. The repository `fedasevich/parfocal` holds the monorepo skeleton (FOUND-001), with pnpm, Turborepo, TypeScript 7 and Biome on the TypeScript side and Python 3.14 with uv on the Python side ([ADR 0006](adr/0006-monorepo-tooling.md), [ADR 0007](adr/0007-python-tooling.md)). Three CI workflows check the docs, the infra code and the workspace. There is no feature code yet. The accounts are provisioned and listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
 
 ## Next up
 
-1. Milestone M0. Work through the STACK epic in [BACKLOG.md](BACKLOG.md), one ADR per slot, starting with the slots that block FOUND-001 (STACK-013 and STACK-018). Then the platform spikes that can overturn ADR 0003: STACK-019 (Modal cold start and API latency), STACK-020 (Neon region and pooler) and STACK-025 (tile latency through the Worker).
-2. The core accounts exist and `infra/tofu` manages the zone settings, buckets and Zitadel apps ([knowledge/infra.md](knowledge/infra.md)). Still open are Workers Paid, the production-only services (Sentry, PostHog, Resend, Grafana Cloud) and authorising the MCP servers in `.mcp.json`.
-3. Then FOUND-001 to stand up the monorepo. FOUND-002 and FOUND-003 are done.
+1. FOUND-004 (TypeScript project references and path aliases) and FOUND-005 (Ruff, basedpyright and pytest config, plus `packages/py-common`), which build directly on the skeleton.
+2. FOUND-006 (pre-commit with Biome, type-aware Oxlint, Ruff and secret scanning) and FOUND-007 (extend the `ci` workflow to the full pipeline).
+3. The remaining M0 STACK slots, starting with the frontend ones FOUND-008 needs (STACK-001, STACK-002, STACK-008) and the platform spikes that can overturn ADR 0003 (STACK-019, STACK-020, STACK-025).
 4. STACK-031 (model licensing) is the largest open risk and can run in parallel.
 
 ## Index
