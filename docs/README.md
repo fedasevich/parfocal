@@ -11,7 +11,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 ## Next up
 
 1. Milestone M0. Work through the STACK epic in [BACKLOG.md](BACKLOG.md), one ADR per slot, starting with the slots that block FOUND-001 (STACK-013 and STACK-018). Then the platform spikes that can overturn ADR 0003: STACK-019 (Modal cold start and API latency), STACK-020 (Neon region and pooler) and STACK-025 (tile latency through the Worker).
-2. Create the accounts (Cloudflare with Workers Paid, Modal, Neon, Zitadel Cloud, Sentry, PostHog, Resend, later Grafana Cloud) and authorise the MCP servers in `.mcp.json`. See [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
+2. The core accounts exist and `infra/tofu` manages the zone settings, buckets and Zitadel apps ([knowledge/infra.md](knowledge/infra.md)). Still open are Workers Paid, the production-only services (Sentry, PostHog, Resend, Grafana Cloud) and authorising the MCP servers in `.mcp.json`.
 3. Then FOUND-001 to stand up the monorepo. FOUND-002 and FOUND-003 are done.
 4. STACK-031 (model licensing) is the largest open risk and can run in parallel.
 
