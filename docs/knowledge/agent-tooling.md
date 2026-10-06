@@ -31,4 +31,4 @@ No secrets here. Secrets live in `.env` locally and in GitHub environments for C
 | Zitadel Cloud | Instance `parfocal` at `https://parfocal-iqcyh5.eu1.zitadel.cloud`, organisation `Parfocal` (`393969446668073456`) | EU region, free plan. The customer-portal team is still named "pathocal" |
 | Zitadel Cloud | Project `Parfocal`, OIDC apps `parfocal-api-dev`, `-staging`, `-prod`, service user `parfocal-tofu` (Org Owner) | Project and apps managed by `infra/tofu`. The dev app's client ID and secret are in `.env` |
 | Modal | Workspace `fedasevich`, environments `main` (production), `dev`, `staging` | Starter plan. CLI token in `~/.modal.toml` |
-| GitHub | `fedasevich/parfocal` | Public. Linked as `origin` |
+| GitHub | `fedasevich/parfocal` | Public. Linked as `origin`. Ruleset "main requires ci-ok" (id 24612221) with admin bypass. Workflows from outside contributors need approval |

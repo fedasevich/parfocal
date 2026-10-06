@@ -10,7 +10,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 ## Next up
 
-1. FOUND-001 to FOUND-006 are done. FOUND-007 (full CI pipeline) depends on STACK-038, so decide that slot first. GitHub Actions is already in use.
+1. FOUND-001 to FOUND-007 are done. FOUND-018 (contract check and image builds in CI) waits for FOUND-008 and FOUND-015.
 2. FOUND tasks without open dependencies: FOUND-014 (dependency and licence scanning), FOUND-016 (shared test fixtures) and FOUND-017 (release versioning). FOUND-009 (local development) and FOUND-010 (configuration) can start too.
 3. The remaining M0 STACK slots, starting with the frontend ones FOUND-008 needs (STACK-001, STACK-002, STACK-008) and the platform spikes that can overturn ADR 0003 (STACK-019, STACK-020, STACK-025).
 4. STACK-031 (model licensing) is the largest open risk and can run in parallel.
