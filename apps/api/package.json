@@ -3,6 +3,10 @@
   "description": "FastAPI backend",
   "private": true,
   "scripts": {
+    "typecheck": "uv run --package parfocal-api basedpyright",
     "test": "uv run --package parfocal-api pytest tests -q"
+  },
+  "dependencies": {
+    "@parfocal/py-common": "workspace:*"
   }
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@parfocal/py-common",
+  "description": "Shared Python helpers",
+  "private": true,
+  "scripts": {
+    "typecheck": "uv run --package parfocal-common basedpyright",
+    "test": "uv run --package parfocal-common pytest tests -q"
+  }
+}

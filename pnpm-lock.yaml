@@ -179,7 +179,11 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
-  apps/api: {}
+  apps/api:
+    dependencies:
+      '@parfocal/py-common':
+        specifier: workspace:*
+        version: link:../../packages/py-common
 
   apps/edge:
     devDependencies:
@@ -204,6 +208,8 @@ importers:
 
   packages/api-client: {}
 
+  packages/py-common: {}
+
   packages/test-fixtures: {}
 
   packages/tokens: {}
@@ -216,9 +222,17 @@ importers:
 
   packages/viewer-engine: {}
 
-  workers/ingest: {}
+  workers/ingest:
+    dependencies:
+      '@parfocal/py-common':
+        specifier: workspace:*
+        version: link:../../packages/py-common
 
-  workers/ml: {}
+  workers/ml:
+    dependencies:
+      '@parfocal/py-common':
+        specifier: workspace:*
+        version: link:../../packages/py-common
 
 packages:
 

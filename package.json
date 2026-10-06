@@ -9,8 +9,8 @@
   "scripts": {
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "check": "biome check .",
-    "format": "biome format --write .",
+    "check": "biome check . && uv run ruff check && uv run ruff format --check",
+    "format": "biome format --write . && uv run ruff format",
     "test:guards": "node --test \"scripts/*.test.ts\""
   },
   "devDependencies": {

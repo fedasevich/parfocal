@@ -3,6 +3,10 @@
   "description": "GPU inference and training jobs",
   "private": true,
   "scripts": {
+    "typecheck": "uv run --package parfocal-ml basedpyright",
     "test": "uv run --package parfocal-ml pytest tests -q"
+  },
+  "dependencies": {
+    "@parfocal/py-common": "workspace:*"
   }
 }

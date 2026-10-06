@@ -3,6 +3,10 @@
   "description": "Slide validation, indexing and thumbnails",
   "private": true,
   "scripts": {
+    "typecheck": "uv run --package parfocal-ingest basedpyright",
     "test": "uv run --package parfocal-ingest pytest tests -q"
+  },
+  "dependencies": {
+    "@parfocal/py-common": "workspace:*"
   }
 }
