@@ -15,4 +15,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0007](0007-python-tooling.md) | Python 3.14 with uv, Ruff, basedpyright and pytest | Accepted | 2026-10-06 |
 | [0008](0008-typescript-internal-packages.md) | TypeScript packages share source instead of project references | Accepted | 2026-10-06 |
 | [0009](0009-quality-gates.md) | Quality gates: lefthook, betterleaks, type-aware Oxlint rules and solution-style tsconfigs | Accepted | 2026-10-06 |
-| [0010](0010-ci-runners-and-suites.md) | GitHub Actions with hosted runners and a nightly self-hosted Mac GPU runner | Accepted | 2026-10-06 |
+| [0010](0010-ci-runners-and-suites.md) | GitHub Actions with hosted runners and a nightly self-hosted Mac GPU runner | Superseded by 0011 | 2026-10-06 |
+| [0011](0011-hosted-ci-only.md) | Hosted CI runners only, no GPU-heavy test suites | Accepted | 2026-10-06 |

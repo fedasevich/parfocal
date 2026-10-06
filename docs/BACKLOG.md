@@ -29,7 +29,7 @@ Task format:
 ### Definition of Done (applies to every task)
 
 1. Code follows the repository conventions and passes lint, format and type checks for both TypeScript and Python.
-2. Tests at the right level are added and green. That means unit tests for logic, API tests for endpoints, component tests for UI, E2E tests for user flows, golden-image tests for rendering and perf/memory budget tests for the viewer hot path. The "Done when" line names which ones.
+2. Tests at the right level are added and green. That means unit tests for logic, API tests for endpoints, component tests for UI, E2E tests for user flows, golden-image tests for rendering and perf/memory budget tests for the viewer hot path (CPU-side in CI, GPU-side as manual result files, [ADR 0011](adr/0011-hosted-ci-only.md)). The "Done when" line names which ones.
 3. User-facing UI passes axe accessibility checks and has keyboard paths. New strings go through the i18n layer.
 4. Tenant isolation is preserved. Any new table, bucket path, cache key or queue message carries the tenant and is covered by an isolation test.
 5. Any PHI access or state change that matters clinically is written to the audit log.
@@ -204,7 +204,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] STACK-012 · Frontend testing stack
   Candidates: Vitest with React Testing Library, Playwright (E2E and component tests), Storybook 9 with interaction and visual tests, MSW for API mocks, Chromatic or Playwright snapshots for visual regression. Default: Vitest, RTL, MSW, Playwright for E2E and visual, Storybook as the component catalogue.
-  Done when the ADR covers how WebGPU and WebGL tests run in CI (headed Chromium on a GPU runner versus SwiftShader) with a spike that renders one Viv tile in CI and compares it to a golden image.
+  Done when the ADR covers how WebGPU and WebGL tests run in CI (SwiftShader software rendering on hosted runners, [ADR 0011](adr/0011-hosted-ci-only.md)) with a spike that renders one Viv tile in CI and compares it to a golden image.
 
 - [x] STACK-013 · Package manager, monorepo orchestration, lint and format
   Candidates: pnpm workspaces with Turborepo, Nx, Moon. Lint and format: Biome, ESLint flat config with typescript-eslint plus Prettier, Oxlint. Default: pnpm and Turborepo, Biome for format and lint plus typescript-eslint for type-aware rules that Biome lacks. Decided in [ADR 0006](adr/0006-monorepo-tooling.md): TypeScript 7 with type-aware Oxlint instead of typescript-eslint, which does not support TypeScript 7.
@@ -328,7 +328,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [x] STACK-038 · CI provider and runners
   Candidates: GitHub Actions with hosted runners plus a self-hosted GPU runner, GitLab CI, Buildkite. Default: GitHub Actions, plus one GPU runner for golden-image, WebGPU and perf suites.
   Done when the ADR lists which suites run on every pull request, nightly and before release.
-  Decided in [ADR 0010](adr/0010-ci-runners-and-suites.md): hosted Linux for every pull request, and a self-hosted Mac GPU runner nightly and before release, never on pull requests.
+  Decided in [ADR 0011](adr/0011-hosted-ci-only.md), which supersedes ADR 0010: GitHub Actions on hosted runners only, no self-hosted runners and no GPU-heavy suites.
 
 - [ ] STACK-039 · Resumable upload protocol
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
@@ -448,7 +448,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] SKEL-006 · Open the slide in Viv
   Signed tile access, one Viv layer, wheel zoom and drag pan.
-  Done when a golden-image test of the fitted view matches within tolerance on the GPU runner.
+  Done when a golden-image test of the fitted view matches within tolerance in CI with software rendering.
   Depends on VIEW-002, TILES-001.
 
 - [ ] SKEL-007 · Draw and save one polygon
@@ -814,7 +814,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-002 · Viv route on WebGL2 for RGB brightfield
   `MultiscaleImageLayer` or equivalent driven by our PixelSource, with a controlled view state and our own camera controller.
-  Done when golden-image tests of fitted, 10× and 40× views on CMU-1.svs match on the GPU runner.
+  Done when golden-image tests of fitted, 10× and 40× views on CMU-1.svs match in CI with software rendering.
   Refs [`poc/src/viv/baseline.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/baseline.ts).
 
 - [ ] VIEW-003 · PixelSource interface and registry
@@ -923,12 +923,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-028 · Overlay level of detail
   A density texture below 2 px nucleus size, dots from 2 to 7 px, outlines above 7 px. Large shapes always outlined. LOD engages only from 500 nucleus-sized shapes.
-  Done when the perf test with 81k real nuclei keeps overlay GPU time under 1 ms at overview.
+  Done when a manual measurement on the owner's Mac with 81k real nuclei, recorded as a result file, shows overlay GPU time under 1 ms at overview ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 27, [`poc/src/annotations/lod.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/lod.ts).
 
 - [ ] VIEW-029 · Cull grid for overlays
   Cells of 16 median nucleus diameters, contiguous ranges per row, a window 2 cells wider than the view.
-  Done when the Viv route's detail-zoom GPU time at 1.6M nuclei stays under 6 ms on the GPU runner.
+  Done when a manual measurement on the owner's Mac, recorded as a result file, shows the Viv route's detail-zoom GPU time at 1.6M nuclei under 6 ms ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 31, [`poc/src/annotations/cull-grid.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/cull-grid.ts).
 
 ### Memory, idle and robustness
@@ -981,12 +981,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-039 · Renderer head-to-head benchmark
   Automated benchmark of the three routes on fixed camera paths with GPU-completion timing (fences, not `gl.finish`) and pixel assertions so empty frames cannot pass.
-  Done when the nightly job publishes a table comparable with doc 31.
+  Done when a manual benchmark run on the owner's Mac produces a result file with a table comparable with doc 31 ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 23.
 
 - [ ] VIEW-040 · Viewer performance budgets
   Budgets per format and RTT: time to first fitted image, time to sharp viewport after a jump, frame p95 while panning, heap ceiling.
-  Done when the perf suite enforces them in CI on the GPU runner and an ADR records the numbers derived from the POC.
+  Done when CI enforces the CPU-side budgets on hosted runners, the frame and GPU-time budgets are checked by a manual run recorded as a result file ([ADR 0011](adr/0011-hosted-ci-only.md)), and an ADR records the numbers derived from the POC.
   Depends on TEST-006.
 
 ---
@@ -1953,7 +1953,7 @@ All variants ship behind flags and the user can switch between them in settings.
 
 - [ ] AISEG-006 · Hover preview
   Dashed outline about 60 ms after the pointer rests, one request in flight, latest position only, cached by prompt, only when the embedding is cached. Can be turned off.
-  Done when a perf test measures pointer-to-outline latency under 100 ms on the GPU runner.
+  Done when a manual measurement on the owner's Mac, recorded as a result file, shows pointer-to-outline latency under 100 ms ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 15.
 
 - [ ] AISEG-007 · Embedding prewarm
@@ -2050,7 +2050,7 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when E2E starts, cancels and reloads a job.
 
 - [ ] AINUC-011 · Throughput target
-  Done when the job processes a CAMELYON16 slide on the chosen GPU in under one hour (POC laptop estimate: ten hours), recorded in the nightly benchmark.
+  Done when the job processes a CAMELYON16 slide on the chosen GPU in under one hour (POC laptop estimate: ten hours), recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 20 §2.5.
 
 ---
@@ -2150,7 +2150,7 @@ All variants ship behind flags and the user can switch between them in settings.
 
 - [ ] MLEVAL-005 · Tumor map evaluation
   FROC and Dice on CAMELYON16 test slides.
-  Done when the harness runs on at least three test slides nightly.
+  Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
 
 - [ ] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
@@ -2164,8 +2164,8 @@ All variants ship behind flags and the user can switch between them in settings.
   Run a model on a site's local validation set and produce a report with sensitivity and specificity, which feeds AIP-005.
   Done when a test produces the report for seeded data and the announcement of a validation reaches the home feed.
 
-- [ ] MLEVAL-009 · Nightly evaluation dashboard
-  Done when results from the nightly runs are published as a static report with trends.
+- [ ] MLEVAL-009 · Evaluation dashboard
+  Done when results from on-demand evaluation runs are published as a static report with trends ([ADR 0011](adr/0011-hosted-ci-only.md)).
 
 ---
 
@@ -2454,18 +2454,18 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the skeleton suite runs locally and in CI.
 
 - [ ] TEST-005 · Golden-image rendering tests
-  Rendered slide views compared against stored images with per-format tolerances on the GPU runner. Includes assertions that frames are not empty.
+  Rendered slide views compared against stored images with per-format tolerances, in headless Chromium with SwiftShader on hosted runners ([ADR 0011](adr/0011-hosted-ci-only.md)). Includes assertions that frames are not empty.
   Done when a golden test catches a deliberately swapped colour channel.
   Refs doc 23 (empty frames looked fast).
 
 - [ ] TEST-006 · Performance budget suite
   Time to fitted image, time to sharp after a jump, frame p95 while panning, overlay GPU time at 81k and 1.6M nuclei, hover preview latency, bundle sizes. Budgets stored in a file with ADR links, runs at several RTTs through the latency proxy.
-  Done when a regression of 20% on any budget fails the nightly run.
+  Done when a regression of 20% on any CPU-side budget fails CI. Frame-rate and overlay GPU-time budgets are checked by manual runs recorded as result files ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Depends on TILES-006.
 
 - [ ] TEST-007 · Memory and leak suite
   Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots.
-  Done when the 20-slide test runs nightly with a pass threshold.
+  Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
 
 - [ ] TEST-008 · Visual regression for UI
   Component stories in both themes and densities.
@@ -2508,10 +2508,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Quarantine with an issue link and an expiry date.
   Done when quarantined tests are reported weekly.
 
-- [ ] TEST-018 · Self-hosted Mac GPU runner
-  Register a GitHub Actions runner on the owner's Mac with the labels `self-hosted`, `macOS`, `gpu`, running as a separate macOS user. A `gpu-nightly` workflow runs on `schedule` and `workflow_dispatch` from `main` only, launches headed Chrome with WebGPU, and reports a missed night. Follow the rules in [ADR 0010](adr/0010-ci-runners-and-suites.md).
-  Done when the nightly workflow runs one real-GPU golden test on the runner, a test proves no `pull_request` workflow can target the runner's labels, and outside contributors need approval before workflows run.
-  Depends on STACK-012, SKEL-006.
+- [ ] TEST-018 · Self-hosted Mac GPU runner (dropped)
+  Dropped by [ADR 0011](adr/0011-hosted-ci-only.md). No self-hosted runners are used.
 
 ---
 

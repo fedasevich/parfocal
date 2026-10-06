@@ -1,7 +1,7 @@
 # 0010. GitHub Actions with hosted runners and a nightly self-hosted Mac GPU runner
 
 - Date: 2026-10-06
-- Status: Accepted
+- Status: Superseded by 0011
 - Deciders: Yurii Fedas
 - Backlog: STACK-038. Touches FOUND-007, STACK-012, TEST-015, TEST-018 and every task whose tests run "on the GPU runner".
 
