@@ -1,0 +1,26 @@
+name: Set up workspace
+description: Install Node, pnpm, uv and both workspaces, and restore the Turborepo cache.
+inputs:
+  cache-key:
+    description: Name that separates this job's Turborepo cache from other jobs.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .node-version
+        cache: pnpm
+    - uses: astral-sh/setup-uv@v10.2.0
+      with:
+        enable-cache: true
+    - uses: actions/cache@v6
+      with:
+        path: .turbo/cache
+        key: turbo-${{ inputs.cache-key }}-${{ runner.os }}-${{ github.sha }}
+        restore-keys: turbo-${{ inputs.cache-key }}-${{ runner.os }}-
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - run: uv sync --all-packages --locked
+      shell: bash

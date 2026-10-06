@@ -8,31 +8,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   TURBO_TELEMETRY_DISABLED: "1"
 
 jobs:
-  workspace:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-          cache: pnpm
-      - uses: astral-sh/setup-uv@v10.2.0
-        with:
-          enable-cache: true
-      - uses: actions/cache@v6
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-${{ runner.os }}-
-      - run: pnpm install --frozen-lockfile
-      - run: uv sync --all-packages --locked
+          cache-key: lint
       - name: Install betterleaks
         env:
           BETTERLEAKS_VERSION: 1.9.0
@@ -43,6 +35,30 @@ jobs:
           tar -xzf /tmp/betterleaks.tar.gz -C /usr/local/bin betterleaks
       - run: pnpm secrets
       - run: pnpm check
-      - run: pnpm turbo run typecheck test --cache-dir=.turbo/cache
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: typecheck
+      - run: pnpm turbo run typecheck --cache-dir=.turbo/cache
       - run: pnpm exec tsc --noEmit -p scripts
       - run: pnpm test:guards
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: test
+      - run: pnpm turbo run test --cache-dir=.turbo/cache
+
+  ci-ok:
+    if: always()
+    needs: [lint, typecheck, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"

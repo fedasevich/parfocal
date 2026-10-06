@@ -370,7 +370,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a pre-commit or lefthook config runs Biome, type-aware Oxlint, Ruff and secret scanning on staged files, and CI runs the same checks.
 
 - [ ] FOUND-007 · CI pipeline for pull requests
-  Jobs for install with cache, lint, typecheck, unit tests for TS and Python, API contract check, build of web and API images. Turborepo remote cache if allowed.
+  Jobs for install with cache, lint, typecheck and unit tests for TS and Python, plus one `ci-ok` job that a branch rule requires. Turborepo remote cache if allowed. The API contract check and image builds moved to FOUND-018 because they need FOUND-008 and FOUND-015.
   Done when a pull request shows all jobs and a failing unit test blocks merge.
   Depends on STACK-038.
 
@@ -416,6 +416,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] FOUND-017 · Release versioning and changelog
   Done when conventional commits are enforced and a changelog is generated per release tag.
+
+- [ ] FOUND-018 · Contract check and image builds in CI
+  Split from FOUND-007. Add the API contract and generated-client check and the web, API and Modal image builds as jobs that `ci-ok` requires.
+  Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
+  Depends on FOUND-007, FOUND-008, FOUND-015.
 
 ---
 
