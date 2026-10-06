@@ -10,7 +10,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 ## Next up
 
-1. FOUND-004 (TypeScript project references and path aliases) and FOUND-005 (Ruff, basedpyright and pytest config, plus `packages/py-common`), which build directly on the skeleton.
+1. FOUND-004 is implemented and waits only for the owner to accept [ADR 0008](adr/0008-typescript-internal-packages.md). FOUND-005 is done.
 2. FOUND-006 (pre-commit with Biome, type-aware Oxlint, Ruff and secret scanning) and FOUND-007 (extend the `ci` workflow to the full pipeline).
 3. The remaining M0 STACK slots, starting with the frontend ones FOUND-008 needs (STACK-001, STACK-002, STACK-008) and the platform spikes that can overturn ADR 0003 (STACK-019, STACK-020, STACK-025).
 4. STACK-031 (model licensing) is the largest open risk and can run in parallel.

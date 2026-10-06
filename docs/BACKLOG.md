@@ -361,7 +361,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Strict mode, shared source across packages instead of project references ([ADR 0008](adr/0008-typescript-internal-packages.md)), path aliases, separate configs for workers.
   Done when `pnpm typecheck` covers every package and a deliberately broken import fails CI.
 
-- [ ] FOUND-005 · Python project layout and tooling
+- [x] FOUND-005 · Python project layout and tooling
   `apps/api` and `workers/*` as uv workspace members with shared `packages/py-common` for settings, logging, tenancy context and audit helpers.
   Done when Ruff, the type checker and pytest run from the root and in CI.
 
