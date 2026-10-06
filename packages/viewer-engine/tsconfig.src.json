@@ -1,0 +1,5 @@
+{
+  "extends": "@parfocal/typescript-config/browser.json",
+  "include": ["src"],
+  "exclude": ["src/workers"]
+}

@@ -41,3 +41,15 @@ Each Python package has its own `[tool.basedpyright]` block, strict for `apps/ap
 ## The ADR check tests stay on unittest
 
 `scripts/test_check_adrs.py` uses `unittest` so the `docs` workflow can run it with plain Python and no installs. Ruff's `PT009` is ignored for `scripts/test_*.py` only. pytest also collects these tests from the root through `pythonpath = ["scripts"]`.
+
+## Oxlint needs the solution-style tsconfig
+
+Oxlint's type-aware engine, like editors, picks the `tsconfig.json` nearest to a file. While that file covered only `src`, test files got no Node types and every `assert` call was reported as unsafe. Each package's `tsconfig.json` now has `"files": []` and references its `src`, test and worker configs ([ADR 0009](../adr/0009-quality-gates.md)). New packages must follow the same layout.
+
+## node:test calls are floating promises
+
+`test()`, `it()` and `describe()` from `node:test` return promises that are never awaited. `.oxlintrc.json` allows them through `allowForKnownSafeCalls` instead of disabling `no-floating-promises`. A planted unawaited call elsewhere is still reported.
+
+## pnpm warns about blocked build scripts
+
+pnpm 12 does not run dependency install scripts unless they are allowed, and prints "to run scripts" after installs. lefthook does not need its install script because the root `prepare` script runs `lefthook install`.

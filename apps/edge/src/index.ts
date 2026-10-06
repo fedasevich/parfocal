@@ -1,7 +1,7 @@
 export const packageName = "@parfocal/edge";
 
 export default {
-  async fetch(): Promise<Response> {
+  fetch(): Response {
     return new Response(null, { status: 404 });
   },
 } satisfies ExportedHandler;

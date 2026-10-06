@@ -1,5 +1,14 @@
 {
-  "extends": "@parfocal/typescript-config/browser.json",
-  "include": ["src"],
-  "exclude": ["src/workers"]
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.src.json"
+    },
+    {
+      "path": "./tsconfig.worker.json"
+    },
+    {
+      "path": "./tsconfig.test.json"
+    }
+  ]
 }

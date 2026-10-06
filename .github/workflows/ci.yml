@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -31,6 +33,16 @@ jobs:
           restore-keys: turbo-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - run: uv sync --all-packages --locked
+      - name: Install betterleaks
+        env:
+          BETTERLEAKS_VERSION: 1.9.0
+          BETTERLEAKS_SHA256: f8b185a39ffcece2a1ca82bf3a4e7435cd81963ffd16b7a9128daf75f35f6de7
+        run: |
+          curl -fsSLo /tmp/betterleaks.tar.gz "https://github.com/betterleaks/betterleaks/releases/download/v${BETTERLEAKS_VERSION}/betterleaks_${BETTERLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${BETTERLEAKS_SHA256}  /tmp/betterleaks.tar.gz" | sha256sum --check
+          tar -xzf /tmp/betterleaks.tar.gz -C /usr/local/bin betterleaks
+      - run: pnpm secrets
       - run: pnpm check
       - run: pnpm turbo run typecheck test --cache-dir=.turbo/cache
+      - run: pnpm exec tsc --noEmit -p scripts
       - run: pnpm test:guards
