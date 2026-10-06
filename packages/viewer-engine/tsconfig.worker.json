@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig/webworker.json",
+  "extends": "@parfocal/typescript-config/webworker.json",
   "include": ["src/workers"]
 }

@@ -190,6 +190,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: 5.20261006.1
         version: 5.20261006.1
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
 
   apps/web:
     dependencies:
@@ -205,22 +208,48 @@ importers:
       '@parfocal/viewer-engine':
         specifier: workspace:*
         version: link:../../packages/viewer-engine
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
 
-  packages/api-client: {}
+  packages/api-client:
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/py-common: {}
 
-  packages/test-fixtures: {}
+  packages/test-fixtures:
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
-  packages/tokens: {}
+  packages/tokens:
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+
+  packages/typescript-config: {}
 
   packages/ui:
     dependencies:
       '@parfocal/tokens':
         specifier: workspace:*
         version: link:../tokens
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
-  packages/viewer-engine: {}
+  packages/viewer-engine:
+    devDependencies:
+      '@parfocal/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   workers/ingest:
     dependencies:

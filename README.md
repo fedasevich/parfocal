@@ -18,6 +18,7 @@ The project memory lives in [docs/](docs/README.md). The plan is [docs/BACKLOG.m
 | `packages/api-client` | TypeScript | Client generated from the API's OpenAPI schema |
 | `packages/tokens` | TypeScript | Design tokens |
 | `packages/test-fixtures` | TypeScript | Slide fixtures and fetch scripts |
+| `packages/typescript-config` | TypeScript | Shared tsconfig presets for browser, web worker, Node and Cloudflare code |
 | `packages/py-common` | Python | Shared settings, logging, tenancy context and audit helpers |
 | `infra/tofu` | OpenTofu | Cloudflare and Zitadel resources ([runbook](docs/knowledge/infra.md)) |
 | `scripts` | Python | Repository checks such as the ADR check |

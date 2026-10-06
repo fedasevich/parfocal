@@ -1,0 +1,8 @@
+{
+  "name": "@parfocal/typescript-config",
+  "description": "Shared tsconfig presets for every TypeScript package",
+  "private": true,
+  "files": [
+    "*.json"
+  ]
+}

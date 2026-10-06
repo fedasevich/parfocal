@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig/cloudflare.json",
+  "extends": "@parfocal/typescript-config/cloudflare.json",
   "include": ["src"]
 }

@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig/browser.json",
+  "extends": "@parfocal/typescript-config/browser.json",
   "include": ["src"]
 }

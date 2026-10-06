@@ -24,7 +24,15 @@ Biome 2.5 deprecated `"recommended": true` under `linter.rules` in favour of `"p
 
 ## Project references do not work with noEmit packages
 
-TypeScript 7 rejects a reference to a project that disables emit (`TS6310`). This repository shares source between packages instead, as decided in [ADR 0008](../adr/0008-typescript-internal-packages.md). Because `apps/web` typechecks the source it imports from other packages, its Turborepo cache key must include theirs. That is what `dependsOn: ["^typecheck"]` in `turbo.json` does. Without it, an edit in `@parfocal/tokens` would replay a stale pass for `@parfocal/web`.
+TypeScript 7 rejects a reference to a project that disables emit (`TS6310`). This repository shares source between packages instead, as decided in [ADR 0008](../adr/0008-typescript-internal-packages.md) and as the Turborepo TypeScript guide recommends.
+
+## Cache keys only cover files inside a package
+
+Turborepo hashes a package's own files. A tsconfig preset in a root folder changes no cache key, so a stricter preset would replay old passes. That is why the presets live in the `@parfocal/typescript-config` package that every TypeScript package depends on. For the same reason, `typecheck` and `test` depend on the `topo` transit task, which brings in the hashes of imported workspace packages, and root files that affect every package are listed in `globalDependencies`. Check new root-level config files against this before relying on the cache.
+
+## Turborepo ships its own docs
+
+`node_modules/turbo/docs` holds the guides for the installed version, including `guides/tools/typescript.mdx` and `guides/tools/python.mdx`. Read them before changing `turbo.json`, because they match the installed version and can differ from older articles.
 
 ## basedpyright strictness is set per package
 

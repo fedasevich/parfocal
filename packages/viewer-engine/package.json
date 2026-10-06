@@ -12,5 +12,8 @@
   },
   "imports": {
     "#*": "./src/*"
+  },
+  "devDependencies": {
+    "@parfocal/typescript-config": "workspace:*"
   }
 }

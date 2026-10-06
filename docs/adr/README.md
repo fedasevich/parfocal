@@ -13,4 +13,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0005](0005-external-sends-only-in-production.md) | Send email, telemetry and analytics only from production (replaces four rows of 0004) | Accepted | 2026-10-06 |
 | [0006](0006-monorepo-tooling.md) | Monorepo tooling: pnpm, Turborepo, TypeScript 7, Biome and type-aware Oxlint | Accepted | 2026-10-06 |
 | [0007](0007-python-tooling.md) | Python 3.14 with uv, Ruff, basedpyright and pytest | Accepted | 2026-10-06 |
-| [0008](0008-typescript-internal-packages.md) | TypeScript packages share source instead of project references | Proposed | 2026-10-06 |
+| [0008](0008-typescript-internal-packages.md) | TypeScript packages share source instead of project references | Accepted | 2026-10-06 |

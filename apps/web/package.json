@@ -18,5 +18,8 @@
     "@parfocal/tokens": "workspace:*",
     "@parfocal/ui": "workspace:*",
     "@parfocal/viewer-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@parfocal/typescript-config": "workspace:*"
   }
 }

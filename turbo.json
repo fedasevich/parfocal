@@ -1,16 +1,19 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "agentGuidance": false,
+  "globalDependencies": [".node-version", ".python-version", "pyproject.toml", "uv.lock"],
   "globalEnv": ["APP_ENV"],
   "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
     "typecheck": {
-      "outputs": [],
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["topo"],
+      "outputs": []
     },
     "test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/uv.lock"],
-      "outputs": [],
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["topo"],
+      "outputs": []
     }
   }
 }
