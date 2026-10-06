@@ -1,4 +1,4 @@
-# pathviewer backlog
+# Parfocal backlog
 
 This file takes an empty repository to a production-quality, multi-tenant cloud platform for pathologists. It covers whole-slide viewing, AI-assisted review and annotation, collaboration, reporting and sign-out. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
 
@@ -41,9 +41,10 @@ Task format:
 | Topic | Decision |
 | --- | --- |
 | Release bar | Research and pilot grade, production-quality code, no regulatory claims in v1. IVDR, FDA and CE marking are later epics |
-| Deployment | Cloud SaaS, multi-tenant, EU data residency first |
+| Deployment | Cloud SaaS, multi-tenant. Region is a tenant attribute. No residency pinning during the pilot, and EU pinning is a trigger before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)) |
+| Pilot data | Public slide datasets with seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
 | Compliance | GDPR, HIPAA and ISO 27001 readiness in v1: audit log, encryption, residency, retention and erasure, BAA-ready logging, pen test |
-| Repository | Monorepo `/Users/yuriifedas/WebstormProjects/pathviewer` with `apps/web`, `apps/api`, `workers/*`, `packages/*` |
+| Repository | Monorepo `/Users/yuriifedas/WebstormProjects/parfocal` (GitHub `fedasevich/parfocal`) with `apps/web`, `apps/api`, `workers/*`, `packages/*` |
 | Frontend | React with TypeScript. Every other library is a STACK decision |
 | Backend | Python. Framework and every other library are STACK decisions |
 | Renderer | Viv is the primary renderer and must work perfectly. The custom WebGPU engine and deck.gl 9.4 WebGPU stay as alternates behind one renderer interface, switchable only in the developer drawer |
@@ -240,11 +241,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] STACK-019 · Web framework
   Candidates: FastAPI with Pydantic v2, Litestar, Django with Django Ninja. Default: FastAPI with Pydantic v2 for OpenAPI 3.1 generation, async I/O and the ecosystem.
-  Done when a spike serves an authenticated, tenant-scoped endpoint with generated OpenAPI that STACK-008 consumes.
+  [ADR 0003](adr/0003-pilot-platform-architecture.md) runs FastAPI on Modal as an ASGI app. The API package must not import Modal, so it can move to another container host.
+  Done when a spike serves an authenticated, tenant-scoped endpoint with generated OpenAPI that STACK-008 consumes, and records Modal cold-start time and API latency budgets.
 
 - [ ] STACK-020 · Database, ORM and migrations
-  Candidates: PostgreSQL 17 with PostGIS. ORM: SQLAlchemy 2.0 async with Alembic, SQLModel, Piccolo. Default: PostgreSQL 17 plus PostGIS, SQLAlchemy 2.0 async, Alembic, asyncpg, PgBouncer in transaction mode.
-  Done when the ADR covers row-level security for tenancy (STACK-023), bulk inserts for AI output through COPY, and autovacuum tuning for annotation tables.
+  Candidates: PostgreSQL 17 with PostGIS. ORM: SQLAlchemy 2.0 async with Alembic, SQLModel, Piccolo. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostgreSQL 17 plus PostGIS on Neon, SQLAlchemy 2.0 async, Alembic, asyncpg, Neon's built-in PgBouncer pooler in transaction mode with tenant context set by `SET LOCAL` inside each transaction. Docker `postgis/postgis:17` locally and a Neon branch per preview.
+  Done when the ADR covers row-level security for tenancy (STACK-023), bulk inserts for AI output through COPY, autovacuum tuning for annotation tables, asyncpg behaviour behind the pooler, and picks the Neon region with the lowest measured latency from Modal's API containers.
   Refs Cytomine and EXACT reports in [`poc/docs/presentation2`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation2) (PostGIS bloat, bulk insert costs).
 
 - [ ] STACK-021 · Annotation and AI result storage model
@@ -253,7 +255,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Refs docs 11, 19, 31, 33.
 
 - [ ] STACK-022 · Background jobs and durable workflows
-  Candidates: Temporal, Hatchet, Celery, Dramatiq, arq. Default: Temporal for long multi-step pipelines (ingest, pre-read, whole-slide jobs, training rounds) because they need retries, resumption and cancellation, plus a light queue only if a simple task runner is still needed.
+  Candidates: Temporal, Hatchet, Celery, Dramatiq, arq. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): job, step and tile tables in Postgres, steps run as Modal functions started with `spawn`, and a Modal cron function that resumes orphaned steps from the last completed tile. Temporal and Hatchet were set aside because they need always-on workers.
   Done when a spike runs a three-step workflow that survives a worker restart mid-step and resumes from the last completed tile.
   Refs doc 20 §5 (jobs must survive restart).
 
@@ -262,12 +264,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR shows how a guest from organisation B reads one view of one case in organisation A without any other access, with the test plan for it.
 
 - [ ] STACK-024 · Realtime transport
-  Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default: Centrifugo or FastAPI WebSockets with Valkey, picked by a spike. The decision weighs presence support, horizontal scaling and HIPAA hosting.
+  Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare Durable Objects with WebSocket Hibernation, one room per case and one per user. Durable Objects carry ephemeral events only and Postgres stays the system of record. FastAPI posts events to a room over an authenticated internal route, and clients refetch on reconnect.
   Done when the spike shows presence and a thread update reaching two browsers under 300 ms on staging.
 
 - [ ] STACK-025 · Object storage, CDN and signed access
-  Candidates: S3, Google Cloud Storage, Azure Blob, Cloudflare R2, with CloudFront, Cloud CDN or Cloudflare in front. Default: follows the cloud choice (STACK-029). Requirements are HTTP/2 or HTTP/3 at the edge, Range requests, signed URLs or signed cookies scoped to a tenant and slide, COOP and COEP header injection, and no SPA fallback on data paths.
-  Done when a spike measures cold and warm tile fetch latency through the CDN for SVS byte ranges and OME-Zarr chunks.
+  Candidates: S3, Google Cloud Storage, Azure Blob, Cloudflare R2, with CloudFront, Cloud CDN or Cloudflare in front. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare R2 with one bucket per environment, keys under `t/{tenant}/s/{slide}/`, and a Worker gateway under the app origin that verifies capability tokens and serves byte ranges through the R2 binding. Presigned URLs are for uploads only, because presigned GETs work only on the S3 API domain and bypass the CDN. Requirements are HTTP/2 or HTTP/3 at the edge, Range requests, signed URLs or signed cookies scoped to a tenant and slide, COOP and COEP header injection, and no SPA fallback on data paths.
+  Done when a spike measures cold and warm tile fetch latency through the Worker gateway, with and without a Cache API layer keyed per byte range, for SVS byte ranges and OME-Zarr chunks.
   Refs docs 09, 20 §3.2, 32.
 
 - [ ] STACK-026 · Slide reading and tiling on the server
@@ -276,22 +278,22 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Refs docs 08, 12, 17, 20 §5.
 
 - [ ] STACK-027 · GPU inference serving
-  Candidates: plain PyTorch workers pulling from the workflow engine, NVIDIA Triton, Ray Serve, BentoML. Default: PyTorch workers per model family behind the workflow engine for batch work, with a priority gate so interactive embedding requests jump ahead of job tiles. Triton is reconsidered when the model count grows.
-  Done when a spike shows an interactive embedding request served within 1 s while a whole-slide job occupies the same GPU.
+  Candidates: plain PyTorch workers pulling from the workflow engine, NVIDIA Triton, Ray Serve, BentoML. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PyTorch in Modal GPU functions per model family. Batch work starts cold. Interactive embeddings run in a separate function that the API pre-warms when a slow device activates the segmentation tool, and it scales down after about 5 idle minutes. Separate containers replace the priority gate. Triton is reconsidered when the model count grows.
+  Done when a spike shows an interactive embedding request served within 1 s from a pre-warmed container while a whole-slide job runs, and records the cold-start time.
   Refs doc 19 (GPU gate), doc 26 (job ops).
 
 - [ ] STACK-028 · Identity provider
-  Candidates: Keycloak (self-hosted), Zitadel, WorkOS, Auth0, Clerk. Criteria: OIDC with PKCE, MFA, organisation SSO later, EU hosting, HIPAA BAA, cost per user. Default: Zitadel or Keycloak self-hosted in the EU, or WorkOS if a managed BAA-covered service is preferred.
-  Done when the ADR records the choice and a spike logs in to the SPA with PKCE, refreshes tokens silently and maps IdP organisations to tenants.
+  Candidates: Keycloak (self-hosted), Zitadel, WorkOS, Auth0, Clerk. Criteria: OIDC with PKCE, MFA, organisation SSO later, EU hosting, HIPAA BAA, cost per user. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Zitadel Cloud on the free plan. FastAPI is a confidential OIDC client in the BFF pattern. The browser holds only an HttpOnly, Secure, SameSite=Strict session cookie, and sessions and refresh tokens live in Postgres.
+  Done when the ADR records the choice and a spike logs in through the BFF, refreshes tokens server-side without the SPA noticing and maps IdP organisations to tenants.
 
 ### Platform and operations
 
 - [ ] STACK-029 · Cloud provider, regions and GPU availability
-  Candidates: AWS, Google Cloud, Azure, plus an EU sovereign option. Criteria: EU region with GPU instances (L4, L40S, A100 or H100), HIPAA BAA, ISO 27001 certified regions, managed Postgres with PostGIS, managed Kubernetes. Default: decide on price and GPU availability in the chosen EU region.
+  Candidates: AWS, Google Cloud, Azure, plus an EU sovereign option. Criteria: EU region with GPU instances (L4, L40S, A100 or H100), HIPAA BAA, ISO 27001 certified regions, managed Postgres with PostGIS, managed Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no single cloud. Cloudflare (Workers, Durable Objects, R2, Pages), Modal (Python and GPUs) and Neon (Postgres), with no region pinning during the pilot.
   Done when the ADR includes a monthly cost estimate for the pilot (three tenants, 5,000 slides per month).
 
 - [ ] STACK-030 · Infrastructure as code, deploy and runtime platform
-  Candidates: OpenTofu or Terraform, Pulumi. Kubernetes with Helm and Argo CD, or a simpler container platform (Cloud Run, ECS). Default: OpenTofu, managed Kubernetes, Helm charts and Argo CD for GitOps, with GPU node pools that scale to zero.
+  Candidates: OpenTofu or Terraform, Pulumi. Kubernetes with Helm and Argo CD, or a simpler container platform (Cloud Run, ECS). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no Kubernetes. Wrangler config for the edge, Modal app code for Python, the Neon API for branches, GitHub Actions for deploys, and a small OpenTofu module for DNS, buckets and the Zitadel and Neon projects.
   Done when the ADR covers preview environments per pull request for the web app and API.
 
 - [ ] STACK-031 · Model licensing policy (open decision)
@@ -300,11 +302,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Refs docs 17, 29, [`poc/docs/presentation2/SlideViewersOneClick.html`](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/presentation2/SlideViewersOneClick.html).
 
 - [ ] STACK-032 · Observability
-  Candidates: OpenTelemetry SDKs everywhere, then Grafana stack (Loki, Tempo, Mimir or Prometheus), Datadog, or Honeycomb. Error tracking with Sentry (self-hosted or EU). Frontend real-user monitoring for viewer frame times. Default: OpenTelemetry, Grafana stack, Sentry EU, with a PHI scrubber in every pipeline.
+  Candidates: OpenTelemetry SDKs everywhere, then Grafana stack (Loki, Tempo, Mimir or Prometheus), Datadog, or Honeycomb. Error tracking with Sentry (self-hosted or EU). Frontend real-user monitoring for viewer frame times. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): OpenTelemetry to the Grafana Cloud free tier, Sentry SaaS free plan, Workers Logs and Modal logs, exporting only from production with console output in every other environment ([ADR 0005](adr/0005-external-sends-only-in-production.md)), and a PHI scrubber in every pipeline.
   Done when the ADR defines the PHI scrubbing rules and a test proves a patient name in a log line is redacted.
 
 - [ ] STACK-033 · Feature flags, experiments and product analytics
-  Candidates: GrowthBook, PostHog (self-hosted EU), Unleash, Statsig. Default: GrowthBook or PostHog self-hosted, chosen on experiment statistics and EU hosting. No PHI ever leaves the platform in events.
+  Candidates: GrowthBook, PostHog (self-hosted EU), Unleash, Statsig. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostHog Cloud for flags, experiments, analytics and surveys, with autocapture and session replay off. Only production sends events and evaluates flags in PostHog, and other environments read flag defaults from a local file ([ADR 0005](adr/0005-external-sends-only-in-production.md)). No PHI ever leaves the platform in events.
   Done when a spike assigns users to the home variants A to D and records an exposure event without identifiers beyond a pseudonymous user id.
 
 - [ ] STACK-034 · Search
@@ -316,11 +318,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the spike renders the sentinel node report with a signature block and AI disclosure in both preview and PDF with matching content.
 
 - [ ] STACK-036 · Email and transactional notifications
-  Candidates: Amazon SES, Postmark, Resend, SendGrid, with EU data processing and BAA where needed. Default: follows STACK-029, with templates rendered server-side and no PHI in subject lines.
+  Candidates: Amazon SES, Postmark, Resend, SendGrid, with EU data processing and BAA where needed. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Resend through its HTTP API in production only. Other environments use a console sender and automated tests an in-memory fake ([ADR 0005](adr/0005-external-sends-only-in-production.md)). Templates are rendered server-side and no PHI goes in subject lines.
   Done when the ADR covers bounce handling and the PHI rules.
 
 - [ ] STACK-037 · Secrets and key management
-  Candidates: cloud KMS with envelope encryption, HashiCorp Vault or OpenBao, External Secrets Operator for Kubernetes. Default: cloud KMS with per-tenant data keys for sensitive columns, and External Secrets for runtime secrets.
+  Candidates: cloud KMS with envelope encryption, HashiCorp Vault or OpenBao, External Secrets Operator for Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): application-level envelope encryption. Per-tenant data keys are wrapped by a master key held as a Modal secret, and sensitive columns are AES-GCM encrypted in FastAPI. Moving the master key to a KMS is a trigger before real PHI. Runtime secrets live in Modal secrets, Wrangler secrets and GitHub environments.
   Done when the ADR defines key rotation and how a tenant's data becomes unreadable after crypto-shredding on erasure.
 
 - [ ] STACK-038 · CI provider and runners
@@ -328,7 +330,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR lists which suites run on every pull request, nightly and before release.
 
 - [ ] STACK-039 · Resumable upload protocol
-  Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client, which avoids routing multi-gigabyte slides through the API.
+  Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
   Done when a spike uploads a 4 GB NDPI over a throttled connection with a forced disconnect and resumes without restarting.
 
 - [ ] STACK-040 · FHIR and HL7 libraries
@@ -344,7 +346,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when an ADR exists or the existing ADRs are confirmed.
 
 - [ ] FOUND-001 · Monorepo skeleton
-  Create `apps/web`, `apps/api`, `workers/ingest`, `workers/ml`, `packages/viewer-engine`, `packages/ui`, `packages/api-client`, `packages/tokens`, `packages/test-fixtures`, `infra/`, `docs/adr/`. Root README explains the layout.
+  Create `apps/web`, `apps/api`, `apps/edge` (router Worker and Durable Objects), `workers/ingest`, `workers/ml`, `packages/viewer-engine`, `packages/ui`, `packages/api-client`, `packages/tokens`, `packages/test-fixtures`, `infra/`, `docs/adr/`. Root README explains the layout.
   Done when `pnpm install` and `uv sync` succeed from a clean clone and a smoke test in each package passes.
   Depends on STACK-013, STACK-018.
 
@@ -377,12 +379,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on STACK-008, STACK-019.
 
 - [ ] FOUND-009 · Local development environment
-  Docker Compose with Postgres plus PostGIS, Valkey, MinIO, the workflow engine, the IdP, mailpit and the realtime server. One command starts everything. Seeded dev tenant.
+  Docker Compose with Postgres plus PostGIS only. The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
 
 - [ ] FOUND-010 · Configuration and settings management
-  Typed settings in Python (pydantic-settings) and a typed runtime config for the web app. No secrets in the frontend bundle.
-  Done when a test fails startup on a missing required setting and the web build fails if a non-public variable is referenced.
+  Typed settings in Python (pydantic-settings) and a typed runtime config for the web app. No secrets in the frontend bundle. One `APP_ENV` setting (`dev`, `test`, `preview`, `staging`, `prod`) picks the email, error reporting, telemetry export, analytics and flag clients at startup, and only `prod` talks to Resend, Sentry, Grafana Cloud and PostHog ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
+  Done when a test fails startup on a missing required setting, the web build fails if a non-public variable is referenced, and a test shows that with any `APP_ENV` other than `prod` no client for those services is created.
 
 - [ ] FOUND-011 · Structured logging with tenant and request context
   JSON logs, request id, tenant id, user id as pseudonymous ids, PHI scrubber.
@@ -403,8 +405,8 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a disallowed licence in a test dependency fails CI.
 
 - [ ] FOUND-015 · Container images
-  Multi-stage Dockerfiles for web (static assets served by the CDN), API, ingest worker and ML worker (CUDA base). Non-root, pinned digests, SBOM output.
-  Done when images build in CI and a container scan reports no critical vulnerabilities.
+  Modal image definitions for the API, ingest and ML (CUDA base) functions with pinned versions, plus a multi-stage Dockerfile for the API so it can run on another host ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The web app is static assets on Cloudflare. Non-root, pinned digests, SBOM output.
+  Done when the API image and the Modal images build in CI and a container scan of the API image reports no critical vulnerabilities.
 
 - [ ] FOUND-016 · Shared test fixtures package
   `packages/test-fixtures` documents how to fetch large fixtures (CMU-1 family, CAMELYON16 tumor_009 and test_001, OpenSlide corpus) into a cache, plus tiny synthetic slides committed in the repo.
@@ -473,11 +475,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when STACK-023 and STACK-028 are confirmed or revised in an ADR.
 
 - [ ] IAM-001 · IdP deployment and configuration
-  Realm or organisation setup, PKCE public client for the SPA, confidential client for the API, MFA policy (TOTP and WebAuthn).
+  Organisation setup in Zitadel Cloud, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), MFA policy (TOTP and WebAuthn).
   Done when the IdP config is code (exported realm or Terraform provider) and recreated from scratch in CI.
   Depends on STACK-028.
 
-- [ ] IAM-002 · SPA login, logout, silent refresh
+- [ ] IAM-002 · Login, logout and session refresh through the BFF
+  FastAPI runs the OIDC code flow and refreshes tokens server-side. The SPA only sees a session cookie ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when Playwright covers login, refresh after expiry, logout and redirect back to the deep link the user started from.
 
 - [ ] IAM-003 · Tenants and organisations
@@ -559,7 +562,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on STACK-037.
 
 - [ ] SEC-005 · Data residency enforcement
-  Tenant region pins storage, database and GPU processing to that region.
+  Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a test fails if a job for an EU tenant is scheduled on a non-EU queue.
 
 - [ ] SEC-006 · Retention policies
@@ -580,7 +583,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] SEC-010 · PHI-safe telemetry
   Analytics, logs, traces and error reports carry no PHI. URLs use ids, never names.
-  Done when an automated scan of a full E2E run's telemetry finds no seeded patient names.
+  Done when an automated scan of a full E2E run's telemetry finds no seeded patient names. The scan reads the console and file exporter output, because non-production environments do not export ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
 
 - [ ] SEC-011 · Security headers and CSP
   Strict CSP with nonces, COOP same-origin, COEP credentialless, CORP, Referrer-Policy, Permissions-Policy allowing WebHID and gamepad only where needed.
@@ -596,7 +599,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on STACK-037.
 
 - [ ] SEC-014 · Backups and restore testing
-  Point-in-time recovery for Postgres, versioned buckets for slides and results.
+  Point-in-time recovery for Postgres, versioned buckets for slides and results. TODO: confirm whether R2 supports object versioning, and if not, use write-once keys plus a protected copy.
   Done when a monthly automated restore into a scratch environment passes integrity checks.
 
 - [ ] SEC-015 · Vulnerability management
@@ -764,11 +767,11 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when STACK-025 is confirmed with measured CDN numbers.
 
 - [ ] TILES-001 · Signed access to slide bytes
-  Short-lived signed URLs or signed cookies scoped to tenant and slide, refreshed before expiry without interrupting the viewer.
+  Short-lived capability tokens minted by the API, scoped to tenant and slide, verified by the edge Worker without a database call ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and refreshed before expiry without interrupting the viewer.
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
 
 - [ ] TILES-002 · CDN in front of slide storage
-  HTTP/2 or HTTP/3, Range requests, caching keyed without the signature, origin shield.
+  HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
   Done when the latency test shows warm tile fetch p95 under 60 ms in the same region.
 
 - [ ] TILES-003 · Same-origin data path
@@ -1012,7 +1015,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
 
 - [ ] LAB-005 · Debug handle
-  A typed `window.__pathviewer` handle in non-production builds for tests and debugging.
+  A typed `window.__parfocal` handle in non-production builds for tests and debugging.
   Done when E2E tests use it to read camera state.
 
 ---
@@ -1645,8 +1648,8 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when STACK-024 is confirmed and the event model (topics per tenant, case and user) is written as an ADR.
 
 - [ ] COLLAB-001 · Realtime infrastructure
-  Authenticated connections, per-tenant topics, reconnect with resume, fan-out from API events.
-  Done when tests confirm a user never receives another tenant's events and reconnect replays missed events.
+  Authenticated connections to Durable Object rooms per case and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
 - [ ] COLLAB-002 · Threads API
   Threads anchored to a slide point, a shape or a group, with title, messages, resolve and reopen, delete with confirmation when replies exist.
@@ -1870,12 +1873,12 @@ All variants ship behind flags and the user can switch between them in settings.
   Depends on MLEVAL-008.
 
 - [ ] AIP-006 · GPU worker pool
-  Workers per model family, GPU memory caps, one heavy job per GPU by default with more on large GPUs, scale to zero when idle.
-  Done when tests confirm memory caps and autoscaling on queue depth in staging.
+  Modal GPU functions per model family with GPU type, memory caps, concurrency and container limits, scaling to zero when idle ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Done when tests confirm the limits and that containers scale with queue depth in staging.
   Refs docs 17, 19.
 
 - [ ] AIP-007 · Interactive priority gate
-  Interactive requests (embeddings, region passes) preempt job blocks, which yield between blocks.
+  Interactive requests (embeddings, region passes) run in their own Modal function, pre-warmed when a slow device activates the tool, so they never queue behind job tiles ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a load test meets STACK-027's target while a whole-slide job runs.
 
 - [ ] AIP-008 · Job model and API
@@ -2378,19 +2381,19 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-029, STACK-030 and STACK-032 are confirmed.
 
 - [ ] OPS-001 · Base infrastructure as code
-  Network, Kubernetes cluster, node pools including GPU, managed Postgres with PostGIS, Valkey, buckets, CDN, DNS, certificates, per environment.
-  Done when `tofu plan` is clean for dev, staging and production and a policy check passes.
+  OpenTofu for DNS, certificates, R2 buckets, the Neon project and the Zitadel project per environment. Workers, Durable Objects and Modal resources are defined in their own config ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Done when `tofu plan` is clean for staging and production and a policy check passes.
 
-- [ ] OPS-002 · Helm charts and GitOps
-  Charts for web, API, workers, realtime, IdP, workflow engine. Argo CD apps per environment.
-  Done when staging is fully reconciled from git.
+- [ ] OPS-002 · Deploy definitions
+  Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Done when CI recreates staging from git alone.
 
 - [ ] OPS-003 · Environments
-  Dev, staging, production, plus preview environments per pull request for web and API with seeded data.
-  Done when a pull request gets a working preview URL.
+  Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, staging from `main` and production from tags, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
 
 - [ ] OPS-004 · Database operations
-  Migrations in deploy, PgBouncer, autovacuum tuning for annotation tables, read replica for reporting.
+  Migrations in deploy, Neon's pooler, autovacuum tuning for annotation tables, a Neon read replica for reporting.
   Done when a load test with bulk annotation inserts keeps p95 API latency under budget.
 
 - [ ] OPS-005 · Continuous deployment
@@ -2398,11 +2401,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a rollback drill on staging succeeds.
 
 - [ ] OPS-006 · Observability stack
-  Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times.
+  Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times. Export is on only in production, and staging switches it on through the override for these tests ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when dashboards exist and a synthetic error appears in alerting.
 
 - [ ] OPS-007 · Alerting and on-call
-  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call.
+  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. Fault-injection tests on staging switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when each SLO has an alert tested by fault injection.
 
 - [ ] OPS-008 · Backups and disaster recovery
@@ -2484,7 +2487,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on FOUND-016.
 
 - [ ] TEST-013 · Workflow and job tests
-  Temporal (or chosen engine) workflows tested with time skipping and worker restarts.
+  The Postgres job runner tested with a fake clock and forced worker kills ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when ingest and pre-read workflows have restart tests.
 
 - [ ] TEST-014 · Security tests in CI

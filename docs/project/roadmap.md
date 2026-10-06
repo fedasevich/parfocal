@@ -4,7 +4,7 @@ Milestone gates are defined in [BACKLOG.md](../BACKLOG.md#milestones). Status is
 
 | Milestone | Status | Started | Done | Notes |
 |---|---|---|---|---|
-| M0 Stack decided | Not started | | | 40 STACK decisions, each ending in an ADR |
+| M0 Stack decided | In progress | 2026-10-06 | | 40 STACK decisions, each ending in an ADR. ADR 0003 sets the platform defaults, and the spikes still close each slot |
 | M1 Walking skeleton | Not started | | | End to end on staging |
 | M2 Viewer parity | Not started | | | Every POC format in Viv at POC-level performance |
 | M3 Review loop | Not started | | | |

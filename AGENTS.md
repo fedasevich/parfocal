@@ -4,7 +4,7 @@ This file is read by Codex and other agents (`AGENTS.md`) and by Claude Code (th
 
 ## What this project is
 
-pathviewer is a multi-tenant cloud platform for pathologists. It covers whole-slide viewing, AI-assisted review and annotation, collaboration, reporting and sign-out. The frontend is React with TypeScript and the backend is Python. The build follows `docs/BACKLOG.md`, which takes an empty repository to a pilot-ready product through milestones M0 to M6.
+Parfocal (`parfocal.eu`) is a multi-tenant cloud platform for pathologists. It covers whole-slide viewing, AI-assisted review and annotation, collaboration, reporting and sign-out. The frontend is React with TypeScript and the backend is Python. The build follows `docs/BACKLOG.md`, which takes an empty repository to a pilot-ready product through milestones M0 to M6.
 
 The design source is the approved prototype pair, the UX kit (https://claude.ai/artifact/WKq3HJJWYL15oY4nXNBweC) and the hi-fi mock (https://claude.ai/artifact/3axrsHDKG5EqDyxu3nZYoJ). The archived POC is reference only. It lives at `/Users/yuriifedas/WebstormProjects/poc` and on GitHub at https://github.com/fedasevich/pathlogy-poc (private, branch `master`). If the local copy is missing, clone it with `gh repo clone fedasevich/pathlogy-poc /Users/yuriifedas/WebstormProjects/poc`. [docs/project/poc-reference.md](docs/project/poc-reference.md) lists every POC doc with full links. Read it to see how an idea was captured and what went wrong, then write fresh code here. Never modify the POC and never copy whole modules from it.
 
@@ -68,7 +68,7 @@ Consolidate when a milestone closes, when the user asks, or when the log has gai
 | `docs/results/` | Spike numbers, benchmarks, perf baselines, ML evaluations, user studies |
 | `docs/knowledge/` | Durable lessons, gotchas and how things work, by topic |
 
-The code layout (`apps/web`, `apps/api`, `workers/*`, `packages/*`, `infra/`) arrives with FOUND-001. Update this table when it does.
+The code layout (`apps/web`, `apps/api`, `apps/edge`, `workers/*`, `packages/*`, `infra/`) arrives with FOUND-001. Update this table when it does.
 
 ## Decision records
 
