@@ -766,14 +766,24 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on CASES-006.
 
 - [ ] INGEST-021 · Upload window with case matching
-  Opens from the worklist Upload button, Add slides in the slides popover and the more menu, the home quick action, or a drop anywhere on the worklist or a case (with a drop overlay). Each file row shows its label and macro image, read on this computer before the upload starts, and the case it matched by label barcode or file name. States are empty, dragging over, uploading, files that need you, and a corner tray when the window is hidden while uploads continue. Esc closes the window without stopping uploads.
+  Opens from the worklist Upload button, Add slides in the slides popover and the more menu, the home quick action, or a drop anywhere on the worklist or a case (with a drop overlay). Each file row shows its label and macro image, read on this computer before the upload starts, and the case it matched by label barcode or file name. States are empty, dragging over, uploading, files that need you, and a corner tray when the window is hidden while uploads continue. Esc closes the window without stopping uploads. A step header shows Files, What the AI runs (INGEST-023) and Running (INGEST-024).
   Done when component tests cover each state, E2E drops files on the worklist and on a case and sees per-file matches, and closing and reopening keeps progress.
-  Depends on INGEST-002, INGEST-011. Refs mock 3, kit W32, kit Flow 5, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Depends on INGEST-002, INGEST-011. Refs mock 3, kit W32, kit Flow 5, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] INGEST-022 · Per-file fixes in the upload window
   Problem rows with one-click fixes: an MRXS without its data folder (add the folder), a duplicate of a slide already in the case (skip or keep both), no case match (choose a case), a photo or other non-slide file (attach to the case as a document or remove). The banner counts the open problems down to "All clear", and "Fix the rest later" leaves the rest in the case's to-do list.
   Done when component tests resolve each problem class, and an E2E uploads a mixed set with all four problems and ends with every row resolved.
   Depends on INGEST-021, INGEST-018. Refs mock 3 "Files that need you" scene, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+
+- [ ] INGEST-023 · What the AI runs, per case
+  An upload step that starts each case from the lab's plan for its specimen type (SET-011), for example tumor map then cells in the tumor areas first for a sentinel node, cells on all tissue for a breast biopsy. The doctor can change it for this case only: find tumor areas, find and type cells (where: tumor areas first, all tissue, or only where outlined, at quality Best, Good or Fast), unsure zones (always with the cells) and a second opinion on unsure cells. Options respect each other ("tumor areas first" needs the tumor map) and validation (AIP-005): a model not validated for the specimen is off and locked with the reason, and a stain with no model says so. A side column shows what runs on each slide, the time per slide from measured throughput (AIP-011) or "not measured yet", and the queue with a run-first switch for STAT cases that the lab can audit.
+  Done when component tests cover a node case, a biopsy case, an IHC slide, each dependency and the estimate with and without measurements, and E2E starts the plan and sees the jobs created as planned.
+  Depends on INGEST-021, AIP-005, AIP-010, SET-011. Refs mock 3 "Choosing what the AI runs", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+
+- [ ] INGEST-024 · Running step per slide
+  An upload step that lists each slide with its stages from AIP-011 (uploaded, tiles built, tissue found with its area, tumor areas, cells by scope, unsure zones), a progress bar for the running stage, and "Open now with what is ready". A paused stage says why and what happens next (for example, the lab server is busy with a STAT case and resumes from the last finished tile), with an option to run Fast in the browser meanwhile. Slides with no model show "viewer only". Notifications for ready and paused follow the user's settings, and the plan can be changed for stages that have not started.
+  Done when component tests cover running, paused and ready, and E2E opens a slide while its cells are still running and sees the partial result.
+  Depends on INGEST-023, AIP-011. Refs mock 3 "AI running", "An AI step paused" and "Ready to read", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 ---
 
@@ -1042,14 +1052,14 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when STACK-007 is confirmed and Storybook (or the chosen catalogue) is set up.
 
 - [ ] DS-001 · Design tokens package
-  Product tokens from the kit for dark and light: page, chrome, chrome-2, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, accent-soft, on-accent, ok, warn, bad, future, pin, plus class colours and the proposal colour. Spacing on a 4 px grid, radii 4, 7 and 10. Exported as CSS variables and TS constants.
+  Product tokens from the kit for dark and light: page, chrome, chrome-2, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, accent-soft, on-accent, ok, warn, bad, future, pin, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Spacing on a 4 px grid, radii 4, 7 and 10. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
-  Refs kit Design system page, mock token block.
+  Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] DS-002 · Colour measurement scripts in CI
-  WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels.
-  Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class).
-  Refs doc 35, kit decision D12.
+  WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
+  Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
+  Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] DS-003 · Typography
   IBM Plex Sans and IBM Plex Mono, self-hosted. Scale is display 26/600, title 17/600, body 13/400, label 11/600 caps, data 12 mono with tabular figures. Nothing below 11 px.
@@ -1086,7 +1096,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when focus trapping, Esc handling and axe tests pass.
 
 - [ ] DS-012 · Inspector primitives
-  Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step.
+  Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, and the back link with its key.
   Done when stories render the mock 5 data and a unit test checks the range bar geometry.
 
 - [ ] DS-013 · Gallery tile
@@ -1439,9 +1449,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when component tests cover each tool and routing.
 
 - [ ] REVIEW-002 · Findings tab layout
-  Per area, a header that states the area's role (the largest "sets the category", a smaller one "can't change the category"), the size scale, then three steps that appear in order: 1 is it tumor (REVIEW-016), 2 how big is it (MEAS-006), 3 how many tumor cells, only for a cluster near 0.2 mm (REVIEW-008). Typer details, class bars and the track record fold under "How the AI found this area". A fixed footer shows progress and the next step. Model warning bar on top when needed.
-  Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
-  Done when component tests match mock 5.
+  Two layouts, chosen by the specimen. Cell findings, the default: the panel shows only what is selected. With nothing selected, one number line (REVIEW-005) for the slide and the zones where the AI is unsure (REVIEW-018), most unsure first, then the scattered unsure cells, a drawn outline and the "Changed after your corrections" zone when they exist. A zone opens to its number line and a gallery of its unsure cells (REVIEW-007). A selected cell shows its crop, the AI call and the zone's cells as small tiles, with the type bar on the slide (REVIEW-019). Extras such as the track record are collapsed rows, and hovering a zone or cell on the slide shows its numbers. Node staging, for sentinel nodes: per area, a header that states the area's role (the largest "sets the category", a smaller one "can't change the category"), the size scale, then three steps in order: 1 is it tumor (REVIEW-016), 2 how big is it (MEAS-006), 3 how many tumor cells, only for a cluster near 0.2 mm (REVIEW-008). Model warning bar on top when needed in both layouts.
+  Refs doc 36, mock 5, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+  Done when component tests match mock 5 in every situation (nothing selected, zone, cell, outline, after learning, node staging).
 
 - [ ] REVIEW-003 · Staging computation API
   Per node, the lead area (the largest not ruled out), its size (the measurement when there is one, else the AI size with its evaluated range), its category (over 2 mm macro, over 0.2 mm or more than 200 cells micro, else ITC), whether it needs a cell count (size at or under 0.2 mm), the suggested pN stage with the (sn) suffix, and the state open, so far or settled. Settled means the lead area is confirmed tumor, measured, and its count range is under 200 when a count is needed. The count range reuses doc 33's expected-mistakes method.
@@ -1453,27 +1463,29 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when component tests cover every state and a unit test checks the scale geometry at the 0.2 and 2 mm lines.
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
-- [ ] REVIEW-005 · Class composition bars
-  Counts per class for the area.
-  Done when component tests render seeded counts.
+- [ ] REVIEW-005 · Number line
+  One line with the tumor share and its likely range for the slide, the open zone or a drawn outline. Opening it shows counts per class, each bar split into cells the AI is sure about (solid) and unsure cells (hatched in the unsure token), a total row split into checked by you, sure and unsure, and the cutoff verdict chip from REVIEW-017 when the lab sets a cutoff. Every answer moves cells from unsure to checked at once.
+  Done when component tests render seeded counts in each state and a unit test checks that the parts add up to the total.
+  Refs mock 5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] REVIEW-006 · Cells to check selection
-  Contested-first order (tumor probability nearest 50%), within the area, excluding reviewed cells, pages of 12.
-  Done when unit tests confirm ordering and paging on a seeded result.
-  Refs doc 33, mock 8.
+  Per zone (REVIEW-018), contested-first order (tumor probability nearest 50%), excluding reviewed cells. Zones are ranked by unsure cells, and the scattered unsure cells come last.
+  Done when unit tests confirm ordering within and across zones on a seeded result.
+  Refs doc 33, mock 5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
-- [ ] REVIEW-007 · Cells gallery in the inspector
-  Twelve tiles, the slide follows the highlighted tile, rest look right (Shift+K), next 12 (Shift+J), click a tile to enter focus review.
-  Done when E2E reviews a page and every decision is persisted.
+- [ ] REVIEW-007 · Cells gallery in the zone view
+  The open zone's unsure cells as tiles in the findings panel, each marked on the slide. Click a tile or a cell on the slide to select it, J for the next unsure cell, "Rest look right" (Shift+K) keeps every remaining call in the zone. There is no separate gallery screen, mock 8 opens a zone in findings.
+  Done when E2E checks a zone by mouse and by keyboard and every decision is persisted.
+  Refs mock 5, mock 8, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] REVIEW-008 · Settled rule
   For a small cluster, the tumor cell count settles when its range can no longer cross 200. Chip moves from open to settled with a toast "You can stop here". The same rule drives REVIEW-017 for cellularity cases.
   Done when unit tests cover the rule and E2E sees the toast after the expected number of decisions.
 
-- [ ] REVIEW-009 · Focus review one cell at a time
-  Cell at 40× with others faded to 18%, dashed ring, review HUD with K keep, 1 to 4 set type, X not a cell, J skip, Shift+J back, Esc to gallery. Minimap shrinks to the locator.
-  Done when E2E reviews 12 cells by keyboard only and the HUD never covers the cell.
-  Refs mock 9, kit W5.
+- [ ] REVIEW-009 · Focus mode for one cell
+  Enter on a selected cell zooms in with every other cell faded and zone outlines hidden. The type bar, keys and arrow jumps are the same as in findings (REVIEW-019). Enter or Esc goes back. Minimap shrinks to the locator.
+  Done when E2E reviews a zone by keyboard only in focus mode and the bar never covers the cell.
+  Refs mock 9, kit W5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] REVIEW-010 · Review decisions API
   Keep, retype, not a cell, skip, with reviewer, time, AI call and confidence at decision time. Reviewed shapes are never re-typed by a model afterwards.
@@ -1485,9 +1497,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when unit tests map calibrated probabilities to phrases with the doc 28 band thresholds.
 
 - [ ] REVIEW-012 · Outline display modes
-  Fade (default, opacity from calibrated probability), mark unsure, bands, with the formulas from the mock.
+  Fade (default, opacity from calibrated probability), mark unsure, bands, with the formulas from the mock. Unsure marks and zone outlines are neutral, white dashes with a dark casing, never a hue, because every hue sits near a class colour for some colour-vision deficiency.
   Done when golden tests cover each mode.
-  Refs mock §2.4, doc 33.
+  Refs mock §2.4, doc 33, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] REVIEW-013 · Track record by confidence band
   Per user and typer, the share of calls kept per band, persisted server-side. An overall figure is shown only when every band that matters has enough checks.
@@ -1510,9 +1522,19 @@ All variants ship behind flags and the user can switch between them in settings.
   Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] REVIEW-017 · Tumor share verdict for cellularity cases
-  The doc 33 verdict (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings.
+  The doc 33 verdict (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings. Shown as the verdict chip in the number line (REVIEW-005), worded "Above 20% whatever the unsure cells are" or "Could be either side of 20%, check the unsure cells".
   Done when unit tests reproduce doc 33's examples and a test confirms the verdict is hidden for a sentinel node case.
-  Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+
+- [ ] REVIEW-018 · Zones where the AI is unsure
+  From the whole-slide cells: a grid of 128 px squares at level 0 (about 31 µm), the share of unsure nuclei per square as in POC `uncertaintyField`, squares with at least 3 nuclei and at least 30% unsure joined edge to edge, zones with fewer than 4 unsure cells dropped. Each zone keeps its cells, its unsure cells and a soft outline, and is named by the most common pair of top-two types among its unsure cells, or "second typer disagrees" or "maybe not cells" when those flags dominate. No other description is generated. Recomputed after corrections and after the learner re-checks the slide. Thresholds are settings until AINUC results on whole slides confirm them.
+  Done when unit tests on a seeded grid cover joining, dropping, naming and ranking, and a test on the mock's 929 nuclei gives two zones of 26 and 24 unsure cells and 31 scattered ones.
+  Depends on AINUC-003. Refs POC [`src/segment/confidence.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/confidence.ts), mock 5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+
+- [ ] REVIEW-019 · Type bar next to the cell and arrow jumps
+  A bar beside the selected cell with Keep, Tumor, Stroma, Immune, Other and Not a cell, each with its key in a keycap (K, 1 to 4, X), placed below or above the cell so it never covers it, and the only place the type buttons appear. Each type names what it covers on hover (immune: lymphocytes, plasma cells, histiocytes). Clicking any cell on the slide selects it. While a cell is selected the arrow keys jump to the nearest unsure cell in that direction (within a cone, undecided cells first, across zones), Shift+arrows pan, J and Shift+J step through the zone, Esc goes back to the zone and then to the list.
+  Done when E2E answers cells with the mouse only and with the keyboard only, and unit tests cover the direction search and its edge cases (no cell that way, cells already decided).
+  Refs mock 5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 ---
 
@@ -1942,8 +1964,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when E2E uploads a slide and the worklist AI cell goes from queued to ready.
 
 - [ ] AIP-011 · Job progress streaming
-  Per-stage progress and partial results stream to the case view and the worklist.
-  Done when tests confirm partial areas arrive before job completion.
+  Per-stage progress and partial results stream to the case view, the worklist and the upload window (uploaded, tiles, tissue found with its area, tumor areas, cells by scope, unsure zones), with a pause reason when a stage waits. Each finished stage records its throughput per model, tier and machine, so time estimates (INGEST-023) use measured values.
+  Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
+  Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] AIP-012 · Patch service on the server
   Read patches at a requested microns per pixel from any supported format, with LRU caching and sparse-region awareness.
@@ -2157,8 +2180,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).
 
 - [ ] AILEARN-003 · Learner UI
-  Shows when the learner is active and how many examples it has, with forget.
-  Done when component tests cover the states.
+  After a few corrections on a slide (10 by default) the learner re-checks the slide. The cells it changed form a zone in findings, "Changed after your corrections", reviewed with the same type bar and keys, with Undo all that restores the typer's first calls and keeps the doctor's own corrections. Learning applies to that slide only. A collapsed row shows how many examples the learner has, with forget.
+  Done when component tests cover the zone, undo and forget, and an E2E sees the zone appear after the set number of corrections.
+  Refs mock 5 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] AILEARN-004 · Server training rounds per tenant
   Fine-tune the typer head from pretrained weights on the tenant's reviewed examples, versioned rounds with a latest pointer, rollback by pointer.
@@ -2253,9 +2277,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting and per-device speed persistence.
 
 - [ ] SET-007 · Shortcuts section
-  Preset (viewer default, QuPath-like, Figma-like), most-used bindings with change, reset to defaults, see all.
+  The rebinding editor from CMD-006, with the preset (viewer default, QuPath-like, Figma-like), filters for all, your changes and conflicts, and reset all. `?` opens Settings at this section.
   Done when tests rebind a key and the keycaps update everywhere.
-  Depends on CMD-001.
+  Depends on CMD-001, CMD-006. Refs mock 17, mock 19, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] SET-008 · Notifications section
   AI finished, replies, STAT assigned, STAT sound.
@@ -2293,10 +2317,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when E2E finds and runs an action, a place and a setting.
   Refs mock 16.
 
-- [ ] CMD-003 · Shortcut sheet
-  `?` opens a searchable sheet with Navigate, Review and Tools columns and a source badge per key (clinical, Figma, QuPath, ours), generated from the registry.
-  Done when a test confirms every registered action appears on the sheet.
-  Refs mock 19.
+- [ ] CMD-003 · `?` opens Shortcuts in Settings
+  `?` and "Keyboard shortcuts" in the more menu open Settings at the Shortcuts section (SET-007). There is no separate read-only sheet, so reference and editing never disagree. The source badge per key (clinical, Figma, QuPath, ours) and every registered action appear there.
+  Done when a test confirms `?` opens the section and every registered action appears in it.
+  Refs mock 19, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] CMD-004 · Key conflict check
   CI fails when two actions in overlapping scopes share a key. Resolves the Shift+L conflict between arrow and compare unlink, and P between polygon and worklist preview by scope.
@@ -2307,8 +2331,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests switch presets and assert bindings.
 
 - [ ] CMD-006 · Rebinding UI
-  Capture a new key, warn on conflicts, reset.
-  Done when E2E rebinds J and the review HUD shows the new key.
+  Click a key next to an action and press the new one. Defaults are marked, changed keys show the default and a reset. A key already used in the same scope offers to swap the two or to leave the other action without a key. Keys the browser keeps (⌘W, ⌘T, ⌘R, ⌘L and others) are refused with the reason. Actions that change the report (sign out) need ⌘ or Ctrl. Undo and Esc stay fixed. Sets are edited as sets: the modifier for the magnification keys, the first key of a chord such as G then a number, and arrows, WASD or IJKL for directions with a clash check. Any action can have a second key. Search by name, or press a key to find what it does. Single-letter shortcuts can be switched off (WCAG 2.1.4), keys match by physical position so non-US layouts keep the map, Z can be tap, hold or both, and the map exports and imports as a file.
+  Done when E2E rebinds J and the review HUD shows the new key, and tests cover a conflict swap, a reserved key, the modifier rule, a set, the single-letter switch and position matching on a Czech layout.
+  Depends on CMD-001. Refs mock 17 and 19, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 ---
 
@@ -2422,9 +2447,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm no events are sent after opt-out.
 
 - [ ] EXP-008 · Moderated test support
-  A study mode that loads public slides (CAMELYON16) with scripted tasks and records timing, for the usability plan in the kit.
+  A study mode that loads public slides (CAMELYON16) with scripted tasks and records timing, for the usability plan in the kit. Round 4 tests the cell findings: open the zone where the AI is least sure, answer 4 unsure cells (round 1 wording, so the rounds compare) and change a cell you can see is a lymphocyte.
   Done when the ten pilot tasks in the kit test plan can run end to end in study mode, with the task set editable without a deploy.
-  Refs kit Usability test plan, [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study).
+  Refs kit Usability test plan, [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] EXP-009 · Study session replay
   In study mode only, record the screen as a DOM recording plus a pointer and key log, with every text field masked. Serve the recorder from our own origin under a neutral name and warn on the start screen when it did not load, because ad blockers block session-recording scripts by URL. Upload in batches at task boundaries and every minute, not every few seconds, because each upload is a storage write. Results show a replay with task chips, a strip of task spans, dead clicks and reloads, and a pointer-only fallback that rebuilds screens from the logged state when the DOM recording is missing.

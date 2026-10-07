@@ -18,3 +18,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0010](0010-ci-runners-and-suites.md) | GitHub Actions with hosted runners and a nightly self-hosted Mac GPU runner | Superseded by 0011 | 2026-10-06 |
 | [0011](0011-hosted-ci-only.md) | Hosted CI runners only, no GPU-heavy test suites | Accepted | 2026-10-06 |
 | [0012](0012-ux-round-2-prototype-revisions.md) | Prototype round 2: staging-first findings, quiet top bar, upload window and clearer compare | Proposed | 2026-10-07 |
+| [0013](0013-cell-findings-shortcuts-and-ai-on-upload.md) | Prototype round 3: cell findings from zones of unsure cells, a neutral unsure colour, a shortcut editor and AI steps on upload | Proposed | 2026-10-07 |

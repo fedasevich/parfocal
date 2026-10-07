@@ -41,3 +41,4 @@ Option 2. The edited and added tasks follow the prototype pair as published on 2
 - AINUC-012 is new work: a tumor cell count per area with a range, which needs nuclei or the 64 px map because a 0.2 mm cluster is three cells across on the 256 px map.
 - The staging wording and the suggested pN stage must be checked with a pathologist in MEAS-000 before any of this is shown to a doctor.
 - The usability plan now has ten pilot tasks, and EXP-008 and EXP-009 follow it.
+- [ADR 0013](0013-cell-findings-shortcuts-and-ai-on-upload.md) keeps this staging layout for sentinel nodes and makes cell findings the default for other specimens, and moves the pilot to round 4.
