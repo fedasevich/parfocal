@@ -52,6 +52,7 @@ In `BACKLOG.md`, a path such as `poc/src/slide/ventana.ts` means `/Users/yuriife
 | 33 | Showing type confidence to a doctor | [33-showing-confidence-to-doctors.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/33-showing-confidence-to-doctors.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/33-showing-confidence-to-doctors.md` |
 | 34 | Every action in the viewer, as a tree | [34-functionality-tree.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/34-functionality-tree.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/34-functionality-tree.md` |
 | 35 | A viewer built around a pathologist's sign-out | [35-ui-ux-for-pathologists.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/35-ui-ux-for-pathologists.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/35-ui-ux-for-pathologists.md` |
+| 36 | Tumor areas for sentinel node review | [36-sentinel-node-areas.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/36-sentinel-node-areas.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/36-sentinel-node-areas.md` |
 
 ## Other material
 

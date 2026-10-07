@@ -23,7 +23,7 @@ Task format:
 - Tick a box only when the task's "Done when" line is fully true and CI is green on the merged branch.
 - When a task turns out to be bigger than two days, split it into new IDs under the same epic and leave a one-line note under the original.
 - When a decision changes a later task, edit that task and add an ADR rather than leaving the old text in place.
-- `poc/` means `/Users/yuriifedas/WebstormProjects/poc/` locally or `https://github.com/fedasevich/pathlogy-poc/blob/master/` on GitHub, and code references are links. `doc NN` means `poc/docs/NN-*.md`, listed with full links in [project/poc-reference.md](project/poc-reference.md). `kit:` names a UX kit page or wireframe (W1 to W31). `mock N` names step N of the converged mock tab (1 Home to 18 Shortcut sheet).
+- `poc/` means `/Users/yuriifedas/WebstormProjects/poc/` locally or `https://github.com/fedasevich/pathlogy-poc/blob/master/` on GitHub, and code references are links. `doc NN` means `poc/docs/NN-*.md`, listed with full links in [project/poc-reference.md](project/poc-reference.md). `kit:` names a UX kit page or wireframe (W1 to W33). `mock N` names step N of the converged mock tab, from 1 Home to 19 Shortcut sheet. Step 3 is Upload slides, so the case screens start at 4 Case at low power and 5 Area at 10x ([ADR 0012](adr/0012-ux-round-2-prototype-revisions.md)).
 - Every feature epic starts with an `xxx-000` research check. It re-checks the current state of the art for that feature's libraries and patterns, confirms or revises the STACK decisions it relies on, and records the outcome as an ADR in `docs/adr/`.
 
 ### Definition of Done (applies to every task)
@@ -77,8 +77,8 @@ Task format:
 | Area | Primary spec | Supporting POC material |
 | --- | --- | --- |
 | Every existing action and key | doc 34 | [`poc/src/app/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/app), [`poc/src/annotations/editor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/editor.ts) |
-| Screens, layout, principles | doc 35, kit IA and wireframes, mock 1 to 18 | doc 25 (UX review), doc 30 (Esc ladder) |
-| Settings, devices, shortcuts | kit Interaction spec, mock 16 and 18, mock §2.13 device legend | doc 16 (mouse pass) |
+| Screens, layout, principles | doc 35, kit IA and wireframes, mock 1 to 19 | doc 25 (UX review), doc 30 (Esc ladder) |
+| Settings, devices, shortcuts | kit Interaction spec, mock 17 and 19, mock §2.13 device legend | doc 16 (mouse pass) |
 | Design system | kit Design system page, doc 35 colour method | mock token block |
 | Formats and readers | doc 08, doc 03, doc 06 | [`poc/src/slide/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/slide), [`poc/src/viv/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/viv) |
 | Tile delivery and latency | doc 09, doc 32, doc 20 §3 | [`poc/scripts/latency-proxy.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/latency-proxy.mjs) |
@@ -213,7 +213,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-014 · Command palette, drag and drop, hotkeys
   Candidates: cmdk, kbar, a custom React Aria combobox. Drag and drop: dnd-kit, Pragmatic drag and drop. Hotkeys: tinykeys, react-hotkeys-hook, a custom registry. Default: cmdk, Pragmatic drag and drop, and a custom key registry. The registry has to support presets, rebinding, chords like G then n, and hold versus tap on Z, which the libraries do not cover well.
   Done when the ADR records the choices and a spike shows a G then 2 chord and a Z hold-versus-tap working with focus in and out of text inputs.
-  Refs mock 15, mock 18, kit Interaction spec.
+  Refs mock 16, mock 19, kit Interaction spec.
 
 ### Viewer and rendering
 
@@ -523,7 +523,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-010 · Guest consultant links
   Expiring, revocable links scoped to one case, optionally one view and its threads, for a user from another organisation. The guest signs in with their own IdP account or a verified email.
   Done when tests prove the guest can read only that case and post only in the shared threads, the link expires, and revocation takes effect within one minute.
-  Depends on STACK-023. Refs kit Flow 3, mock 10.
+  Depends on STACK-023. Refs kit Flow 3, mock 11.
 
 - [ ] IAM-011 · Service accounts and API tokens
   For integrations (LIS adapter, import scripts), with scopes and rotation.
@@ -680,7 +680,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on STACK-039.
 
 - [ ] INGEST-002 · Upload UI with resume
-  Drag and drop or file picker on a case, per-file progress, pause, resume after reload, retry on failure, multiple files.
+  Drag and drop or file picker on a case, per-file progress, pause, resume after reload, retry on failure, multiple files. The window and its states are INGEST-021.
   Done when an E2E test interrupts a throttled 1 GB upload, reloads the page, and the upload resumes to completion.
 
 - [ ] INGEST-003 · Ingest workflow skeleton
@@ -764,6 +764,16 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   A CLI that uploads a folder of slides with a CSV manifest mapping files to cases.
   Done when a test imports 20 fixture slides into 5 cases.
   Depends on CASES-006.
+
+- [ ] INGEST-021 · Upload window with case matching
+  Opens from the worklist Upload button, Add slides in the slides popover and the more menu, the home quick action, or a drop anywhere on the worklist or a case (with a drop overlay). Each file row shows its label and macro image, read on this computer before the upload starts, and the case it matched by label barcode or file name. States are empty, dragging over, uploading, files that need you, and a corner tray when the window is hidden while uploads continue. Esc closes the window without stopping uploads.
+  Done when component tests cover each state, E2E drops files on the worklist and on a case and sees per-file matches, and closing and reopening keeps progress.
+  Depends on INGEST-002, INGEST-011. Refs mock 3, kit W32, kit Flow 5, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+
+- [ ] INGEST-022 · Per-file fixes in the upload window
+  Problem rows with one-click fixes: an MRXS without its data folder (add the folder), a duplicate of a slide already in the case (skip or keep both), no case match (choose a case), a photo or other non-slide file (attach to the case as a document or remove). The banner counts the open problems down to "All clear", and "Fix the rest later" leaves the rest in the case's to-do list.
+  Done when component tests resolve each problem class, and an E2E uploads a mixed set with all four problems and ends with every row resolved.
+  Depends on INGEST-021, INGEST-018. Refs mock 3 "Files that need you" scene, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 
@@ -913,7 +923,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-025 · Coverage tracking
   Record which tissue has been seen at 10× or more, per user and slide, persisted to the server in batches.
   Done when tests on a scripted pan path produce the expected coverage raster and percentage, and coverage survives reload.
-  Refs kit W19, mock 3 and 14.
+  Refs kit W19, mock 4 and 15.
 
 ### Overlays
 
@@ -1004,7 +1014,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] LAB-001 · Developer drawer
   Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD, pause models.
   Done when component tests cover each control and a permission test hides it from doctors.
-  Refs mock 17, kit W25.
+  Refs mock 18, kit W25.
 
 - [ ] LAB-002 · Performance HUD
   Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Floats in a free corner and can be hidden.
@@ -1076,8 +1086,8 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when focus trapping, Esc handling and axe tests pass.
 
 - [ ] DS-012 · Inspector primitives
-  Section label, card, warn bar, region row, class bars, verdict card with range bar (band, point, dashed cutoff, axis labels).
-  Done when stories render the mock 4 data and a unit test checks the range bar geometry.
+  Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step.
+  Done when stories render the mock 5 data and a unit test checks the range bar geometry.
 
 - [ ] DS-013 · Gallery tile
   92 px and 120 px sizes. States are to check, current, done. Dashed ring on the cell, label in AI wording.
@@ -1117,9 +1127,9 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock 1 and 2.
 
 - [ ] SHELL-003 · Case top bar
-  Back to worklist, patient block (name, sex, age, masked MRN, or initials when hidden), case and slide line, slide switcher with Q and E, Review and Annotate switch, viewed ring, share, panel toggle, settings, help, and the permanent primary sign-out button.
-  Done when component tests cover each element and E2E covers keyboard access to all of them.
-  Refs mock §2.1, kit W2.
+  A quiet bar: icon-only back, a case chip (priority tag, short patient name, case number) that opens the patient and case popover, a slide button (thumbnail, block and stain, n of N) that opens the slides popover (CASE-002), Review and Annotate switch, viewed ring, panel toggle, a "more" menu (share, second opinion, add slides, focus mode, shortcuts, settings) and the permanent primary sign-out button. Popovers close on Esc and on an outside click.
+  Done when component tests cover each element and each popover, and E2E covers keyboard access to all of them.
+  Refs mock §2.1, kit W2 and W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] SHELL-004 · Workspaces Review and Annotate
   Switching changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
@@ -1143,7 +1153,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] SHELL-008 · Focus mode
   Cmd+\ hides the top bar, rail and inspector, shows the focus pill and the area card, keeps the minimap and magnification bar.
   Done when E2E covers enter and exit and the screen-coverage measurement drops to the expected value.
-  Refs mock 13, kit W23.
+  Refs mock 14, kit W23.
 
 - [ ] SHELL-009 · Screen coverage measurement
   A test utility that measures the share of the canvas covered by chrome at 1280, 1440 and 1920 widths.
@@ -1157,7 +1167,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
   Done when an E2E test with two pages confirms camera sync both ways.
-  Refs doc 35, mock 5 pop-out icon.
+  Refs doc 35, mock 6 pop-out icon.
 
 ---
 
@@ -1299,18 +1309,19 @@ All variants ship behind flags and the user can switch between them in settings.
   Load case, patient, slides and AI state, open the first slide fitted.
   Done when E2E opens a case from the worklist and the slide is fitted within the TEST-006 budget.
 
-- [ ] CASE-002 · Slide tray
-  Thumbnails of the case's slides with block and stain labels, Q and E to switch, backslash toggles the tray, compare entry point.
-  Done when tests cover switching, and switching preserves per-slide camera.
-  Refs mock 3, kit W2.
+- [ ] CASE-002 · Slides popover
+  The top bar's slide button opens the case's slides with thumbnail, block and stain, viewed share and processing progress. Q and E step through slides. Every other slide has a "Side by side" button (CMP-007), and the footer has "Compare slides" and "Add slides" (INGEST-021). The permanent tray is an optional pinned strip in settings, off by default.
+  Done when tests cover switching from the popover and by key, switching preserves per-slide camera, and the pinned strip setting works.
+  Refs mock 4, kit W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] CASE-003 · Per-slide view memory
   Each slide remembers its camera while the case is open.
   Done when tests switch slides and come back to the same view.
 
 - [ ] CASE-004 · AI state: pre-read ready
-  Heat overlay, area outlines with numbered badges, verdict sentence with chip, "where to look" list, go-to-area button.
-  Done when component tests match mock 3 ready scene.
+  Heat overlay and area outlines with numbered badges. The panel leads with the staging question for a sentinel node: "Metastasis likely, largest about 7.7 mm", a chip "Macro if confirmed", and a size scale with the 0.2 and 2 mm lines (REVIEW-004). The area list is largest first with size and category per row. The footer says "Start with area 1". Once the largest area is confirmed and measured the hero reads "Macrometastasis, 8.0 mm, settled" with the suggested pN stage, the smaller rows say they cannot change the category, and the footer offers sign-out.
+  Done when component tests match the mock 4 "Large deposit found" scene in both the open and the settled state.
+  Refs kit W2, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] CASE-005 · AI state: still running
   The map fills in as computed, with a dashed line where the AI has reached. Stage progress card. Areas appear as found, with placeholders. The view never moves.
@@ -1340,12 +1351,17 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when tests cover the setting and initials mode.
 
 - [ ] CASE-011 · Case header details
-  Specimen, clinical note, clinical question, blocks, assigned pathologist.
+  Specimen, clinical note, clinical question, blocks, assigned pathologist and who sent the case, in the case chip popover (SHELL-003).
   Done when component tests cover each field and missing data.
 
 - [ ] CASE-012 · Case state transitions
   Scanned, AI reading, to review, waiting on others, draft report, signed, amended.
   Done when unit tests cover the state machine and every transition is audited.
+
+- [ ] CASE-013 · AI state: only a small cluster
+  When the largest area sits near 0.2 mm, the hero says both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis, and lists the steps still open (confirm, measure, count cells).
+  Done when component tests match the mock 4 "Only a small cluster" scene and the step list follows the staging state.
+  Depends on REVIEW-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 
@@ -1369,7 +1385,7 @@ All variants ship behind flags and the user can switch between them in settings.
   Refs mock §2.7, kit D11.
 
 - [ ] NAV-004 · Area list and go to area
-  Areas sorted by size with real dimensions and category (macro, micro, ITC size), G then n flies to area n, `[` and `]` go to previous and next.
+  Areas sorted by size with real dimensions and category (macro, micro, ITC size), G then n flies to area n, `[` and `]` go to previous and next. Each row says its role: "Largest, sets the category" for the lead area and, once the category is settled, "Can't change the category" for the others.
   Done when E2E flies to each area and marks it visited at 10× or more.
 
 - [ ] NAV-005 · Edge cues
@@ -1380,25 +1396,27 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
   Done when model-based tests drive every transition.
-  Refs kit Interaction spec, mock 5. Built on STACK-005 state machine choice.
+  Refs kit Interaction spec, mock 6. Built on STACK-005 state machine choice.
 
 - [ ] NAV-007 · Minimap placement scoring
   Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning.
   Done when unit tests reproduce the mock's placement decisions for each scene.
-  Refs mock 5 placement algorithm.
+  Refs mock 6 placement algorithm.
 
 - [ ] NAV-008 · Minimap content
-  Seen trail, area outlines with badges, viewport rectangle (crosshair below 8 px), cell dots in area mode, header and footer text, click and drag to move.
-  Done when golden tests cover reading, area and travel modes.
+  Seen trail, area outlines with badges, viewport rectangle (crosshair below 8 px), cell dots in area mode, header and footer text. The map is a button: a click opens the whole-slide peek (NAV-010), with a corner "open" hint and a hover ring. Dragging the viewport rectangle still moves the view.
+  Done when golden tests cover reading, area and travel modes and E2E opens the peek by clicking the map.
+  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] NAV-009 · Minimap settings
   When useful, always, never.
   Done when tests cover each mode.
 
 - [ ] NAV-010 · Whole-slide peek
-  Hold Z for the whole slide over a dimmed case, tap Z toggles the last two magnifications (hold registers after 180 ms). Click a place to go there, release to return. Seen trail, AI areas, checked ticks, you-are-here box.
-  Done when E2E covers hold, tap, click-to-go and release.
-  Refs mock 14, kit W12.
+  Hold Z for the whole slide over a dimmed case and release to return. A tap under 350 ms keeps it open until Z, Esc or a click. It also opens from the viewed ring and from a click on the minimap. Click a place to go there. Seen trail, AI areas, checked ticks, you-are-here box, and a "return" hint while latched.
+  Done when E2E covers hold, tap-to-latch, opening from the ring and the minimap, click-to-go and release.
+  Superseded behaviour: the earlier "tap toggles the last two magnifications" is dropped, see [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Refs mock 15, kit W12.
 
 - [ ] NAV-011 · Travel animation and route line
   Camera flight with a route line to the target, skip with `]` again.
@@ -1421,17 +1439,19 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when component tests cover each tool and routing.
 
 - [ ] REVIEW-002 · Findings tab layout
-  Verdict first, then evidence, then cells (the xPath order). Model warning bar on top when needed.
-  Done when component tests match mock 4.
+  Per area, a header that states the area's role (the largest "sets the category", a smaller one "can't change the category"), the size scale, then three steps that appear in order: 1 is it tumor (REVIEW-016), 2 how big is it (MEAS-006), 3 how many tumor cells, only for a cluster near 0.2 mm (REVIEW-008). Typer details, class bars and the track record fold under "How the AI found this area". A fixed footer shows progress and the next step. Model warning bar on top when needed.
+  Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Done when component tests match mock 5.
 
-- [ ] REVIEW-003 · Verdict computation API
-  Per area, the share of the cutoff class with the expected-mistakes range (sum of probabilities in both directions), the cutoff from lab settings, and the state firm, open, above cutoff, settled or not validated.
-  Done when unit tests reproduce doc 33's examples and the property that firm answers are never wrong on the validation fixture.
-  Refs doc 33.
+- [ ] REVIEW-003 · Staging computation API
+  Per node, the lead area (the largest not ruled out), its size (the measurement when there is one, else the AI size with its evaluated range), its category (over 2 mm macro, over 0.2 mm or more than 200 cells micro, else ITC), whether it needs a cell count (size at or under 0.2 mm), the suggested pN stage with the (sn) suffix, and the state open, so far or settled. Settled means the lead area is confirmed tumor, measured, and its count range is under 200 when a count is needed. The count range reuses doc 33's expected-mistakes method.
+  Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and the property that firm answers are never wrong on the validation fixture.
+  Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
-- [ ] REVIEW-004 · Verdict card and range bar
-  Plain-words heading, chip, sub-line, range bar with band, point and dashed cutoff on one scale.
-  Done when component tests cover every state.
+- [ ] REVIEW-004 · Staging hero and size scale
+  Plain-words heading, chip, sub-line and a log size scale from 0.05 to 20 mm with ITC, micro and macro zones, a dot per area, and the current area's range band and numbered point. For a cluster, a count bar with the 200-cell line.
+  Done when component tests cover every state and a unit test checks the scale geometry at the 0.2 and 2 mm lines.
+  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] REVIEW-005 · Class composition bars
   Counts per class for the area.
@@ -1440,20 +1460,20 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] REVIEW-006 · Cells to check selection
   Contested-first order (tumor probability nearest 50%), within the area, excluding reviewed cells, pages of 12.
   Done when unit tests confirm ordering and paging on a seeded result.
-  Refs doc 33, mock 7.
+  Refs doc 33, mock 8.
 
 - [ ] REVIEW-007 · Cells gallery in the inspector
   Twelve tiles, the slide follows the highlighted tile, rest look right (Shift+K), next 12 (Shift+J), click a tile to enter focus review.
   Done when E2E reviews a page and every decision is persisted.
 
 - [ ] REVIEW-008 · Settled rule
-  The verdict settles when the range can no longer cross the cutoff. Chip moves from open to settled with a toast "You can stop here".
+  For a small cluster, the tumor cell count settles when its range can no longer cross 200. Chip moves from open to settled with a toast "You can stop here". The same rule drives REVIEW-017 for cellularity cases.
   Done when unit tests cover the rule and E2E sees the toast after the expected number of decisions.
 
 - [ ] REVIEW-009 · Focus review one cell at a time
   Cell at 40× with others faded to 18%, dashed ring, review HUD with K keep, 1 to 4 set type, X not a cell, J skip, Shift+J back, Esc to gallery. Minimap shrinks to the locator.
   Done when E2E reviews 12 cells by keyboard only and the HUD never covers the cell.
-  Refs mock 8, kit W5.
+  Refs mock 9, kit W5.
 
 - [ ] REVIEW-010 · Review decisions API
   Keep, retype, not a cell, skip, with reviewer, time, AI call and confidence at decision time. Reviewed shapes are never re-typed by a model afterwards.
@@ -1483,6 +1503,16 @@ All variants ship behind flags and the user can switch between them in settings.
   The cells gallery and fade work on paged whole-slide results because the chunk schema carries probabilities.
   Done when E2E reviews cells on a 1M-nucleus paged result.
   Depends on AINUC-003.
+
+- [ ] REVIEW-016 · Your call on an area
+  Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call fills the report, ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before sign-out. Marking the lead area Not tumor hands the category to the next largest.
+  Done when component tests cover the three calls and toggling off, and API tests persist the call with the reviewer and time and write it to the audit log.
+  Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+
+- [ ] REVIEW-017 · Tumor share verdict for cellularity cases
+  The doc 33 verdict (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings.
+  Done when unit tests reproduce doc 33's examples and a test confirms the verdict is hidden for a sentinel node case.
+  Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 
@@ -1559,7 +1589,7 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] ANN-015 · Layers tab
   Groups with counts, visibility (A toggles overlays), lock, colour, nested children, group by class, cluster, region or source, target layer for new shapes, Cmd+G group and Cmd+Shift+G ungroup.
   Done when component and interaction tests cover each control. Hidden and locked groups are excluded from hit testing.
-  Refs mock 9, doc 34 §6.
+  Refs mock 10, doc 34 §6.
 
 - [ ] ANN-016 · Grouping rules
   Class, cluster (radius in µm), containment, provenance.
@@ -1623,12 +1653,12 @@ All variants ship behind flags and the user can switch between them in settings.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
-  Done when the measurement categories per specimen (macro over 2 mm, micro 0.2 to 2 mm, ITC under 0.2 mm) are confirmed from current staging guidance and recorded in an ADR.
+  Done when the measurement categories per specimen (macro over 2 mm, micro over 0.2 mm or more than 200 cells, ITC up to 0.2 mm and up to 200 cells) and the pN wording with the (sn) suffix are confirmed from current staging guidance, checked with a pathologist, and recorded in an ADR.
 
 - [ ] MEAS-001 · Ruler tool
   Drag to measure with the value on the line in mono digits, Shift snaps to 45°, double-click snaps to the long axis of the area under the pointer.
   Done when unit tests cover length in µm on slides with different microns per pixel and the long-axis snap.
-  Refs mock 6.
+  Refs mock 7.
 
 - [ ] MEAS-002 · Area and perimeter for closed shapes
   Done when unit tests check areas against analytic shapes.
@@ -1645,6 +1675,11 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] MEAS-005 · Units setting
   µm and mm automatically or always µm.
   Done when tests cover both settings.
+
+- [ ] MEAS-006 · Measure as a step of the area
+  "Measure" in the area panel opens the ruler at a magnification where the whole area fits, already drawn along the area's long axis for the doctor to adjust. The panel compares the value with the AI size (within the evaluated range is normal, outside it asks for a check), the value replaces the AI size in the panel, the area list and the size scale, and the largest measurement feeds MEAS-004.
+  Done when E2E measures the lead area, the hero settles, and a unit test computes the pre-drawn line from an area outline.
+  Depends on MEAS-001, AITUM-003. Refs mock 7, kit W21, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 
@@ -1664,7 +1699,7 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] COLLAB-003 · Comment tool and pins
   C places a pin and opens the composer, Enter posts, Shift+Enter adds a line. Pins show initials, store an offset relative to their target, follow and hide with their shape, and are draggable with undo.
   Done when interaction tests cover placing, dragging and following a moved shape.
-  Refs doc 15, mock 10.
+  Refs doc 15, mock 11.
 
 - [ ] COLLAB-004 · Thread popover
   Title, resolve, close, messages with relative time, reply field, measurement embed.
@@ -1724,8 +1759,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when tests cover cursor mapping with offsets.
 
 - [ ] CMP-004 · Pane slide picker
-  Pick any slide of the case per pane from the tray.
-  Done when E2E opens H&E and IHC side by side from the tray.
+  Each pane is labelled Left or Right with a chip naming its slide. The chip opens a list of the case's slides. Picking the slide shown on the other side swaps the two. The inspector repeats the two slots with Change buttons and Swap sides.
+  Done when E2E puts A2 next to A1 from a pane chip and from the inspector, and a test confirms the swap rule.
+  Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] CMP-005 · Rotation support
   Rotate a pane for alignment, off by default for input devices.
@@ -1734,6 +1770,11 @@ All variants ship behind flags and the user can switch between them in settings.
 - [ ] CMP-006 · Semi-automatic alignment
   Optional coarse registration from thumbnails to propose an initial offset.
   Done when a test aligns two serial-section fixtures within a tolerance, or an ADR defers it.
+
+- [ ] CMP-007 · Compare entry points and per-side layers
+  "Side by side" on any slide in the slides popover opens it next to the current one. "Compare slides" opens the screen with the right-side picker already open. Layers (tumor map outline, measurements, comments) are chosen per side.
+  Done when E2E opens a pair from each entry point and a golden test shows an overlay on one side only.
+  Depends on CASE-002. Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 
@@ -1752,8 +1793,8 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when unit tests evaluate conditions and computed fields.
 
 - [ ] REPORT-003 · Sentinel lymph node template
-  Specimen, nodes examined, nodes with tumor, largest deposit, category, extranodal extension, AI used.
-  Done when tests fill the template from seeded findings and the category is computed from the largest deposit.
+  Specimen, nodes examined, nodes with metastasis, largest deposit, tumor cells in it when it is 0.2 mm or less, category, suggested pN with the (sn) suffix (editable), extranodal extension, AI used. A missing value reads "not measured yet" or "after the category", never a guess.
+  Done when tests fill the template from seeded findings, the category and pN are computed from the largest deposit and its count, and missing values render as pending.
   Refs mock §2.19.
 
 - [ ] REPORT-004 · Prefill from confirmed findings
@@ -1765,7 +1806,7 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when component tests cover editing and validation.
 
 - [ ] REPORT-006 · Before-signing checklist
-  All AI areas looked at, at 10× or more, tissue viewed percentage, uncertain cells checked and verdict settled, open threads as a warning. Incomplete items link to "go to unseen tissue".
+  Category settled from the largest area, areas confirmed or marked as unable to change the category, unsure areas as a warning, tissue viewed percentage, open threads as a warning. Incomplete items link to the area or to "go to unseen tissue".
   Done when unit tests compute the checklist from coverage and review data and E2E follows a "go to unseen" link.
 
 - [ ] REPORT-007 · AI disclosure
@@ -1871,7 +1912,7 @@ All variants ship behind flags and the user can switch between them in settings.
 
 - [ ] AIP-004 · Model tier picker
   The picker dialog in Annotate and the tier chip in Review.
-  Done when component tests match mock 9 "choosing a model".
+  Done when component tests match mock 10 "choosing a model".
 
 - [ ] AIP-005 · Validation mapping per site and specimen
   Which models are validated for which specimen types at which site. An unvalidated combination drives the "not validated" state.
@@ -2058,6 +2099,11 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when the job processes a CAMELYON16 slide on the chosen GPU in under one hour (POC laptop estimate: ten hours), recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 20 §2.5.
 
+- [ ] AINUC-012 · Tumor cell count per area
+  Count tumor-typed nuclei inside an area outline, with the expected-mistakes range from calibrated probabilities, for clusters at or under 0.2 mm where 200 cells decide between isolated tumor cells and a micrometastasis. Uses the 64 px tumor map cells or nuclei, never the coarse 256 px map, for clusters this small.
+  Done when unit tests count seeded nuclei inside outlines with the range, and an evaluation against a pathologist's counts on small clusters is recorded as a result file or the gap is filed as a TODO.
+  Depends on AINUC-006, AITUM-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+
 ---
 
 ## 24 AITUM · Tumor and region maps
@@ -2076,8 +2122,9 @@ All variants ship behind flags and the user can switch between them in settings.
   Done when golden tests cover colormaps and threshold.
 
 - [ ] AITUM-003 · Areas from the tumor map
-  Threshold, connected components, outlines, size across in mm, category.
-  Done when tests on the reference slide produce areas matching the ground truth within tolerance.
+  Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
+  Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
+  Refs doc 36, [`poc/src/segment/tumor-areas.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/tumor-areas.ts), [`poc/scripts/tumor-areas.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tumor-areas.mjs), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] AITUM-004 · View-scoped map on demand
   Compute the map for the current view when no whole-slide map exists.
@@ -2194,7 +2241,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm each setting changes the UI live.
 
 - [ ] SET-004 · Layout section
-  Tools rail or dock with previews, side panel width and hide, panel while moving, minimap mode, slide tray.
+  Tools rail or dock with previews, side panel width and hide, panel while moving, minimap mode, pinned slide strip (off by default, CASE-002).
   Done when tests cover each setting.
 
 - [ ] SET-005 · AI and confidence section
@@ -2244,12 +2291,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] CMD-002 · Command palette
   Cmd+K from everywhere, fuzzy search over actions, places (areas, cases) and settings, grouped results with keys shown, Enter runs the first, lab actions only in developer mode.
   Done when E2E finds and runs an action, a place and a setting.
-  Refs mock 15.
+  Refs mock 16.
 
 - [ ] CMD-003 · Shortcut sheet
   `?` opens a searchable sheet with Navigate, Review and Tools columns and a source badge per key (clinical, Figma, QuPath, ours), generated from the registry.
   Done when a test confirms every registered action appears on the sheet.
-  Refs mock 18.
+  Refs mock 19.
 
 - [ ] CMD-004 · Key conflict check
   CI fails when two actions in overlapping scopes share a key. Resolves the Shift+L conflict between arrow and compare unlink, and P between polygon and worklist preview by scope.
@@ -2376,8 +2423,13 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] EXP-008 · Moderated test support
   A study mode that loads public slides (CAMELYON16) with scripted tasks and records timing, for the usability plan in the kit.
-  Done when the eight kit test tasks can run end to end in study mode.
+  Done when the ten pilot tasks in the kit test plan can run end to end in study mode, with the task set editable without a deploy.
   Refs kit Usability test plan, [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study).
+
+- [ ] EXP-009 · Study session replay
+  In study mode only, record the screen as a DOM recording plus a pointer and key log, with every text field masked. Serve the recorder from our own origin under a neutral name and warn on the start screen when it did not load, because ad blockers block session-recording scripts by URL. Upload in batches at task boundaries and every minute, not every few seconds, because each upload is a storage write. Results show a replay with task chips, a strip of task spans, dead clicks and reloads, and a pointer-only fallback that rebuilds screens from the logged state when the DOM recording is missing.
+  Done when E2E records a scripted session and replays it with task jumps, a blocked recorder produces the start-screen warning and a working pointer-only replay, and a test confirms no unmasked text reaches the recording.
+  Depends on EXP-008. Refs [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 ---
 

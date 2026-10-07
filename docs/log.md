@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-07
+
+- Brought the backlog in line with prototype round 2 ([ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), Proposed). The hi-fi mock (version 13) and UX kit (version 8) now have a quiet case top bar with popovers, an upload window with per-file case matching and fixes, findings that lead with the largest deposit and ask "is it tumor, how big, how many cells" in order, a labelled compare picker and a clickable minimap. Edited 20 tasks and added CASE-013, REVIEW-016, REVIEW-017, MEAS-006, CMP-007, AINUC-012, INGEST-021, INGEST-022 and EXP-009, so the backlog now holds 531 tasks. The mock gained an Upload slides step at 3, so every `mock N` from Case at low power onwards was renumbered. The area rule comes from POC doc 36, which sized the largest tumor_009 deposit at 8.1 mm against the annotated 8.1 mm, on a training slide. Surprise from the pilot: an ad blocker blocked the study's session recorder, and per-five-second uploads would have used the free storage plan after about eight participants, which EXP-009 now covers.
+
 ## 2026-10-06
 
 - FOUND-007 done. The `ci` workflow now has `lint`, `typecheck` and `test` jobs with a shared setup action and a `ci-ok` job that requires all three, merged through pull request #1. With the owner's go-ahead, added the ruleset "main requires ci-ok" with admin bypass and required approval for workflows from outside contributors. Draft pull request #2 broke one unit test, and GitHub blocked its merge until it was closed unmerged. The API contract check and image builds were split into FOUND-018. No self-hosted runner was connected ([ADR 0011](adr/0011-hosted-ci-only.md)).
