@@ -36,4 +36,6 @@ pnpm typecheck
 pnpm check
 ```
 
+`pnpm fixtures` fetches the small slide fixtures into `~/.cache/parfocal/fixtures` and checks their SHA-256. Name other groups to fetch more, and set `PARFOCAL_FIXTURES_LOCAL` in `.env` to link slides already on disk instead of downloading them ([packages/test-fixtures](packages/test-fixtures/README.md)).
+
 `pnpm check` runs Biome, type-aware Oxlint, Ruff lint and the Ruff format check. `pnpm secrets` scans the git history for secrets. `pnpm typecheck` runs TypeScript and basedpyright in every package, strict for `apps/api` and `packages/py-common` and standard for `workers/*`. `pnpm test` runs Node's test runner and pytest. `uv run pytest` also runs every Python test from the root. The tools are chosen in [ADR 0006](docs/adr/0006-monorepo-tooling.md), [ADR 0007](docs/adr/0007-python-tooling.md) and [ADR 0008](docs/adr/0008-typescript-internal-packages.md). Turborepo runs the TypeScript and Python tasks in one graph. Each Python package has a small `package.json` whose scripts call uv.

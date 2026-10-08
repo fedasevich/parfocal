@@ -13,6 +13,7 @@
     "typecheck": "turbo run typecheck && tsc --noEmit -p scripts",
     "check": "biome check . && oxlint --type-aware && uv run ruff check && uv run ruff format --check",
     "secrets": "betterleaks git . --redact --no-banner",
+    "fixtures": "node --env-file-if-exists=.env packages/test-fixtures/src/cli.ts",
     "format": "biome format --write . && uv run ruff format"
   },
   "devDependencies": {

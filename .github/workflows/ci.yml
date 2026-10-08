@@ -54,6 +54,11 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: test
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+      - run: pnpm fixtures
       - run: pnpm turbo run test --cache-dir=.turbo/cache
 
   ci-ok:

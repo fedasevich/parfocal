@@ -1,0 +1,212 @@
+{
+  "remote": [
+    {
+      "file": "CMU-1-Small-Region.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1-Small-Region.svs",
+      "sha256": "ed92d5a9f2e86df67640d6f92ce3e231419ce127131697fbbce42ad5e002c8a7",
+      "bytes": 1938955,
+      "groups": ["small"]
+    },
+    {
+      "file": "CMU-1-Saved-1_16.zip",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Mirax/CMU-1-Saved-1_16.zip",
+      "sha256": "5bf66d612475e30bdc46e0f16e8e88558e02fb1fd3cb83bfd804366462b842bc",
+      "bytes": 3754715,
+      "groups": ["small"]
+    },
+    {
+      "file": "CMU-1.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1.svs",
+      "sha256": "00a3d54482cd707abf254fe69dccc8d06b8ff757a1663f1290c23418c480eb30",
+      "bytes": 177552579,
+      "groups": ["formats"]
+    },
+    {
+      "file": "CMU-1.tiff",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Generic-TIFF/CMU-1.tiff",
+      "sha256": "73a7e89bc15576587c3d68e55d9bf92f09690280166240b48ff4b48230b13bcd",
+      "bytes": 204117846,
+      "groups": ["formats"]
+    },
+    {
+      "file": "JP2K-33003-1.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/JP2K-33003-1.svs",
+      "sha256": "6205ccf75a8fa6c32df7c5c04b7377398971a490fb6b320d50d91f7ba6a0e6fd",
+      "bytes": 63847265,
+      "groups": ["formats"]
+    },
+    {
+      "file": "CMU-1-JP2K-33005.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1-JP2K-33005.svs",
+      "sha256": "9a1923cd9bcb260ba4d99d64f8d6e32550648c332ba48817f920662f3a513420",
+      "bytes": 132565343,
+      "groups": ["formats"]
+    },
+    {
+      "file": "CMU-1.ndpi",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Hamamatsu/CMU-1.ndpi",
+      "sha256": "edf4a1ccf395c7000ae93ad3b44c07d97043810e00be0c1d167dd09bbe436e46",
+      "bytes": 198030965,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Leica-1.scn",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Leica/Leica-1.scn",
+      "sha256": "63a3c00fef5215497a9725cf19092a93f7f5ff855ce8561af74b087631831a97",
+      "bytes": 291812870,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Ventana-1.bif",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Ventana/Ventana-1.bif",
+      "sha256": "2eb05cd8f628c36408c3fde09beeeebaaae90181c4f840d5475ec7594bdcbbb6",
+      "bytes": 227377284,
+      "groups": ["formats"]
+    },
+    {
+      "file": "CMU-1-JP2K-33005-v2.zip",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/DICOM/CMU-1-JP2K-33005-v2.zip",
+      "sha256": "c43d3ae4f5f14cf801ff4178825b4450dcaa8270d8ee1e574efef3140264fb7a",
+      "bytes": 127346479,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Huron-1-40x.tif",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Huron/Huron-1-40x.tif",
+      "sha256": "8ff6a75066d6325b1df2ecdeaaa2adf026b13082dc3673319a1788ef12978094",
+      "bytes": 115718398,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Huron-1-Uncompressed.tif",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Huron/Huron-1-Uncompressed.tif",
+      "sha256": "c67bc0dc203bbb0acf72f843c05b84d52538307165baa7b2bb9d3d3ec05f450d",
+      "bytes": 213728696,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Argos-1.avs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Argos/Argos-1.avs",
+      "sha256": "3b68b5be6270344ad1823bb6c74c242d60493be90926002f6cdf6e96ca8ff28d",
+      "bytes": 93458691,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Philips-4.tiff",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Philips-TIFF/Philips-4.tiff",
+      "sha256": "6a743d3bbf721a63f1fc2920f41ddcca43571346665114c6827e63efe034a0b0",
+      "bytes": 290991342,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Zeiss-5-Flat.czi",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Zeiss/Zeiss-5-Flat.czi",
+      "sha256": "99fb7fba0b289933d765c7051b07998783029b155a9795c0eae81a5250ee3c1e",
+      "bytes": 52281408,
+      "groups": ["formats"]
+    },
+    {
+      "file": "Leica-4.zip",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/DICOM/Leica-4.zip",
+      "sha256": "71bd6db778d8565b28aa358d1abce0c55985c149183630c2ed31d1f8757185bb",
+      "bytes": 85348848,
+      "groups": ["formats"]
+    },
+    {
+      "file": "CMU-2.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-2.svs",
+      "sha256": "fb6df83bfd91a252185c9652aebeb00deff84e49329f7ff8f75744f31f475b08",
+      "bytes": 390750635,
+      "groups": ["big"]
+    },
+    {
+      "file": "JP2K-33003-2.svs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/JP2K-33003-2.svs",
+      "sha256": "1a13cef86b55b51127cebd94a1f6069f7de494c98e3e708640d1ce7181d9e3fd",
+      "bytes": 289250433,
+      "groups": ["big"]
+    },
+    {
+      "file": "Argos-1-Stacked.avs",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Argos/Argos-1-Stacked.avs",
+      "sha256": "1b88645342040b62bb3c3feaa1db76f9419cd7749327690b1221475a4d04c34a",
+      "bytes": 460096120,
+      "groups": ["big"]
+    },
+    {
+      "file": "OS-1.ndpi",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Hamamatsu/OS-1.ndpi",
+      "sha256": "5c78bb466a47c7242e6256ccdd14a8a0ced66088cf39b91d33622990afffed1e",
+      "bytes": 1992269307,
+      "groups": ["big"]
+    },
+    {
+      "file": "Leica-3.scn",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Leica/Leica-3.scn",
+      "sha256": "5ec8867f3edf90e685b8436e515bc24dbbefae545fb556dab568d7691592849b",
+      "bytes": 2993595082,
+      "groups": ["big"]
+    },
+    {
+      "file": "Philips-3.tiff",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Philips-TIFF/Philips-3.tiff",
+      "sha256": "01b1513bfb09718d270ec02b75985b0ee32091ba2cb50d286e760bab9534ddf1",
+      "bytes": 3305342358,
+      "groups": ["big"]
+    },
+    {
+      "file": "OS-1.bif",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Ventana/OS-1.bif",
+      "sha256": "c07e2f98d7653639ed7e064531648bc44f2aa4bb021f79253cec9d5b018fbdd4",
+      "bytes": 3871468922,
+      "groups": ["big"]
+    },
+    {
+      "file": "Hamamatsu-1.ndpi",
+      "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Hamamatsu/Hamamatsu-1.ndpi",
+      "sha256": "6a2afb9332fbf88415a24e9dd898150acfedf87ca0991920183e6cbc8f19b2fa",
+      "bytes": 6901027524,
+      "groups": ["huge"]
+    },
+    {
+      "file": "tumor_009.xml",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/annotations/tumor_009.xml",
+      "sha256": "89e9a3cf398df8f32d14c9885da1f6c88f70b4517139533cfd7c17f65d1e9613",
+      "bytes": 620740,
+      "groups": ["small", "camelyon"]
+    },
+    {
+      "file": "test_001.xml",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/annotations/test_001.xml",
+      "sha256": "b487308cb057d064891d082a3f088aa0a7cc260a95e9879c141bf8244ff29e67",
+      "bytes": 281405,
+      "groups": ["small", "camelyon"]
+    },
+    {
+      "file": "tumor_009.tif",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/tumor_009.tif",
+      "sha256": "55b9967443a77977bc62e2368a13878feb8cc177119afbcf3c11a3d29203f89e",
+      "bytes": 2466318858,
+      "groups": ["camelyon"]
+    },
+    {
+      "file": "test_001.tif",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/test_001.tif",
+      "sha256": "eda774b4f9f44eba0aead16a5fdf27a9452b7769f569b553d330ff7fc6719f0e",
+      "bytes": 1142160268,
+      "groups": ["camelyon"]
+    }
+  ],
+  "synthetic": [
+    {
+      "file": "synthetic-jpeg.tiff",
+      "sha256": "6ece7d0a8b99a0267858807a707b91121888e460d4be617bd78ec7c80017c5ba",
+      "bytes": 87497
+    },
+    {
+      "file": "synthetic-zlib.ome.tiff",
+      "sha256": "c0692f322518704a57a34dbf218a3582b00fb5fe1c575d8e4f0cf8b0f6af6bcb",
+      "bytes": 37003
+    }
+  ]
+}

@@ -78,6 +78,7 @@ tmp/
 *.ome.tif
 *.ome.tiff
 *.zarr/
+!packages/test-fixtures/synthetic/**
 *.onnx
 *.pt
 *.pth

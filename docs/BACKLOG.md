@@ -401,9 +401,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a migration test upgrades and downgrades an empty database in CI.
   Depends on STACK-020.
 
-- [ ] FOUND-014 · Dependency and licence scanning
+- [ ] FOUND-014 · Dependency and licence scanning (on hold)
   Renovate or Dependabot, `pip-audit`, `pnpm audit`, licence allowlist for npm and PyPI.
   Done when a disallowed licence in a test dependency fails CI.
+  On hold since 2026-10-08. The owner does not need licence checks or dependency update automation for now. Notes for when it resumes are in the log entry of that date.
 
 - [ ] FOUND-015 · Container images
   Modal image definitions for the API, ingest and ML (CUDA base) functions with pinned versions, plus a multi-stage Dockerfile for the API so it can run on another host ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The web app is static assets on Cloudflare. Non-root, pinned digests, SBOM output.
@@ -412,6 +413,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] FOUND-016 · Shared test fixtures package
   `packages/test-fixtures` documents how to fetch large fixtures (CMU-1 family, CAMELYON16 tumor_009 and test_001, OpenSlide corpus) into a cache, plus tiny synthetic slides committed in the repo.
   Done when `pnpm fixtures` downloads with checksums and CI caches them.
+  `PARFOCAL_FIXTURES_LOCAL` links verified slides already on disk, such as the POC's copies, instead of downloading them.
   Refs [`poc/scripts/fetch-formats.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/fetch-formats.mjs), [`poc/scripts/fetch-camelyon.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/fetch-camelyon.mjs).
 
 - [ ] FOUND-017 · Release versioning and changelog
