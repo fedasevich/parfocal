@@ -23,3 +23,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0015](0015-vite-build-tool.md) | Vite 8 as the build tool and dev server | Accepted | 2026-10-08 |
 | [0016](0016-react-19-spa-compiler-strictmode.md) | React 19 SPA with React Compiler, and StrictMode around the viewer | Accepted | 2026-10-08 |
 | [0017](0017-orval-api-client.md) | Orval generates the typed API client from FastAPI's OpenAPI 3.1 | Accepted | 2026-10-08 |
+| [0018](0018-postgres-sqlalchemy-rls.md) | Postgres 17 with PostGIS, SQLAlchemy 2.1 on asyncpg, Alembic and row-level security per transaction | Accepted | 2026-10-08 |

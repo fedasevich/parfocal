@@ -250,6 +250,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: PostgreSQL 17 with PostGIS. ORM: SQLAlchemy 2.0 async with Alembic, SQLModel, Piccolo. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostgreSQL 17 plus PostGIS on Neon, SQLAlchemy 2.0 async, Alembic, asyncpg, Neon's built-in PgBouncer pooler in transaction mode with tenant context set by `SET LOCAL` inside each transaction. Docker `postgis/postgis:17` locally and a Neon branch per preview.
   Done when the ADR covers row-level security for tenancy (STACK-023), bulk inserts for AI output through COPY, autovacuum tuning for annotation tables, asyncpg behaviour behind the pooler, and picks the Neon region with the lowest measured latency from Modal's API containers.
   Refs Cytomine and EXACT reports in [`poc/docs/presentation2`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation2) (PostGIS bloat, bulk insert costs).
+  Decided in [ADR 0018](adr/0018-postgres-sqlalchemy-rls.md) except the Neon region, which needs a measurement from Modal once the cloud is back.
 
 - [ ] STACK-021 · Annotation and AI result storage model
   Options: PostGIS rows for human annotations plus columnar chunk files in object storage for model output (the POC split), everything in PostGIS, GeoParquet or FlatGeobuf files per job. Default: the split. Human annotations go in PostGIS with an append-only version table. Model output is stored as typed-array chunks per job tile in object storage with a summary index, and FlatGeobuf is used for export.
