@@ -395,7 +395,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on STACK-032.
 
 - [ ] FOUND-012 · Error handling conventions
-  RFC 9457 problem details in the API, a typed error mapping in the client, and user-facing error toasts without stack traces.
+  RFC 9457 problem details in the API and a typed error mapping in the client. The user-facing toasts moved to FOUND-019 because the UI is not final.
   Done when contract tests cover 400, 401, 403, 404, 409 and 422 shapes.
 
 - [ ] FOUND-013 · Database baseline and migrations
@@ -421,6 +421,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [x] FOUND-017 · Release versioning and changelog
   Done when conventional commits are enforced and a changelog is generated per release tag.
   Conventional Commits with the backlog ID as scope, commitlint and a local git-cliff release ([ADR 0014](adr/0014-conventional-commits-and-releases.md)).
+
+- [ ] FOUND-019 · User-facing error toasts
+  Split from FOUND-012. Show `ApiError` kinds from `@parfocal/api-client` as toasts or inline field errors in the kit's style, never with stack traces or server detail meant for logs.
+  Done when component tests cover each error kind and an axe check passes.
+  Depends on FOUND-012 and the final UI shell.
 
 - [ ] FOUND-018 · Contract check and image builds in CI
   Split from FOUND-007. Add the API contract and generated-client check and the web, API and Modal image builds as jobs that `ci-ok` requires.
