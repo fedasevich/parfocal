@@ -34,6 +34,10 @@ Resend's free plan allows 100 emails a day and sending pauses at the limit. Only
 
 Setting `region=` on a Modal function needs the Team plan ($250 a month) and adds a 1.5x multiplier for broad regions and 1.75x for narrow ones. On lower plans Modal chooses where containers run, so latency from the API to Neon must be measured, not assumed. Source: https://modal.com/docs/guide/region-selection and ADR 0003.
 
+## Local only until the owner fixes the cloud
+
+Since 2026-10-08 the owner has asked that nothing touch the cloud: no Modal deploys or runs, no Neon branches, no OpenTofu applies and no staging or production deploys. The owner is fixing the cloud side. Build and test against local services, write `TODO` for numbers that need the cloud, and ask before touching it again.
+
 ## Modal stops deploys at the workspace spend limit
 
 On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its spend limit" before building anything. Deploys and runs in every environment stop until the owner raises the limit or the billing period resets, so CI deploys to Modal would fail the same way. Source: STACK-019 log entry.

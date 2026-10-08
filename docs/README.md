@@ -10,13 +10,12 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 ## Next up
 
-The owner asked for the walking skeleton's backend and infrastructure next, without UI work, because the UI is not final.
+Work stays local until the owner fixes the cloud side. No Modal, Neon, staging or production changes, see [knowledge/platform.md](knowledge/platform.md). The UI is not final, so no UI work either.
 
-1. STACK-008 waits for [ADR 0017](adr/0017-orval-api-client.md) (Orval) to be accepted. STACK-019 is blocked until the Modal spend limit is raised, then needs its cold-start and latency numbers. FOUND-008 can start once ADR 0017 is accepted.
-2. STACK-020 (database, ORM, migrations and row-level security on Neon) needs Neon credentials or Docker running, then FOUND-013. FOUND-010 and FOUND-012 are done. FOUND-019 (error toasts) waits for the final UI.
-3. STACK-028 and STACK-023, then IAM-001 to IAM-003 and CASES-001 for SKEL-002 and SKEL-003.
-4. OPS-001 (DNS, Neon and the policy check are left) and OPS-002 for SKEL-001.
-5. STACK-031 (model licensing) is the largest open risk and can run in parallel. FOUND-014 is on hold.
+1. FOUND-008: OpenAPI from the API and the Orval client in `packages/api-client`, with a contract test.
+2. STACK-020 against local Postgres with PostGIS and PgBouncer in Docker, standing in for Neon and its pooler. The Neon region check stays `TODO`. Then FOUND-013.
+3. STACK-028 and STACK-023, then IAM-003 and CASES-001 against the local database. IAM-001 and IAM-002 need Zitadel and wait for the owner.
+4. STACK-019 needs a Modal run for its cold-start numbers and waits for the owner. FOUND-014 is on hold, and FOUND-019 waits for the final UI.
 
 ## Index
 

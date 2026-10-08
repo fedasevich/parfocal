@@ -1,7 +1,7 @@
 # 0017. Orval generates the typed API client from FastAPI's OpenAPI 3.1
 
 - Date: 2026-10-08
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-008, FOUND-008, FOUND-018
 
