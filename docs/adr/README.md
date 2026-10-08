@@ -25,3 +25,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0017](0017-orval-api-client.md) | Orval generates the typed API client from FastAPI's OpenAPI 3.1 | Accepted | 2026-10-08 |
 | [0018](0018-postgres-sqlalchemy-rls.md) | Postgres 17 with PostGIS, SQLAlchemy 2.1 on asyncpg, Alembic and row-level security per transaction | Accepted | 2026-10-08 |
 | [0019](0019-soft-delete-policy.md) | Soft delete only for user-deletable clinical records, hard delete only by retention jobs | Accepted | 2026-10-08 |
+| [0020](0020-authorization-rls-scopes-and-rbac.md) | Authorization: tenant row-level security, restrictive guest scopes and role permissions in code | Accepted | 2026-10-08 |

@@ -9,3 +9,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-08 | [React Compiler on Vite 8 and a WebGL host under StrictMode](2026-10-08-react-compiler-strictmode-spike.md) | STACK-002 | spike |
 | 2026-10-08 | [OpenAPI 3.1 from FastAPI and typed clients under TypeScript 7](2026-10-08-api-client-codegen-spike.md) | STACK-008, STACK-019 | spike |
 | 2026-10-08 | [Row-level security, a transaction-mode pooler and bulk inserts on local Postgres](2026-10-08-postgres-rls-pooler-spike.md) | STACK-020 | spike |
+| 2026-10-08 | [A restrictive scope policy limits a guest to one case and one view](2026-10-08-guest-scope-rls-spike.md) | STACK-023 | spike |

@@ -262,9 +262,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike runs a three-step workflow that survives a worker restart mid-step and resumes from the last completed tile.
   Refs doc 20 §5 (jobs must survive restart).
 
-- [ ] STACK-023 · Authorization model
+- [x] STACK-023 · Authorization model
   Candidates: application RBAC with PostgreSQL row-level security, OpenFGA or SpiceDB for relationship-based sharing, Cerbos or OPA for policies. Default: RLS for hard tenant isolation, an RBAC permission table for roles, and OpenFGA only if guest links and cross-organisation sharing outgrow plain tables.
   Done when the ADR shows how a guest from organisation B reads one view of one case in organisation A without any other access, with the test plan for it.
+  Decided in [ADR 0020](adr/0020-authorization-rls-scopes-and-rbac.md).
 
 - [ ] STACK-024 · Realtime transport
   Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare Durable Objects with WebSocket Hibernation, one room per case and one per user. Durable Objects carry ephemeral events only and Postgres stays the system of record. FastAPI posts events to a room over an authenticated internal route, and clients refetch on reconnect.
