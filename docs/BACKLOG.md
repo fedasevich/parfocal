@@ -399,7 +399,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   RFC 9457 problem details in the API and a typed error mapping in the client. The user-facing toasts moved to FOUND-019 because the UI is not final.
   Done when contract tests cover 400, 401, 403, 404, 409 and 422 shapes.
 
-- [ ] FOUND-013 · Database baseline and migrations
+- [x] FOUND-013 · Database baseline and migrations
   Alembic set up, naming conventions, `tenant_id` on every tenant-owned table, created and updated timestamps, soft-delete policy decided.
   Soft delete is decided in [ADR 0019](adr/0019-soft-delete-policy.md).
   Done when a migration test upgrades and downgrades an empty database in CI.
