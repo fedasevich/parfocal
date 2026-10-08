@@ -12,10 +12,9 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 Work stays local until the owner fixes the cloud side. No Modal, Neon, staging or production changes, see [knowledge/platform.md](knowledge/platform.md). The UI is not final, so no UI work either.
 
-1. FOUND-008: OpenAPI from the API and the Orval client in `packages/api-client`, with a contract test.
-2. STACK-020 against local Postgres with PostGIS and PgBouncer in Docker, standing in for Neon and its pooler. The Neon region check stays `TODO`. Then FOUND-013.
-3. STACK-028 and STACK-023, then IAM-003 and CASES-001 against the local database. IAM-001 and IAM-002 need Zitadel and wait for the owner.
-4. STACK-019 needs a Modal run for its cold-start numbers and waits for the owner. FOUND-014 is on hold, and FOUND-019 waits for the final UI.
+1. STACK-020 against local Postgres with PostGIS and PgBouncer in Docker, standing in for Neon and its pooler. The Neon region check stays `TODO`. Then FOUND-013.
+2. STACK-028 and STACK-023, then IAM-003 and CASES-001 against the local database. IAM-001 and IAM-002 need Zitadel and wait for the owner.
+3. STACK-019 needs a Modal run for its cold-start numbers and waits for the owner. FOUND-014 is on hold, and FOUND-019 waits for the final UI.
 
 ## Index
 

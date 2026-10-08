@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-08
 
+- FOUND-008 done after CI run 37747925924 passed on `main`, including the regenerate-and-compare step. The first run failed on pnpm's ignored esbuild install script, now denied in `pnpm-workspace.yaml`.
 - FOUND-008 implemented. `pnpm api:generate` exports the API's OpenAPI 3.1 schema to `packages/api-client/openapi.json` and runs Orval, which writes TanStack Query hooks over `apiFetch`, a fetcher that throws `ApiError` for problem responses. A Python contract test compares the served schema with the committed file, a client test drives the generated `getHealth` against a stubbed `fetch`, and the `test` CI job now regenerates and fails when the client is stale. Surprise: Orval writes extensionless imports unless its `tsconfig` option allows `.ts` imports, and Biome reformatted `openapi.json` until it was excluded. FOUND-018 now covers only the image builds.
 - The owner asked to keep away from the cloud until they fix it and to build only what runs locally, recorded in [knowledge/platform.md](knowledge/platform.md). [ADR 0017](adr/0017-orval-api-client.md) was accepted under the owner's standing approval of ADRs that are best for the app, so STACK-008 is done.
 - FOUND-012 done after CI run 37746989164 passed on `main`. The backlog now holds 536 tasks with FOUND-019.

@@ -376,7 +376,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a pull request shows all jobs and a failing unit test blocks merge.
   Depends on STACK-038.
 
-- [ ] FOUND-008 · OpenAPI generation and client codegen pipeline
+- [x] FOUND-008 · OpenAPI generation and client codegen pipeline
   The API emits OpenAPI 3.1, `packages/api-client` is generated from it with Orval ([ADR 0017](adr/0017-orval-api-client.md)), and CI fails when the committed client is stale.
   Done when a contract test proves the served schema equals the committed one.
   Depends on STACK-008, STACK-019.
