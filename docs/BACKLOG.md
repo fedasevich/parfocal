@@ -428,7 +428,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-012 and the final UI shell.
 
 - [ ] FOUND-018 · Contract check and image builds in CI
-  Split from FOUND-007. Add the API contract and generated-client check and the web, API and Modal image builds as jobs that `ci-ok` requires.
+  Split from FOUND-007. Add the web, API and Modal image builds as jobs that `ci-ok` requires. The API contract test and the generated-client check already run in the `test` job since FOUND-008.
   Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
   Depends on FOUND-007, FOUND-008, FOUND-015.
 

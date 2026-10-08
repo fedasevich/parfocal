@@ -67,6 +67,11 @@ jobs:
           key: fixtures-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
       - run: pnpm fixtures
       - run: pnpm turbo run test --cache-dir=.turbo/cache
+      - name: Check the generated API client is current
+        run: |
+          pnpm api:generate
+          git status --porcelain -- packages/api-client
+          test -z "$(git status --porcelain -- packages/api-client)"
 
   ci-ok:
     if: always()

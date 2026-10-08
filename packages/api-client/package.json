@@ -8,12 +8,22 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --test \"test/**/*.test.ts\""
+    "test": "node --test \"test/**/*.test.ts\"",
+    "generate": "orval --config orval.config.ts && biome check --write src/generated"
   },
   "imports": {
     "#*": "./src/*"
   },
   "devDependencies": {
-    "@parfocal/typescript-config": "workspace:*"
+    "@parfocal/typescript-config": "workspace:*",
+    "@types/react": "19.3.0",
+    "orval": "8.40.0",
+    "react": "19.3.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.104.1"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
   }
 }

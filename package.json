@@ -15,7 +15,8 @@
     "secrets": "betterleaks git . --redact --no-banner",
     "fixtures": "node --env-file-if-exists=.env packages/test-fixtures/src/cli.ts",
     "release": "node scripts/release.ts",
-    "format": "biome format --write . && uv run ruff format"
+    "format": "biome format --write . && uv run ruff format",
+    "api:generate": "uv run --package parfocal-api python -m parfocal_api.openapi && pnpm --filter @parfocal/api-client generate"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

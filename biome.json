@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/.terraform.lock.hcl"]
+    "includes": ["**", "!**/.terraform.lock.hcl", "!packages/api-client/openapi.json"]
   },
   "formatter": {
     "indentStyle": "space",

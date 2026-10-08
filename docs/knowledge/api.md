@@ -9,3 +9,9 @@ Every error response has the media type `application/problem+json` and the field
 ## Validation errors never echo input
 
 FastAPI's default 422 body repeats the submitted value in `input`, which could be a patient name. The problem handler keeps only each field's location, message and code. A contract test submits a patient name in an invalid body and checks that it is absent from the response.
+
+## The client is generated, never edited
+
+`pnpm api:generate` writes `packages/api-client/openapi.json` from `create_app` with placeholder settings, then Orval writes `packages/api-client/src/generated/api.ts` and Biome tidies it ([ADR 0017](../adr/0017-orval-api-client.md)). Run it after changing any route or model and commit both files. `test_openapi_contract.py` fails when the served schema differs from the committed file, and the `test` CI job regenerates and fails on any change. Every route needs an explicit `operation_id`, because the generated function names come from it.
+
+Generated calls go through `apiFetch` in `src/fetcher.ts`, which sends the session cookie, returns `{ data, status, headers }` for success and throws an `ApiError` otherwise. Orval only writes `.ts` in its import of the fetcher when its own `tsconfig` option allows `.ts` imports, which `orval.config.ts` sets inline because the package's `tsconfig.json` is solution-style with no compiler options. `openapi.json` is excluded from Biome, which would otherwise reformat it and break the byte-for-byte contract test.
