@@ -17,8 +17,8 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0009](0009-quality-gates.md) | Quality gates: lefthook, betterleaks, type-aware Oxlint rules and solution-style tsconfigs | Accepted | 2026-10-06 |
 | [0010](0010-ci-runners-and-suites.md) | GitHub Actions with hosted runners and a nightly self-hosted Mac GPU runner | Superseded by 0011 | 2026-10-06 |
 | [0011](0011-hosted-ci-only.md) | Hosted CI runners only, no GPU-heavy test suites | Accepted | 2026-10-06 |
-| [0012](0012-ux-round-2-prototype-revisions.md) | Prototype round 2: staging-first findings, quiet top bar, upload window and clearer compare | Proposed | 2026-10-07 |
-| [0013](0013-cell-findings-shortcuts-and-ai-on-upload.md) | Prototype round 3: cell findings from zones of unsure cells, a neutral unsure colour, a shortcut editor and AI steps on upload | Proposed | 2026-10-07 |
-| [0014](0014-conventional-commits-and-releases.md) | Conventional Commits with backlog scopes, and releases cut locally with git-cliff | Proposed | 2026-10-08 |
-| [0015](0015-vite-build-tool.md) | Vite 8 as the build tool and dev server | Proposed | 2026-10-08 |
-| [0016](0016-react-19-spa-compiler-strictmode.md) | React 19 SPA with React Compiler, and StrictMode around the viewer | Proposed | 2026-10-08 |
+| [0012](0012-ux-round-2-prototype-revisions.md) | Prototype round 2: staging-first findings, quiet top bar, upload window and clearer compare | Accepted | 2026-10-07 |
+| [0013](0013-cell-findings-shortcuts-and-ai-on-upload.md) | Prototype round 3: cell findings from zones of unsure cells, a neutral unsure colour, a shortcut editor and AI steps on upload | Accepted | 2026-10-07 |
+| [0014](0014-conventional-commits-and-releases.md) | Conventional Commits with backlog scopes, and releases cut locally with git-cliff | Accepted | 2026-10-08 |
+| [0015](0015-vite-build-tool.md) | Vite 8 as the build tool and dev server | Accepted | 2026-10-08 |
+| [0016](0016-react-19-spa-compiler-strictmode.md) | React 19 SPA with React Compiler, and StrictMode around the viewer | Accepted | 2026-10-08 |

@@ -1,7 +1,7 @@
 # 0015. Vite 8 as the build tool and dev server
 
 - Date: 2026-10-08
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-001
 

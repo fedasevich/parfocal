@@ -156,15 +156,15 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ### Frontend
 
-- [ ] STACK-001 · Build tool and dev server
+- [x] STACK-001 · Build tool and dev server
   Candidates: Vite (Rolldown-based), Rsbuild, Next.js in SPA mode. Default: Vite, because the viewer is a client-heavy SPA with workers and WASM, and the POC already runs on Vite 8.
   Done when an ADR records the choice, worker and WASM bundling are confirmed with a spike that loads an ONNX model and a module worker under COOP and COEP.
-  Refs doc 14 (COOP/COEP), [`poc/vite.config.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/vite.config.ts). Proposed in [ADR 0015](adr/0015-vite-build-tool.md): Vite 8, with plain `server.headers` and `wasmPaths` for onnxruntime-web.
+  Refs doc 14 (COOP/COEP), [`poc/vite.config.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/vite.config.ts). Decided in [ADR 0015](adr/0015-vite-build-tool.md): Vite 8, with plain `server.headers` and `wasmPaths` for onnxruntime-web.
 
-- [ ] STACK-002 · React version and rendering mode
+- [x] STACK-002 · React version and rendering mode
   Candidates: React 19 SPA with client rendering, React 19 with a server framework (Next.js, React Router framework mode). Default: React 19 SPA, with React Compiler evaluated. Server rendering brings little because every screen is authenticated and canvas-heavy.
   Done when the ADR records the React version, whether React Compiler is on, and the StrictMode policy for the viewer canvas.
-  Proposed in [ADR 0016](adr/0016-react-19-spa-compiler-strictmode.md): React 19.3 SPA, React Compiler on, StrictMode on with a viewer host that fully destroys its engine.
+  Decided in [ADR 0016](adr/0016-react-19-spa-compiler-strictmode.md): React 19.3 SPA, React Compiler on, StrictMode on with a viewer host that fully destroys its engine.
 
 - [ ] STACK-003 · Routing
   Candidates: TanStack Router, React Router 7 (library mode). Default: TanStack Router for fully typed routes and search params. That matters because worklist filters, case view state and deep links to a view all live in the URL.
@@ -417,7 +417,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   `PARFOCAL_FIXTURES_LOCAL` links verified slides already on disk, such as the POC's copies, instead of downloading them.
   Refs [`poc/scripts/fetch-formats.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/fetch-formats.mjs), [`poc/scripts/fetch-camelyon.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/fetch-camelyon.mjs).
 
-- [ ] FOUND-017 · Release versioning and changelog
+- [x] FOUND-017 · Release versioning and changelog
   Done when conventional commits are enforced and a changelog is generated per release tag.
   Conventional Commits with the backlog ID as scope, commitlint and a local git-cliff release ([ADR 0014](adr/0014-conventional-commits-and-releases.md)).
 

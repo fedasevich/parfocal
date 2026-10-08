@@ -1,7 +1,7 @@
 # 0013. Prototype round 3: cell findings from zones of unsure cells, a neutral unsure colour, a shortcut editor and AI steps on upload
 
 - Date: 2026-10-07
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: edits REVIEW-002, REVIEW-005, REVIEW-006, REVIEW-007, REVIEW-009, REVIEW-012, REVIEW-017, DS-001, DS-002, DS-012, AILEARN-003, AIP-011, SET-007, CMD-003, CMD-006, INGEST-021 and EXP-008. Adds REVIEW-018, REVIEW-019, INGEST-023 and INGEST-024.
 

@@ -1,7 +1,7 @@
 # 0016. React 19 SPA with React Compiler, and StrictMode around the viewer
 
 - Date: 2026-10-08
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-002
 

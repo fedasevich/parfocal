@@ -10,10 +10,13 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 ## Next up
 
-1. FOUND-001 to FOUND-007 are done. FOUND-018 (contract check and image builds in CI) waits for FOUND-008 and FOUND-015.
-2. FOUND-016 (shared test fixtures) is done. FOUND-017 (release versioning) is built and waits for [ADR 0014](adr/0014-conventional-commits-and-releases.md) to be accepted. FOUND tasks without open dependencies: FOUND-009 (local development) and FOUND-010 (configuration). FOUND-014 is on hold.
-3. The remaining M0 STACK slots. STACK-001 and STACK-002 wait for [ADR 0015](adr/0015-vite-build-tool.md) and [ADR 0016](adr/0016-react-19-spa-compiler-strictmode.md) to be accepted. Next are STACK-008 with STACK-019, then the platform spikes that can overturn ADR 0003 (STACK-020, STACK-025).
-4. STACK-031 (model licensing) is the largest open risk and can run in parallel.
+The owner asked for the walking skeleton's backend and infrastructure next, without UI work, because the UI is not final.
+
+1. STACK-019 with STACK-008: FastAPI on Modal serving an authenticated, tenant-scoped endpoint, its OpenAPI and a generated client, with cold-start and latency numbers. Then FOUND-008.
+2. STACK-020 (database, ORM, migrations and row-level security on Neon), then FOUND-013 and FOUND-010.
+3. STACK-028 and STACK-023, then IAM-001 to IAM-003 and CASES-001 for SKEL-002 and SKEL-003.
+4. OPS-001 (DNS, Neon and the policy check are left) and OPS-002 for SKEL-001.
+5. STACK-031 (model licensing) is the largest open risk and can run in parallel. FOUND-014 is on hold.
 
 ## Index
 

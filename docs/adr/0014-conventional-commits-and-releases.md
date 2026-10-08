@@ -1,7 +1,7 @@
 # 0014. Conventional Commits with backlog scopes, and releases cut locally with git-cliff
 
 - Date: 2026-10-08
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: FOUND-017
 

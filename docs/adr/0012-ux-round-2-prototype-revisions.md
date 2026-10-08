@@ -1,7 +1,7 @@
 # 0012. Prototype round 2: staging-first findings, quiet top bar, upload window and clearer compare
 
 - Date: 2026-10-07
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: edits SHELL-003, CASE-002, CASE-004, CASE-011, NAV-004, NAV-008, NAV-010, REVIEW-002, REVIEW-003, REVIEW-004, REVIEW-008, DS-012, MEAS-000, CMP-004, REPORT-003, REPORT-006, AITUM-003, INGEST-002, EXP-008, SET-004 and the mock numbering in "How to use". Adds CASE-013, REVIEW-016, REVIEW-017, MEAS-006, CMP-007, AINUC-012, INGEST-021, INGEST-022 and EXP-009.
 
