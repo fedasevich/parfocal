@@ -164,6 +164,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-002 · React version and rendering mode
   Candidates: React 19 SPA with client rendering, React 19 with a server framework (Next.js, React Router framework mode). Default: React 19 SPA, with React Compiler evaluated. Server rendering brings little because every screen is authenticated and canvas-heavy.
   Done when the ADR records the React version, whether React Compiler is on, and the StrictMode policy for the viewer canvas.
+  Proposed in [ADR 0016](adr/0016-react-19-spa-compiler-strictmode.md): React 19.3 SPA, React Compiler on, StrictMode on with a viewer host that fully destroys its engine.
 
 - [ ] STACK-003 · Routing
   Candidates: TanStack Router, React Router 7 (library mode). Default: TanStack Router for fully typed routes and search params. That matters because worklist filters, case view state and deep links to a view all live in the URL.

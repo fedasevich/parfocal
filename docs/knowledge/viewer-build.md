@@ -22,3 +22,7 @@ The POC needed a middleware plugin for COOP and COEP because `server.headers` sk
 ## Headless Chrome on a Mac has real WebGPU
 
 playwright-core with `channel: "chrome"` drives the installed Chrome without downloading a browser, and with `--enable-unsafe-webgpu` headless pages get the `apple metal-3` adapter. Hosted Linux CI does not, which is why golden images use SwiftShader there ([ADR 0011](../adr/0011-hosted-ci-only.md)).
+
+## StrictMode exposes a leaking canvas host on the first mount
+
+In development StrictMode mounts, unmounts and remounts every effect. A viewer host whose cleanup does not destroy the engine shows two WebGL contexts and two canvases right after the first mount. A production build hides that until Chrome forcibly loses contexts once 16 are alive. Count contexts by wrapping `HTMLCanvasElement.prototype.getContext` and listening for `webglcontextlost`. Source: [STACK-002 spike](../results/2026-10-08-react-compiler-strictmode-spike.md).
