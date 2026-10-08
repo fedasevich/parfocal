@@ -394,7 +394,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a test shows a patient name passed to a logger is redacted.
   Depends on STACK-032.
 
-- [ ] FOUND-012 · Error handling conventions
+- [x] FOUND-012 · Error handling conventions
   RFC 9457 problem details in the API and a typed error mapping in the client. The user-facing toasts moved to FOUND-019 because the UI is not final.
   Done when contract tests cover 400, 401, 403, 404, 409 and 422 shapes.
 
