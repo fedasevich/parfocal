@@ -385,7 +385,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Docker Compose with Postgres plus PostGIS only. The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
 
-- [ ] FOUND-010 · Configuration and settings management
+- [x] FOUND-010 · Configuration and settings management
   Typed settings in Python (pydantic-settings) and a typed runtime config for the web app. No secrets in the frontend bundle. One `APP_ENV` setting (`dev`, `test`, `preview`, `staging`, `prod`) picks the email, error reporting, telemetry export, analytics and flag clients at startup, and only `prod` talks to Resend, Sentry, Grafana Cloud and PostHog ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when a test fails startup on a missing required setting, the web build fails if a non-public variable is referenced, and a test shows that with any `APP_ENV` other than `prod` no client for those services is created.
 

@@ -13,7 +13,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 The owner asked for the walking skeleton's backend and infrastructure next, without UI work, because the UI is not final.
 
 1. STACK-008 waits for [ADR 0017](adr/0017-orval-api-client.md) (Orval) to be accepted. STACK-019 is blocked until the Modal spend limit is raised, then needs its cold-start and latency numbers. FOUND-008 can start once ADR 0017 is accepted.
-2. STACK-020 (database, ORM, migrations and row-level security on Neon) needs Neon credentials or Docker running, then FOUND-013. FOUND-010 is built and is ticked after a green CI run.
+2. STACK-020 (database, ORM, migrations and row-level security on Neon) needs Neon credentials or Docker running, then FOUND-013. FOUND-010 is done.
 3. STACK-028 and STACK-023, then IAM-001 to IAM-003 and CASES-001 for SKEL-002 and SKEL-003.
 4. OPS-001 (DNS, Neon and the policy check are left) and OPS-002 for SKEL-001.
 5. STACK-031 (model licensing) is the largest open risk and can run in parallel. FOUND-014 is on hold.
