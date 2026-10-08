@@ -410,7 +410,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Modal image definitions for the API, ingest and ML (CUDA base) functions with pinned versions, plus a multi-stage Dockerfile for the API so it can run on another host ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The web app is static assets on Cloudflare. Non-root, pinned digests, SBOM output.
   Done when the API image and the Modal images build in CI and a container scan of the API image reports no critical vulnerabilities.
 
-- [ ] FOUND-016 · Shared test fixtures package
+- [x] FOUND-016 · Shared test fixtures package
   `packages/test-fixtures` documents how to fetch large fixtures (CMU-1 family, CAMELYON16 tumor_009 and test_001, OpenSlide corpus) into a cache, plus tiny synthetic slides committed in the repo.
   Done when `pnpm fixtures` downloads with checksums and CI caches them.
   `PARFOCAL_FIXTURES_LOCAL` links verified slides already on disk, such as the POC's copies, instead of downloading them.
