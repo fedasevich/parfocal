@@ -20,3 +20,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0012](0012-ux-round-2-prototype-revisions.md) | Prototype round 2: staging-first findings, quiet top bar, upload window and clearer compare | Proposed | 2026-10-07 |
 | [0013](0013-cell-findings-shortcuts-and-ai-on-upload.md) | Prototype round 3: cell findings from zones of unsure cells, a neutral unsure colour, a shortcut editor and AI steps on upload | Proposed | 2026-10-07 |
 | [0014](0014-conventional-commits-and-releases.md) | Conventional Commits with backlog scopes, and releases cut locally with git-cliff | Proposed | 2026-10-08 |
+| [0015](0015-vite-build-tool.md) | Vite 8 as the build tool and dev server | Proposed | 2026-10-08 |

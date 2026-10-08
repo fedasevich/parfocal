@@ -12,7 +12,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 1. FOUND-001 to FOUND-007 are done. FOUND-018 (contract check and image builds in CI) waits for FOUND-008 and FOUND-015.
 2. FOUND-016 (shared test fixtures) is done. FOUND-017 (release versioning) is built and waits for [ADR 0014](adr/0014-conventional-commits-and-releases.md) to be accepted. FOUND tasks without open dependencies: FOUND-009 (local development) and FOUND-010 (configuration). FOUND-014 is on hold.
-3. The remaining M0 STACK slots, starting with the frontend ones FOUND-008 needs (STACK-001, STACK-002, STACK-008) and the platform spikes that can overturn ADR 0003 (STACK-019, STACK-020, STACK-025).
+3. The remaining M0 STACK slots. STACK-001 waits for [ADR 0015](adr/0015-vite-build-tool.md) to be accepted. Next are STACK-002 and STACK-008, then the platform spikes that can overturn ADR 0003 (STACK-019, STACK-020, STACK-025).
 4. STACK-031 (model licensing) is the largest open risk and can run in parallel.
 
 ## Index

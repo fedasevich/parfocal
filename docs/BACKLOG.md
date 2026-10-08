@@ -159,7 +159,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-001 · Build tool and dev server
   Candidates: Vite (Rolldown-based), Rsbuild, Next.js in SPA mode. Default: Vite, because the viewer is a client-heavy SPA with workers and WASM, and the POC already runs on Vite 8.
   Done when an ADR records the choice, worker and WASM bundling are confirmed with a spike that loads an ONNX model and a module worker under COOP and COEP.
-  Refs doc 14 (COOP/COEP), [`poc/vite.config.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/vite.config.ts).
+  Refs doc 14 (COOP/COEP), [`poc/vite.config.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/vite.config.ts). Proposed in [ADR 0015](adr/0015-vite-build-tool.md): Vite 8, with plain `server.headers` and `wasmPaths` for onnxruntime-web.
 
 - [ ] STACK-002 · React version and rendering mode
   Candidates: React 19 SPA with client rendering, React 19 with a server framework (Next.js, React Router framework mode). Default: React 19 SPA, with React Compiler evaluated. Server rendering brings little because every screen is authenticated and canvas-heavy.

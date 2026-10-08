@@ -14,3 +14,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | OpenTofu setup, credentials and gotchas | [infra.md](infra.md) |
 | pnpm, Turborepo, Biome, TypeScript and uv in this repository | [tooling.md](tooling.md) |
 | Slide fixtures, the local POC link and fixture checksums | [test-fixtures.md](test-fixtures.md) |
+| Vite, workers, WebAssembly and onnxruntime-web in the web build | [viewer-build.md](viewer-build.md) |
