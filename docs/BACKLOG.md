@@ -418,6 +418,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] FOUND-017 · Release versioning and changelog
   Done when conventional commits are enforced and a changelog is generated per release tag.
+  Conventional Commits with the backlog ID as scope, commitlint and a local git-cliff release ([ADR 0014](adr/0014-conventional-commits-and-releases.md)).
 
 - [ ] FOUND-018 · Contract check and image builds in CI
   Split from FOUND-007. Add the API contract and generated-client check and the web, API and Modal image builds as jobs that `ci-ok` requires.

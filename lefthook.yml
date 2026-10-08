@@ -14,3 +14,8 @@ pre-commit:
       stage_fixed: true
     - name: secrets
       run: betterleaks git . --pre-commit --staged --redact --no-banner
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm commitlint --edit {1}

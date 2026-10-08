@@ -14,12 +14,16 @@
     "check": "biome check . && oxlint --type-aware && uv run ruff check && uv run ruff format --check",
     "secrets": "betterleaks git . --redact --no-banner",
     "fixtures": "node --env-file-if-exists=.env packages/test-fixtures/src/cli.ts",
+    "release": "node scripts/release.ts",
     "format": "biome format --write . && uv run ruff format"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@parfocal/typescript-config": "workspace:*",
     "@types/node": "^26.0.0",
+    "git-cliff": "2.14.2",
     "lefthook": "2.1.17",
     "oxlint": "1.87.0",
     "oxlint-tsgolint": "7.0.2003",

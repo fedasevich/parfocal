@@ -101,6 +101,7 @@ Never invent data. Do not make up benchmark numbers, model scores, user quotes, 
 - Read every POC-supported format natively. Convert only when an ADR-recorded trigger fires.
 - No PHI in logs, analytics, test fixtures committed to the repo, or docs.
 - Commit only when the user asks. Do not add attribution lines to commit messages or pull request descriptions.
+- Write commit messages as Conventional Commits with the backlog ID as the scope, such as `feat(FOUND-017): Add release versioning` or `docs(FOUND-016): Tick after a green ci run` ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)). A hook rejects other messages.
 
 ## Code style
 

@@ -65,3 +65,7 @@ pnpm 12 applies a minimum release age before it installs a version, as a supply-
 ## CI jobs and the main ruleset
 
 The `ci` workflow has `lint`, `typecheck` and `test` jobs that share `.github/actions/setup-workspace`, and a `ci-ok` job that fails when any of them fails, is cancelled or is skipped. The repository ruleset "main requires ci-ok" (id 24612221) requires only `ci-ok`, so new jobs are added under `ci-ok`'s `needs` and the ruleset never has to change. Repository admins can bypass the ruleset, which is how direct pushes to `main` keep working. Actions also require approval before workflows run for any outside contributor. Proven on 2026-10-06 by pull request #2, which broke one unit test: `test` and `ci-ok` failed and GitHub reported the merge as blocked.
+
+## Commit messages and releases
+
+lefthook's `commit-msg` hook runs commitlint, so a message without a Conventional Commits type fails before the commit exists. `commitlint.config.js` turns off the case and line-length rules so backlog IDs stay upper case and subjects stay in sentence case ([ADR 0014](../adr/0014-conventional-commits-and-releases.md)). After cloning, `pnpm install` installs the hook through the `prepare` script. A checkout made before FOUND-017 needs `pnpm lefthook install` once to add `commit-msg`. git-cliff reads `cliff.toml` and only counts tags shaped like `vX.Y.Z`. Check `pnpm exec git-cliff --bumped-version` before a release, because it reports the latest tag unchanged when no commit since then is conventional.
