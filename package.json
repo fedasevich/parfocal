@@ -16,7 +16,10 @@
     "fixtures": "node --env-file-if-exists=.env packages/test-fixtures/src/cli.ts",
     "release": "node scripts/release.ts",
     "format": "biome format --write . && uv run ruff format",
-    "api:generate": "uv run --package parfocal-api python -m parfocal_api.openapi && pnpm --filter @parfocal/api-client generate"
+    "api:generate": "uv run --package parfocal-api python -m parfocal_api.openapi && pnpm --filter @parfocal/api-client generate",
+    "db:up": "docker compose up -d --wait",
+    "db:migrate": "uv run --package parfocal-api alembic -c apps/api/alembic.ini upgrade head",
+    "test:db": "docker compose up -d --wait && uv run pytest -m db"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

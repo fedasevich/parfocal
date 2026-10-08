@@ -7,7 +7,7 @@ How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is r
 | Web app | Cloudflare Pages | Vite dev server | Vitest and Playwright |
 | Router, tile gateway, realtime | Workers and Durable Objects | The Cloudflare Vite plugin runs the Worker and Durable Objects locally under `vite dev`, so the app is one origin like production | Miniflare through the Workers Vitest pool |
 | Slide storage | R2 production bucket | R2 `parfocal-dev` bucket, through a remote binding from the Worker and the S3 API from Python | Miniflare's in-memory R2 for Worker unit tests. Python integration tests use `parfocal-dev` with a per-run prefix that is deleted afterwards |
-| Database | Neon | Docker `postgis/postgis:17` | The same container, or the CI service container. Neon Local when a test needs the real pooler |
+| Database | Neon | Docker Compose with `imresamu/postgis:17-3.6.1-alpine3.22` and PgBouncer in transaction mode (`pnpm db:up`) | The same compose stack, in CI as well |
 | Python API | FastAPI on Modal | `uv run uvicorn` | pytest with the FastAPI test client |
 | Jobs | Modal `spawn` and cron | In-process runner behind the same interface | In-process runner with a fake clock |
 | GPU inference | Modal GPU functions | CPU or Apple MPS for small models, or `modal serve` against the dev Modal environment | CPU with tiny fixtures |

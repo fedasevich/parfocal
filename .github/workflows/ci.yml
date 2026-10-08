@@ -73,9 +73,21 @@ jobs:
           git status --porcelain -- packages/api-client
           test -z "$(git status --porcelain -- packages/api-client)"
 
+  db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: db
+      - run: docker compose up -d --wait
+      - run: uv run pytest -m db
+      - if: failure()
+        run: docker compose logs
+
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, db]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"

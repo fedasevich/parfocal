@@ -383,7 +383,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on STACK-008, STACK-019.
 
 - [ ] FOUND-009 · Local development environment
-  Docker Compose with Postgres plus PostGIS only. The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
+  Docker Compose with Postgres plus PostGIS and a PgBouncer in transaction mode like Neon's (the compose file exists since FOUND-013). The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
 
 - [x] FOUND-010 · Configuration and settings management
@@ -401,6 +401,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] FOUND-013 · Database baseline and migrations
   Alembic set up, naming conventions, `tenant_id` on every tenant-owned table, created and updated timestamps, soft-delete policy decided.
+  Soft delete is decided in [ADR 0019](adr/0019-soft-delete-policy.md).
   Done when a migration test upgrades and downgrades an empty database in CI.
   Depends on STACK-020.
 

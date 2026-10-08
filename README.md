@@ -36,6 +36,8 @@ pnpm typecheck
 pnpm check
 ```
 
+`pnpm db:up` starts Postgres with PostGIS and a PgBouncer in Docker, `pnpm db:migrate` applies the migrations and `pnpm test:db` runs the database tests ([knowledge/database.md](docs/knowledge/database.md)).
+
 `pnpm fixtures` fetches the small slide fixtures into `~/.cache/parfocal/fixtures` and checks their SHA-256. Name other groups to fetch more, and set `PARFOCAL_FIXTURES_LOCAL` in `.env` to link slides already on disk instead of downloading them ([packages/test-fixtures](packages/test-fixtures/README.md)).
 
 Commit messages follow Conventional Commits with the backlog ID as the scope, and a lefthook `commit-msg` hook checks them with commitlint. `pnpm release` cuts a release from a clean `main`: it picks the next version from the commits, rewrites `CHANGELOG.md` with git-cliff, commits and tags. `git push --follow-tags origin main` then publishes the GitHub release ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)).

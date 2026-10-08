@@ -1,0 +1,29 @@
+name: parfocal
+
+services:
+  postgres:
+    image: imresamu/postgis:17-3.6.1-alpine3.22
+    environment:
+      POSTGRES_USER: parfocal
+      POSTGRES_DB: parfocal
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports: ["5432:5432"]
+    volumes:
+      - ./infra/local/postgres-init.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parfocal -d parfocal"]
+      interval: 1s
+      retries: 60
+
+  pooler:
+    image: edoburu/pgbouncer:v1.26.0-p0
+    volumes:
+      - ./infra/local/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+    ports: ["6432:5432"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

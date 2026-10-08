@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "FastAPI backend"
 requires-python = ">=3.14,<3.15"
 dependencies = [
+    "alembic>=1.20,<1.21",
     "fastapi>=0.142,<0.143",
     "parfocal-common",
 ]

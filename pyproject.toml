@@ -25,7 +25,8 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PT", "N", "C4",
 known-first-party = ["parfocal_api", "parfocal_common", "parfocal_ingest", "parfocal_ml"]
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib", "-ra"]
+addopts = ["--import-mode=importlib", "-ra", "-m", "not db"]
+markers = ["db: needs the local Postgres and pooler from compose.yaml (pnpm test:db)"]
 pythonpath = ["scripts"]
 testpaths = ["apps/api/tests", "workers/ingest/tests", "workers/ml/tests", "packages/py-common/tests", "scripts"]
 asyncio_mode = "auto"
