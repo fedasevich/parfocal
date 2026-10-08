@@ -19,6 +19,12 @@ How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is r
 
 Credentials for development (the dev bucket and Zitadel) live in a git-ignored `.env`, described by a committed `.env.example`.
 
+## Settings
+
+The API reads its settings from the environment through `ApiSettings` in `apps/api` and refuses to start when `APP_ENV`, `DATABASE_URL` or a Zitadel setting is missing. `select_clients` in `packages/py-common` picks the email, error, telemetry, analytics and flag clients from `APP_ENV`, and the overrides `EMAIL_BACKEND`, `ERROR_BACKEND`, `TELEMETRY_EXPORT`, `ANALYTICS_BACKEND` and `FLAG_BACKEND` switch one concern at a time. Production clients are passed in as factories, and `prod` refuses to start while any of them is missing, which stays true until STACK-032, STACK-033 and STACK-036 add the SDKs. Local flags come from `FLAG_FILE` (default `flags.json`).
+
+The web app only sees variables that start with `PARFOCAL_PUBLIC_`. `PARFOCAL_PUBLIC_APP_ENV` is required and `PARFOCAL_PUBLIC_API_BASE_URL` defaults to `/api`. A Vite plugin in `apps/web/vite/public-env.ts` fails the build or dev server when code reads any other `import.meta.env` name or the object as a whole, so a secret cannot reach the bundle by accident.
+
 ## Unverified
 
 - A Worker under `vite dev` using a remote R2 binding while its Durable Objects stay local. Confirm in FOUND-009.

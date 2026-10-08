@@ -73,3 +73,15 @@ lefthook's `commit-msg` hook runs commitlint, so a message without a Conventiona
 ## Generators built on the TypeScript compiler API break on TypeScript 7
 
 TypeScript 7 is the native Go compiler and its package does not expose the JavaScript compiler API. Tools that build code through it, such as Hey API openapi-ts 0.99, crash with `Cannot read properties of undefined (reading 'AnyKeyword')` when TypeScript 7 is installed. Check a new code generator against `typescript@7` before adopting it. Source: [codegen spike](../results/2026-10-08-api-client-codegen-spike.md).
+
+## Starlette's test client wants httpx2
+
+FastAPI 0.142's `TestClient` warns that using `httpx` is deprecated and asks for `httpx2`, the pydantic team's successor. The root dev group installs `httpx2`. Source: FOUND-010 log entry.
+
+## pydantic's PostgresDsn is a multi-host URL
+
+`PostgresDsn` parses into `MultiHostUrl`, which has `hosts()` instead of `host`. Read the host as `settings.database_url.hosts()[0]["host"]`.
+
+## Calling a settings class without arguments fails basedpyright
+
+pydantic-settings fills required fields from the environment, but basedpyright reports the missing constructor arguments. `load_settings(SettingsClass)` in `parfocal_common.settings` makes that call in one typed place, so no ignore comments are needed.

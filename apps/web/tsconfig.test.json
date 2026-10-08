@@ -2,6 +2,7 @@
   "extends": "@parfocal/typescript-config/node.json",
   "include": ["test"],
   "compilerOptions": {
-    "lib": ["es2024", "dom", "dom.iterable"]
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": ["node", "vite/client"]
   }
 }

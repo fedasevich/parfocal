@@ -1,4 +1,7 @@
 {
   "extends": "@parfocal/typescript-config/browser.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "types": ["vite/client"]
+  }
 }

@@ -7,8 +7,10 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --test \"test/**/*.test.ts\""
+    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.node.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "build": "vite build",
+    "dev": "vite"
   },
   "imports": {
     "#*": "./src/*"
@@ -20,6 +22,7 @@
     "@parfocal/viewer-engine": "workspace:*"
   },
   "devDependencies": {
-    "@parfocal/typescript-config": "workspace:*"
+    "@parfocal/typescript-config": "workspace:*",
+    "vite": "8.3.3"
   }
 }
