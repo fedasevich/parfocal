@@ -22,3 +22,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0014](0014-conventional-commits-and-releases.md) | Conventional Commits with backlog scopes, and releases cut locally with git-cliff | Accepted | 2026-10-08 |
 | [0015](0015-vite-build-tool.md) | Vite 8 as the build tool and dev server | Accepted | 2026-10-08 |
 | [0016](0016-react-19-spa-compiler-strictmode.md) | React 19 SPA with React Compiler, and StrictMode around the viewer | Accepted | 2026-10-08 |
+| [0017](0017-orval-api-client.md) | Orval generates the typed API client from FastAPI's OpenAPI 3.1 | Proposed | 2026-10-08 |

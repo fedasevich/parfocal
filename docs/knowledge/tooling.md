@@ -69,3 +69,7 @@ The `ci` workflow has `lint`, `typecheck` and `test` jobs that share `.github/ac
 ## Commit messages and releases
 
 lefthook's `commit-msg` hook runs commitlint, so a message without a Conventional Commits type fails before the commit exists. `commitlint.config.js` turns off the case and line-length rules so backlog IDs stay upper case and subjects stay in sentence case ([ADR 0014](../adr/0014-conventional-commits-and-releases.md)). After cloning, `pnpm install` installs the hook through the `prepare` script. A checkout made before FOUND-017 needs `pnpm lefthook install` once to add `commit-msg`. git-cliff reads `cliff.toml` and only counts tags shaped like `vX.Y.Z`. Check `pnpm exec git-cliff --bumped-version` before a release, because it reports the latest tag unchanged when no commit since then is conventional.
+
+## Generators built on the TypeScript compiler API break on TypeScript 7
+
+TypeScript 7 is the native Go compiler and its package does not expose the JavaScript compiler API. Tools that build code through it, such as Hey API openapi-ts 0.99, crash with `Cannot read properties of undefined (reading 'AnyKeyword')` when TypeScript 7 is installed. Check a new code generator against `typescript@7` before adopting it. Source: [codegen spike](../results/2026-10-08-api-client-codegen-spike.md).

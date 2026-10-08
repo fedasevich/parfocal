@@ -12,7 +12,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 The owner asked for the walking skeleton's backend and infrastructure next, without UI work, because the UI is not final.
 
-1. STACK-019 with STACK-008: FastAPI on Modal serving an authenticated, tenant-scoped endpoint, its OpenAPI and a generated client, with cold-start and latency numbers. Then FOUND-008.
+1. STACK-008 waits for [ADR 0017](adr/0017-orval-api-client.md) (Orval) to be accepted. STACK-019 is blocked until the Modal spend limit is raised, then needs its cold-start and latency numbers. FOUND-008 can start once ADR 0017 is accepted.
 2. STACK-020 (database, ORM, migrations and row-level security on Neon), then FOUND-013 and FOUND-010.
 3. STACK-028 and STACK-023, then IAM-001 to IAM-003 and CASES-001 for SKEL-002 and SKEL-003.
 4. OPS-001 (DNS, Neon and the policy check are left) and OPS-002 for SKEL-001.

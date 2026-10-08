@@ -33,3 +33,7 @@ Resend's free plan allows 100 emails a day and sending pauses at the limit. Only
 ## Modal region pinning needs the Team plan
 
 Setting `region=` on a Modal function needs the Team plan ($250 a month) and adds a 1.5x multiplier for broad regions and 1.75x for narrow ones. On lower plans Modal chooses where containers run, so latency from the API to Neon must be measured, not assumed. Source: https://modal.com/docs/guide/region-selection and ADR 0003.
+
+## Modal stops deploys at the workspace spend limit
+
+On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its spend limit" before building anything. Deploys and runs in every environment stop until the owner raises the limit or the billing period resets, so CI deploys to Modal would fail the same way. Source: STACK-019 log entry.
