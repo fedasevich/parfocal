@@ -56,7 +56,7 @@ pnpm 12 does not run dependency install scripts unless they are allowed, and pri
 
 ## pnpm 12 fails CI on unapproved build scripts
 
-Locally pnpm only warns about ignored dependency build scripts, but in CI it stops with `ERR_PNPM_IGNORED_BUILDS`. Every dependency with an install script needs an explicit decision in `allowBuilds` in `pnpm-workspace.yaml`, made with `pnpm approve-builds <pkg>` or `pnpm approve-builds '!<pkg>'`. lefthook is denied because the root `prepare` script installs the hooks. Source: FOUND-006 CI run 37536244555.
+Locally pnpm only warns about ignored dependency build scripts, but in CI it stops with `ERR_PNPM_IGNORED_BUILDS`. Every dependency with an install script needs an explicit decision in `allowBuilds` in `pnpm-workspace.yaml`, made with `pnpm approve-builds <pkg>` or `pnpm approve-builds '!<pkg>'`. lefthook is denied because the root `prepare` script installs the hooks. esbuild, which Orval pulls in, is denied because its script only checks the binary that its platform package already ships. Check new dev tools with `CI=true pnpm install --frozen-lockfile` in a fresh clone before pushing. Source: FOUND-006 CI run 37536244555 and FOUND-008 CI run 37747805617.
 
 ## pnpm 12 holds back brand-new releases
 

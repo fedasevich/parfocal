@@ -3,6 +3,7 @@ packages:
   - packages/*
   - workers/*
 allowBuilds:
+  esbuild: false
   lefthook: false
 minimumReleaseAgeExclude:
   - '@cloudflare/workers-types@5.20261006.1'
