@@ -521,7 +521,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   User row linked to the IdP subject, membership per tenant (each workspace is a tenant, [ADR 0024](adr/0024-workspaces-are-tenants.md)), display name, initials, avatar colour, title (MUDr.). A member principal is accepted only with an active membership in its tenant.
   Done when API tests cover membership in two tenants and switching between them.
 
-- [ ] IAM-006 · Roles and permissions
+- [x] IAM-006 · Roles and permissions
   Roles: consultant pathologist, resident, lab lead, lab staff, administrator and outside consultant, with the UX kit's permission matrix ([ADR 0026](adr/0026-roles-and-permission-matrix.md)). A permission matrix in code and a generated doc page. Platform operators sit outside the matrix and only reach `/api/platform/*` ([ADR 0024](adr/0024-workspaces-are-tenants.md)).
   Done when a table-driven test asserts every endpoint's permission for every role.
 
