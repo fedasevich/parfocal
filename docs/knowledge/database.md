@@ -36,6 +36,10 @@ Every request transaction starts with one `SET_SCOPE` statement from `scoped_tra
 
 `organisations` and `tenants` have no `tenant_id` but still force row-level security through `enable_platform_management`. Members read only their own rows, and only the platform scope writes. `test_every_table_has_forced_row_security_at_head` fails for any table without forced row-level security except `alembic_version` and PostGIS's `spatial_ref_sys`. A mutation check on 2026-10-13 showed that `getCurrentTenant` stays isolated even with its `WHERE` removed, and that the isolation suite fails when the tenant policy is loosened. Source: IAM-003 and IAM-004 log entries.
 
+## Who sees people and workspaces
+
+`app.user_id` joins the scope for signed-in people. A member sees their own `memberships` rows in any tenant (`own_memberships`), the tenants those rows point to, and the organisations of visible tenants, because the organisations policy selects from `tenants` and so inherits its row-level security. `users` rows are visible to the person, to members of the current tenant through `memberships`, and to the auth and platform scopes. Policies read other tables only in one direction (users and tenants read memberships, organisations read tenants), which keeps Postgres from recursing. Source: IAM-005 log entry.
+
 ## Adding a table means adding it to the isolation suite
 
 `apps/api/tests/test_tenant_isolation.py` fails when a table at head has no seeder in `SEEDERS` or when a GET operation in the OpenAPI schema is missing from `GET_ROUTES`. A new tenant-owned table needs a seeder that inserts rows for the given tenant and adds their ids and a marker string to `Seeded`. A new GET route needs its exposure and a path built from tenant A's ids. The suite then calls every tenant route as tenant A, which must see a marker, and as tenant B, which must see none. Table models in `parfocal_api.tables` must match the migrations, which `test_models_match_the_migrations` checks with Alembic's comparison.

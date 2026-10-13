@@ -8,8 +8,10 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     LargeBinary,
+    SmallInteger,
     String,
     Table,
+    UniqueConstraint,
     Uuid,
     func,
     text,
@@ -117,4 +119,43 @@ sessions = Table(
     Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
     Column("last_seen_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column(
+        "active_tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id", ondelete="SET NULL"),
+        nullable=True,
+    ),
+)
+
+AVATAR_COLOURS = 12
+
+users = Table(
+    "users",
+    metadata,
+    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column("subject", String(200), nullable=False, unique=True),
+    Column("email", String(320), nullable=True),
+    Column("display_name", String(200), nullable=False),
+    Column("initials", String(3), nullable=False),
+    Column("avatar_colour", SmallInteger, nullable=False),
+    Column("title", String(40), nullable=True),
+    Column(
+        "last_tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id", ondelete="SET NULL"),
+        nullable=True,
+    ),
+    *timestamps(),
+    CheckConstraint("initials ~ '^[A-Z]{1,3}$'", name="initials"),
+    CheckConstraint("avatar_colour BETWEEN 0 AND 11", name="avatar_colour"),
+)
+
+memberships = Table(
+    "memberships",
+    metadata,
+    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column("tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=False, index=True),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, index=True),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "user_id"),
 )

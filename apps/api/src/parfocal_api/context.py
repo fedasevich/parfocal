@@ -12,6 +12,7 @@ from parfocal_api.principals import (
     MissingGuestGrantError,
     PlatformOperator,
     Principal,
+    SignedInUser,
     database_scope,
 )
 from parfocal_api.problems import ForbiddenError, TenantSuspendedError
@@ -52,5 +53,16 @@ async def platform_connection(
         yield connection
 
 
+async def user_connection(
+    request: Request, principal: Annotated[Principal, Depends(authenticate)]
+) -> AsyncIterator[AsyncConnection]:
+    if not isinstance(principal, SignedInUser | MemberPrincipal):
+        raise ForbiddenError
+    async with scoped_transaction(engine_of(request), database_scope(principal)) as connection:
+        yield connection
+
+
 TenantConnection = Annotated[AsyncConnection, Depends(tenant_connection, scope="function")]
 PlatformConnection = Annotated[AsyncConnection, Depends(platform_connection, scope="function")]
+UserConnection = Annotated[AsyncConnection, Depends(user_connection, scope="function")]
+CurrentPrincipal = Annotated[Principal, Depends(authenticate)]

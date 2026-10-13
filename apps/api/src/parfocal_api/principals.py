@@ -7,12 +7,14 @@ from parfocal_common.db import DatabaseScope
 @dataclass(frozen=True)
 class SignedInUser:
     subject: str
+    user_id: uuid.UUID
 
 
 @dataclass(frozen=True)
 class MemberPrincipal:
     subject: str
     tenant_id: uuid.UUID
+    user_id: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -43,10 +45,10 @@ class MissingGuestGrantError(Exception):
 
 def database_scope(principal: Principal) -> DatabaseScope:
     match principal:
-        case SignedInUser():
-            return DatabaseScope()
-        case MemberPrincipal(tenant_id=tenant_id):
-            return DatabaseScope(tenant_id=tenant_id)
+        case SignedInUser(user_id=user_id):
+            return DatabaseScope(user_id=user_id)
+        case MemberPrincipal(tenant_id=tenant_id, user_id=user_id):
+            return DatabaseScope(tenant_id=tenant_id, user_id=user_id)
         case GuestPrincipal(grant=GuestGrant(host_tenant_id=host, case_id=case, view_id=view)):
             return DatabaseScope(tenant_id=host, case_id=case, view_id=view)
         case GuestPrincipal():

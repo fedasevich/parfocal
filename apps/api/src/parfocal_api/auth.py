@@ -3,6 +3,7 @@ import hashlib
 import html
 import json
 import secrets
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, cast
@@ -13,12 +14,20 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import delete, exists, func, insert, select, update
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_api.oidc import IdentityError, OidcClient, TokenSet
-from parfocal_api.principals import PlatformOperator, Principal, SignedInUser
+from parfocal_api.principals import MemberPrincipal, PlatformOperator, Principal, SignedInUser
 from parfocal_api.problems import ProblemError, UnauthenticatedError
-from parfocal_api.tables import auth_logins, platform_operators, sessions
+from parfocal_api.tables import (
+    AVATAR_COLOURS,
+    auth_logins,
+    memberships,
+    platform_operators,
+    sessions,
+    users,
+)
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
 SESSION_COOKIE = "__Host-parfocal_session"
@@ -149,34 +158,115 @@ async def refresh_session(
     return True
 
 
+@dataclass(frozen=True)
+class Resolved:
+    subject: str
+    user_id: uuid.UUID | None
+    active_tenant_id: uuid.UUID | None
+    operator: bool
+    member: bool
+
+
+async def resolve(
+    connection: AsyncConnection, subject: str, active_tenant_id: uuid.UUID | None
+) -> Resolved:
+    user_id = await connection.scalar(select(users.c.id).where(users.c.subject == subject))
+    operator = bool(
+        await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
+    )
+    member = (
+        user_id is not None
+        and active_tenant_id is not None
+        and bool(
+            await connection.scalar(
+                select(
+                    exists().where(
+                        memberships.c.user_id == user_id,
+                        memberships.c.tenant_id == active_tenant_id,
+                    )
+                )
+            )
+        )
+    )
+    return Resolved(subject, user_id, active_tenant_id, operator, member)
+
+
+def principal_of(resolved: Resolved) -> Principal:
+    if resolved.operator:
+        return PlatformOperator(resolved.subject)
+    if resolved.user_id is None:
+        raise UnauthenticatedError
+    if resolved.member and resolved.active_tenant_id is not None:
+        return MemberPrincipal(resolved.subject, resolved.active_tenant_id, resolved.user_id)
+    return SignedInUser(resolved.subject, resolved.user_id)
+
+
 async def authenticate(request: Request) -> Principal:
     session_id = request.cookies.get(SESSION_COOKIE)
     if not session_id:
         raise UnauthenticatedError
     state = auth_state(request)
+    resolved: Resolved | None = None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         loaded = await load_session(connection, state, session_id)
-        if loaded is None:
-            subject = None
-        else:
+        if loaded is not None:
             row = loaded["row"]
-            subject = str(row.subject)
-            if row.access_expires_at - REFRESH_MARGIN <= now() and not await refresh_session(
-                connection, state, session_id, loaded["tokens"]
-            ):
-                subject = None
+            alive = True
+            if row.access_expires_at - REFRESH_MARGIN <= now():
+                alive = await refresh_session(connection, state, session_id, loaded["tokens"])
             elif row.last_seen_at + SEEN_INTERVAL <= now():
                 await connection.execute(
                     update(sessions)
                     .where(sessions.c.id_hash == digest(session_id))
                     .values(last_seen_at=func.now())
                 )
-        operator = subject is not None and bool(
-            await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
-        )
-    if subject is None:
+            if alive:
+                resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
+    if resolved is None:
         raise UnauthenticatedError
-    return PlatformOperator(subject) if operator else SignedInUser(subject)
+    return principal_of(resolved)
+
+
+def initials_of(name: str) -> str:
+    letters = [word[0] for word in name.split() if word[:1].isalpha()]
+    picked = letters[0] + letters[-1] if len(letters) > 1 else "".join(letters[:1])
+    initials = "".join(letter for letter in picked.upper() if "A" <= letter <= "Z")
+    return initials or "U"
+
+
+def avatar_colour_of(subject: str) -> int:
+    return hashlib.sha256(subject.encode()).digest()[0] % AVATAR_COLOURS
+
+
+async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> uuid.UUID | None:
+    subject = str(claims["sub"])
+    email = claims.get("email")
+    name = str(claims.get("name") or email or "New user")
+    user_id = await connection.scalar(
+        upsert(users)
+        .values(
+            subject=subject,
+            email=email,
+            display_name=name,
+            initials=initials_of(name),
+            avatar_colour=avatar_colour_of(subject),
+        )
+        .on_conflict_do_update(index_elements=[users.c.subject], set_={"email": email})
+        .returning(users.c.id)
+    )
+    last_tenant = await connection.scalar(
+        select(memberships.c.tenant_id)
+        .join(users, users.c.id == memberships.c.user_id)
+        .where(users.c.id == user_id, memberships.c.tenant_id == users.c.last_tenant_id)
+    )
+    if last_tenant is not None:
+        return last_tenant
+    tenant_ids = (
+        await connection.scalars(
+            select(memberships.c.tenant_id).where(memberships.c.user_id == user_id).limit(2)
+        )
+    ).all()
+    return tenant_ids[0] if len(tenant_ids) == 1 else None
 
 
 def set_cookie(response: Response, name: str, value: str, max_age: int, same_site: str) -> None:
@@ -261,6 +351,7 @@ async def complete_login(
         raise LoginFailedError from error
     session_id = secrets.token_urlsafe(32)
     async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        active_tenant_id = await sign_in_user(connection, claims)
         await connection.execute(
             insert(sessions).values(
                 id_hash=digest(session_id),
@@ -268,6 +359,7 @@ async def complete_login(
                 tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
                 access_expires_at=now() + timedelta(seconds=tokens.expires_in),
                 expires_at=now() + SESSION_LIFETIME,
+                active_tenant_id=active_tenant_id,
             )
         )
     response = hop_to(login.return_to)

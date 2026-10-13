@@ -19,10 +19,13 @@ from parfocal_common.db import DatabaseScope
 TENANT = uuid.uuid4()
 CASE = uuid.uuid4()
 VIEW = uuid.uuid4()
+USER = uuid.uuid4()
 
 
 def test_a_member_is_scoped_to_their_tenant() -> None:
-    assert database_scope(MemberPrincipal("user", TENANT)) == DatabaseScope(tenant_id=TENANT)
+    assert database_scope(MemberPrincipal("user", TENANT, USER)) == DatabaseScope(
+        tenant_id=TENANT, user_id=USER
+    )
 
 
 def test_a_guest_is_scoped_to_the_host_tenant_case_and_view() -> None:
@@ -40,12 +43,13 @@ def test_a_platform_operator_has_no_tenant() -> None:
 
 
 def test_a_signed_in_user_without_a_workspace_has_an_empty_scope() -> None:
-    assert database_scope(SignedInUser("user")) == DatabaseScope()
+    assert database_scope(SignedInUser("user", USER)) == DatabaseScope(user_id=USER)
 
 
 def test_scope_parameters_clear_every_setting_they_do_not_use() -> None:
     assert DatabaseScope(tenant_id=TENANT).parameters() == {
         "tenant": str(TENANT),
+        "user": "",
         "case": "",
         "view": "",
         "platform": "",

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.tables import organisations, platform_operators, tenants
+from parfocal_api.tables import memberships, organisations, platform_operators, tenants, users
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
 pytestmark = pytest.mark.db
@@ -24,7 +24,7 @@ class Seeded:
     markers: set[str] = field(default_factory=set[str])
 
     def member(self) -> MemberPrincipal:
-        return MemberPrincipal("isolation-member", self.tenant_id)
+        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"])
 
 
 type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
@@ -42,7 +42,7 @@ class Route:
     path: Callable[[Seeded], str]
 
 
-BASE_TABLES = {"organisations", "tenants"}
+BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
 SEEDERS: dict[str, Seeder] = {}
 GET_ROUTES = {
@@ -52,6 +52,11 @@ GET_ROUTES = {
     "getTenant": Route(Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}"),
     "getCurrentTenant": Route(Exposure.TENANT, lambda _: "/api/tenant"),
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
+    "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
+    "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
+    "listMembers": Route(
+        Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
+    ),
 }
 UNOWNED_TABLES = {"alembic_version", "spatial_ref_sys"}
 
@@ -78,12 +83,26 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
         )
         .returning(tenants.c.id)
     )
+    member_name = f"Member {slug}"
+    user_id = await connection.scalar(
+        insert(users)
+        .values(
+            subject=f"subject-{slug}",
+            email=f"{slug}@example.test",
+            display_name=member_name,
+            initials="MM",
+            avatar_colour=0,
+        )
+        .returning(users.c.id)
+    )
+    await connection.execute(insert(memberships).values(tenant_id=tenant_id, user_id=user_id))
     assert isinstance(organisation_id, uuid.UUID)
     assert isinstance(tenant_id, uuid.UUID)
+    assert isinstance(user_id, uuid.UUID)
     seeded = Seeded(
         tenant_id=tenant_id,
-        ids={"organisation": organisation_id, "tenant": tenant_id},
-        markers={str(organisation_id), str(tenant_id), slug, name},
+        ids={"organisation": organisation_id, "tenant": tenant_id, "user": user_id},
+        markers={str(organisation_id), str(tenant_id), str(user_id), slug, name, member_name},
     )
     for seeder in SEEDERS.values():
         await seeder(connection, seeded)

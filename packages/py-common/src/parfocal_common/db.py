@@ -13,9 +13,11 @@ SCOPE_CASE_SETTING = "app.scope_case_id"
 SCOPE_VIEW_SETTING = "app.scope_view_id"
 PLATFORM_SETTING = "app.platform"
 AUTH_SETTING = "app.auth"
+USER_SETTING = "app.user_id"
 CURRENT_TENANT = f"NULLIF(current_setting('{TENANT_SETTING}', true), '')::uuid"
 PLATFORM_OPERATOR = f"COALESCE(current_setting('{PLATFORM_SETTING}', true), '') = 'on'"
 AUTH_SERVICE = f"COALESCE(current_setting('{AUTH_SETTING}', true), '') = 'on'"
+CURRENT_USER = f"NULLIF(current_setting('{USER_SETTING}', true), '')::uuid"
 
 NAMING_CONVENTION = {
     "ix": "ix_%(table_name)s_%(column_0_N_name)s",
@@ -52,6 +54,7 @@ class SoftDeletable:
 @dataclass(frozen=True)
 class DatabaseScope:
     tenant_id: uuid.UUID | None = None
+    user_id: uuid.UUID | None = None
     case_id: uuid.UUID | None = None
     view_id: uuid.UUID | None = None
     platform: bool = False
@@ -60,6 +63,7 @@ class DatabaseScope:
     def parameters(self) -> dict[str, str]:
         return {
             "tenant": str(self.tenant_id or ""),
+            "user": str(self.user_id or ""),
             "case": str(self.case_id or ""),
             "view": str(self.view_id or ""),
             "platform": "on" if self.platform else "",
@@ -69,6 +73,7 @@ class DatabaseScope:
 
 SET_SCOPE = text(
     f"SELECT set_config('{TENANT_SETTING}', :tenant, true), "
+    f"set_config('{USER_SETTING}', :user, true), "
     f"set_config('{SCOPE_CASE_SETTING}', :case, true), "
     f"set_config('{SCOPE_VIEW_SETTING}', :view, true), "
     f"set_config('{PLATFORM_SETTING}', :platform, true), "

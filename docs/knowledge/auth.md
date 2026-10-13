@@ -24,6 +24,8 @@ The next login shows an account picker with the previous user. Choosing it asks 
 | Platform operators | `uv run --package parfocal-api --env-file .env python -m parfocal_api.operators add <zitadel-user-id>`, also `remove` and `list` |
 | Test user | `e2e-pathologist@parfocal.eu` in Zitadel's `Parfocal` organisation, password in `.env` as `ZITADEL_TEST_PASSWORD`, MFA not set up |
 
+Login creates the `users` row on first sign-in and later only refreshes its email, so a profile edited in the app is never overwritten by the IdP. The session's `active_tenant_id` starts at the user's last workspace if they are still a member, or their only workspace, and `PUT /api/me/workspace` changes it. `authenticate` returns a `MemberPrincipal` only while the membership exists.
+
 `SESSION_KEY` is 32 random bytes in URL-safe base64. Changing it signs everyone out and has no other effect.
 
 ## Running the login end to end
