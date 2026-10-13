@@ -503,16 +503,16 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the IdP config is code (exported realm or Terraform provider) and recreated from scratch in CI.
   Depends on STACK-028.
 
-- [ ] IAM-002 · Login, logout and session refresh through the BFF
+- [x] IAM-002 · Login, logout and session refresh through the BFF
   FastAPI runs the OIDC code flow and refreshes tokens server-side. The SPA only sees a session cookie ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The session lookup is `authenticate` in `parfocal_api.auth` and returns a signed-in user or a platform operator, who is a row in `platform_operators` ([ADR 0024](adr/0024-workspaces-are-tenants.md), [ADR 0025](adr/0025-zitadel-bff-login.md)). IAM-005 turns a signed-in user into a member of the chosen workspace.
   Done when Playwright covers login, refresh after expiry, logout and redirect back to the deep link the user started from.
 
-- [ ] IAM-003 · Tenants and organisations
+- [x] IAM-003 · Tenants and organisations
   Tenant table, slug, region, plan, status. An organisation can hold several workspaces (diagnostic, research de-identified, second-opinion network). Each workspace is a tenant and the organisation groups them ([ADR 0024](adr/0024-workspaces-are-tenants.md)).
   Done when API tests create, suspend and reactivate a tenant and a suspended tenant's users are refused.
   Refs kit IA "Other workspaces", mock 1 org switcher, [ADR 0024](adr/0024-workspaces-are-tenants.md).
 
-- [ ] IAM-004 · Tenant context and row-level security
+- [x] IAM-004 · Tenant context and row-level security
   Every request sets the tenant in the database session. RLS policies on every tenant-owned table.
   Done when an isolation test suite runs every list and get endpoint as a user of tenant B against data of tenant A and gets nothing. The suite runs automatically on every new table.
   Depends on FOUND-013.
