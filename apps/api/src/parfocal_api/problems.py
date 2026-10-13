@@ -58,6 +58,11 @@ class ForbiddenError(ProblemError):
     title = "You do not have access to this"
 
 
+class TenantSuspendedError(ForbiddenError):
+    code = "tenant-suspended"
+    title = "This workspace is suspended"
+
+
 class NotFoundError(ProblemError):
     status = 404
     code = "not-found"

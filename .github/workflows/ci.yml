@@ -85,9 +85,42 @@ jobs:
       - if: failure()
         run: docker compose logs
 
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: e2e
+      - run: docker compose up -d --wait
+      - run: pnpm db:migrate
+      - name: Write the local settings
+        env:
+          ZITADEL_CLIENT_ID: ${{ secrets.ZITADEL_DEV_CLIENT_ID }}
+          ZITADEL_CLIENT_SECRET: ${{ secrets.ZITADEL_DEV_CLIENT_SECRET }}
+          ZITADEL_TEST_USERNAME: ${{ secrets.ZITADEL_TEST_USERNAME }}
+          ZITADEL_TEST_PASSWORD: ${{ secrets.ZITADEL_TEST_PASSWORD }}
+        run: |
+          umask 077
+          {
+            echo "APP_ENV=test"
+            echo "PARFOCAL_PUBLIC_APP_ENV=test"
+            echo "DATABASE_URL=postgresql://parfocal_app@localhost:6432/parfocal"
+            echo "PUBLIC_ORIGIN=http://localhost:5173"
+            echo "SESSION_KEY=$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+            echo "ZITADEL_ISSUER=https://parfocal-iqcyh5.eu1.zitadel.cloud"
+            echo "ZITADEL_CLIENT_ID=${ZITADEL_CLIENT_ID}"
+            echo "ZITADEL_CLIENT_SECRET=${ZITADEL_CLIENT_SECRET}"
+            echo "ZITADEL_TEST_USERNAME=${ZITADEL_TEST_USERNAME}"
+            echo "ZITADEL_TEST_PASSWORD=${ZITADEL_TEST_PASSWORD}"
+          } > .env
+      - run: pnpm test:e2e
+      - if: failure()
+        run: docker compose logs
+
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, db]
+    needs: [lint, typecheck, test, db, e2e]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"

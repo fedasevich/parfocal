@@ -1,0 +1,14 @@
+{
+  "name": "@parfocal/e2e",
+  "description": "Playwright end-to-end tests against the local stack and the dev Zitadel instance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@parfocal/typescript-config": "workspace:*",
+    "@playwright/test": "1.64.0"
+  }
+}

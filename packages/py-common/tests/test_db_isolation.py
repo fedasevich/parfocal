@@ -11,10 +11,18 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from parfocal_common.db import (
+    AUTH_SETTING,
     NAMING_CONVENTION,
+    PLATFORM_SETTING,
+    SCOPE_CASE_SETTING,
+    SCOPE_VIEW_SETTING,
+    TENANT_SETTING,
+    DatabaseScope,
     SoftDeletable,
     TenantOwned,
     Timestamped,
+    async_database_url,
+    scoped_transaction,
     tenant_transaction,
 )
 from parfocal_common.schema_sql import (
@@ -34,10 +42,6 @@ TENANT_A = uuid.UUID("00000000-0000-0000-0000-00000000000a")
 TENANT_B = uuid.UUID("00000000-0000-0000-0000-00000000000b")
 
 pytestmark = pytest.mark.db
-
-
-def async_url(url: str) -> str:
-    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 
 @dataclass(frozen=True)
@@ -63,8 +67,8 @@ def notes_table(schema: str) -> Table[Any]:
 @pytest.fixture
 async def database() -> AsyncIterator[Fixture]:
     schema = f"test_{uuid.uuid4().hex[:12]}"
-    owner = create_async_engine(async_url(OWNER_URL))
-    app = create_async_engine(async_url(APP_URL))
+    owner = create_async_engine(async_database_url(OWNER_URL))
+    app = create_async_engine(async_database_url(APP_URL))
     notes = notes_table(schema)
     async with owner.begin() as connection:
         await connection.execute(text(f"CREATE SCHEMA {schema}"))
@@ -158,3 +162,23 @@ async def test_updated_at_moves_on_update(database: Fixture) -> None:
             await connection.execute(select(table.c.created_at, table.c.updated_at))
         ).one()
         assert updated > created
+
+
+async def test_scope_settings_never_linger_on_a_pooled_connection() -> None:
+    engine = create_async_engine(async_database_url(APP_URL), pool_size=1, max_overflow=0)
+    names = (TENANT_SETTING, SCOPE_CASE_SETTING, SCOPE_VIEW_SETTING, PLATFORM_SETTING, AUTH_SETTING)
+    read_settings = text(
+        "SELECT " + ", ".join(f"NULLIF(current_setting('{name}', true), '')" for name in names)
+    )
+    scope = DatabaseScope(
+        tenant_id=TENANT_A, case_id=uuid.uuid4(), view_id=uuid.uuid4(), platform=True, auth=True
+    )
+    try:
+        async with scoped_transaction(engine, scope) as connection:
+            inside = (await connection.execute(read_settings)).one()
+            assert inside == (str(TENANT_A), str(scope.case_id), str(scope.view_id), "on", "on")
+        for _ in range(3):
+            async with engine.begin() as connection:
+                assert tuple((await connection.execute(read_settings)).one()) == (None,) * 5
+    finally:
+        await engine.dispose()

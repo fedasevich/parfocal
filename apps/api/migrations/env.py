@@ -5,7 +5,7 @@ from alembic import context
 from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from parfocal_common.db import metadata
+from parfocal_common.db import async_database_url, metadata
 
 LOCAL_OWNER_URL = "postgresql://parfocal@localhost:5432/parfocal"
 
@@ -14,7 +14,7 @@ def migration_url() -> str:
     configured = context.config.attributes.get("url") or os.environ.get(
         "MIGRATION_DATABASE_URL", LOCAL_OWNER_URL
     )
-    return str(configured).replace("postgresql://", "postgresql+asyncpg://", 1)
+    return async_database_url(str(configured))
 
 
 def run(connection: Connection) -> None:

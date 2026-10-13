@@ -29,3 +29,15 @@ The edoburu PgBouncer image writes `auth_user=` into its generated config, which
 ## Restrictive policies narrow, permissive ones widen
 
 Postgres ORs permissive policies and ANDs restrictive ones with the result. Guest scopes are `RESTRICTIVE`, so they can only take rows away from what tenant isolation allows. A second permissive policy would have widened access instead. Source: [STACK-023 spike](../results/2026-10-08-guest-scope-rls-spike.md).
+
+## Request scope and the tenancy tables
+
+Every request transaction starts with one `SET_SCOPE` statement from `scoped_transaction` in `parfocal_common.db`, which sets `app.tenant_id`, `app.scope_case_id`, `app.scope_view_id` and `app.platform` together and clears the ones a scope does not use. In the API only `parfocal_api.context` builds a scope from a principal. Routes take `TenantConnection` or `PlatformConnection` and never set anything themselves ([ADR 0020](../adr/0020-authorization-rls-scopes-and-rbac.md), [ADR 0024](../adr/0024-workspaces-are-tenants.md)).
+
+`organisations` and `tenants` have no `tenant_id` but still force row-level security through `enable_platform_management`. Members read only their own rows, and only the platform scope writes. `test_every_table_has_forced_row_security_at_head` fails for any table without forced row-level security except `alembic_version` and PostGIS's `spatial_ref_sys`. A mutation check on 2026-10-13 showed that `getCurrentTenant` stays isolated even with its `WHERE` removed, and that the isolation suite fails when the tenant policy is loosened. Source: IAM-003 and IAM-004 log entries.
+
+## Adding a table means adding it to the isolation suite
+
+`apps/api/tests/test_tenant_isolation.py` fails when a table at head has no seeder in `SEEDERS` or when a GET operation in the OpenAPI schema is missing from `GET_ROUTES`. A new tenant-owned table needs a seeder that inserts rows for the given tenant and adds their ids and a marker string to `Seeded`. A new GET route needs its exposure and a path built from tenant A's ids. The suite then calls every tenant route as tenant A, which must see a marker, and as tenant B, which must see none. Table models in `parfocal_api.tables` must match the migrations, which `test_models_match_the_migrations` checks with Alembic's comparison.
+
+The API tests connect through the pooler to a fresh database per test session, so `infra/local/pgbouncer.ini` has a `*` entry that forwards any database name as `parfocal_app`.

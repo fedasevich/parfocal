@@ -9,14 +9,17 @@ import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
 export interface FieldError {
@@ -29,6 +32,35 @@ export interface Health {
   status: string;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Name = string;
+
+export interface Organisation {
+  id: string;
+  slug: string;
+  name: string;
+  created_at: string;
+}
+
+/**
+ * @pattern ^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$
+ */
+export type Slug = string;
+
+export interface OrganisationDraft {
+  slug: Slug;
+  name: Name;
+}
+
+export type Plan = (typeof Plan)[keyof typeof Plan];
+
+export const Plan = {
+  pilot: "pilot",
+} as const;
+
 export interface Problem {
   type: string;
   title: string;
@@ -36,6 +68,58 @@ export interface Problem {
   code: string;
   detail?: string | null;
   errors?: FieldError[] | null;
+}
+
+export type Region = (typeof Region)[keyof typeof Region];
+
+export const Region = {
+  eu: "eu",
+  us: "us",
+} as const;
+
+export interface Session {
+  subject: string;
+  name: string | null;
+  email: string | null;
+  operator: boolean;
+}
+
+export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];
+
+export const TenantKind = {
+  diagnostic: "diagnostic",
+  research: "research",
+  "second-opinion": "second-opinion",
+} as const;
+
+export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus];
+
+export const TenantStatus = {
+  active: "active",
+  suspended: "suspended",
+} as const;
+
+export interface Tenant {
+  id: string;
+  organisation_id: string;
+  slug: string;
+  name: string;
+  kind: TenantKind;
+  region: Region;
+  plan: Plan;
+  status: TenantStatus;
+  suspended_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantDraft {
+  organisation_id: string;
+  slug: Slug;
+  name: Name;
+  kind: TenantKind;
+  region: Region;
+  plan?: Plan;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -209,6 +293,1438 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetHealthQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSessionResponse200 = {
+  data: Session;
+  status: 200;
+};
+
+export type getSessionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSessionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSessionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSessionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSessionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSessionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSessionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSessionResponseSuccess = getSessionResponse200 & {
+  headers: Headers;
+};
+export type getSessionResponseError = (
+  | getSessionResponse400
+  | getSessionResponse401
+  | getSessionResponse403
+  | getSessionResponse404
+  | getSessionResponse409
+  | getSessionResponse422
+  | getSessionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSessionResponse = getSessionResponseSuccess | getSessionResponseError;
+
+export const getGetSessionUrl = () => {
+  return `/api/auth/session`;
+};
+
+/**
+ * @summary Get Session
+ */
+export const getSession = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSessionResponse> => {
+  return apiFetch<getSessionResponse>(getGetSessionUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSessionQueryKey = () => {
+  return [`/api/auth/session`] as const;
+};
+
+export const getGetSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSessionQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSession>>> = ({ signal }) =>
+    getSession({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSession>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getSession>>>;
+export type GetSessionQueryError = Problem;
+
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSession>>,
+          TError,
+          Awaited<ReturnType<typeof getSession>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSession>>,
+          TError,
+          Awaited<ReturnType<typeof getSession>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Session
+ */
+
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSessionQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listOrganisationsResponse200 = {
+  data: Organisation[];
+  status: 200;
+};
+
+export type listOrganisationsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listOrganisationsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listOrganisationsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listOrganisationsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listOrganisationsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listOrganisationsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listOrganisationsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listOrganisationsResponseSuccess = listOrganisationsResponse200 & {
+  headers: Headers;
+};
+export type listOrganisationsResponseError = (
+  | listOrganisationsResponse400
+  | listOrganisationsResponse401
+  | listOrganisationsResponse403
+  | listOrganisationsResponse404
+  | listOrganisationsResponse409
+  | listOrganisationsResponse422
+  | listOrganisationsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listOrganisationsResponse =
+  | listOrganisationsResponseSuccess
+  | listOrganisationsResponseError;
+
+export const getListOrganisationsUrl = () => {
+  return `/api/platform/organisations`;
+};
+
+/**
+ * @summary List Organisations
+ */
+export const listOrganisations = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listOrganisationsResponse> => {
+  return apiFetch<listOrganisationsResponse>(getListOrganisationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListOrganisationsQueryKey = () => {
+  return [`/api/platform/organisations`] as const;
+};
+
+export const getListOrganisationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listOrganisations>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listOrganisations>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListOrganisationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listOrganisations>>> = ({ signal }) =>
+    listOrganisations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listOrganisations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListOrganisationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listOrganisations>>
+>;
+export type ListOrganisationsQueryError = Problem;
+
+export function useListOrganisations<
+  TData = Awaited<ReturnType<typeof listOrganisations>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listOrganisations>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOrganisations>>,
+          TError,
+          Awaited<ReturnType<typeof listOrganisations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListOrganisations<
+  TData = Awaited<ReturnType<typeof listOrganisations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listOrganisations>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOrganisations>>,
+          TError,
+          Awaited<ReturnType<typeof listOrganisations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListOrganisations<
+  TData = Awaited<ReturnType<typeof listOrganisations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listOrganisations>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Organisations
+ */
+
+export function useListOrganisations<
+  TData = Awaited<ReturnType<typeof listOrganisations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listOrganisations>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListOrganisationsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createOrganisationResponse201 = {
+  data: Organisation;
+  status: 201;
+};
+
+export type createOrganisationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createOrganisationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createOrganisationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createOrganisationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createOrganisationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createOrganisationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createOrganisationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createOrganisationResponseSuccess = createOrganisationResponse201 & {
+  headers: Headers;
+};
+export type createOrganisationResponseError = (
+  | createOrganisationResponse400
+  | createOrganisationResponse401
+  | createOrganisationResponse403
+  | createOrganisationResponse404
+  | createOrganisationResponse409
+  | createOrganisationResponse422
+  | createOrganisationResponse500
+) & {
+  headers: Headers;
+};
+
+export type createOrganisationResponse =
+  | createOrganisationResponseSuccess
+  | createOrganisationResponseError;
+
+export const getCreateOrganisationUrl = () => {
+  return `/api/platform/organisations`;
+};
+
+/**
+ * @summary Create Organisation
+ */
+export const createOrganisation = async (
+  organisationDraft: OrganisationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createOrganisationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createOrganisationResponse>(getCreateOrganisationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(organisationDraft),
+  });
+};
+
+export const getCreateOrganisationMutationKey = () => ["createOrganisation"] as const;
+
+export const getCreateOrganisationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createOrganisation>>,
+    TError,
+    CreateOrganisationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createOrganisation>>,
+  TError,
+  CreateOrganisationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateOrganisationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createOrganisation>>,
+    CreateOrganisationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createOrganisation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateOrganisationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createOrganisation>>
+>;
+export type CreateOrganisationMutationBody = OrganisationDraft;
+export type CreateOrganisationMutationError = Problem;
+export type CreateOrganisationMutationVariables = { data: OrganisationDraft };
+
+/**
+ * @summary Create Organisation
+ */
+export const useCreateOrganisation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createOrganisation>>,
+      TError,
+      CreateOrganisationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createOrganisation>>,
+  TError,
+  CreateOrganisationMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateOrganisationMutationOptions(options), queryClient);
+};
+
+export type listTenantsResponse200 = {
+  data: Tenant[];
+  status: 200;
+};
+
+export type listTenantsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listTenantsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listTenantsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listTenantsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTenantsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listTenantsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listTenantsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listTenantsResponseSuccess = listTenantsResponse200 & {
+  headers: Headers;
+};
+export type listTenantsResponseError = (
+  | listTenantsResponse400
+  | listTenantsResponse401
+  | listTenantsResponse403
+  | listTenantsResponse404
+  | listTenantsResponse409
+  | listTenantsResponse422
+  | listTenantsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listTenantsResponse = listTenantsResponseSuccess | listTenantsResponseError;
+
+export const getListTenantsUrl = () => {
+  return `/api/platform/tenants`;
+};
+
+/**
+ * @summary List Tenants
+ */
+export const listTenants = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listTenantsResponse> => {
+  return apiFetch<listTenantsResponse>(getListTenantsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTenantsQueryKey = () => {
+  return [`/api/platform/tenants`] as const;
+};
+
+export const getListTenantsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTenants>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTenants>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTenantsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenants>>> = ({ signal }) =>
+    listTenants({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTenants>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTenantsQueryResult = NonNullable<Awaited<ReturnType<typeof listTenants>>>;
+export type ListTenantsQueryError = Problem;
+
+export function useListTenants<TData = Awaited<ReturnType<typeof listTenants>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTenants>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTenants>>,
+          TError,
+          Awaited<ReturnType<typeof listTenants>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTenants<TData = Awaited<ReturnType<typeof listTenants>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTenants>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTenants>>,
+          TError,
+          Awaited<ReturnType<typeof listTenants>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTenants<TData = Awaited<ReturnType<typeof listTenants>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTenants>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Tenants
+ */
+
+export function useListTenants<TData = Awaited<ReturnType<typeof listTenants>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTenants>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTenantsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createTenantResponse201 = {
+  data: Tenant;
+  status: 201;
+};
+
+export type createTenantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createTenantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createTenantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createTenantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createTenantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createTenantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createTenantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createTenantResponseSuccess = createTenantResponse201 & {
+  headers: Headers;
+};
+export type createTenantResponseError = (
+  | createTenantResponse400
+  | createTenantResponse401
+  | createTenantResponse403
+  | createTenantResponse404
+  | createTenantResponse409
+  | createTenantResponse422
+  | createTenantResponse500
+) & {
+  headers: Headers;
+};
+
+export type createTenantResponse = createTenantResponseSuccess | createTenantResponseError;
+
+export const getCreateTenantUrl = () => {
+  return `/api/platform/tenants`;
+};
+
+/**
+ * @summary Create Tenant
+ */
+export const createTenant = async (
+  tenantDraft: TenantDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createTenantResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createTenantResponse>(getCreateTenantUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(tenantDraft),
+  });
+};
+
+export const getCreateTenantMutationKey = () => ["createTenant"] as const;
+
+export const getCreateTenantMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createTenant>>,
+    TError,
+    CreateTenantMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createTenant>>,
+  TError,
+  CreateTenantMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateTenantMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createTenant>>,
+    CreateTenantMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createTenant(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateTenantMutationResult = NonNullable<Awaited<ReturnType<typeof createTenant>>>;
+export type CreateTenantMutationBody = TenantDraft;
+export type CreateTenantMutationError = Problem;
+export type CreateTenantMutationVariables = { data: TenantDraft };
+
+/**
+ * @summary Create Tenant
+ */
+export const useCreateTenant = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createTenant>>,
+      TError,
+      CreateTenantMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createTenant>>,
+  TError,
+  CreateTenantMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateTenantMutationOptions(options), queryClient);
+};
+
+export type getTenantResponse200 = {
+  data: Tenant;
+  status: 200;
+};
+
+export type getTenantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTenantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTenantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTenantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTenantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTenantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTenantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTenantResponseSuccess = getTenantResponse200 & {
+  headers: Headers;
+};
+export type getTenantResponseError = (
+  | getTenantResponse400
+  | getTenantResponse401
+  | getTenantResponse403
+  | getTenantResponse404
+  | getTenantResponse409
+  | getTenantResponse422
+  | getTenantResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTenantResponse = getTenantResponseSuccess | getTenantResponseError;
+
+export const getGetTenantUrl = (tenantId: string) => {
+  return `/api/platform/tenants/${tenantId}`;
+};
+
+/**
+ * @summary Get Tenant
+ */
+export const getTenant = async (
+  tenantId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTenantResponse> => {
+  return apiFetch<getTenantResponse>(getGetTenantUrl(tenantId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTenantQueryKey = (tenantId: string) => {
+  return [`/api/platform/tenants/${tenantId}`] as const;
+};
+
+export const getGetTenantQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTenant>>,
+  TError = Problem,
+>(
+  tenantId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTenantQueryKey(tenantId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenant>>> = ({ signal }) =>
+    getTenant(tenantId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: tenantId !== null && tenantId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTenantQueryResult = NonNullable<Awaited<ReturnType<typeof getTenant>>>;
+export type GetTenantQueryError = Problem;
+
+export function useGetTenant<TData = Awaited<ReturnType<typeof getTenant>>, TError = Problem>(
+  tenantId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTenant>>,
+          TError,
+          Awaited<ReturnType<typeof getTenant>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTenant<TData = Awaited<ReturnType<typeof getTenant>>, TError = Problem>(
+  tenantId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTenant>>,
+          TError,
+          Awaited<ReturnType<typeof getTenant>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTenant<TData = Awaited<ReturnType<typeof getTenant>>, TError = Problem>(
+  tenantId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Tenant
+ */
+
+export function useGetTenant<TData = Awaited<ReturnType<typeof getTenant>>, TError = Problem>(
+  tenantId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTenant>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTenantQueryOptions(tenantId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type suspendTenantResponse200 = {
+  data: Tenant;
+  status: 200;
+};
+
+export type suspendTenantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type suspendTenantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type suspendTenantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type suspendTenantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type suspendTenantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type suspendTenantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type suspendTenantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type suspendTenantResponseSuccess = suspendTenantResponse200 & {
+  headers: Headers;
+};
+export type suspendTenantResponseError = (
+  | suspendTenantResponse400
+  | suspendTenantResponse401
+  | suspendTenantResponse403
+  | suspendTenantResponse404
+  | suspendTenantResponse409
+  | suspendTenantResponse422
+  | suspendTenantResponse500
+) & {
+  headers: Headers;
+};
+
+export type suspendTenantResponse = suspendTenantResponseSuccess | suspendTenantResponseError;
+
+export const getSuspendTenantUrl = (tenantId: string) => {
+  return `/api/platform/tenants/${tenantId}/suspend`;
+};
+
+/**
+ * @summary Suspend Tenant
+ */
+export const suspendTenant = async (
+  tenantId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<suspendTenantResponse> => {
+  return apiFetch<suspendTenantResponse>(getSuspendTenantUrl(tenantId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSuspendTenantMutationKey = () => ["suspendTenant"] as const;
+
+export const getSuspendTenantMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suspendTenant>>,
+    TError,
+    SuspendTenantMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suspendTenant>>,
+  TError,
+  SuspendTenantMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSuspendTenantMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suspendTenant>>,
+    SuspendTenantMutationVariables
+  > = (props) => {
+    const { tenantId } = props ?? {};
+
+    return suspendTenant(tenantId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SuspendTenantMutationResult = NonNullable<Awaited<ReturnType<typeof suspendTenant>>>;
+
+export type SuspendTenantMutationError = Problem;
+export type SuspendTenantMutationVariables = { tenantId: string };
+
+/**
+ * @summary Suspend Tenant
+ */
+export const useSuspendTenant = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suspendTenant>>,
+      TError,
+      SuspendTenantMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof suspendTenant>>,
+  TError,
+  SuspendTenantMutationVariables,
+  TContext
+> => {
+  return useMutation(getSuspendTenantMutationOptions(options), queryClient);
+};
+
+export type reactivateTenantResponse200 = {
+  data: Tenant;
+  status: 200;
+};
+
+export type reactivateTenantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reactivateTenantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reactivateTenantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reactivateTenantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reactivateTenantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reactivateTenantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reactivateTenantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reactivateTenantResponseSuccess = reactivateTenantResponse200 & {
+  headers: Headers;
+};
+export type reactivateTenantResponseError = (
+  | reactivateTenantResponse400
+  | reactivateTenantResponse401
+  | reactivateTenantResponse403
+  | reactivateTenantResponse404
+  | reactivateTenantResponse409
+  | reactivateTenantResponse422
+  | reactivateTenantResponse500
+) & {
+  headers: Headers;
+};
+
+export type reactivateTenantResponse =
+  | reactivateTenantResponseSuccess
+  | reactivateTenantResponseError;
+
+export const getReactivateTenantUrl = (tenantId: string) => {
+  return `/api/platform/tenants/${tenantId}/reactivate`;
+};
+
+/**
+ * @summary Reactivate Tenant
+ */
+export const reactivateTenant = async (
+  tenantId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reactivateTenantResponse> => {
+  return apiFetch<reactivateTenantResponse>(getReactivateTenantUrl(tenantId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReactivateTenantMutationKey = () => ["reactivateTenant"] as const;
+
+export const getReactivateTenantMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactivateTenant>>,
+    TError,
+    ReactivateTenantMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactivateTenant>>,
+  TError,
+  ReactivateTenantMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReactivateTenantMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactivateTenant>>,
+    ReactivateTenantMutationVariables
+  > = (props) => {
+    const { tenantId } = props ?? {};
+
+    return reactivateTenant(tenantId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactivateTenantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reactivateTenant>>
+>;
+
+export type ReactivateTenantMutationError = Problem;
+export type ReactivateTenantMutationVariables = { tenantId: string };
+
+/**
+ * @summary Reactivate Tenant
+ */
+export const useReactivateTenant = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reactivateTenant>>,
+      TError,
+      ReactivateTenantMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reactivateTenant>>,
+  TError,
+  ReactivateTenantMutationVariables,
+  TContext
+> => {
+  return useMutation(getReactivateTenantMutationOptions(options), queryClient);
+};
+
+export type getCurrentTenantResponse200 = {
+  data: Tenant;
+  status: 200;
+};
+
+export type getCurrentTenantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCurrentTenantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCurrentTenantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCurrentTenantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCurrentTenantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCurrentTenantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCurrentTenantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCurrentTenantResponseSuccess = getCurrentTenantResponse200 & {
+  headers: Headers;
+};
+export type getCurrentTenantResponseError = (
+  | getCurrentTenantResponse400
+  | getCurrentTenantResponse401
+  | getCurrentTenantResponse403
+  | getCurrentTenantResponse404
+  | getCurrentTenantResponse409
+  | getCurrentTenantResponse422
+  | getCurrentTenantResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCurrentTenantResponse =
+  | getCurrentTenantResponseSuccess
+  | getCurrentTenantResponseError;
+
+export const getGetCurrentTenantUrl = () => {
+  return `/api/tenant`;
+};
+
+/**
+ * @summary Get Current Tenant
+ */
+export const getCurrentTenant = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCurrentTenantResponse> => {
+  return apiFetch<getCurrentTenantResponse>(getGetCurrentTenantUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCurrentTenantQueryKey = () => {
+  return [`/api/tenant`] as const;
+};
+
+export const getGetCurrentTenantQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCurrentTenant>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentTenant>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCurrentTenantQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentTenant>>> = ({ signal }) =>
+    getCurrentTenant({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrentTenant>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCurrentTenantQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentTenant>>>;
+export type GetCurrentTenantQueryError = Problem;
+
+export function useGetCurrentTenant<
+  TData = Awaited<ReturnType<typeof getCurrentTenant>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentTenant>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentTenant>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentTenant>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrentTenant<
+  TData = Awaited<ReturnType<typeof getCurrentTenant>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentTenant>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentTenant>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentTenant>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrentTenant<
+  TData = Awaited<ReturnType<typeof getCurrentTenant>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentTenant>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Current Tenant
+ */
+
+export function useGetCurrentTenant<
+  TData = Awaited<ReturnType<typeof getCurrentTenant>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentTenant>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCurrentTenantQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

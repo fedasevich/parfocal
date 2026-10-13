@@ -14,6 +14,8 @@ from parfocal_common.clients import (
 REQUIRED = {
     "APP_ENV": "dev",
     "DATABASE_URL": "postgresql://parfocal@localhost:5432/parfocal",
+    "PUBLIC_ORIGIN": "http://localhost:5173",
+    "SESSION_KEY": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
     "ZITADEL_ISSUER": "https://parfocal-iqcyh5.eu1.zitadel.cloud",
     "ZITADEL_CLIENT_ID": "client",
     "ZITADEL_CLIENT_SECRET": "zitadel-client-secret-value",

@@ -29,3 +29,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0021](0021-chosen-home-worklist-status-board-and-account-menu.md) | Prototype round 4: launchpad home, worklist by day with a preview on demand, status board, account menu, upload from a link and a fixed settings window | Accepted | 2026-10-08 |
 | [0022](0022-sign-out-report-standards-and-pdf-preview.md) | Sign-out report built to CAP synoptic rules with ICCR datasets and TNM 8, with a PDF preview, print and share | Accepted | 2026-10-08 |
 | [0023](0023-gap-review-backend-first.md) | Gap review: one case state model, cases from the LIS first, roles narrowed by folders, team control, and backend before UI | Proposed | 2026-10-10 |
+| [0024](0024-workspaces-are-tenants.md) | Each workspace is a tenant, organisations group them, and platform operators manage both | Accepted | 2026-10-13 |
+| [0025](0025-zitadel-bff-login.md) | Zitadel Cloud behind a FastAPI backend-for-frontend with sessions in Postgres | Accepted | 2026-10-13 |

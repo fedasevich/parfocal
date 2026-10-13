@@ -36,7 +36,7 @@ Setting `region=` on a Modal function needs the Team plan ($250 a month) and add
 
 ## Local only until the owner fixes the cloud
 
-Since 2026-10-08 the owner has asked that nothing touch the cloud: no Modal deploys or runs, no Neon branches, no OpenTofu applies and no staging or production deploys. The owner is fixing the cloud side. Build and test against local services, write `TODO` for numbers that need the cloud, and ask before touching it again.
+Since 2026-10-08 the owner has asked that nothing touch the cloud: no Modal deploys or runs, no Neon branches, no OpenTofu applies and no staging or production deploys. The owner is fixing the cloud side. Build and test against local services, write `TODO` for numbers that need the cloud, and ask before touching it again. On 2026-10-13 the owner allowed Zitadel Cloud again. Modal, Neon, OpenTofu applies and deploys are still off.
 
 ## Modal stops deploys at the workspace spend limit
 

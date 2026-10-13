@@ -30,5 +30,6 @@ No secrets here. Secrets live in `.env` locally and in GitHub environments for C
 | Neon | Project `soft-pine-86468744`, database `parfocal` | Created through the Vercel Marketplace (team "fedasevich's projects"), free plan, US East (`iad1`), Neon Auth off. Personal API keys are available in the Neon console |
 | Zitadel Cloud | Instance `parfocal` at `https://parfocal-iqcyh5.eu1.zitadel.cloud`, organisation `Parfocal` (`393969446668073456`) | EU region, free plan. The customer-portal team is still named "pathocal" |
 | Zitadel Cloud | Project `Parfocal`, OIDC apps `parfocal-api-dev`, `-staging`, `-prod`, service user `parfocal-tofu` (Org Owner) | Project and apps managed by `infra/tofu`. The dev app's client ID and secret are in `.env` |
+| Zitadel Cloud | Human user `e2e-pathologist@parfocal.eu` (id `394945461896722336`) | Created on 2026-10-13 through the v2 user API for the login E2E, not yet in `infra/tofu`. Password in `.env`. TODO: import it into OpenTofu in IAM-001 |
 | Modal | Workspace `fedasevich`, environments `main` (production), `dev`, `staging` | Starter plan. CLI token in `~/.modal.toml` |
 | GitHub | `fedasevich/parfocal` | Public. Linked as `origin`. Ruleset "main requires ci-ok" (id 24612221) with admin bypass. Workflows from outside contributors need approval |

@@ -9,7 +9,10 @@ const crossOriginIsolation = {
 export default defineConfig({
   envPrefix: publicEnvPrefix,
   plugins: [publicEnvOnly()],
-  server: { headers: crossOriginIsolation },
+  server: {
+    headers: crossOriginIsolation,
+    proxy: { "/api": "http://localhost:8000" },
+  },
   preview: { headers: crossOriginIsolation },
   worker: { format: "es" },
   build: { target: "es2024" },

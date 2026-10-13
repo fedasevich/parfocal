@@ -17,7 +17,7 @@ How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is r
 | Traces, logs, metrics | Grafana Cloud | Console exporters | Console and file exporters, which the SEC-010 scan reads |
 | Flags, experiments, analytics | PostHog | Local flag file | Local flag file |
 
-Credentials for development (the dev bucket and Zitadel) live in a git-ignored `.env`, described by a committed `.env.example`.
+Credentials for development (the dev bucket and Zitadel) live in a git-ignored `.env`, described by a committed `.env.example`. `pnpm api:dev` runs the API on port 8000 with `.env`, and the Vite dev server on port 5173 proxies `/api` to it, so the browser sees one origin as in production. `PUBLIC_ORIGIN` must match the Zitadel app's redirect URI (`http://localhost:5173`), and `SESSION_KEY` is any 32 random bytes in URL-safe base64.
 
 ## Settings
 

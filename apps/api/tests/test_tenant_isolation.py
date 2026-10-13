@@ -1,0 +1,182 @@
+import asyncio
+import uuid
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from enum import Enum, auto
+
+import pytest
+from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
+from sqlalchemy import insert, text
+from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+
+from parfocal_api.openapi import openapi_schema
+from parfocal_api.principals import MemberPrincipal
+from parfocal_api.tables import organisations, platform_operators, tenants
+from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
+
+pytestmark = pytest.mark.db
+
+
+@dataclass(frozen=True)
+class Seeded:
+    tenant_id: uuid.UUID
+    ids: dict[str, uuid.UUID] = field(default_factory=dict[str, uuid.UUID])
+    markers: set[str] = field(default_factory=set[str])
+
+    def member(self) -> MemberPrincipal:
+        return MemberPrincipal("isolation-member", self.tenant_id)
+
+
+type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
+
+
+class Exposure(Enum):
+    PUBLIC = auto()
+    PLATFORM = auto()
+    TENANT = auto()
+
+
+@dataclass(frozen=True)
+class Route:
+    exposure: Exposure
+    path: Callable[[Seeded], str]
+
+
+BASE_TABLES = {"organisations", "tenants"}
+AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
+SEEDERS: dict[str, Seeder] = {}
+GET_ROUTES = {
+    "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
+    "listOrganisations": Route(Exposure.PLATFORM, lambda _: "/api/platform/organisations"),
+    "listTenants": Route(Exposure.PLATFORM, lambda _: "/api/platform/tenants"),
+    "getTenant": Route(Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}"),
+    "getCurrentTenant": Route(Exposure.TENANT, lambda _: "/api/tenant"),
+    "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
+}
+UNOWNED_TABLES = {"alembic_version", "spatial_ref_sys"}
+
+
+def routes(exposure: Exposure) -> list[str]:
+    return [name for name, route in GET_ROUTES.items() if route.exposure is exposure]
+
+
+async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
+    slug = f"{label}-{uuid.uuid4().hex[:10]}"
+    name = f"Isolation {slug}"
+    organisation_id = await connection.scalar(
+        insert(organisations).values(slug=slug, name=name).returning(organisations.c.id)
+    )
+    tenant_id = await connection.scalar(
+        insert(tenants)
+        .values(
+            organisation_id=organisation_id,
+            slug=slug,
+            name=name,
+            kind="diagnostic",
+            region="eu",
+            plan="pilot",
+        )
+        .returning(tenants.c.id)
+    )
+    assert isinstance(organisation_id, uuid.UUID)
+    assert isinstance(tenant_id, uuid.UUID)
+    seeded = Seeded(
+        tenant_id=tenant_id,
+        ids={"organisation": organisation_id, "tenant": tenant_id},
+        markers={str(organisation_id), str(tenant_id), slug, name},
+    )
+    for seeder in SEEDERS.values():
+        await seeder(connection, seeded)
+    return seeded
+
+
+async def seed_both(database: str) -> tuple[Seeded, Seeded]:
+    engine = create_async_engine(async_database_url(with_database(OWNER_URL, database)))
+    try:
+        async with engine.begin() as connection:
+            return await seed_tenant(connection, "a"), await seed_tenant(connection, "b")
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture(scope="module")
+def seeded(database: str) -> tuple[Seeded, Seeded]:
+    return asyncio.run(seed_both(database))
+
+
+def test_every_get_operation_is_in_the_suite() -> None:
+    paths: dict[str, dict[str, dict[str, str]]] = openapi_schema()["paths"]
+    operations = {
+        operation["operationId"]
+        for path in paths.values()
+        for method, operation in path.items()
+        if method == "get"
+    }
+    assert operations == set(GET_ROUTES)
+
+
+def test_every_table_is_seeded_by_the_suite(database: str) -> None:
+    rows = query(
+        with_database(OWNER_URL, database),
+        "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+    )
+    known = BASE_TABLES | AUTH_TABLES | set(SEEDERS)
+    assert {str(row[0]) for row in rows} - UNOWNED_TABLES == known
+
+
+@pytest.mark.parametrize("operation", routes(Exposure.TENANT))
+def test_tenant_routes_show_a_member_their_own_data(
+    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
+) -> None:
+    a, _ = seeded
+    response = api(a.member()).get(GET_ROUTES[operation].path(a))
+    assert response.status_code == 200, response.text
+    assert any(marker in response.text for marker in a.markers)
+
+
+@pytest.mark.parametrize("operation", routes(Exposure.TENANT))
+def test_tenant_routes_show_another_tenant_nothing(
+    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
+) -> None:
+    a, b = seeded
+    response = api(b.member()).get(GET_ROUTES[operation].path(a))
+    assert response.status_code in {200, 404}, response.text
+    assert [marker for marker in a.markers if marker in response.text] == []
+
+
+@pytest.mark.parametrize("operation", routes(Exposure.PLATFORM))
+def test_platform_routes_refuse_members(
+    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
+) -> None:
+    a, b = seeded
+    response = api(b.member()).get(GET_ROUTES[operation].path(a))
+    assert response.status_code == 403
+    assert [marker for marker in a.markers if marker in response.text] == []
+
+
+async def rows_visible_to_a_member(database: str, tenant_id: uuid.UUID) -> dict[str, int]:
+    owner = create_async_engine(async_database_url(with_database(OWNER_URL, database)))
+    app = create_async_engine(async_database_url(with_database(APP_URL, database)))
+    try:
+        async with owner.begin() as connection:
+            await connection.execute(
+                insert(platform_operators).values(subject=f"operator-{uuid.uuid4()}")
+            )
+        counts: dict[str, int] = {}
+        async with scoped_transaction(app, DatabaseScope(tenant_id=tenant_id)) as connection:
+            for table in sorted(AUTH_TABLES):
+                counts[table] = int(
+                    await connection.scalar(text(f"SELECT count(*) FROM {table}")) or 0
+                )
+        return counts
+    finally:
+        await owner.dispose()
+        await app.dispose()
+
+
+def test_auth_tables_are_hidden_from_tenant_scopes(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, _ = seeded
+    counts = asyncio.run(rows_visible_to_a_member(database, a.tenant_id))
+    assert counts == dict.fromkeys(sorted(AUTH_TABLES), 0)

@@ -291,9 +291,9 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike shows an interactive embedding request served within 1 s from a pre-warmed container while a whole-slide job runs, and records the cold-start time.
   Refs doc 19 (GPU gate), doc 26 (job ops).
 
-- [ ] STACK-028 · Identity provider
+- [x] STACK-028 · Identity provider
   Candidates: Keycloak (self-hosted), Zitadel, WorkOS, Auth0, Clerk. Criteria: OIDC with PKCE, MFA, organisation SSO later, EU hosting, HIPAA BAA, cost per user. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Zitadel Cloud on the free plan. FastAPI is a confidential OIDC client in the BFF pattern. The browser holds only an HttpOnly, Secure, SameSite=Strict session cookie, and sessions and refresh tokens live in Postgres.
-  Done when the ADR records the choice and a spike logs in through the BFF, refreshes tokens server-side without the SPA noticing and maps IdP organisations to tenants.
+  Done when the ADR records the choice and a spike logs in through the BFF, refreshes tokens server-side without the SPA noticing and maps IdP organisations to tenants. Decided in [ADR 0025](adr/0025-zitadel-bff-login.md).
 
 ### Platform and operations
 
@@ -504,13 +504,13 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on STACK-028.
 
 - [ ] IAM-002 · Login, logout and session refresh through the BFF
-  FastAPI runs the OIDC code flow and refreshes tokens server-side. The SPA only sees a session cookie ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  FastAPI runs the OIDC code flow and refreshes tokens server-side. The SPA only sees a session cookie ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The session lookup is `authenticate` in `parfocal_api.auth` and returns a signed-in user or a platform operator, who is a row in `platform_operators` ([ADR 0024](adr/0024-workspaces-are-tenants.md), [ADR 0025](adr/0025-zitadel-bff-login.md)). IAM-005 turns a signed-in user into a member of the chosen workspace.
   Done when Playwright covers login, refresh after expiry, logout and redirect back to the deep link the user started from.
 
 - [ ] IAM-003 · Tenants and organisations
-  Tenant table, slug, region, plan, status. An organisation can hold several workspaces (diagnostic, research de-identified, second-opinion network).
+  Tenant table, slug, region, plan, status. An organisation can hold several workspaces (diagnostic, research de-identified, second-opinion network). Each workspace is a tenant and the organisation groups them ([ADR 0024](adr/0024-workspaces-are-tenants.md)).
   Done when API tests create, suspend and reactivate a tenant and a suspended tenant's users are refused.
-  Refs kit IA "Other workspaces", mock 1 org switcher.
+  Refs kit IA "Other workspaces", mock 1 org switcher, [ADR 0024](adr/0024-workspaces-are-tenants.md).
 
 - [ ] IAM-004 · Tenant context and row-level security
   Every request sets the tenant in the database session. RLS policies on every tenant-owned table.
@@ -518,11 +518,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on FOUND-013.
 
 - [ ] IAM-005 · Users, memberships and profiles
-  User row linked to the IdP subject, membership per tenant and workspace, display name, initials, avatar colour, title (MUDr.).
+  User row linked to the IdP subject, membership per tenant (each workspace is a tenant, [ADR 0024](adr/0024-workspaces-are-tenants.md)), display name, initials, avatar colour, title (MUDr.). A member principal is accepted only with an active membership in its tenant.
   Done when API tests cover membership in two tenants and switching between them.
 
 - [ ] IAM-006 · Roles and permissions
-  Roles: org admin, lab admin, lab lead, consultant pathologist, resident, annotator, guest consultant, secretary, read-only clinician. A permission matrix in code and a generated doc page.
+  Roles: org admin, lab admin, lab lead, consultant pathologist, resident, annotator, guest consultant, secretary, read-only clinician. A permission matrix in code and a generated doc page. Platform operators sit outside the matrix and only reach `/api/platform/*` ([ADR 0024](adr/0024-workspaces-are-tenants.md)).
   Done when a table-driven test asserts every endpoint's permission for every role.
 
 - [ ] IAM-007 · Invitations
@@ -534,7 +534,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a component test and an E2E test switch workspace and the worklist reloads in the new scope.
 
 - [ ] IAM-009 · Session policies
-  Idle lock after the lab-set time (default 15 min) that returns to the same view on unlock, "sign out on other devices", concurrent session list.
+  Idle lock after the lab-set time (default 15 min) that returns to the same view on unlock, "sign out on other devices", concurrent session list. Sessions already live in the `sessions` table with `last_seen_at` (updated at most once a minute) and a fixed 12 h lifetime from IAM-002, which this task makes configurable.
   Done when tests cover lock, unlock to the same camera position, and remote session revocation.
   Refs mock §2.15 Privacy and session.
 

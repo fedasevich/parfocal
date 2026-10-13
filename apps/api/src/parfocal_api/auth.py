@@ -1,0 +1,327 @@
+import base64
+import hashlib
+import html
+import json
+import secrets
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, Any, cast
+
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from pydantic import BaseModel
+from sqlalchemy import delete, exists, func, insert, select, update
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+
+from parfocal_api.oidc import IdentityError, OidcClient, TokenSet
+from parfocal_api.principals import PlatformOperator, Principal, SignedInUser
+from parfocal_api.problems import ProblemError, UnauthenticatedError
+from parfocal_api.tables import auth_logins, platform_operators, sessions
+from parfocal_common.db import DatabaseScope, scoped_transaction
+
+SESSION_COOKIE = "__Host-parfocal_session"
+LOGIN_COOKIE = "__Host-parfocal_login"
+LOGIN_LIFETIME = timedelta(minutes=10)
+SESSION_LIFETIME = timedelta(hours=12)
+REFRESH_MARGIN = timedelta(seconds=30)
+SEEN_INTERVAL = timedelta(minutes=1)
+AUTH_SCOPE = DatabaseScope(auth=True)
+
+
+class LoginFailedError(ProblemError):
+    status = 400
+    code = "login-failed"
+    title = "Signing in did not work, try again"
+
+
+class SessionKeyError(ValueError):
+    def __init__(self) -> None:
+        super().__init__("SESSION_KEY must be 32 bytes encoded as URL-safe base64")
+
+
+class SessionCipher:
+    def __init__(self, key: str) -> None:
+        try:
+            raw = base64.urlsafe_b64decode(key.encode())
+        except ValueError as error:
+            raise SessionKeyError from error
+        if len(raw) != 32:
+            raise SessionKeyError
+        self._aead = AESGCM(raw)
+
+    def seal(self, value: dict[str, Any]) -> bytes:
+        nonce = secrets.token_bytes(12)
+        return nonce + self._aead.encrypt(nonce, json.dumps(value).encode(), None)
+
+    def open(self, sealed: bytes) -> dict[str, Any]:
+        opened: dict[str, Any] = json.loads(self._aead.decrypt(sealed[:12], sealed[12:], None))
+        return opened
+
+
+@dataclass(frozen=True)
+class AuthState:
+    engine: AsyncEngine
+    identity: OidcClient
+    cipher: SessionCipher
+    public_origin: str
+
+
+class Session(BaseModel):
+    subject: str
+    name: str | None
+    email: str | None
+    operator: bool
+
+
+def auth_state(request: Request) -> AuthState:
+    return cast("AuthState", request.app.state.auth)
+
+
+def digest(value: str) -> bytes:
+    return hashlib.sha256(value.encode()).digest()
+
+
+def code_challenge(verifier: str) -> str:
+    return (
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    )
+
+
+def safe_return_path(value: str) -> str:
+    if not value.startswith("/") or value.startswith(("//", "/\\")) or "\\" in value:
+        return "/"
+    if any(ord(character) < 0x20 for character in value):
+        return "/"
+    return value
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
+
+
+def sealed_tokens(tokens: TokenSet, claims: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id_token": tokens.id_token,
+        "refresh_token": tokens.refresh_token,
+        "name": claims.get("name"),
+        "email": claims.get("email"),
+    }
+
+
+async def load_session(
+    connection: AsyncConnection, state: AuthState, session_id: str
+) -> dict[str, Any] | None:
+    row = (
+        await connection.execute(
+            select(sessions)
+            .where(sessions.c.id_hash == digest(session_id), sessions.c.expires_at > func.now())
+            .with_for_update()
+        )
+    ).one_or_none()
+    if row is None:
+        return None
+    try:
+        tokens = state.cipher.open(row.tokens)
+    except InvalidTag:
+        return None
+    return {"row": row, "tokens": tokens}
+
+
+async def refresh_session(
+    connection: AsyncConnection, state: AuthState, session_id: str, tokens: dict[str, Any]
+) -> bool:
+    try:
+        renewed = await state.identity.refresh(str(tokens["refresh_token"]))
+        claims = await state.identity.verify_id_token(renewed.id_token, None)
+    except IdentityError:
+        await connection.execute(delete(sessions).where(sessions.c.id_hash == digest(session_id)))
+        return False
+    await connection.execute(
+        update(sessions)
+        .where(sessions.c.id_hash == digest(session_id))
+        .values(
+            tokens=state.cipher.seal(sealed_tokens(renewed, claims)),
+            access_expires_at=now() + timedelta(seconds=renewed.expires_in),
+        )
+    )
+    return True
+
+
+async def authenticate(request: Request) -> Principal:
+    session_id = request.cookies.get(SESSION_COOKIE)
+    if not session_id:
+        raise UnauthenticatedError
+    state = auth_state(request)
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        loaded = await load_session(connection, state, session_id)
+        if loaded is None:
+            subject = None
+        else:
+            row = loaded["row"]
+            subject = str(row.subject)
+            if row.access_expires_at - REFRESH_MARGIN <= now() and not await refresh_session(
+                connection, state, session_id, loaded["tokens"]
+            ):
+                subject = None
+            elif row.last_seen_at + SEEN_INTERVAL <= now():
+                await connection.execute(
+                    update(sessions)
+                    .where(sessions.c.id_hash == digest(session_id))
+                    .values(last_seen_at=func.now())
+                )
+        operator = subject is not None and bool(
+            await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
+        )
+    if subject is None:
+        raise UnauthenticatedError
+    return PlatformOperator(subject) if operator else SignedInUser(subject)
+
+
+def set_cookie(response: Response, name: str, value: str, max_age: int, same_site: str) -> None:
+    response.set_cookie(
+        name,
+        value,
+        max_age=max_age,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite=cast("Any", same_site),
+    )
+
+
+def clear_cookie(response: Response, name: str) -> None:
+    response.delete_cookie(name, path="/", secure=True, httponly=True)
+
+
+def hop_to(path: str) -> HTMLResponse:
+    target = html.escape(path, quote=True)
+    return HTMLResponse(
+        "<!doctype html><title>Signing in</title>"
+        f'<meta http-equiv="refresh" content="0;url={target}">'
+        f'<a href="{target}">Continue</a>',
+        headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"},
+    )
+
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+@router.get("/login", include_in_schema=False)
+async def start_login(request: Request, return_to: str = "/") -> RedirectResponse:
+    state = auth_state(request)
+    login_state = secrets.token_urlsafe(32)
+    binding = secrets.token_urlsafe(32)
+    verifier = secrets.token_urlsafe(48)
+    nonce = secrets.token_urlsafe(24)
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        await connection.execute(delete(auth_logins).where(auth_logins.c.expires_at < func.now()))
+        await connection.execute(
+            insert(auth_logins).values(
+                state_hash=digest(login_state),
+                binding_hash=digest(binding),
+                code_verifier=verifier,
+                nonce=nonce,
+                return_to=safe_return_path(return_to),
+                expires_at=now() + LOGIN_LIFETIME,
+            )
+        )
+    url = await state.identity.authorization_url(login_state, nonce, code_challenge(verifier))
+    response = RedirectResponse(url, status_code=302)
+    set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
+    return response
+
+
+@router.get("/callback", include_in_schema=False)
+async def complete_login(
+    request: Request, code: str | None = None, state: str | None = None
+) -> HTMLResponse:
+    binding = request.cookies.get(LOGIN_COOKIE)
+    if not code or not state or not binding:
+        raise LoginFailedError
+    auth = auth_state(request)
+    async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        login = (
+            await connection.execute(
+                delete(auth_logins)
+                .where(
+                    auth_logins.c.state_hash == digest(state),
+                    auth_logins.c.expires_at > func.now(),
+                )
+                .returning(*auth_logins.c)
+            )
+        ).one_or_none()
+    if login is None or not secrets.compare_digest(login.binding_hash, digest(binding)):
+        raise LoginFailedError
+    try:
+        tokens = await auth.identity.exchange(code, login.code_verifier)
+        claims = await auth.identity.verify_id_token(tokens.id_token, login.nonce)
+    except IdentityError as error:
+        raise LoginFailedError from error
+    session_id = secrets.token_urlsafe(32)
+    async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        await connection.execute(
+            insert(sessions).values(
+                id_hash=digest(session_id),
+                subject=str(claims["sub"]),
+                tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
+                access_expires_at=now() + timedelta(seconds=tokens.expires_in),
+                expires_at=now() + SESSION_LIFETIME,
+            )
+        )
+    response = hop_to(login.return_to)
+    set_cookie(
+        response, SESSION_COOKIE, session_id, int(SESSION_LIFETIME.total_seconds()), "strict"
+    )
+    clear_cookie(response, LOGIN_COOKIE)
+    return response
+
+
+@router.get("/logout", include_in_schema=False)
+async def logout(request: Request) -> RedirectResponse:
+    auth = auth_state(request)
+    home = f"{auth.public_origin}/"
+    session_id = request.cookies.get(SESSION_COOKIE)
+    tokens: dict[str, Any] | None = None
+    if session_id:
+        async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+            sealed = await connection.scalar(
+                delete(sessions)
+                .where(sessions.c.id_hash == digest(session_id))
+                .returning(sessions.c.tokens)
+            )
+        if sealed is not None:
+            try:
+                tokens = auth.cipher.open(sealed)
+            except InvalidTag:
+                tokens = None
+    target = home
+    if tokens is not None:
+        try:
+            await auth.identity.revoke(str(tokens["refresh_token"]))
+            target = await auth.identity.end_session_url(str(tokens["id_token"]), home)
+        except IdentityError:
+            target = home
+    response = RedirectResponse(target, status_code=302)
+    clear_cookie(response, SESSION_COOKIE)
+    return response
+
+
+@router.get("/session", operation_id="getSession")
+async def get_session(
+    request: Request, principal: Annotated[Principal, Depends(authenticate)]
+) -> Session:
+    auth = auth_state(request)
+    session_id = request.cookies.get(SESSION_COOKIE, "")
+    async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        sealed = await connection.scalar(
+            select(sessions.c.tokens).where(sessions.c.id_hash == digest(session_id))
+        )
+    profile = auth.cipher.open(sealed) if sealed is not None else {}
+    return Session(
+        subject=principal.subject,
+        name=profile.get("name"),
+        email=profile.get("email"),
+        operator=isinstance(principal, PlatformOperator),
+    )
