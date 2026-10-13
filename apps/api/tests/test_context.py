@@ -14,6 +14,7 @@ from parfocal_api.principals import (
     SignedInUser,
     database_scope,
 )
+from parfocal_api.tables import Role
 from parfocal_common.db import DatabaseScope
 
 TENANT = uuid.uuid4()
@@ -23,7 +24,7 @@ USER = uuid.uuid4()
 
 
 def test_a_member_is_scoped_to_their_tenant() -> None:
-    assert database_scope(MemberPrincipal("user", TENANT, USER)) == DatabaseScope(
+    assert database_scope(MemberPrincipal("user", TENANT, USER, Role.CONSULTANT)) == DatabaseScope(
         tenant_id=TENANT, user_id=USER
     )
 

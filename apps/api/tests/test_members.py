@@ -30,10 +30,10 @@ def user_id_of(browser: Browser) -> str:
     return str(browser.sql(f"SELECT id FROM users WHERE subject = '{browser.idp.subject}'")[0][0])
 
 
-def join(browser: Browser, tenant_id: str) -> None:
+def join(browser: Browser, tenant_id: str, role: str = "consultant") -> None:
     browser.sql(
-        "INSERT INTO memberships (tenant_id, user_id) "
-        f"VALUES ('{tenant_id}', '{user_id_of(browser)}')"
+        "INSERT INTO memberships (tenant_id, user_id, role) "
+        f"VALUES ('{tenant_id}', '{user_id_of(browser)}', '{role}')"
     )
 
 
@@ -204,15 +204,15 @@ def test_operators_add_and_list_members(api: ApiAs, browser: Browser) -> None:
     tenant = make_tenant(browser)
     user = user_id_of(browser)
     path = f"/api/platform/tenants/{tenant}/members"
-    added = api(OPERATOR).post(path, json={"user_id": user})
+    added = api(OPERATOR).post(path, json={"user_id": user, "role": "lead"})
     assert added.status_code == 201
-    assert added.json()["user_id"] == user
-    again = api(OPERATOR).post(path, json={"user_id": user})
+    assert (added.json()["user_id"], added.json()["role"]) == (user, "lead")
+    again = api(OPERATOR).post(path, json={"user_id": user, "role": "lead"})
     assert (again.status_code, again.json()["code"]) == (409, "already-a-member")
     assert [member["user_id"] for member in api(OPERATOR).get(path).json()] == [user]
-    unknown_user = api(OPERATOR).post(path, json={"user_id": str(uuid.uuid4())})
+    unknown_user = api(OPERATOR).post(path, json={"user_id": str(uuid.uuid4()), "role": "lab"})
     assert unknown_user.status_code == 404
     unknown_tenant = api(OPERATOR).post(
-        f"/api/platform/tenants/{uuid.uuid4()}/members", json={"user_id": user}
+        f"/api/platform/tenants/{uuid.uuid4()}/members", json={"user_id": user, "role": "lab"}
     )
     assert unknown_tenant.status_code == 404

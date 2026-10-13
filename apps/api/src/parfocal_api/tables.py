@@ -37,6 +37,18 @@ class Plan(StrEnum):
     PILOT = "pilot"
 
 
+class Role(StrEnum):
+    CONSULTANT = "consultant"
+    RESIDENT = "resident"
+    LEAD = "lead"
+    LAB = "lab"
+    OUTSIDE_CONSULTANT = "outside-consultant"
+    ADMIN = "admin"
+
+
+MEMBER_ROLE_CHECK = "role IN ('consultant', 'resident', 'lead', 'lab', 'admin')"
+
+
 class TenantStatus(StrEnum):
     ACTIVE = "active"
     SUSPENDED = "suspended"
@@ -156,6 +168,8 @@ memberships = Table(
     Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
     Column("tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=False, index=True),
     Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, index=True),
+    Column("role", String(30), nullable=False),
     *timestamps(),
     UniqueConstraint("tenant_id", "user_id"),
+    CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
 )

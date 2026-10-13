@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from sqlalchemy import exists, insert, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -14,6 +14,7 @@ from parfocal_api.context import (
     TenantConnection,
     UserConnection,
 )
+from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, SignedInUser
 from parfocal_api.problems import (
     ConflictError,
@@ -24,6 +25,7 @@ from parfocal_api.problems import (
 )
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    Role,
     TenantKind,
     TenantStatus,
     memberships,
@@ -41,6 +43,15 @@ type DisplayName = Annotated[
 type Title = Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)]
 
 
+def member_role(role: Role) -> Role:
+    if role is Role.OUTSIDE_CONSULTANT:
+        raise ValueError("Outside consultants get a guest link, not a membership")
+    return role
+
+
+type MemberRole = Annotated[Role, AfterValidator(member_role)]
+
+
 class Profile(BaseModel):
     user_id: uuid.UUID
     display_name: str
@@ -49,8 +60,13 @@ class Profile(BaseModel):
     title: str | None
 
 
+class Member(Profile):
+    role: Role
+
+
 class Workspace(BaseModel):
     tenant_id: uuid.UUID
+    role: Role
     slug: str
     name: str
     kind: TenantKind
@@ -77,17 +93,28 @@ class WorkspaceChoice(BaseModel):
 
 class MembershipDraft(BaseModel):
     user_id: uuid.UUID
+    role: MemberRole
+
+
+class RoleChange(BaseModel):
+    role: MemberRole
 
 
 class Membership(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     user_id: uuid.UUID
+    role: Role
 
 
 class NotAMemberError(ForbiddenError):
     code = "not-a-member"
     title = "You are not a member of this workspace"
+
+
+class OwnRoleError(ConflictError):
+    code = "own-role"
+    title = "Ask another person with this right to change your role"
 
 
 class AlreadyAMemberError(ConflictError):
@@ -118,6 +145,7 @@ async def own_workspaces(connection: AsyncConnection, user_id: uuid.UUID) -> lis
     rows = await connection.execute(
         select(
             tenants.c.id.label("tenant_id"),
+            memberships.c.role,
             tenants.c.slug,
             tenants.c.name,
             tenants.c.kind,
@@ -207,15 +235,59 @@ async def switch_workspace(
     return chosen
 
 
-@tenant_router.get("/members", operation_id="listTenantMembers")
-async def list_tenant_members(connection: TenantConnection) -> list[Profile]:
+MEMBER_COLUMNS = (*PROFILE_COLUMNS, memberships.c.role)
+
+
+def member_of(row: object) -> Member:
+    return Member.model_validate(row, from_attributes=True)
+
+
+@tenant_router.get("/members", operation_id="listTenantMembers", **require(Permission.SEE_TEAM))
+async def list_tenant_members(connection: TenantConnection) -> list[Member]:
     rows = await connection.execute(
-        select(*PROFILE_COLUMNS)
+        select(*MEMBER_COLUMNS)
         .join(memberships, memberships.c.user_id == users.c.id)
         .where(memberships.c.tenant_id == literal_column(CURRENT_TENANT))
         .order_by(users.c.display_name)
     )
-    return [profile_of(row) for row in rows]
+    return [member_of(row) for row in rows]
+
+
+@tenant_router.put(
+    "/members/{user_id}/role",
+    operation_id="changeMemberRole",
+    **require(Permission.MANAGE_PEOPLE),
+)
+async def change_member_role(
+    user_id: uuid.UUID,
+    change: RoleChange,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Member:
+    if isinstance(principal, MemberPrincipal) and principal.user_id == user_id:
+        raise OwnRoleError
+    changed = await connection.scalar(
+        update(memberships)
+        .where(
+            memberships.c.user_id == user_id,
+            memberships.c.tenant_id == literal_column(CURRENT_TENANT),
+        )
+        .values(role=change.role)
+        .returning(memberships.c.user_id)
+    )
+    if changed is None:
+        raise NotFoundError("Member not found")
+    row = (
+        await connection.execute(
+            select(*MEMBER_COLUMNS)
+            .join(memberships, memberships.c.user_id == users.c.id)
+            .where(
+                users.c.id == user_id,
+                memberships.c.tenant_id == literal_column(CURRENT_TENANT),
+            )
+        )
+    ).one()
+    return member_of(row)
 
 
 @platform_router.post("/tenants/{tenant_id}/members", operation_id="addMember", status_code=201)
@@ -229,8 +301,13 @@ async def add_member(
         row = (
             await connection.execute(
                 insert(memberships)
-                .values(tenant_id=tenant_id, user_id=draft.user_id)
-                .returning(memberships.c.id, memberships.c.tenant_id, memberships.c.user_id)
+                .values(tenant_id=tenant_id, user_id=draft.user_id, role=draft.role)
+                .returning(
+                    memberships.c.id,
+                    memberships.c.tenant_id,
+                    memberships.c.user_id,
+                    memberships.c.role,
+                )
             )
         ).one()
     except IntegrityError as error:
@@ -239,11 +316,11 @@ async def add_member(
 
 
 @platform_router.get("/tenants/{tenant_id}/members", operation_id="listMembers")
-async def list_members(tenant_id: uuid.UUID, connection: PlatformConnection) -> list[Profile]:
+async def list_members(tenant_id: uuid.UUID, connection: PlatformConnection) -> list[Member]:
     rows = await connection.execute(
-        select(*PROFILE_COLUMNS)
+        select(*MEMBER_COLUMNS)
         .join(memberships, memberships.c.user_id == users.c.id)
         .where(memberships.c.tenant_id == tenant_id)
         .order_by(users.c.display_name)
     )
-    return [profile_of(row) for row in rows]
+    return [member_of(row) for row in rows]

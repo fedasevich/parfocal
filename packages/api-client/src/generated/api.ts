@@ -43,6 +43,17 @@ export interface Health {
  */
 export type Initials = string;
 
+export type Role = (typeof Role)[keyof typeof Role];
+
+export const Role = {
+  consultant: "consultant",
+  resident: "resident",
+  lead: "lead",
+  lab: "lab",
+  "outside-consultant": "outside-consultant",
+  admin: "admin",
+} as const;
+
 export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];
 
 export const TenantKind = {
@@ -60,6 +71,7 @@ export const TenantStatus = {
 
 export interface Workspace {
   tenant_id: string;
+  role: Role;
   slug: string;
   name: string;
   kind: TenantKind;
@@ -78,14 +90,27 @@ export interface Me {
   workspaces: Workspace[];
 }
 
+export interface Member {
+  user_id: string;
+  display_name: string;
+  initials: string;
+  avatar_colour: number;
+  title: string | null;
+  role: Role;
+}
+
+export type MemberRole = Role;
+
 export interface Membership {
   id: string;
   tenant_id: string;
   user_id: string;
+  role: Role;
 }
 
 export interface MembershipDraft {
   user_id: string;
+  role: Role;
 }
 
 /**
@@ -126,14 +151,6 @@ export interface Problem {
   errors?: FieldError[] | null;
 }
 
-export interface Profile {
-  user_id: string;
-  display_name: string;
-  initials: string;
-  avatar_colour: number;
-  title: string | null;
-}
-
 /**
  * @maxLength 40
  */
@@ -152,6 +169,10 @@ export const Region = {
   eu: "eu",
   us: "us",
 } as const;
+
+export interface RoleChange {
+  role: Role;
+}
 
 export interface Session {
   subject: string;
@@ -2273,7 +2294,7 @@ export const useSwitchWorkspace = <TError = Problem, TContext = unknown>(
 };
 
 export type listTenantMembersResponse200 = {
-  data: Profile[];
+  data: Member[];
   status: 200;
 };
 
@@ -2446,6 +2467,169 @@ export function useListTenantMembers<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type changeMemberRoleResponse200 = {
+  data: Member;
+  status: 200;
+};
+
+export type changeMemberRoleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeMemberRoleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeMemberRoleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeMemberRoleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeMemberRoleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeMemberRoleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeMemberRoleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeMemberRoleResponseSuccess = changeMemberRoleResponse200 & {
+  headers: Headers;
+};
+export type changeMemberRoleResponseError = (
+  | changeMemberRoleResponse400
+  | changeMemberRoleResponse401
+  | changeMemberRoleResponse403
+  | changeMemberRoleResponse404
+  | changeMemberRoleResponse409
+  | changeMemberRoleResponse422
+  | changeMemberRoleResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeMemberRoleResponse =
+  | changeMemberRoleResponseSuccess
+  | changeMemberRoleResponseError;
+
+export const getChangeMemberRoleUrl = (userId: string) => {
+  return `/api/tenant/members/${userId}/role`;
+};
+
+/**
+ * @summary Change Member Role
+ */
+export const changeMemberRole = async (
+  userId: string,
+  roleChange: RoleChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeMemberRoleResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeMemberRoleResponse>(getChangeMemberRoleUrl(userId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(roleChange),
+  });
+};
+
+export const getChangeMemberRoleMutationKey = () => ["changeMemberRole"] as const;
+
+export const getChangeMemberRoleMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeMemberRole>>,
+    TError,
+    ChangeMemberRoleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeMemberRole>>,
+  TError,
+  ChangeMemberRoleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeMemberRoleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeMemberRole>>,
+    ChangeMemberRoleMutationVariables
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return changeMemberRole(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeMemberRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeMemberRole>>
+>;
+export type ChangeMemberRoleMutationBody = RoleChange;
+export type ChangeMemberRoleMutationError = Problem;
+export type ChangeMemberRoleMutationVariables = { userId: string; data: RoleChange };
+
+/**
+ * @summary Change Member Role
+ */
+export const useChangeMemberRole = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeMemberRole>>,
+      TError,
+      ChangeMemberRoleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeMemberRole>>,
+  TError,
+  ChangeMemberRoleMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeMemberRoleMutationOptions(options), queryClient);
+};
+
 export type addMemberResponse201 = {
   data: Membership;
   status: 201;
@@ -2606,7 +2790,7 @@ export const useAddMember = <TError = Problem, TContext = unknown>(
 };
 
 export type listMembersResponse200 = {
-  data: Profile[];
+  data: Member[];
   status: 200;
 };
 

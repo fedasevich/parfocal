@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
+from parfocal_api.tables import Role
 from parfocal_common.db import DatabaseScope
 
 
@@ -15,6 +16,7 @@ class MemberPrincipal:
     subject: str
     tenant_id: uuid.UUID
     user_id: uuid.UUID
+    role: Role
 
 
 @dataclass(frozen=True)

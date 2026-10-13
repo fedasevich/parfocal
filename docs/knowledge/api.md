@@ -20,6 +20,10 @@ Generated calls go through `apiFetch` in `src/fetcher.ts`, which sends the sessi
 
 `authenticate` in `parfocal_api.auth` reads the session cookie and returns a `SignedInUser` or a `PlatformOperator` from `parfocal_api.principals`. `MemberPrincipal` and `GuestPrincipal` arrive with IAM-005 and IAM-010. Tests that are not about login replace it through `app.dependency_overrides`, which `ApiAs` in `apps/api/tests/db_support.py` wraps so a test calls `api(principal).get(...)`. Never add a header or query switch to pick a principal in application code. See [auth.md](auth.md).
 
+## Every route declares a permission or why it is open
+
+Guard a tenant route with `**require(Permission.X)` from `parfocal_api.permissions`. It refuses roles whose matrix cell is empty and puts `x-permission` into the OpenAPI schema. A route that every member, every signed-in person or nobody signed in may call goes into `OPEN_OPERATIONS` in `apps/api/tests/test_permissions.py` with its reason, and a guarded one needs a request in `GUARDED_CALLS`. The tests fail until one of the two is done. After changing the matrix run `pnpm permissions:doc`. See [ADR 0026](../adr/0026-roles-and-permission-matrix.md).
+
 ## Database dependencies close before the response
 
 `TenantConnection` and `PlatformConnection` use `Depends(..., scope="function")`, so the transaction commits or rolls back before FastAPI sends the response. With the default scope the commit runs after the response is sent, and a failed commit would follow a 200. Source: IAM-004 log entry.

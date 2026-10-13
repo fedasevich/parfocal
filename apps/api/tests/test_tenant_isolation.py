@@ -11,7 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.tables import memberships, organisations, platform_operators, tenants, users
+from parfocal_api.tables import (
+    Role,
+    memberships,
+    organisations,
+    platform_operators,
+    tenants,
+    users,
+)
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
 pytestmark = pytest.mark.db
@@ -24,7 +31,7 @@ class Seeded:
     markers: set[str] = field(default_factory=set[str])
 
     def member(self) -> MemberPrincipal:
-        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"])
+        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"], Role.LEAD)
 
 
 type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
@@ -95,7 +102,9 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
         )
         .returning(users.c.id)
     )
-    await connection.execute(insert(memberships).values(tenant_id=tenant_id, user_id=user_id))
+    await connection.execute(
+        insert(memberships).values(tenant_id=tenant_id, user_id=user_id, role="lead")
+    )
     assert isinstance(organisation_id, uuid.UUID)
     assert isinstance(tenant_id, uuid.UUID)
     assert isinstance(user_id, uuid.UUID)

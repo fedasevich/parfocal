@@ -22,6 +22,7 @@ from parfocal_api.principals import MemberPrincipal, PlatformOperator, Principal
 from parfocal_api.problems import ProblemError, UnauthenticatedError
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    Role,
     auth_logins,
     memberships,
     platform_operators,
@@ -164,7 +165,7 @@ class Resolved:
     user_id: uuid.UUID | None
     active_tenant_id: uuid.UUID | None
     operator: bool
-    member: bool
+    role: Role | None
 
 
 async def resolve(
@@ -174,21 +175,14 @@ async def resolve(
     operator = bool(
         await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
     )
-    member = (
-        user_id is not None
-        and active_tenant_id is not None
-        and bool(
-            await connection.scalar(
-                select(
-                    exists().where(
-                        memberships.c.user_id == user_id,
-                        memberships.c.tenant_id == active_tenant_id,
-                    )
-                )
+    role = None
+    if user_id is not None and active_tenant_id is not None:
+        role = await connection.scalar(
+            select(memberships.c.role).where(
+                memberships.c.user_id == user_id, memberships.c.tenant_id == active_tenant_id
             )
         )
-    )
-    return Resolved(subject, user_id, active_tenant_id, operator, member)
+    return Resolved(subject, user_id, active_tenant_id, operator, Role(role) if role else None)
 
 
 def principal_of(resolved: Resolved) -> Principal:
@@ -196,8 +190,10 @@ def principal_of(resolved: Resolved) -> Principal:
         return PlatformOperator(resolved.subject)
     if resolved.user_id is None:
         raise UnauthenticatedError
-    if resolved.member and resolved.active_tenant_id is not None:
-        return MemberPrincipal(resolved.subject, resolved.active_tenant_id, resolved.user_id)
+    if resolved.role is not None and resolved.active_tenant_id is not None:
+        return MemberPrincipal(
+            resolved.subject, resolved.active_tenant_id, resolved.user_id, resolved.role
+        )
     return SignedInUser(resolved.subject, resolved.user_id)
 
 
