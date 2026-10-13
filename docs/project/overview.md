@@ -16,9 +16,10 @@ The roles come from IAM-006 in the backlog. They are org admin, lab admin, lab l
 - Worklists, cases, navigation aids, the Review and Annotate workspaces and measurements.
 - AI pre-read on slide arrival, interactive segmentation, whole-slide nuclei and typing, tumor maps and learning from corrections.
 - Realtime threads, presence, follow-my-view, guest second opinions and slide comparison.
-- Cases with CSV and FHIR import, templated synoptic reports, PDF with AI disclosure and sign-out.
+- Cases with CSV and FHIR import, templated synoptic reports, PDF with AI disclosure and sign-out, and slide import from a link.
 - GDPR, HIPAA and ISO 27001 readiness. The pilot itself holds only public slides with seeded fake identities.
-- Every home and worklist variant behind feature flags for A/B experiments.
+- A launchpad home, a worklist grouped by due day with a case preview on demand, and a status board for cases and lab work, with feature flags for the choices still open ([ADR 0021](../adr/0021-chosen-home-worklist-status-board-and-account-menu.md)).
+- Sign-out reports built to CAP's synoptic rules with ICCR datasets and TNM 8, with a PDF that can be printed and shared ([ADR 0022](../adr/0022-sign-out-report-standards-and-pdf-preview.md)).
 - Mouse, keyboard, trackpad, tablet with pen, gamepad and SpaceMouse.
 
 The full scope and the "Later epics" list are in [BACKLOG.md](../BACKLOG.md). The decisions behind this scope are in [ADR 0002](../adr/0002-planning-baseline.md).
