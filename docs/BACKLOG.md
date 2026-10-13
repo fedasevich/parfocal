@@ -517,7 +517,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an isolation test suite runs every list and get endpoint as a user of tenant B against data of tenant A and gets nothing. The suite runs automatically on every new table.
   Depends on FOUND-013.
 
-- [ ] IAM-005 · Users, memberships and profiles
+- [x] IAM-005 · Users, memberships and profiles
   User row linked to the IdP subject, membership per tenant (each workspace is a tenant, [ADR 0024](adr/0024-workspaces-are-tenants.md)), display name, initials, avatar colour, title (MUDr.). A member principal is accepted only with an active membership in its tenant.
   Done when API tests cover membership in two tenants and switching between them.
 
