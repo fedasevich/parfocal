@@ -2062,7 +2062,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when unit tests cover routing rules.
 
 
-- [ ] CASES-012 · Case state machine
+- [x] CASES-012 · Case state machine
   One state model behind the worklist, the board, the report and outgoing messages: waiting for slides, waiting for AI, ready to review, in review, waiting on others (with the reason: lab work, second opinion, clinical question, supervision), report drafted, with the supervisor, signed, amending and cancelled. Each transition has the actors who may make it. States that follow from data (slides arrived, AI done, sub-tasks open) are derived, the rest are moved by people. Priority and due time are attributes, not states.
   Done when a table-driven test covers every allowed and refused transition with its actor, and a property test proves every state is reachable and signed is reachable only through sign-out.
   Depends on CASES-001. Refs kit Case lifecycle and data page, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0038](adr/0038-case-state-machine.md) says.
