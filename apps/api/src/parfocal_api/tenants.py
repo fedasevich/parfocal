@@ -3,21 +3,26 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import Row, func, insert, literal_column, select, update
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
+from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.tables import (
+    DEFAULT_IDLE_LOCK_MINUTES,
+    DEFAULT_SESSION_HOURS,
     SLUG_PATTERN,
     Plan,
     Region,
     TenantKind,
     TenantStatus,
     organisations,
+    session_policies,
     tenants,
 )
 from parfocal_common.db import CURRENT_TENANT
@@ -203,3 +208,67 @@ async def reactivate_tenant(
 async def get_current_tenant(connection: TenantConnection) -> Tenant:
     current = select(tenants).where(tenants.c.id == literal_column(CURRENT_TENANT))
     return tenant_of((await connection.execute(current)).one())
+
+
+class SessionPolicyChange(BaseModel):
+    idle_lock_minutes: Annotated[int, Field(ge=1, le=240)]
+    session_hours: Annotated[int, Field(ge=1, le=24)]
+
+
+class SessionPolicy(SessionPolicyChange):
+    tenant_id: uuid.UUID
+
+
+async def current_policy(connection: AsyncConnection) -> SessionPolicy:
+    tenant_id = await connection.scalar(select(literal_column(CURRENT_TENANT)))
+    assert isinstance(tenant_id, uuid.UUID)
+    row = (
+        await connection.execute(
+            select(session_policies.c.idle_lock_minutes, session_policies.c.session_hours).where(
+                session_policies.c.tenant_id == tenant_id
+            )
+        )
+    ).one_or_none()
+    return SessionPolicy(
+        tenant_id=tenant_id,
+        idle_lock_minutes=row.idle_lock_minutes if row else DEFAULT_IDLE_LOCK_MINUTES,
+        session_hours=row.session_hours if row else DEFAULT_SESSION_HOURS,
+    )
+
+
+@tenant.get("/tenant/session-policy", operation_id="getSessionPolicy")
+async def get_session_policy(connection: TenantConnection) -> SessionPolicy:
+    return await current_policy(connection)
+
+
+@tenant.put(
+    "/tenant/session-policy",
+    operation_id="updateSessionPolicy",
+    **require(Permission.LAB_SETUP, write=True),
+)
+async def update_session_policy(
+    change: SessionPolicyChange, principal: CurrentPrincipal, connection: TenantConnection
+) -> SessionPolicy:
+    previous = await current_policy(connection)
+    policy = SessionPolicy(tenant_id=previous.tenant_id, **change.model_dump())
+    if previous != policy:
+        await connection.execute(
+            upsert(session_policies)
+            .values(tenant_id=previous.tenant_id, **change.model_dump())
+            .on_conflict_do_update(
+                index_elements=[session_policies.c.tenant_id], set_=change.model_dump()
+            )
+        )
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.SESSION_POLICY_CHANGED,
+            AuditTarget.TENANT,
+            previous.tenant_id,
+            tenant_id=previous.tenant_id,
+            details={
+                "from": previous.model_dump(exclude={"tenant_id"}),
+                "to": change.model_dump(),
+            },
+        )
+    return policy

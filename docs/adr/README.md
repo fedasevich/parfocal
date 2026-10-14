@@ -36,3 +36,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0028](0028-data-classes-on-columns.md) | Five data classes declared on every column, with a generated data map | Accepted | 2026-10-14 |
 | [0029](0029-service-accounts-with-own-api-tokens.md) | Service accounts per workspace with our own hashed API tokens and narrow scopes | Accepted | 2026-10-14 |
 | [0030](0030-invitations-bound-to-verified-email.md) | Invitations bound to a verified email, accepted by a signed-in person, with operators inviting first administrators | Accepted | 2026-10-14 |
+| [0031](0031-idle-lock-from-explicit-activity.md) | Idle lock driven by explicit activity, unlocked by signing in again, with limits set per workspace | Accepted | 2026-10-14 |

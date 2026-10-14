@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 0 |
-| `personal` | 14 |
+| `personal` | 15 |
 | `secret` | 8 |
-| `operational` | 64 |
+| `operational` | 71 |
 | `public` | 0 |
 
 ## api_tokens
@@ -120,11 +120,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 
+## session_policies
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `idle_lock_minutes` | operational |
+| `session_hours` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## sessions
 
 | Column | Class |
 |---|---|
 | `id_hash` | secret |
+| `id` | operational |
 | `subject` | personal |
 | `tokens` | secret |
 | `access_expires_at` | operational |
@@ -132,6 +143,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `last_seen_at` | operational |
 | `created_at` | operational |
 | `active_tenant_id` | operational |
+| `active_at` | operational |
+| `user_agent` | personal |
 
 ## tenants
 

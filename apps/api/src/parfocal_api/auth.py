@@ -29,6 +29,8 @@ from parfocal_api.principals import (
 from parfocal_api.problems import ForbiddenError, ProblemError, UnauthenticatedError
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    DEFAULT_IDLE_LOCK_MINUTES,
+    DEFAULT_SESSION_HOURS,
     ActorKind,
     Role,
     api_tokens,
@@ -36,6 +38,7 @@ from parfocal_api.tables import (
     memberships,
     platform_operators,
     service_accounts,
+    session_policies,
     sessions,
     users,
 )
@@ -44,7 +47,7 @@ from parfocal_common.db import DatabaseScope, scoped_transaction
 SESSION_COOKIE = "__Host-parfocal_session"
 LOGIN_COOKIE = "__Host-parfocal_login"
 LOGIN_LIFETIME = timedelta(minutes=10)
-SESSION_LIFETIME = timedelta(hours=12)
+USER_AGENT_LENGTH = 200
 REFRESH_MARGIN = timedelta(seconds=30)
 SEEN_INTERVAL = timedelta(minutes=1)
 AUTH_SCOPE = DatabaseScope(auth=True)
@@ -237,6 +240,30 @@ async def service_principal(state: AuthState, token: str) -> ServicePrincipal:
     return ServicePrincipal(row.account_id, row.tenant_id, frozenset(row.scopes))
 
 
+class SessionLockedError(UnauthenticatedError):
+    code = "session-locked"
+    title = "Your session is locked. Sign in again to continue"
+
+
+@dataclass(frozen=True)
+class SessionLimits:
+    idle: timedelta
+    lifetime: timedelta
+
+
+async def session_limits(connection: AsyncConnection, tenant_id: uuid.UUID | None) -> SessionLimits:
+    row = (
+        await connection.execute(
+            select(session_policies.c.idle_lock_minutes, session_policies.c.session_hours).where(
+                session_policies.c.tenant_id == tenant_id
+            )
+        )
+    ).one_or_none()
+    minutes = row.idle_lock_minutes if row else DEFAULT_IDLE_LOCK_MINUTES
+    hours = row.session_hours if row else DEFAULT_SESSION_HOURS
+    return SessionLimits(timedelta(minutes=minutes), timedelta(hours=hours))
+
+
 async def authenticate(request: Request) -> Principal:
     authorization = request.headers.get("authorization")
     if authorization is not None:
@@ -249,12 +276,22 @@ async def authenticate(request: Request) -> Principal:
         raise UnauthenticatedError
     state = auth_state(request)
     resolved: Resolved | None = None
+    locked = False
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         loaded = await load_session(connection, state, session_id)
         if loaded is not None:
             row = loaded["row"]
             alive = True
-            if row.access_expires_at - REFRESH_MARGIN <= now():
+            limits = await session_limits(connection, row.active_tenant_id)
+            if row.created_at + limits.lifetime <= now():
+                await connection.execute(
+                    delete(sessions).where(sessions.c.id_hash == digest(session_id))
+                )
+                alive = False
+            elif row.active_at + limits.idle <= now():
+                locked = True
+                alive = False
+            elif row.access_expires_at - REFRESH_MARGIN <= now():
                 alive = await refresh_session(connection, state, session_id, loaded["tokens"])
             elif row.last_seen_at + SEEN_INTERVAL <= now():
                 await connection.execute(
@@ -264,6 +301,8 @@ async def authenticate(request: Request) -> Principal:
                 )
             if alive:
                 resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
+    if locked:
+        raise SessionLockedError
     if resolved is None:
         raise UnauthenticatedError
     return principal_of(resolved)
@@ -348,7 +387,9 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.get("/login", include_in_schema=False)
-async def start_login(request: Request, return_to: str = "/") -> RedirectResponse:
+async def start_login(
+    request: Request, return_to: str = "/", reauth: bool = False
+) -> RedirectResponse:
     state = auth_state(request)
     login_state = secrets.token_urlsafe(32)
     binding = secrets.token_urlsafe(32)
@@ -366,7 +407,9 @@ async def start_login(request: Request, return_to: str = "/") -> RedirectRespons
                 expires_at=now() + LOGIN_LIFETIME,
             )
         )
-    url = await state.identity.authorization_url(login_state, nonce, code_challenge(verifier))
+    url = await state.identity.authorization_url(
+        login_state, nonce, code_challenge(verifier), prompt="login" if reauth else None
+    )
     response = RedirectResponse(url, status_code=302)
     set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
     return response
@@ -399,22 +442,30 @@ async def complete_login(
     except IdentityError as error:
         raise LoginFailedError from error
     session_id = secrets.token_urlsafe(32)
+    previous = request.cookies.get(SESSION_COOKIE)
     async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        if previous:
+            await connection.execute(
+                delete(sessions).where(
+                    sessions.c.id_hash == digest(previous),
+                    sessions.c.subject == str(claims["sub"]),
+                )
+            )
         active_tenant_id = await sign_in_user(connection, claims)
+        limits = await session_limits(connection, active_tenant_id)
         await connection.execute(
             insert(sessions).values(
                 id_hash=digest(session_id),
                 subject=str(claims["sub"]),
                 tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
                 access_expires_at=now() + timedelta(seconds=tokens.expires_in),
-                expires_at=now() + SESSION_LIFETIME,
+                expires_at=now() + limits.lifetime,
                 active_tenant_id=active_tenant_id,
+                user_agent=request.headers.get("user-agent", "")[:USER_AGENT_LENGTH] or None,
             )
         )
     response = hop_to(login.return_to)
-    set_cookie(
-        response, SESSION_COOKIE, session_id, int(SESSION_LIFETIME.total_seconds()), "strict"
-    )
+    set_cookie(response, SESSION_COOKIE, session_id, int(limits.lifetime.total_seconds()), "strict")
     clear_cookie(response, LOGIN_COOKIE)
     return response
 

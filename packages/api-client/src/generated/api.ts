@@ -116,6 +116,10 @@ export type DisplayName = string;
  */
 export type Email = string;
 
+export interface EndedSessions {
+  ended: number;
+}
+
 export interface FieldError {
   location: (string | number)[];
   message: string;
@@ -303,6 +307,44 @@ export interface Session {
   name: string | null;
   email: string | null;
   operator: boolean;
+}
+
+export interface SessionPolicy {
+  /**
+   * @minimum 1
+   * @maximum 240
+   */
+  idle_lock_minutes: number;
+  /**
+   * @minimum 1
+   * @maximum 24
+   */
+  session_hours: number;
+  tenant_id: string;
+}
+
+export interface SessionPolicyChange {
+  /**
+   * @minimum 1
+   * @maximum 240
+   */
+  idle_lock_minutes: number;
+  /**
+   * @minimum 1
+   * @maximum 24
+   */
+  session_hours: number;
+}
+
+export interface SessionSummary {
+  id: string;
+  created_at: string;
+  last_seen_at: string;
+  active_at: string;
+  expires_at: string;
+  user_agent: string | null;
+  current: boolean;
+  locked: boolean;
 }
 
 export interface Tenant {
@@ -677,6 +719,540 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listSessionsResponse200 = {
+  data: SessionSummary[];
+  status: 200;
+};
+
+export type listSessionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSessionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSessionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSessionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSessionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSessionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSessionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSessionsResponseSuccess = listSessionsResponse200 & {
+  headers: Headers;
+};
+export type listSessionsResponseError = (
+  | listSessionsResponse400
+  | listSessionsResponse401
+  | listSessionsResponse403
+  | listSessionsResponse404
+  | listSessionsResponse409
+  | listSessionsResponse422
+  | listSessionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSessionsResponse = listSessionsResponseSuccess | listSessionsResponseError;
+
+export const getListSessionsUrl = () => {
+  return `/api/auth/sessions`;
+};
+
+/**
+ * @summary List Sessions
+ */
+export const listSessions = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSessionsResponse> => {
+  return apiFetch<listSessionsResponse>(getListSessionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSessionsQueryKey = () => {
+  return [`/api/auth/sessions`] as const;
+};
+
+export const getListSessionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSessions>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSessionsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSessions>>> = ({ signal }) =>
+    listSessions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSessions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listSessions>>>;
+export type ListSessionsQueryError = Problem;
+
+export function useListSessions<TData = Awaited<ReturnType<typeof listSessions>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSessions>>,
+          TError,
+          Awaited<ReturnType<typeof listSessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSessions<TData = Awaited<ReturnType<typeof listSessions>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSessions>>,
+          TError,
+          Awaited<ReturnType<typeof listSessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSessions<TData = Awaited<ReturnType<typeof listSessions>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Sessions
+ */
+
+export function useListSessions<TData = Awaited<ReturnType<typeof listSessions>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSessionsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type recordActivityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type recordActivityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type recordActivityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type recordActivityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type recordActivityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type recordActivityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type recordActivityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type recordActivityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type recordActivityResponseSuccess = recordActivityResponse204 & {
+  headers: Headers;
+};
+export type recordActivityResponseError = (
+  | recordActivityResponse400
+  | recordActivityResponse401
+  | recordActivityResponse403
+  | recordActivityResponse404
+  | recordActivityResponse409
+  | recordActivityResponse422
+  | recordActivityResponse500
+) & {
+  headers: Headers;
+};
+
+export type recordActivityResponse = recordActivityResponseSuccess | recordActivityResponseError;
+
+export const getRecordActivityUrl = () => {
+  return `/api/auth/activity`;
+};
+
+/**
+ * @summary Record Activity
+ */
+export const recordActivity = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<recordActivityResponse> => {
+  return apiFetch<recordActivityResponse>(getRecordActivityUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRecordActivityMutationKey = () => ["recordActivity"] as const;
+
+export const getRecordActivityMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof recordActivity>>, TError, void, TContext>;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof recordActivity>>, TError, void, TContext> => {
+  const mutationKey = getRecordActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordActivity>>, void> = () => {
+    return recordActivity(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordActivityMutationResult = NonNullable<Awaited<ReturnType<typeof recordActivity>>>;
+
+export type RecordActivityMutationError = Problem;
+
+/**
+ * @summary Record Activity
+ */
+export const useRecordActivity = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordActivity>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof recordActivity>>, TError, void, TContext> => {
+  return useMutation(getRecordActivityMutationOptions(options), queryClient);
+};
+
+export type endSessionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type endSessionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type endSessionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type endSessionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type endSessionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type endSessionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type endSessionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type endSessionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type endSessionResponseSuccess = endSessionResponse204 & {
+  headers: Headers;
+};
+export type endSessionResponseError = (
+  | endSessionResponse400
+  | endSessionResponse401
+  | endSessionResponse403
+  | endSessionResponse404
+  | endSessionResponse409
+  | endSessionResponse422
+  | endSessionResponse500
+) & {
+  headers: Headers;
+};
+
+export type endSessionResponse = endSessionResponseSuccess | endSessionResponseError;
+
+export const getEndSessionUrl = (sessionId: string) => {
+  return `/api/auth/sessions/${sessionId}`;
+};
+
+/**
+ * @summary End Session
+ */
+export const endSession = async (
+  sessionId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<endSessionResponse> => {
+  return apiFetch<endSessionResponse>(getEndSessionUrl(sessionId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getEndSessionMutationKey = () => ["endSession"] as const;
+
+export const getEndSessionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof endSession>>,
+    TError,
+    EndSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof endSession>>,
+  TError,
+  EndSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEndSessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof endSession>>,
+    EndSessionMutationVariables
+  > = (props) => {
+    const { sessionId } = props ?? {};
+
+    return endSession(sessionId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EndSessionMutationResult = NonNullable<Awaited<ReturnType<typeof endSession>>>;
+
+export type EndSessionMutationError = Problem;
+export type EndSessionMutationVariables = { sessionId: string };
+
+/**
+ * @summary End Session
+ */
+export const useEndSession = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof endSession>>,
+      TError,
+      EndSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof endSession>>,
+  TError,
+  EndSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getEndSessionMutationOptions(options), queryClient);
+};
+
+export type endOtherSessionsResponse200 = {
+  data: EndedSessions;
+  status: 200;
+};
+
+export type endOtherSessionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type endOtherSessionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type endOtherSessionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type endOtherSessionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type endOtherSessionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type endOtherSessionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type endOtherSessionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type endOtherSessionsResponseSuccess = endOtherSessionsResponse200 & {
+  headers: Headers;
+};
+export type endOtherSessionsResponseError = (
+  | endOtherSessionsResponse400
+  | endOtherSessionsResponse401
+  | endOtherSessionsResponse403
+  | endOtherSessionsResponse404
+  | endOtherSessionsResponse409
+  | endOtherSessionsResponse422
+  | endOtherSessionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type endOtherSessionsResponse =
+  | endOtherSessionsResponseSuccess
+  | endOtherSessionsResponseError;
+
+export const getEndOtherSessionsUrl = () => {
+  return `/api/auth/sessions/end-others`;
+};
+
+/**
+ * @summary End Other Sessions
+ */
+export const endOtherSessions = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<endOtherSessionsResponse> => {
+  return apiFetch<endOtherSessionsResponse>(getEndOtherSessionsUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getEndOtherSessionsMutationKey = () => ["endOtherSessions"] as const;
+
+export const getEndOtherSessionsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof endOtherSessions>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof endOtherSessions>>, TError, void, TContext> => {
+  const mutationKey = getEndOtherSessionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof endOtherSessions>>, void> = () => {
+    return endOtherSessions(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EndOtherSessionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof endOtherSessions>>
+>;
+
+export type EndOtherSessionsMutationError = Problem;
+
+/**
+ * @summary End Other Sessions
+ */
+export const useEndOtherSessions = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof endOtherSessions>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof endOtherSessions>>, TError, void, TContext> => {
+  return useMutation(getEndOtherSessionsMutationOptions(options), queryClient);
+};
 
 export type listOrganisationsResponse200 = {
   data: Organisation[];
@@ -1951,6 +2527,343 @@ export function useGetCurrentTenant<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getSessionPolicyResponse200 = {
+  data: SessionPolicy;
+  status: 200;
+};
+
+export type getSessionPolicyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSessionPolicyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSessionPolicyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSessionPolicyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSessionPolicyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSessionPolicyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSessionPolicyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSessionPolicyResponseSuccess = getSessionPolicyResponse200 & {
+  headers: Headers;
+};
+export type getSessionPolicyResponseError = (
+  | getSessionPolicyResponse400
+  | getSessionPolicyResponse401
+  | getSessionPolicyResponse403
+  | getSessionPolicyResponse404
+  | getSessionPolicyResponse409
+  | getSessionPolicyResponse422
+  | getSessionPolicyResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSessionPolicyResponse =
+  | getSessionPolicyResponseSuccess
+  | getSessionPolicyResponseError;
+
+export const getGetSessionPolicyUrl = () => {
+  return `/api/tenant/session-policy`;
+};
+
+/**
+ * @summary Get Session Policy
+ */
+export const getSessionPolicy = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSessionPolicyResponse> => {
+  return apiFetch<getSessionPolicyResponse>(getGetSessionPolicyUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSessionPolicyQueryKey = () => {
+  return [`/api/tenant/session-policy`] as const;
+};
+
+export const getGetSessionPolicyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSessionPolicy>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionPolicy>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSessionPolicyQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionPolicy>>> = ({ signal }) =>
+    getSessionPolicy({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSessionPolicy>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSessionPolicyQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionPolicy>>>;
+export type GetSessionPolicyQueryError = Problem;
+
+export function useGetSessionPolicy<
+  TData = Awaited<ReturnType<typeof getSessionPolicy>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionPolicy>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSessionPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getSessionPolicy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSessionPolicy<
+  TData = Awaited<ReturnType<typeof getSessionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionPolicy>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSessionPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getSessionPolicy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSessionPolicy<
+  TData = Awaited<ReturnType<typeof getSessionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionPolicy>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Session Policy
+ */
+
+export function useGetSessionPolicy<
+  TData = Awaited<ReturnType<typeof getSessionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionPolicy>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSessionPolicyQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type updateSessionPolicyResponse200 = {
+  data: SessionPolicy;
+  status: 200;
+};
+
+export type updateSessionPolicyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateSessionPolicyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateSessionPolicyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateSessionPolicyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateSessionPolicyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateSessionPolicyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateSessionPolicyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateSessionPolicyResponseSuccess = updateSessionPolicyResponse200 & {
+  headers: Headers;
+};
+export type updateSessionPolicyResponseError = (
+  | updateSessionPolicyResponse400
+  | updateSessionPolicyResponse401
+  | updateSessionPolicyResponse403
+  | updateSessionPolicyResponse404
+  | updateSessionPolicyResponse409
+  | updateSessionPolicyResponse422
+  | updateSessionPolicyResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateSessionPolicyResponse =
+  | updateSessionPolicyResponseSuccess
+  | updateSessionPolicyResponseError;
+
+export const getUpdateSessionPolicyUrl = () => {
+  return `/api/tenant/session-policy`;
+};
+
+/**
+ * @summary Update Session Policy
+ */
+export const updateSessionPolicy = async (
+  sessionPolicyChange: SessionPolicyChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateSessionPolicyResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateSessionPolicyResponse>(getUpdateSessionPolicyUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(sessionPolicyChange),
+  });
+};
+
+export const getUpdateSessionPolicyMutationKey = () => ["updateSessionPolicy"] as const;
+
+export const getUpdateSessionPolicyMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSessionPolicy>>,
+    TError,
+    UpdateSessionPolicyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSessionPolicy>>,
+  TError,
+  UpdateSessionPolicyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSessionPolicyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSessionPolicy>>,
+    UpdateSessionPolicyMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSessionPolicy(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSessionPolicyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSessionPolicy>>
+>;
+export type UpdateSessionPolicyMutationBody = SessionPolicyChange;
+export type UpdateSessionPolicyMutationError = Problem;
+export type UpdateSessionPolicyMutationVariables = { data: SessionPolicyChange };
+
+/**
+ * @summary Update Session Policy
+ */
+export const useUpdateSessionPolicy = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSessionPolicy>>,
+      TError,
+      UpdateSessionPolicyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSessionPolicy>>,
+  TError,
+  UpdateSessionPolicyMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSessionPolicyMutationOptions(options), queryClient);
+};
 
 export type getMeResponse200 = {
   data: Me;

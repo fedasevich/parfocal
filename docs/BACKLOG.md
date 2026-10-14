@@ -535,9 +535,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a component test and an E2E test switch workspace and the worklist reloads in the new scope.
 
 - [ ] IAM-009 · Session policies
-  Idle lock after the lab-set time (default 15 min) that returns to the same view on unlock, "sign out on other devices", concurrent session list. Sessions already live in the `sessions` table with `last_seen_at` (updated at most once a minute) and a fixed 12 h lifetime from IAM-002, which this task makes configurable.
-  Done when tests cover lock, unlock to the same camera position, and remote session revocation.
-  Refs mock §2.15 Privacy and session.
+  Idle lock after the lab-set time (default 15 min), "sign out on other devices", concurrent session list, and a session lifetime set per workspace instead of IAM-002's fixed 12 h. Built as [ADR 0031](adr/0031-idle-lock-from-explicit-activity.md) says.
+  Done when tests cover lock, unlock by signing in again, and remote session revocation.
+  The lock screen and the return to the same camera position moved to IAM-021. Refs mock §2.15 Privacy and session.
 
 - [ ] IAM-010 · Guest consultant links
   Expiring, revocable links scoped to one case, optionally one view and its threads, for a user from another organisation. The guest signs in with their own IdP account or a verified email.
@@ -591,6 +591,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Deactivating a person first lists their open work: cases, consults, reports waiting for their co-sign and lab tasks. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their signed reports keep their name and stay valid, and their audit history stays.
   Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed reports still verify.
   Depends on IAM-014, BOARD-007, COLLAB-013. Refs kit W51, kit Flow 25.
+
+- [ ] IAM-021 · Lock screen that returns to the same view
+  Split from IAM-009. The web app sends `recordActivity` on keyboard, pointer and viewer input at most once a minute, shows the kit's lock screen when the API answers `session-locked`, unlocks through `/api/auth/login?reauth=true` and comes back to the same view and camera position.
+  Done when a component test and an E2E test lock an open slide, unlock and find the same camera position.
+  Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session.
 
 ---
 

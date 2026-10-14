@@ -25,6 +25,8 @@ from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
 from parfocal_common.db import metadata
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
+DEFAULT_IDLE_LOCK_MINUTES = 15
+DEFAULT_SESSION_HOURS = 12
 
 
 class TenantKind(StrEnum):
@@ -167,6 +169,14 @@ sessions = Table(
     "sessions",
     metadata,
     Column("id_hash", LargeBinary, primary_key=True, info=SECRET),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        nullable=False,
+        unique=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
     Column("subject", String(200), nullable=False, index=True, info=PERSONAL),
     Column("tokens", LargeBinary, nullable=False, info=SECRET),
     Column("access_expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
@@ -192,6 +202,14 @@ sessions = Table(
         nullable=True,
         info=OPERATIONAL,
     ),
+    Column(
+        "active_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("user_agent", String(200), nullable=True, info=PERSONAL),
 )
 
 AVATAR_COLOURS = 12
@@ -411,4 +429,21 @@ invitations = Table(
         info=OPERATIONAL,
     ),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+)
+
+session_policies = Table(
+    "session_policies",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("idle_lock_minutes", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("session_hours", SmallInteger, nullable=False, info=OPERATIONAL),
+    *timestamps(),
+    CheckConstraint("idle_lock_minutes BETWEEN 1 AND 240", name="idle_lock_minutes"),
+    CheckConstraint("session_hours BETWEEN 1 AND 24", name="session_hours"),
 )

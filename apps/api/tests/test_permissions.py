@@ -51,6 +51,11 @@ OPEN_OPERATIONS = {
     "addMember": "platform",
     "invitePlatformMember": "platform",
     "acceptInvitation": "signed-in",
+    "listSessions": "signed-in",
+    "recordActivity": "signed-in",
+    "endSession": "signed-in",
+    "endOtherSessions": "signed-in",
+    "getSessionPolicy": "member",
     "listMembers": "platform",
 }
 
@@ -75,6 +80,9 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "updateSessionPolicy": lambda _: Call(
+        "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
+    ),
     "listInvitations": lambda _: Call("GET", "/api/tenant/invitations"),
     "createInvitation": lambda _: Call(
         "POST",
@@ -106,6 +114,7 @@ PLACEHOLDER = Workspace(
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
+    "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
 }
 
 

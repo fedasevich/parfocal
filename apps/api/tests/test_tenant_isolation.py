@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     organisations,
     platform_operators,
     service_accounts,
+    session_policies,
     tenants,
     users,
 )
@@ -125,8 +126,17 @@ async def seed_invitations(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(email)
 
 
+async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(session_policies).values(
+            tenant_id=seeded.tenant_id, idle_lock_minutes=20, session_hours=10
+        )
+    )
+
+
 SEEDERS: dict[str, Seeder] = {
     "invitations": seed_invitations,
+    "session_policies": seed_session_policies,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
@@ -144,6 +154,8 @@ GET_ROUTES = {
     "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events"),
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
+    "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

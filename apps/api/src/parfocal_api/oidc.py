@@ -69,19 +69,22 @@ class OidcClient:
                 raise IdentityError("The discovery document is incomplete") from error
         return self._discovery
 
-    async def authorization_url(self, state: str, nonce: str, code_challenge: str) -> str:
-        query = urlencode(
-            {
-                "client_id": self.client_id,
-                "redirect_uri": self.redirect_uri,
-                "response_type": "code",
-                "scope": SCOPES,
-                "state": state,
-                "nonce": nonce,
-                "code_challenge": code_challenge,
-                "code_challenge_method": "S256",
-            }
-        )
+    async def authorization_url(
+        self, state: str, nonce: str, code_challenge: str, prompt: str | None = None
+    ) -> str:
+        parameters = {
+            "client_id": self.client_id,
+            "redirect_uri": self.redirect_uri,
+            "response_type": "code",
+            "scope": SCOPES,
+            "state": state,
+            "nonce": nonce,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        }
+        if prompt is not None:
+            parameters["prompt"] = prompt
+        query = urlencode(parameters)
         return f"{(await self.discovery()).authorization_endpoint}?{query}"
 
     async def end_session_url(self, id_token_hint: str, post_logout_redirect_uri: str) -> str:

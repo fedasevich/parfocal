@@ -20,7 +20,7 @@ The next login shows an account picker with the previous user. Choosing it asks 
 |---|---|
 | Login, callback, logout, session | `/api/auth/login`, `/callback` and `/logout` are browser navigations and are left out of the OpenAPI schema. `/api/auth/session` (`getSession`) is a normal call |
 | Tables | `auth_logins` (pending logins by hash of `state`), `sessions` (by hash of the cookie value, tokens and profile sealed with AES-GCM under `SESSION_KEY`), `platform_operators`, all readable only in the auth scope |
-| Session lifetime | 12 h fixed, `last_seen_at` updated at most once a minute. IAM-009 makes it configurable |
+| Session lifetime | The active workspace's `session_policies` row, 12 h and a 15 minute idle lock by default. `last_seen_at` follows any request at most once a minute, but only `POST /api/auth/activity` and login move `active_at`, which the idle lock reads |
 | Platform operators | `uv run --package parfocal-api --env-file .env python -m parfocal_api.operators add <zitadel-user-id>`, also `remove` and `list` |
 | Test user | `e2e-pathologist@parfocal.eu` in Zitadel's `Parfocal` organisation, password in `.env` as `ZITADEL_TEST_PASSWORD`, MFA not set up |
 
@@ -35,3 +35,7 @@ Login creates the `users` row on first sign-in and later only refreshes its emai
 The invitation tests sign the test user in, make it a platform operator for one call to invite its own address into a fresh workspace, and read the link from the file outbox that `playwright.config.ts` turns on with `EMAIL_BACKEND=file`. Helpers shared by the specs live in `apps/e2e/tests/support.ts`. `psql -tAc` prints `INSERT 0 1` after a `RETURNING` value, so take the first line.
 
 The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behind `httpx2.MockTransport`. It signs real RS256 ID tokens, checks PKCE and rotates refresh tokens, so the client's verification runs without Zitadel.
+
+## Row-level security skips rows silently
+
+An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.
