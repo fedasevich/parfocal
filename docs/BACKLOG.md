@@ -2015,7 +2015,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when STACK-040 is confirmed and the case data model is written as an ADR.
   The model is [ADR 0036](adr/0036-case-data-model.md).
 
-- [ ] CASES-001 · Patient and case model
+- [x] CASES-001 · Patient and case model
   Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, status), specimen, block, slide, as [ADR 0036](adr/0036-case-data-model.md) describes. The case's folder arrives with CASES-003. SEC-004 already created `patients` with the encrypted name, MRN and birth date and their blind indexes ([ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)), so this task adds the remaining columns and tables.
   Done when migrations, API tests and isolation tests pass.
 
