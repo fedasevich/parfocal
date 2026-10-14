@@ -117,3 +117,4 @@ These apply to everything written in this repository and in chat: docs, code, co
 - Join independent clauses with a period or a conjunction, not a semicolon.
 - Write in English and Markdown with relative links. File names are lowercase kebab-case and dates are `YYYY-MM-DD`.
 - Prefer short, plain sentences and tables over long prose. Mark open questions with `TODO` so they are easy to find.
+- Never name a backlog task by its ID alone. In chat, reports, logs and docs, follow the ID with a few plain words saying what it is, such as "STACK-037 (key management)" or "IAM-009 (session lock and session list)", so a reader never has to open the backlog to follow along.
