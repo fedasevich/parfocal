@@ -12,7 +12,7 @@ services:
       - ./infra/local/postgres-init.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U parfocal -d parfocal"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U parfocal -d parfocal"]
       interval: 1s
       retries: 60
 
