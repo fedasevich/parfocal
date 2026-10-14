@@ -621,7 +621,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Built as [ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md) says. PHI reads and clinical writes are recorded by the tasks that build them, through `parfocal_api.audit.record`.
   Refs Concentriq report (21 CFR Part 11, ALCOA+).
 
-- [ ] SEC-004 · Field-level encryption for direct identifiers
+- [x] SEC-004 · Field-level encryption for direct identifiers
   Patient name, MRN and birth date encrypted with tenant data keys from `parfocal_common.envelope` ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md)), stored wrapped in a `tenant_keys` table. Search uses blind indexes under a per-tenant index key that is destroyed with the data keys.
   Done when tests show ciphertext at rest, correct search, and unreadable data after the tenant key is destroyed.
   Depends on STACK-037. Search is decided in [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md).

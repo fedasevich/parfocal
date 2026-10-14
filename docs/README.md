@@ -6,7 +6,7 @@ Last consolidated: 2026-10-14
 
 ## Where we are now
 
-Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 33 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
+Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 34 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
 
 | Area | State |
 |---|---|
@@ -23,7 +23,7 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. SEC-004 waits for a green CI run on `main`. It unblocks CASES-001, the patient and case model that most remaining backend work needs.
+1. CASES-001, the patient and case model that most remaining backend work needs, is unblocked now that SEC-004 encrypts patient identifiers.
 2. Research checks that need no cloud: IAM-000 (confirm STACK-023 and STACK-028) and SEC-000 (the control matrix).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
 4. Waiting for the owner: STACK-019 (Modal spend limit), STACK-020 (Neon region), IAM-001 (CI credentials for Zitadel). Waiting for the final UI: IAM-008, IAM-014, IAM-021 and FOUND-019. FOUND-014 is on hold.
