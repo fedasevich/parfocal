@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-14
+
+- SEC-003 implemented, not ticked until CI is green on `main`. [ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md), accepted under the owner's standing approval, puts the audit log in Postgres as `audit_events` (migration `0006`), written in the same transaction as the change. A trigger chains each workspace's entries with SHA-256 under an advisory lock, and the app role cannot update, delete or truncate them. `parfocal_api.audit.record` now records new organisations and workspaces, suspension and reactivation, members added, role changes with the old and new role, sign-in and sign-out. `GET /api/tenant/audit-events` (`audit-log` permission) exports a workspace's trail, optionally for one target, and `chain_breaks` verifies it outside the database. 9 tests in `test_audit.py` at first cover the chain across platform and member actions, the app role refused, the owner refused while the trigger stands, a changed and a removed entry found, 20 concurrent writers keeping one unbroken chain, a case's history in order and the read permission. The isolation and permission suites gained the table and the route. Mutation checks removed the advisory lock, the revoke, the append-only trigger and a field from the Python hash, and each was caught by the test meant for it. Surprise: `jsonb` rewrites its text, so details are stored as canonical JSON text to keep the hash reproducible. A side review pointed out that an unchangeable log holding IdP subjects and user ids would block GDPR erasure, so before the first commit people became pseudonyms in a separate erasable `audit_people` table, and `forget` removes the link without breaking the chain. 4 more tests cover entries holding no subjects, forgetting keeping every hash, only the platform forgetting, and one workspace not resolving another's people, which a mutation of that policy showed to be needed.
+
 ## 2026-10-13
 
 - IAM-006 done after CI run 38420215082 passed on `main`.

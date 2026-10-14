@@ -6,13 +6,15 @@ from enum import Enum, auto
 
 import pytest
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
-from sqlalchemy import insert, text
+from sqlalchemy import insert, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import (
     Role,
+    audit_events,
+    audit_people,
     memberships,
     organisations,
     platform_operators,
@@ -51,7 +53,39 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
-SEEDERS: dict[str, Seeder] = {}
+
+
+async def seed_audit_people(connection: AsyncConnection, seeded: Seeded) -> None:
+    subject = await connection.scalar(
+        select(users.c.subject).where(users.c.id == seeded.ids["user"])
+    )
+    pseudonym = await connection.scalar(
+        insert(audit_people).values(subject=subject).returning(audit_people.c.id)
+    )
+    assert isinstance(pseudonym, uuid.UUID)
+    seeded.ids["audit_person"] = pseudonym
+    seeded.markers.add(str(subject))
+
+
+async def seed_audit_events(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"audit-{uuid.uuid4().hex}"
+    await connection.execute(
+        insert(audit_events).values(
+            tenant_id=seeded.tenant_id,
+            actor_kind="member",
+            actor_id=seeded.ids["audit_person"],
+            action="case.opened",
+            target_type="case",
+            details=f'{{"marker":"{marker}"}}',
+        )
+    )
+    seeded.markers.add(marker)
+
+
+SEEDERS: dict[str, Seeder] = {
+    "audit_people": seed_audit_people,
+    "audit_events": seed_audit_events,
+}
 GET_ROUTES = {
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "listOrganisations": Route(Exposure.PLATFORM, lambda _: "/api/platform/organisations"),
@@ -61,6 +95,7 @@ GET_ROUTES = {
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
+    "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

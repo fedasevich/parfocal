@@ -7,6 +7,7 @@ from sqlalchemy import exists, insert, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, auth_state, digest
 from parfocal_api.context import (
     CurrentPrincipal,
@@ -15,7 +16,7 @@ from parfocal_api.context import (
     UserConnection,
 )
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import MemberPrincipal, SignedInUser
+from parfocal_api.principals import MemberPrincipal, SignedInUser, database_scope
 from parfocal_api.problems import (
     ConflictError,
     ForbiddenError,
@@ -266,17 +267,33 @@ async def change_member_role(
 ) -> Member:
     if isinstance(principal, MemberPrincipal) and principal.user_id == user_id:
         raise OwnRoleError
-    changed = await connection.scalar(
-        update(memberships)
-        .where(
-            memberships.c.user_id == user_id,
-            memberships.c.tenant_id == literal_column(CURRENT_TENANT),
-        )
-        .values(role=change.role)
-        .returning(memberships.c.user_id)
+    in_this_tenant = (
+        memberships.c.user_id == user_id,
+        memberships.c.tenant_id == literal_column(CURRENT_TENANT),
     )
-    if changed is None:
+    member = (
+        await connection.execute(
+            select(memberships.c.role, users.c.subject)
+            .join(users, users.c.id == memberships.c.user_id)
+            .where(*in_this_tenant)
+            .with_for_update(of=memberships)
+        )
+    ).one_or_none()
+    if member is None:
         raise NotFoundError("Member not found")
+    if member.role != change.role:
+        await connection.execute(
+            update(memberships).where(*in_this_tenant).values(role=change.role)
+        )
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.MEMBER_ROLE_CHANGED,
+            AuditTarget.PERSON,
+            person=member.subject,
+            tenant_id=database_scope(principal).tenant_id,
+            details={"from": member.role, "to": change.role},
+        )
     row = (
         await connection.execute(
             select(*MEMBER_COLUMNS)
@@ -292,11 +309,16 @@ async def change_member_role(
 
 @platform_router.post("/tenants/{tenant_id}/members", operation_id="addMember", status_code=201)
 async def add_member(
-    tenant_id: uuid.UUID, draft: MembershipDraft, connection: PlatformConnection
+    tenant_id: uuid.UUID,
+    draft: MembershipDraft,
+    principal: CurrentPrincipal,
+    connection: PlatformConnection,
 ) -> Membership:
-    for table, key, label in ((tenants, tenant_id, "Tenant"), (users, draft.user_id, "User")):
-        if not await connection.scalar(select(exists().where(table.c.id == key))):
-            raise NotFoundError(f"{label} not found")
+    if not await connection.scalar(select(exists().where(tenants.c.id == tenant_id))):
+        raise NotFoundError("Tenant not found")
+    subject = await connection.scalar(select(users.c.subject).where(users.c.id == draft.user_id))
+    if subject is None:
+        raise NotFoundError("User not found")
     try:
         row = (
             await connection.execute(
@@ -312,6 +334,15 @@ async def add_member(
         ).one()
     except IntegrityError as error:
         raise AlreadyAMemberError from error
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.MEMBER_ADDED,
+        AuditTarget.PERSON,
+        person=subject,
+        tenant_id=tenant_id,
+        details={"role": draft.role},
+    )
     return Membership.model_validate(row, from_attributes=True)
 
 

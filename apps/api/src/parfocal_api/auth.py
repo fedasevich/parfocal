@@ -17,11 +17,13 @@ from sqlalchemy import delete, exists, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
 from parfocal_api.oidc import IdentityError, OidcClient, TokenSet
 from parfocal_api.principals import MemberPrincipal, PlatformOperator, Principal, SignedInUser
 from parfocal_api.problems import ProblemError, UnauthenticatedError
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    ActorKind,
     Role,
     auth_logins,
     memberships,
@@ -250,6 +252,13 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> u
         .on_conflict_do_update(index_elements=[users.c.subject], set_={"email": email})
         .returning(users.c.id)
     )
+    await record(
+        connection,
+        Actor(ActorKind.USER, subject),
+        AuditAction.USER_SIGNED_IN,
+        AuditTarget.PERSON,
+        person=subject,
+    )
     last_tenant = await connection.scalar(
         select(memberships.c.tenant_id)
         .join(users, users.c.id == memberships.c.user_id)
@@ -372,16 +381,27 @@ async def logout(request: Request) -> RedirectResponse:
     home = f"{auth.public_origin}/"
     session_id = request.cookies.get(SESSION_COOKIE)
     tokens: dict[str, Any] | None = None
+    ended = None
     if session_id:
         async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
-            sealed = await connection.scalar(
-                delete(sessions)
-                .where(sessions.c.id_hash == digest(session_id))
-                .returning(sessions.c.tokens)
-            )
-        if sealed is not None:
+            ended = (
+                await connection.execute(
+                    delete(sessions)
+                    .where(sessions.c.id_hash == digest(session_id))
+                    .returning(sessions.c.tokens, sessions.c.subject)
+                )
+            ).one_or_none()
+            if ended is not None:
+                await record(
+                    connection,
+                    Actor(ActorKind.USER, ended.subject),
+                    AuditAction.USER_SIGNED_OUT,
+                    AuditTarget.PERSON,
+                    person=ended.subject,
+                )
+        if ended is not None:
             try:
-                tokens = auth.cipher.open(sealed)
+                tokens = auth.cipher.open(ended.tokens)
             except InvalidTag:
                 tokens = None
     target = home

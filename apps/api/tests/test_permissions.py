@@ -49,6 +49,7 @@ class Workspace:
     tenant_id: uuid.UUID
     users: dict[Role, uuid.UUID]
     colleague: uuid.UUID
+    slug: str
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "listAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events"),
     "listTenantMembers": lambda _: Call("GET", "/api/tenant/members"),
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "consultant"}
@@ -163,7 +165,7 @@ async def seed(database: str) -> Workspace:
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.RESIDENT)
         assert isinstance(tenant_id, uuid.UUID)
-        return Workspace(tenant_id, people, colleague)
+        return Workspace(tenant_id, people, colleague, slug)
     finally:
         await engine.dispose()
 
@@ -178,7 +180,8 @@ def principal_for(workspace: Workspace, role: Role) -> Principal:
         return GuestPrincipal(
             "outside", GuestGrant(host_tenant_id=workspace.tenant_id, case_id=uuid.uuid4())
         )
-    return MemberPrincipal(f"subject-{role}", workspace.tenant_id, workspace.users[role], role)
+    subject = f"{workspace.slug}-{role}"
+    return MemberPrincipal(subject, workspace.tenant_id, workspace.users[role], role)
 
 
 def send(api: ApiAs, principal: Principal, call: Call) -> int:

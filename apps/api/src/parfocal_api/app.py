@@ -5,7 +5,7 @@ import httpx2
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from parfocal_api import auth, tenants, users
+from parfocal_api import audit_trail, auth, tenants, users
 from parfocal_api.oidc import OidcClient
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
 from parfocal_api.settings import ApiSettings
@@ -82,5 +82,6 @@ def create_app(
     app.include_router(users.me_router)
     app.include_router(users.tenant_router)
     app.include_router(users.platform_router)
+    app.include_router(audit_trail.router)
 
     return app

@@ -22,6 +22,42 @@ import type {
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
+export type ActorKind = (typeof ActorKind)[keyof typeof ActorKind];
+
+export const ActorKind = {
+  user: "user",
+  member: "member",
+  guest: "guest",
+  operator: "operator",
+  system: "system",
+} as const;
+
+export interface AuditEvent {
+  id: string;
+  tenant_id: string | null;
+  seq: number;
+  occurred_at: string;
+  actor_kind: ActorKind;
+  actor_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  details: string;
+  prev_hash: string;
+  hash: string;
+  actor_subject?: string | null;
+  target_subject?: string | null;
+}
+
+export type AuditTarget = (typeof AuditTarget)[keyof typeof AuditTarget];
+
+export const AuditTarget = {
+  organisation: "organisation",
+  tenant: "tenant",
+  person: "person",
+  case: "case",
+} as const;
+
 /**
  * @minLength 1
  * @maxLength 200
@@ -207,6 +243,11 @@ export interface TenantDraft {
 export interface WorkspaceChoice {
   tenant_id: string;
 }
+
+export type ListAuditEventsParams = {
+  target_type?: AuditTarget | null;
+  target_id?: string | null;
+};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -2950,6 +2991,196 @@ export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, 
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListMembersQueryOptions(tenantId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listAuditEventsResponse200 = {
+  data: AuditEvent[];
+  status: 200;
+};
+
+export type listAuditEventsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAuditEventsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAuditEventsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAuditEventsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAuditEventsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAuditEventsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAuditEventsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAuditEventsResponseSuccess = listAuditEventsResponse200 & {
+  headers: Headers;
+};
+export type listAuditEventsResponseError = (
+  | listAuditEventsResponse400
+  | listAuditEventsResponse401
+  | listAuditEventsResponse403
+  | listAuditEventsResponse404
+  | listAuditEventsResponse409
+  | listAuditEventsResponse422
+  | listAuditEventsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAuditEventsResponse = listAuditEventsResponseSuccess | listAuditEventsResponseError;
+
+export const getListAuditEventsUrl = (params?: ListAuditEventsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tenant/audit-events?${stringifiedParams}`
+    : `/api/tenant/audit-events`;
+};
+
+/**
+ * @summary List Audit Events
+ */
+export const listAuditEvents = async (
+  params?: ListAuditEventsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAuditEventsResponse> => {
+  return apiFetch<listAuditEventsResponse>(getListAuditEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAuditEventsQueryKey = (params?: ListAuditEventsParams) => {
+  return [`/api/tenant/audit-events`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAuditEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAuditEvents>>,
+  TError = Problem,
+>(
+  params?: ListAuditEventsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAuditEventsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditEvents>>> = ({ signal }) =>
+    listAuditEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAuditEvents>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAuditEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditEvents>>>;
+export type ListAuditEventsQueryError = Problem;
+
+export function useListAuditEvents<
+  TData = Awaited<ReturnType<typeof listAuditEvents>>,
+  TError = Problem,
+>(
+  params: undefined | ListAuditEventsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAuditEvents>>,
+          TError,
+          Awaited<ReturnType<typeof listAuditEvents>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAuditEvents<
+  TData = Awaited<ReturnType<typeof listAuditEvents>>,
+  TError = Problem,
+>(
+  params?: ListAuditEventsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAuditEvents>>,
+          TError,
+          Awaited<ReturnType<typeof listAuditEvents>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAuditEvents<
+  TData = Awaited<ReturnType<typeof listAuditEvents>>,
+  TError = Problem,
+>(
+  params?: ListAuditEventsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Audit Events
+ */
+
+export function useListAuditEvents<
+  TData = Awaited<ReturnType<typeof listAuditEvents>>,
+  TError = Problem,
+>(
+  params?: ListAuditEventsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAuditEventsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

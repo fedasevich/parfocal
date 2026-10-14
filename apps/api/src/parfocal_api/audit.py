@@ -1,0 +1,184 @@
+import hashlib
+import json
+import uuid
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel
+from sqlalchemy import delete, insert, select
+from sqlalchemy.dialects.postgresql import insert as upsert
+from sqlalchemy.ext.asyncio import AsyncConnection
+
+from parfocal_api.principals import (
+    GuestPrincipal,
+    MemberPrincipal,
+    PlatformOperator,
+    Principal,
+    SignedInUser,
+)
+from parfocal_api.tables import ActorKind, audit_events, audit_people
+
+GENESIS = bytes(32)
+
+
+class AuditAction(StrEnum):
+    ORGANISATION_CREATED = "organisation.created"
+    TENANT_CREATED = "tenant.created"
+    TENANT_SUSPENDED = "tenant.suspended"
+    TENANT_REACTIVATED = "tenant.reactivated"
+    MEMBER_ADDED = "member.added"
+    MEMBER_ROLE_CHANGED = "member.role-changed"
+    USER_SIGNED_IN = "user.signed-in"
+    USER_SIGNED_OUT = "user.signed-out"
+    CASE_OPENED = "case.opened"
+    REPORT_SIGNED_OUT = "report.signed-out"
+    REPORT_AMENDED = "report.amended"
+
+
+class AuditTarget(StrEnum):
+    ORGANISATION = "organisation"
+    TENANT = "tenant"
+    PERSON = "person"
+    CASE = "case"
+
+
+@dataclass(frozen=True)
+class Actor:
+    kind: ActorKind
+    subject: str | None = None
+
+
+class AuditEvent(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID | None
+    seq: int
+    occurred_at: datetime
+    actor_kind: ActorKind
+    actor_id: uuid.UUID | None
+    action: str
+    target_type: str
+    target_id: uuid.UUID | None
+    details: str
+    prev_hash: str
+    hash: str
+    actor_subject: str | None = None
+    target_subject: str | None = None
+
+
+def actor_of(principal: Principal) -> Actor:
+    match principal:
+        case MemberPrincipal(subject=subject):
+            return Actor(ActorKind.MEMBER, subject)
+        case SignedInUser(subject=subject):
+            return Actor(ActorKind.USER, subject)
+        case GuestPrincipal(subject=subject):
+            return Actor(ActorKind.GUEST, subject)
+        case PlatformOperator(subject=subject):
+            return Actor(ActorKind.OPERATOR, subject)
+
+
+def canonical(details: dict[str, Any]) -> str:
+    return json.dumps(details, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+async def pseudonym_of(connection: AsyncConnection, subject: str) -> uuid.UUID:
+    await connection.execute(
+        upsert(audit_people)
+        .values(subject=subject)
+        .on_conflict_do_nothing(index_elements=[audit_people.c.subject])
+    )
+    pseudonym = await connection.scalar(
+        select(audit_people.c.id).where(audit_people.c.subject == subject)
+    )
+    assert isinstance(pseudonym, uuid.UUID)
+    return pseudonym
+
+
+async def forget(connection: AsyncConnection, subject: str) -> bool:
+    forgotten = await connection.scalar(
+        delete(audit_people).where(audit_people.c.subject == subject).returning(audit_people.c.id)
+    )
+    return forgotten is not None
+
+
+async def record(
+    connection: AsyncConnection,
+    actor: Actor,
+    action: AuditAction,
+    target_type: AuditTarget,
+    target_id: uuid.UUID | None = None,
+    *,
+    person: str | None = None,
+    tenant_id: uuid.UUID | None = None,
+    details: dict[str, Any] | None = None,
+) -> None:
+    actor_id = await pseudonym_of(connection, actor.subject) if actor.subject else None
+    if person is not None:
+        target_id = await pseudonym_of(connection, person)
+    await connection.execute(
+        insert(audit_events).values(
+            tenant_id=tenant_id,
+            actor_kind=actor.kind,
+            actor_id=actor_id,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            details=canonical(details or {}),
+        )
+    )
+
+
+def event_of(row: Any) -> AuditEvent:
+    values = dict(row._mapping)
+    values["prev_hash"] = bytes(values["prev_hash"]).hex()
+    values["hash"] = bytes(values["hash"]).hex()
+    return AuditEvent.model_validate(values)
+
+
+def field(value: object | None) -> str:
+    if value is None:
+        return "-"
+    text = str(value)
+    return f"{len(text)}:{text}"
+
+
+def timestamp(moment: datetime) -> str:
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def event_hash(event: AuditEvent) -> str:
+    payload = "".join(
+        field(value)
+        for value in (
+            event.id,
+            event.tenant_id,
+            event.seq,
+            timestamp(event.occurred_at),
+            event.actor_kind,
+            event.actor_id,
+            event.action,
+            event.target_type,
+            event.target_id,
+            event.details,
+        )
+    )
+    return hashlib.sha256(bytes.fromhex(event.prev_hash) + payload.encode()).hexdigest()
+
+
+def chain_breaks(events: Iterable[AuditEvent]) -> list[int]:
+    expected_seq = 1
+    expected_prev = GENESIS.hex()
+    breaks: list[int] = []
+    for event in sorted(events, key=lambda item: item.seq):
+        if (
+            event.seq != expected_seq
+            or event.prev_hash != expected_prev
+            or event.hash != event_hash(event)
+        ):
+            breaks.append(event.seq)
+        expected_seq = event.seq + 1
+        expected_prev = event.hash
+    return breaks

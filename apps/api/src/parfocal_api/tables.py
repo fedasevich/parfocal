@@ -3,14 +3,17 @@ from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
+    Index,
     LargeBinary,
     SmallInteger,
     String,
     Table,
+    Text,
     UniqueConstraint,
     Uuid,
     func,
@@ -172,4 +175,42 @@ memberships = Table(
     *timestamps(),
     UniqueConstraint("tenant_id", "user_id"),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+)
+
+
+class ActorKind(StrEnum):
+    USER = "user"
+    MEMBER = "member"
+    GUEST = "guest"
+    OPERATOR = "operator"
+    SYSTEM = "system"
+
+
+audit_people = Table(
+    "audit_people",
+    metadata,
+    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column("subject", String(200), nullable=False, unique=True),
+)
+
+audit_events = Table(
+    "audit_events",
+    metadata,
+    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column("tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=True),
+    Column("seq", BigInteger, nullable=False),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("actor_kind", String(20), nullable=False),
+    Column("actor_id", Uuid[uuid.UUID](), nullable=True),
+    Column("action", String(60), nullable=False),
+    Column("target_type", String(40), nullable=False),
+    Column("target_id", Uuid[uuid.UUID](), nullable=True),
+    Column("details", Text, nullable=False, server_default="{}"),
+    Column("prev_hash", LargeBinary, nullable=False),
+    Column("hash", LargeBinary, nullable=False),
+    UniqueConstraint("tenant_id", "seq", postgresql_nulls_not_distinct=True),
+    Index(
+        "ix_audit_events_tenant_id_target_type_target_id", "tenant_id", "target_type", "target_id"
+    ),
+    one_of("actor_kind", ActorKind),
 )

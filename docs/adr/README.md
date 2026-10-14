@@ -32,3 +32,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0024](0024-workspaces-are-tenants.md) | Each workspace is a tenant, organisations group them, and platform operators manage both | Accepted | 2026-10-13 |
 | [0025](0025-zitadel-bff-login.md) | Zitadel Cloud behind a FastAPI backend-for-frontend with sessions in Postgres | Accepted | 2026-10-13 |
 | [0026](0026-roles-and-permission-matrix.md) | Six roles and the UX kit's permission matrix in code, declared on every route | Accepted | 2026-10-13 |
+| [0027](0027-audit-log-hash-chain-in-postgres.md) | Audit log as an append-only Postgres table with a hash chain per workspace and people named by erasable pseudonyms | Accepted | 2026-10-14 |

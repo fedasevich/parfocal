@@ -8,7 +8,8 @@ from sqlalchemy import Row, func, insert, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.context import PlatformConnection, TenantConnection
+from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.tables import (
     SLUG_PATTERN,
@@ -84,8 +85,17 @@ async def insert_unique(connection: AsyncConnection, statement: Any) -> Row[Any]
         raise
 
 
+STATUS_ACTIONS = {
+    TenantStatus.SUSPENDED: AuditAction.TENANT_SUSPENDED,
+    TenantStatus.ACTIVE: AuditAction.TENANT_REACTIVATED,
+}
+
+
 async def set_status(
-    connection: AsyncConnection, tenant_id: uuid.UUID, status: TenantStatus
+    connection: AsyncConnection,
+    principal: CurrentPrincipal,
+    tenant_id: uuid.UUID,
+    status: TenantStatus,
 ) -> Tenant:
     suspended_at = func.now() if status is TenantStatus.SUSPENDED else None
     row = (
@@ -96,7 +106,17 @@ async def set_status(
             .returning(*tenants.c)
         )
     ).one_or_none()
-    return tenant_of(row) if row else await platform_tenant(connection, tenant_id)
+    if row is None:
+        return await platform_tenant(connection, tenant_id)
+    await record(
+        connection,
+        actor_of(principal),
+        STATUS_ACTIONS[status],
+        AuditTarget.TENANT,
+        tenant_id,
+        tenant_id=tenant_id,
+    )
+    return tenant_of(row)
 
 
 async def platform_tenant(connection: AsyncConnection, tenant_id: uuid.UUID) -> Tenant:
@@ -112,10 +132,18 @@ tenant = APIRouter(prefix="/api", tags=["tenant"])
 
 @platform.post("/organisations", operation_id="createOrganisation", status_code=201)
 async def create_organisation(
-    draft: OrganisationDraft, connection: PlatformConnection
+    draft: OrganisationDraft, principal: CurrentPrincipal, connection: PlatformConnection
 ) -> Organisation:
     statement = insert(organisations).values(**draft.model_dump()).returning(*organisations.c)
-    return organisation_of(await insert_unique(connection, statement))
+    organisation = organisation_of(await insert_unique(connection, statement))
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.ORGANISATION_CREATED,
+        AuditTarget.ORGANISATION,
+        organisation.id,
+    )
+    return organisation
 
 
 @platform.get("/organisations", operation_id="listOrganisations")
@@ -125,14 +153,25 @@ async def list_organisations(connection: PlatformConnection) -> list[Organisatio
 
 
 @platform.post("/tenants", operation_id="createTenant", status_code=201)
-async def create_tenant(draft: TenantDraft, connection: PlatformConnection) -> Tenant:
+async def create_tenant(
+    draft: TenantDraft, principal: CurrentPrincipal, connection: PlatformConnection
+) -> Tenant:
     organisation = await connection.scalar(
         select(organisations.c.id).where(organisations.c.id == draft.organisation_id)
     )
     if organisation is None:
         raise NotFoundError("Organisation not found")
     statement = insert(tenants).values(**draft.model_dump()).returning(*tenants.c)
-    return tenant_of(await insert_unique(connection, statement))
+    created = tenant_of(await insert_unique(connection, statement))
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.TENANT_CREATED,
+        AuditTarget.TENANT,
+        created.id,
+        tenant_id=created.id,
+    )
+    return created
 
 
 @platform.get("/tenants", operation_id="listTenants")
@@ -147,13 +186,17 @@ async def get_tenant(tenant_id: uuid.UUID, connection: PlatformConnection) -> Te
 
 
 @platform.post("/tenants/{tenant_id}/suspend", operation_id="suspendTenant")
-async def suspend_tenant(tenant_id: uuid.UUID, connection: PlatformConnection) -> Tenant:
-    return await set_status(connection, tenant_id, TenantStatus.SUSPENDED)
+async def suspend_tenant(
+    tenant_id: uuid.UUID, principal: CurrentPrincipal, connection: PlatformConnection
+) -> Tenant:
+    return await set_status(connection, principal, tenant_id, TenantStatus.SUSPENDED)
 
 
 @platform.post("/tenants/{tenant_id}/reactivate", operation_id="reactivateTenant")
-async def reactivate_tenant(tenant_id: uuid.UUID, connection: PlatformConnection) -> Tenant:
-    return await set_status(connection, tenant_id, TenantStatus.ACTIVE)
+async def reactivate_tenant(
+    tenant_id: uuid.UUID, principal: CurrentPrincipal, connection: PlatformConnection
+) -> Tenant:
+    return await set_status(connection, principal, tenant_id, TenantStatus.ACTIVE)
 
 
 @tenant.get("/tenant", operation_id="getCurrentTenant")

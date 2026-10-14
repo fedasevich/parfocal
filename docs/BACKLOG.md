@@ -609,6 +609,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-003 · Audit log
   Append-only audit table with hash chaining. Every PHI read (case open, slide open, report view), every write that matters clinically (annotation accept, review decision, sign-out, amendment), every permission change. Export for auditors.
   Done when tests prove entries cannot be updated or deleted by the app role, the chain verifies, and an auditor export lists a case's full history.
+  Built as [ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md) says. PHI reads and clinical writes are recorded by the tasks that build them, through `parfocal_api.audit.record`.
   Refs Concentriq report (21 CFR Part 11, ALCOA+).
 
 - [ ] SEC-004 · Field-level encryption for direct identifiers
