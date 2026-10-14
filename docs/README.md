@@ -12,7 +12,7 @@ The prototypes are approved for a production build and the planning is done. [BA
 
 Work stays local until the owner fixes the cloud side. No Modal, Neon, staging or production changes, see [knowledge/platform.md](knowledge/platform.md). Zitadel Cloud may be used again since 2026-10-13. The UI is not final, so no UI work either.
 
-1. IAM-009 waits for a green CI run on `main` before it is ticked. Its lock screen moved to IAM-021, which needs the final UI. CASES-001's encrypted identifiers depend on SEC-004 and STACK-037. IAM-001 (Zitadel config recreated from scratch in CI) needs a decision on CI credentials. STACK-020 only lacks the Neon region measurement.
+1. IAM-021 (the lock screen) needs the final UI. CASES-001's encrypted identifiers depend on SEC-004 and STACK-037. IAM-001 (Zitadel config recreated from scratch in CI) needs a decision on CI credentials. STACK-020 only lacks the Neon region measurement.
 2. STACK-019 needs a Modal run for its cold-start numbers and waits for the owner. FOUND-014 is on hold, and FOUND-019 waits for the final UI.
 
 ## Index

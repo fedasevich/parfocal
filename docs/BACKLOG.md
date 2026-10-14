@@ -534,7 +534,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The top-left organisation and workspace switcher from mock 1 and kit W1.
   Done when a component test and an E2E test switch workspace and the worklist reloads in the new scope.
 
-- [ ] IAM-009 · Session policies
+- [x] IAM-009 · Session policies
   Idle lock after the lab-set time (default 15 min), "sign out on other devices", concurrent session list, and a session lifetime set per workspace instead of IAM-002's fixed 12 h. Built as [ADR 0031](adr/0031-idle-lock-from-explicit-activity.md) says.
   Done when tests cover lock, unlock by signing in again, and remote session revocation.
   The lock screen and the return to the same camera position moved to IAM-021. Refs mock §2.15 Privacy and session.
