@@ -66,6 +66,10 @@ export const ActorKind = {
   service: "service",
 } as const;
 
+export interface AllFolders {
+  all_folders: boolean;
+}
+
 export interface ApiToken {
   id: string;
   expires_at: string;
@@ -291,6 +295,16 @@ export interface CaseFolder {
 export interface CaseStateView {
   id: string;
   state: CaseState;
+}
+
+export interface CaseSummary {
+  id: string;
+  accession: string;
+  priority: Priority;
+  state: CaseState;
+  due_at: string | null;
+  folder_id: string | null;
+  assignee_user_id: string | null;
 }
 
 /**
@@ -668,6 +682,10 @@ export interface TokenRequest {
 export interface WorkspaceChoice {
   tenant_id: string;
 }
+
+export type ListCasesParams = {
+  state?: CaseState | null;
+};
 
 export type ListAuditEventsParams = {
   target_type?: AuditTarget | null;
@@ -1714,6 +1732,182 @@ export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError =
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type listCasesResponse200 = {
+  data: CaseSummary[];
+  status: 200;
+};
+
+export type listCasesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listCasesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listCasesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listCasesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listCasesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listCasesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listCasesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listCasesResponseSuccess = listCasesResponse200 & {
+  headers: Headers;
+};
+export type listCasesResponseError = (
+  | listCasesResponse400
+  | listCasesResponse401
+  | listCasesResponse403
+  | listCasesResponse404
+  | listCasesResponse409
+  | listCasesResponse422
+  | listCasesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listCasesResponse = listCasesResponseSuccess | listCasesResponseError;
+
+export const getListCasesUrl = (params?: ListCasesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/cases?${stringifiedParams}` : `/api/cases`;
+};
+
+/**
+ * @summary List Cases
+ */
+export const listCases = async (
+  params?: ListCasesParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listCasesResponse> => {
+  return apiFetch<listCasesResponse>(getListCasesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCasesQueryKey = (params?: ListCasesParams) => {
+  return [`/api/cases`, ...(params ? [params] : [])] as const;
+};
+
+export const getListCasesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCases>>,
+  TError = Problem,
+>(
+  params?: ListCasesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListCasesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listCases>>> = ({ signal }) =>
+    listCases(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCases>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listCases>>>;
+export type ListCasesQueryError = Problem;
+
+export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params: undefined | ListCasesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCases>>,
+          TError,
+          Awaited<ReturnType<typeof listCases>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCases>>,
+          TError,
+          Awaited<ReturnType<typeof listCases>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Cases
+ */
+
+export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListCasesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type createCaseResponse201 = {
   data: CaseDetail;
   status: 201;
@@ -2665,6 +2859,165 @@ export const useFileCase = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getFileCaseMutationOptions(options), queryClient);
+};
+
+export type setAllFoldersResponse200 = {
+  data: AllFolders;
+  status: 200;
+};
+
+export type setAllFoldersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setAllFoldersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setAllFoldersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setAllFoldersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setAllFoldersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setAllFoldersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setAllFoldersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setAllFoldersResponseSuccess = setAllFoldersResponse200 & {
+  headers: Headers;
+};
+export type setAllFoldersResponseError = (
+  | setAllFoldersResponse400
+  | setAllFoldersResponse401
+  | setAllFoldersResponse403
+  | setAllFoldersResponse404
+  | setAllFoldersResponse409
+  | setAllFoldersResponse422
+  | setAllFoldersResponse500
+) & {
+  headers: Headers;
+};
+
+export type setAllFoldersResponse = setAllFoldersResponseSuccess | setAllFoldersResponseError;
+
+export const getSetAllFoldersUrl = (userId: string) => {
+  return `/api/tenant/members/${userId}/all-folders`;
+};
+
+/**
+ * @summary Set All Folders
+ */
+export const setAllFolders = async (
+  userId: string,
+  allFolders: AllFolders,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setAllFoldersResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setAllFoldersResponse>(getSetAllFoldersUrl(userId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(allFolders),
+  });
+};
+
+export const getSetAllFoldersMutationKey = () => ["setAllFolders"] as const;
+
+export const getSetAllFoldersMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setAllFolders>>,
+    TError,
+    SetAllFoldersMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setAllFolders>>,
+  TError,
+  SetAllFoldersMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetAllFoldersMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setAllFolders>>,
+    SetAllFoldersMutationVariables
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return setAllFolders(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetAllFoldersMutationResult = NonNullable<Awaited<ReturnType<typeof setAllFolders>>>;
+export type SetAllFoldersMutationBody = AllFolders;
+export type SetAllFoldersMutationError = Problem;
+export type SetAllFoldersMutationVariables = { userId: string; data: AllFolders };
+
+/**
+ * @summary Set All Folders
+ */
+export const useSetAllFolders = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setAllFolders>>,
+      TError,
+      SetAllFoldersMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setAllFolders>>,
+  TError,
+  SetAllFoldersMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetAllFoldersMutationOptions(options), queryClient);
 };
 
 export type cancelCaseResponse200 = {

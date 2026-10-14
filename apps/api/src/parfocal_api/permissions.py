@@ -200,3 +200,10 @@ def require(permission: Permission, *, write: bool = False) -> dict[str, Any]:
     if write:
         extra["x-permission-write"] = True
     return {"dependencies": [Depends(check)], "openapi_extra": extra}
+
+
+def grant_in_folder(role: Role, permission: Permission, inside: bool) -> Grant:
+    grant = grant_for(role, permission)
+    if permission in FOLDER_SCOPED and not inside and role is not Role.OUTSIDE_CONSULTANT:
+        return Grant.NONE
+    return grant

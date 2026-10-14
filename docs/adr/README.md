@@ -47,3 +47,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0039](0039-email-through-resend-with-phi-rules.md) | Send email through Resend, with bounce handling and a rule that email never carries PHI | Accepted | 2026-10-14 |
 | [0040](0040-observability-and-phi-scrubbing.md) | Observability with OpenTelemetry, Grafana Cloud and Sentry, and one PHI scrubbing rule set | Accepted | 2026-10-14 |
 | [0041](0041-identity-and-authorization-rechecked.md) | Identity and authorization rechecked in October 2026: Zitadel Cloud and row-level security with roles in code both confirmed | Accepted | 2026-10-14 |
+| [0046](0046-roles-narrowed-by-folders.md) | Folder-scoped permissions apply inside a person's folders, unfiled cases stay open, and leads may work in every folder | Accepted | 2026-10-14 |

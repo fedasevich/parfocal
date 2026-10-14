@@ -278,6 +278,7 @@ memberships = Table(
     ),
     Column("role", String(30), nullable=False, info=OPERATIONAL),
     Column("signs_alone", Boolean, nullable=True, info=OPERATIONAL),
+    Column("all_folders", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     Column(
         "supervisor_user_id",
         Uuid[uuid.UUID](),
@@ -289,6 +290,7 @@ memberships = Table(
     UniqueConstraint("tenant_id", "user_id"),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
     CheckConstraint("supervisor_user_id IS DISTINCT FROM user_id", name="own_supervisor"),
+    CheckConstraint("NOT all_folders OR role = 'lead'", name="all_folders"),
 )
 
 

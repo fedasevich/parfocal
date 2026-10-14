@@ -4,10 +4,11 @@ from typing import cast
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.folder_access import access_of, require_folder
 from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, database_scope
@@ -180,6 +181,7 @@ async def case_detail(
     ).one_or_none()
     if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
         raise NotFoundError("Case not found")
+    await require_folder(connection, principal, row.folder_id)
     slide_rows = (
         await connection.execute(
             select(slides)
@@ -223,3 +225,35 @@ async def case_detail(
             for slide in slide_rows
         ],
     )
+
+
+class CaseSummary(BaseModel):
+    id: uuid.UUID
+    accession: str
+    priority: Priority
+    state: CaseState
+    due_at: datetime | None
+    folder_id: uuid.UUID | None
+    assignee_user_id: uuid.UUID | None
+
+
+@router.get("", operation_id="listCases", **require(Permission.SEE_CASES))
+async def list_cases(
+    principal: CurrentPrincipal, connection: TenantConnection, state: CaseState | None = None
+) -> list[CaseSummary]:
+    access = await access_of(connection, principal)
+    statement = select(cases).where(cases.c.deleted_at.is_(None), access.condition())
+    if isinstance(principal, MemberPrincipal):
+        statement = statement.where(
+            or_(
+                cases.c.is_draft.is_(False),
+                cases.c.created_by_user_id == principal.user_id,
+                literal(principal.role is Role.LAB),
+            )
+        )
+    else:
+        statement = statement.where(cases.c.is_draft.is_(False))
+    if state is not None:
+        statement = statement.where(cases.c.state == state)
+    rows = await connection.execute(statement.order_by(cases.c.created_at))
+    return [CaseSummary.model_validate(row, from_attributes=True) for row in rows]

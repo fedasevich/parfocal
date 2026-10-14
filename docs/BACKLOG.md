@@ -575,7 +575,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-016 · Roles narrowed by folders
   A membership carries the folders (services) the person works in. Permissions marked folder-scoped in the matrix (see cases, create and edit cases, upload, move slides, take cases, make calls, order lab work, ask for a second opinion, prepare a tumor board, read the team page) apply only inside those folders. Leads may be given every folder. Outside consultants never have folders and keep their guest grant.
   Done when the table-driven permission test from IAM-006 runs every folder-scoped permission inside and outside the folders, and an isolation test proves a list endpoint hides cases of other folders.
-  Depends on IAM-006, CASES-003. Refs kit Roles and access page, [ADR 0023](adr/0023-gap-review-backend-first.md).
+  Depends on IAM-006, CASES-003. Refs kit Roles and access page, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0046](adr/0046-roles-narrowed-by-folders.md) says.
 
 - [ ] IAM-017 · Emergency access with a reason
   A person may open a case outside their folders after giving a reason. The grant lasts a lab-set time (default 4 h), covers that case only, is marked in the audit log and notifies the folder's lead. Administrators have no patient data permissions and use the same path when they must look at a case.

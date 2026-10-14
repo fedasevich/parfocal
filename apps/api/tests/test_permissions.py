@@ -20,6 +20,7 @@ from parfocal_api.permissions import (
     Grant,
     Permission,
     grant_for,
+    grant_in_folder,
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal, Principal
@@ -104,6 +105,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"template": "{prefix}{yy}-{seq:5}", "prefixes": ["S"]},
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
+    "listCases": lambda _: Call("GET", "/api/cases"),
+    "setAllFolders": lambda w: Call(
+        "PUT", f"/api/tenant/members/{w.colleague}/all-folders", {"all_folders": False}
+    ),
     "createCase": lambda _: Call(
         "POST",
         "/api/cases",
@@ -395,3 +400,16 @@ def test_a_role_change_takes_effect_and_rejects_guest_roles(
     unknown = api(admin).put(f"/api/tenant/members/{uuid.uuid4()}/role", json={"role": "lab"})
     assert unknown.status_code == 404
     api(admin).put(path, json={"role": "resident"})
+
+
+def test_folder_scoped_permissions_apply_only_inside_the_folders() -> None:
+    assert len(FOLDER_SCOPED) == 10
+    for permission in Permission:
+        for role in COLUMNS:
+            inside = grant_in_folder(role, permission, inside=True)
+            outside = grant_in_folder(role, permission, inside=False)
+            assert inside == grant_for(role, permission)
+            if permission in FOLDER_SCOPED and role is not Role.OUTSIDE_CONSULTANT:
+                assert outside is Grant.NONE, (permission, role)
+            else:
+                assert outside == inside, (permission, role)

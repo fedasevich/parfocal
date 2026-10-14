@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.folder_access import require_folder
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -20,6 +21,7 @@ from parfocal_api.tables import (
     folder_members,
     folders,
     memberships,
+    users,
 )
 from parfocal_common.db import CURRENT_TENANT
 
@@ -261,6 +263,8 @@ async def file_case(
     )
     if not found:
         raise NotFoundError("Case not found")
+    await require_folder(connection, principal, previous)
+    await require_folder(connection, principal, target.folder_id)
     await connection.execute(
         update(cases).where(cases.c.id == case_id).values(folder_id=target.folder_id)
     )
@@ -277,3 +281,53 @@ async def file_case(
         },
     )
     return target
+
+
+class AllFolders(BaseModel):
+    all_folders: bool
+
+
+class AllFoldersForLeadsError(ConflictError):
+    code = "all-folders-for-leads"
+    title = "Only leads may work in every folder"
+
+
+member_router = APIRouter(prefix="/api/tenant/members", tags=["folders"])
+
+
+@member_router.put(
+    "/{user_id}/all-folders",
+    operation_id="setAllFolders",
+    **require(Permission.MANAGE_PEOPLE, write=True),
+)
+async def set_all_folders(
+    user_id: uuid.UUID,
+    change: AllFolders,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> AllFolders:
+    tenant_id = await tenant_of(connection)
+    role = await connection.scalar(
+        select(memberships.c.role).where(
+            memberships.c.tenant_id == tenant_id, memberships.c.user_id == user_id
+        )
+    )
+    if role is None:
+        raise NotFoundError("Member not found")
+    if change.all_folders and role != "lead":
+        raise AllFoldersForLeadsError
+    await connection.execute(
+        update(memberships)
+        .where(memberships.c.tenant_id == tenant_id, memberships.c.user_id == user_id)
+        .values(all_folders=change.all_folders)
+    )
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.FOLDER_CHANGED,
+        AuditTarget.PERSON,
+        tenant_id=tenant_id,
+        person=await connection.scalar(select(users.c.subject).where(users.c.id == user_id)),
+        details={"all_folders": change.all_folders},
+    )
+    return change

@@ -219,6 +219,7 @@ GET_ROUTES = {
     "getAccessionFormat": Route(Exposure.TENANT, lambda _: "/api/tenant/accession-format"),
     "listFolders": Route(Exposure.TENANT, lambda _: "/api/tenant/folders"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
+    "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "getSigningRights": Route(
         Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"
     ),

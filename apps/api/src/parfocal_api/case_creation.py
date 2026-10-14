@@ -18,6 +18,7 @@ from parfocal_api.accessions import (
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.cases import CaseDetail, case_detail, keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.folder_access import require_folder
 from parfocal_api.folders import ArchivedFolderError, one_folder
 from parfocal_api.identifiers import (
     PatientIdentity,
@@ -273,6 +274,7 @@ async def create_case(
     defaults = await RULES.defaults_for(connection, tenant_id, draft)
     assignee = draft.assignee_user_id or defaults.assignee_user_id
     await check_assignee(connection, tenant_id, assignee)
+    await require_folder(connection, principal, draft.folder_id)
     if draft.folder_id is not None:
         folder = await one_folder(connection, draft.folder_id)
         if folder.archived_at is not None:

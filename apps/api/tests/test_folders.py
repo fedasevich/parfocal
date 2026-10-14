@@ -51,8 +51,8 @@ def make_lab(database: str) -> Lab:
         )
         owner(
             database,
-            "INSERT INTO memberships (tenant_id, user_id, role) "
-            f"VALUES ('{tenant_id}', '{user_id}', '{role}')",
+            "INSERT INTO memberships (tenant_id, user_id, role, all_folders) "
+            f"VALUES ('{tenant_id}', '{user_id}', '{role}', {str(role is Role.LEAD).lower()})",
         )
         people[role] = MemberPrincipal(subject, tenant_id, user_id, role)
     return Lab(tenant_id, people)
@@ -93,9 +93,7 @@ def test_a_case_moves_between_folders_and_is_audited(api: ApiAs, database: str) 
     second = api(lead).post(FOLDERS, json={"name": "GI"}).json()
     case = new_case(api, lab, folder_id=first["id"])
     assert case["folder_id"] == first["id"]
-    moved = api(lab.people[Role.LAB]).put(
-        f"/api/cases/{case['id']}/folder", json={"folder_id": second["id"]}
-    )
+    moved = api(lead).put(f"/api/cases/{case['id']}/folder", json={"folder_id": second["id"]})
     assert moved.json() == {"folder_id": second["id"]}
     assert api(lead).get(f"/api/cases/{case['id']}").json()["folder_id"] == second["id"]
     details = owner(
