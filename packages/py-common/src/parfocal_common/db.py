@@ -8,6 +8,8 @@ from sqlalchemy import DateTime, MetaData, Uuid, func, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from parfocal_common.data_classes import OPERATIONAL
+
 TENANT_SETTING = "app.tenant_id"
 SCOPE_CASE_SETTING = "app.scope_case_id"
 SCOPE_VIEW_SETTING = "app.scope_view_id"
@@ -35,20 +37,22 @@ class Base(DeclarativeBase):
 
 
 class TenantOwned:
-    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False, index=True, info=OPERATIONAL)
 
 
 class Timestamped:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now(), info=OPERATIONAL
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now(), info=OPERATIONAL
     )
 
 
 class SoftDeletable:
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, info=OPERATIONAL
+    )
 
 
 @dataclass(frozen=True)

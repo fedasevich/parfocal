@@ -20,6 +20,7 @@
     "db:up": "docker compose up -d --wait",
     "db:migrate": "uv run --package parfocal-api alembic -c apps/api/alembic.ini upgrade head",
     "permissions:doc": "uv run --package parfocal-api python -m parfocal_api.permissions_doc",
+    "data-map:doc": "uv run --package parfocal-api python -m parfocal_api.data_map",
     "api:dev": "uv run --package parfocal-api --env-file .env uvicorn parfocal_api.app:create_app --factory --port 8000",
     "test:e2e": "pnpm --filter @parfocal/e2e test:e2e",
     "test:db": "docker compose up -d --wait && uv run pytest -m db"

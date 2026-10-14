@@ -601,6 +601,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-001 · Data classification and PHI inventory
   Classify every field (PHI, personal, operational, public). Generate a data map from model annotations in code.
   Done when a CI check fails if a new column lacks a classification.
+  Classes and where they are declared are in [ADR 0028](adr/0028-data-classes-on-columns.md).
 
 - [ ] SEC-002 · Encryption in transit and at rest
   TLS 1.2+ everywhere including internal traffic, encrypted volumes, buckets and backups, HSTS.

@@ -20,6 +20,7 @@ from sqlalchemy import (
     text,
 )
 
+from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
 from parfocal_common.db import metadata
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
@@ -64,17 +65,35 @@ def one_of(column: str, values: type[StrEnum]) -> CheckConstraint:
 
 def timestamps() -> list[Column[datetime]]:
     return [
-        Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
-        Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+        Column(
+            "created_at",
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+            info=OPERATIONAL,
+        ),
+        Column(
+            "updated_at",
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+            info=OPERATIONAL,
+        ),
     ]
 
 
 organisations = Table(
     "organisations",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
-    Column("slug", String(40), nullable=False, unique=True),
-    Column("name", String(200), nullable=False),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column("slug", String(40), nullable=False, unique=True, info=OPERATIONAL),
+    Column("name", String(200), nullable=False, info=OPERATIONAL),
     *timestamps(),
     CheckConstraint(f"slug ~ '{SLUG_PATTERN}'", name="slug"),
 )
@@ -82,21 +101,34 @@ organisations = Table(
 tenants = Table(
     "tenants",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
     Column(
         "organisation_id",
         Uuid[uuid.UUID](),
         ForeignKey("organisations.id"),
         nullable=False,
         index=True,
+        info=OPERATIONAL,
     ),
-    Column("slug", String(40), nullable=False, unique=True),
-    Column("name", String(200), nullable=False),
-    Column("kind", String(20), nullable=False),
-    Column("region", String(10), nullable=False),
-    Column("plan", String(20), nullable=False),
-    Column("status", String(20), nullable=False, server_default=TenantStatus.ACTIVE.value),
-    Column("suspended_at", DateTime(timezone=True), nullable=True),
+    Column("slug", String(40), nullable=False, unique=True, info=OPERATIONAL),
+    Column("name", String(200), nullable=False, info=OPERATIONAL),
+    Column("kind", String(20), nullable=False, info=OPERATIONAL),
+    Column("region", String(10), nullable=False, info=OPERATIONAL),
+    Column("plan", String(20), nullable=False, info=OPERATIONAL),
+    Column(
+        "status",
+        String(20),
+        nullable=False,
+        server_default=TenantStatus.ACTIVE.value,
+        info=OPERATIONAL,
+    ),
+    Column("suspended_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     CheckConstraint(f"slug ~ '{SLUG_PATTERN}'", name="slug"),
     one_of("kind", TenantKind),
@@ -109,36 +141,55 @@ tenants = Table(
 platform_operators = Table(
     "platform_operators",
     metadata,
-    Column("subject", String(200), primary_key=True),
-    Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("subject", String(200), primary_key=True, info=PERSONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
 )
 
 auth_logins = Table(
     "auth_logins",
     metadata,
-    Column("state_hash", LargeBinary, primary_key=True),
-    Column("binding_hash", LargeBinary, nullable=False),
-    Column("code_verifier", String(200), nullable=False),
-    Column("nonce", String(200), nullable=False),
-    Column("return_to", String(2000), nullable=False),
-    Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
+    Column("state_hash", LargeBinary, primary_key=True, info=SECRET),
+    Column("binding_hash", LargeBinary, nullable=False, info=SECRET),
+    Column("code_verifier", String(200), nullable=False, info=SECRET),
+    Column("nonce", String(200), nullable=False, info=SECRET),
+    Column("return_to", String(2000), nullable=False, info=OPERATIONAL),
+    Column("expires_at", DateTime(timezone=True), nullable=False, index=True, info=OPERATIONAL),
 )
 
 sessions = Table(
     "sessions",
     metadata,
-    Column("id_hash", LargeBinary, primary_key=True),
-    Column("subject", String(200), nullable=False, index=True),
-    Column("tokens", LargeBinary, nullable=False),
-    Column("access_expires_at", DateTime(timezone=True), nullable=False),
-    Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
-    Column("last_seen_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
-    Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("id_hash", LargeBinary, primary_key=True, info=SECRET),
+    Column("subject", String(200), nullable=False, index=True, info=PERSONAL),
+    Column("tokens", LargeBinary, nullable=False, info=SECRET),
+    Column("access_expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    Column("expires_at", DateTime(timezone=True), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "last_seen_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
     Column(
         "active_tenant_id",
         Uuid[uuid.UUID](),
         ForeignKey("tenants.id", ondelete="SET NULL"),
         nullable=True,
+        info=OPERATIONAL,
     ),
 )
 
@@ -147,18 +198,25 @@ AVATAR_COLOURS = 12
 users = Table(
     "users",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
-    Column("subject", String(200), nullable=False, unique=True),
-    Column("email", String(320), nullable=True),
-    Column("display_name", String(200), nullable=False),
-    Column("initials", String(3), nullable=False),
-    Column("avatar_colour", SmallInteger, nullable=False),
-    Column("title", String(40), nullable=True),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=PERSONAL,
+    ),
+    Column("subject", String(200), nullable=False, unique=True, info=PERSONAL),
+    Column("email", String(320), nullable=True, info=PERSONAL),
+    Column("display_name", String(200), nullable=False, info=PERSONAL),
+    Column("initials", String(3), nullable=False, info=PERSONAL),
+    Column("avatar_colour", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("title", String(40), nullable=True, info=PERSONAL),
     Column(
         "last_tenant_id",
         Uuid[uuid.UUID](),
         ForeignKey("tenants.id", ondelete="SET NULL"),
         nullable=True,
+        info=OPERATIONAL,
     ),
     *timestamps(),
     CheckConstraint("initials ~ '^[A-Z]{1,3}$'", name="initials"),
@@ -168,10 +226,30 @@ users = Table(
 memberships = Table(
     "memberships",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
-    Column("tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=False, index=True),
-    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, index=True),
-    Column("role", String(30), nullable=False),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+        info=PERSONAL,
+    ),
+    Column("role", String(30), nullable=False, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("tenant_id", "user_id"),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
@@ -189,25 +267,39 @@ class ActorKind(StrEnum):
 audit_people = Table(
     "audit_people",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
-    Column("subject", String(200), nullable=False, unique=True),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=PERSONAL,
+    ),
+    Column("subject", String(200), nullable=False, unique=True, info=PERSONAL),
 )
 
 audit_events = Table(
     "audit_events",
     metadata,
-    Column("id", Uuid[uuid.UUID](), primary_key=True, server_default=text("gen_random_uuid()")),
-    Column("tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=True),
-    Column("seq", BigInteger, nullable=False),
-    Column("occurred_at", DateTime(timezone=True), nullable=False),
-    Column("actor_kind", String(20), nullable=False),
-    Column("actor_id", Uuid[uuid.UUID](), nullable=True),
-    Column("action", String(60), nullable=False),
-    Column("target_type", String(40), nullable=False),
-    Column("target_id", Uuid[uuid.UUID](), nullable=True),
-    Column("details", Text, nullable=False, server_default="{}"),
-    Column("prev_hash", LargeBinary, nullable=False),
-    Column("hash", LargeBinary, nullable=False),
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), nullable=True, info=OPERATIONAL
+    ),
+    Column("seq", BigInteger, nullable=False, info=OPERATIONAL),
+    Column("occurred_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    Column("actor_kind", String(20), nullable=False, info=OPERATIONAL),
+    Column("actor_id", Uuid[uuid.UUID](), nullable=True, info=PERSONAL),
+    Column("action", String(60), nullable=False, info=OPERATIONAL),
+    Column("target_type", String(40), nullable=False, info=OPERATIONAL),
+    Column("target_id", Uuid[uuid.UUID](), nullable=True, info=PERSONAL),
+    Column("details", Text, nullable=False, server_default="{}", info=OPERATIONAL),
+    Column("prev_hash", LargeBinary, nullable=False, info=OPERATIONAL),
+    Column("hash", LargeBinary, nullable=False, info=OPERATIONAL),
     UniqueConstraint("tenant_id", "seq", postgresql_nulls_not_distinct=True),
     Index(
         "ix_audit_events_tenant_id_target_type_target_id", "tenant_id", "target_type", "target_id"
