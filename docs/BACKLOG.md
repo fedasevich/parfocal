@@ -543,7 +543,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests prove the guest can read only that case and post only in the shared threads, the link expires, and revocation takes effect within one minute.
   Depends on STACK-023. Refs kit Flow 3, mock 12.
 
-- [ ] IAM-011 · Service accounts and API tokens
+- [x] IAM-011 · Service accounts and API tokens
   For integrations (LIS adapter, import scripts), with scopes and rotation.
   Done when tests cover scope enforcement and token revocation.
   Built as [ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md) says.
@@ -599,7 +599,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Map GDPR articles, the HIPAA Security Rule safeguards and ISO 27001:2022 Annex A controls to the backlog.
   Done when a control matrix in `docs/compliance/controls.md` links each control to a task ID or marks it as policy work.
 
-- [ ] SEC-001 · Data classification and PHI inventory
+- [x] SEC-001 · Data classification and PHI inventory
   Classify every field (PHI, personal, operational, public). Generate a data map from model annotations in code.
   Done when a CI check fails if a new column lacks a classification.
   Classes and where they are declared are in [ADR 0028](adr/0028-data-classes-on-columns.md).
@@ -608,7 +608,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   TLS 1.2+ everywhere including internal traffic, encrypted volumes, buckets and backups, HSTS.
   Done when an automated config test (for example tfsec or checkov rules) passes and a TLS scan scores A.
 
-- [ ] SEC-003 · Audit log
+- [x] SEC-003 · Audit log
   Append-only audit table with hash chaining. Every PHI read (case open, slide open, report view), every write that matters clinically (annotation accept, review decision, sign-out, amendment), every permission change. Export for auditors.
   Done when tests prove entries cannot be updated or deleted by the app role, the chain verifies, and an auditor export lists a case's full history.
   Built as [ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md) says. PHI reads and clinical writes are recorded by the tasks that build them, through `parfocal_api.audit.record`.
