@@ -2067,7 +2067,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when a table-driven test covers every allowed and refused transition with its actor, and a property test proves every state is reachable and signed is reachable only through sign-out.
   Depends on CASES-001. Refs kit Case lifecycle and data page, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0038](adr/0038-case-state-machine.md) says.
 
-- [ ] CASES-013 · Case creation API
+- [x] CASES-013 · Case creation API
   Create a case with an existing or new patient, specimens with blocks and their expected levels and stains, clinical information, requesting clinician and priority. Service, due time, assignee and AI plan are filled from the lab rules (CASES-022, CASES-023, AIP-016) and can be overridden. A case may be saved as a draft, which only its author and the lab see. The accession number is assigned on creation (CASES-004) and creation is idempotent per request key.
   Done when API tests cover creation with each default and override, drafts and their visibility, idempotency and the audit entry.
   Depends on CASES-001, CASES-004. Refs kit Flow 10. The defaults come from `case_creation.RULES`, which returns nothing until CASES-022, CASES-023 and AIP-016 plug in their rules.
