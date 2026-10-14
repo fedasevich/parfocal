@@ -326,9 +326,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: Typst, WeasyPrint, headless Chromium (Playwright) print, ReportLab. Default: Typst for deterministic, versionable templates, or WeasyPrint if templates must share HTML and CSS with the web preview.
   Done when the spike renders the sentinel node report with a signature block and AI disclosure in both preview and PDF with matching content.
 
-- [ ] STACK-036 · Email and transactional notifications
+- [x] STACK-036 · Email and transactional notifications
   Candidates: Amazon SES, Postmark, Resend, SendGrid, with EU data processing and BAA where needed. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Resend through its HTTP API in production only. Other environments use a console sender and automated tests an in-memory fake ([ADR 0005](adr/0005-external-sends-only-in-production.md)). Templates are rendered server-side and no PHI goes in subject lines.
   Done when the ADR covers bounce handling and the PHI rules.
+  Decided in [ADR 0039](adr/0039-email-through-resend-with-phi-rules.md): Resend in production only, no PHI in email, signed bounce webhooks feeding a suppression list.
 
 - [x] STACK-037 · Secrets and key management
   Candidates: cloud KMS with envelope encryption, HashiCorp Vault or OpenBao, External Secrets Operator for Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): application-level envelope encryption. Per-tenant data keys are wrapped by a master key held as a Modal secret, and sensitive columns are AES-GCM encrypted in FastAPI. Moving the master key to a KMS is a trigger before real PHI. Runtime secrets live in Modal secrets, Wrangler secrets and GitHub environments.
