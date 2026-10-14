@@ -41,6 +41,10 @@ class AuditAction(StrEnum):
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
     API_TOKEN_ISSUED = "api-token.issued"
     API_TOKEN_REVOKED = "api-token.revoked"
+    INVITATION_CREATED = "invitation.created"
+    INVITATION_REVOKED = "invitation.revoked"
+    INVITATION_ACCEPTED = "invitation.accepted"
+    INVITATION_EXPIRED = "invitation.expired"
 
 
 class AuditTarget(StrEnum):
@@ -49,6 +53,7 @@ class AuditTarget(StrEnum):
     PERSON = "person"
     CASE = "case"
     SERVICE_ACCOUNT = "service-account"
+    INVITATION = "invitation"
 
 
 @dataclass(frozen=True)

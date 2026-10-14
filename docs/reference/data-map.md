@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 0 |
-| `personal` | 13 |
-| `secret` | 7 |
-| `operational` | 57 |
+| `personal` | 14 |
+| `secret` | 8 |
+| `operational` | 64 |
 | `public` | 0 |
 
 ## api_tokens
@@ -65,6 +65,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `nonce` | secret |
 | `return_to` | operational |
 | `expires_at` | operational |
+
+## invitations
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `email` | personal |
+| `role` | operational |
+| `token_hash` | secret |
+| `expires_at` | operational |
+| `accepted_at` | operational |
+| `revoked_at` | operational |
+| `created_at` | operational |
 
 ## memberships
 

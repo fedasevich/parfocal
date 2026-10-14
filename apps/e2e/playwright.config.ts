@@ -7,6 +7,8 @@ const envFile = `${root}.env`;
 if (existsSync(envFile)) {
   process.loadEnvFile(envFile);
 }
+process.env.EMAIL_BACKEND = "file";
+process.env.EMAIL_OUTBOX = `${root}.outbox/e2e-email.jsonl`;
 
 export default defineConfig({
   testDir: "tests",

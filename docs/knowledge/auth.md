@@ -24,12 +24,14 @@ The next login shows an account picker with the previous user. Choosing it asks 
 | Platform operators | `uv run --package parfocal-api --env-file .env python -m parfocal_api.operators add <zitadel-user-id>`, also `remove` and `list` |
 | Test user | `e2e-pathologist@parfocal.eu` in Zitadel's `Parfocal` organisation, password in `.env` as `ZITADEL_TEST_PASSWORD`, MFA not set up |
 
-Login creates the `users` row on first sign-in and later only refreshes its email, so a profile edited in the app is never overwritten by the IdP. The session's `active_tenant_id` starts at the user's last workspace if they are still a member, or their only workspace, and `PUT /api/me/workspace` changes it. `authenticate` returns a `MemberPrincipal` only while the membership exists.
+Login creates the `users` row on first sign-in and later only refreshes its email, which it stores only when the ID token says `email_verified` is true, so a profile edited in the app is never overwritten by the IdP. The session's `active_tenant_id` starts at the user's last workspace if they are still a member, or their only workspace, and `PUT /api/me/workspace` changes it. `authenticate` returns a `MemberPrincipal` only while the membership exists.
 
 `SESSION_KEY` is 32 random bytes in URL-safe base64. Changing it signs everyone out and has no other effect.
 
 ## Running the login end to end
 
 `pnpm test:e2e` starts the API on port 8000 (`pnpm api:dev`) and Vite on 5173, which proxies `/api`, unless they are already running. It needs `pnpm db:up`, `pnpm db:migrate` and the Zitadel values in `.env`, and it uses the installed Google Chrome, so no Playwright browser download is needed. The `e2e` CI job runs the same tests. It writes `.env` from the repository secrets `ZITADEL_DEV_CLIENT_ID`, `ZITADEL_DEV_CLIENT_SECRET`, `ZITADEL_TEST_USERNAME` and `ZITADEL_TEST_PASSWORD` with a fresh `SESSION_KEY`, and uses the runner's Google Chrome. Playwright traces record typed values, including the password, so CI keeps traces off and uploads no artifacts. Pull requests from forks get no secrets, so their `e2e` job fails.
+
+The invitation tests sign the test user in, make it a platform operator for one call to invite its own address into a fresh workspace, and read the link from the file outbox that `playwright.config.ts` turns on with `EMAIL_BACKEND=file`. Helpers shared by the specs live in `apps/e2e/tests/support.ts`. `psql -tAc` prints `INSERT 0 1` after a `RETURNING` value, so take the first line.
 
 The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behind `httpx2.MockTransport`. It signs real RS256 ID tokens, checks PKCE and rotates refresh tokens, so the client's verification runs without Zitadel.

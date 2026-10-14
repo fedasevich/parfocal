@@ -13,7 +13,7 @@ class AppEnv(StrEnum):
     PROD = "prod"
 
 
-type EmailBackend = Literal["console", "memory", "resend"]
+type EmailBackend = Literal["console", "memory", "file", "resend"]
 type ErrorBackend = Literal["console", "sentry"]
 type TelemetryExport = Literal["console", "otlp"]
 type AnalyticsBackend = Literal["none", "posthog"]
@@ -61,6 +61,7 @@ class ServiceSettings(BaseSettings):
     analytics_backend: AnalyticsBackend | None = None
     flag_backend: FlagBackend | None = None
     flag_file: str = "flags.json"
+    email_outbox: str = ".outbox/email.jsonl"
 
     def backends(self) -> Backends:
         defaults = default_backends(self.app_env)

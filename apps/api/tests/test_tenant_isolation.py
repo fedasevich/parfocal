@@ -16,6 +16,7 @@ from parfocal_api.tables import (
     api_tokens,
     audit_events,
     audit_people,
+    invitations,
     memberships,
     organisations,
     platform_operators,
@@ -110,7 +111,22 @@ async def seed_api_tokens(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(str(token))
 
 
+async def seed_invitations(connection: AsyncConnection, seeded: Seeded) -> None:
+    email = f"invited-{uuid.uuid4().hex[:12]}@example.test"
+    await connection.execute(
+        insert(invitations).values(
+            tenant_id=seeded.tenant_id,
+            email=email,
+            role="lab",
+            token_hash=uuid.uuid4().bytes,
+            expires_at=text("now() + interval '1 day'"),
+        )
+    )
+    seeded.markers.add(email)
+
+
 SEEDERS: dict[str, Seeder] = {
+    "invitations": seed_invitations,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
@@ -127,6 +143,7 @@ GET_ROUTES = {
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
     "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events"),
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
+    "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

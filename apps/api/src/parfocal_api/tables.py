@@ -378,3 +378,37 @@ api_tokens = Table(
         info=OPERATIONAL,
     ),
 )
+
+invitations = Table(
+    "invitations",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("email", String(320), nullable=False, info=PERSONAL),
+    Column("role", String(30), nullable=False, info=OPERATIONAL),
+    Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
+    Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    Column("accepted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+)

@@ -25,6 +25,7 @@ from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal,
 from parfocal_api.tables import (
     Role,
     api_tokens,
+    invitations,
     memberships,
     organisations,
     service_accounts,
@@ -48,6 +49,8 @@ OPEN_OPERATIONS = {
     "suspendTenant": "platform",
     "reactivateTenant": "platform",
     "addMember": "platform",
+    "invitePlatformMember": "platform",
+    "acceptInvitation": "signed-in",
     "listMembers": "platform",
 }
 
@@ -61,6 +64,7 @@ class Workspace:
     account: uuid.UUID
     token: uuid.UUID
     spare_account: uuid.UUID
+    invitations: list[uuid.UUID]
 
 
 @dataclass(frozen=True)
@@ -71,6 +75,13 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "listInvitations": lambda _: Call("GET", "/api/tenant/invitations"),
+    "createInvitation": lambda _: Call(
+        "POST",
+        "/api/tenant/invitations",
+        {"email": f"{uuid.uuid4().hex[:8]}@example.test", "role": "lab"},
+    ),
+    "revokeInvitation": lambda w: Call("DELETE", f"/api/tenant/invitations/{w.invitations.pop()}"),
     "listServiceAccounts": lambda _: Call("GET", "/api/tenant/service-accounts"),
     "createServiceAccount": lambda _: Call(
         "POST",
@@ -91,7 +102,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
 }
 PLACEHOLDER = Workspace(
-    uuid.uuid4(), {}, uuid.uuid4(), "", uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    uuid.uuid4(), {}, uuid.uuid4(), "", uuid.uuid4(), uuid.uuid4(), uuid.uuid4(), [uuid.uuid4()]
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
@@ -217,11 +228,26 @@ async def seed(database: str) -> Workspace:
                 )
                 .returning(api_tokens.c.id)
             )
+            pending = [
+                await connection.scalar(
+                    insert(invitations)
+                    .values(
+                        tenant_id=tenant_id,
+                        email=f"pending-{index}@example.test",
+                        role="lab",
+                        token_hash=uuid.uuid4().bytes,
+                        expires_at=func.now(),
+                    )
+                    .returning(invitations.c.id)
+                )
+                for index in range(len(COLUMNS))
+            ]
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
         assert isinstance(spare_account, uuid.UUID)
-        return Workspace(tenant_id, people, colleague, slug, account, token, spare_account)
+        ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
+        return Workspace(tenant_id, people, colleague, slug, account, token, spare_account, ids)
     finally:
         await engine.dispose()
 

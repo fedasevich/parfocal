@@ -282,7 +282,7 @@ def avatar_colour_of(subject: str) -> int:
 
 async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> uuid.UUID | None:
     subject = str(claims["sub"])
-    email = claims.get("email")
+    email = claims.get("email") if claims.get("email_verified") is True else None
     name = str(claims.get("name") or email or "New user")
     user_id = await connection.scalar(
         upsert(users)

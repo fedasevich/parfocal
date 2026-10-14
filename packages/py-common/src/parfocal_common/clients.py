@@ -21,6 +21,17 @@ class EmailSender(Protocol):
     def send(self, message: EmailMessage) -> None: ...
 
 
+@dataclass(frozen=True)
+class FileEmailSender:
+    path: Path
+
+    def send(self, message: EmailMessage) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps({"to": message.to, "template": message.template, "link": message.link})
+        with self.path.open("a", encoding="utf-8") as outbox:
+            outbox.write(f"{line}\n")
+
+
 class ErrorReporter(Protocol):
     def capture(self, error: BaseException) -> None: ...
 
@@ -122,6 +133,8 @@ def select_clients(settings: ServiceSettings, production: ProductionFactories) -
             email = _production("email", "resend", production.email, settings)
         case "memory":
             email = MemoryEmailSender()
+        case "file":
+            email = FileEmailSender(Path(settings.email_outbox))
         case "console":
             email = ConsoleEmailSender()
     errors: ErrorReporter = (

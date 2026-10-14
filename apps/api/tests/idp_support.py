@@ -61,6 +61,7 @@ class FakeIdp:
             "exp": now + 3600,
             "name": "Test Pathologist",
             "email": "pathologist@example.test",
+            "email_verified": True,
         }
         if nonce is not None:
             claims["nonce"] = nonce

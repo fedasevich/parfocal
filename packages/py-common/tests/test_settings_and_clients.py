@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ from parfocal_common.clients import (
     ConsoleEmailSender,
     ConsoleErrorReporter,
     ConsoleTelemetryExporter,
+    EmailMessage,
     Factory,
     FileFlagClient,
     MemoryEmailSender,
@@ -99,3 +101,15 @@ def test_local_flags_come_from_the_flag_file(tmp_path: Path) -> None:
     )
     assert clients.flags.variant("home-variant", "user-1") == "B"
     assert clients.flags.variant("unknown", "user-1") is None
+
+
+def test_a_local_outbox_file_collects_emails(tmp_path: Path) -> None:
+    outbox = tmp_path / "outbox" / "email.jsonl"
+    clients = select_clients(
+        settings(app_env="dev", email_backend="file", email_outbox=str(outbox)),
+        ProductionFactories(),
+    )
+    for link in ("https://app.test/a", "https://app.test/b"):
+        clients.email.send(EmailMessage(to="person@example.test", template="invite", link=link))
+    lines = [json.loads(line) for line in outbox.read_text().splitlines()]
+    assert [line["link"] for line in lines] == ["https://app.test/a", "https://app.test/b"]
