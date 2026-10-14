@@ -525,7 +525,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Roles: consultant pathologist, resident, lab lead, lab staff, administrator and outside consultant, with the UX kit's permission matrix ([ADR 0026](adr/0026-roles-and-permission-matrix.md)). A permission matrix in code and a generated doc page. Platform operators sit outside the matrix and only reach `/api/platform/*` ([ADR 0024](adr/0024-workspaces-are-tenants.md)).
   Done when a table-driven test asserts every endpoint's permission for every role.
 
-- [ ] IAM-007 · Invitations
+- [x] IAM-007 · Invitations
   Admins invite by email with a role, invites expire, acceptance creates the membership.
   Done when E2E covers invite, accept and expiry, and the audit log records each step.
   Built as [ADR 0030](adr/0030-invitations-bound-to-verified-email.md) says. The `/invitations/{token}` page waits for the final UI.
