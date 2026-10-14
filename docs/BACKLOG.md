@@ -624,7 +624,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-004 · Field-level encryption for direct identifiers
   Patient name, MRN and birth date encrypted with tenant data keys from `parfocal_common.envelope` ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md)), stored wrapped in a `tenant_keys` table. Search uses blind indexes under a per-tenant index key that is destroyed with the data keys.
   Done when tests show ciphertext at rest, correct search, and unreadable data after the tenant key is destroyed.
-  Depends on STACK-037.
+  Depends on STACK-037. Search is decided in [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md).
 
 - [ ] SEC-005 · Data residency enforcement
   Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
@@ -2014,7 +2014,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when STACK-040 is confirmed and the case data model is written as an ADR.
 
 - [ ] CASES-001 · Patient and case model
-  Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, folder, status), specimen, block, slide.
+  Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, folder, status), specimen, block, slide. SEC-004 already created `patients` with the encrypted name, MRN and birth date and their blind indexes ([ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)), so this task adds the remaining columns and tables.
   Done when migrations, API tests and isolation tests pass.
 
 - [ ] CASES-002 · Case creation UI

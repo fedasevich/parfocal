@@ -10,12 +10,14 @@ from parfocal_common.clients import (
     NoAnalytics,
     ProductionFactories,
 )
+from parfocal_common.envelope import InvalidMasterKeysError
 
 REQUIRED = {
     "APP_ENV": "dev",
     "DATABASE_URL": "postgresql://parfocal@localhost:5432/parfocal",
     "PUBLIC_ORIGIN": "http://localhost:5173",
     "SESSION_KEY": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "MASTER_KEYS": "dev:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
     "ZITADEL_ISSUER": "https://parfocal-iqcyh5.eu1.zitadel.cloud",
     "ZITADEL_CLIENT_ID": "client",
     "ZITADEL_CLIENT_SECRET": "zitadel-client-secret-value",
@@ -58,3 +60,9 @@ def test_prod_refuses_to_start_without_production_clients(
 def test_settings_can_be_passed_directly() -> None:
     settings = ApiSettings.model_validate({name.lower(): value for name, value in REQUIRED.items()})
     assert create_app(settings).settings is settings
+
+
+def test_startup_refuses_a_malformed_master_keyring(environment: pytest.MonkeyPatch) -> None:
+    environment.setenv("MASTER_KEYS", "dev:too-short")
+    with pytest.raises(InvalidMasterKeysError):
+        create_app()

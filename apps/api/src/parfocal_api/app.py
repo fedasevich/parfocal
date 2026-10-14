@@ -20,6 +20,7 @@ from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
 from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine
+from parfocal_common.envelope import MasterKeyring
 from parfocal_common.settings import load_settings
 
 PRODUCTION_FACTORIES = ProductionFactories()
@@ -61,6 +62,7 @@ class ParfocalApi(FastAPI):
         )
         self.settings = settings
         self.clients = clients
+        self.keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
         self.state.engine = create_engine(str(settings.database_url))
         self.state.auth = auth.AuthState(
             engine=self.state.engine,

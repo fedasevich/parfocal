@@ -19,9 +19,11 @@ from parfocal_api.tables import (
     invitations,
     memberships,
     organisations,
+    patients,
     platform_operators,
     service_accounts,
     session_policies,
+    tenant_keys,
     tenants,
     users,
 )
@@ -134,8 +136,32 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
     )
 
 
+async def seed_tenant_keys(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(tenant_keys).values(
+            tenant_id=seeded.tenant_id,
+            purpose="data",
+            version=1,
+            master_id="isolation",
+            wrapped_key=uuid.uuid4().bytes,
+        )
+    )
+
+
+async def seed_patients(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(patients).values(
+            tenant_id=seeded.tenant_id,
+            name_ciphertext=uuid.uuid4().bytes,
+            name_tokens=[uuid.uuid4().bytes],
+        )
+    )
+
+
 SEEDERS: dict[str, Seeder] = {
     "invitations": seed_invitations,
+    "tenant_keys": seed_tenant_keys,
+    "patients": seed_patients,
     "session_policies": seed_session_policies,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,

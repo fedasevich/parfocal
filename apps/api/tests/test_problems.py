@@ -23,6 +23,7 @@ SETTINGS = ApiSettings.model_validate(
         "database_url": "postgresql://parfocal@localhost:5432/parfocal",
         "public_origin": "http://localhost:5173",
         "session_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "master_keys": "test:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
         "zitadel_issuer": "https://parfocal-iqcyh5.eu1.zitadel.cloud",
         "zitadel_client_id": "client",
         "zitadel_client_secret": "zitadel-client-secret-value",

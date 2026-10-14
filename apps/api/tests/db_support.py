@@ -25,6 +25,7 @@ OWNER_URL = os.environ.get(
 APP_URL = os.environ.get(
     "PARFOCAL_TEST_APP_URL", "postgresql://parfocal_app@localhost:6432/parfocal"
 )
+TEST_MASTER_KEYS = "test:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
 ALEMBIC_INI = Path(__file__).resolve().parents[1] / "alembic.ini"
 
 
@@ -69,6 +70,7 @@ def api_settings(database: str) -> ApiSettings:
             "database_url": with_database(APP_URL, database),
             "public_origin": "http://localhost:5173",
             "session_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "master_keys": TEST_MASTER_KEYS,
             "zitadel_issuer": "https://issuer.invalid",
             "zitadel_client_id": "test",
             "zitadel_client_secret": "test",

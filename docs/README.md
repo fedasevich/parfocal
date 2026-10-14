@@ -14,7 +14,7 @@ Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 33 a
 | Stack (M0) | 9 of 40 STACK slots decided by spikes. STACK-019 waits for a Modal run and STACK-020 for a Neon region measurement |
 | API foundations | Typed settings and client selection by `APP_ENV`, RFC 9457 problems, an Orval client generated from OpenAPI, Postgres 17 with PostGIS behind PgBouncer, forced row-level security on every table and a table-driven isolation suite |
 | Identity | Zitadel login through a backend-for-frontend with sessions in Postgres ([ADR 0025](adr/0025-zitadel-bff-login.md)), workspaces as tenants ([ADR 0024](adr/0024-workspaces-are-tenants.md)), memberships, the kit's six roles with a permission declared on every route ([ADR 0026](adr/0026-roles-and-permission-matrix.md)), invitations ([ADR 0030](adr/0030-invitations-bound-to-verified-email.md)), service accounts ([ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md)), idle lock and session control ([ADR 0031](adr/0031-idle-lock-from-explicit-activity.md)), signing rights ([ADR 0032](adr/0032-signing-rights-on-the-membership.md)) |
-| Security | A hash-chained audit log naming people by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)) and a data class on every column with a generated [data map](reference/data-map.md) ([ADR 0028](adr/0028-data-classes-on-columns.md)) |
+| Security | A hash-chained audit log naming people by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)) a data class on every column with a generated [data map](reference/data-map.md) ([ADR 0028](adr/0028-data-classes-on-columns.md)), and envelope-encrypted patient identifiers with blind indexes ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md), [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)) |
 | Web | A Vite build with typed public config and no screens. The UI is not final, so screens wait |
 
 Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
@@ -23,7 +23,7 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. SEC-004 (encrypted patient identifiers on top of [ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md)) unblocks CASES-001, the patient and case model that most remaining backend work needs.
+1. SEC-004 waits for a green CI run on `main`. It unblocks CASES-001, the patient and case model that most remaining backend work needs.
 2. Research checks that need no cloud: IAM-000 (confirm STACK-023 and STACK-028) and SEC-000 (the control matrix).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
 4. Waiting for the owner: STACK-019 (Modal spend limit), STACK-020 (Neon region), IAM-001 (CI credentials for Zitadel). Waiting for the final UI: IAM-008, IAM-014, IAM-021 and FOUND-019. FOUND-014 is on hold.

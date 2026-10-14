@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 0 |
+| `phi` | 6 |
 | `personal` | 17 |
-| `secret` | 8 |
-| `operational` | 73 |
+| `secret` | 9 |
+| `operational` | 83 |
 | `public` | 0 |
 
 ## api_tokens
@@ -103,6 +103,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 
+## patients
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name_ciphertext` | phi |
+| `name_tokens` | phi |
+| `mrn_ciphertext` | phi |
+| `mrn_index` | phi |
+| `birth_date_ciphertext` | phi |
+| `birth_date_index` | phi |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
+
 ## platform_operators
 
 | Column | Class |
@@ -147,6 +163,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `active_tenant_id` | operational |
 | `active_at` | operational |
 | `user_agent` | personal |
+
+## tenant_keys
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `purpose` | operational |
+| `version` | operational |
+| `master_id` | operational |
+| `wrapped_key` | secret |
+| `created_at` | operational |
 
 ## tenants
 

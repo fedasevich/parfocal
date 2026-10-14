@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     LargeBinary,
     SmallInteger,
     String,
@@ -22,7 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 
-from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
+from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
@@ -461,4 +462,66 @@ session_policies = Table(
     *timestamps(),
     CheckConstraint("idle_lock_minutes BETWEEN 1 AND 240", name="idle_lock_minutes"),
     CheckConstraint("session_hours BETWEEN 1 AND 24", name="session_hours"),
+)
+
+
+class KeyPurpose(StrEnum):
+    DATA = "data"
+    INDEX = "index"
+
+
+tenant_keys = Table(
+    "tenant_keys",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("purpose", String(10), primary_key=True, info=OPERATIONAL),
+    Column("version", Integer, primary_key=True, info=OPERATIONAL),
+    Column("master_id", String(40), nullable=False, info=OPERATIONAL),
+    Column("wrapped_key", LargeBinary, nullable=False, info=SECRET),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    one_of("purpose", KeyPurpose),
+    CheckConstraint("version BETWEEN 1 AND 65535", name="version"),
+)
+
+patients = Table(
+    "patients",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("name_ciphertext", LargeBinary, nullable=False, info=PHI),
+    Column("name_tokens", ARRAY(LargeBinary), nullable=False, info=PHI),
+    Column("mrn_ciphertext", LargeBinary, nullable=True, info=PHI),
+    Column("mrn_index", LargeBinary, nullable=True, info=PHI),
+    Column("birth_date_ciphertext", LargeBinary, nullable=True, info=PHI),
+    Column("birth_date_index", LargeBinary, nullable=True, info=PHI),
+    *timestamps(),
+    Column("deleted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    UniqueConstraint("tenant_id", "mrn_index"),
+    Index("ix_patients_name_tokens", "name_tokens", postgresql_using="gin"),
+    Index("ix_patients_birth_date_index", "tenant_id", "birth_date_index"),
 )

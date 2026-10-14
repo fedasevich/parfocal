@@ -108,6 +108,7 @@ jobs:
             echo "DATABASE_URL=postgresql://parfocal_app@localhost:6432/parfocal"
             echo "PUBLIC_ORIGIN=http://localhost:5173"
             echo "SESSION_KEY=$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+            echo "MASTER_KEYS=ci:$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
             echo "ZITADEL_ISSUER=https://parfocal-iqcyh5.eu1.zitadel.cloud"
             echo "ZITADEL_CLIENT_ID=${ZITADEL_CLIENT_ID}"
             echo "ZITADEL_CLIENT_SECRET=${ZITADEL_CLIENT_SECRET}"

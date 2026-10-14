@@ -14,6 +14,7 @@ PLACEHOLDER_SETTINGS = ApiSettings.model_validate(
         "database_url": "postgresql://schema@localhost/schema",
         "public_origin": "http://localhost:5173",
         "session_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "master_keys": "schema:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
         "zitadel_issuer": "https://issuer.invalid",
         "zitadel_client_id": "schema",
         "zitadel_client_secret": "schema",
