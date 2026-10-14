@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 21 |
+| `personal` | 22 |
 | `secret` | 9 |
-| `operational` | 137 |
+| `operational` | 147 |
 | `public` | 0 |
 
 ## accession_counters
@@ -127,6 +127,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `clinical_note` | phi |
 | `clinical_question` | phi |
 | `created_by_user_id` | personal |
+| `folder_id` | operational |
 | `service` | operational |
 | `requester` | personal |
 | `is_draft` | operational |
@@ -136,6 +137,26 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## folder_members
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `folder_id` | operational |
+| `user_id` | personal |
+
+## folders
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `colour` | operational |
+| `archived_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## invitations
 

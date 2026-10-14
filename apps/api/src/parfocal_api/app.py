@@ -12,6 +12,7 @@ from parfocal_api import (
     case_creation,
     case_states,
     cases,
+    folders,
     invitations,
     service_accounts,
     sessions_api,
@@ -95,6 +96,8 @@ def create_app(
     app.include_router(sessions_api.router)
     app.include_router(cases.router)
     app.include_router(case_creation.router)
+    app.include_router(folders.router)
+    app.include_router(folders.case_router)
     app.include_router(case_states.router)
     app.include_router(accessions.router)
     app.include_router(signing.tenant_router)

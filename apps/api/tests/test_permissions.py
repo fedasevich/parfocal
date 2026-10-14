@@ -26,6 +26,7 @@ from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal,
 from parfocal_api.tables import (
     Role,
     api_tokens,
+    folders,
     invitations,
     memberships,
     organisations,
@@ -60,6 +61,7 @@ OPEN_OPERATIONS = {
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
     "getAccessionFormat": "member",
+    "listFolders": "member",
     "putSignature": "signed-in",
     "deleteSignature": "signed-in",
     "listMembers": "platform",
@@ -77,6 +79,7 @@ class Workspace:
     spare_account: uuid.UUID
     invitations: list[uuid.UUID]
     case: uuid.UUID
+    folder: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -87,6 +90,14 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "createFolder": lambda _: Call(
+        "POST", "/api/tenant/folders", {"name": f"Folder {uuid.uuid4().hex[:8]}"}
+    ),
+    "updateFolder": lambda w: Call("PATCH", f"/api/tenant/folders/{w.folder}", {"colour": 2}),
+    "setFolderPeople": lambda w: Call(
+        "PUT", f"/api/tenant/folders/{w.folder}/people", {"user_ids": []}
+    ),
+    "fileCase": lambda w: Call("PUT", f"/api/cases/{w.case}/folder", {"folder_id": None}),
     "updateAccessionFormat": lambda _: Call(
         "PUT",
         "/api/tenant/accession-format",
@@ -145,11 +156,13 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     [uuid.uuid4()],
     uuid.uuid4(),
+    uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getAccessionFormat": lambda _: Call("GET", "/api/tenant/accession-format"),
+    "listFolders": lambda _: Call("GET", "/api/tenant/folders"),
 }
 
 
@@ -287,13 +300,28 @@ async def seed(database: str) -> Workspace:
                 for index in range(len(COLUMNS))
             ]
             case = await seed_case(connection, tenant_id)
+            folder = await connection.scalar(
+                insert(folders)
+                .values(tenant_id=tenant_id, name="Matrix folder")
+                .returning(folders.c.id)
+            )
+            assert isinstance(folder, uuid.UUID)
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
         assert isinstance(spare_account, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
         return Workspace(
-            tenant_id, people, colleague, slug, account, token, spare_account, ids, case.case_id
+            tenant_id,
+            people,
+            colleague,
+            slug,
+            account,
+            token,
+            spare_account,
+            ids,
+            case.case_id,
+            folder,
         )
     finally:
         await engine.dispose()

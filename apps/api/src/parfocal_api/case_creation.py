@@ -18,6 +18,7 @@ from parfocal_api.accessions import (
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.cases import CaseDetail, case_detail, keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.folders import ArchivedFolderError, one_folder
 from parfocal_api.identifiers import (
     PatientIdentity,
     TenantKeys,
@@ -97,6 +98,7 @@ class CaseDraft(BaseModel):
     service: Annotated[str, StringConstraints(max_length=60)] | None = None
     due_at: datetime | None = None
     assignee_user_id: uuid.UUID | None = None
+    folder_id: uuid.UUID | None = None
     draft: bool = False
 
     @model_validator(mode="after")
@@ -271,6 +273,10 @@ async def create_case(
     defaults = await RULES.defaults_for(connection, tenant_id, draft)
     assignee = draft.assignee_user_id or defaults.assignee_user_id
     await check_assignee(connection, tenant_id, assignee)
+    if draft.folder_id is not None:
+        folder = await one_folder(connection, draft.folder_id)
+        if folder.archived_at is not None:
+            raise ArchivedFolderError
     keys = await ensure_keys(connection, keyring, tenant_id)
     patient_id = await patient_for(connection, keys, draft)
     case_id = uuid.uuid4()
@@ -285,6 +291,7 @@ async def create_case(
             service=draft.service or defaults.service,
             source=CaseSource.MANUAL,
             assignee_user_id=assignee,
+            folder_id=draft.folder_id,
             requester=draft.requester,
             is_draft=draft.draft,
             clinical_note=seal_field(keys, "cases", case_id, "clinical_note", draft.clinical_note),

@@ -2026,7 +2026,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
 
 - [ ] CASES-003 · Folders and spaces
   Folders by service with colours, membership, counts. Adds the folder to each case, which CASES-001 left out.
-  Done when API and component tests cover folders.
+  Done when API tests cover folders. The folder screens and their component tests moved to CASES-025.
 
 - [x] CASES-004 · Accession number rules
   Per-tenant format and uniqueness.
@@ -2121,6 +2121,11 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Given a set of dropped files (slides and documents such as a requisition), decide for each one where it goes: an existing case by label barcode or file name, the new case being created, already in a case and left out, or a document whose fields fill the new case. Every decision can be changed before anything is applied. Applying is one transaction: the case is created, slides go to their cases, and the assignees of cases that received slides are told. A drop on one case sends every slide there, and a label that names another case asks first.
   Done when API tests cover each decision, an override, a duplicate, a requisition that fills fields, a drop on one case with a mismatched label, and a failure that leaves nothing half applied.
   Depends on CASES-013, CASES-016, INGEST-011. Refs mock 24 (New case, entry options), ADR 0023.
+
+- [ ] CASES-025 · Folder screens
+  Split from CASES-003. The folder list with colours and open case counts, editing a folder, choosing its people and filing a case into a folder, in the kit's style.
+  Done when component tests cover each screen and an E2E test files a case into a folder.
+  Depends on CASES-003 and the final UI shell.
 
 - [ ] CASES-023 · Due time rules
   Due time comes from the priority and specimen type, counted in the lab's working calendar with its holidays and working hours. Changing the rules affects only new cases.

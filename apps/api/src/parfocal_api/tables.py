@@ -643,6 +643,7 @@ cases = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column("folder_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("service", String(60), nullable=True, info=OPERATIONAL),
     Column("requester", String(200), nullable=True, info=PERSONAL),
     Column("is_draft", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
@@ -670,6 +671,7 @@ cases = Table(
         "AND cancelled_from IS DISTINCT FROM 'amending'",
         name="cancelled",
     ),
+    ForeignKeyConstraint(["folder_id", "tenant_id"], ["folders.id", "folders.tenant_id"]),
 )
 
 specimens = Table(
@@ -785,4 +787,31 @@ case_requests = Table(
         info=OPERATIONAL,
     ),
     ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+)
+
+folders = Table(
+    "folders",
+    metadata,
+    *owned_ids(),
+    Column("name", String(60), nullable=False, info=OPERATIONAL),
+    Column("colour", SmallInteger, nullable=False, server_default="0", info=OPERATIONAL),
+    Column("archived_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "name"),
+    UniqueConstraint("id", "tenant_id"),
+    CheckConstraint("colour BETWEEN 0 AND 11", name="colour"),
+)
+
+folder_members = Table(
+    "folder_members",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("folder_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=PERSONAL),
+    ForeignKeyConstraint(["folder_id", "tenant_id"], ["folders.id", "folders.tenant_id"]),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
 )

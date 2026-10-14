@@ -42,6 +42,8 @@ class AuditAction(StrEnum):
     ACCESSION_FORMAT_CHANGED = "tenant.accession-format-changed"
     CASE_OPENED = "case.opened"
     CASE_CREATED = "case.created"
+    CASE_FILED = "case.filed"
+    FOLDER_CHANGED = "folder.changed"
     CASE_STATE_CHANGED = "case.state-changed"
     REPORT_SIGNED_OUT = "report.signed-out"
     REPORT_AMENDED = "report.amended"
@@ -62,6 +64,7 @@ class AuditTarget(StrEnum):
     CASE = "case"
     SERVICE_ACCOUNT = "service-account"
     INVITATION = "invitation"
+    FOLDER = "folder"
 
 
 @dataclass(frozen=True)

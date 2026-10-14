@@ -73,6 +73,7 @@ class CaseDetail(BaseModel):
     state: CaseState
     source: CaseSource
     assignee_user_id: uuid.UUID | None
+    folder_id: uuid.UUID | None
     service: str | None
     requester: str | None
     is_draft: bool
@@ -203,6 +204,7 @@ async def case_detail(
         state=CaseState(row.state),
         source=CaseSource(row.source),
         assignee_user_id=row.assignee_user_id,
+        folder_id=row.folder_id,
         service=row.service,
         requester=row.requester,
         is_draft=row.is_draft,

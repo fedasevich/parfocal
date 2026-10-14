@@ -100,6 +100,7 @@ export const AuditTarget = {
   case: "case",
   "service-account": "service-account",
   invitation: "invitation",
+  folder: "folder",
 } as const;
 
 export interface BlockDetail {
@@ -226,6 +227,7 @@ export interface CaseDetail {
   state: CaseState;
   source: CaseSource;
   assignee_user_id: string | null;
+  folder_id: string | null;
   service: string | null;
   requester: string | null;
   is_draft: boolean;
@@ -278,13 +280,24 @@ export interface CaseDraft {
   service?: string | null;
   due_at?: string | null;
   assignee_user_id?: string | null;
+  folder_id?: string | null;
   draft?: boolean;
+}
+
+export interface CaseFolder {
+  folder_id: string | null;
 }
 
 export interface CaseStateView {
   id: string;
   state: CaseState;
 }
+
+/**
+ * @minimum 0
+ * @exclusiveMaximum 12
+ */
+export type Colour = number;
 
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
@@ -356,6 +369,37 @@ export interface FieldError {
   location: (string | number)[];
   message: string;
   code: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  colour: number;
+  archived_at: string | null;
+  open_cases: number;
+  people: string[];
+}
+
+/**
+ * @minLength 1
+ * @maxLength 60
+ */
+export type FolderName = string;
+
+export interface FolderChange {
+  name?: FolderName | null;
+  colour?: Colour | null;
+  archived?: boolean | null;
+}
+
+export interface FolderDraft {
+  name: FolderName;
+  colour?: Colour;
+}
+
+export interface FolderPeople {
+  /** @maxItems 500 */
+  user_ids: string[];
 }
 
 export interface Health {
@@ -1826,6 +1870,801 @@ export const useCreateCase = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCreateCaseMutationOptions(options), queryClient);
+};
+
+export type listFoldersResponse200 = {
+  data: Folder[];
+  status: 200;
+};
+
+export type listFoldersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listFoldersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listFoldersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listFoldersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listFoldersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listFoldersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listFoldersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listFoldersResponseSuccess = listFoldersResponse200 & {
+  headers: Headers;
+};
+export type listFoldersResponseError = (
+  | listFoldersResponse400
+  | listFoldersResponse401
+  | listFoldersResponse403
+  | listFoldersResponse404
+  | listFoldersResponse409
+  | listFoldersResponse422
+  | listFoldersResponse500
+) & {
+  headers: Headers;
+};
+
+export type listFoldersResponse = listFoldersResponseSuccess | listFoldersResponseError;
+
+export const getListFoldersUrl = () => {
+  return `/api/tenant/folders`;
+};
+
+/**
+ * @summary List Folders
+ */
+export const listFolders = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listFoldersResponse> => {
+  return apiFetch<listFoldersResponse>(getListFoldersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListFoldersQueryKey = () => {
+  return [`/api/tenant/folders`] as const;
+};
+
+export const getListFoldersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFolders>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFolders>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListFoldersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFolders>>> = ({ signal }) =>
+    listFolders({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFolders>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListFoldersQueryResult = NonNullable<Awaited<ReturnType<typeof listFolders>>>;
+export type ListFoldersQueryError = Problem;
+
+export function useListFolders<TData = Awaited<ReturnType<typeof listFolders>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFolders>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFolders>>,
+          TError,
+          Awaited<ReturnType<typeof listFolders>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListFolders<TData = Awaited<ReturnType<typeof listFolders>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFolders>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFolders>>,
+          TError,
+          Awaited<ReturnType<typeof listFolders>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListFolders<TData = Awaited<ReturnType<typeof listFolders>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFolders>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Folders
+ */
+
+export function useListFolders<TData = Awaited<ReturnType<typeof listFolders>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFolders>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFoldersQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createFolderResponse201 = {
+  data: Folder;
+  status: 201;
+};
+
+export type createFolderResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createFolderResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createFolderResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createFolderResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createFolderResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createFolderResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createFolderResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createFolderResponseSuccess = createFolderResponse201 & {
+  headers: Headers;
+};
+export type createFolderResponseError = (
+  | createFolderResponse400
+  | createFolderResponse401
+  | createFolderResponse403
+  | createFolderResponse404
+  | createFolderResponse409
+  | createFolderResponse422
+  | createFolderResponse500
+) & {
+  headers: Headers;
+};
+
+export type createFolderResponse = createFolderResponseSuccess | createFolderResponseError;
+
+export const getCreateFolderUrl = () => {
+  return `/api/tenant/folders`;
+};
+
+/**
+ * @summary Create Folder
+ */
+export const createFolder = async (
+  folderDraft: FolderDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createFolderResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createFolderResponse>(getCreateFolderUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(folderDraft),
+  });
+};
+
+export const getCreateFolderMutationKey = () => ["createFolder"] as const;
+
+export const getCreateFolderMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createFolder>>,
+    TError,
+    CreateFolderMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createFolder>>,
+  TError,
+  CreateFolderMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateFolderMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createFolder>>,
+    CreateFolderMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createFolder(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateFolderMutationResult = NonNullable<Awaited<ReturnType<typeof createFolder>>>;
+export type CreateFolderMutationBody = FolderDraft;
+export type CreateFolderMutationError = Problem;
+export type CreateFolderMutationVariables = { data: FolderDraft };
+
+/**
+ * @summary Create Folder
+ */
+export const useCreateFolder = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createFolder>>,
+      TError,
+      CreateFolderMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createFolder>>,
+  TError,
+  CreateFolderMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateFolderMutationOptions(options), queryClient);
+};
+
+export type updateFolderResponse200 = {
+  data: Folder;
+  status: 200;
+};
+
+export type updateFolderResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateFolderResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateFolderResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateFolderResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateFolderResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateFolderResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateFolderResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateFolderResponseSuccess = updateFolderResponse200 & {
+  headers: Headers;
+};
+export type updateFolderResponseError = (
+  | updateFolderResponse400
+  | updateFolderResponse401
+  | updateFolderResponse403
+  | updateFolderResponse404
+  | updateFolderResponse409
+  | updateFolderResponse422
+  | updateFolderResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateFolderResponse = updateFolderResponseSuccess | updateFolderResponseError;
+
+export const getUpdateFolderUrl = (folderId: string) => {
+  return `/api/tenant/folders/${folderId}`;
+};
+
+/**
+ * @summary Update Folder
+ */
+export const updateFolder = async (
+  folderId: string,
+  folderChange: FolderChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateFolderResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateFolderResponse>(getUpdateFolderUrl(folderId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(folderChange),
+  });
+};
+
+export const getUpdateFolderMutationKey = () => ["updateFolder"] as const;
+
+export const getUpdateFolderMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFolder>>,
+    TError,
+    UpdateFolderMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateFolder>>,
+  TError,
+  UpdateFolderMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateFolderMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateFolder>>,
+    UpdateFolderMutationVariables
+  > = (props) => {
+    const { folderId, data } = props ?? {};
+
+    return updateFolder(folderId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateFolderMutationResult = NonNullable<Awaited<ReturnType<typeof updateFolder>>>;
+export type UpdateFolderMutationBody = FolderChange;
+export type UpdateFolderMutationError = Problem;
+export type UpdateFolderMutationVariables = { folderId: string; data: FolderChange };
+
+/**
+ * @summary Update Folder
+ */
+export const useUpdateFolder = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateFolder>>,
+      TError,
+      UpdateFolderMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateFolder>>,
+  TError,
+  UpdateFolderMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateFolderMutationOptions(options), queryClient);
+};
+
+export type setFolderPeopleResponse200 = {
+  data: Folder;
+  status: 200;
+};
+
+export type setFolderPeopleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setFolderPeopleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setFolderPeopleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setFolderPeopleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setFolderPeopleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setFolderPeopleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setFolderPeopleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setFolderPeopleResponseSuccess = setFolderPeopleResponse200 & {
+  headers: Headers;
+};
+export type setFolderPeopleResponseError = (
+  | setFolderPeopleResponse400
+  | setFolderPeopleResponse401
+  | setFolderPeopleResponse403
+  | setFolderPeopleResponse404
+  | setFolderPeopleResponse409
+  | setFolderPeopleResponse422
+  | setFolderPeopleResponse500
+) & {
+  headers: Headers;
+};
+
+export type setFolderPeopleResponse = setFolderPeopleResponseSuccess | setFolderPeopleResponseError;
+
+export const getSetFolderPeopleUrl = (folderId: string) => {
+  return `/api/tenant/folders/${folderId}/people`;
+};
+
+/**
+ * @summary Set Folder People
+ */
+export const setFolderPeople = async (
+  folderId: string,
+  folderPeople: FolderPeople,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setFolderPeopleResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setFolderPeopleResponse>(getSetFolderPeopleUrl(folderId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(folderPeople),
+  });
+};
+
+export const getSetFolderPeopleMutationKey = () => ["setFolderPeople"] as const;
+
+export const getSetFolderPeopleMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setFolderPeople>>,
+    TError,
+    SetFolderPeopleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setFolderPeople>>,
+  TError,
+  SetFolderPeopleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetFolderPeopleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setFolderPeople>>,
+    SetFolderPeopleMutationVariables
+  > = (props) => {
+    const { folderId, data } = props ?? {};
+
+    return setFolderPeople(folderId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetFolderPeopleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setFolderPeople>>
+>;
+export type SetFolderPeopleMutationBody = FolderPeople;
+export type SetFolderPeopleMutationError = Problem;
+export type SetFolderPeopleMutationVariables = { folderId: string; data: FolderPeople };
+
+/**
+ * @summary Set Folder People
+ */
+export const useSetFolderPeople = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setFolderPeople>>,
+      TError,
+      SetFolderPeopleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setFolderPeople>>,
+  TError,
+  SetFolderPeopleMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetFolderPeopleMutationOptions(options), queryClient);
+};
+
+export type fileCaseResponse200 = {
+  data: CaseFolder;
+  status: 200;
+};
+
+export type fileCaseResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type fileCaseResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type fileCaseResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type fileCaseResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type fileCaseResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type fileCaseResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type fileCaseResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type fileCaseResponseSuccess = fileCaseResponse200 & {
+  headers: Headers;
+};
+export type fileCaseResponseError = (
+  | fileCaseResponse400
+  | fileCaseResponse401
+  | fileCaseResponse403
+  | fileCaseResponse404
+  | fileCaseResponse409
+  | fileCaseResponse422
+  | fileCaseResponse500
+) & {
+  headers: Headers;
+};
+
+export type fileCaseResponse = fileCaseResponseSuccess | fileCaseResponseError;
+
+export const getFileCaseUrl = (caseId: string) => {
+  return `/api/cases/${caseId}/folder`;
+};
+
+/**
+ * @summary File Case
+ */
+export const fileCase = async (
+  caseId: string,
+  caseFolder: CaseFolder,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<fileCaseResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<fileCaseResponse>(getFileCaseUrl(caseId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseFolder),
+  });
+};
+
+export const getFileCaseMutationKey = () => ["fileCase"] as const;
+
+export const getFileCaseMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileCase>>,
+    TError,
+    FileCaseMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileCase>>,
+  TError,
+  FileCaseMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileCaseMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileCase>>,
+    FileCaseMutationVariables
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return fileCase(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileCaseMutationResult = NonNullable<Awaited<ReturnType<typeof fileCase>>>;
+export type FileCaseMutationBody = CaseFolder;
+export type FileCaseMutationError = Problem;
+export type FileCaseMutationVariables = { caseId: string; data: CaseFolder };
+
+/**
+ * @summary File Case
+ */
+export const useFileCase = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileCase>>,
+      TError,
+      FileCaseMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileCase>>,
+  TError,
+  FileCaseMutationVariables,
+  TContext
+> => {
+  return useMutation(getFileCaseMutationOptions(options), queryClient);
 };
 
 export type cancelCaseResponse200 = {

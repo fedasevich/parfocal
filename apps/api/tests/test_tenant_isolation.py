@@ -20,6 +20,8 @@ from parfocal_api.tables import (
     audit_events,
     audit_people,
     case_requests,
+    folder_members,
+    folders,
     invitations,
     memberships,
     organisations,
@@ -68,6 +70,7 @@ CASE_TABLES = {
     "slides",
     "accession_counters",
     "case_requests",
+    "folder_members",
 }
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
 
@@ -176,7 +179,21 @@ async def seed_accession_formats(connection: AsyncConnection, seeded: Seeded) ->
     seeded.markers.add(f'"{prefix}"')
 
 
+async def seed_folders(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Folder {uuid.uuid4().hex[:10]}"
+    folder_id = await connection.scalar(
+        insert(folders).values(tenant_id=seeded.tenant_id, name=name).returning(folders.c.id)
+    )
+    await connection.execute(
+        insert(folder_members).values(
+            tenant_id=seeded.tenant_id, folder_id=folder_id, user_id=seeded.ids["user"]
+        )
+    )
+    seeded.markers.add(name)
+
+
 SEEDERS: dict[str, Seeder] = {
+    "folders": seed_folders,
     "accession_formats": seed_accession_formats,
     "invitations": seed_invitations,
     "cases": seed_cases,
@@ -200,6 +217,7 @@ GET_ROUTES = {
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "getAccessionFormat": Route(Exposure.TENANT, lambda _: "/api/tenant/accession-format"),
+    "listFolders": Route(Exposure.TENANT, lambda _: "/api/tenant/folders"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getSigningRights": Route(
         Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"
