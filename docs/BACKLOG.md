@@ -2028,7 +2028,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when E2E creates a case and uploads a slide.
   Depends on CASES-013. Refs kit Case creation page, kit W39 to W41, kit Flow 10.
 
-- [ ] CASES-003 · Folders and spaces
+- [x] CASES-003 · Folders and spaces
   Folders by service with colours, membership, counts. Adds the folder to each case, which CASES-001 left out.
   Done when API tests cover folders. The folder screens and their component tests moved to CASES-025.
 

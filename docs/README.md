@@ -6,7 +6,7 @@ Last consolidated: 2026-10-14
 
 ## Where we are now
 
-Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 40 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
+Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 45 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
 
 | Area | State |
 |---|---|
@@ -23,7 +23,7 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. CASES-003 (folders by service) waits for a green CI run on `main`. It unblocks IAM-016 (roles narrowed by folders).
+1. IAM-016 (roles narrowed by folders) is next, then IAM-017 (emergency access with a reason).
 2. Research checks that need no cloud: IAM-000 (re-check the identity and authorization decisions) and SEC-000 (map GDPR, HIPAA and ISO 27001 controls to tasks).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
 4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen), CASES-025 (folder screens) and FOUND-019 (error toasts). FOUND-014 (dependency and licence scanning) is on hold.
