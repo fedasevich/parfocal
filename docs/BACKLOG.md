@@ -577,7 +577,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when API tests cover grant, expiry and refusal without a reason, the audit entry carries the reason, and a permission test proves an administrator cannot read a patient without it.
   Depends on IAM-016, SEC-003. Refs kit W65, kit W71, [ADR 0023](adr/0023-gap-review-backend-first.md).
 
-- [ ] IAM-018 · Supervision and signing rights
+- [x] IAM-018 · Supervision and signing rights
   A person record holds whether they may sign alone, their supervisor if they may not, and whether a signature is on file. A resident's sign-out is refused and becomes a send-for-review (REPORT-019). A consultant without a signature on file cannot sign. Changing these is a lead's action and is audited.
   Done when API tests cover each combination and the refusal messages, and the audit log records every change.
   Depends on IAM-006. Refs kit W48, kit Flow 14. Built as [ADR 0032](adr/0032-signing-rights-on-the-membership.md) says.
