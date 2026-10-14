@@ -50,3 +50,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0046](0046-roles-narrowed-by-folders.md) | Folder-scoped permissions apply inside a person's folders, unfiled cases stay open, and leads may work in every folder | Accepted | 2026-10-14 |
 | [0042](0042-model-licensing-policy.md) | Model licensing policy: Parfocal is commercial, and the registry blocks any model whose weights or training data licences are not confirmed | Proposed | 2026-10-14 |
 | [0045](0045-forms-and-validation.md) | Forms with TanStack Form and Zod 4, and report forms driven by template data | Accepted | 2026-10-14 |
+| [0044](0044-background-jobs-and-workflows.md) | Background jobs and workflows on Postgres tables with leases, confirming the default of ADR 0003 | Accepted | 2026-10-14 |

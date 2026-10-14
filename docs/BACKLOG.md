@@ -263,10 +263,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR defines the chunk schema (including type probabilities, which the POC paged format dropped) and a spike pages 1.6M nuclei in the browser under the doc 31 budgets.
   Refs docs 11, 19, 31, 33.
 
-- [ ] STACK-022 · Background jobs and durable workflows
+- [x] STACK-022 · Background jobs and durable workflows
   Candidates: Temporal, Hatchet, Celery, Dramatiq, arq. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): job, step and tile tables in Postgres, steps run as Modal functions started with `spawn`, and a Modal cron function that resumes orphaned steps from the last completed tile. Temporal and Hatchet were set aside because they need always-on workers.
   Done when a spike runs a three-step workflow that survives a worker restart mid-step and resumes from the last completed tile.
   Refs doc 20 §5 (jobs must survive restart).
+  Decided in [ADR 0044](adr/0044-background-jobs-and-workflows.md): Postgres job, step and tile tables with leases and `FOR UPDATE SKIP LOCKED`, proven by a kill test in [results/2026-10-14-durable-workflow-spike.md](results/2026-10-14-durable-workflow-spike.md).
 
 - [x] STACK-023 · Authorization model
   Candidates: application RBAC with PostgreSQL row-level security, OpenFGA or SpiceDB for relationship-based sharing, Cerbos or OPA for policies. Default: RLS for hard tenant isolation, an RBAC permission table for roles, and OpenFGA only if guest links and cross-organisation sharing outgrow plain tables.

@@ -14,3 +14,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-14 | [Envelope encryption with tenant data keys in Python](2026-10-14-envelope-encryption-spike.md) | STACK-037 | spike |
 | 2026-10-14 | [fhir.resources 8.3 for R4B and R5 on Python 3.14](2026-10-14-fhir-resources-spike.md) | STACK-040 | spike |
 | 2026-10-14 | [Forms and validation: library compile, React Compiler and bundle size](2026-10-14-forms-spike.md) | STACK-009 | spike |
+| 2026-10-14 | [A three-step workflow that survives SIGKILL, on Postgres tables and on DBOS](2026-10-14-durable-workflow-spike.md) | STACK-022 | spike |
