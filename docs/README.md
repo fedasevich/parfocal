@@ -2,18 +2,31 @@
 
 Start here. Every file in `docs/` is listed below, and agents keep this index current. See [AGENTS.md](../AGENTS.md) for how these files are maintained.
 
-Last consolidated: 2026-10-06
+Last consolidated: 2026-10-14
 
 ## Where we are now
 
-The prototypes are approved for a production build and the planning is done. [BACKLOG.md](BACKLOG.md) holds 558 tasks in 38 epics from an empty repository to a pilot-ready product. The decisions taken during planning are recorded as the baseline in [ADR 0002](adr/0002-planning-baseline.md). The platform is decided in [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. The pilot uses public slides with fake identities and optimises for cost. The STACK slots now carry these defaults but each still needs its spike. The repository `fedasevich/parfocal` holds the monorepo skeleton (FOUND-001), with pnpm, Turborepo, TypeScript 7 and Biome on the TypeScript side and Python 3.14 with uv on the Python side ([ADR 0006](adr/0006-monorepo-tooling.md), [ADR 0007](adr/0007-python-tooling.md)). Three CI workflows check the docs, the infra code and the workspace. The API has typed settings, client selection by `APP_ENV`, RFC 9457 errors, a local Postgres stack with row-level security, and tenants and organisations with a table-driven isolation suite ([ADR 0024](adr/0024-workspaces-are-tenants.md)). Login through Zitadel works with server-side sessions ([ADR 0025](adr/0025-zitadel-bff-login.md)) and is tested end to end in CI. People hold memberships with one of the UX kit's roles in one or more workspaces and switch between them, and every route declares its permission ([ADR 0026](adr/0026-roles-and-permission-matrix.md)). An append-only audit log with a hash chain per workspace records permission and workspace changes and sign-ins, naming people only by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)). Every column carries a data class, and a generated data map lists them ([ADR 0028](adr/0028-data-classes-on-columns.md)). Integrations reach a workspace through service accounts with scoped, revocable API tokens ([ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md)). People join workspaces through invitations bound to their verified email ([ADR 0030](adr/0030-invitations-bound-to-verified-email.md)). Sessions lock after the workspace's idle time and people can end their other sessions ([ADR 0031](adr/0031-idle-lock-from-explicit-activity.md)). Who signs alone, who supervises and whether a signature is on file are decided by one rule ([ADR 0032](adr/0032-signing-rights-on-the-membership.md)). The web app has a Vite build with typed public config but no screens yet. The accounts are provisioned and listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
+Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 32 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
+
+| Area | State |
+|---|---|
+| Repository and CI | pnpm and Turborepo monorepo with TypeScript 7 and Biome, Python 3.14 with uv ([ADR 0006](adr/0006-monorepo-tooling.md), [ADR 0007](adr/0007-python-tooling.md)). CI runs lint, types, unit, database and Playwright jobs behind `ci-ok`, plus docs and infra workflows. Commits follow Conventional Commits with the backlog ID ([ADR 0014](adr/0014-conventional-commits-and-releases.md)) |
+| Stack (M0) | 8 of 40 STACK slots decided by spikes. STACK-019 waits for a Modal run and STACK-020 for a Neon region measurement |
+| API foundations | Typed settings and client selection by `APP_ENV`, RFC 9457 problems, an Orval client generated from OpenAPI, Postgres 17 with PostGIS behind PgBouncer, forced row-level security on every table and a table-driven isolation suite |
+| Identity | Zitadel login through a backend-for-frontend with sessions in Postgres ([ADR 0025](adr/0025-zitadel-bff-login.md)), workspaces as tenants ([ADR 0024](adr/0024-workspaces-are-tenants.md)), memberships, the kit's six roles with a permission declared on every route ([ADR 0026](adr/0026-roles-and-permission-matrix.md)), invitations ([ADR 0030](adr/0030-invitations-bound-to-verified-email.md)), service accounts ([ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md)), idle lock and session control ([ADR 0031](adr/0031-idle-lock-from-explicit-activity.md)), signing rights ([ADR 0032](adr/0032-signing-rights-on-the-membership.md)) |
+| Security | A hash-chained audit log naming people by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)) and a data class on every column with a generated [data map](reference/data-map.md) ([ADR 0028](adr/0028-data-classes-on-columns.md)) |
+| Web | A Vite build with typed public config and no screens. The UI is not final, so screens wait |
+
+Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
 
 ## Next up
 
-Work stays local until the owner fixes the cloud side. No Modal, Neon, staging or production changes, see [knowledge/platform.md](knowledge/platform.md). Zitadel Cloud may be used again since 2026-10-13. The UI is not final, so no UI work either.
+No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. IAM-021 (the lock screen) needs the final UI. CASES-001's encrypted identifiers depend on SEC-004 and STACK-037. IAM-001 (Zitadel config recreated from scratch in CI) needs a decision on CI credentials. STACK-020 only lacks the Neon region measurement.
-2. STACK-019 needs a Modal run for its cold-start numbers and waits for the owner. FOUND-014 is on hold, and FOUND-019 waits for the final UI.
+1. STACK-037 (key management) can be decided and tested locally with the master key in `.env`. It unblocks SEC-004 (encrypted patient identifiers), which unblocks CASES-001, the patient and case model that most remaining backend work needs.
+2. Research checks that need no cloud: IAM-000 (confirm STACK-023 and STACK-028) and SEC-000 (the control matrix).
+3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
+4. Waiting for the owner: STACK-019 (Modal spend limit), STACK-020 (Neon region), IAM-001 (CI credentials for Zitadel). Waiting for the final UI: IAM-008, IAM-014, IAM-021 and FOUND-019. FOUND-014 is on hold.
 
 ## Index
 
