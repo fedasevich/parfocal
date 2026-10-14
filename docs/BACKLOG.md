@@ -330,9 +330,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: Amazon SES, Postmark, Resend, SendGrid, with EU data processing and BAA where needed. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Resend through its HTTP API in production only. Other environments use a console sender and automated tests an in-memory fake ([ADR 0005](adr/0005-external-sends-only-in-production.md)). Templates are rendered server-side and no PHI goes in subject lines.
   Done when the ADR covers bounce handling and the PHI rules.
 
-- [ ] STACK-037 · Secrets and key management
+- [x] STACK-037 · Secrets and key management
   Candidates: cloud KMS with envelope encryption, HashiCorp Vault or OpenBao, External Secrets Operator for Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): application-level envelope encryption. Per-tenant data keys are wrapped by a master key held as a Modal secret, and sensitive columns are AES-GCM encrypted in FastAPI. Moving the master key to a KMS is a trigger before real PHI. Runtime secrets live in Modal secrets, Wrangler secrets and GitHub environments.
   Done when the ADR defines key rotation and how a tenant's data becomes unreadable after crypto-shredding on erasure.
+  Decided in [ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md). `parfocal_common.envelope` holds the keyring and field format.
 
 - [x] STACK-038 · CI provider and runners
   Candidates: GitHub Actions with hosted runners plus a self-hosted GPU runner, GitLab CI, Buildkite. Default: GitHub Actions, plus one GPU runner for golden-image, WebGPU and perf suites.
@@ -621,7 +622,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Refs Concentriq report (21 CFR Part 11, ALCOA+).
 
 - [ ] SEC-004 · Field-level encryption for direct identifiers
-  Patient name, MRN and birth date encrypted with tenant data keys. Search uses blind indexes or trigram on a tokenised form.
+  Patient name, MRN and birth date encrypted with tenant data keys from `parfocal_common.envelope` ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md)), stored wrapped in a `tenant_keys` table. Search uses blind indexes under a per-tenant index key that is destroyed with the data keys.
   Done when tests show ciphertext at rest, correct search, and unreadable data after the tenant key is destroyed.
   Depends on STACK-037.
 

@@ -5,6 +5,7 @@ description = "Shared settings, logging, tenancy context and audit helpers for t
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "asyncpg>=0.32,<0.33",
+    "cryptography>=50,<51",
     "geoalchemy2>=0.20,<0.21",
     "pydantic>=2.13,<3",
     "pydantic-settings>=2.15,<3",

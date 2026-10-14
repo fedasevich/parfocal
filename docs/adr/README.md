@@ -38,3 +38,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0030](0030-invitations-bound-to-verified-email.md) | Invitations bound to a verified email, accepted by a signed-in person, with operators inviting first administrators | Accepted | 2026-10-14 |
 | [0031](0031-idle-lock-from-explicit-activity.md) | Idle lock driven by explicit activity, unlocked by signing in again, with limits set per workspace | Accepted | 2026-10-14 |
 | [0032](0032-signing-rights-on-the-membership.md) | Signing rights on the membership, decided by one function, changed only by a lead | Accepted | 2026-10-14 |
+| [0033](0033-envelope-encryption-with-tenant-data-keys.md) | Envelope encryption with versioned tenant data keys under a rotating master keyring | Accepted | 2026-10-14 |
