@@ -14,6 +14,8 @@ from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import (
     Role,
+    accession_counters,
+    accession_formats,
     api_tokens,
     audit_events,
     audit_people,
@@ -57,7 +59,14 @@ class Route:
 
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
-CASE_TABLES = {"tenant_keys", "patients", "specimens", "blocks", "slides"}
+CASE_TABLES = {
+    "tenant_keys",
+    "patients",
+    "specimens",
+    "blocks",
+    "slides",
+    "accession_counters",
+}
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
 
 
@@ -142,7 +151,23 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({case.accession, str(case.case_id)})
 
 
+async def seed_accession_formats(connection: AsyncConnection, seeded: Seeded) -> None:
+    prefix = "".join(chr(ord("A") + int(c, 16) % 26) for c in uuid.uuid4().hex[:4])
+    await connection.execute(
+        insert(accession_formats).values(
+            tenant_id=seeded.tenant_id, template="{prefix}{yy}-{seq:5}", prefixes=[prefix]
+        )
+    )
+    await connection.execute(
+        insert(accession_counters).values(
+            tenant_id=seeded.tenant_id, prefix=prefix, year=2026, last_value=1
+        )
+    )
+    seeded.markers.add(f'"{prefix}"')
+
+
 SEEDERS: dict[str, Seeder] = {
+    "accession_formats": seed_accession_formats,
     "invitations": seed_invitations,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
@@ -164,6 +189,7 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "getAccessionFormat": Route(Exposure.TENANT, lambda _: "/api/tenant/accession-format"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getSigningRights": Route(
         Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"

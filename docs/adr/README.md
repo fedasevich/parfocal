@@ -42,3 +42,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0034](0034-blind-indexes-for-encrypted-patient-identifiers.md) | Exact-match blind indexes for encrypted patient identifiers, with name search by whole words | Accepted | 2026-10-14 |
 | [0035](0035-fhir-r4-through-fhir-resources-r4b.md) | FHIR R4 on the wire through fhir.resources' R4B models, with codes checked by us and no FHIR server | Accepted | 2026-10-14 |
 | [0036](0036-case-data-model.md) | Case data model: patient, case, specimen, block and slide, with the kit's ten states and FHIR's codes | Accepted | 2026-10-14 |
+| [0037](0037-accession-number-templates.md) | Accession numbers from a per-workspace template with a counter per prefix and year | Accepted | 2026-10-14 |

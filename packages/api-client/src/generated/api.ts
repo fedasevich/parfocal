@@ -23,6 +23,33 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
 /**
+ * @maxLength 60
+ */
+export type Template = string;
+
+/**
+ * @pattern ^[A-Z]{1,4}$
+ */
+export type Prefix = string;
+
+export interface AccessionFormatChange {
+  template: Template;
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  prefixes: Prefix[];
+}
+
+export type AccessionFormatViewNext = { [key: string]: string };
+
+export interface AccessionFormatView {
+  template: string;
+  prefixes: string[];
+  next: AccessionFormatViewNext;
+}
+
+/**
  * @minLength 1
  * @maxLength 100
  */
@@ -1559,6 +1586,347 @@ export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError =
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getAccessionFormatResponse200 = {
+  data: AccessionFormatView;
+  status: 200;
+};
+
+export type getAccessionFormatResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAccessionFormatResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAccessionFormatResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAccessionFormatResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAccessionFormatResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAccessionFormatResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAccessionFormatResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAccessionFormatResponseSuccess = getAccessionFormatResponse200 & {
+  headers: Headers;
+};
+export type getAccessionFormatResponseError = (
+  | getAccessionFormatResponse400
+  | getAccessionFormatResponse401
+  | getAccessionFormatResponse403
+  | getAccessionFormatResponse404
+  | getAccessionFormatResponse409
+  | getAccessionFormatResponse422
+  | getAccessionFormatResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAccessionFormatResponse =
+  | getAccessionFormatResponseSuccess
+  | getAccessionFormatResponseError;
+
+export const getGetAccessionFormatUrl = () => {
+  return `/api/tenant/accession-format`;
+};
+
+/**
+ * @summary Get Accession Format
+ */
+export const getAccessionFormat = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAccessionFormatResponse> => {
+  return apiFetch<getAccessionFormatResponse>(getGetAccessionFormatUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAccessionFormatQueryKey = () => {
+  return [`/api/tenant/accession-format`] as const;
+};
+
+export const getGetAccessionFormatQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccessionFormat>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccessionFormat>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccessionFormatQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccessionFormat>>> = ({ signal }) =>
+    getAccessionFormat({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAccessionFormat>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAccessionFormatQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccessionFormat>>
+>;
+export type GetAccessionFormatQueryError = Problem;
+
+export function useGetAccessionFormat<
+  TData = Awaited<ReturnType<typeof getAccessionFormat>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccessionFormat>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccessionFormat>>,
+          TError,
+          Awaited<ReturnType<typeof getAccessionFormat>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccessionFormat<
+  TData = Awaited<ReturnType<typeof getAccessionFormat>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccessionFormat>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccessionFormat>>,
+          TError,
+          Awaited<ReturnType<typeof getAccessionFormat>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccessionFormat<
+  TData = Awaited<ReturnType<typeof getAccessionFormat>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccessionFormat>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Accession Format
+ */
+
+export function useGetAccessionFormat<
+  TData = Awaited<ReturnType<typeof getAccessionFormat>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccessionFormat>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccessionFormatQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type updateAccessionFormatResponse200 = {
+  data: AccessionFormatView;
+  status: 200;
+};
+
+export type updateAccessionFormatResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateAccessionFormatResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateAccessionFormatResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateAccessionFormatResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateAccessionFormatResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateAccessionFormatResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateAccessionFormatResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateAccessionFormatResponseSuccess = updateAccessionFormatResponse200 & {
+  headers: Headers;
+};
+export type updateAccessionFormatResponseError = (
+  | updateAccessionFormatResponse400
+  | updateAccessionFormatResponse401
+  | updateAccessionFormatResponse403
+  | updateAccessionFormatResponse404
+  | updateAccessionFormatResponse409
+  | updateAccessionFormatResponse422
+  | updateAccessionFormatResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateAccessionFormatResponse =
+  | updateAccessionFormatResponseSuccess
+  | updateAccessionFormatResponseError;
+
+export const getUpdateAccessionFormatUrl = () => {
+  return `/api/tenant/accession-format`;
+};
+
+/**
+ * @summary Update Accession Format
+ */
+export const updateAccessionFormat = async (
+  accessionFormatChange: AccessionFormatChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateAccessionFormatResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateAccessionFormatResponse>(getUpdateAccessionFormatUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(accessionFormatChange),
+  });
+};
+
+export const getUpdateAccessionFormatMutationKey = () => ["updateAccessionFormat"] as const;
+
+export const getUpdateAccessionFormatMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAccessionFormat>>,
+    TError,
+    UpdateAccessionFormatMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAccessionFormat>>,
+  TError,
+  UpdateAccessionFormatMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateAccessionFormatMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAccessionFormat>>,
+    UpdateAccessionFormatMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateAccessionFormat(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAccessionFormatMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAccessionFormat>>
+>;
+export type UpdateAccessionFormatMutationBody = AccessionFormatChange;
+export type UpdateAccessionFormatMutationError = Problem;
+export type UpdateAccessionFormatMutationVariables = { data: AccessionFormatChange };
+
+/**
+ * @summary Update Accession Format
+ */
+export const useUpdateAccessionFormat = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAccessionFormat>>,
+      TError,
+      UpdateAccessionFormatMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAccessionFormat>>,
+  TError,
+  UpdateAccessionFormatMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateAccessionFormatMutationOptions(options), queryClient);
+};
 
 export type getSigningRightsResponse200 = {
   data: SigningRights;

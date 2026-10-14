@@ -59,6 +59,7 @@ OPEN_OPERATIONS = {
     "endSession": "signed-in",
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
+    "getAccessionFormat": "member",
     "putSignature": "signed-in",
     "deleteSignature": "signed-in",
     "listMembers": "platform",
@@ -86,6 +87,11 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "updateAccessionFormat": lambda _: Call(
+        "PUT",
+        "/api/tenant/accession-format",
+        {"template": "{prefix}{yy}-{seq:5}", "prefixes": ["S"]},
+    ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),
     "changeSigningRights": lambda w: Call(
@@ -136,6 +142,7 @@ PLACEHOLDER = Workspace(
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
+    "getAccessionFormat": lambda _: Call("GET", "/api/tenant/accession-format"),
 }
 
 

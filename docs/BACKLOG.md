@@ -2031,6 +2031,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] CASES-004 · Accession number rules
   Per-tenant format and uniqueness.
   Done when tests cover format validation and collisions.
+  Built as [ADR 0037](adr/0037-accession-number-templates.md) says.
 
 - [ ] CASES-005 · Patient history
   Earlier cases and reports for a patient across years.

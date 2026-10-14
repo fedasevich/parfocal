@@ -710,3 +710,33 @@ slides = Table(
     ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
     ForeignKeyConstraint(["block_id", "case_id"], ["blocks.id", "blocks.case_id"]),
 )
+
+accession_formats = Table(
+    "accession_formats",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("template", String(60), nullable=False, info=OPERATIONAL),
+    Column("prefixes", ARRAY(String(4)), nullable=False, info=OPERATIONAL),
+    *timestamps(),
+)
+
+accession_counters = Table(
+    "accession_counters",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("prefix", String(4), primary_key=True, info=OPERATIONAL),
+    Column("year", SmallInteger, primary_key=True, info=OPERATIONAL),
+    Column("last_value", Integer, nullable=False, info=OPERATIONAL),
+)
