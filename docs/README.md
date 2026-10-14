@@ -23,7 +23,7 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. IAM-016 (roles narrowed by folders) and IAM-017 (emergency access with a reason) wait for a green CI run on `main`.
+1. IAM-017 (emergency access with a reason) waits for a green CI run on `main`.
 2. Research checks that need no cloud: IAM-000 (re-check the identity and authorization decisions) and SEC-000 (map GDPR, HIPAA and ISO 27001 controls to tasks).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
 4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen), CASES-025 (folder screens) and FOUND-019 (error toasts). FOUND-014 (dependency and licence scanning) is on hold.
