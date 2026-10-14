@@ -34,6 +34,8 @@ from parfocal_api.tables import (
 )
 from parfocal_common.db import async_database_url
 
+NARROWED = {"changeSigningRights": {Role.ADMIN: "only a lead decides who signs alone (W48)"}}
+
 OPEN_OPERATIONS = {
     "getHealth": "public",
     "getSession": "signed-in",
@@ -56,6 +58,8 @@ OPEN_OPERATIONS = {
     "endSession": "signed-in",
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
+    "putSignature": "signed-in",
+    "deleteSignature": "signed-in",
     "listMembers": "platform",
 }
 
@@ -80,6 +84,12 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),
+    "changeSigningRights": lambda w: Call(
+        "PUT",
+        f"/api/tenant/members/{w.colleague}/signing",
+        {"signs_alone": None, "supervisor_user_id": None},
+    ),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
     ),
@@ -291,7 +301,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
     permission = guarded_operations()[operation]
     status = send(api, principal_for(workspace, role), GUARDED_CALLS[operation](workspace))
     grant = grant_for(role, permission)
-    if grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
+    narrowed = role in NARROWED.get(operation, {})
+    if narrowed or grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
         assert status == 403
     else:
         assert 200 <= status < 300

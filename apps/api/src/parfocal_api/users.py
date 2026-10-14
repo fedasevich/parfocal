@@ -283,7 +283,7 @@ async def change_member_role(
         raise NotFoundError("Member not found")
     if member.role != change.role:
         await connection.execute(
-            update(memberships).where(*in_this_tenant).values(role=change.role)
+            update(memberships).where(*in_this_tenant).values(role=change.role, signs_alone=None)
         )
         await record(
             connection,

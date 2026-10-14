@@ -11,6 +11,7 @@ from parfocal_api import (
     invitations,
     service_accounts,
     sessions_api,
+    signing,
     tenants,
     users,
 )
@@ -86,6 +87,8 @@ def create_app(
 
     app.include_router(auth.router)
     app.include_router(sessions_api.router)
+    app.include_router(signing.tenant_router)
+    app.include_router(signing.me_router)
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)
     app.include_router(users.me_router)

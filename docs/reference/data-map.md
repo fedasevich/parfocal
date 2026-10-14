@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 0 |
-| `personal` | 15 |
+| `personal` | 17 |
 | `secret` | 8 |
-| `operational` | 71 |
+| `operational` | 73 |
 | `public` | 0 |
 
 ## api_tokens
@@ -88,6 +88,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `tenant_id` | operational |
 | `user_id` | personal |
 | `role` | operational |
+| `signs_alone` | operational |
+| `supervisor_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -173,6 +175,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `initials` | personal |
 | `avatar_colour` | operational |
 | `title` | personal |
+| `signature` | personal |
+| `signature_added_at` | operational |
 | `last_tenant_id` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |

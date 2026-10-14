@@ -580,7 +580,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-018 · Supervision and signing rights
   A person record holds whether they may sign alone, their supervisor if they may not, and whether a signature is on file. A resident's sign-out is refused and becomes a send-for-review (REPORT-019). A consultant without a signature on file cannot sign. Changing these is a lead's action and is audited.
   Done when API tests cover each combination and the refusal messages, and the audit log records every change.
-  Depends on IAM-006. Refs kit W48, kit Flow 14.
+  Depends on IAM-006. Refs kit W48, kit Flow 14. Built as [ADR 0032](adr/0032-signing-rights-on-the-membership.md) says.
 
 - [ ] IAM-019 · Sign-in by emailed code for outside consultants
   An invited outside consultant signs in with a one-time code sent to the invited address. The code works once, for 10 minutes, and is rate limited per address and per IP. A code for one address never opens another account. The resulting session carries only the guest grants of IAM-010.
