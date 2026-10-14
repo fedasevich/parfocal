@@ -6,12 +6,12 @@ Last consolidated: 2026-10-14
 
 ## Where we are now
 
-Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 34 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
+Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 36 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
 
 | Area | State |
 |---|---|
 | Repository and CI | pnpm and Turborepo monorepo with TypeScript 7 and Biome, Python 3.14 with uv ([ADR 0006](adr/0006-monorepo-tooling.md), [ADR 0007](adr/0007-python-tooling.md)). CI runs lint, types, unit, database and Playwright jobs behind `ci-ok`, plus docs and infra workflows. Commits follow Conventional Commits with the backlog ID ([ADR 0014](adr/0014-conventional-commits-and-releases.md)) |
-| Stack (M0) | 9 of 40 STACK slots decided by spikes. STACK-019 waits for a Modal run and STACK-020 for a Neon region measurement |
+| Stack (M0) | 10 of 40 STACK slots decided by spikes. STACK-019 (Modal cold starts) and STACK-020 (Postgres hosting) wait for cloud access |
 | API foundations | Typed settings and client selection by `APP_ENV`, RFC 9457 problems, an Orval client generated from OpenAPI, Postgres 17 with PostGIS behind PgBouncer, forced row-level security on every table and a table-driven isolation suite |
 | Identity | Zitadel login through a backend-for-frontend with sessions in Postgres ([ADR 0025](adr/0025-zitadel-bff-login.md)), workspaces as tenants ([ADR 0024](adr/0024-workspaces-are-tenants.md)), memberships, the kit's six roles with a permission declared on every route ([ADR 0026](adr/0026-roles-and-permission-matrix.md)), invitations ([ADR 0030](adr/0030-invitations-bound-to-verified-email.md)), service accounts ([ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md)), idle lock and session control ([ADR 0031](adr/0031-idle-lock-from-explicit-activity.md)), signing rights ([ADR 0032](adr/0032-signing-rights-on-the-membership.md)) |
 | Security | A hash-chained audit log naming people by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)) a data class on every column with a generated [data map](reference/data-map.md) ([ADR 0028](adr/0028-data-classes-on-columns.md)), and envelope-encrypted patient identifiers with blind indexes ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md), [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)) |
@@ -23,10 +23,10 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. CASES-001, the patient and case model that most remaining backend work needs, is unblocked now that SEC-004 encrypts patient identifiers.
-2. Research checks that need no cloud: IAM-000 (confirm STACK-023 and STACK-028) and SEC-000 (the control matrix).
+1. CASES-001 (patient and case data model) waits for a green CI run on `main`. After it, the next case tasks need no UI: CASES-004 (accession number rules), CASES-003 (folders) and CASES-012 (case state machine).
+2. Research checks that need no cloud: IAM-000 (re-check the identity and authorization decisions) and SEC-000 (map GDPR, HIPAA and ISO 27001 controls to tasks).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
-4. Waiting for the owner: STACK-019 (Modal spend limit), STACK-020 (Neon region), IAM-001 (CI credentials for Zitadel). Waiting for the final UI: IAM-008, IAM-014, IAM-021 and FOUND-019. FOUND-014 is on hold.
+4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen) and FOUND-019 (error toasts). FOUND-014 (dependency and licence scanning) is on hold.
 
 ## Index
 

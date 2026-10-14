@@ -12,3 +12,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-08 | [A restrictive scope policy limits a guest to one case and one view](2026-10-08-guest-scope-rls-spike.md) | STACK-023 | spike |
 | 2026-10-13 | [Zitadel Cloud login through a FastAPI backend-for-frontend](2026-10-13-zitadel-bff-login-spike.md) | STACK-028 | spike |
 | 2026-10-14 | [Envelope encryption with tenant data keys in Python](2026-10-14-envelope-encryption-spike.md) | STACK-037 | spike |
+| 2026-10-14 | [fhir.resources 8.3 for R4B and R5 on Python 3.14](2026-10-14-fhir-resources-spike.md) | STACK-040 | spike |

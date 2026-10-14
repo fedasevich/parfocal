@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 import pytest
+from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import insert, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -19,11 +20,9 @@ from parfocal_api.tables import (
     invitations,
     memberships,
     organisations,
-    patients,
     platform_operators,
     service_accounts,
     session_policies,
-    tenant_keys,
     tenants,
     users,
 )
@@ -58,6 +57,7 @@ class Route:
 
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
+CASE_TABLES = {"tenant_keys", "patients", "specimens", "blocks", "slides"}
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
 
 
@@ -136,32 +136,15 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
     )
 
 
-async def seed_tenant_keys(connection: AsyncConnection, seeded: Seeded) -> None:
-    await connection.execute(
-        insert(tenant_keys).values(
-            tenant_id=seeded.tenant_id,
-            purpose="data",
-            version=1,
-            master_id="isolation",
-            wrapped_key=uuid.uuid4().bytes,
-        )
-    )
-
-
-async def seed_patients(connection: AsyncConnection, seeded: Seeded) -> None:
-    await connection.execute(
-        insert(patients).values(
-            tenant_id=seeded.tenant_id,
-            name_ciphertext=uuid.uuid4().bytes,
-            name_tokens=[uuid.uuid4().bytes],
-        )
-    )
+async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
+    case = await seed_case(connection, seeded.tenant_id)
+    seeded.ids["case"] = case.case_id
+    seeded.markers.update({case.accession, str(case.case_id)})
 
 
 SEEDERS: dict[str, Seeder] = {
     "invitations": seed_invitations,
-    "tenant_keys": seed_tenant_keys,
-    "patients": seed_patients,
+    "cases": seed_cases,
     "session_policies": seed_session_policies,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
@@ -181,6 +164,7 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getSigningRights": Route(
         Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"
     ),
@@ -272,7 +256,7 @@ def test_every_table_is_seeded_by_the_suite(database: str) -> None:
         with_database(OWNER_URL, database),
         "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
     )
-    known = BASE_TABLES | AUTH_TABLES | set(SEEDERS)
+    known = BASE_TABLES | AUTH_TABLES | CASE_TABLES | set(SEEDERS)
     assert {str(row[0]) for row in rows} - UNOWNED_TABLES == known
 
 

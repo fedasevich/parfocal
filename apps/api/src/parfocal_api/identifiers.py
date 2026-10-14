@@ -155,18 +155,33 @@ def blind(keys: TenantKeys, field: str, value: str) -> bytes:
     return hmac.new(keys.index, message, hashlib.sha256).digest()[:INDEX_BYTES]
 
 
-def context(keys: TenantKeys, patient_id: uuid.UUID, field: str) -> bytes:
-    return f"patients.{field}:{keys.tenant_id}:{patient_id}".encode()
+def context(keys: TenantKeys, table: str, row_id: uuid.UUID, field: str) -> bytes:
+    return f"{table}.{field}:{keys.tenant_id}:{row_id}".encode()
+
+
+def seal_field(
+    keys: TenantKeys, table: str, row_id: uuid.UUID, field: str, value: str | None
+) -> bytes | None:
+    if value is None:
+        return None
+    return encrypt(keys.current, value, context(keys, table, row_id, field))
+
+
+def open_field(
+    keys: TenantKeys, table: str, row_id: uuid.UUID, field: str, value: bytes | None
+) -> str | None:
+    if value is None:
+        return None
+    return decrypt(keys.data, value, context(keys, table, row_id, field))
 
 
 async def add_patient(
     connection: AsyncConnection, keys: TenantKeys, identity: PatientIdentity
 ) -> uuid.UUID:
     patient_id = uuid.uuid4()
-    current = keys.current
 
     def sealed(field: str, value: str | None) -> bytes | None:
-        return None if value is None else encrypt(current, value, context(keys, patient_id, field))
+        return seal_field(keys, "patients", patient_id, field, value)
 
     birth_date = identity.birth_date.isoformat() if identity.birth_date else None
     await connection.execute(
@@ -198,9 +213,7 @@ async def read_patient(
     ).one()
 
     def opened(field: str, value: bytes | None) -> str | None:
-        return (
-            None if value is None else decrypt(keys.data, value, context(keys, patient_id, field))
-        )
+        return open_field(keys, "patients", patient_id, field, value)
 
     name = opened("name", row.name_ciphertext)
     assert name is not None

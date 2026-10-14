@@ -9,6 +9,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     LargeBinary,
@@ -465,6 +466,13 @@ session_policies = Table(
 )
 
 
+class Sex(StrEnum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+    UNKNOWN = "unknown"
+
+
 class KeyPurpose(StrEnum):
     DATA = "data"
     INDEX = "index"
@@ -519,9 +527,186 @@ patients = Table(
     Column("mrn_index", LargeBinary, nullable=True, info=PHI),
     Column("birth_date_ciphertext", LargeBinary, nullable=True, info=PHI),
     Column("birth_date_index", LargeBinary, nullable=True, info=PHI),
+    Column("sex", String(10), nullable=False, server_default="unknown", info=PHI),
+    Column("age_years", SmallInteger, nullable=True, info=PHI),
     *timestamps(),
     Column("deleted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     UniqueConstraint("tenant_id", "mrn_index"),
     Index("ix_patients_name_tokens", "name_tokens", postgresql_using="gin"),
     Index("ix_patients_birth_date_index", "tenant_id", "birth_date_index"),
+    UniqueConstraint("id", "tenant_id"),
+    one_of("sex", Sex),
+    CheckConstraint("age_years BETWEEN 0 AND 150", name="age_years"),
+)
+
+
+class Priority(StrEnum):
+    ROUTINE = "routine"
+    URGENT = "urgent"
+    ASAP = "asap"
+    STAT = "stat"
+
+
+class CaseState(StrEnum):
+    WAITING_FOR_SLIDES = "waiting-for-slides"
+    WAITING_FOR_AI = "waiting-for-ai"
+    READY_TO_REVIEW = "ready-to-review"
+    IN_REVIEW = "in-review"
+    WAITING_ON_OTHERS = "waiting-on-others"
+    REPORT_DRAFTED = "report-drafted"
+    WITH_SUPERVISOR = "with-supervisor"
+    SIGNED = "signed"
+    AMENDING = "amending"
+    CANCELLED = "cancelled"
+
+
+class CaseSource(StrEnum):
+    LIS = "lis"
+    MANUAL = "manual"
+    UPLOAD = "upload"
+
+
+class Laterality(StrEnum):
+    LEFT = "left"
+    RIGHT = "right"
+    BILATERAL = "bilateral"
+    NOT_APPLICABLE = "not-applicable"
+    UNKNOWN = "unknown"
+
+
+def owned_ids() -> list[Column[uuid.UUID]]:
+    return [
+        Column(
+            "id",
+            Uuid[uuid.UUID](),
+            primary_key=True,
+            server_default=text("gen_random_uuid()"),
+            info=OPERATIONAL,
+        ),
+        Column(
+            "tenant_id",
+            Uuid[uuid.UUID](),
+            ForeignKey("tenants.id"),
+            nullable=False,
+            index=True,
+            info=OPERATIONAL,
+        ),
+    ]
+
+
+def case_timestamps() -> list[Column[datetime]]:
+    return [
+        *timestamps(),
+        Column("deleted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    ]
+
+
+def case_column() -> Column[uuid.UUID]:
+    return Column("case_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL)
+
+
+cases = Table(
+    "cases",
+    metadata,
+    *owned_ids(),
+    Column("patient_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("accession", String(40), nullable=False, info=PHI),
+    Column(
+        "priority",
+        String(10),
+        nullable=False,
+        server_default=Priority.ROUTINE.value,
+        info=OPERATIONAL,
+    ),
+    Column("due_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "state",
+        String(30),
+        nullable=False,
+        server_default=CaseState.WAITING_FOR_SLIDES.value,
+        info=OPERATIONAL,
+    ),
+    Column("source", String(10), nullable=False, info=OPERATIONAL),
+    Column(
+        "assignee_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("clinical_note", LargeBinary, nullable=True, info=PHI),
+    Column("clinical_question", LargeBinary, nullable=True, info=PHI),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *case_timestamps(),
+    UniqueConstraint("tenant_id", "accession"),
+    UniqueConstraint("id", "tenant_id"),
+    ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
+    one_of("priority", Priority),
+    one_of("state", CaseState),
+    one_of("source", CaseSource),
+)
+
+specimens = Table(
+    "specimens",
+    metadata,
+    *owned_ids(),
+    case_column(),
+    Column("letter", String(2), nullable=False, info=OPERATIONAL),
+    Column("type", String(200), nullable=True, info=PHI),
+    Column("site", String(200), nullable=True, info=PHI),
+    Column(
+        "laterality",
+        String(20),
+        nullable=False,
+        server_default=Laterality.UNKNOWN.value,
+        info=PHI,
+    ),
+    Column("procedure", String(200), nullable=True, info=PHI),
+    Column("collected_at", DateTime(timezone=True), nullable=True, info=PHI),
+    Column("received_at", DateTime(timezone=True), nullable=True, info=PHI),
+    *case_timestamps(),
+    UniqueConstraint("case_id", "letter"),
+    UniqueConstraint("id", "case_id", "tenant_id"),
+    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+    CheckConstraint("letter ~ '^[A-Z]{1,2}$'", name="letter"),
+    one_of("laterality", Laterality),
+)
+
+blocks = Table(
+    "blocks",
+    metadata,
+    *owned_ids(),
+    case_column(),
+    Column("specimen_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("number", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("description", String(200), nullable=True, info=PHI),
+    *case_timestamps(),
+    UniqueConstraint("specimen_id", "number"),
+    UniqueConstraint("id", "case_id"),
+    ForeignKeyConstraint(
+        ["specimen_id", "case_id", "tenant_id"],
+        ["specimens.id", "specimens.case_id", "specimens.tenant_id"],
+    ),
+    CheckConstraint("number BETWEEN 1 AND 999", name="number"),
+)
+
+slides = Table(
+    "slides",
+    metadata,
+    *owned_ids(),
+    case_column(),
+    Column("block_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
+    Column("barcode", String(100), nullable=True, info=PHI),
+    Column("stain", String(60), nullable=False, server_default="H&E", info=OPERATIONAL),
+    Column("level", SmallInteger, nullable=True, info=OPERATIONAL),
+    *case_timestamps(),
+    UniqueConstraint("tenant_id", "barcode"),
+    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+    ForeignKeyConstraint(["block_id", "case_id"], ["blocks.id", "blocks.case_id"]),
 )

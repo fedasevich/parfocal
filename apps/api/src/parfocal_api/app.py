@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from parfocal_api import (
     audit_trail,
     auth,
+    cases,
     invitations,
     service_accounts,
     sessions_api,
@@ -89,6 +90,7 @@ def create_app(
 
     app.include_router(auth.router)
     app.include_router(sessions_api.router)
+    app.include_router(cases.router)
     app.include_router(signing.tenant_router)
     app.include_router(signing.me_router)
     app.include_router(tenants.platform)

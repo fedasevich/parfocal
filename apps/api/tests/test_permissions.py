@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from case_support import seed_case
 from db_support import OWNER_URL, ApiAs, with_database
 from sqlalchemy import func, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -74,6 +75,7 @@ class Workspace:
     token: uuid.UUID
     spare_account: uuid.UUID
     invitations: list[uuid.UUID]
+    case: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -84,6 +86,7 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),
     "changeSigningRights": lambda w: Call(
         "PUT",
@@ -120,7 +123,15 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
 }
 PLACEHOLDER = Workspace(
-    uuid.uuid4(), {}, uuid.uuid4(), "", uuid.uuid4(), uuid.uuid4(), uuid.uuid4(), [uuid.uuid4()]
+    uuid.uuid4(),
+    {},
+    uuid.uuid4(),
+    "",
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
+    [uuid.uuid4()],
+    uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
@@ -261,12 +272,15 @@ async def seed(database: str) -> Workspace:
                 )
                 for index in range(len(COLUMNS))
             ]
+            case = await seed_case(connection, tenant_id)
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
         assert isinstance(spare_account, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
-        return Workspace(tenant_id, people, colleague, slug, account, token, spare_account, ids)
+        return Workspace(
+            tenant_id, people, colleague, slug, account, token, spare_account, ids, case.case_id
+        )
     finally:
         await engine.dispose()
 
@@ -279,7 +293,7 @@ def workspace(database: str) -> Workspace:
 def principal_for(workspace: Workspace, role: Role) -> Principal:
     if role is Role.OUTSIDE_CONSULTANT:
         return GuestPrincipal(
-            "outside", GuestGrant(host_tenant_id=workspace.tenant_id, case_id=uuid.uuid4())
+            "outside", GuestGrant(host_tenant_id=workspace.tenant_id, case_id=workspace.case)
         )
     subject = f"{workspace.slug}-{role}"
     return MemberPrincipal(subject, workspace.tenant_id, workspace.users[role], role)

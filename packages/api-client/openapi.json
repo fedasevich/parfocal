@@ -592,6 +592,117 @@
         }
       }
     },
+    "/api/cases/{case_id}": {
+      "get": {
+        "tags": [
+          "cases"
+        ],
+        "summary": "Get Case",
+        "operationId": "getCase",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-cases"
+      }
+    },
     "/api/tenant/members/{user_id}/signing": {
       "get": {
         "tags": [
@@ -4274,6 +4385,170 @@
         ],
         "title": "AuditTarget"
       },
+      "BlockDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "description"
+        ],
+        "title": "BlockDetail"
+      },
+      "CaseDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "accession": {
+            "type": "string",
+            "title": "Accession"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CaseState"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CaseSource"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
+          },
+          "clinical_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinical Note"
+          },
+          "clinical_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinical Question"
+          },
+          "patient": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PatientDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "specimens": {
+            "items": {
+              "$ref": "#/components/schemas/SpecimenDetail"
+            },
+            "type": "array",
+            "title": "Specimens"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/SlideDetail"
+            },
+            "type": "array",
+            "title": "Slides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "accession",
+          "priority",
+          "due_at",
+          "state",
+          "source",
+          "assignee_user_id",
+          "clinical_note",
+          "clinical_question",
+          "patient",
+          "specimens",
+          "slides"
+        ],
+        "title": "CaseDetail"
+      },
+      "CaseSource": {
+        "type": "string",
+        "enum": [
+          "lis",
+          "manual",
+          "upload"
+        ],
+        "title": "CaseSource"
+      },
+      "CaseState": {
+        "type": "string",
+        "enum": [
+          "waiting-for-slides",
+          "waiting-for-ai",
+          "ready-to-review",
+          "in-review",
+          "waiting-on-others",
+          "report-drafted",
+          "with-supervisor",
+          "signed",
+          "amending",
+          "cancelled"
+        ],
+        "title": "CaseState"
+      },
       "CreatedServiceAccount": {
         "properties": {
           "account": {
@@ -4507,6 +4782,17 @@
         ],
         "title": "IssuedToken"
       },
+      "Laterality": {
+        "type": "string",
+        "enum": [
+          "left",
+          "right",
+          "bilateral",
+          "not-applicable",
+          "unknown"
+        ],
+        "title": "Laterality"
+      },
       "Me": {
         "properties": {
           "user_id": {
@@ -4728,12 +5014,82 @@
         ],
         "title": "OrganisationDraft"
       },
+      "PatientDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "mrn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mrn"
+          },
+          "birth_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Date"
+          },
+          "sex": {
+            "$ref": "#/components/schemas/Sex"
+          },
+          "age_years": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Years"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "mrn",
+          "birth_date",
+          "sex",
+          "age_years"
+        ],
+        "title": "PatientDetail"
+      },
       "Plan": {
         "type": "string",
         "enum": [
           "pilot"
         ],
         "title": "Plan"
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "routine",
+          "urgent",
+          "asap",
+          "stat"
+        ],
+        "title": "Priority"
       },
       "Problem": {
         "properties": {
@@ -5111,6 +5467,16 @@
         ],
         "title": "SessionSummary"
       },
+      "Sex": {
+        "type": "string",
+        "enum": [
+          "male",
+          "female",
+          "other",
+          "unknown"
+        ],
+        "title": "Sex"
+      },
       "SigningChange": {
         "properties": {
           "signs_alone": {
@@ -5211,9 +5577,158 @@
         ],
         "title": "SigningRights"
       },
+      "SlideDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "stain": {
+            "type": "string",
+            "title": "Stain"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "block_id",
+          "barcode",
+          "stain",
+          "level"
+        ],
+        "title": "SlideDetail"
+      },
       "Slug": {
         "type": "string",
         "pattern": "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
+      },
+      "SpecimenDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "letter": {
+            "type": "string",
+            "title": "Letter"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "site": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site"
+          },
+          "laterality": {
+            "$ref": "#/components/schemas/Laterality"
+          },
+          "procedure": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Procedure"
+          },
+          "collected_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collected At"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/BlockDetail"
+            },
+            "type": "array",
+            "title": "Blocks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "letter",
+          "type",
+          "site",
+          "laterality",
+          "procedure",
+          "collected_at",
+          "received_at",
+          "blocks"
+        ],
+        "title": "SpecimenDetail"
       },
       "Tenant": {
         "properties": {

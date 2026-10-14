@@ -344,9 +344,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
   Done when a spike uploads a 4 GB NDPI over a throttled connection with a forced disconnect and resumes without restarting.
 
-- [ ] STACK-040 · FHIR and HL7 libraries
+- [x] STACK-040 · FHIR and HL7 libraries
   Candidates: fhir.resources (Pydantic), HAPI FHIR as an external server, python-hl7 for v2. Default: fhir.resources for parsing and building Patient, ServiceRequest, Specimen and DiagnosticReport, and no FHIR server in v1.
   Done when the ADR fixes the FHIR version (R4 or R5) and the resources in scope.
+  Decided in [ADR 0035](adr/0035-fhir-r4-through-fhir-resources-r4b.md): R4 on the wire through fhir.resources' R4B models.
 
 ---
 
@@ -2010,11 +2011,12 @@ The launchpad is everyone's home and the department dashboard is the default hom
 
 ## 20 CASES · Patients, cases, import and LIS adapter
 
-- [ ] CASES-000 · Research check
+- [x] CASES-000 · Research check
   Done when STACK-040 is confirmed and the case data model is written as an ADR.
+  The model is [ADR 0036](adr/0036-case-data-model.md).
 
 - [ ] CASES-001 · Patient and case model
-  Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, folder, status), specimen, block, slide. SEC-004 already created `patients` with the encrypted name, MRN and birth date and their blind indexes ([ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)), so this task adds the remaining columns and tables.
+  Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, status), specimen, block, slide, as [ADR 0036](adr/0036-case-data-model.md) describes. The case's folder arrives with CASES-003. SEC-004 already created `patients` with the encrypted name, MRN and birth date and their blind indexes ([ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)), so this task adds the remaining columns and tables.
   Done when migrations, API tests and isolation tests pass.
 
 - [ ] CASES-002 · Case creation UI
@@ -2023,7 +2025,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Depends on CASES-013. Refs kit Case creation page, kit W39 to W41, kit Flow 10.
 
 - [ ] CASES-003 · Folders and spaces
-  Folders by service with colours, membership, counts.
+  Folders by service with colours, membership, counts. Adds the folder to each case, which CASES-001 left out.
   Done when API and component tests cover folders.
 
 - [ ] CASES-004 · Accession number rules

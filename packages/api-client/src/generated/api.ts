@@ -75,6 +75,107 @@ export const AuditTarget = {
   invitation: "invitation",
 } as const;
 
+export interface BlockDetail {
+  id: string;
+  number: number;
+  description: string | null;
+}
+
+export type Priority = (typeof Priority)[keyof typeof Priority];
+
+export const Priority = {
+  routine: "routine",
+  urgent: "urgent",
+  asap: "asap",
+  stat: "stat",
+} as const;
+
+export type CaseState = (typeof CaseState)[keyof typeof CaseState];
+
+export const CaseState = {
+  "waiting-for-slides": "waiting-for-slides",
+  "waiting-for-ai": "waiting-for-ai",
+  "ready-to-review": "ready-to-review",
+  "in-review": "in-review",
+  "waiting-on-others": "waiting-on-others",
+  "report-drafted": "report-drafted",
+  "with-supervisor": "with-supervisor",
+  signed: "signed",
+  amending: "amending",
+  cancelled: "cancelled",
+} as const;
+
+export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
+
+export const CaseSource = {
+  lis: "lis",
+  manual: "manual",
+  upload: "upload",
+} as const;
+
+export type Sex = (typeof Sex)[keyof typeof Sex];
+
+export const Sex = {
+  male: "male",
+  female: "female",
+  other: "other",
+  unknown: "unknown",
+} as const;
+
+export interface PatientDetail {
+  id: string;
+  name: string;
+  mrn: string | null;
+  birth_date: string | null;
+  sex: Sex;
+  age_years: number | null;
+}
+
+export type Laterality = (typeof Laterality)[keyof typeof Laterality];
+
+export const Laterality = {
+  left: "left",
+  right: "right",
+  bilateral: "bilateral",
+  "not-applicable": "not-applicable",
+  unknown: "unknown",
+} as const;
+
+export interface SpecimenDetail {
+  id: string;
+  letter: string;
+  type: string | null;
+  site: string | null;
+  laterality: Laterality;
+  procedure: string | null;
+  collected_at: string | null;
+  received_at: string | null;
+  blocks: BlockDetail[];
+}
+
+export interface SlideDetail {
+  id: string;
+  block_id: string | null;
+  barcode: string | null;
+  stain: string;
+  level: number | null;
+}
+
+export interface CaseDetail {
+  id: string;
+  accession: string;
+  priority: Priority;
+  due_at: string | null;
+  state: CaseState;
+  source: CaseSource;
+  assignee_user_id: string | null;
+  clinical_note: string | null;
+  clinical_question: string | null;
+  patient: PatientDetail | null;
+  specimens: SpecimenDetail[];
+  slides: SlideDetail[];
+}
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -1289,6 +1390,175 @@ export const useEndOtherSessions = <TError = Problem, TContext = unknown>(
 ): UseMutationResult<Awaited<ReturnType<typeof endOtherSessions>>, TError, void, TContext> => {
   return useMutation(getEndOtherSessionsMutationOptions(options), queryClient);
 };
+
+export type getCaseResponse200 = {
+  data: CaseDetail;
+  status: 200;
+};
+
+export type getCaseResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCaseResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCaseResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCaseResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCaseResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCaseResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCaseResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCaseResponseSuccess = getCaseResponse200 & {
+  headers: Headers;
+};
+export type getCaseResponseError = (
+  | getCaseResponse400
+  | getCaseResponse401
+  | getCaseResponse403
+  | getCaseResponse404
+  | getCaseResponse409
+  | getCaseResponse422
+  | getCaseResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCaseResponse = getCaseResponseSuccess | getCaseResponseError;
+
+export const getGetCaseUrl = (caseId: string) => {
+  return `/api/cases/${caseId}`;
+};
+
+/**
+ * @summary Get Case
+ */
+export const getCase = async (
+  caseId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCaseResponse> => {
+  return apiFetch<getCaseResponse>(getGetCaseUrl(caseId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCaseQueryKey = (caseId: string) => {
+  return [`/api/cases/${caseId}`] as const;
+};
+
+export const getGetCaseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCase>>,
+  TError = Problem,
+>(
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCaseQueryKey(caseId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCase>>> = ({ signal }) =>
+    getCase(caseId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: caseId !== null && caseId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getCase>>>;
+export type GetCaseQueryError = Problem;
+
+export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError = Problem>(
+  caseId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCase>>,
+          TError,
+          Awaited<ReturnType<typeof getCase>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError = Problem>(
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCase>>,
+          TError,
+          Awaited<ReturnType<typeof getCase>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError = Problem>(
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Case
+ */
+
+export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError = Problem>(
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCase>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCaseQueryOptions(caseId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getSigningRightsResponse200 = {
   data: SigningRights;

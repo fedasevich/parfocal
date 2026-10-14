@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 6 |
-| `personal` | 17 |
+| `phi` | 19 |
+| `personal` | 19 |
 | `secret` | 9 |
-| `operational` | 83 |
+| `operational` | 117 |
 | `public` | 0 |
 
 ## api_tokens
@@ -66,6 +66,40 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `return_to` | operational |
 | `expires_at` | operational |
 
+## blocks
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `case_id` | operational |
+| `specimen_id` | operational |
+| `number` | operational |
+| `description` | phi |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
+
+## cases
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `patient_id` | operational |
+| `accession` | phi |
+| `priority` | operational |
+| `due_at` | operational |
+| `state` | operational |
+| `source` | operational |
+| `assignee_user_id` | personal |
+| `clinical_note` | phi |
+| `clinical_question` | phi |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
+
 ## invitations
 
 | Column | Class |
@@ -115,6 +149,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `mrn_index` | phi |
 | `birth_date_ciphertext` | phi |
 | `birth_date_index` | phi |
+| `sex` | phi |
+| `age_years` | phi |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
@@ -163,6 +199,39 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `active_tenant_id` | operational |
 | `active_at` | operational |
 | `user_agent` | personal |
+
+## slides
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `case_id` | operational |
+| `block_id` | operational |
+| `barcode` | phi |
+| `stain` | operational |
+| `level` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
+
+## specimens
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `case_id` | operational |
+| `letter` | operational |
+| `type` | phi |
+| `site` | phi |
+| `laterality` | phi |
+| `procedure` | phi |
+| `collected_at` | phi |
+| `received_at` | phi |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
 
 ## tenant_keys
 
