@@ -606,9 +606,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
 
-- [ ] SEC-000 · Research check for compliance controls
+- [x] SEC-000 · Research check for compliance controls
   Map GDPR articles, the HIPAA Security Rule safeguards and ISO 27001:2022 Annex A controls to the backlog.
   Done when a control matrix in `docs/compliance/controls.md` links each control to a task ID or marks it as policy work.
+  The matrix is [compliance/controls.md](compliance/controls.md). Its 9 gaps are listed there as candidate tasks. TODO: control names were written from memory and must be checked against the standards' texts.
 
 - [x] SEC-001 · Data classification and PHI inventory
   Classify every field (PHI, personal, operational, public). Generate a data map from model annotations in code.
