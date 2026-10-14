@@ -22,6 +22,12 @@ import type {
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
+/**
+ * @minLength 1
+ * @maxLength 100
+ */
+export type AccountName = string;
+
 export type ActorKind = (typeof ActorKind)[keyof typeof ActorKind];
 
 export const ActorKind = {
@@ -30,7 +36,16 @@ export const ActorKind = {
   guest: "guest",
   operator: "operator",
   system: "system",
+  service: "service",
 } as const;
+
+export interface ApiToken {
+  id: string;
+  expires_at: string;
+  revoked_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+}
 
 export interface AuditEvent {
   id: string;
@@ -56,7 +71,37 @@ export const AuditTarget = {
   tenant: "tenant",
   person: "person",
   case: "case",
+  "service-account": "service-account",
 } as const;
+
+export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
+
+export const ServiceScope = {
+  "see-cases": "see-cases",
+  "edit-cases": "edit-cases",
+  "upload-slides": "upload-slides",
+  "see-team": "see-team",
+} as const;
+
+export interface ServiceAccount {
+  id: string;
+  name: string;
+  scopes: ServiceScope[];
+  disabled_at: string | null;
+  created_at: string;
+  tokens: ApiToken[];
+}
+
+export interface IssuedToken {
+  id: string;
+  token: string;
+  expires_at: string;
+}
+
+export interface CreatedServiceAccount {
+  account: ServiceAccount;
+  token: IssuedToken;
+}
 
 /**
  * @minLength 1
@@ -210,6 +255,19 @@ export interface RoleChange {
   role: Role;
 }
 
+/**
+ * @minimum 1
+ * @maximum 365
+ */
+export type TokenDays = number;
+
+export interface ServiceAccountDraft {
+  expires_in_days?: TokenDays;
+  name: AccountName;
+  /** @minItems 1 */
+  scopes: ServiceScope[];
+}
+
 export interface Session {
   subject: string;
   name: string | null;
@@ -238,6 +296,10 @@ export interface TenantDraft {
   kind: TenantKind;
   region: Region;
   plan?: Plan;
+}
+
+export interface TokenRequest {
+  expires_in_days?: TokenDays;
 }
 
 export interface WorkspaceChoice {
@@ -3188,3 +3250,791 @@ export function useListAuditEvents<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listServiceAccountsResponse200 = {
+  data: ServiceAccount[];
+  status: 200;
+};
+
+export type listServiceAccountsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listServiceAccountsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listServiceAccountsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listServiceAccountsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listServiceAccountsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listServiceAccountsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listServiceAccountsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listServiceAccountsResponseSuccess = listServiceAccountsResponse200 & {
+  headers: Headers;
+};
+export type listServiceAccountsResponseError = (
+  | listServiceAccountsResponse400
+  | listServiceAccountsResponse401
+  | listServiceAccountsResponse403
+  | listServiceAccountsResponse404
+  | listServiceAccountsResponse409
+  | listServiceAccountsResponse422
+  | listServiceAccountsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listServiceAccountsResponse =
+  | listServiceAccountsResponseSuccess
+  | listServiceAccountsResponseError;
+
+export const getListServiceAccountsUrl = () => {
+  return `/api/tenant/service-accounts`;
+};
+
+/**
+ * @summary List Service Accounts
+ */
+export const listServiceAccounts = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listServiceAccountsResponse> => {
+  return apiFetch<listServiceAccountsResponse>(getListServiceAccountsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListServiceAccountsQueryKey = () => {
+  return [`/api/tenant/service-accounts`] as const;
+};
+
+export const getListServiceAccountsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listServiceAccounts>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listServiceAccounts>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListServiceAccountsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listServiceAccounts>>> = ({ signal }) =>
+    listServiceAccounts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listServiceAccounts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListServiceAccountsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listServiceAccounts>>
+>;
+export type ListServiceAccountsQueryError = Problem;
+
+export function useListServiceAccounts<
+  TData = Awaited<ReturnType<typeof listServiceAccounts>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listServiceAccounts>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listServiceAccounts>>,
+          TError,
+          Awaited<ReturnType<typeof listServiceAccounts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListServiceAccounts<
+  TData = Awaited<ReturnType<typeof listServiceAccounts>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listServiceAccounts>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listServiceAccounts>>,
+          TError,
+          Awaited<ReturnType<typeof listServiceAccounts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListServiceAccounts<
+  TData = Awaited<ReturnType<typeof listServiceAccounts>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listServiceAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Service Accounts
+ */
+
+export function useListServiceAccounts<
+  TData = Awaited<ReturnType<typeof listServiceAccounts>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listServiceAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListServiceAccountsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createServiceAccountResponse201 = {
+  data: CreatedServiceAccount;
+  status: 201;
+};
+
+export type createServiceAccountResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createServiceAccountResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createServiceAccountResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createServiceAccountResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createServiceAccountResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createServiceAccountResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createServiceAccountResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createServiceAccountResponseSuccess = createServiceAccountResponse201 & {
+  headers: Headers;
+};
+export type createServiceAccountResponseError = (
+  | createServiceAccountResponse400
+  | createServiceAccountResponse401
+  | createServiceAccountResponse403
+  | createServiceAccountResponse404
+  | createServiceAccountResponse409
+  | createServiceAccountResponse422
+  | createServiceAccountResponse500
+) & {
+  headers: Headers;
+};
+
+export type createServiceAccountResponse =
+  | createServiceAccountResponseSuccess
+  | createServiceAccountResponseError;
+
+export const getCreateServiceAccountUrl = () => {
+  return `/api/tenant/service-accounts`;
+};
+
+/**
+ * @summary Create Service Account
+ */
+export const createServiceAccount = async (
+  serviceAccountDraft: ServiceAccountDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createServiceAccountResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createServiceAccountResponse>(getCreateServiceAccountUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(serviceAccountDraft),
+  });
+};
+
+export const getCreateServiceAccountMutationKey = () => ["createServiceAccount"] as const;
+
+export const getCreateServiceAccountMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createServiceAccount>>,
+    TError,
+    CreateServiceAccountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createServiceAccount>>,
+  TError,
+  CreateServiceAccountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateServiceAccountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createServiceAccount>>,
+    CreateServiceAccountMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createServiceAccount(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateServiceAccountMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createServiceAccount>>
+>;
+export type CreateServiceAccountMutationBody = ServiceAccountDraft;
+export type CreateServiceAccountMutationError = Problem;
+export type CreateServiceAccountMutationVariables = { data: ServiceAccountDraft };
+
+/**
+ * @summary Create Service Account
+ */
+export const useCreateServiceAccount = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createServiceAccount>>,
+      TError,
+      CreateServiceAccountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createServiceAccount>>,
+  TError,
+  CreateServiceAccountMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateServiceAccountMutationOptions(options), queryClient);
+};
+
+export type issueApiTokenResponse201 = {
+  data: IssuedToken;
+  status: 201;
+};
+
+export type issueApiTokenResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type issueApiTokenResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type issueApiTokenResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type issueApiTokenResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type issueApiTokenResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type issueApiTokenResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type issueApiTokenResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type issueApiTokenResponseSuccess = issueApiTokenResponse201 & {
+  headers: Headers;
+};
+export type issueApiTokenResponseError = (
+  | issueApiTokenResponse400
+  | issueApiTokenResponse401
+  | issueApiTokenResponse403
+  | issueApiTokenResponse404
+  | issueApiTokenResponse409
+  | issueApiTokenResponse422
+  | issueApiTokenResponse500
+) & {
+  headers: Headers;
+};
+
+export type issueApiTokenResponse = issueApiTokenResponseSuccess | issueApiTokenResponseError;
+
+export const getIssueApiTokenUrl = (accountId: string) => {
+  return `/api/tenant/service-accounts/${accountId}/tokens`;
+};
+
+/**
+ * @summary Issue Api Token
+ */
+export const issueApiToken = async (
+  accountId: string,
+  tokenRequest: TokenRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<issueApiTokenResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<issueApiTokenResponse>(getIssueApiTokenUrl(accountId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(tokenRequest),
+  });
+};
+
+export const getIssueApiTokenMutationKey = () => ["issueApiToken"] as const;
+
+export const getIssueApiTokenMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof issueApiToken>>,
+    TError,
+    IssueApiTokenMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof issueApiToken>>,
+  TError,
+  IssueApiTokenMutationVariables,
+  TContext
+> => {
+  const mutationKey = getIssueApiTokenMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof issueApiToken>>,
+    IssueApiTokenMutationVariables
+  > = (props) => {
+    const { accountId, data } = props ?? {};
+
+    return issueApiToken(accountId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type IssueApiTokenMutationResult = NonNullable<Awaited<ReturnType<typeof issueApiToken>>>;
+export type IssueApiTokenMutationBody = TokenRequest;
+export type IssueApiTokenMutationError = Problem;
+export type IssueApiTokenMutationVariables = { accountId: string; data: TokenRequest };
+
+/**
+ * @summary Issue Api Token
+ */
+export const useIssueApiToken = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof issueApiToken>>,
+      TError,
+      IssueApiTokenMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof issueApiToken>>,
+  TError,
+  IssueApiTokenMutationVariables,
+  TContext
+> => {
+  return useMutation(getIssueApiTokenMutationOptions(options), queryClient);
+};
+
+export type revokeApiTokenResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeApiTokenResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type revokeApiTokenResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type revokeApiTokenResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type revokeApiTokenResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type revokeApiTokenResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type revokeApiTokenResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type revokeApiTokenResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type revokeApiTokenResponseSuccess = revokeApiTokenResponse204 & {
+  headers: Headers;
+};
+export type revokeApiTokenResponseError = (
+  | revokeApiTokenResponse400
+  | revokeApiTokenResponse401
+  | revokeApiTokenResponse403
+  | revokeApiTokenResponse404
+  | revokeApiTokenResponse409
+  | revokeApiTokenResponse422
+  | revokeApiTokenResponse500
+) & {
+  headers: Headers;
+};
+
+export type revokeApiTokenResponse = revokeApiTokenResponseSuccess | revokeApiTokenResponseError;
+
+export const getRevokeApiTokenUrl = (accountId: string, tokenId: string) => {
+  return `/api/tenant/service-accounts/${accountId}/tokens/${tokenId}`;
+};
+
+/**
+ * @summary Revoke Api Token
+ */
+export const revokeApiToken = async (
+  accountId: string,
+  tokenId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<revokeApiTokenResponse> => {
+  return apiFetch<revokeApiTokenResponse>(getRevokeApiTokenUrl(accountId, tokenId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokeApiTokenMutationKey = () => ["revokeApiToken"] as const;
+
+export const getRevokeApiTokenMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeApiToken>>,
+    TError,
+    RevokeApiTokenMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokeApiToken>>,
+  TError,
+  RevokeApiTokenMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokeApiTokenMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeApiToken>>,
+    RevokeApiTokenMutationVariables
+  > = (props) => {
+    const { accountId, tokenId } = props ?? {};
+
+    return revokeApiToken(accountId, tokenId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeApiTokenMutationResult = NonNullable<Awaited<ReturnType<typeof revokeApiToken>>>;
+
+export type RevokeApiTokenMutationError = Problem;
+export type RevokeApiTokenMutationVariables = { accountId: string; tokenId: string };
+
+/**
+ * @summary Revoke Api Token
+ */
+export const useRevokeApiToken = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokeApiToken>>,
+      TError,
+      RevokeApiTokenMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokeApiToken>>,
+  TError,
+  RevokeApiTokenMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokeApiTokenMutationOptions(options), queryClient);
+};
+
+export type disableServiceAccountResponse200 = {
+  data: ServiceAccount;
+  status: 200;
+};
+
+export type disableServiceAccountResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type disableServiceAccountResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type disableServiceAccountResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type disableServiceAccountResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type disableServiceAccountResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type disableServiceAccountResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type disableServiceAccountResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type disableServiceAccountResponseSuccess = disableServiceAccountResponse200 & {
+  headers: Headers;
+};
+export type disableServiceAccountResponseError = (
+  | disableServiceAccountResponse400
+  | disableServiceAccountResponse401
+  | disableServiceAccountResponse403
+  | disableServiceAccountResponse404
+  | disableServiceAccountResponse409
+  | disableServiceAccountResponse422
+  | disableServiceAccountResponse500
+) & {
+  headers: Headers;
+};
+
+export type disableServiceAccountResponse =
+  | disableServiceAccountResponseSuccess
+  | disableServiceAccountResponseError;
+
+export const getDisableServiceAccountUrl = (accountId: string) => {
+  return `/api/tenant/service-accounts/${accountId}/disable`;
+};
+
+/**
+ * @summary Disable Service Account
+ */
+export const disableServiceAccount = async (
+  accountId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<disableServiceAccountResponse> => {
+  return apiFetch<disableServiceAccountResponse>(getDisableServiceAccountUrl(accountId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDisableServiceAccountMutationKey = () => ["disableServiceAccount"] as const;
+
+export const getDisableServiceAccountMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof disableServiceAccount>>,
+    TError,
+    DisableServiceAccountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof disableServiceAccount>>,
+  TError,
+  DisableServiceAccountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDisableServiceAccountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof disableServiceAccount>>,
+    DisableServiceAccountMutationVariables
+  > = (props) => {
+    const { accountId } = props ?? {};
+
+    return disableServiceAccount(accountId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DisableServiceAccountMutationResult = NonNullable<
+  Awaited<ReturnType<typeof disableServiceAccount>>
+>;
+
+export type DisableServiceAccountMutationError = Problem;
+export type DisableServiceAccountMutationVariables = { accountId: string };
+
+/**
+ * @summary Disable Service Account
+ */
+export const useDisableServiceAccount = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof disableServiceAccount>>,
+      TError,
+      DisableServiceAccountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof disableServiceAccount>>,
+  TError,
+  DisableServiceAccountMutationVariables,
+  TContext
+> => {
+  return useMutation(getDisableServiceAccountMutationOptions(options), queryClient);
+};

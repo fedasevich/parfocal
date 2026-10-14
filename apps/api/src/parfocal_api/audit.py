@@ -17,6 +17,7 @@ from parfocal_api.principals import (
     MemberPrincipal,
     PlatformOperator,
     Principal,
+    ServicePrincipal,
     SignedInUser,
 )
 from parfocal_api.tables import ActorKind, audit_events, audit_people
@@ -36,6 +37,10 @@ class AuditAction(StrEnum):
     CASE_OPENED = "case.opened"
     REPORT_SIGNED_OUT = "report.signed-out"
     REPORT_AMENDED = "report.amended"
+    SERVICE_ACCOUNT_CREATED = "service-account.created"
+    SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
+    API_TOKEN_ISSUED = "api-token.issued"
+    API_TOKEN_REVOKED = "api-token.revoked"
 
 
 class AuditTarget(StrEnum):
@@ -43,12 +48,14 @@ class AuditTarget(StrEnum):
     TENANT = "tenant"
     PERSON = "person"
     CASE = "case"
+    SERVICE_ACCOUNT = "service-account"
 
 
 @dataclass(frozen=True)
 class Actor:
     kind: ActorKind
     subject: str | None = None
+    service_id: uuid.UUID | None = None
 
 
 class AuditEvent(BaseModel):
@@ -78,6 +85,8 @@ def actor_of(principal: Principal) -> Actor:
             return Actor(ActorKind.GUEST, subject)
         case PlatformOperator(subject=subject):
             return Actor(ActorKind.OPERATOR, subject)
+        case ServicePrincipal(account_id=account_id):
+            return Actor(ActorKind.SERVICE, service_id=account_id)
 
 
 def canonical(details: dict[str, Any]) -> str:
@@ -115,7 +124,9 @@ async def record(
     tenant_id: uuid.UUID | None = None,
     details: dict[str, Any] | None = None,
 ) -> None:
-    actor_id = await pseudonym_of(connection, actor.subject) if actor.subject else None
+    actor_id = actor.service_id
+    if actor.subject is not None:
+        actor_id = await pseudonym_of(connection, actor.subject)
     if person is not None:
         target_id = await pseudonym_of(connection, person)
     await connection.execute(

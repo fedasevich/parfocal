@@ -15,11 +15,12 @@ from parfocal_api.audit import (
     AuditAction,
     AuditEvent,
     AuditTarget,
+    actor_of,
     chain_breaks,
     forget,
     record,
 )
-from parfocal_api.principals import MemberPrincipal, PlatformOperator
+from parfocal_api.principals import MemberPrincipal, PlatformOperator, ServicePrincipal
 from parfocal_api.tables import ActorKind, Role
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
@@ -353,3 +354,28 @@ def test_a_workspace_cannot_resolve_people_from_another(api: ApiAs, database: st
     seen = asyncio.run(in_scope(database, scope, visible))
     assert me.subject in seen
     assert stranger.subject not in seen
+
+
+def test_service_accounts_are_named_by_their_account_id(api: ApiAs, database: str) -> None:
+    tenant_id = make_tenant(api)
+    admin = admin_of(api, database, tenant_id)
+    account_id = uuid.uuid4()
+    service = ServicePrincipal(account_id, uuid.UUID(tenant_id), frozenset({"see-team"}))
+
+    async def write(connection: AsyncConnection) -> None:
+        await record(
+            connection,
+            actor_of(service),
+            AuditAction.CASE_OPENED,
+            AuditTarget.CASE,
+            uuid.uuid4(),
+            tenant_id=uuid.UUID(tenant_id),
+        )
+
+    asyncio.run(in_scope(database, DatabaseScope(tenant_id=uuid.UUID(tenant_id)), write))
+    last = trail(api, admin)[-1]
+    assert (last.actor_kind, last.actor_id, last.actor_subject) == (
+        ActorKind.SERVICE,
+        account_id,
+        None,
+    )

@@ -22,7 +22,7 @@ Generated calls go through `apiFetch` in `src/fetcher.ts`, which sends the sessi
 
 ## Every route declares a permission or why it is open
 
-Guard a tenant route with `**require(Permission.X)` from `parfocal_api.permissions`. It refuses roles whose matrix cell is empty and puts `x-permission` into the OpenAPI schema. A route that every member, every signed-in person or nobody signed in may call goes into `OPEN_OPERATIONS` in `apps/api/tests/test_permissions.py` with its reason, and a guarded one needs a request in `GUARDED_CALLS`. The tests fail until one of the two is done. After changing the matrix run `pnpm permissions:doc`. See [ADR 0026](../adr/0026-roles-and-permission-matrix.md).
+Guard a tenant route with `**require(Permission.X)` from `parfocal_api.permissions`. It refuses roles whose matrix cell is empty and puts `x-permission` into the OpenAPI schema. A route that every member, every signed-in person or nobody signed in may call goes into `OPEN_OPERATIONS` in `apps/api/tests/test_permissions.py` with its reason, and a guarded one needs a request in `GUARDED_CALLS`. The tests fail until one of the two is done. After changing the matrix run `pnpm permissions:doc`. A route that changes something passes `write=True`, which refuses view-only grants, and `test_permissions.py` treats every guarded call that is not a GET as a write. Service accounts reach routes with `Authorization: Bearer pf_...` and only through the permissions in their scopes, so a route that must stay with people checks the principal type, as `/api/me` does ([ADR 0029](../adr/0029-service-accounts-with-own-api-tokens.md)). See [ADR 0026](../adr/0026-roles-and-permission-matrix.md).
 
 ## Database dependencies close before the response
 

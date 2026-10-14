@@ -546,6 +546,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-011 · Service accounts and API tokens
   For integrations (LIS adapter, import scripts), with scopes and rotation.
   Done when tests cover scope enforcement and token revocation.
+  Built as [ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md) says.
 
 - [ ] IAM-012 · Per-organisation SSO
   SAML or OIDC federation per tenant through the IdP, with just-in-time provisioning and role mapping.

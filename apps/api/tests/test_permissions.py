@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from db_support import OWNER_URL, ApiAs, with_database
-from sqlalchemy import insert
+from sqlalchemy import func, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
@@ -22,7 +22,15 @@ from parfocal_api.permissions import (
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal, Principal
-from parfocal_api.tables import Role, memberships, organisations, tenants, users
+from parfocal_api.tables import (
+    Role,
+    api_tokens,
+    memberships,
+    organisations,
+    service_accounts,
+    tenants,
+    users,
+)
 from parfocal_common.db import async_database_url
 
 OPEN_OPERATIONS = {
@@ -50,6 +58,9 @@ class Workspace:
     users: dict[Role, uuid.UUID]
     colleague: uuid.UUID
     slug: str
+    account: uuid.UUID
+    token: uuid.UUID
+    spare_account: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -60,12 +71,28 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "listServiceAccounts": lambda _: Call("GET", "/api/tenant/service-accounts"),
+    "createServiceAccount": lambda _: Call(
+        "POST",
+        "/api/tenant/service-accounts",
+        {"name": f"LIS {uuid.uuid4().hex[:8]}", "scopes": ["edit-cases"]},
+    ),
+    "issueApiToken": lambda w: Call("POST", f"/api/tenant/service-accounts/{w.account}/tokens", {}),
+    "revokeApiToken": lambda w: Call(
+        "DELETE", f"/api/tenant/service-accounts/{w.account}/tokens/{w.token}"
+    ),
+    "disableServiceAccount": lambda w: Call(
+        "POST", f"/api/tenant/service-accounts/{w.spare_account}/disable"
+    ),
     "listAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events"),
     "listTenantMembers": lambda _: Call("GET", "/api/tenant/members"),
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "consultant"}
     ),
 }
+PLACEHOLDER = Workspace(
+    uuid.uuid4(), {}, uuid.uuid4(), "", uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+)
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
 }
@@ -86,6 +113,13 @@ def guarded_operations() -> dict[str, Permission]:
         for name, operation in operations().items()
         if "x-permission" in operation
     }
+
+
+WRITES = {name for name, call in GUARDED_CALLS.items() if call(PLACEHOLDER).method != "GET"}
+
+
+def writes() -> set[str]:
+    return {name for name, operation in operations().items() if operation.get("x-permission-write")}
 
 
 def test_the_matrix_covers_every_permission_for_every_role() -> None:
@@ -119,6 +153,7 @@ def test_every_operation_declares_a_permission_or_why_it_is_open() -> None:
     assert set(every) == set(guarded) | set(OPEN_OPERATIONS)
     assert not set(guarded) & set(OPEN_OPERATIONS)
     assert set(guarded) == set(GUARDED_CALLS)
+    assert writes() == WRITES
     member_open = {name for name, reason in OPEN_OPERATIONS.items() if reason == "member"}
     assert member_open == set(MEMBER_CALLS)
 
@@ -164,8 +199,29 @@ async def seed(database: str) -> Workspace:
                 for role in MEMBER_ROLES
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.RESIDENT)
+            account, spare_account = [
+                await connection.scalar(
+                    insert(service_accounts)
+                    .values(tenant_id=tenant_id, name=name, scopes=["edit-cases"])
+                    .returning(service_accounts.c.id)
+                )
+                for name in ("Permission check", "Spare")
+            ]
+            token = await connection.scalar(
+                insert(api_tokens)
+                .values(
+                    tenant_id=tenant_id,
+                    service_account_id=account,
+                    token_hash=uuid.uuid4().bytes,
+                    expires_at=func.now(),
+                )
+                .returning(api_tokens.c.id)
+            )
         assert isinstance(tenant_id, uuid.UUID)
-        return Workspace(tenant_id, people, colleague, slug)
+        assert isinstance(account, uuid.UUID)
+        assert isinstance(token, uuid.UUID)
+        assert isinstance(spare_account, uuid.UUID)
+        return Workspace(tenant_id, people, colleague, slug, account, token, spare_account)
     finally:
         await engine.dispose()
 
@@ -199,10 +255,11 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
 ) -> None:
     permission = guarded_operations()[operation]
     status = send(api, principal_for(workspace, role), GUARDED_CALLS[operation](workspace))
-    if grant_for(role, permission) is Grant.NONE:
+    grant = grant_for(role, permission)
+    if grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
         assert status == 403
     else:
-        assert status == 200
+        assert 200 <= status < 300
 
 
 @pytest.mark.db

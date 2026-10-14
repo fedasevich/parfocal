@@ -19,6 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
 from parfocal_common.db import metadata
@@ -262,6 +263,7 @@ class ActorKind(StrEnum):
     GUEST = "guest"
     OPERATOR = "operator"
     SYSTEM = "system"
+    SERVICE = "service"
 
 
 audit_people = Table(
@@ -305,4 +307,74 @@ audit_events = Table(
         "ix_audit_events_tenant_id_target_type_target_id", "tenant_id", "target_type", "target_id"
     ),
     one_of("actor_kind", ActorKind),
+)
+
+SERVICE_SCOPES_CHECK = (
+    "scopes <@ ARRAY['see-cases', 'edit-cases', 'upload-slides', 'see-team']::varchar[] "
+    "AND cardinality(scopes) > 0"
+)
+
+service_accounts = Table(
+    "service_accounts",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("name", String(100), nullable=False, info=OPERATIONAL),
+    Column("scopes", ARRAY(String(40)), nullable=False, info=OPERATIONAL),
+    Column("disabled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "name"),
+    CheckConstraint(SERVICE_SCOPES_CHECK, name="scopes"),
+)
+
+api_tokens = Table(
+    "api_tokens",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "service_account_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("service_accounts.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
+    Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("last_used_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
 )

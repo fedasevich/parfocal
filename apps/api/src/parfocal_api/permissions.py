@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import Depends
 
 from parfocal_api.context import CurrentPrincipal
-from parfocal_api.principals import GuestPrincipal, MemberPrincipal
+from parfocal_api.principals import GuestPrincipal, MemberPrincipal, ServicePrincipal
 from parfocal_api.problems import ForbiddenError
 from parfocal_api.tables import Role
 
@@ -176,14 +176,27 @@ def role_of(principal: object) -> Role:
     raise ForbiddenError
 
 
-def require(permission: Permission) -> dict[str, Any]:
+class ServiceScope(StrEnum):
+    SEE_CASES = Permission.SEE_CASES.value
+    EDIT_CASES = Permission.EDIT_CASES.value
+    UPLOAD_SLIDES = Permission.UPLOAD_SLIDES.value
+    SEE_TEAM = Permission.SEE_TEAM.value
+
+
+def grant_of(principal: object, permission: Permission) -> Grant:
+    if isinstance(principal, ServicePrincipal):
+        return Grant.ALL if permission.value in principal.scopes else Grant.NONE
+    return grant_for(role_of(principal), permission)
+
+
+def require(permission: Permission, *, write: bool = False) -> dict[str, Any]:
     async def check(principal: CurrentPrincipal) -> Grant:
-        grant = grant_for(role_of(principal), permission)
-        if grant is Grant.NONE:
+        grant = grant_of(principal, permission)
+        if grant is Grant.NONE or (write and grant is Grant.VIEW_ONLY):
             raise ForbiddenError
         return grant
 
-    return {
-        "dependencies": [Depends(check)],
-        "openapi_extra": {"x-permission": permission.value},
-    }
+    extra: dict[str, Any] = {"x-permission": permission.value}
+    if write:
+        extra["x-permission-write"] = True
+    return {"dependencies": [Depends(check)], "openapi_extra": extra}

@@ -19,15 +19,23 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
 from parfocal_api.oidc import IdentityError, OidcClient, TokenSet
-from parfocal_api.principals import MemberPrincipal, PlatformOperator, Principal, SignedInUser
-from parfocal_api.problems import ProblemError, UnauthenticatedError
+from parfocal_api.principals import (
+    MemberPrincipal,
+    PlatformOperator,
+    Principal,
+    ServicePrincipal,
+    SignedInUser,
+)
+from parfocal_api.problems import ForbiddenError, ProblemError, UnauthenticatedError
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     ActorKind,
     Role,
+    api_tokens,
     auth_logins,
     memberships,
     platform_operators,
+    service_accounts,
     sessions,
     users,
 )
@@ -40,6 +48,7 @@ SESSION_LIFETIME = timedelta(hours=12)
 REFRESH_MARGIN = timedelta(seconds=30)
 SEEN_INTERVAL = timedelta(minutes=1)
 AUTH_SCOPE = DatabaseScope(auth=True)
+API_TOKEN_PREFIX = "pf_"
 
 
 class LoginFailedError(ProblemError):
@@ -199,7 +208,42 @@ def principal_of(resolved: Resolved) -> Principal:
     return SignedInUser(resolved.subject, resolved.user_id)
 
 
+async def service_principal(state: AuthState, token: str) -> ServicePrincipal:
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        row = (
+            await connection.execute(
+                select(
+                    api_tokens.c.id,
+                    api_tokens.c.last_used_at,
+                    service_accounts.c.id.label("account_id"),
+                    service_accounts.c.tenant_id,
+                    service_accounts.c.scopes,
+                )
+                .join(service_accounts, service_accounts.c.id == api_tokens.c.service_account_id)
+                .where(
+                    api_tokens.c.token_hash == digest(token),
+                    api_tokens.c.revoked_at.is_(None),
+                    api_tokens.c.expires_at > func.now(),
+                    service_accounts.c.disabled_at.is_(None),
+                )
+            )
+        ).one_or_none()
+        if row is None:
+            raise UnauthenticatedError
+        if row.last_used_at is None or row.last_used_at + SEEN_INTERVAL <= now():
+            await connection.execute(
+                update(api_tokens).where(api_tokens.c.id == row.id).values(last_used_at=func.now())
+            )
+    return ServicePrincipal(row.account_id, row.tenant_id, frozenset(row.scopes))
+
+
 async def authenticate(request: Request) -> Principal:
+    authorization = request.headers.get("authorization")
+    if authorization is not None:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() != "bearer" or not token.startswith(API_TOKEN_PREFIX):
+            raise UnauthenticatedError
+        return await service_principal(auth_state(request), token)
     session_id = request.cookies.get(SESSION_COOKIE)
     if not session_id:
         raise UnauthenticatedError
@@ -420,6 +464,8 @@ async def logout(request: Request) -> RedirectResponse:
 async def get_session(
     request: Request, principal: Annotated[Principal, Depends(authenticate)]
 ) -> Session:
+    if isinstance(principal, ServicePrincipal):
+        raise ForbiddenError
     auth = auth_state(request)
     session_id = request.cookies.get(SESSION_COOKIE, "")
     async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:

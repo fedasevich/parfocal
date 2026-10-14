@@ -13,11 +13,13 @@ from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import (
     Role,
+    api_tokens,
     audit_events,
     audit_people,
     memberships,
     organisations,
     platform_operators,
+    service_accounts,
     tenants,
     users,
 )
@@ -82,9 +84,37 @@ async def seed_audit_events(connection: AsyncConnection, seeded: Seeded) -> None
     seeded.markers.add(marker)
 
 
+async def seed_service_accounts(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Service {uuid.uuid4().hex}"
+    account = await connection.scalar(
+        insert(service_accounts)
+        .values(tenant_id=seeded.tenant_id, name=name, scopes=["see-team"])
+        .returning(service_accounts.c.id)
+    )
+    assert isinstance(account, uuid.UUID)
+    seeded.ids["service_account"] = account
+    seeded.markers.update({name, str(account)})
+
+
+async def seed_api_tokens(connection: AsyncConnection, seeded: Seeded) -> None:
+    token = await connection.scalar(
+        insert(api_tokens)
+        .values(
+            tenant_id=seeded.tenant_id,
+            service_account_id=seeded.ids["service_account"],
+            token_hash=uuid.uuid4().bytes,
+            expires_at=text("now() + interval '1 day'"),
+        )
+        .returning(api_tokens.c.id)
+    )
+    seeded.markers.add(str(token))
+
+
 SEEDERS: dict[str, Seeder] = {
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
+    "service_accounts": seed_service_accounts,
+    "api_tokens": seed_api_tokens,
 }
 GET_ROUTES = {
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
@@ -96,6 +126,7 @@ GET_ROUTES = {
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
     "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events"),
+    "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

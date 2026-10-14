@@ -257,7 +257,7 @@ async def list_tenant_members(connection: TenantConnection) -> list[Member]:
 @tenant_router.put(
     "/members/{user_id}/role",
     operation_id="changeMemberRole",
-    **require(Permission.MANAGE_PEOPLE),
+    **require(Permission.MANAGE_PEOPLE, write=True),
 )
 async def change_member_role(
     user_id: uuid.UUID,

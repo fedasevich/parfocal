@@ -14,9 +14,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 |---|---|
 | `phi` | 0 |
 | `personal` | 13 |
-| `secret` | 6 |
-| `operational` | 43 |
+| `secret` | 7 |
+| `operational` | 57 |
 | `public` | 0 |
+
+## api_tokens
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `service_account_id` | operational |
+| `token_hash` | secret |
+| `expires_at` | operational |
+| `revoked_at` | operational |
+| `last_used_at` | operational |
+| `created_at` | operational |
 
 ## audit_events
 
@@ -80,6 +93,18 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 |---|---|
 | `subject` | personal |
 | `created_at` | operational |
+
+## service_accounts
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `scopes` | operational |
+| `disabled_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## sessions
 

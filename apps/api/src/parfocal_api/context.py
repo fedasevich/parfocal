@@ -12,6 +12,7 @@ from parfocal_api.principals import (
     MissingGuestGrantError,
     PlatformOperator,
     Principal,
+    ServicePrincipal,
     SignedInUser,
     database_scope,
 )
@@ -27,7 +28,7 @@ def engine_of(request: Request) -> AsyncEngine:
 async def tenant_connection(
     request: Request, principal: Annotated[Principal, Depends(authenticate)]
 ) -> AsyncIterator[AsyncConnection]:
-    if not isinstance(principal, MemberPrincipal | GuestPrincipal):
+    if not isinstance(principal, MemberPrincipal | GuestPrincipal | ServicePrincipal):
         raise ForbiddenError
     try:
         scope = database_scope(principal)

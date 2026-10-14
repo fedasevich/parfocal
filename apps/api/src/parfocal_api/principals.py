@@ -37,7 +37,16 @@ class PlatformOperator:
     subject: str
 
 
-type Principal = SignedInUser | MemberPrincipal | GuestPrincipal | PlatformOperator
+@dataclass(frozen=True)
+class ServicePrincipal:
+    account_id: uuid.UUID
+    tenant_id: uuid.UUID
+    scopes: frozenset[str]
+
+
+type Principal = (
+    SignedInUser | MemberPrincipal | GuestPrincipal | PlatformOperator | ServicePrincipal
+)
 
 
 class MissingGuestGrantError(Exception):
@@ -57,3 +66,5 @@ def database_scope(principal: Principal) -> DatabaseScope:
             raise MissingGuestGrantError
         case PlatformOperator():
             return DatabaseScope(platform=True)
+        case ServicePrincipal(tenant_id=tenant_id):
+            return DatabaseScope(tenant_id=tenant_id)

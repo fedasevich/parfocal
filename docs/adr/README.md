@@ -34,3 +34,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0026](0026-roles-and-permission-matrix.md) | Six roles and the UX kit's permission matrix in code, declared on every route | Accepted | 2026-10-13 |
 | [0027](0027-audit-log-hash-chain-in-postgres.md) | Audit log as an append-only Postgres table with a hash chain per workspace and people named by erasable pseudonyms | Accepted | 2026-10-14 |
 | [0028](0028-data-classes-on-columns.md) | Five data classes declared on every column, with a generated data map | Accepted | 2026-10-14 |
+| [0029](0029-service-accounts-with-own-api-tokens.md) | Service accounts per workspace with our own hashed API tokens and narrow scopes | Accepted | 2026-10-14 |
