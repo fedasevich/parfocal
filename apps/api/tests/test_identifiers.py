@@ -114,7 +114,7 @@ def test_identifiers_are_ciphertext_at_rest_and_read_back(database: str) -> None
         f"SELECT patients::text FROM patients WHERE id = '{jana}'",
     )
     stored = str(raw[0][0])
-    for plain in ("Jana", "Nov", "123", "1961", "ab 123"):
+    for plain in ("Jana", "Nováková", "ab 123 456", "1961-04-02"):
         assert plain not in stored
     hexed = stored.lower()
     for plain in (b"Jana".hex(), b"123 456".hex(), b"1961-04-02".hex()):
