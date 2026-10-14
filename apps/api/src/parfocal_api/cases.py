@@ -10,13 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import GuestPrincipal, database_scope
+from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import NotFoundError
 from parfocal_api.tables import (
     CaseSource,
     CaseState,
     Laterality,
     Priority,
+    Role,
     Sex,
     blocks,
     cases,
@@ -40,6 +41,8 @@ class BlockDetail(BaseModel):
     id: uuid.UUID
     number: int
     description: str | None
+    stains: list[str]
+    levels: int
 
 
 class SpecimenDetail(BaseModel):
@@ -70,6 +73,9 @@ class CaseDetail(BaseModel):
     state: CaseState
     source: CaseSource
     assignee_user_id: uuid.UUID | None
+    service: str | None
+    requester: str | None
+    is_draft: bool
     clinical_note: str | None
     clinical_question: str | None
     patient: PatientDetail | None
@@ -129,13 +135,25 @@ async def specimen_details(connection: AsyncConnection, case_id: uuid.UUID) -> l
             collected_at=specimen.collected_at,
             received_at=specimen.received_at,
             blocks=[
-                BlockDetail(id=block.id, number=block.number, description=block.description)
+                BlockDetail(
+                    id=block.id,
+                    number=block.number,
+                    description=block.description,
+                    stains=list(block.stains),
+                    levels=block.levels,
+                )
                 for block in block_rows
                 if block.specimen_id == specimen.id
             ],
         )
         for specimen in specimen_rows
     ]
+
+
+def sees_draft(principal: Principal, created_by: uuid.UUID | None) -> bool:
+    if not isinstance(principal, MemberPrincipal):
+        return False
+    return principal.role is Role.LAB or principal.user_id == created_by
 
 
 @router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_CASES))
@@ -145,12 +163,21 @@ async def get_case(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> CaseDetail:
+    return await case_detail(connection, keyring_of(request), principal, case_id)
+
+
+async def case_detail(
+    connection: AsyncConnection,
+    keyring: MasterKeyring,
+    principal: Principal,
+    case_id: uuid.UUID,
+) -> CaseDetail:
     row = (
         await connection.execute(
             select(cases).where(cases.c.id == case_id, cases.c.deleted_at.is_(None))
         )
     ).one_or_none()
-    if row is None:
+    if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
         raise NotFoundError("Case not found")
     slide_rows = (
         await connection.execute(
@@ -164,7 +191,7 @@ async def get_case(
     if not guest:
         tenant_id = database_scope(principal).tenant_id
         assert tenant_id is not None
-        keys = await load_keys(connection, keyring_of(request), tenant_id)
+        keys = await load_keys(connection, keyring, tenant_id)
         patient = await patient_detail(connection, keys, row.patient_id)
         note = open_field(keys, "cases", case_id, "clinical_note", row.clinical_note)
         question = open_field(keys, "cases", case_id, "clinical_question", row.clinical_question)
@@ -176,6 +203,9 @@ async def get_case(
         state=CaseState(row.state),
         source=CaseSource(row.source),
         assignee_user_id=row.assignee_user_id,
+        service=row.service,
+        requester=row.requester,
+        is_draft=row.is_draft,
         clinical_note=note,
         clinical_question=question,
         patient=patient,

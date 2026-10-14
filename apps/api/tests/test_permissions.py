@@ -93,6 +93,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"template": "{prefix}{yy}-{seq:5}", "prefixes": ["S"]},
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
+    "createCase": lambda _: Call(
+        "POST",
+        "/api/cases",
+        {"patient": {"name": "Matrix Patient"}, "specimens": [{"letter": "A"}]},
+    ),
     "cancelCase": lambda w: Call("POST", f"/api/cases/{w.case}/cancel"),
     "restoreCase": lambda w: Call("POST", f"/api/cases/{w.case}/restore"),
     "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),

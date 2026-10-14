@@ -106,6 +106,36 @@ export interface BlockDetail {
   id: string;
   number: number;
   description: string | null;
+  stains: string[];
+  levels: number;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Text200 = string;
+
+/**
+ * @minLength 1
+ * @maxLength 60
+ */
+export type Stain = string;
+
+export interface BlockDraft {
+  /**
+   * @minimum 1
+   * @maximum 999
+   */
+  number: number;
+  description?: Text200 | null;
+  /** @maxItems 20 */
+  stains?: Stain[];
+  /**
+   * @minimum 1
+   * @maximum 50
+   */
+  levels?: number;
 }
 
 export type Priority = (typeof Priority)[keyof typeof Priority];
@@ -196,11 +226,59 @@ export interface CaseDetail {
   state: CaseState;
   source: CaseSource;
   assignee_user_id: string | null;
+  service: string | null;
+  requester: string | null;
+  is_draft: boolean;
   clinical_note: string | null;
   clinical_question: string | null;
   patient: PatientDetail | null;
   specimens: SpecimenDetail[];
   slides: SlideDetail[];
+}
+
+export interface NewPatient {
+  name: Text200;
+  mrn?: string | null;
+  birth_date?: string | null;
+  sex?: Sex;
+  age_years?: number | null;
+}
+
+/**
+ * @pattern ^[A-Z]{1,2}$
+ */
+export type Letter = string;
+
+export interface SpecimenDraft {
+  letter: Letter;
+  type?: Text200 | null;
+  site?: Text200 | null;
+  laterality?: Laterality;
+  procedure?: Text200 | null;
+  collected_at?: string | null;
+  received_at?: string | null;
+  /** @maxItems 100 */
+  blocks?: BlockDraft[];
+}
+
+export interface CaseDraft {
+  patient_id?: string | null;
+  patient?: NewPatient | null;
+  /**
+   * @minItems 1
+   * @maxItems 26
+   */
+  specimens: SpecimenDraft[];
+  clinical_note?: string | null;
+  clinical_question?: string | null;
+  requester?: Text200 | null;
+  priority?: Priority;
+  prefix?: string | null;
+  accession?: string | null;
+  service?: string | null;
+  due_at?: string | null;
+  assignee_user_id?: string | null;
+  draft?: boolean;
 }
 
 export interface CaseStateView {
@@ -1591,6 +1669,164 @@ export function useGetCase<TData = Awaited<ReturnType<typeof getCase>>, TError =
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type createCaseResponse201 = {
+  data: CaseDetail;
+  status: 201;
+};
+
+export type createCaseResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createCaseResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createCaseResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createCaseResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createCaseResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createCaseResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createCaseResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createCaseResponseSuccess = createCaseResponse201 & {
+  headers: Headers;
+};
+export type createCaseResponseError = (
+  | createCaseResponse400
+  | createCaseResponse401
+  | createCaseResponse403
+  | createCaseResponse404
+  | createCaseResponse409
+  | createCaseResponse422
+  | createCaseResponse500
+) & {
+  headers: Headers;
+};
+
+export type createCaseResponse = createCaseResponseSuccess | createCaseResponseError;
+
+export const getCreateCaseUrl = () => {
+  return `/api/cases`;
+};
+
+/**
+ * @summary Create Case
+ */
+export const createCase = async (
+  caseDraft: CaseDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createCaseResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createCaseResponse>(getCreateCaseUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseDraft),
+  });
+};
+
+export const getCreateCaseMutationKey = () => ["createCase"] as const;
+
+export const getCreateCaseMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCase>>,
+    TError,
+    CreateCaseMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCase>>,
+  TError,
+  CreateCaseMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateCaseMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCase>>,
+    CreateCaseMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createCase(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCaseMutationResult = NonNullable<Awaited<ReturnType<typeof createCase>>>;
+export type CreateCaseMutationBody = CaseDraft;
+export type CreateCaseMutationError = Problem;
+export type CreateCaseMutationVariables = { data: CaseDraft };
+
+/**
+ * @summary Create Case
+ */
+export const useCreateCase = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createCase>>,
+      TError,
+      CreateCaseMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createCase>>,
+  TError,
+  CreateCaseMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateCaseMutationOptions(options), queryClient);
+};
 
 export type cancelCaseResponse200 = {
   data: CaseStateView;

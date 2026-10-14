@@ -2070,7 +2070,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] CASES-013 · Case creation API
   Create a case with an existing or new patient, specimens with blocks and their expected levels and stains, clinical information, requesting clinician and priority. Service, due time, assignee and AI plan are filled from the lab rules (CASES-022, CASES-023, AIP-016) and can be overridden. A case may be saved as a draft, which only its author and the lab see. The accession number is assigned on creation (CASES-004) and creation is idempotent per request key.
   Done when API tests cover creation with each default and override, drafts and their visibility, idempotency and the audit entry.
-  Depends on CASES-001, CASES-004. Refs kit Flow 10.
+  Depends on CASES-001, CASES-004. Refs kit Flow 10. The defaults come from `case_creation.RULES`, which returns nothing until CASES-022, CASES-023 and AIP-016 plug in their rules.
 
 - [ ] CASES-014 · Field ownership between the LIS and the app
   A case from the LIS marks the fields the LIS owns (patient, specimen, requester) as read-only in the app, and an edit is refused with a pointer to the LIS. Fields the app owns stay editable and are audited. After sign-out a change to anything on the report needs an amendment.
@@ -2125,7 +2125,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] CASES-023 · Due time rules
   Due time comes from the priority and specimen type, counted in the lab's working calendar with its holidays and working hours. Changing the rules affects only new cases.
   Done when unit tests cover each priority, a holiday, a weekend, a daylight saving change and a rule change that leaves existing cases alone.
-  Depends on CASES-013. Refs kit W68.
+  Depends on CASES-013. Refs kit W68. Fills `due_at` through `case_creation.RULES`.
 
 ---
 

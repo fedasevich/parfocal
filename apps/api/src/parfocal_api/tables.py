@@ -643,6 +643,9 @@ cases = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column("service", String(60), nullable=True, info=OPERATIONAL),
+    Column("requester", String(200), nullable=True, info=PERSONAL),
+    Column("is_draft", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     Column(
         "state_changed_at",
         DateTime(timezone=True),
@@ -703,6 +706,8 @@ blocks = Table(
     Column("specimen_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("number", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("description", String(200), nullable=True, info=PHI),
+    Column("stains", ARRAY(String(60)), nullable=False, server_default="{}", info=OPERATIONAL),
+    Column("levels", SmallInteger, nullable=False, server_default="1", info=OPERATIONAL),
     *case_timestamps(),
     UniqueConstraint("specimen_id", "number"),
     UniqueConstraint("id", "case_id"),
@@ -711,6 +716,7 @@ blocks = Table(
         ["specimens.id", "specimens.case_id", "specimens.tenant_id"],
     ),
     CheckConstraint("number BETWEEN 1 AND 999", name="number"),
+    CheckConstraint("levels BETWEEN 1 AND 50", name="levels"),
 )
 
 slides = Table(
@@ -756,4 +762,27 @@ accession_counters = Table(
     Column("prefix", String(4), primary_key=True, info=OPERATIONAL),
     Column("year", SmallInteger, primary_key=True, info=OPERATIONAL),
     Column("last_value", Integer, nullable=False, info=OPERATIONAL),
+)
+
+case_requests = Table(
+    "case_requests",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), primary_key=True, info=PERSONAL),
+    Column("request_key", String(100), primary_key=True, info=OPERATIONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
 )

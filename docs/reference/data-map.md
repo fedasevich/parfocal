@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 19 |
+| `personal` | 21 |
 | `secret` | 9 |
-| `operational` | 129 |
+| `operational` | 137 |
 | `public` | 0 |
 
 ## accession_counters
@@ -95,9 +95,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `specimen_id` | operational |
 | `number` | operational |
 | `description` | phi |
+| `stains` | operational |
+| `levels` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## case_requests
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `request_key` | operational |
+| `case_id` | operational |
+| `created_at` | operational |
 
 ## cases
 
@@ -115,6 +127,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `clinical_note` | phi |
 | `clinical_question` | phi |
 | `created_by_user_id` | personal |
+| `service` | operational |
+| `requester` | personal |
+| `is_draft` | operational |
 | `state_changed_at` | operational |
 | `cancelled_from` | operational |
 | `cancelled_at` | operational |
