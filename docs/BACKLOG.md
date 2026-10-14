@@ -499,8 +499,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 03 IAM · Identity, tenancy, roles, guest access
 
-- [ ] IAM-000 · Research check for identity and authorization
+- [x] IAM-000 · Research check for identity and authorization
   Done when STACK-023 and STACK-028 are confirmed or revised in an ADR.
+  Both confirmed in [ADR 0041](adr/0041-identity-and-authorization-rechecked.md).
 
 - [ ] IAM-001 · IdP deployment and configuration
   Organisation setup in Zitadel Cloud, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), MFA policy (TOTP and WebAuthn).
