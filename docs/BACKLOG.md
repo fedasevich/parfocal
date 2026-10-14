@@ -2028,7 +2028,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Folders by service with colours, membership, counts. Adds the folder to each case, which CASES-001 left out.
   Done when API and component tests cover folders.
 
-- [ ] CASES-004 · Accession number rules
+- [x] CASES-004 · Accession number rules
   Per-tenant format and uniqueness.
   Done when tests cover format validation and collisions.
   Built as [ADR 0037](adr/0037-accession-number-templates.md) says.
