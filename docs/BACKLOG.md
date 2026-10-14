@@ -197,9 +197,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   [ADR 0017](adr/0017-orval-api-client.md) picks Orval instead, because Hey API's generator needs the TypeScript compiler API that TypeScript 7 does not ship.
   Done when the spike generates a client for two endpoints and a contract test compares the served schema with the committed one.
 
-- [ ] STACK-009 · Forms and validation
+- [x] STACK-009 · Forms and validation
   Candidates: React Hook Form with Zod, TanStack Form with Zod or Valibot. Default: TanStack Form with Zod, with schemas generated from OpenAPI where possible.
   Done when the ADR covers report forms with conditional fields, which are the hardest case.
+  Decided in [ADR 0045](adr/0045-forms-and-validation.md): TanStack Form with Zod 4, and report forms driven by template data with conditional fields.
 
 - [ ] STACK-010 · Tables, lists and virtualisation
   Candidates: TanStack Table plus TanStack Virtual, AG Grid. Default: TanStack Table and Virtual for worklist, layers and audit views.
@@ -309,6 +310,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Decide whether the product is commercial, then which models may run in which tenant type. HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA 4.0. Verify PathoSAM, SlimSAM, NuClick, SAM2, the MONAI bundles and any foundation models (UNI2, Virchow2, H-optimus, Prov-GigaPath) from their hosted weight licences, not from repository licences. Review the training and calibration datasets (PanNuke, CoNSeP, CAMELYON16) the same way.
   Done when the ADR has a licence matrix (model, weights licence, data licence, allowed tenant types) and the model registry (AIP-002) enforces it.
   Refs docs 17, 29, [`poc/docs/presentation2/SlideViewersOneClick.html`](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/presentation2/SlideViewersOneClick.html).
+  Proposed in [ADR 0042](adr/0042-model-licensing-policy.md), waiting for the owner: commercial from the first pilot, with a licence matrix of 25 models and 10 datasets that the model registry must enforce.
 
 - [x] STACK-032 · Observability
   Candidates: OpenTelemetry SDKs everywhere, then Grafana stack (Loki, Tempo, Mimir or Prometheus), Datadog, or Honeycomb. Error tracking with Sentry (self-hosted or EU). Frontend real-user monitoring for viewer frame times. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): OpenTelemetry to the Grafana Cloud free tier, Sentry SaaS free plan, Workers Logs and Modal logs, exporting only from production with console output in every other environment ([ADR 0005](adr/0005-external-sends-only-in-production.md)), and a PHI scrubber in every pipeline.
