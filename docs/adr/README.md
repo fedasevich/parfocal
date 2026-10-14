@@ -45,3 +45,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0037](0037-accession-number-templates.md) | Accession numbers from a per-workspace template with a counter per prefix and year | Accepted | 2026-10-14 |
 | [0038](0038-case-state-machine.md) | Case state machine: named events with allowed actors, derived moves by the system, cancel and restore by leads | Accepted | 2026-10-14 |
 | [0039](0039-email-through-resend-with-phi-rules.md) | Send email through Resend, with bounce handling and a rule that email never carries PHI | Accepted | 2026-10-14 |
+| [0040](0040-observability-and-phi-scrubbing.md) | Observability with OpenTelemetry, Grafana Cloud and Sentry, and one PHI scrubbing rule set | Accepted | 2026-10-14 |

@@ -310,9 +310,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR has a licence matrix (model, weights licence, data licence, allowed tenant types) and the model registry (AIP-002) enforces it.
   Refs docs 17, 29, [`poc/docs/presentation2/SlideViewersOneClick.html`](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/presentation2/SlideViewersOneClick.html).
 
-- [ ] STACK-032 · Observability
+- [x] STACK-032 · Observability
   Candidates: OpenTelemetry SDKs everywhere, then Grafana stack (Loki, Tempo, Mimir or Prometheus), Datadog, or Honeycomb. Error tracking with Sentry (self-hosted or EU). Frontend real-user monitoring for viewer frame times. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): OpenTelemetry to the Grafana Cloud free tier, Sentry SaaS free plan, Workers Logs and Modal logs, exporting only from production with console output in every other environment ([ADR 0005](adr/0005-external-sends-only-in-production.md)), and a PHI scrubber in every pipeline.
   Done when the ADR defines the PHI scrubbing rules and a test proves a patient name in a log line is redacted.
+  Decided in [ADR 0040](adr/0040-observability-and-phi-scrubbing.md). The scrubber is `parfocal_common.scrubbing`. FOUND-011 (structured logging) wires it into the API's logging.
 
 - [ ] STACK-033 · Feature flags, experiments and product analytics
   Candidates: GrowthBook, PostHog (self-hosted EU), Unleash, Statsig. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostHog Cloud for flags, experiments, analytics and surveys, with autocapture and session replay off. Only production sends events and evaluates flags in PostHog, and other environments read flag defaults from a local file ([ADR 0005](adr/0005-external-sends-only-in-production.md)). No PHI ever leaves the platform in events.
