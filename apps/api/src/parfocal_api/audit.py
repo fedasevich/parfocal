@@ -41,6 +41,7 @@ class AuditAction(StrEnum):
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"
     ACCESSION_FORMAT_CHANGED = "tenant.accession-format-changed"
     CASE_OPENED = "case.opened"
+    CASE_STATE_CHANGED = "case.state-changed"
     REPORT_SIGNED_OUT = "report.signed-out"
     REPORT_AMENDED = "report.amended"
     SERVICE_ACCOUNT_CREATED = "service-account.created"

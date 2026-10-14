@@ -643,6 +643,15 @@ cases = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column(
+        "state_changed_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("cancelled_from", String(30), nullable=True, info=OPERATIONAL),
+    Column("cancelled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *case_timestamps(),
     UniqueConstraint("tenant_id", "accession"),
     UniqueConstraint("id", "tenant_id"),
@@ -650,6 +659,14 @@ cases = Table(
     one_of("priority", Priority),
     one_of("state", CaseState),
     one_of("source", CaseSource),
+    CheckConstraint(
+        "(state = 'cancelled') = (cancelled_from IS NOT NULL) "
+        "AND (state = 'cancelled') = (cancelled_at IS NOT NULL) "
+        "AND cancelled_from IS DISTINCT FROM 'cancelled' "
+        "AND cancelled_from IS DISTINCT FROM 'signed' "
+        "AND cancelled_from IS DISTINCT FROM 'amending'",
+        name="cancelled",
+    ),
 )
 
 specimens = Table(
