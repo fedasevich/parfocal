@@ -14,6 +14,7 @@ from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantCon
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.tables import (
+    DEFAULT_EMERGENCY_HOURS,
     DEFAULT_IDLE_LOCK_MINUTES,
     DEFAULT_SESSION_HOURS,
     SLUG_PATTERN,
@@ -213,6 +214,7 @@ async def get_current_tenant(connection: TenantConnection) -> Tenant:
 class SessionPolicyChange(BaseModel):
     idle_lock_minutes: Annotated[int, Field(ge=1, le=240)]
     session_hours: Annotated[int, Field(ge=1, le=24)]
+    emergency_hours: Annotated[int, Field(ge=1, le=24)] = DEFAULT_EMERGENCY_HOURS
 
 
 class SessionPolicy(SessionPolicyChange):
@@ -224,15 +226,18 @@ async def current_policy(connection: AsyncConnection) -> SessionPolicy:
     assert isinstance(tenant_id, uuid.UUID)
     row = (
         await connection.execute(
-            select(session_policies.c.idle_lock_minutes, session_policies.c.session_hours).where(
-                session_policies.c.tenant_id == tenant_id
-            )
+            select(
+                session_policies.c.idle_lock_minutes,
+                session_policies.c.session_hours,
+                session_policies.c.emergency_hours,
+            ).where(session_policies.c.tenant_id == tenant_id)
         )
     ).one_or_none()
     return SessionPolicy(
         tenant_id=tenant_id,
         idle_lock_minutes=row.idle_lock_minutes if row else DEFAULT_IDLE_LOCK_MINUTES,
         session_hours=row.session_hours if row else DEFAULT_SESSION_HOURS,
+        emergency_hours=row.emergency_hours if row else DEFAULT_EMERGENCY_HOURS,
     )
 
 

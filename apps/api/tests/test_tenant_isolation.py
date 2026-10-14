@@ -20,6 +20,7 @@ from parfocal_api.tables import (
     audit_events,
     audit_people,
     case_requests,
+    emergency_grants,
     folder_members,
     folders,
     invitations,
@@ -71,6 +72,7 @@ CASE_TABLES = {
     "accession_counters",
     "case_requests",
     "folder_members",
+    "emergency_grants",
 }
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
 
@@ -159,6 +161,15 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             user_id=seeded.ids["user"],
             request_key="isolation",
             case_id=case.case_id,
+        )
+    )
+    await connection.execute(
+        insert(emergency_grants).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            case_id=case.case_id,
+            reason="Isolation suite reason",
+            expires_at=text("now() + interval '1 hour'"),
         )
     )
     seeded.markers.update({case.accession, str(case.case_id)})

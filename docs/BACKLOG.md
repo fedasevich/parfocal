@@ -583,7 +583,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-017 · Emergency access with a reason
   A person may open a case outside their folders after giving a reason. The grant lasts a lab-set time (default 4 h), covers that case only, is marked in the audit log and notifies the folder's lead. Administrators have no patient data permissions and use the same path when they must look at a case.
   Done when API tests cover grant, expiry and refusal without a reason, the audit entry carries the reason, and a permission test proves an administrator cannot read a patient without it.
-  Depends on IAM-016, SEC-003. Refs kit W65, kit W71, [ADR 0023](adr/0023-gap-review-backend-first.md).
+  Depends on IAM-016, SEC-003. Refs kit W65, kit W71, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0047](adr/0047-emergency-access-with-a-reason.md) says. Notifying the folder's lead waits for NOTIF-001 (notification service).
 
 - [x] IAM-018 · Supervision and signing rights
   A person record holds whether they may sign alone, their supervisor if they may not, and whether a signature is on file. A resident's sign-out is refused and becomes a send-for-review (REPORT-019). A consultant without a signature on file cannot sign. Changing these is a lead's action and is audited.

@@ -30,6 +30,7 @@ from parfocal_common.db import metadata
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
 DEFAULT_IDLE_LOCK_MINUTES = 15
 DEFAULT_SESSION_HOURS = 12
+DEFAULT_EMERGENCY_HOURS = 4
 
 
 class TenantKind(StrEnum):
@@ -462,9 +463,17 @@ session_policies = Table(
     ),
     Column("idle_lock_minutes", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("session_hours", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column(
+        "emergency_hours",
+        SmallInteger,
+        nullable=False,
+        server_default=str(DEFAULT_EMERGENCY_HOURS),
+        info=OPERATIONAL,
+    ),
     *timestamps(),
     CheckConstraint("idle_lock_minutes BETWEEN 1 AND 240", name="idle_lock_minutes"),
     CheckConstraint("session_hours BETWEEN 1 AND 24", name="session_hours"),
+    CheckConstraint("emergency_hours BETWEEN 1 AND 24", name="emergency_hours"),
 )
 
 
@@ -816,4 +825,33 @@ folder_members = Table(
         ["memberships.tenant_id", "memberships.user_id"],
         ondelete="CASCADE",
     ),
+)
+
+emergency_grants = Table(
+    "emergency_grants",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), nullable=False, info=PERSONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("reason", String(500), nullable=False, info=PHI),
+    Column(
+        "granted_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
+    ),
+    Index("ix_emergency_grants_user_id_case_id", "user_id", "case_id"),
 )

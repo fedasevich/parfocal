@@ -375,6 +375,21 @@ export type DisplayName = string;
  */
 export type Email = string;
 
+export interface EmergencyGrant {
+  case_id: string;
+  expires_at: string;
+}
+
+/**
+ * @minLength 10
+ * @maxLength 500
+ */
+export type Reason = string;
+
+export interface EmergencyRequest {
+  reason: Reason;
+}
+
 export interface EndedSessions {
   ended: number;
 }
@@ -610,6 +625,11 @@ export interface SessionPolicy {
    * @maximum 24
    */
   session_hours: number;
+  /**
+   * @minimum 1
+   * @maximum 24
+   */
+  emergency_hours?: number;
   tenant_id: string;
 }
 
@@ -624,6 +644,11 @@ export interface SessionPolicyChange {
    * @maximum 24
    */
   session_hours: number;
+  /**
+   * @minimum 1
+   * @maximum 24
+   */
+  emergency_hours?: number;
 }
 
 export interface SessionSummary {
@@ -2064,6 +2089,172 @@ export const useCreateCase = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCreateCaseMutationOptions(options), queryClient);
+};
+
+export type requestEmergencyAccessResponse201 = {
+  data: EmergencyGrant;
+  status: 201;
+};
+
+export type requestEmergencyAccessResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type requestEmergencyAccessResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type requestEmergencyAccessResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type requestEmergencyAccessResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type requestEmergencyAccessResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type requestEmergencyAccessResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type requestEmergencyAccessResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type requestEmergencyAccessResponseSuccess = requestEmergencyAccessResponse201 & {
+  headers: Headers;
+};
+export type requestEmergencyAccessResponseError = (
+  | requestEmergencyAccessResponse400
+  | requestEmergencyAccessResponse401
+  | requestEmergencyAccessResponse403
+  | requestEmergencyAccessResponse404
+  | requestEmergencyAccessResponse409
+  | requestEmergencyAccessResponse422
+  | requestEmergencyAccessResponse500
+) & {
+  headers: Headers;
+};
+
+export type requestEmergencyAccessResponse =
+  | requestEmergencyAccessResponseSuccess
+  | requestEmergencyAccessResponseError;
+
+export const getRequestEmergencyAccessUrl = (caseId: string) => {
+  return `/api/cases/${caseId}/emergency-access`;
+};
+
+/**
+ * @summary Request Emergency Access
+ */
+export const requestEmergencyAccess = async (
+  caseId: string,
+  emergencyRequest: EmergencyRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<requestEmergencyAccessResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<requestEmergencyAccessResponse>(getRequestEmergencyAccessUrl(caseId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(emergencyRequest),
+  });
+};
+
+export const getRequestEmergencyAccessMutationKey = () => ["requestEmergencyAccess"] as const;
+
+export const getRequestEmergencyAccessMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestEmergencyAccess>>,
+    TError,
+    RequestEmergencyAccessMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestEmergencyAccess>>,
+  TError,
+  RequestEmergencyAccessMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRequestEmergencyAccessMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestEmergencyAccess>>,
+    RequestEmergencyAccessMutationVariables
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return requestEmergencyAccess(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestEmergencyAccessMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestEmergencyAccess>>
+>;
+export type RequestEmergencyAccessMutationBody = EmergencyRequest;
+export type RequestEmergencyAccessMutationError = Problem;
+export type RequestEmergencyAccessMutationVariables = { caseId: string; data: EmergencyRequest };
+
+/**
+ * @summary Request Emergency Access
+ */
+export const useRequestEmergencyAccess = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof requestEmergencyAccess>>,
+      TError,
+      RequestEmergencyAccessMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof requestEmergencyAccess>>,
+  TError,
+  RequestEmergencyAccessMutationVariables,
+  TContext
+> => {
+  return useMutation(getRequestEmergencyAccessMutationOptions(options), queryClient);
 };
 
 export type listFoldersResponse200 = {

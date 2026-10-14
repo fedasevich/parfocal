@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 19 |
-| `personal` | 22 |
+| `phi` | 20 |
+| `personal` | 23 |
 | `secret` | 9 |
-| `operational` | 148 |
+| `operational` | 154 |
 | `public` | 0 |
 
 ## accession_counters
@@ -138,6 +138,18 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `updated_at` | operational |
 | `deleted_at` | operational |
 
+## emergency_grants
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `case_id` | operational |
+| `reason` | phi |
+| `granted_at` | operational |
+| `expires_at` | operational |
+
 ## folder_members
 
 | Column | Class |
@@ -240,6 +252,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `tenant_id` | operational |
 | `idle_lock_minutes` | operational |
 | `session_hours` | operational |
+| `emergency_hours` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

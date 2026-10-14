@@ -105,6 +105,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"template": "{prefix}{yy}-{seq:5}", "prefixes": ["S"]},
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
+    "requestEmergencyAccess": lambda w: Call(
+        "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
+    ),
     "listCases": lambda _: Call("GET", "/api/cases"),
     "setAllFolders": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/all-folders", {"all_folders": False}

@@ -43,6 +43,7 @@ class AuditAction(StrEnum):
     CASE_OPENED = "case.opened"
     CASE_CREATED = "case.created"
     CASE_FILED = "case.filed"
+    CASE_EMERGENCY_ACCESS = "case.emergency-access"
     FOLDER_CHANGED = "folder.changed"
     CASE_STATE_CHANGED = "case.state-changed"
     REPORT_SIGNED_OUT = "report.signed-out"

@@ -8,7 +8,7 @@ from sqlalchemy import literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.folder_access import access_of, require_folder
+from parfocal_api.folder_access import access_of, require_case_access
 from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, database_scope
@@ -158,7 +158,7 @@ def sees_draft(principal: Principal, created_by: uuid.UUID | None) -> bool:
     return principal.role is Role.LAB or principal.user_id == created_by
 
 
-@router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_CASES))
+@router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_CASES, emergency=True))
 async def get_case(
     case_id: uuid.UUID,
     request: Request,
@@ -181,7 +181,7 @@ async def case_detail(
     ).one_or_none()
     if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
         raise NotFoundError("Case not found")
-    await require_folder(connection, principal, row.folder_id)
+    await require_case_access(connection, principal, case_id, row.folder_id, Permission.SEE_CASES)
     slide_rows = (
         await connection.execute(
             select(slides)

@@ -174,6 +174,7 @@ def test_the_lead_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
         "tenant_id": tenant_id,
         "idle_lock_minutes": 15,
         "session_hours": 12,
+        "emergency_hours": 4,
     }
     change = {"idle_lock_minutes": 30, "session_hours": 8}
     assert api(lead).put("/api/tenant/session-policy", json=change).status_code == 200
