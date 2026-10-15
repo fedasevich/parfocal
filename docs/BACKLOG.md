@@ -55,7 +55,7 @@ Task format:
 | Identity | OIDC through a managed or self-hosted identity provider. Organisations, roles and invitations live in our database. Per-organisation SAML or OIDC SSO is a later task |
 | AI runtime | Hybrid. Batch work (pre-read, whole-slide nuclei, tumor maps, training) runs on server GPU workers. Interactive segmentation runs in the browser through ONNX, using server-computed embeddings when they exist |
 | AI scope v1 | Interactive segmentation, whole-slide nuclei detection and typing, tumor and region maps, learning from corrections |
-| Model licensing | Open decision (STACK-031). HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA. PanNuke-derived calibration needs review. The model registry stores licence metadata from day one |
+| Model licensing | On hold (STACK-031). The owner said on 2026-10-15 that Parfocal will not really be commercial. HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA. PanNuke-derived calibration needs review. The model registry stores licence metadata from day one |
 | ML evaluation | The POC harness is ported as the MLEVAL epic and gates promotion of any model to a tier |
 | UX variants | The launchpad is the home for everyone and the department dashboard the default for lab leads. The worklist is a list grouped by due day with a case preview on demand, plus day and grid views. The status board is a page of its own. Choices still open ship behind feature flags ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)) |
 | Devices | Mouse, keyboard, trackpad, tablet with pen, gamepad (Gamepad API), SpaceMouse (WebHID) |
@@ -307,11 +307,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: OpenTofu or Terraform, Pulumi. Kubernetes with Helm and Argo CD, or a simpler container platform (Cloud Run, ECS). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no Kubernetes. Wrangler config for the edge, Modal app code for Python, the Neon API for branches, GitHub Actions for deploys, and a small OpenTofu module for DNS, buckets and the Zitadel and Neon projects.
   Done when the ADR covers preview environments per pull request for the web app and API.
 
-- [ ] STACK-031 · Model licensing policy (open decision)
+- [ ] STACK-031 · Model licensing policy (on hold)
   Decide whether the product is commercial, then which models may run in which tenant type. HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA 4.0. Verify PathoSAM, SlimSAM, NuClick, SAM2, the MONAI bundles and any foundation models (UNI2, Virchow2, H-optimus, Prov-GigaPath) from their hosted weight licences, not from repository licences. Review the training and calibration datasets (PanNuke, CoNSeP, CAMELYON16) the same way.
   Done when the ADR has a licence matrix (model, weights licence, data licence, allowed tenant types) and the model registry (AIP-002) enforces it.
   Refs docs 17, 29, [`poc/docs/presentation2/SlideViewersOneClick.html`](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/presentation2/SlideViewersOneClick.html).
-  Proposed in [ADR 0042](adr/0042-model-licensing-policy.md), waiting for the owner: commercial from the first pilot, with a licence matrix of 25 models and 10 datasets that the model registry must enforce.
+  On hold since 2026-10-15. The owner said Parfocal will not really be commercial and licensing does not matter for now, so [ADR 0042](adr/0042-model-licensing-policy.md) (commercial from the first pilot) was rejected. Its licence matrix of 25 models and 10 datasets stays as reference. Revisit before any paying tenant.
 
 - [x] STACK-032 · Observability
   Candidates: OpenTelemetry SDKs everywhere, then Grafana stack (Loki, Tempo, Mimir or Prometheus), Datadog, or Honeycomb. Error tracking with Sentry (self-hosted or EU). Frontend real-user monitoring for viewer frame times. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): OpenTelemetry to the Grafana Cloud free tier, Sentry SaaS free plan, Workers Logs and Modal logs, exporting only from production with console output in every other environment ([ADR 0005](adr/0005-external-sends-only-in-production.md)), and a PHI scrubber in every pipeline.
@@ -580,7 +580,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the table-driven permission test from IAM-006 runs every folder-scoped permission inside and outside the folders, and an isolation test proves a list endpoint hides cases of other folders.
   Depends on IAM-006, CASES-003. Refs kit Roles and access page, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0046](adr/0046-roles-narrowed-by-folders.md) says.
 
-- [ ] IAM-017 · Emergency access with a reason
+- [x] IAM-017 · Emergency access with a reason
   A person may open a case outside their folders after giving a reason. The grant lasts a lab-set time (default 4 h), covers that case only, is marked in the audit log and notifies the folder's lead. Administrators have no patient data permissions and use the same path when they must look at a case.
   Done when API tests cover grant, expiry and refusal without a reason, the audit entry carries the reason, and a permission test proves an administrator cannot read a patient without it.
   Depends on IAM-016, SEC-003. Refs kit W65, kit W71, [ADR 0023](adr/0023-gap-review-backend-first.md). Built as [ADR 0047](adr/0047-emergency-access-with-a-reason.md) says. Notifying the folder's lead waits for NOTIF-001 (notification service).
@@ -2064,7 +2064,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when a signed report reaches the file-drop adapter as FHIR and PDF.
   Depends on REPORT-013.
 
-- [ ] CASES-011 · Case assignment and routing rules
+- [x] CASES-011 · Case assignment and routing rules
   Assign by folder, specimen and load, STAT first.
   Done when unit tests cover routing rules.
 

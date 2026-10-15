@@ -23,8 +23,8 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. IAM-017 (emergency access with a reason) and CASES-011 (case assignment and routing) wait for a green CI run on `main`. Then restart the stopped decision tasks STACK-026 (server slide reading), STACK-003 (routing), STACK-004 (server state) and STACK-030 (deploy pipeline and previews), which suit parallel agents.
-2. Research checks that need no cloud: IAM-000 (re-check the identity and authorization decisions) and SEC-000 (map GDPR, HIPAA and ISO 27001 controls to tasks).
+1. Restart the stopped decision tasks STACK-026 (server slide reading), STACK-003 (routing), STACK-004 (server state) and STACK-030 (deploy pipeline and previews), which suit parallel agents.
+2. Backend tasks that need no UI: IAM-015 (availability status), CASES-023 (due time rules), CASES-015 (patient matching) and CASES-019 (cancel, restore and merge).
 3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0032, which agents accepted under standing approval.
 4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen), CASES-025 (folder screens) and FOUND-019 (error toasts). FOUND-014 (dependency and licence scanning) is on hold.
 

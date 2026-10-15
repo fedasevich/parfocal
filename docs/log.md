@@ -2,6 +2,11 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-15
+
+- IAM-017 (emergency access with a reason) done after CI run 38639946496 passed on `main`, and CASES-011 (case assignment and routing) done after CI run 38640181715 passed.
+- STACK-031 (model licensing policy) put on hold. The owner said Parfocal will not really be commercial and licensing does not matter for now, so [ADR 0042](adr/0042-model-licensing-policy.md) was rejected and risk R1 now points to it for later.
+
 ## 2026-10-14
 
 - Stopped for the day at the owner's request because of usage limits. Four parallel agents were stopped before finishing and left nothing in the repository: STACK-026 (server slide reading), STACK-003 (routing), STACK-004 (server state) and STACK-030 (deploy pipeline and previews). Their reserved ADR numbers 0043, 0048, 0049 and 0050 are free again.

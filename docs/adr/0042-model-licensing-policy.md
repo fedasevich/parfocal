@@ -1,7 +1,7 @@
 # 0042. Model licensing policy: Parfocal is commercial, and the registry blocks any model whose licences are not confirmed
 
 - Date: 2026-10-14
-- Status: Proposed
+- Status: Rejected
 - Deciders: Yurii Fedas
 - Backlog: STACK-031 (model licensing policy), AIP-002 (model registry), AIP-000 (AI platform research check), AIP-001 (model artifact storage), AIP-003 (tiers Best, Good, Fast), AIP-008 (job model and API), AINUC-000 (nuclei detector and typer research check), AISEG-000 (interactive segmentation research check), AITUM-000 (tumor map research check), MLEVAL-000 (evaluation research check), MLEVAL-001 (dataset registry and loaders)
 
@@ -105,3 +105,7 @@ This table feeds the data columns above and the dataset rules in AIP-002 (model 
 - AIP-002 (model registry) gets the fields and the rules above. AIP-008 (job model and API) must call the same check. Edits to the backlog are listed in the log entry.
 - Open questions for counsel: whether offline evaluation on a non-commercial dataset by a company is allowed, whether weights trained on non-commercial data inherit the dataset licence, and whether a Commons Clause bars hosting for outside users. The registry assumes the strict answer to all three until counsel says otherwise.
 - Open source checks: PathoSAM weights licence, SAM 3 sign-off, MobileSAM, EfficientViT-SAM, InstanSeg and StarDist weights licences, CoNSeP, CryoNuSeg and CAMELYON16 dataset licences, and the primary Lizard page.
+
+## Owner response
+
+On 2026-10-15 the owner said Parfocal will not really be commercial and licensing does not matter for now. The commercial premise does not hold, so this record is rejected. The licence matrix stays as reference for STACK-031 (model licensing policy), which is on hold until a paying tenant is planned.
