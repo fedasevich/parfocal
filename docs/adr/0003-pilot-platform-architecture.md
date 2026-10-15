@@ -1,7 +1,8 @@
 # 0003. Pilot platform architecture on Cloudflare, Modal and Neon
 
 - Date: 2026-10-06
-- Status: Accepted, its Pages part amended by [ADR 0050](0050-deploy-pipeline-and-previews.md)
+- Status: Accepted
+- Amended by: [ADR 0050](0050-deploy-pipeline-and-previews.md), which replaces its Pages part
 - Deciders: Yurii Fedas
 - Backlog: sets the defaults of STACK-019, STACK-020, STACK-022, STACK-024, STACK-025, STACK-027, STACK-028, STACK-029, STACK-030, STACK-032, STACK-033, STACK-036, STACK-037 and STACK-039. Edits FOUND-001, FOUND-009, FOUND-015, IAM-001, IAM-002, TILES-001, TILES-002, COLLAB-001, AIP-006, AIP-007, SEC-005, SEC-014, OPS-001 to OPS-004 and TEST-013.
 
