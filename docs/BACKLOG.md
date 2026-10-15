@@ -573,7 +573,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Lab admin screen to list members, change roles, deactivate and resend invites.
   Done when component and E2E tests cover each action and each action is audited.
 
-- [ ] IAM-015 · Availability status and back-up
+- [x] IAM-015 · Availability status and back-up
   Each user can be available, busy until a time (for example during a tumor board) or away with a named back-up. Reassigning (BOARD-007), routing (CASES-011) and STAT notifications (NOTIF-003) respect it, and the account menu (SHELL-012) sets it.
   Done when API tests cover each status and its expiry, and a routing test sends a new case to the back-up of an away user.
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md), [ADR 0051](adr/0051-availability-status-and-back-up.md).
