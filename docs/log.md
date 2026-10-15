@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-15
 
+- IAM-015 (availability status and back-up) implemented, not ticked until CI is green on `main`. [ADR 0051](adr/0051-availability-status-and-back-up.md), accepted under the owner's standing approval, stores the status on the membership (migration `0019`): busy until a time of at most 24 hours, or away with a back-up who is another member and not away. A status past its end reads as available. A new case assigned to an away person goes to the back-up, and the routing rules prefer the back-up of an away person. `GET`/`PUT /api/me/availability` and `GET /api/tenant/availability` serve it. 13 tests in `test_availability.py` and 2 new tests in `test_routing.py` cover each status, its expiry, invalid statuses and back-ups, the team list and a new case going to the back-up. Mutation checks removed the expiry, the hand-over to the back-up and the routing preference, and each was caught.
 - IAM-017 (emergency access with a reason) done after CI run 38639946496 passed on `main`, and CASES-011 (case assignment and routing) done after CI run 38640181715 passed.
 - STACK-031 (model licensing policy) put on hold. The owner said Parfocal will not really be commercial and licensing does not matter for now, so [ADR 0042](adr/0042-model-licensing-policy.md) was rejected and risk R1 now points to it for later.
 

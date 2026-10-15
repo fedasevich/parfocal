@@ -60,6 +60,19 @@ class Role(StrEnum):
 MEMBER_ROLE_CHECK = "role IN ('consultant', 'resident', 'lead', 'lab', 'admin')"
 
 
+class Availability(StrEnum):
+    AVAILABLE = "available"
+    BUSY = "busy"
+    AWAY = "away"
+
+
+AVAILABILITY_CHECK = (
+    "(availability = 'available' AND available_again_at IS NULL AND backup_user_id IS NULL)"
+    " OR (availability = 'busy' AND available_again_at IS NOT NULL AND backup_user_id IS NULL)"
+    " OR (availability = 'away' AND backup_user_id IS NOT NULL)"
+)
+
+
 class TenantStatus(StrEnum):
     ACTIVE = "active"
     SUSPENDED = "suspended"
@@ -287,9 +300,23 @@ memberships = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column(
+        "availability",
+        String(10),
+        nullable=False,
+        server_default=Availability.AVAILABLE.value,
+        info=OPERATIONAL,
+    ),
+    Column("available_again_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("backup_user_id", Uuid[uuid.UUID](), nullable=True, info=PERSONAL),
     *timestamps(),
     UniqueConstraint("tenant_id", "user_id"),
+    ForeignKeyConstraint(
+        ["tenant_id", "backup_user_id"], ["memberships.tenant_id", "memberships.user_id"]
+    ),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+    CheckConstraint(AVAILABILITY_CHECK, name="availability"),
+    CheckConstraint("backup_user_id IS DISTINCT FROM user_id", name="own_backup"),
     CheckConstraint("supervisor_user_id IS DISTINCT FROM user_id", name="own_supervisor"),
     CheckConstraint("NOT all_folders OR role = 'lead'", name="all_folders"),
 )

@@ -107,6 +107,20 @@ export const AuditTarget = {
   folder: "folder",
 } as const;
 
+export type Availability = (typeof Availability)[keyof typeof Availability];
+
+export const Availability = {
+  available: "available",
+  busy: "busy",
+  away: "away",
+} as const;
+
+export interface AvailabilityChange {
+  status: Availability;
+  until?: string | null;
+  backup_user_id?: string | null;
+}
+
 export interface BlockDetail {
   id: string;
   number: number;
@@ -517,6 +531,13 @@ export interface Member {
   avatar_colour: number;
   title: string | null;
   role: Role;
+}
+
+export interface MemberAvailability {
+  user_id: string;
+  status: Availability;
+  until: string | null;
+  backup_user_id: string | null;
 }
 
 export type MemberRole = Role;
@@ -4454,6 +4475,517 @@ export const useDeleteSignature = <TError = Problem, TContext = unknown>(
 ): UseMutationResult<Awaited<ReturnType<typeof deleteSignature>>, TError, void, TContext> => {
   return useMutation(getDeleteSignatureMutationOptions(options), queryClient);
 };
+
+export type getMyAvailabilityResponse200 = {
+  data: MemberAvailability;
+  status: 200;
+};
+
+export type getMyAvailabilityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyAvailabilityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyAvailabilityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyAvailabilityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyAvailabilityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyAvailabilityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyAvailabilityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyAvailabilityResponseSuccess = getMyAvailabilityResponse200 & {
+  headers: Headers;
+};
+export type getMyAvailabilityResponseError = (
+  | getMyAvailabilityResponse400
+  | getMyAvailabilityResponse401
+  | getMyAvailabilityResponse403
+  | getMyAvailabilityResponse404
+  | getMyAvailabilityResponse409
+  | getMyAvailabilityResponse422
+  | getMyAvailabilityResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyAvailabilityResponse =
+  | getMyAvailabilityResponseSuccess
+  | getMyAvailabilityResponseError;
+
+export const getGetMyAvailabilityUrl = () => {
+  return `/api/me/availability`;
+};
+
+/**
+ * @summary Get My Availability
+ */
+export const getMyAvailability = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyAvailabilityResponse> => {
+  return apiFetch<getMyAvailabilityResponse>(getGetMyAvailabilityUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyAvailabilityQueryKey = () => {
+  return [`/api/me/availability`] as const;
+};
+
+export const getGetMyAvailabilityQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyAvailability>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAvailability>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyAvailabilityQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAvailability>>> = ({ signal }) =>
+    getMyAvailability({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyAvailability>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyAvailabilityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyAvailability>>
+>;
+export type GetMyAvailabilityQueryError = Problem;
+
+export function useGetMyAvailability<
+  TData = Awaited<ReturnType<typeof getMyAvailability>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAvailability>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAvailability>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAvailability>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyAvailability<
+  TData = Awaited<ReturnType<typeof getMyAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAvailability>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAvailability>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAvailability>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyAvailability<
+  TData = Awaited<ReturnType<typeof getMyAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAvailability>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Availability
+ */
+
+export function useGetMyAvailability<
+  TData = Awaited<ReturnType<typeof getMyAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAvailability>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyAvailabilityQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setMyAvailabilityResponse200 = {
+  data: MemberAvailability;
+  status: 200;
+};
+
+export type setMyAvailabilityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setMyAvailabilityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setMyAvailabilityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setMyAvailabilityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setMyAvailabilityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setMyAvailabilityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setMyAvailabilityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setMyAvailabilityResponseSuccess = setMyAvailabilityResponse200 & {
+  headers: Headers;
+};
+export type setMyAvailabilityResponseError = (
+  | setMyAvailabilityResponse400
+  | setMyAvailabilityResponse401
+  | setMyAvailabilityResponse403
+  | setMyAvailabilityResponse404
+  | setMyAvailabilityResponse409
+  | setMyAvailabilityResponse422
+  | setMyAvailabilityResponse500
+) & {
+  headers: Headers;
+};
+
+export type setMyAvailabilityResponse =
+  | setMyAvailabilityResponseSuccess
+  | setMyAvailabilityResponseError;
+
+export const getSetMyAvailabilityUrl = () => {
+  return `/api/me/availability`;
+};
+
+/**
+ * @summary Set My Availability
+ */
+export const setMyAvailability = async (
+  availabilityChange: AvailabilityChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setMyAvailabilityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setMyAvailabilityResponse>(getSetMyAvailabilityUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(availabilityChange),
+  });
+};
+
+export const getSetMyAvailabilityMutationKey = () => ["setMyAvailability"] as const;
+
+export const getSetMyAvailabilityMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setMyAvailability>>,
+    TError,
+    SetMyAvailabilityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setMyAvailability>>,
+  TError,
+  SetMyAvailabilityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetMyAvailabilityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setMyAvailability>>,
+    SetMyAvailabilityMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setMyAvailability(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetMyAvailabilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setMyAvailability>>
+>;
+export type SetMyAvailabilityMutationBody = AvailabilityChange;
+export type SetMyAvailabilityMutationError = Problem;
+export type SetMyAvailabilityMutationVariables = { data: AvailabilityChange };
+
+/**
+ * @summary Set My Availability
+ */
+export const useSetMyAvailability = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setMyAvailability>>,
+      TError,
+      SetMyAvailabilityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setMyAvailability>>,
+  TError,
+  SetMyAvailabilityMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetMyAvailabilityMutationOptions(options), queryClient);
+};
+
+export type listAvailabilityResponse200 = {
+  data: MemberAvailability[];
+  status: 200;
+};
+
+export type listAvailabilityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAvailabilityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAvailabilityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAvailabilityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAvailabilityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAvailabilityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAvailabilityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAvailabilityResponseSuccess = listAvailabilityResponse200 & {
+  headers: Headers;
+};
+export type listAvailabilityResponseError = (
+  | listAvailabilityResponse400
+  | listAvailabilityResponse401
+  | listAvailabilityResponse403
+  | listAvailabilityResponse404
+  | listAvailabilityResponse409
+  | listAvailabilityResponse422
+  | listAvailabilityResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAvailabilityResponse =
+  | listAvailabilityResponseSuccess
+  | listAvailabilityResponseError;
+
+export const getListAvailabilityUrl = () => {
+  return `/api/tenant/availability`;
+};
+
+/**
+ * @summary List Availability
+ */
+export const listAvailability = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAvailabilityResponse> => {
+  return apiFetch<listAvailabilityResponse>(getListAvailabilityUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAvailabilityQueryKey = () => {
+  return [`/api/tenant/availability`] as const;
+};
+
+export const getListAvailabilityQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAvailability>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAvailability>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAvailabilityQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAvailability>>> = ({ signal }) =>
+    listAvailability({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAvailability>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAvailabilityQueryResult = NonNullable<Awaited<ReturnType<typeof listAvailability>>>;
+export type ListAvailabilityQueryError = Problem;
+
+export function useListAvailability<
+  TData = Awaited<ReturnType<typeof listAvailability>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAvailability>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAvailability>>,
+          TError,
+          Awaited<ReturnType<typeof listAvailability>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAvailability<
+  TData = Awaited<ReturnType<typeof listAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAvailability>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAvailability>>,
+          TError,
+          Awaited<ReturnType<typeof listAvailability>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAvailability<
+  TData = Awaited<ReturnType<typeof listAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAvailability>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Availability
+ */
+
+export function useListAvailability<
+  TData = Awaited<ReturnType<typeof listAvailability>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAvailability>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAvailabilityQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listOrganisationsResponse200 = {
   data: Organisation[];

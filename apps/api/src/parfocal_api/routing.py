@@ -18,6 +18,7 @@ class Candidate:
     load_minutes: int = 0
     capacity_minutes: int = 240
     available: bool = True
+    backup_user_id: uuid.UUID | None = None
 
     def works_in(self, folder_id: uuid.UUID | None) -> bool:
         return folder_id is None or self.all_folders or folder_id in self.folders
@@ -41,6 +42,7 @@ class CaseToRoute:
     folder_id: uuid.UUID | None = None
     specimen_types: frozenset[str] = frozenset()
     minutes: int = DEFAULT_CASE_MINUTES
+    preferred_user_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -60,8 +62,22 @@ def eligible(case: CaseToRoute, candidates: Iterable[Candidate]) -> list[Candida
     ]
 
 
+def preferred(case: CaseToRoute, candidates: Iterable[Candidate]) -> Candidate | None:
+    people = {candidate.user_id: candidate for candidate in candidates}
+    wanted = people.get(case.preferred_user_id) if case.preferred_user_id else None
+    if wanted is not None and not wanted.available and wanted.backup_user_id is not None:
+        wanted = people.get(wanted.backup_user_id)
+    if wanted is None or not eligible(case, [wanted]):
+        return None
+    return wanted
+
+
 def choose(case: CaseToRoute, candidates: Iterable[Candidate]) -> Candidate | None:
-    options = eligible(case, candidates)
+    people = list(candidates)
+    picked = preferred(case, people)
+    if picked is not None:
+        return picked
+    options = eligible(case, people)
     if not options:
         return None
     return min(options, key=lambda candidate: (candidate.load_share, str(candidate.user_id)))

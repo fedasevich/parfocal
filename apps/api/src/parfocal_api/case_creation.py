@@ -16,6 +16,7 @@ from parfocal_api.accessions import (
     format_of,
 )
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.availability import covering
 from parfocal_api.cases import CaseDetail, case_detail, keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.folder_access import require_folder
@@ -272,8 +273,9 @@ async def create_case(
         response.status_code = 200
         return await case_detail(connection, keyring, principal, repeated)
     defaults = await RULES.defaults_for(connection, tenant_id, draft)
-    assignee = draft.assignee_user_id or defaults.assignee_user_id
-    await check_assignee(connection, tenant_id, assignee)
+    chosen = draft.assignee_user_id or defaults.assignee_user_id
+    await check_assignee(connection, tenant_id, chosen)
+    assignee = await covering(connection, chosen)
     await require_folder(connection, principal, draft.folder_id)
     if draft.folder_id is not None:
         folder = await one_folder(connection, draft.folder_id)
@@ -326,6 +328,7 @@ async def create_case(
             "priority": draft.priority,
             "new_patient": draft.patient is not None,
             "specimens": len(draft.specimens),
+            "covered_by_backup": assignee != chosen,
         },
     )
     return await case_detail(connection, keyring, principal, case_id)

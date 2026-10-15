@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 20 |
-| `personal` | 23 |
+| `personal` | 24 |
 | `secret` | 9 |
-| `operational` | 154 |
+| `operational` | 156 |
 | `public` | 0 |
 
 ## accession_counters
@@ -195,6 +195,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `signs_alone` | operational |
 | `all_folders` | operational |
 | `supervisor_user_id` | personal |
+| `availability` | operational |
+| `available_again_at` | operational |
+| `backup_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 

@@ -234,6 +234,8 @@ GET_ROUTES = {
     "getSigningRights": Route(
         Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"
     ),
+    "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
+    "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"

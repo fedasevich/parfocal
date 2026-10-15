@@ -24,8 +24,18 @@ def person(
     load: int = 0,
     capacity: int = 240,
     available: bool = True,
+    backup: str | None = None,
 ) -> Candidate:
-    return Candidate(uid(name), folders, all_folders, specimen_types, load, capacity, available)
+    return Candidate(
+        uid(name),
+        folders,
+        all_folders,
+        specimen_types,
+        load,
+        capacity,
+        available,
+        uid(backup) if backup else None,
+    )
 
 
 def case(
@@ -36,8 +46,17 @@ def case(
     specimens: frozenset[str] = frozenset(),
     minutes: int = 20,
     at: int = 0,
+    preferred: str | None = None,
 ) -> CaseToRoute:
-    return CaseToRoute(uid(name), priority, T0 + timedelta(minutes=at), folder, specimens, minutes)
+    return CaseToRoute(
+        uid(name),
+        priority,
+        T0 + timedelta(minutes=at),
+        folder,
+        specimens,
+        minutes,
+        uid(preferred) if preferred else None,
+    )
 
 
 def chosen(item: CaseToRoute, people: list[Candidate]) -> uuid.UUID | None:
@@ -112,6 +131,23 @@ def test_the_queue_spreads_cases_and_stat_takes_the_last_room() -> None:
     assert assigned.count(uid("first")) == 1
     assert assigned.count(uid("second")) == 2
     assert assigned.count(None) == 1
+
+
+def test_a_case_for_an_away_person_goes_to_their_back_up() -> None:
+    away = person("away", available=False, backup="cover")
+    cover = person("cover", load=200)
+    idle = person("idle")
+    assert chosen(case("a", preferred="away"), [away, cover, idle]) == uid("cover")
+    assert chosen(case("b"), [away, cover, idle]) == uid("idle")
+
+
+def test_a_preferred_person_keeps_the_case_unless_they_cannot_take_it() -> None:
+    mine = person("mine", frozenset({NODES}), load=200)
+    idle = person("idle", all_folders=True)
+    busy = person("busy", frozenset({NODES}), available=False)
+    assert chosen(case("a", folder=NODES, preferred="mine"), [mine, idle]) == uid("mine")
+    assert chosen(case("b", folder=SKIN, preferred="mine"), [mine, idle]) == uid("idle")
+    assert chosen(case("c", folder=NODES, preferred="busy"), [busy, idle]) == uid("idle")
 
 
 def test_nobody_eligible_leaves_the_case_in_the_pool() -> None:

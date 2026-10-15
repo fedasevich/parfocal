@@ -63,6 +63,8 @@ OPEN_OPERATIONS = {
     "getSessionPolicy": "member",
     "getAccessionFormat": "member",
     "listFolders": "member",
+    "getMyAvailability": "member",
+    "setMyAvailability": "member",
     "putSignature": "signed-in",
     "deleteSignature": "signed-in",
     "listMembers": "platform",
@@ -120,6 +122,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "cancelCase": lambda w: Call("POST", f"/api/cases/{w.case}/cancel"),
     "restoreCase": lambda w: Call("POST", f"/api/cases/{w.case}/restore"),
     "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),
+    "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "changeSigningRights": lambda w: Call(
         "PUT",
         f"/api/tenant/members/{w.colleague}/signing",
@@ -171,6 +174,8 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getAccessionFormat": lambda _: Call("GET", "/api/tenant/accession-format"),
     "listFolders": lambda _: Call("GET", "/api/tenant/folders"),
+    "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
+    "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
 }
 
 

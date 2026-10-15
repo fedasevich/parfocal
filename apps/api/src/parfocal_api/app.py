@@ -9,6 +9,7 @@ from parfocal_api import (
     accessions,
     audit_trail,
     auth,
+    availability,
     case_creation,
     case_states,
     cases,
@@ -105,6 +106,8 @@ def create_app(
     app.include_router(accessions.router)
     app.include_router(signing.tenant_router)
     app.include_router(signing.me_router)
+    app.include_router(availability.me_router)
+    app.include_router(availability.team_router)
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)
     app.include_router(users.me_router)
