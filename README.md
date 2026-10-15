@@ -36,6 +36,8 @@ pnpm typecheck
 pnpm check
 ```
 
+`pnpm board` opens the live task board over the backlog, and `python3 scripts/board.py ready` lists the tasks free to start ([docs/board](docs/board/README.md)).
+
 `pnpm db:up` starts Postgres with PostGIS and a PgBouncer in Docker, `pnpm db:migrate` applies the migrations and `pnpm test:db` runs the database tests ([knowledge/database.md](docs/knowledge/database.md)).
 
 `pnpm fixtures` fetches the small slide fixtures into `~/.cache/parfocal/fixtures` and checks their SHA-256. Name other groups to fetch more, and set `PARFOCAL_FIXTURES_LOCAL` in `.env` to link slides already on disk instead of downloading them ([packages/test-fixtures](packages/test-fixtures/README.md)).

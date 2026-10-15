@@ -20,13 +20,14 @@ Everything the project knows, plans, decides and measures lives in `docs/`. Chat
 4. Check `docs/adr/` for anything already decided that touches the task. Don't reopen an accepted decision unless the user asks to.
 5. Check `docs/knowledge/` for known gotchas in the area.
 6. Read the POC files and docs named in "Refs". `poc/` paths and `doc NN` resolve as described in `docs/project/poc-reference.md`.
+7. Claim the task on the board with `python3 scripts/board.py claim ID --by NAME` and commit the claim file with the first change. `python3 scripts/board.py ready` lists free tasks and `show ID` prints a task with its dependency trees, docs and log lines ([docs/board/README.md](docs/board/README.md)).
 
 ### After finishing a task
 
 Update `docs/` in the same change as the code.
 
 1. Add a dated entry to `docs/log.md` (newest on top). Name the backlog ID, say what was done, where the result is and anything surprising.
-2. Tick the task in `docs/BACKLOG.md` only when its "Done when" line is fully true and the tests pass. If the task was split or changed, edit the backlog as its "How to use" section says.
+2. Tick the task in `docs/BACKLOG.md` only when its "Done when" line is fully true and the tests pass. If the task was split or changed, edit the backlog as its "How to use" section says. Until it is ticked, move its claim to `review` (`board.py move ID review`). Delete the claim (`board.py release ID`) in the change that ticks it.
 3. If a choice was made between real alternatives, write an ADR (see below).
 4. If anything was measured, write a result file (see below). Numbers never live only in a log line or a commit message.
 5. If you learned something a later session must not rediscover the hard way, add it to `docs/knowledge/`.
@@ -36,7 +37,7 @@ Update `docs/` in the same change as the code.
 
 ### When stopping mid-task
 
-Write an "In progress" note at the top of `docs/README.md`. It names the backlog ID, what is done, what is left, the exact next step and any uncommitted or broken state. Remove the note when the task is finished.
+Leave the task's claim file in place with a `note:` saying where it stands, and write an "In progress" note at the top of `docs/README.md`. It names the backlog ID, what is done, what is left, the exact next step and any uncommitted or broken state. Remove the note when the task is finished.
 
 ## Memory consolidation
 
@@ -60,6 +61,7 @@ Consolidate when a milestone closes, when the user asks, or when the log has gai
 | `docs/README.md` | Index of all docs, "Where we are now", "Next up", "In progress" |
 | `docs/BACKLOG.md` | Every task from empty repo to pilot, with checkboxes, the Definition of Done and the decisions baseline |
 | `docs/log.md` | Dated, append-only log of what was done |
+| `docs/board/` | The task board: one claim file per task being worked on, read by `scripts/board.py` |
 | `docs/project/overview.md` | The product, users, scope, design sources and the POC's role |
 | `docs/project/roadmap.md` | Milestones M0 to M6 and their status |
 | `docs/project/risks.md` | Risk register |
