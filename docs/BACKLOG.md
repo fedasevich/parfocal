@@ -171,13 +171,15 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR records the React version, whether React Compiler is on, and the StrictMode policy for the viewer canvas.
   Decided in [ADR 0016](adr/0016-react-19-spa-compiler-strictmode.md): React 19.3 SPA, React Compiler on, StrictMode on with a viewer host that fully destroys its engine.
 
-- [ ] STACK-003 · Routing
+- [x] STACK-003 · Routing
   Candidates: TanStack Router, React Router 7 (library mode). Default: TanStack Router for fully typed routes and search params. That matters because worklist filters, case view state and deep links to a view all live in the URL.
   Done when a spike shows typed search params for `/case/:caseId/slide/:slideId?x=&y=&z=` with validation and a code-split route.
+  Decided in [ADR 0048](adr/0048-routing.md): TanStack Router with Zod search params.
 
-- [ ] STACK-004 · Server state and data fetching
+- [x] STACK-004 · Server state and data fetching
   Candidates: TanStack Query v5, RTK Query, SWR. Default: TanStack Query, with the generated API client (STACK-008) supplying query functions and keys.
   Done when the ADR covers caching, invalidation from realtime events (STACK-024), optimistic updates with retry for annotation edits, and suspense usage.
+  Decided in [ADR 0049](adr/0049-server-state-and-data-fetching.md): TanStack Query v5 on the generated client, with invalidation from realtime events.
 
 - [ ] STACK-005 · Client UI state
   Candidates: Zustand, Jotai, Redux Toolkit, XState for the complex state machines. Default: Zustand for app UI state (panels, tools, workspace, selection), and XState only where a real state machine helps (smart minimap, review loop, one-click prompt flow).
@@ -283,10 +285,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike measures cold and warm tile fetch latency through the Worker gateway, with and without a Cache API layer keyed per byte range, for SVS byte ranges and OME-Zarr chunks.
   Refs docs 09, 20 §3.2, 32.
 
-- [ ] STACK-026 · Slide reading and tiling on the server
+- [x] STACK-026 · Slide reading and tiling on the server
   Candidates: OpenSlide 4 with openslide-python, tiffslide, tifffile, TIAToolbox, bioformats2raw for conversion fallbacks, MONAI Label as middleware. Default: tifffile and tiffslide (plus OpenSlide where it reads better) for validation, indexing, thumbnails and patches, TIAToolbox for pixel-size-aware tiling in ML workers, no MONAI Label server. Doc 20 found that only its endpoint shape and datastore were still in use.
   Done when the ADR lists, per POC format, which server library reads it and which fixture proves it.
   Refs docs 08, 12, 17, 20 §5.
+  Decided in [ADR 0043](adr/0043-server-slide-reading.md): OpenSlide first, tiffslide for OME-TIFF, tifffile for validation and wsidicom for DICOM. The automated fixture tests belong to INGEST-003 (ingest workflow skeleton).
 
 - [ ] STACK-027 · GPU inference serving
   Candidates: plain PyTorch workers pulling from the workflow engine, NVIDIA Triton, Ray Serve, BentoML. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PyTorch in Modal GPU functions per model family. Batch work starts cold. Interactive embeddings run in a separate function that the API pre-warms when a slow device activates the segmentation tool, and it scales down after about 5 idle minutes. Separate containers replace the priority gate. Triton is reconsidered when the model count grows.
@@ -303,9 +306,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: AWS, Google Cloud, Azure, plus an EU sovereign option. Criteria: EU region with GPU instances (L4, L40S, A100 or H100), HIPAA BAA, ISO 27001 certified regions, managed Postgres with PostGIS, managed Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no single cloud. Cloudflare (Workers, Durable Objects, R2, Pages), Modal (Python and GPUs) and Neon (Postgres), with no region pinning during the pilot.
   Done when the ADR includes a monthly cost estimate for the pilot (three tenants, 5,000 slides per month).
 
-- [ ] STACK-030 · Infrastructure as code, deploy and runtime platform
+- [x] STACK-030 · Infrastructure as code, deploy and runtime platform
   Candidates: OpenTofu or Terraform, Pulumi. Kubernetes with Helm and Argo CD, or a simpler container platform (Cloud Run, ECS). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no Kubernetes. Wrangler config for the edge, Modal app code for Python, the Neon API for branches, GitHub Actions for deploys, and a small OpenTofu module for DNS, buckets and the Zitadel and Neon projects.
   Done when the ADR covers preview environments per pull request for the web app and API.
+  Decided in [ADR 0050](adr/0050-deploy-pipeline-and-previews.md): no Kubernetes, one Worker, Modal app and Neon branch per pull request, torn down on close and by a nightly sweep.
 
 - [ ] STACK-031 · Model licensing policy (on hold)
   Decide whether the product is commercial, then which models may run in which tenant type. HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA 4.0. Verify PathoSAM, SlimSAM, NuClick, SAM2, the MONAI bundles and any foundation models (UNI2, Virchow2, H-optimus, Prov-GigaPath) from their hosted weight licences, not from repository licences. Review the training and calibration datasets (PanNuke, CoNSeP, CAMELYON16) the same way.
@@ -2730,14 +2734,17 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] OPS-001 · Base infrastructure as code
   OpenTofu for DNS, certificates, R2 buckets, the Neon project and the Zitadel project per environment. Workers, Durable Objects and Modal resources are defined in their own config ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when `tofu plan` is clean for staging and production and a policy check passes.
+  Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
 
 - [ ] OPS-002 · Deploy definitions
   Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when CI recreates staging from git alone.
+  Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
 
 - [ ] OPS-003 · Environments
   Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, staging from `main` and production from tags, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
+  Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
 
 - [ ] OPS-004 · Database operations
   Migrations in deploy, Neon's pooler, autovacuum tuning for annotation tables, a Neon read replica for reporting.
@@ -2746,6 +2753,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] OPS-005 · Continuous deployment
   Main to staging automatically, tagged releases to production with approval, database migration safety checks, rollback.
   Done when a rollback drill on staging succeeds.
+  Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
 
 - [ ] OPS-006 · Observability stack
   Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times. Export is on only in production, and staging switches it on through the override for these tests ([ADR 0005](adr/0005-external-sends-only-in-production.md)).

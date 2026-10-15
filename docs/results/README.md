@@ -15,3 +15,6 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-14 | [fhir.resources 8.3 for R4B and R5 on Python 3.14](2026-10-14-fhir-resources-spike.md) | STACK-040 | spike |
 | 2026-10-14 | [Forms and validation: library compile, React Compiler and bundle size](2026-10-14-forms-spike.md) | STACK-009 | spike |
 | 2026-10-14 | [A three-step workflow that survives SIGKILL, on Postgres tables and on DBOS](2026-10-14-durable-workflow-spike.md) | STACK-022 | spike |
+| 2026-10-15 | [Server slide reading with tifffile, tiffslide, OpenSlide and wsidicom](2026-10-15-server-slide-reading-spike.md) | STACK-026 | spike |
+| 2026-10-15 | [Routing with TanStack Router and React Router](2026-10-15-routing-spike.md) | STACK-003 | spike |
+| 2026-10-15 | [Server state with TanStack Query, SWR and RTK Query](2026-10-15-server-state-spike.md) | STACK-004 | spike |

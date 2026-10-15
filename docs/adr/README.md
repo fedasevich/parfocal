@@ -53,3 +53,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0044](0044-background-jobs-and-workflows.md) | Background jobs and workflows on Postgres tables with leases, confirming the default of ADR 0003 | Accepted | 2026-10-14 |
 | [0047](0047-emergency-access-with-a-reason.md) | Emergency access: a written reason opens one case for a lab-set time, administrators included | Accepted | 2026-10-14 |
 | [0051](0051-availability-status-and-back-up.md) | Availability status per workspace, with an away person's new cases going to their back-up | Accepted | 2026-10-15 |
+| [0043](0043-server-slide-reading.md) | Server slide reading with OpenSlide first, tiffslide for OME-TIFF and tifffile for validation | Accepted | 2026-10-15 |
+| [0048](0048-routing.md) | Routing with TanStack Router and Zod search params | Accepted | 2026-10-15 |
+| [0049](0049-server-state-and-data-fetching.md) | Server state in TanStack Query v5 on the generated client, with event-driven invalidation | Accepted | 2026-10-15 |
+| [0050](0050-deploy-pipeline-and-previews.md) | Deploy pipeline and per-pull-request previews on Cloudflare, Modal and Neon | Accepted | 2026-10-15 |
