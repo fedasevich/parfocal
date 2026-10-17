@@ -2,6 +2,9 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-18
+
+- SKEL-003 (minimal tenant, user, project and slide tables) ticked without new code. Its "Done when" was already met by PROJ-001 (project API) and ADAPT-004 (cases and slides in projects): `test_projects.py` creates a project in the user's workspace, `test_another_workspace_gets_nothing` gets 404 for it from another workspace, and CI on `main` is green.
 ## 2026-10-17
 
 - Ticked PROJ-004 (class taxonomy per project) after a green `ci` run on `main`.
