@@ -1,6 +1,6 @@
 # Parfocal backlog
 
-This file takes an empty repository to a production-quality, multi-tenant cloud platform for pathologists. It covers whole-slide viewing, AI-assisted review and annotation, collaboration, reporting and sign-out. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
+This file takes an empty repository to a production-quality, multi-tenant cloud platform where researchers evaluate AI results on whole slides and doctors review them. It covers whole-slide viewing, importing and running AI results, object IDs, review tasks with verdicts and opinions, disagreements and sign-off, the evaluation report, comments and annotation. Since 2026-10-17 it follows the AI results review direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). The earlier hospital sign-out workflow is kept as ideas for consideration. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
 
 The design source is the approved prototype pair:
 
@@ -25,6 +25,8 @@ Task format:
 - When a decision changes a later task, edit that task and add an ADR rather than leaving the old text in place.
 - `poc/` means `/Users/yuriifedas/WebstormProjects/poc/` locally or `https://github.com/fedasevich/pathlogy-poc/blob/master/` on GitHub, and code references are links. `doc NN` means `poc/docs/NN-*.md`, listed with full links in [project/poc-reference.md](project/poc-reference.md). `kit:` names a UX kit page or wireframe (W1 to W73). W39 to W73 and Flows 9 to 30 came from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)), and the hi-fi mock has them as steps 23 to 35, from 23 Sign in and lock to 35 Empty and error states. `mock N` names step N of the converged mock tab, from 1 Home to 21 Shortcuts. Step 3 is Status board and step 4 Upload slides, so the case screens start at 5 Case at low power and 6 Area at 10x, and step 15 is Report and PDF ([ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)).
 - Tasks say what users must be able to do, the rules behind it and the tests that prove it. Layout, sizes, placement and wording follow the prototype at the time the task is built, so a later prototype change needs a backlog edit only when it changes behaviour or rules. `mock N` and `kit:` references point at the current design, not a fixed spec, and a test checks behaviour rather than a pixel layout unless the task says otherwise.
+- Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit) and doc 41 (what is clickable, tags, icons and type).
+- Epics with the milestone Idea and tasks whose title starts with `Idea:` are kept from the hospital direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). They are not planned. Don't start one unless the owner asks, and never make a planned task depend on one. A task that is needed again loses its `Idea:` prefix in a backlog edit with an ADR.
 - Tasks from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)) are backend first: models, rules, APIs, events and their tests. The screens for them are still changing in the prototype, so their UI tasks are added only when those screens settle, and no backend task here may depend on a layout.
 - Every feature epic starts with an `xxx-000` research check. It re-checks the current state of the art for that feature's libraries and patterns, confirms or revises the STACK decisions it relies on, and records the outcome as an ADR in `docs/adr/`.
 
@@ -44,34 +46,43 @@ Task format:
 | --- | --- |
 | Release bar | Research and pilot grade, production-quality code, no regulatory claims in v1. IVDR, FDA and CE marking are later epics |
 | Deployment | Cloud SaaS, multi-tenant. Region is a tenant attribute. No residency pinning during the pilot, and EU pinning is a trigger before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)) |
-| Pilot data | Public slide datasets with seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
+| Product direction | AI results review: researchers import or run AI and evaluate it, doctors review, fix, comment and give an opinion. The viewer stays. The hospital sign-out workflow is kept as ideas ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Roles | Researcher, reviewer and admin in a workspace. Owner, reviewer and viewer in a project. They replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) (ADAPT-001, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Data model | Project, then an optional case, then slide, then result sets. Loose slides sit directly in a project. Every import or model run is a result set with its model, version, date and source, and reviewer edits form a separate reviewed layer ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Privacy | Each project is de-identified (the default, no patient fields, names stripped on upload) or clinical (patient fields optional, names can be hidden, access logged) ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Object IDs | Short IDs per slide (T2, T2·C145, C3021, R4, Z1, M1), a full path for links and exports (`P07/S26-04812/A1/T2·C145`), carried across result sets by overlap ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Review | Review tasks with slides, a result set, reviewers, a split, a scope, an opinion form, blinding and a due date. Verdicts are Agree, Disagree or Not sure per object, in guided review or the full viewer. Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Interaction | A control responds only when clicking it changes something in the flow. Auto-advancing and far-reaching actions show an Undo. The bell is the only place for mentions, replies, tasks and jobs (doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Pilot data | Public slide datasets and their AI results in de-identified projects. Clinical projects use seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
 | Compliance | GDPR, HIPAA and ISO 27001 readiness in v1: audit log, encryption, residency, retention and erasure, BAA-ready logging, pen test |
 | Repository | Monorepo `/Users/yuriifedas/WebstormProjects/parfocal` (GitHub `fedasevich/parfocal`) with `apps/web`, `apps/api`, `workers/*`, `packages/*` |
 | Frontend | React with TypeScript. Every other library is a STACK decision |
 | Backend | Python. Framework and every other library are STACK decisions |
 | Renderer | Viv is the primary renderer and must work perfectly. The custom WebGPU engine and deck.gl 9.4 WebGPU stay as alternates behind one renderer interface, switchable only in the developer drawer |
 | Formats | Read every format the POC could read, natively, with no conversion by default. Convert only when a format is unreadable or fails its performance budget. Sidecar indexes and derived low-resolution levels are allowed because they do not change the original |
-| Ingest | Resumable browser upload and server-side import from an HTTPS or object-storage link, both with server validation and indexing ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)). DICOMweb, SFTP and scanner shares, watch folders and LIS intake are later epics |
+| Ingest | Resumable browser upload of slides together with their AI result files, server-side import from an HTTPS or object-storage link, reading in place from a connected source, a webhook per project and a watched bucket, all with server validation and indexing ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md), [ADR 0053](adr/0053-ai-results-review-direction.md)). DICOMweb, SFTP and scanner shares are later epics, and LIS intake is an idea |
 | Identity | OIDC through a managed or self-hosted identity provider. Organisations, roles and invitations live in our database. Per-organisation SAML or OIDC SSO is a later task |
 | AI runtime | Hybrid. Batch work (pre-read, whole-slide nuclei, tumor maps, training) runs on server GPU workers. Interactive segmentation runs in the browser through ONNX, using server-computed embeddings when they exist |
-| AI scope v1 | Interactive segmentation, whole-slide nuclei detection and typing, tumor and region maps, learning from corrections |
+| AI scope v1 | Importing AI results made elsewhere is first class. Built-in models (tumor map, nuclei detection and typing) and a lab's own HTTP endpoint run on demand as model runs that make result sets. Interactive segmentation and learning from corrections stay. Nothing runs on arrival by default ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Model licensing | On hold (STACK-031). The owner said on 2026-10-15 that Parfocal will not really be commercial. HoVer-NeXt and VISTA-2D weights are CC BY-NC-SA. PanNuke-derived calibration needs review. The model registry stores licence metadata from day one |
 | ML evaluation | The POC harness is ported as the MLEVAL epic and gates promotion of any model to a tier |
-| UX variants | The launchpad is the home for everyone and the department dashboard the default for lab leads. The worklist is a list grouped by due day with a case preview on demand, plus day and grid views. The status board is a page of its own. Choices still open ship behind feature flags ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)) |
+| UX variants | The launchpad is the home for everyone. My work replaces the worklist with To review, Assigned by me and All slides. The department dashboard, the worklist views and the status board are ideas. Choices still open ship behind feature flags ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md), [ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Devices | Mouse, keyboard, trackpad, tablet with pen, gamepad (Gamepad API), SpaceMouse (WebHID) |
-| Collaboration | Realtime threads, presence, follow-my-view and expiring cross-organisation guest links. No CRDT multiplayer annotation in v1 |
-| Cases and reports | Manual case creation plus CSV and FHIR import. Templated synoptic reports built to CAP's synoptic rules with ICCR datasets and TNM 8, the first one for sentinel lymph node. PDF with AI disclosure, print, and sharing that follows the report state ([ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md)). LIS integration is an adapter interface only |
+| Collaboration | Realtime threads pinned to an object ID, an ROI or a point, with mentions and blinding, presence and follow-my-view. Guest consultant links are an idea. No CRDT multiplayer annotation in v1 ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Cases and reports | Cases are optional groups of slides inside a project, created by hand or from file names on upload, with CSV import. The v1 output is the evaluation report per review task with PDF, CSV, JSON and GeoJSON exports. Synoptic sign-out reports ([ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md)), FHIR import and the LIS adapter are ideas ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Language | English only, with every string externalised (i18n-ready) |
 | Offline | No offline mode. The Fast tier runs in the browser. Edits are optimistic and retried on flaky networks |
 | UX research | Feature flags, experiments, PHI-free opt-in analytics, in-app SUS and SEQ, task timing for the KPIs |
 | Sequencing | Walking skeleton first (M1), then feature epics deepen it |
 | Testing | Everything is tested. The TEST epic builds the infrastructure, and every task's "Done when" names its tests |
+| Design system | Zones by background, one component per job, avatar plus name for people, nine tag types, five icon sizes (12, 16, 20, 24, 40), nine type sizes (11, 12, 13, 14, 16, 18, 20, 24, 28) with running text never under 12 px (doc 38, doc 39, doc 41, kit: UI kit: tags, icons and type) |
 
 ## Product KPIs carried from the UX kit
 
 - Chrome covers under 35% of a 1440×900 screen in Review (POC today: 48.5%, 67% with the one-click tool).
-- Core sign-out tasks take 30% less time than the POC viewer in a moderated test.
-- SUS above 70 with 3 to 5 pathologists.
+- Core review tasks (judge the objects of a slide, comment on one, submit the opinion) take 30% less time than in the POC viewer in a moderated test.
+- A reviewer new to Parfocal finishes a first slide in guided review without help. TODO: set the time target after the first moderated session.
+- SUS above 70 with 3 to 5 pathologists and 2 or 3 researchers.
 - Viewer stays at 60 fps while panning with 1.6M nuclei loaded (POC: under 5 ms GPU per frame with LOD, culling and paging, doc 31).
 
 ## Source map
@@ -92,6 +103,7 @@ Task format:
 | Learning from corrections | docs 18, 22 | [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts) |
 | Evaluation | docs 13, 20 §2.8, 26 | [`poc/server/tools/score_*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/tools), `bench_*` |
 | MONAI Label assessment | docs 12, 17, 20 §5 | [`poc/server/app/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/app) |
+| AI results review direction | doc 37, doc 38, doc 39, doc 40, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md) | kit Parfocal pages, mock screens home, worklist, project, upload, runmodel, job, task, guided, opinion, disagree, signoff, evaluation, admin, setup |
 | Platform architecture research | [`poc/docs/presentation1`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation1), [`poc/docs/presentation2`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation2) | Cytomine, EXACT, Concentriq, QuPath, V7 reports |
 
 ## Milestones
@@ -99,11 +111,11 @@ Task format:
 | Milestone | Meaning | Gate |
 | --- | --- | --- |
 | M0 Stack decided | Every STACK task closed with an ADR | `docs/adr/` holds one ADR per slot |
-| M1 Walking skeleton | Log in, create a case, upload one SVS, open it in Viv, draw a polygon, save, sign out a stub report, all on staging | SKEL epic done, E2E green on staging |
+| M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one verdict and submit the review, all on staging | SKEL epic done, E2E green on staging |
 | M2 Viewer parity | Every POC format opens correctly in Viv with POC-level performance, plus alternates behind the interface | VIEW, TILES, INGEST done, perf and golden suites green |
-| M3 Review loop | Worklist, case, navigation aids, review workspace, measurement, settings, palette | WL, CASE, NAV, REVIEW, MEAS, SET, CMD done |
-| M4 AI pre-read | Slides are pre-read on arrival, findings and cells to check work, interactive AI in Annotate | AIP, AISEG, AINUC, AITUM, MLEVAL core done |
-| M5 Collaboration and reports | Threads, presence, guest second opinion, compare, status board, reports with PDF and sign-out, team and tumor boards | COLLAB, CMP, BOARD, REPORT, CASES, TEAM, TB done |
+| M3 Review loop | Projects, upload with AI results, object IDs, review tasks, My work, guided review and the slide view with verdicts and the opinion form, navigation aids, measurement, settings, palette, sign-up and setup | ADAPT, PROJ, RSET, OBJ, TASK, GUIDE, WL, CASE, NAV, REVIEW, MEAS, SET, CMD, ONB done |
+| M4 AI runs and visualization | Model runs and the jobs tray, lab model endpoints, layers, heatmaps, diff and the object table, interactive AI in Annotate | AIP, JOBS, VIZ, AISEG, AINUC, AITUM, MLEVAL core done |
+| M5 Collaboration and evaluation | Threads pinned to IDs, presence, compare, notifications, the disagreement queue and sign-off, the evaluation report, remote sources and webhooks, the admin page | COLLAB, CMP, NOTIF, ADJ, EVAL, REMOTE, ADMIN, CASES done |
 | M6 Pilot ready | Compliance controls, ops, experiments, devices, learning loop, pilot runbook | SEC, OPS, EXP, DEV, AILEARN, PILOT done |
 
 ## Epic index
@@ -120,17 +132,17 @@ Task format:
 | 07 | VIEW | Viewer core, Viv primary, alternates | M1 to M2 |
 | 08 | DS | Design system | M1 to M3 |
 | 09 | SHELL | Application shell and layout | M1 to M3 |
-| 10 | HOME | Home and department dashboard | M3 |
-| 11 | WL | Worklist views, case preview and AI queue | M3 |
-| 12 | CASE | Case view | M3 |
+| 10 | HOME | Home | M3 |
+| 11 | WL | My work | M3 |
+| 12 | CASE | Slide view | M3 |
 | 13 | NAV | Navigation aids | M3 |
 | 14 | REVIEW | Review workspace | M3 to M4 |
 | 15 | ANN | Annotate workspace | M2 to M4 |
 | 16 | MEAS | Measurements | M3 |
-| 17 | COLLAB | Comments, realtime, second opinion | M5 |
+| 17 | COLLAB | Comments and realtime | M5 |
 | 18 | CMP | Compare slides | M5 |
-| 19 | REPORT | Reports and sign-out | M5 |
-| 20 | CASES | Patients, cases, import, LIS adapter | M3 to M5 |
+| 19 | REPORT | Clinical reports and sign-out | Idea |
+| 20 | CASES | Cases and patients | M3 to M5 |
 | 21 | AIP | AI platform, registry, jobs, GPU pool | M4 |
 | 22 | AISEG | Interactive segmentation | M4 |
 | 23 | AINUC | Whole-slide nuclei, typing, confidence | M4 |
@@ -140,16 +152,29 @@ Task format:
 | 27 | SET | Settings | M3 |
 | 28 | CMD | Command palette and shortcuts | M3 |
 | 29 | DEV | Input devices and tablet layout | M6 |
-| 30 | NOTIF | Notifications | M5 |
+| 30 | NOTIF | Notifications | M3 to M5 |
 | 31 | LAB | Developer drawer and HUD | M2 |
 | 32 | EXP | Experiments, analytics, surveys | M3 to M6 |
 | 33 | I18N | Internationalisation readiness | M1 |
 | 34 | OPS | Infrastructure and operations | M1 to M6 |
 | 35 | TEST | Test infrastructure | M0 to M6 |
 | 36 | PILOT | Documentation and pilot readiness | M6 |
-| 37 | BOARD | Status board, tickets and lab work | M5 |
-| 38 | TEAM | Team, capacity, absences and hand-over | M5 |
-| 39 | TB | Tumor boards | M5 |
+| 37 | BOARD | Status board, tickets and lab work | Idea |
+| 38 | TEAM | Team, capacity, absences and hand-over | Idea |
+| 39 | TB | Tumor boards | Idea |
+| 40 | PROJ | Projects, privacy modes, class taxonomy and templates | M3 |
+| 41 | RSET | Result sets and AI result import | M3 |
+| 42 | OBJ | Object IDs | M3 |
+| 43 | TASK | Review tasks and the slide pipeline | M3 |
+| 44 | GUIDE | Verdicts, guided review and the opinion form | M3 |
+| 45 | ADJ | Disagreements, adjudication and sign-off | M5 |
+| 46 | EVAL | Evaluation report and exports | M5 |
+| 47 | JOBS | Model runs, the jobs tray and lab models | M4 |
+| 48 | REMOTE | Remote sources, webhooks and events | M5 |
+| 49 | ONB | Sign-up, setup and the sample project | M3 |
+| 50 | ADMIN | Admin page | M5 |
+| 51 | VIZ | Layers and visualization | M4 |
+| 52 | ADAPT | Reverting or reworking the built hospital code | M3 |
 
 ---
 
@@ -470,14 +495,14 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a Playwright test logs in a seeded pathologist on staging and sees their name in the top bar.
   Depends on IAM-001, IAM-002.
 
-- [ ] SKEL-003 · Minimal tenant, user and case tables
-  Done when API tests create a case for the user's tenant and another tenant's user gets 404 for it.
-  Depends on IAM-003, CASES-001.
+- [ ] SKEL-003 · Minimal tenant, user, project and slide tables
+  Done when API tests create a project for the user's tenant and another tenant's user gets 404 for it.
+  Depends on IAM-003, PROJ-001.
 
-- [ ] SKEL-004 · Upload one SVS into a case
-  Presigned multipart upload, object lands under the tenant's prefix, a slide row is created.
-  Done when an E2E test uploads CMU-1-Small-Region.svs and the slide shows in the case.
-  Depends on INGEST-001, INGEST-002.
+- [ ] SKEL-004 · Upload one SVS and its result file into a project
+  Presigned multipart upload, objects land under the tenant's prefix, a slide row and a result set row are created.
+  Done when an E2E test uploads CMU-1-Small-Region.svs with a small GeoJSON and both show in the project.
+  Depends on INGEST-001, INGEST-002, RSET-001.
 
 - [ ] SKEL-005 · Validate and index the slide
   The ingest workflow reads the pyramid, writes level metadata and a thumbnail.
@@ -494,10 +519,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an E2E test draws, reloads and sees the same polygon.
   Depends on ANN-001, ANN-020.
 
-- [ ] SKEL-008 · Stub report and sign out
-  One free-text field, sign-out records signer and time, the case moves to signed.
-  Done when an E2E test signs out and the case shows as signed in a list, with an audit log entry.
-  Depends on REPORT-001, SEC-003.
+- [ ] SKEL-008 · Stub verdict and submit
+  One Agree, Disagree or Not sure on the drawn polygon and a submit that records the reviewer and the time and moves the slide to submitted. Replaces the stub report and sign-out ([ADR 0053](adr/0053-ai-results-review-direction.md)).
+  Done when an E2E test submits and the slide shows as submitted in a list, with an audit log entry.
+  Depends on GUIDE-001, SEC-003.
 
 - [ ] SKEL-009 · CI deploys main to staging
   Done when merging to main deploys automatically and the skeleton E2E suite runs against staging after deploy.
@@ -555,7 +580,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests cover lock, unlock by signing in again, and remote session revocation.
   The lock screen and the return to the same camera position moved to IAM-021. Refs mock §2.15 Privacy and session.
 
-- [ ] IAM-010 · Guest consultant links
+- [ ] IAM-010 · Idea: Guest consultant links
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Guest consultants belong to the second-opinion idea.
   Expiring, revocable links scoped to one case, optionally one view and its threads, for a user from another organisation. The guest signs in with their own IdP account or a verified email.
   Done when tests prove the guest can read only that case and post only in the shared threads, the link expires, and revocation takes effect within one minute.
   Depends on STACK-023. Refs kit Flow 3, mock 12.
@@ -576,6 +602,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-014 · Admin console for users and roles
   Lab admin screen to list members, change roles, deactivate and resend invites.
   Done when component and E2E tests cover each action and each action is audited.
+  The screen is ADMIN-003 in the admin page.
 
 - [x] IAM-015 · Availability status and back-up
   Each user can be available, busy until a time (for example during a tumor board) or away with a named back-up. Reassigning (BOARD-007), routing (CASES-011) and STAT notifications (NOTIF-003) respect it, and the account menu (SHELL-012) sets it.
@@ -598,20 +625,26 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when API tests cover each combination and the refusal messages, and the audit log records every change.
   Depends on IAM-006. Refs kit W48, kit Flow 14. Built as [ADR 0032](adr/0032-signing-rights-on-the-membership.md) says.
 
-- [ ] IAM-019 · Sign-in by emailed code for outside consultants
+- [ ] IAM-019 · Idea: Sign-in by emailed code for outside consultants
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Guest consultants belong to the second-opinion idea.
   An invited outside consultant signs in with a one-time code sent to the invited address. The code works once, for 10 minutes, and is rate limited per address and per IP. A code for one address never opens another account. The resulting session carries only the guest grants of IAM-010.
   Done when API tests cover success, reuse, expiry, a wrong address, the rate limit and a session that cannot reach anything beyond the grant.
   Depends on IAM-010. Refs kit W49, kit W62, kit Flow 21, [ADR 0023](adr/0023-gap-review-backend-first.md).
 
 - [ ] IAM-020 · Deactivation with hand-over
-  Deactivating a person first lists their open work: cases, consults, reports waiting for their co-sign and lab tasks. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their signed reports keep their name and stay valid, and their audit history stays.
-  Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed reports still verify.
-  Depends on IAM-014, BOARD-007, COLLAB-013. Refs kit W51, kit Flow 25.
+  Deactivating a person first lists their open work: review tasks they are on, tasks they own, adjudications and open threads. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their verdicts, sign-offs and audit history stay.
+  Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed-off evaluations still verify.
+  Depends on IAM-014, TASK-007, ADJ-003. Refs kit W51, kit Flow 25.
 
 - [ ] IAM-021 · Lock screen that returns to the same view
   Split from IAM-009. The web app sends `recordActivity` on keyboard, pointer and viewer input at most once a minute, shows the kit's lock screen when the API answers `session-locked`, unlocks through `/api/auth/login?reauth=true` and comes back to the same view and camera position.
   Done when a component test and an E2E test lock an open slide, unlock and find the same camera position.
   Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session.
+
+- [ ] IAM-022 · Researcher, reviewer and admin roles with project roles
+  Workspace roles researcher, reviewer and admin, and project roles owner, reviewer and viewer, replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) in the permission matrix. ADAPT-001 migrates existing memberships and removes the hospital roles and grants. A reviewer sees only the projects and tasks they are in. A researcher creates projects, uploads, runs models, creates tasks, resolves disagreements and signs off. An admin manages people, models, sources and security and sees no patient data without IAM-017.
+  Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, and an isolation test proves a reviewer cannot list a project they are not in.
+  Depends on IAM-006. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 ---
 
@@ -654,9 +687,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Export all personal data for a data subject. Erase or pseudonymise on request where law allows, with reports kept per legal duty.
   Done when tests cover both workflows end to end.
 
-- [ ] SEC-008 · Pseudonymised research workspaces
-  Copying cases into a research workspace strips direct identifiers, replaces them with stable pseudonyms and removes label images.
-  Done when tests prove no direct identifier, label image or macro image with a barcode reaches the research workspace.
+- [ ] SEC-008 · De-identified projects
+  A de-identified project never holds a direct identifier. Upload strips names and record numbers from file metadata and hides label and macro images. Copying slides from a clinical project into a de-identified one replaces case IDs with stable pseudonyms and removes label images.
+  Done when tests prove no direct identifier, label image or macro image with a barcode reaches a de-identified project, through upload, link import, webhook and copy.
+  Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
@@ -714,7 +748,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an external test covers web, API, guest links and tile access, and every high finding is fixed and retested.
   Depends on M5.
 
-- [ ] SEC-023 · Electronic signature record for sign-out
+- [ ] SEC-023 · Idea: Electronic signature record for sign-out
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Sign-off of an evaluation confirms with single sign-on instead (ADJ-004).
   Sign-out requires re-authentication within a short window and records meaning, signer, time and content hash.
   Done when tests prove a signed report's hash detects tampering.
   Refs REPORT-008.
@@ -747,6 +782,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 ---
 
 ## 05 INGEST · Slide upload, validation and indexing
+
+Since [ADR 0053](adr/0053-ai-results-review-direction.md) an upload carries slides and their AI result files together through four steps, Files, Match, Check and Upload (mock: upload). Result files are read and checked by the RSET epic, and no model runs on arrival.
 
 Formats in scope, all read natively: Aperio SVS (JPEG and JPEG 2000), generic tiled TIFF, OME-TIFF (8 and 16 bit), Hamamatsu NDPI (including files above 4 GB), Ventana BIF, Leica SCN, Philips TIFF, Huron TIFF, ARGOS TIFF, OME-Zarr v0.4 and v0.5 (sharded). Out of scope for v1 (later epic): MRXS, iSyntax, CZI, VSI, DICOM WSI. Doc 08 has the per-format findings.
 
@@ -830,7 +867,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 32.
 
 - [ ] INGEST-017 · Publish step and slide status
-  On success the slide becomes viewable, the case updates, and AI pre-read is enqueued (AIP-010).
+  On success the slide becomes viewable in its project and case, paired result files are imported as result sets (RSET-001), and no model runs unless the user started one (JOBS-001).
   Done when an E2E test sees the slide go from uploading to processing to ready with live status.
 
 - [ ] INGEST-018 · Ingest failure UX
@@ -846,29 +883,30 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a test imports 20 fixture slides into 5 cases.
   Depends on CASES-006.
 
-- [ ] INGEST-021 · Upload window with case matching
-  Opens from the upload entry in the global bar (SHELL-002), from adding slides inside a case, from the home quick action, or from a drop anywhere on the worklist or a case (with a drop overlay). Each file row shows its label and macro image, read on this computer before the upload starts, and the case it matched by label barcode or file name. States are empty, dragging over, uploading, files that need you, and a corner tray when the window is hidden while uploads continue. Esc closes the window without stopping uploads. A step header shows Files, What the AI runs (INGEST-023) and Running (INGEST-024).
-  Done when component tests cover each state, E2E drops files on the worklist and on a case and sees per-file matches, and closing and reopening keeps progress.
-  Depends on INGEST-002, INGEST-011. Refs mock 4, kit W32, kit Flow 5, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+- [ ] INGEST-021 · Upload wizard with slides and results
+  Opens from Upload in the top bar, the project page, Home's Start something and a drop anywhere on a project, with a drop overlay. Four steps, Files, Match, Check and Upload, in one full-width wizard whose steps can be clicked once reached. Files has two zones, slides and AI result files, each with drop and choose and an empty, dragging and listing state. Match pairs results with slides (RSET-004) and groups slides into cases from file names or keeps them loose (CASES-024). Check shows one zone per problem with its fix (INGEST-022, RSET-005), and only Start upload is a filled button. Upload shows one bar for everything and one per file (INGEST-024). Closing keeps the upload going in the jobs tray (JOBS-003). A side summary shows where the files go, the privacy mode and the counts so far.
+  Done when component tests cover each step and state, and E2E drops a folder of slides and results on a project, fixes a pairing, starts the upload, closes the window and finds the upload in the jobs tray.
+  Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
-- [ ] INGEST-022 · Per-file fixes in the upload window
-  Problem rows with one-click fixes: an MRXS without its data folder (add the folder), a duplicate of a slide already in the case (skip or keep both), no case match (choose a case), a photo or other non-slide file (attach to the case as a document or remove). The banner counts the open problems down to "All clear", and "Fix the rest later" leaves the rest in the case's to-do list.
-  Done when component tests resolve each problem class, and an E2E uploads a mixed set with all four problems and ends with every row resolved.
-  Depends on INGEST-021, INGEST-018. Refs mock 4 "Files that need you" scene, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+- [ ] INGEST-022 · Per-file problems in the Check step
+  One zone per problem, each with its fix: a slide that cannot be read, an MRXS without its data folder (add the folder), a duplicate already in the project (skip or keep both), and a result file with parse errors, a scale mismatch or new classes (RSET-005). Files with a problem wait and the rest upload. The step counts the open problems down to "Nothing needs you".
+  Done when component tests resolve each problem class, and an E2E uploads a mixed set and ends with the fixed files uploaded and the others waiting.
+  Depends on INGEST-021, INGEST-018, RSET-005. Refs mock: upload/check, doc 40 R3.
 
-- [ ] INGEST-023 · What the AI runs, per case
+- [ ] INGEST-023 · Idea: What the AI runs, per case
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Running a model is its own window (JOBS-002).
   An upload step that starts each case from the lab's plan for its specimen type (SET-011), for example tumor map then cells in the tumor areas first for a sentinel node, cells on all tissue for a breast biopsy. The doctor can change it for this case only: find tumor areas, find and type cells (where: tumor areas first, all tissue, or only where outlined, at quality Best, Good or Fast), unsure zones (always with the cells) and a second opinion on unsure cells. Options respect each other ("tumor areas first" needs the tumor map) and validation (AIP-005): a model not validated for the specimen is off and locked with the reason, and a stain with no model says so. A side column shows what runs on each slide, the time per slide from measured throughput (AIP-011) or "not measured yet", and the queue with a run-first switch for STAT cases that the lab can audit.
   Done when component tests cover a node case, a biopsy case, an IHC slide, each dependency and the estimate with and without measurements, and E2E starts the plan and sees the jobs created as planned.
   Depends on INGEST-021, AIP-005, AIP-010, SET-011. Refs mock 4 "Choosing what the AI runs", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
-- [ ] INGEST-024 · Running step per slide
-  An upload step that lists each slide with its stages from AIP-011 (uploaded, tiles built, tissue found with its area, tumor areas, cells by scope, unsure zones), a progress bar for the running stage, and "Open now with what is ready". A paused stage says why and what happens next (for example, the lab server is busy with a STAT case and resumes from the last finished tile), with an option to run Fast in the browser meanwhile. Slides with no model show "viewer only". Notifications for ready and paused follow the user's settings, and the plan can be changed for stages that have not started.
-  Done when component tests cover running, paused and ready, and E2E opens a slide while its cells are still running and sees the partial result.
-  Depends on INGEST-023, AIP-011. Refs mock 4 "AI running", "An AI step paused" and "Ready to read", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+- [ ] INGEST-024 · Upload progress with steps per slide
+  One bar for the whole upload with the time left and one per file. Each file row opens its processing steps: uploaded, tiles built, tissue found, results read, placed on the slide and IDs given, or "no results" for a slide that came without them, with a check per finished step and a bar on the running one. "Open now with what is ready" appears once tissue is found. The last step lists slides without results with Run a model (JOBS-002) or leave them.
+  Done when component tests cover running, waiting and finished slides, and E2E opens a slide while its results are still being placed.
+  Depends on INGEST-021, RSET-001, OBJ-001. Refs mock: upload/progress, mock: upload/done, doc 39.
 
 - [ ] INGEST-025 · Import slides from a link
-  Besides files from the computer, the user can give a link to slides on another server. In v1 that is an HTTPS link or an object-storage link (S3 or Azure, usually presigned). The server, not the browser, reads what the link holds and lists the slides with their size and the case each matches (accession number, label barcode or file name). It leaves out slides the case already has and downloads the chosen ones into the same quarantine as browser uploads (INGEST-001), so the normal workflow, AI plan and status follow. Fetching is protected against server-side request forgery: allowed schemes only, no private or link-local addresses after DNS resolution or redirects, size and time limits, and no platform credentials sent to the link.
-  Done when API tests refuse private addresses, redirects to them and oversize files, E2E imports a fixture slide from a test HTTP server into a case, a duplicate is left out by checksum, and the imported slide goes through INGEST-003 to published.
+  Besides files from the computer, the user can give a link to slides on another server. In v1 that is an HTTPS link or an object-storage link (S3 or Azure, usually presigned). The server, not the browser, reads what the link holds and lists the slides with their size and the project and case each matches (file name or embedded slide ID). It leaves out slides the project already has and downloads the chosen ones into the same quarantine as browser uploads (INGEST-001), so the normal workflow and status follow, and result files next to the slides are imported as result sets (RSET-001). Fetching is protected against server-side request forgery: allowed schemes only, no private or link-local addresses after DNS resolution or redirects, size and time limits, and no platform credentials sent to the link.
+  Done when API tests refuse private addresses, redirects to them and oversize files, E2E imports a fixture slide from a test HTTP server into a project, a duplicate is left out by checksum, and the imported slide goes through INGEST-003 to published.
   Depends on INGEST-001, INGEST-003, INGEST-021. Refs mock 4 "From a link", kit W36, kit Flow 7, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
 - [ ] INGEST-026 · Saved import sources
@@ -1153,27 +1191,31 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] DS-003 · Typography
-  IBM Plex Sans and IBM Plex Mono, self-hosted. Scale is display 26/600, title 17/600, body 13/400, label 11/600 caps, data 12 mono with tabular figures. Nothing below 11 px.
-  Done when the type specimen story passes visual tests and fonts load without layout shift.
+  IBM Plex Sans and IBM Plex Mono, self-hosted. Nine sizes and nothing between them: label 11/600 in capitals, caption 12, body small 13, body 14, lead 16, title small 18/600, title 20/600, page title 24/600 and display 28/600. Running text is never under 12 px, and 11 px is only for capital labels, tags, counts and keycaps. Mono only for IDs, numbers in columns, file names and keys.
+  Done when the type specimen story passes visual tests, fonts load without layout shift, and a lint check fails on a font size off the scale.
+  Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
 
 - [ ] DS-004 · Icon set with key badges
-  The SVG icon set from the mock (select, hand, smart, auto, poly, free, rect, ellipse, marker, ruler, arrow, text, comment, brush, slides, sun, gear, help, share, back, next, popout, device icons, panel, home, check, warn, eye, lock, search, flag and others) as React components. Tools show their key letter.
-  Done when every icon has a story and an accessible name.
+  The SVG icon set from the mock (select, hand, smart, auto, poly, free, rect, ellipse, marker, ruler, arrow, text, comment, brush, slides, sun, gear, help, share, back, next, popout, device icons, panel, home, check, warn, eye, lock, search, flag and others) as React components. Five sizes: 12 inside tags and checkboxes, 16 by default, 20 for sidebar navigation, large buttons, tiles and zone headers, 24 for drop zones and empty states, and 40 for state badges. Icons take the text colour, the accent only for a selected state and a status colour only when the icon is the status. One stroke width. Tools show their key in the tooltip.
+  Done when every icon has a story and an accessible name, and a test fails on an icon size off the scale.
+  Refs doc 41, doc 40 D4.
 
 - [ ] DS-005 · Theme switching
   System, dark and light, with the user setting stored per device. Neutral chroma near zero for chrome.
   Done when visual tests cover both themes for every component.
 
 - [ ] DS-006 · Buttons and icon buttons
-  Primary, secondary, ghost. States are default, hover, pressed, focus and disabled. Inline key hints. 32 px height, 24 px minimum target.
+  Primary, secondary, ghost. One filled primary button per screen, so the top bar's Upload is a normal button (doc 40 D2). States are default, hover, pressed, focus and disabled. Inline key hints. 32 px height, 24 px minimum target.
   Done when stories, interaction tests and axe pass.
 
 - [ ] DS-007 · Segmented control, toggle, slider, stepper
+  A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1).
   Done when stories, keyboard tests and axe pass.
 
-- [ ] DS-008 · Chips and status pills
-  Firm, open, neutral, settled, above cutoff, needs review, not validated, running, future tag, STAT badge.
-  Done when stories exist for each variant in both themes.
+- [ ] DS-008 · Tags
+  Nine tag types cover the app. Status is round with a dot and a word, in the tones neutral, accent, ok, warn, bad and research. Category has square corners, is gray and may carry a 12 px icon. Object ID is monospace with a border, at 20 px and 28 px. Result set has a layers icon and a tone by its source. Count is 16 px, blue when it needs the person and gray for totals. Keycap (DS-009), token (DS-020) and filter chip, a control with a check when on, complete the set, with mock-only markers kept out of the product. Tags are 20 px, never clickable, in sentence case, and a status always has its dot and a word.
+  Done when stories exist for every type and tone in both themes, and a test fails on a tag height or tone outside the set.
+  Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] DS-009 · Keycap component
   Done when keycaps render the user's current binding from the key registry, not a hard-coded letter.
@@ -1195,6 +1237,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when stories and tests cover each state.
 
 - [ ] DS-014 · Avatar, avatar stack, presence dot
+  A person is always an avatar with a name. A stack shows the names in a tooltip and a +N count (doc 38).
   Done when stories exist and colours come from the user profile.
 
 - [ ] DS-015 · Skeletons and placeholders that hold space
@@ -1211,6 +1254,31 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Comfortable and compact.
   Done when visual tests cover both densities for lists and inspector.
 
+- [ ] DS-018 · Surfaces and zones
+  Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding.
+  Done when stories show each level in both themes and a visual test covers a modal with three zones.
+  Refs doc 38 "Surfaces and spacing".
+
+- [ ] DS-019 · Progress bar and ring
+  One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, and one ring for review progress split by verdict colour (agree, disagree, not sure, open) with the percentage in the middle.
+  Done when stories cover each state, a unit test checks the ring arcs add up, and the bar and ring expose progressbar and image roles with their values.
+  Refs doc 38 "One component per job".
+
+- [ ] DS-020 · Type-to-find token field
+  A field where a person types a name or a slide, a list shows matches with avatar, name and role or a thumbnail, and picked items sit in the field as chips with a remove cross. It also offers to invite an email that matches nobody.
+  Done when component tests cover typing, picking by keyboard, removing and inviting, and axe passes.
+  Refs doc 39, mock: task/find.
+
+- [ ] DS-021 · Undo toast
+  A toast that names what just happened ("T1 marked agree", "Run cancelled") with an Undo link, kept for 4 s and not covering the slide centre. Undo restores the exact state before the action.
+  Done when component tests cover undo within and after the window, and E2E undoes a verdict and a cancelled run.
+  Refs doc 40 G2 and R1, doc 41.
+
+- [ ] DS-022 · Modals: small one-column and full-width wizard
+  Small one-column modals for short tasks and a medium one-column stepper (New review task) that sizes to its content, with a shadow over the footer when more content follows. Only the upload wizard is full width. Steps of a stepper can be clicked to go back. The scrim is 62% black in dark.
+  Done when stories cover each size, a test switches steps without the width changing, and focus trapping and Esc pass.
+  Refs doc 39, doc 40 R3 and R4.
+
 ---
 
 ## 09 SHELL · Application shell and layout
@@ -1219,21 +1287,21 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when STACK-003 and STACK-005 are confirmed for the shell.
 
 - [ ] SHELL-001 · Routes and code splitting
-  Home, worklist (with view param), status board (with scope and filters in the URL), case (with slide and camera in the URL), the case report, settings deep links, admin, guest view. The viewer engine is split into its own chunk.
+  Home, My work (with its tab), project (with tab and filters), slide (with project, task, slide, camera and selected object in the URL), guided review, evaluation report, setup, settings deep links and admin as its own page. The viewer engine is split into its own chunk.
   Done when routing tests cover deep links and the initial home bundle stays under the budget set in TEST-006.
 
-- [ ] SHELL-002 · Global top bar for home, worklist and board
-  One bar shared by the screens outside a case, with the organisation switcher, search that opens the palette, New case as the main entry, which also takes slides (CASES-024), the notification bell (NOTIF-002) and the account menu (SHELL-012). Settings and theme are reached through the account menu and Cmd+comma rather than buttons of their own.
-  Done when component and E2E tests cover each control and every control is reachable by keyboard.
-  Refs mock 1 to 3, kit W35, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
+- [ ] SHELL-002 · Global top bar and sidebar
+  One top bar outside a slide, with the Parfocal logo and the workspace's name and logo with its switcher (IAM-008), search that opens the palette and accepts object IDs, New project, Upload as a normal button, the jobs ring (JOBS-003), the bell (NOTIF-002) and the account menu (SHELL-012). The sidebar holds Home, My work with its count, the projects with their slide counts, New project and, for admins, Admin under Workspace. Mentions live only behind the bell. Settings and theme are reached through the account menu and Cmd+comma.
+  Done when component and E2E tests cover each control, every control is reachable by keyboard, and a test confirms the sidebar has no Mentions entry.
+  Refs mock: home, doc 39, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
-- [ ] SHELL-003 · Case top bar
-  A quiet bar: icon-only back, a case chip (priority tag, short patient name, case number) that opens the patient and case popover, a slide button (thumbnail, block and stain, n of N) that opens the slides popover (CASE-002), Review and Annotate switch, viewed ring, panel toggle, a "more" menu (share, second opinion, add slides, focus mode, shortcuts, settings) and the permanent primary sign-out button. Popovers close on Esc and on an outside click.
+- [ ] SHELL-003 · Slide top bar
+  A quiet bar: icon-only back, the slide picker (thumbnail, slide, case, n of N and a count of result sets per slide) that opens the slides popover (CASE-002), the Guided, Full viewer and Annotate switch, the progress ring (CASE-015), the panel toggle, a more menu (share, add a result set, run a model, compare, focus mode, shortcuts, settings) and Submit review as the primary button for reviewers. Popovers close on Esc and on an outside click.
   Done when component tests cover each element and each popover, and E2E covers keyboard access to all of them.
-  Refs mock §2.1, kit W2 and W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Refs mock: case, doc 38 "Viewer".
 
 - [ ] SHELL-004 · Workspaces Review and Annotate
-  Switching changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
+  Guided review (GUIDE-002), Review and Annotate save to one review. Switching between Review and Annotate changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
   Done when tests assert the camera is unchanged across a switch.
 
 - [ ] SHELL-005 · Inspector panel with resize and hide
@@ -1247,7 +1315,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs kit W9, decision D6.
 
 - [ ] SHELL-007 · View transitions
-  Worklist to case (the row grows into the canvas), tile to focus review, sign-out back to the worklist. Built on the View Transitions API, with a new key press cancelling the current transition.
+  My work to slide (the row grows into the canvas), tile to focus review, submit back to My work. Built on the View Transitions API, with a new key press cancelling the current transition.
   Done when tests confirm input is never blocked during a transition and reduced motion cuts.
   Refs kit motion table.
 
@@ -1277,91 +1345,97 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ---
 
-## 10 HOME · Home and department dashboard
+## 10 HOME · Home
 
-The launchpad is everyone's home and the department dashboard is the default home for lab leads ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)). The feed and search-first ideas live on as the launchpad's activity, the notification centre and the search page rather than as homes of their own. EXP-003 can still test the lab leads' default.
+The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md), [ADR 0053](adr/0053-ai-results-review-direction.md)). The department dashboard is an idea. The feed and search-first ideas live on as the launchpad's activity, the bell and the search page.
 
 - [ ] HOME-000 · Research check
   Done when the data each variant needs is mapped to API endpoints in an ADR.
 
 - [ ] HOME-001 · Home API aggregates
-  Resume target (case, slide, area, cell), due counts, recent cases, department numbers, upcoming tumor boards, announcements.
+  Resume target (task, slide, object, camera), the user's tasks with due dates, projects with a strip of slide thumbnails and review progress, the week in numbers (objects checked, share agreeing with the AI, open disagreements), what is coming up and announcements.
   Done when API tests cover each aggregate with tenant isolation.
 
 - [ ] HOME-002 · Launchpad home
-  A greeting with the date and what is due, a way to resume the last case exactly where it was left or from the start, quick actions for work that is not on the list (worklist, upload, ask a colleague, find a patient), recent cases with thumbnails, and the department in a few numbers with what is coming up and announcements.
-  Done when component tests cover each block with seeded data and E2E resumes at the exact saved view.
-  Refs mock 1 scene A, kit W28, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
+  A greeting with the date and what is due, then a large continue card with the slide image, the task, slide n of N, progress and the due date, with Continue and Open in the full viewer. Start something tiles with one line each (Upload, Run a model, New review task, Find an object, New project), the projects as cards with a strip of their slides and review dots, and a side column with the week in numbers, coming up and announcements. A first-week variant leads with the sample project and the getting-started checklist (ONB-006).
+  Done when component tests cover each block with seeded data and E2E continues at the exact saved slide and object.
+  Refs mock: home, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] HOME-003 · Resume state
-  Persist the last case, slide, camera, workspace, area and review position per user.
-  Done when E2E closes the browser mid-review and resumes at the same cell.
+  Persist the last task, slide, camera, mode, selected object and review position per user.
+  Done when E2E closes the browser mid-review and resumes at the same object.
 
-- [ ] HOME-004 · Variant B Department dashboard
+- [ ] HOME-004 · Idea: Variant B Department dashboard
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Today, week and month toggle. KPIs for received, AI pre-read share, median turnaround against target, STAT open, second opinions. Pipeline funnel, team load with rebalance suggestion, turnaround chart, needs-attention list.
   Done when component tests render seeded data and permission tests restrict it to lab leads and admins.
 
-- [ ] HOME-005 · Department metrics pipeline
+- [ ] HOME-005 · Idea: Department metrics pipeline
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Turnaround, throughput and funnel computed from case and job events.
   Done when unit tests compute metrics from a seeded event log.
 
-- [ ] HOME-006 · Rebalance suggestion
+- [ ] HOME-006 · Idea: Rebalance suggestion
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Suggest moving cases between pathologists by load and specialty. The suggestion only proposes, and a lead confirms.
   Done when unit tests cover the heuristic and E2E applies a suggestion with an audit entry.
 
 - [ ] HOME-007 · Activity on the launchpad and in notifications
-  Replies, mentions, AI results, tumor board changes and model validations, shown on the launchpad and in the notification centre, filterable by everything, mentions, my cases and AI. Each item links to the case or thread.
+  Replies, mentions, new tasks, finished model runs and imports, and sign-offs, shown on the launchpad and in the notification centre, filterable by everything, mentions and jobs. Each item links to the slide, object, thread, task or job.
   Done when component tests render seeded events with each filter and the activity updates in realtime.
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
 - [ ] HOME-008 · Search page
-  A full search page reached from the sidebar and from the palette's "all results", with scopes (all, patients, cases, slides, reports, folders, actions), grouped results and a patient result that groups their cases across years.
-  Done when E2E searches a partial surname and opens a historic report.
+  A full search page reached from the sidebar and from the palette's "all results", with scopes (all, projects, cases, slides, object IDs, people, actions), grouped results, and an ID result that opens the slide at the object.
+  Done when E2E searches `T2·C145` and part of a full path and opens the slide at the object.
   Depends on CASES-009, CMD-002. Refs mock 1 scene D, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
-- [ ] HOME-009 · Announcements and tumor boards
-  Lab admins post announcements. Upcoming tumor boards come from the TB epic.
+- [ ] HOME-009 · Announcements
+  Admins post announcements, shown on Home with a coloured dot by kind (a new model, a slow server, a change).
   Done when API and component tests cover create, list and expiry.
-  Depends on TB-001.
 
 - [ ] HOME-010 · Role-based default home
-  Launchpad for everyone, dashboard for lab leads, overridable in settings.
+  The launchpad for everyone. A reviewer's continue card and tasks come first, a researcher's projects and Start something come first, set from the role chosen at setup (ONB-004) and changeable in settings.
   Done when tests cover defaults per role and the override.
 
 ---
 
-## 11 WL · Worklist views, case preview and AI queue
+## 11 WL · My work
+
+My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.md)). To review lists the reviewer's tasks behind one Continue card, Assigned by me shows the researcher's tasks with progress per reviewer, and All slides is a filterable table. The worklist views, the case preview and the AI queue are ideas.
 
 - [ ] WL-000 · Research check
-  Done when the worklist query API and the data needs of the list, day and grid views and the case preview are captured in an ADR.
+  Done when the My work query API and the data needs of its three tabs are captured in an ADR.
 
-- [ ] WL-001 · Worklist query API
-  Filter by assignee, folder, status, due, priority, AI state, shared with me, starred, signed. Sort by due and priority. Cursor pagination.
+- [ ] WL-001 · My work query API
+  Tasks for me with my progress and due date, tasks I created with progress per reviewer and their status (in review, not started, disagreements, ready to sign off), and all slides I can see with project, result sets, reviews and status. Filters by project, status, result set, reviewer and storage. Cursor pagination.
   Done when API tests cover every filter and tenant isolation.
 
-- [ ] WL-002 · Worklist sidebar
-  Home, my worklist, the status board (BOARD-003) with its count, shared with me (badge), starred, signed out, folders by service with colours and counts.
-  Done when component tests cover navigation and counts.
+- [ ] WL-002 · Worklist sidebar (moved)
+  Moved to SHELL-002, which holds the sidebar ([ADR 0053](adr/0053-ai-results-review-direction.md)).
 
-- [ ] WL-003 · AI status line
+- [ ] WL-003 · Idea: AI status line
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   The segmented bar and the sentence "The AI has read 6 of 8 cases ...", with a link to the queue.
   Done when component tests cover every AI state mix.
 
-- [ ] WL-004 · AI cell and dot semantics
+- [ ] WL-004 · Idea: AI cell and dot semantics
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Dot colours and one-sentence AI result per case. Red means tumor flagged, green nothing flagged, blue reading, amber decision needed, grey no model applies. Progress bar while running.
   Done when unit tests map every case AI state to its dot and sentence.
   Refs mock 2 caption.
 
-- [ ] WL-005 · Worklist list grouped by due day
-  Cases grouped by the day they are due (today, tomorrow, then the next working days), each group with its count and a reading-time estimate (WL-010). A row identifies the patient (STAT, name, sex, age, masked MRN), the case and specimen, the AI result (WL-004), status, people on the case and the due time. Opening a case is one action from its row. While the case preview is open, rows drop their less important fields so the list stays readable.
-  Done when component tests cover the grouping across a weekend, the estimate per group and the reduced row, and the list virtualises 10,000 rows.
-  Refs mock 2, kit W1, kit Worklist options, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
+- [ ] WL-005 · To review tab
+  One Continue card for the task in progress with the slide image, progress and time left, then each of my tasks with its project, scope, due date, blinding, my progress and a status tag, with Continue or Start. A side column shows mentions and replies. Opening the next slide is one action.
+  Done when component tests cover a task in progress, a new task and a finished one, and E2E continues from My work into guided review at the next object.
+  Refs mock: worklist/review.
 
 - [ ] WL-006 · Keyboard navigation in the worklist
-  Arrow keys and J and K move the selection, Enter or a double-click opens the case, P shows or hides the case preview, Esc hides the preview and then clears the selection.
+  Arrow keys and J and K move the selection in each tab, Enter opens the task or slide and Esc clears the selection.
   Done when E2E drives the whole list by keyboard.
 
-- [ ] WL-007 · Case preview on demand
+- [ ] WL-007 · Idea: Case preview on demand
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Selecting a case shows a preview next to the list without leaving it: the slide with the AI map faintly over it, the AI result and how sure it is, the case's slides, specimen, clinical note, due time, status and who else is on the case, and open lab work (BOARD-001). From the preview the user can open the case, reassign it (BOARD-007) and open its ticket on the board. The preview never shows until asked for, the list stays usable while it is open, and whether it opens on select is remembered per user.
   Done when component tests cover a ready, a running and a not-run case, E2E selects by keyboard and opens by Enter, and the remembered choice survives a reload.
   Refs mock 2 scene "A with B's preview open", [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -1369,19 +1443,23 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] WL-008 · View C Status board (dropped)
   Dropped. The status board is a page of its own, see the BOARD epic ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)).
 
-- [ ] WL-009 · View D Day plan
+- [ ] WL-009 · Idea: View D Day plan
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Timeline 9:00 to 16:00 with a now line, cases placed by due time and estimated reading time, fixed commitments, unscheduled list, re-plan.
   Done when unit tests cover the estimate (slide count, specimen, AI pre-read) and the placement algorithm.
 
-- [ ] WL-010 · Reading-time estimate model
+- [ ] WL-010 · Idea: Reading-time estimate model
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A simple estimate from slide count, specimen type and AI result, calibrated later from task timing (EXP-006).
   Done when unit tests cover the formula and it is versioned.
 
-- [ ] WL-011 · View E Slide grid
+- [ ] WL-011 · Idea: View E Slide grid
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Card per case with thumbnail and faint AI map, progress ring and time left while running.
   Done when component tests cover ready, running and queued cards.
 
-- [ ] WL-012 · View switcher and persistence
+- [ ] WL-012 · Idea: View switcher and persistence
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   List, day and grid views and the case preview on demand, remembered per user, overridden by experiment assignment when one is active.
   Done when tests cover persistence and experiment override.
 
@@ -1389,37 +1467,51 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Swap names for initials across the app for screen sharing and teaching.
   Done when E2E confirms no full name appears anywhere in the DOM with the toggle on.
 
-- [ ] WL-014 · AI queue panel
+- [ ] WL-014 · Idea: AI queue panel
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. The jobs tray (JOBS-003) replaces it.
   Jobs per slide in run order, stage pills (scan, tissue, tumor map, cells), ETA, throughput sparkline, held job with run anyway or skip AI, pause queue, run STAT first.
   Done when component tests cover every job state and action shown in the mock 2 queue scene, and API tests cover each action with permissions.
   Depends on AIP-010.
 
-- [ ] WL-015 · Star and assign
+- [ ] WL-015 · Idea: Star and assign
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Star a case, and assign it to yourself from the list. Reassigning to someone else goes through the picker in BOARD-007.
   Done when API and E2E tests cover each action with audit entries.
 
 - [ ] WL-016 · Realtime worklist updates
-  New cases, AI progress and status changes update without reload.
+  New tasks, reviewer progress, finished jobs and status changes update without reload.
   Done when E2E with two sessions shows an update within 2 s.
   Depends on COLLAB-001.
 
 - [ ] WL-017 · Filter popover
-  Folder, due date, AI result, person.
+  Project, status, result set, reviewer and storage, for the All slides tab, kept in the URL.
   Done when component tests cover combined filters and URL persistence.
+
+- [ ] WL-018 · Assigned by me tab
+  The researcher's tasks as a table with the result set, each reviewer as avatar and name with a progress bar, the due date, a status tag and one action by status: Nudge, Resolve for disagreements or Sign off when ready. A more menu reassigns slides, changes the due date or adds a reviewer (TASK-007).
+  Done when component tests cover each status and its action, and E2E nudges a reviewer and opens the disagreement queue.
+  Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
+
+- [ ] WL-019 · All slides tab
+  Every slide the person can see, with project and case, result sets, reviews by person and status, a search that filters as you type and the filters of WL-017. A row opens the slide.
+  Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.
+  Depends on WL-001, WL-017. Refs mock: worklist/all.
 
 ---
 
-## 12 CASE · Case view
+## 12 CASE · Slide view
+
+The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-direction.md)). The inspector has Objects, Layers, Comments and Opinion tabs (CASE-014). Sentinel-node staging is a project analysis template (PROJ-005), so the staging tasks here and in REVIEW apply only in projects that turn it on.
 
 - [ ] CASE-000 · Research check
   Done when the case view state model (slide, workspace, inspector tab, area, review position) is captured in an ADR.
 
 - [ ] CASE-001 · Case loader
-  Load case, patient, slides and AI state, open the first slide fitted.
-  Done when E2E opens a case from the worklist and the slide is fitted within the TEST-006 budget.
+  Load the project, the optional case, the slides, their result sets, the review task and the person's verdicts, and open the slide fitted. Patient fields load only in clinical projects.
+  Done when E2E opens a slide from My work and from the project page and the slide is fitted within the TEST-006 budget.
 
 - [ ] CASE-002 · Slides popover
-  The top bar's slide button opens the case's slides with thumbnail, block and stain, viewed share and processing progress. Q and E step through slides. Every other slide has a "Side by side" button (CMP-007), and the footer has "Compare slides" and "Add slides" (INGEST-021). The permanent tray is an optional pinned strip in settings, off by default.
+  The top bar's slide button opens the case's slides with thumbnail, case, block and stain, the number of result sets, review progress and processing progress. Q and E step through slides. Every other slide has a "Side by side" button (CMP-007), and the footer has "Compare slides" and "Add slides" (INGEST-021). The permanent tray is an optional pinned strip in settings, off by default.
   Done when tests cover switching from the popover and by key, switching preserves per-slide camera, and the pinned strip setting works.
   Refs mock 5, kit W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
@@ -1428,9 +1520,10 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when tests switch slides and come back to the same view.
 
 - [ ] CASE-004 · AI state: pre-read ready
-  Heat overlay and area outlines with numbered badges. The panel leads with the staging question for a sentinel node: "Metastasis likely, largest about 7.7 mm", a chip "Macro if confirmed", and a size scale with the 0.2 and 2 mm lines (REVIEW-004). The area list is largest first with size and category per row. The footer says "Start with area 1". Once the largest area is confirmed and measured the hero reads "Macrometastasis, 8.0 mm, settled" with the suggested pN stage, the smaller rows say they cannot change the category, and the footer offers sign-out.
+  Heat overlay and area outlines with numbered badges. The panel leads with the staging question for a sentinel node: "Metastasis likely, largest about 7.7 mm", a chip "Macro if confirmed", and a size scale with the 0.2 and 2 mm lines (REVIEW-004). The area list is largest first with size and category per row. The footer says "Start with area 1". Once the largest area is confirmed and measured the hero reads "Macrometastasis, 8.0 mm, settled" with the suggested pN stage, the smaller rows say they cannot change the category, and the footer offers submit.
   Done when component tests cover the content and behaviour of the mock 5 "Large deposit found" scene in both the open and the settled state.
   Refs kit W2, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Only in projects with the sentinel node staging template (PROJ-005).
 
 - [ ] CASE-005 · AI state: still running
   The map fills in as computed, with a dashed line where the AI has reached. Stage progress card. Areas appear as found, with placeholders. The view never moves.
@@ -1446,7 +1539,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Step field by field along the serpentine path with a key, marking seen tissue.
   Done when E2E completes a scan on a small slide and coverage reaches 100%.
 
-- [ ] CASE-008 · AI state: model not validated
+- [ ] CASE-008 · Idea: AI state: model not validated
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. It depends on per-specimen validation, which is an idea.
   Warning bar, areas shown for reference only, no verdict, amber chip.
   Done when component tests cover the state and the report draft notes it.
   Depends on AIP-005.
@@ -1456,14 +1550,15 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when tests check it against the coverage raster.
 
 - [ ] CASE-010 · Patient banner
-  Lab-locked setting that keeps name, sex, age and record number visible on every case screen.
+  Only in clinical projects (PROJ-002). A lab-locked setting that keeps name, sex, age and record number visible on every case screen.
   Done when tests cover the setting and initials mode.
 
 - [ ] CASE-011 · Case header details
-  Specimen, clinical note, clinical question, blocks, assigned pathologist and who sent the case, in the case chip popover (SHELL-003).
+  Project, case, specimen, blocks, the task and its researcher, and in clinical projects the clinical note, in the slide picker's details (SHELL-003).
   Done when component tests cover each field and missing data.
 
-- [ ] CASE-012 · Case state transitions
+- [ ] CASE-012 · Idea: Case state transitions
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Review tasks carry the slide pipeline (TASK-002), and ADAPT-007 reverts the case state machine.
   Scanned, AI reading, to review, waiting on others, draft report, signed, amended.
   Done when unit tests cover the state machine and every transition is audited.
 
@@ -1471,6 +1566,17 @@ The launchpad is everyone's home and the department dashboard is the default hom
   When the largest area sits near 0.2 mm, the hero says both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis, and lists the steps still open (confirm, measure, count cells).
   Done when component tests cover the content and behaviour of the mock 5 "Only a small cluster" scene and the step list follows the staging state.
   Depends on REVIEW-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Only in projects with the sentinel node staging template (PROJ-005).
+
+- [ ] CASE-014 · Inspector with Objects, Layers, Comments and Opinion
+  Four tabs with counts. Objects lists the object IDs with their verdicts and, with the staging template, the staging hero and area list. Layers holds the result sets and their styles (VIZ-001). Comments lists the threads by ID (COLLAB-005). Opinion holds the form (GUIDE-007). The template line names the project's analysis template.
+  Done when component tests cover each tab with seeded data, the counts follow changes, and a project without a template shows no staging.
+  Depends on CASE-001, OBJ-001, GUIDE-001. Refs mock: case, mock: layers, doc 37 "Viewer".
+
+- [ ] CASE-015 · Progress ring in the slide top bar
+  One ring split by verdict colour (agree, disagree, not sure, open) with this slide's percentage. Clicking it opens a popover with the task, slide n of N, the due date, time left and a button for the next slide.
+  Done when component tests cover an empty, a partial and a finished slide, and E2E opens the next slide from the popover.
+  Depends on DS-019, TASK-003. Refs doc 38 answer 3, mock: case.
 
 ---
 
@@ -1539,6 +1645,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
 
 ## 14 REVIEW · Review workspace
 
+Cell findings and node staging run in the Objects tab of the slide view (CASE-014). Verdicts on whole objects come from GUIDE-001 and use K, X and U in both modes ([ADR 0053](adr/0053-ai-results-review-direction.md)). Node staging applies only with the sentinel node template (PROJ-005).
+
 - [ ] REVIEW-000 · Research check
   Re-read docs 28 and 33 and confirm the confidence rules below still hold for the typer chosen in AINUC.
   Done when an ADR lists the display rules and their evidence.
@@ -1590,6 +1698,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Keep, retype, not a cell, skip, with reviewer, time, AI call and confidence at decision time. Reviewed shapes are never re-typed by a model afterwards.
   Done when API tests cover each decision and the "never re-typed" rule.
   Refs doc 22.
+  Decisions are stored per reviewer in the reviewed layer (RSET-007).
 
 - [ ] REVIEW-011 · AI wording modes
   Plain words (default), percent, frequency, with the validated phrases "tumor", "probably tumor", "tumor or immune".
@@ -1616,7 +1725,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Depends on AINUC-003.
 
 - [ ] REVIEW-016 · Your call on an area
-  Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call fills the report, ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before sign-out. Marking the lead area Not tumor hands the category to the next largest.
+  Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call is the verdict on the area's ID (GUIDE-001), ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before submit. Marking the lead area Not tumor hands the category to the next largest.
   Done when component tests cover the three calls and toggling off, and API tests persist the call with the reviewer and time and write it to the audit log.
   Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
@@ -1692,10 +1801,10 @@ The launchpad is everyone's home and the department dashboard is the default hom
   With nothing selected, sets the class for new shapes. With a selection, re-classes it. In review contexts it also marks reviewed and teaches. The swatch click and the key behave the same (fixes the POC inconsistency).
   Done when tests confirm identical behaviour for key and swatch.
   Refs doc 34 inconsistencies.
+  Keys follow the project taxonomy, 1 to 9 (PROJ-004).
 
-- [ ] ANN-012 · Class taxonomy per tenant
-  Default classes tumor, stroma, immune, other with kit colours. Lab admins can extend per specimen type, with colour validation from DS-002.
-  Done when API tests cover custom classes and the colour check rejects a colour too close to an existing class.
+- [ ] ANN-012 · Class taxonomy per tenant (moved)
+  Moved to PROJ-004, because classes belong to a project ([ADR 0053](adr/0053-ai-results-review-direction.md)).
 
 - [ ] ANN-013 · Undo and redo
   Transactions: draft vertex, then prompt point, then committed edit. A model run accept is one step. Async results arriving after accept fold into the accept entry. Group operations and comments are covered.
@@ -1711,6 +1820,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Groups with counts, visibility (A toggles overlays), lock, colour, nested children, group by class, cluster, region or source, target layer for new shapes, Cmd+G group and Cmd+Shift+G ungroup.
   Done when component and interaction tests cover each control. Hidden and locked groups are excluded from hit testing.
   Refs mock 11, doc 34 §6.
+  Result sets and their styles are the top of the Layers tab (VIZ-001).
 
 - [ ] ANN-016 · Grouping rules
   Class, cluster (radius in µm), containment, provenance.
@@ -1748,6 +1858,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Merge into a new group by default, never replace silently. Undoable. Reads QuPath GeoJSON and the app's own export.
   Done when round-trip tests export and re-import with no loss, including groups, comments and review state.
   Refs doc 25 import defects.
+  Importing a file as a result set goes through RSET. This task covers importing a file as editable annotations in Annotate.
 
 - [ ] ANN-024 · Export GeoJSON, FlatGeobuf and own JSON
   Runs are included (the POC once exported "0 shapes"), large results stream from the server.
@@ -1788,7 +1899,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Each measurement with area, value, time, category chip.
   Done when component tests cover the list.
 
-- [ ] MEAS-004 · Report linkage
+- [ ] MEAS-004 · Idea: Report linkage
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. The clinical report is an idea.
   The largest relevant measurement fills the report's largest deposit and category with its source named.
   Done when E2E measures and the report draft shows the value and source.
   Depends on REPORT-004.
@@ -1810,12 +1922,13 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when STACK-024 is confirmed and the event model (topics per tenant, case and user) is written as an ADR.
 
 - [ ] COLLAB-001 · Realtime infrastructure
-  Authenticated connections to Durable Object rooms per case and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Authenticated connections to Durable Object rooms per slide, per task and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
 - [ ] COLLAB-002 · Threads API
-  Threads anchored to a slide point, a shape or a group, with title, messages, resolve and reopen, delete with confirmation when replies exist.
+  Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist.
   Done when API tests cover anchors, permissions and audit.
+  During blind review a reviewer sees only their own threads and the researcher's (TASK-004). Depends on OBJ-001, TASK-004.
 
 - [ ] COLLAB-003 · Comment tool and pins
   C places a pin and opens the composer, Enter posts, Shift+Enter adds a line. Pins show initials, store an offset relative to their target, follow and hide with their shape, and are draggable with undo.
@@ -1836,15 +1949,17 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Depends on NOTIF-001.
 
 - [ ] COLLAB-007 · Presence
-  Who is viewing a case now, shown on the case and in the second-opinion card.
+  Who is viewing a slide now, shown on the slide and on the project page.
   Done when E2E with two users shows presence within 2 s and it clears on leave.
 
-- [ ] COLLAB-008 · Ask for a second opinion
+- [ ] COLLAB-008 · Idea: Ask for a second opinion
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Pick a colleague (same organisation or guest from another), send the current view and its threads, create a guest link when external, move the case to waiting on others.
   Done when E2E covers internal and external requests end to end.
   Depends on IAM-010.
 
-- [ ] COLLAB-009 · Guest view
+- [ ] COLLAB-009 · Idea: Guest view
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A guest opens the case at the exact view without installing anything, can measure and reply, sees only the shared threads. Initials mode is on while a guest is viewing.
   Done when E2E covers the guest journey and permission tests confirm the limits.
 
@@ -1855,17 +1970,19 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] COLLAB-011 · Live shared cursor in compare and follow modes
   Done when tests cover cursor broadcast throttling and display.
 
-- [ ] COLLAB-012 · Open threads at sign-out
-  Sign-out warns on open threads but does not block.
-  Done when E2E signs out with an open thread and sees the warning.
+- [ ] COLLAB-012 · Open threads at submit and sign-off
+  Submitting a review and signing off a task warn on open threads but do not block.
+  Done when E2E submits with an open thread and sees the warning.
 
 
-- [ ] COLLAB-013 · Consult record and structured opinion
+- [ ] COLLAB-013 · Idea: Consult record and structured opinion
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A consult has a requester, a consultant, a question, the view it is about, a due date and a state (requested, accepted, declined, answered, closed). The opinion is agree, disagree or cannot say, with text and attached measurements or snapshots, so the requester's report can quote it. Declining names another consultant. The consultant's access ends when the consult closes or expires.
   Done when API tests cover every state, the quotable opinion, declining with a suggestion and access ending on close.
   Depends on COLLAB-008, IAM-010. Refs kit W56, kit Flow 15.
 
-- [ ] COLLAB-014 · Secure links for signed reports
+- [ ] COLLAB-014 · Idea: Secure links for signed reports
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A signed report, or a read-only view of it, is shared through a link bound to the recipient's email. Opening it needs a code sent to that address, it expires, and the sender can revoke it. Every opening is logged, and a recipient who says it was not meant for them revokes it.
   Done when API tests cover the code, expiry, revocation, the "not for me" path and the audit entries.
   Depends on IAM-019, REPORT-015. Refs kit W57.
@@ -1910,121 +2027,9 @@ The launchpad is everyone's home and the department dashboard is the default hom
 
 ---
 
-## 19 REPORT · Reports and sign-out
+## 20 CASES · Cases and patients
 
-- [ ] REPORT-000 · Research check
-  Check ICCR and CAP datasets for sentinel lymph node reporting and IHE PaLM APSR structure, and confirm the template engine and PDF choice (STACK-035). Start from [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md), re-read CAP Breast Invasive Resection 4.11.0.0 (the ADR read the element text from 4.9.0.0), and settle with the supervisor which template, report language and registry coding (ICD-O-3, SNOMED) a Czech laboratory uses. TODO.
-  Done when an ADR names the dataset versions used.
-
-- [ ] REPORT-001 · Report model and API
-  Report per case with template id and version, field values with source (manual, measurement, AI confirmed), status draft, signed, amended, and signer.
-  Done when API tests cover the lifecycle and audit entries.
-
-- [ ] REPORT-002 · Template engine
-  Templates as versioned data, with fields, types, conditional visibility, validation and computed fields. Lab admins can enable templates per specimen type.
-  Done when unit tests evaluate conditions and computed fields.
-
-- [ ] REPORT-003 · Sentinel lymph node template
-  Elements from the ICCR dataset for surgically removed lymph nodes for breast tumours, with CAP's element names and answers and TNM 8 pN: clinical information, operative procedure, laterality, sentinel, non-sentinel and total nodes examined, nodes with metastatic carcinoma, with macrometastases and with micrometastases, isolated tumour cells only, tumour cells in a cluster at or under 0.2 mm, size of largest metastatic deposit, extranodal extension, treatment effect, ancillary studies, pN with (sn), (i+) or mi, and a local AI element. Each element is marked core, conditional or optional. A missing core or applicable conditional value renders as waiting with what it needs, never as a guess. When the breast is reported separately, a comment says "p" needs the primary tumour removed.
-  Done when tests fill the template from seeded findings for a macrometastasis, a micrometastasis, isolated tumour cells only and a negative node, the category and pN are computed from the largest deposit and its count, and missing values render as waiting.
-  Refs mock 14 and 15, kit Sign-out report, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-- [ ] REPORT-004 · Prefill from confirmed findings
-  Fields fill only from what the doctor confirmed, never from raw AI output, and each AI-derived value names its source.
-  Done when tests confirm unconfirmed AI areas never reach the report.
-
-- [ ] REPORT-005 · Report tab and editor
-  Field editing, sources shown, validation messages, a way to the full report (REPORT-014) and to sign-out.
-  Done when component tests cover editing and validation.
-
-- [ ] REPORT-006 · Before-signing checklist
-  Category settled from the largest area, areas confirmed or marked as unable to change the category, unsure areas as a warning, tissue viewed percentage, open threads as a warning, and required report elements still empty, which block signing. Incomplete items link to the area, the element or to "go to unseen tissue".
-  Done when unit tests compute the checklist from coverage and review data and E2E follows a "go to unseen" link.
-
-- [ ] REPORT-007 · AI disclosure
-  Exact model names and versions for every model whose output influenced a confirmed value, plus validation status. No CAP or ICCR wording exists yet, so the statement follows [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md): which model and version, what it did, what the pathologist reviewed, and that no value was set without review. It is marked as a local element and replaced when guidance appears.
-  Done when tests check the disclosure against the job records.
-
-- [ ] REPORT-008 · Sign-out
-  Cmd+Enter or the sign-out action wherever it is offered, re-authentication per SEC-023, the case moves to signed, a transition back to the worklist. Sign-out is refused while a core report element is empty.
-  Done when E2E signs out by keyboard, a test refuses sign-out with an empty core element, and the audit log and e-signature record exist.
-
-- [ ] REPORT-009 · PDF rendering
-  A4 pages in the usual order: laboratory and report status, patient and dates (the items 42 CFR 493.1291(c) lists), an amendment box when amended, specimen, clinical history, final diagnosis, the synoptic block with the standards it follows, comment, gross, microscopic, slides and stains, AI statement and the electronic signature. A running header from page 2, page n of N, and a DRAFT watermark until signed. Optional sections can be left out, and value sources never print. The PDF and the on-screen pages come from the same model and paginate the same.
-  Done when a golden PDF test compares text content and layout fingerprints for a draft, a signed and an amended report, and a test confirms no value source reaches the PDF.
-  Depends on STACK-035. Refs [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-- [ ] REPORT-010 · Amendments and addenda
-  After sign-out, changes create an amendment with reason, new signature and a visible history. The amended report says at its top what changed, why, when and by whom, and both versions are kept (42 CFR 493.1291(k)). An addendum adds information that does not change the diagnosis, such as a late stain, as its own signed section below the original. Both are sent again through the outbox (REPORT-022).
-  Done when tests confirm the original stays immutable, the amendment chain renders, and an addendum leaves the diagnosis and its signature untouched.
-  Refs kit Flow 19.
-
-- [ ] REPORT-011 · "No tumor seen" variant
-  For cases with no flagged area that went through a systematic scan.
-  Done when tests require coverage above the lab threshold before this variant can be signed.
-
-- [ ] REPORT-012 · Report attachments
-  Review CSV, measurement list and selected snapshots attached to the report.
-  Done when tests confirm attachments are generated and stored with the report.
-
-- [ ] REPORT-013 · Report delivery hook
-  Signed reports are published through the LIS adapter interface (CASES-010) and available as FHIR DiagnosticReport.
-  Done when a contract test validates the FHIR resource.
-
-- [ ] REPORT-014 · Full report view
-  The doctor can read the whole report as pages before signing, see which required elements are filled and which are waiting, choose which optional sections to include and, in a draft, see where each value came from. From there they can sign, see the PDF, print and share it, and after signing start an amendment.
-  Done when component tests cover a draft with waiting elements, a draft ready to sign, a signed and an amended report, pagination keeps a section title with its first line, axe passes, and E2E signs from this view.
-  Depends on REPORT-001, REPORT-002, REPORT-009. Refs mock 15, kit W37, kit Sign-out report, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-- [ ] REPORT-015 · PDF preview, print and share
-  The doctor sees the PDF exactly as it is stored, can print it and download it, and can share it according to its state. A draft only goes to a colleague for a read. A signed report goes to the requesting clinician automatically and can join a tumor board pack (HOME-009), go out as a secure expiring link that needs sign-in (IAM-010), or go to another laboratory. Release to a patient portal after the hospital's delay is shown but waits for a portal integration. Every share is audited.
-  Done when E2E shares a signed report each way, a permission test refuses sharing a draft outside the department, audit entries exist, and printing produces the same A4 pages as the PDF.
-  Depends on REPORT-009, IAM-010, HOME-009. Refs mock 15, kit W38, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-- [ ] REPORT-016 · Tumour cell content for molecular testing
-  For cellularity cases the report gives the block and slide, the field assessed (outlined for macrodissection), the share of nucleated cells that are tumour cells with its likely range, whether it clears the assay minimum set by the lab, the cells counted, the unsure cells the pathologist checked, cells changed by learning and a macrodissection note, following the CAP Molecular Oncology Committee recommendations as confirmed in REPORT-000.
-  Done when tests fill the section from seeded REVIEW-017 data, the verdict is computed against the lab's minimum including the "could be either side" case, and the values match the review panel.
-  Depends on REVIEW-017, REPORT-002, SET-011. Refs mock 15 cell case, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-- [ ] REPORT-017 · HL7 v2 and IHE APSR output
-  Signed and amended reports also leave as HL7 v2.5 with the synoptic values as coded observations (the NAACCR Volume V style CAP checklists use) and as an IHE APSR document on HL7 CDA R2 with its diagnostic conclusion section, through the adapter interface (CASES-008).
-  Done when contract tests validate the CDA against the APSR templates and the HL7 message with a parser, for a signed and an amended report.
-  Depends on REPORT-013, CASES-008. Refs [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
-
-
-- [ ] REPORT-018 · Undo window before delivery
-  Signing locks the report version and starts a grace period, set by the lab (default 10 s), before the report goes to the outbox. Unsigning inside it returns the report to draft and is audited. After it only an amendment changes the report.
-  Done when API tests with a fake clock cover unsigning inside and outside the window, and a test proves nothing reaches the outbox before the window ends.
-  Depends on REPORT-008, REPORT-022. Refs kit W61, kit Flow 16, [ADR 0023](adr/0023-gap-review-backend-first.md).
-
-- [ ] REPORT-019 · Resident draft and supervisor co-sign
-  A resident sends a draft for review, and the case moves to with the supervisor (CASES-012). The supervisor's edits are kept as changes against the resident's version. The supervisor returns the case with a note or co-signs, which records both people (reported by, verified by) with two electronic signature records.
-  Done when API tests cover send, return with a note, co-sign, the change list between versions and both signature records, and a resident's direct sign-out is refused.
-  Depends on IAM-018, SEC-023, CASES-012. Refs kit W55, kit Flow 14, [ADR 0023](adr/0023-gap-review-backend-first.md).
-
-- [ ] REPORT-020 · Free-text templates and phrases
-  Templates for specimens without a synoptic protocol: sections and required items, enabled per specimen type. A phrase library per lab and per person expands short codes into text. Measurements insert with their source, as in synoptic reports. The sign-out gate refuses a report with an empty required item.
-  Done when unit tests cover expansion, required items and measurement sources, and API tests cover the phrase libraries' permissions.
-  Depends on REPORT-002. Refs kit W72.
-
-- [ ] REPORT-021 · Report editing lease
-  Only the assignee, or the supervisor during review, edits the calls and the report draft. Editing takes a lease that expires after 10 idle minutes. Anyone else reads, measures and comments. A take-over request reaches the lease holder, who can accept or refuse, and an expired lease can be taken.
-  Done when API tests with two users cover the lease, a refused write, a take-over and expiry with a fake clock.
-  Depends on REPORT-001, COLLAB-007. Refs kit W66, [ADR 0023](adr/0023-gap-review-backend-first.md).
-
-- [ ] REPORT-022 · Delivery outbox
-  Signed reports, amendments, addenda and their messages leave through an outbox with states waiting, sent, delivered and rejected. Delivery retries with backoff and keeps the order per case. Sign-out succeeds while the LIS is down, and the queue drains when it is back. A rejected message keeps the receiver's error and can be retried after a fix, or answered with an amendment.
-  Done when tests cover retry, ordering, a receiver that is down for an hour, a rejection and a retry after the fix, with the file-drop adapter.
-  Depends on REPORT-013, CASES-008. Refs kit W67, kit W70, kit Flow 30.
-
-- [ ] REPORT-023 · Code mappings for outgoing reports
-  Each tenant keeps a versioned mapping from report values to the codes its receivers need (HL7 tables, SNOMED CT, ICD-O-3). A value without a mapping stops that message with an error that names the value. Administrators edit the mappings and every change is audited.
-  Done when tests cover a mapped value, an unmapped value that stops the message and names it, and a mapping change that lets a retry through.
-  Depends on REPORT-017, REPORT-022.
-
----
-
-## 20 CASES · Patients, cases, import and LIS adapter
+Cases are optional groups of slides inside a project (PROJ-001). Patient fields exist only in clinical projects (PROJ-002). The built case model and case creation are reworked for projects, and accession numbers, folders, routing and the case state machine are reverted, by the ADAPT epic. LIS, FHIR and the hospital case handling are ideas ([ADR 0053](adr/0053-ai-results-review-direction.md)).
 
 - [x] CASES-000 · Research check
   Done when STACK-040 is confirmed and the case data model is written as an ADR.
@@ -2035,9 +2040,9 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when migrations, API tests and isolation tests pass.
 
 - [ ] CASES-002 · Case creation UI
-  Create a case with patient lookup or creation, specimen and blocks, then upload slides. The prototype has three options (a quick drawer, a full page in steps, and creating from a label in upload), and the screens follow whichever the prototype settles on.
-  Done when E2E creates a case and uploads a slide.
-  Depends on CASES-013. Refs kit Case creation page, kit W39 to W41, kit Flow 10.
+  Create a case inside a project with its ID and specimen. In a de-identified project a case has an ID only. In a clinical project patient fields are offered and every one is optional.
+  Done when E2E creates a case in each privacy mode and uploads a slide into it.
+  Depends on CASES-013, PROJ-007. Refs mock: newcase/case, mock: newcase/casec.
 
 - [x] CASES-003 · Folders and spaces
   Folders by service with colours, membership, counts. Adds the folder to each case, which CASES-001 left out.
@@ -2048,7 +2053,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when tests cover format validation and collisions.
   Built as [ADR 0037](adr/0037-accession-number-templates.md) says.
 
-- [ ] CASES-005 · Patient history
+- [ ] CASES-005 · Idea: Patient history
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Earlier cases and reports for a patient across years.
   Done when E2E opens a historic report from the patient view.
 
@@ -2056,19 +2062,22 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Patients, cases and slide manifests with a dry run, validation report and idempotent re-run.
   Done when tests import a 500-row file twice without duplicates.
 
-- [ ] CASES-007 · FHIR import
+- [ ] CASES-007 · Idea: FHIR import
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Patient, ServiceRequest and Specimen bundles mapped to our model.
   Done when contract tests import sample bundles.
 
-- [ ] CASES-008 · LIS adapter interface
+- [ ] CASES-008 · Idea: LIS adapter interface
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A documented adapter interface for intake (orders) and output (reports), with a no-op adapter and a file-drop adapter for the pilot.
   Done when tests run the file-drop adapter end to end.
 
 - [ ] CASES-009 · Search API
-  Patients, cases, slides, reports, folders, with scopes, tenant-scoped, PHI-safe ranking.
+  Projects, cases, slides, object IDs by any part of the full path (OBJ-004) and people, with scopes, and patients only in clinical projects, tenant-scoped, PHI-safe ranking.
   Done when tests meet the STACK-034 latency on seeded data.
 
-- [ ] CASES-010 · Report output through the adapter
+- [ ] CASES-010 · Idea: Report output through the adapter
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Done when a signed report reaches the file-drop adapter as FHIR and PDF.
   Depends on REPORT-013.
 
@@ -2087,62 +2096,69 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when API tests cover creation with each default and override, drafts and their visibility, idempotency and the audit entry.
   Depends on CASES-001, CASES-004. Refs kit Flow 10. The defaults come from `case_creation.RULES`, which returns nothing until CASES-022, CASES-023 and AIP-016 plug in their rules.
 
-- [ ] CASES-014 · Field ownership between the LIS and the app
+- [ ] CASES-014 · Idea: Field ownership between the LIS and the app
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A case from the LIS marks the fields the LIS owns (patient, specimen, requester) as read-only in the app, and an edit is refused with a pointer to the LIS. Fields the app owns stay editable and are audited. After sign-out a change to anything on the report needs an amendment.
   Done when API tests cover a refused LIS-owned edit, an allowed app-owned edit and a post-sign-out edit that is refused without an amendment.
   Depends on CASES-008, CASES-013. Refs kit W43, kit Flow 9.
 
-- [ ] CASES-015 · Patient matching and duplicates
+- [ ] CASES-015 · Idea: Patient matching and duplicates
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   The same birth number means the same patient. The same name and birth date without a birth number is a possible duplicate, returned as candidates. Creating a new patient against a candidate needs a reason. Merging two patients is a lead's or administrator's action, keeps a record that can be reversed and is never automatic.
   Done when unit tests cover each matching rule, and API tests cover the reason, a merge and its reversal with audit entries.
   Depends on CASES-001. Refs kit W42.
 
 - [ ] CASES-016 · Slides that match no case
-  A slide whose label or file name names no known case goes to the tenant's unmatched queue, while the rest of its upload continues. From there it either creates a case prefilled from the label and file name (accession, specimen, block, stain) or is attached to an existing case with a reason.
-  Done when API tests cover the queue, creating from a label, attaching with a reason, and an upload whose other files are unaffected.
-  Depends on CASES-013, INGEST-011, INGEST-021. Refs kit W41, kit Flow 11.
+  A slide whose file name names no case stays loose in the project, and a result file that matches no slide waits in the upload's Match step until the user picks one. A loose slide can be filed into a case later.
+  Done when API tests cover loose slides, filing one later and an upload whose other files are unaffected.
+  Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/match.
 
 - [ ] CASES-017 · Moving a slide between cases
-  A slide moves with its history to another case. Calls and measurements made on it leave the source case's report draft, the target case's AI plan runs on it, and both assignees are notified. A move is refused while either case is signed until an amendment is open. A reason is required and both cases log the move.
-  Done when API tests cover a move, a refused move on a signed case, the report draft cleanup and the AI rerun, with audit entries on both cases.
-  Depends on CASES-012, REPORT-010. Refs kit W44, kit Flow 12.
+  A slide moves with its history to another case in the same project. Its result sets, IDs, verdicts and threads move with it, and the researchers of tasks that hold it are notified. A move is refused while a task that holds the slide is signed off, until it is reopened (ADJ-004). A reason is required and both cases log the move.
+  Done when API tests cover a move, a refused move on a signed-off task and the moved result sets, with audit entries on both cases.
+  Depends on CASES-012, ADJ-004. Refs kit W44, kit Flow 12.
 
-- [ ] CASES-018 · Expected slides
+- [ ] CASES-018 · Idea: Expected slides
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Blocks with their levels and stains create expected slides. Arriving slides fulfil them. A case waits for slides until the first one arrives, and expected slides still missing are reported to the sign-out checks.
   Done when API tests cover fulfilment by barcode, a missing level reported at sign-out, and a case leaving waiting for slides.
   Depends on CASES-013, REPORT-006. Refs kit W43.
 
-- [ ] CASES-019 · Cancel, restore and merge cases
+- [ ] CASES-019 · Idea: Cancel, restore and merge cases
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A lead cancels a case with a reason. A cancelled case leaves every list, stays findable by search and can be restored for 30 days. A signed case cannot be cancelled. Two cases created for the same specimen can be merged into one, and the old accession keeps resolving to the merged case for links and notifications.
   Done when API tests cover cancel, restore, the refusal on a signed case, a merge and an old link that resolves after it.
   Depends on CASES-012. Refs kit W43, kit W65.
 
-- [ ] CASES-020 · Next case in a list
-  Given a case and the list it was opened from (a worklist query, a board column, search results or a tumor board session), return the next and previous case. Cases still waiting for AI or on hold are skipped where the list's rules say so. The end of today's group is reported as the end.
+- [ ] CASES-020 · Next slide in a task
+  Given a slide and the task or list it was opened from (a task, the All slides tab or search results), return the next and previous slide, skipping slides already submitted where the task says so. The end of the task is reported as the end.
   Done when API tests cover each list kind, skipping and the end of the list.
-  Depends on WL-001, BOARD-004. Refs kit Navigation map, kit W61, kit Flow 16.
+  Depends on WL-001, TASK-001. Refs kit Navigation map, kit W61, kit Flow 16.
 
 - [ ] CASES-021 · Back targets in deep links
-  Every link the app produces (notifications, shared links, emails, search results) carries where it came from, so the client can return there. Links to moved or merged cases and slides resolve to their new place.
-  Done when API tests resolve links after a slide move and a case merge, and every link kind in the notification catalogue (NOTIF-006) carries its origin.
-  Depends on CASES-017, CASES-019, NOTIF-006. Refs kit Navigation map.
+  Every link the app produces (notifications, shared links, emails, search results) carries where it came from, so the client can return there. Links to moved slides and to merged objects resolve to their new place.
+  Done when API tests resolve links after a slide move and an object merge (OBJ-003), and every link kind in the notification catalogue (NOTIF-006) carries its origin.
+  Depends on CASES-017, OBJ-003, NOTIF-006. Refs kit Navigation map.
 
-- [ ] CASES-022 · Assignment rules with a test run
+- [ ] CASES-022 · Idea: Assignment rules with a test run
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Rules are ordered and the first match assigns the case. A rule matches on service, specimen, priority, folder or source and assigns to a person, a team by load, a resident together with their supervisor, the consultant named in a consult, or the pool. Nobody away is ever chosen (IAM-015, TEAM-001). Rules are versioned with their author. A test run applies a rule set to past cases and returns each person's count, the pool count and anyone over capacity, without changing anything.
   Done when unit tests cover ordering, each target, absences and the pool fallback, and an API test runs a rule set over a seeded week.
   Depends on CASES-011, TEAM-003. Refs kit W50, kit Flow 24, [ADR 0023](adr/0023-gap-review-backend-first.md).
 
 - [ ] CASES-024 · Sorting dropped files into cases
-  Given a set of dropped files (slides and documents such as a requisition), decide for each one where it goes: an existing case by label barcode or file name, the new case being created, already in a case and left out, or a document whose fields fill the new case. Every decision can be changed before anything is applied. Applying is one transaction: the case is created, slides go to their cases, and the assignees of cases that received slides are told. A drop on one case sends every slide there, and a label that names another case asks first.
-  Done when API tests cover each decision, an override, a duplicate, a requisition that fills fields, a drop on one case with a mismatched label, and a failure that leaves nothing half applied.
-  Depends on CASES-013, CASES-016, INGEST-011. Refs mock 24 (New case, entry options), ADR 0023.
+  Given a set of dropped files (slides and AI result files), decide for each slide its case from the file name or keep it loose, leave out slides the project already has, and hand result files to pairing (RSET-004). Every decision can be changed before anything is applied. Applying is one transaction: cases are created, slides go to their cases, and result sets are created for the paired files.
+  Done when API tests cover each decision, an override, a duplicate, a file with no case and a failure that leaves nothing half applied.
+  Depends on CASES-013, INGEST-011, PROJ-001. Refs mock: upload/match, doc 37 "AI results and import".
 
-- [ ] CASES-025 · Folder screens
+- [ ] CASES-025 · Idea: Folder screens
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Folders by service are an idea. Projects group the work.
   Split from CASES-003. The folder list with colours and open case counts, editing a folder, choosing its people and filing a case into a folder, in the kit's style.
   Done when component tests cover each screen and an E2E test files a case into a folder.
   Depends on CASES-003 and the final UI shell.
 
-- [ ] CASES-023 · Due time rules
+- [ ] CASES-023 · Idea: Due time rules
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Due time comes from the priority and specimen type, counted in the lab's working calendar with its holidays and working hours. Changing the rules affects only new cases.
   Done when unit tests cover each priority, a holiday, a weekend, a daylight saving change and a rule change that leaves existing cases alone.
   Depends on CASES-013. Refs kit W68. Fills `due_at` through `case_creation.RULES`.
@@ -2150,6 +2166,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
 ---
 
 ## 21 AIP · AI platform: registry, tiers, jobs, GPU pool
+
+Models run on demand as model runs that create result sets (JOBS) and nothing runs on arrival ([ADR 0053](adr/0053-ai-results-review-direction.md)). Tiers stay for the interactive tools in Annotate.
 
 - [ ] AIP-000 · Research check
   Re-check doc 20's ranked list against the current literature (nucleus segmentation and typing models, pathology foundation models, promptable segmentation) and confirm STACK-022, STACK-027 and STACK-031.
@@ -2162,6 +2180,7 @@ The launchpad is everyone's home and the department dashboard is the default hom
 - [ ] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
   Done when API tests cover registration and the licence rule from STACK-031 blocks a non-commercial model in a commercial tenant.
+  Each model is either a Parfocal model, always listed unless an admin hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
 
 - [ ] AIP-003 · Tiers Best, Good, Fast
   Tier mapping per task and per site, set by the lab, with the exact model visible on hover.
@@ -2172,7 +2191,8 @@ The launchpad is everyone's home and the department dashboard is the default hom
   The picker dialog in Annotate and the tier chip in Review.
   Done when component tests cover the choices and behaviour of mock 11 "choosing a model".
 
-- [ ] AIP-005 · Validation mapping per site and specimen
+- [ ] AIP-005 · Idea: Validation mapping per site and specimen
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Validation per specimen belongs to the clinical direction.
   Which models are validated for which specimen types at which site. An unvalidated combination drives the "not validated" state.
   Done when API tests cover the mapping and the case shows the right state.
   Depends on MLEVAL-008.
@@ -2195,12 +2215,13 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Done when a test kills a job halfway and the resumed run produces the same chunks as an uninterrupted run.
   Refs doc 19, [`poc/server/app/nuclei/wsi.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/app/nuclei/wsi.py).
 
-- [ ] AIP-010 · Pre-read on arrival
+- [ ] AIP-010 · Idea: Pre-read on arrival
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Models run when a person starts them (JOBS-001).
   When a slide is published, the pipeline runs tissue, tumor map, then cells, in priority order with STAT first. Pause queue and run STAT first controls. Held jobs await a decision when no validated model applies.
   Done when E2E uploads a slide and the worklist AI cell goes from queued to ready.
 
 - [ ] AIP-011 · Job progress streaming
-  Per-stage progress and partial results stream to the case view, the worklist and the upload window (uploaded, tiles, tissue found with its area, tumor areas, cells by scope, unsure zones), with a pause reason when a stage waits. Each finished stage records its throughput per model, tier and machine, so time estimates (INGEST-023) use measured values.
+  Per-stage progress and partial results stream to the slide view, the jobs tray and job window (JOBS-003, JOBS-004) and the upload window (queued, tiles read, tissue found, model running, objects placed, IDs given, result set added), with a pause reason when a stage waits. Each finished stage records its throughput per model, tier and machine, so time estimates (JOBS-002) use measured values.
   Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
   Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
@@ -2224,12 +2245,14 @@ The launchpad is everyone's home and the department dashboard is the default hom
   Refs doc 25.
 
 
-- [ ] AIP-016 · AI plan per specimen type
+- [ ] AIP-016 · Idea: AI plan per specimen type
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   The lab sets which AI steps (tumor map, tumor areas, cell detection, cell typing) run for each specimen type and at which tier. A step whose model is not validated for that specimen (AIP-005) is off by default, and turning it on marks its cases "not validated". The plan is versioned and is what new cases and uploads start from.
   Done when API tests cover the plan, the validation rule and the plan a new case receives.
   Depends on AIP-003, AIP-005. Refs kit W68.
 
-- [ ] AIP-017 · Model approval and monitoring
+- [ ] AIP-017 · Idea: Model approval and monitoring
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   A model version becomes available for a specimen type only when a lead approves it with an electronic signature, after a site validation report (MLEVAL-008) meets the lab's thresholds. In use, the share of its calls that doctors change is tracked per specimen type, and passing the lab's threshold reopens validation and tells the lead.
   Done when API tests cover approval, refusal below a threshold and the signature record, and a test with seeded review decisions raises the alert.
   Depends on AIP-005, MLEVAL-008, SEC-023. Refs kit W69, kit Flow 28.
@@ -2541,11 +2564,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Name, role (lab), workspace (lab), signature block for reports.
   Done when tests cover editing and locked fields.
 
-- [ ] SET-011 · Lab admin settings console
-  Lab-level values for cutoffs per specimen, lock times, banner, tiers, templates, classes.
-  Done when permission tests restrict it to lab admins and changes are audited.
+- [ ] SET-011 · Workspace settings console
+  Workspace values for lock times, tiers, the default privacy mode, default classes and templates, and announcements, in the admin page (ADMIN-001).
+  Done when permission tests restrict it to admins and changes are audited.
 
-- [ ] SET-012 · Home and worklist choice
+- [ ] SET-012 · Idea: Home and worklist choice
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. There is one home and no worklist views.
   Users pick their home (launchpad or department dashboard, the dashboard is the default for lab leads), their worklist view (list, day or grid) and whether the case preview opens on select, unless an experiment pins them.
   Done when tests cover each choice and the experiment pin.
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -2562,7 +2586,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests cover chords, hold and tap, scope precedence and typing in inputs.
 
 - [ ] CMD-002 · Command palette
-  Cmd+K from everywhere, fuzzy search over actions, places (areas, cases) and settings, grouped results with keys shown, Enter runs the first, lab actions only in developer mode.
+  Cmd+K from everywhere, fuzzy search over actions, places (projects, slides, areas, object IDs by any part of the full path) and settings, grouped results with keys shown, Enter runs the first, lab actions only in developer mode.
   Done when E2E finds and runs an action, a place and a setting.
   Refs mock 18.
 
@@ -2644,13 +2668,16 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-036 is confirmed.
 
 - [ ] NOTIF-001 · Notification service
-  Events (AI finished, reply, mention, STAT assigned, second opinion requested, guest replied) to in-app, email and realtime channels by preference.
+  Events (mention, reply, review task assigned, model run finished or paused, upload done, disagreements ready, task signed off) to in-app, email and realtime channels by preference.
   Done when tests cover routing by preference and tenant isolation.
 
-- [ ] NOTIF-002 · In-app notification centre and badges
-  Done when component tests cover unread counts and mark as read.
+- [ ] NOTIF-002 · The bell
+  The bell in the top bar opens a panel over the current page with For me, Mentions and Jobs, each with its unread count, Unread only, Mark all read and See all. Opening an item marks it read and goes to the exact place. The bell is the only place for mentions, and the sidebar has no Mentions entry.
+  Done when component tests cover the filters, the counts, marking one read and marking all read, and E2E opens a mention from the bell on Home and lands on the thread.
+  Depends on NOTIF-006. Refs mock: notifs/panel, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
-- [ ] NOTIF-003 · STAT banner
+- [ ] NOTIF-003 · Idea: STAT banner
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. There are no STAT cases in review tasks.
   A banner on any screen outside an open case when a STAT case is assigned, with an optional sound. While a slide is open nothing is shown (NOTIF-008).
   Done when E2E assigns a STAT case and the banner appears in another session, and does not appear in a session that has a case open until it leaves the case.
 
@@ -2662,7 +2689,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 
 - [ ] NOTIF-006 · Event catalogue with deep links
-  Every notification has a kind from a documented catalogue and a target link to the exact place: a case at a view, a thread, a slide, a ticket, a report or a failed message. Kinds include case ready, STAT assigned, reply, mention, lab work done, report sent for co-sign, report returned, case reassigned, consult requested and answered, report rejected by the receiver, and integration down.
+  Every notification has a kind from a documented catalogue and a target link to the exact place: a slide at an object, a thread, a task, a job, an evaluation or a failed delivery. Kinds include mention, reply, task assigned, task due soon, model run finished, run paused, upload done, disagreements ready, task signed off, result set added by a webhook and integration down.
   Done when a test checks every catalogue kind has a target and a template, and API tests resolve each target for its recipient.
   Depends on NOTIF-001. Refs kit W52, kit Flow 18.
 
@@ -2672,8 +2699,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on NOTIF-006. Refs kit W53.
 
 - [ ] NOTIF-008 · Hold notifications while reading
-  While a person has a case open, notifications are stored but nothing interrupts them: no toast, banner or sound, STAT included. When they leave the case, what arrived is released in order. The client reports when a case is opened and closed, and a stale report expires after the lab idle time.
-  Done when tests deliver events during an open case and prove nothing is pushed until the case closes, then everything arrives in order, and an expired open state releases them.
+  While a person has a slide open, notifications are stored but nothing interrupts them: no toast, banner or sound, mentions included. When they leave the slide, what arrived is released in order. The client reports when a slide is opened and closed, and a stale report expires after the lab idle time.
+  Done when tests deliver events while a slide is open and prove nothing is pushed until the slide closes, then everything arrives in order, and an expired open state releases them.
   Depends on NOTIF-001, COLLAB-007. Refs ADR 0023.
 
 ---
@@ -2691,7 +2718,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Events for navigation, review decisions, tool use and task boundaries, with ids only.
   Done when a schema test rejects events with free text fields.
 
-- [ ] EXP-003 · Home and worklist experiments
+- [ ] EXP-003 · Idea: Home and worklist experiments
+  Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. The home and worklist variants it tested are ideas.
   Assignment, exposure events and metrics (time to open the first case, cases per hour, preference) for the lab leads' default home and for whether the case preview opens on select.
   Done when tests confirm stable assignment and correct exposure logging.
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -2890,7 +2918,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when each runbook is exercised once on staging.
 
 - [ ] PILOT-004 · Pilot data onboarding
-  Import historic cases and slides for the pilot site with the bulk import tool.
+  Import the pilot's slides and their AI results into projects with the bulk import tool, with cases from file names.
   Done when a dry run on staging imports the pilot sample.
 
 - [ ] PILOT-005 · Moderated usability study
@@ -2907,74 +2935,747 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ---
 
+## 40 PROJ · Projects, privacy modes, class taxonomy and templates
+
+A project holds slides, AI results and review tasks. Cases inside it are optional ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Data model").
+
+- [ ] PROJ-000 · Research check
+  Done when an ADR records the project model (project, optional case, slide, result sets), the privacy modes and the project roles, and what each existing table (cases, patients, slides) becomes.
+  Depends on ADAPT-000.
+
+- [ ] PROJ-001 · Project model and API
+  A project has a short ID (P07), a name, a colour, a privacy mode, an analysis template, a class taxonomy, members with project roles and a status. Cases are optional, and loose slides belong to the project directly.
+  Done when migrations, API tests for create, list, update and archive, and isolation tests pass, and every change is audited.
+  Depends on IAM-004, ADAPT-004. Refs mock: project, kit: Information architecture.
+
+- [ ] PROJ-002 · Privacy modes
+  De-identified, the default, has no patient fields in any response or screen, strips names from file metadata on upload and hides label and macro images. Clinical allows patient fields, every one optional, with hidden names and logged access. Changing a project from de-identified to clinical is an admin action with a reason.
+  Done when API tests prove no patient field leaves a de-identified project, an upload fixture with a name in its SVS metadata arrives without it, clinical reads are audited, and the mode change needs an admin and a reason.
+  Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
+
+- [ ] PROJ-003 · Project roles
+  Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project.
+  Done when the permission test runs every project endpoint for every project role, and an isolation test hides another project's slides from a reviewer.
+  Depends on IAM-022, PROJ-001.
+
+- [ ] PROJ-004 · Class taxonomy per project
+  Class names, colours and keys 1 to 9, started from a template (PanNuke, sentinel node) and checked for colour distance (DS-002). Mappings from imported class names (Neoplastic, tumour_cell) are stored per project and reused (RSET-005).
+  Done when API tests cover templates, custom classes, the colour check rejecting a colour too close to another, and a stored mapping applied to a second import.
+  Depends on PROJ-001, DS-002. Refs doc 37, mock: upload/check.
+
+- [ ] PROJ-005 · Analysis templates
+  A project turns on an analysis template. Sentinel node staging adds the staging hero, the area list and the measure step (REVIEW-003, REVIEW-004, CASE-004, MEAS-006). Cell review adds unsure zones and cell typing. None shows objects, layers, verdicts and the opinion form only.
+  Done when API tests cover each template and component tests show the staging cards only with the staging template.
+  Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
+
+- [ ] PROJ-006 · Project page
+  A header with the name, privacy tag, members and Upload and New review task, then tabs. Slides lists the slides grouped by case with result sets and reviewers, filters (result set, needs review, no results) and a search, and a row opens the slide with Open shown on hover. Review tasks lists the project's tasks. Settings is PROJ-008. Files dropped anywhere on the page open the upload (INGEST-021).
+  Done when component tests cover each tab and filter, and E2E opens a slide from a row and starts an upload by dropping files.
+  Depends on PROJ-001, WL-001. Refs mock: project, doc 38 "Project", doc 40 R5.
+
+- [ ] PROJ-007 · New project and new case
+  New project asks for a name, the privacy mode as plain radio rows with a sentence each, a template and a class list. New case inside a project asks for its ID and specimen, and patient fields only in a clinical project.
+  Done when component tests cover both forms in each privacy mode and E2E creates a project and a case.
+  Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
+
+- [ ] PROJ-008 · Project settings
+  Privacy mode, review defaults (blind review, hide the AI for a first read), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002) and members with project roles.
+  Done when component and API tests cover each setting and its audit entry.
+  Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006. Refs mock: project/settings.
+
+---
+
+## 41 RSET · Result sets and AI result import
+
+Importing AI results made elsewhere is first class. A result set is one import or one model run on one slide ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "AI results and import").
+
+- [ ] RSET-000 · Research check
+  Done when an ADR names the parsers for GeoJSON, QuPath exports, CSV and TSV, and masks and heatmaps, and the Parfocal JSON schema is drafted.
+
+- [ ] RSET-001 · Result set model and API
+  Per slide: model name and version, date, source file or run, imported or run here, class mapping, object count and stats. The AI output is immutable. Result sets list in the project and the slide view.
+  Done when API tests cover create, list and delete with a confirmation when reviews exist, isolation tests pass, and a test proves an imported set cannot be edited.
+  Depends on PROJ-001, ANN-020.
+
+- [ ] RSET-002 · Parfocal JSON schema and validator
+  A documented schema with a template to download and a validator in the API and as a command line tool. The help drawer "What files work?" opens from the upload and from an import error.
+  Done when schema tests accept the template and reject each documented error with its line, and the help drawer has a component test.
+  Depends on RSET-000. Refs mock: formats, doc 38 answer 7.
+
+- [ ] RSET-003 · Readers for GeoJSON, CSV and masks
+  GeoJSON including QuPath exports, CSV or TSV of cells or detections with a column-mapping step, and masks and heatmaps as PNG or TIFF aligned to a slide level.
+  Done when parser tests read a fixture of each kind into the same object form, including a QuPath export and a CSV with renamed columns.
+  Depends on RSET-001, RSET-000.
+
+- [ ] RSET-004 · Pairing results with slides
+  Results pair with slides by file name, an embedded slide ID or the folder, each with how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
+  Done when unit tests cover each pairing rule and a tie, and API tests cover an override and an unpaired result.
+  Depends on RSET-001. Refs mock: upload/match.
+
+- [ ] RSET-005 · Import checks and fixes
+  Schema and parse errors name the line or feature and offer a downloadable error report and "import the other N". A coordinate or scale mismatch guesses the level or microns per pixel and shows both overlays with the share on tissue. Unknown classes are mapped to project classes once and remembered (PROJ-004). Missing scores count as no score or as 1.0.
+  Done when tests cover each problem with fixtures: three objects without a class, a heatmap at level 2 scaled by 4, three new classes, and rows without a score.
+  Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: states/importfail.
+
+- [ ] RSET-006 · Add a result set from the viewer
+  On an open slide a file is previewed as an overlay before it is saved, with alignment and scale fixes, and shown next to the existing sets once added.
+  Done when E2E adds a GeoJSON from the slide view, fixes its offset and sees it in Layers.
+  Depends on RSET-005, VIZ-001. Refs mock: upload/viewer.
+
+- [ ] RSET-007 · Reviewed layer
+  Reviewer edits (retype, outline, delete, add) are recorded per reviewer in a layer over the AI set, so the AI output is never overwritten and can be compared with what reviewers made of it. Added objects get IDs with a plus (OBJ-003).
+  Done when API tests cover each edit, prove the AI set is unchanged, and compare a reviewed layer with its set.
+  Depends on RSET-001, OBJ-001, ANN-020.
+
+- [ ] RSET-008 · Export reviewed annotations
+  Reviewed annotations export as Parfocal JSON and GeoJSON with full IDs, per reviewer or as the consensus after adjudication.
+  Done when round-trip tests export and re-import a reviewed layer with no loss.
+  Depends on RSET-007, OBJ-001.
+
+---
+
+## 42 OBJ · Object IDs
+
+IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "IDs for objects", kit: ID system).
+
+- [ ] OBJ-000 · Research check
+  Done when an ADR fixes the ID grammar, the full path, the overlap threshold and the split and merge rules.
+
+- [ ] OBJ-001 · ID grammar and allocation
+  T for tumor regions, T2·C145 for a cell inside a region, C for other cells, R for regions of interest, Z for unsure zones and M for measurements, allocated per slide and stable. The full path is `P07/S26-04812/A1/T2·C145`.
+  Done when unit tests cover allocation order, the full path and parsing every form back.
+  Depends on OBJ-000, RSET-001.
+
+- [ ] OBJ-002 · IDs across result sets
+  When a new set arrives on a slide, objects that overlap an existing object above the threshold inherit its ID, new objects get new IDs, and missing ones show as "not in this set".
+  Done when tests on two fixture sets cover inherited, new and missing objects.
+  Depends on OBJ-001.
+
+- [ ] OBJ-003 · Split, merge and added objects
+  Splitting T2 gives T2a and T2b and keeps T2 in the history. Merging T2 and T3 keeps T2 and retires T3 as an alias. Objects a reviewer adds get a plus, as in T6⁺.
+  Done when unit tests cover each rule and an alias that still resolves.
+  Depends on OBJ-001, RSET-007.
+
+- [ ] OBJ-004 · ID resolution and search
+  Any part of a full path resolves to the object, including aliases, for links, search (CASES-009) and the palette (CMD-002).
+  Done when API tests resolve every form and an alias after a merge.
+  Depends on OBJ-003.
+
+- [ ] OBJ-005 · IDs on the slide and in lists
+  ID labels on the slide (switchable in Layers), the object ID tag in every list (DS-008) and copy of the full ID.
+  Done when component tests cover labels on and off and copying, and a golden test places labels without overlap on the fixture.
+  Depends on OBJ-001, DS-008, VIEW-026.
+
+---
+
+## 43 TASK · Review tasks and the slide pipeline
+
+A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Pipeline").
+
+- [ ] TASK-000 · Research check
+  Done when an ADR records the slide pipeline (uploaded, AI running or imported, ready, assigned, in review, submitted, disagreement queue, signed off, exported), what is derived and who moves each state.
+  Depends on ADAPT-007.
+
+- [ ] TASK-001 · Review task model and API
+  A task (RT-14) has a name, a project, slides or cases, a result set, reviewers, a split (everyone reviews all, split evenly, chosen per slide), a scope, an opinion form version, blinding, the start mode (guided or full viewer), a due date and reminders.
+  Done when API tests cover create, edit, list and each split, with isolation and audit.
+  Depends on PROJ-003, RSET-001, TASK-000.
+
+- [ ] TASK-002 · Slide states per task and reviewer
+  Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited.
+  Done when a table-driven test covers every allowed and refused transition with its actor.
+  Depends on TASK-001.
+
+- [ ] TASK-003 · Scope and progress
+  Scopes are all regions, a random N cells per slide that is the same for every reviewer, cells below a score, objects inside ROIs, and unsure zones. Progress counts against the scope, as in 37 of 50 sampled cells.
+  Done when unit tests prove the sample is deterministic and shared, and progress counts match on a fixture.
+  Depends on TASK-001, OBJ-001.
+
+- [ ] TASK-004 · Blinding and first read
+  Reviewers see others' verdicts and comments only after they submit. A project can hide the AI for a first read and reveal it afterwards. The researcher sees everything.
+  Done when permission tests cover each role before and after submit, and E2E reveals the AI after a first read.
+  Depends on TASK-002, GUIDE-001.
+
+- [ ] TASK-005 · New review task stepper
+  A medium one-column stepper with Slides, Reviewers, What to check, How and when, and Send. Reviewers are picked in the token field (DS-020). The estimate follows every choice. Send shows a summary with a Change link per row and the email the reviewers receive.
+  Done when component tests cover each step and the estimate, and E2E creates a task from the project page and from the end of an upload.
+  Depends on TASK-001, DS-020, DS-022. Refs mock: task, doc 39.
+
+- [ ] TASK-006 · Invitations to a task
+  Inviting someone new to a task sends an email without PHI that names who asked, the project, the work and the due date. Accepting creates the account and opens the first slide (ONB-003).
+  Done when API and E2E tests cover invite, accept and landing on the first slide.
+  Depends on TASK-001, IAM-007, NOTIF-004.
+
+- [ ] TASK-007 · Nudge, reassign and change a task
+  The researcher nudges reviewers who are behind, reassigns slides, adds a reviewer and changes the due date, each audited and notified.
+  Done when API tests cover each action and E2E nudges from Assigned by me.
+  Depends on TASK-001, NOTIF-001.
+
+- [ ] TASK-008 · Submit a slide review
+  Submitting shows what will be sent (verdicts by kind and the opinion), saves the review and opens the next slide. A submitted review can be reopened by its reviewer until sign-off.
+  Done when E2E submits, reopens and submits again, and the next slide opens.
+  Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next.
+
+---
+
+## 44 GUIDE · Verdicts, guided review and the opinion form
+
+Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
+
+- [ ] GUIDE-000 · Research check
+  Done when an ADR records the verdict model, the disagree reasons per object kind and the opinion form schema.
+
+- [ ] GUIDE-001 · Verdict model and API
+  Agree, Disagree or Not sure per object and reviewer, a reason on Disagree, saved at once, changeable until sign-off, and audited.
+  Done when API tests cover each verdict, a change, a refused change after sign-off and the audit entry.
+  Depends on OBJ-001, TASK-002.
+
+- [ ] GUIDE-002 · Guided review
+  One object at a time with a plain question ("Is T2 tumor?"), what the AI said in a 16 px line, and Agree, Disagree and Not sure as large buttons with K, X and U. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review.
+  Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
+  Depends on GUIDE-001, VIEW-020. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
+
+- [ ] GUIDE-003 · Disagree reasons and optional fixes
+  Disagree asks what is wrong with four quick reasons per object kind. Redrawing the outline or changing the type is optional.
+  Done when component tests cover reasons for a region and a cell, and E2E redraws an outline from guided review.
+  Depends on GUIDE-002, RSET-007. Refs mock: guided/disagree.
+
+- [ ] GUIDE-004 · Undo after a verdict
+  Every verdict shows what was recorded with an Undo (DS-021), which restores the verdict and the position.
+  Done when E2E undoes a verdict on the last object of a slide and the slide is open again.
+  Depends on GUIDE-002, DS-021. Refs doc 40 G2.
+
+- [ ] GUIDE-005 · Verdicts in the full viewer
+  K, X and U act on the selected object in the full viewer, and the Objects tab lists IDs with verdicts.
+  Done when E2E gives the same verdicts in both modes and sees one review.
+  Depends on GUIDE-001, CASE-014.
+
+- [ ] GUIDE-006 · Opinion form builder
+  The researcher builds a short form per project from a default template (acceptable 1 to 5, main error type, a free comment), with scale, choice, yes or no and text questions, versioned.
+  Done when API tests cover each question kind and a new version leaving old answers intact.
+  Depends on PROJ-001.
+
+- [ ] GUIDE-007 · Opinion form for the reviewer
+  Three quick questions when a slide is done in guided review, and the whole form in the Opinion tab, saved as a draft.
+  Done when component tests cover each question kind and E2E answers in guided review and finds the answers in the tab.
+  Depends on GUIDE-006, GUIDE-002. Refs mock: opinion, mock: guided/done.
+
+- [ ] GUIDE-008 · How this works
+  A first-time coach in guided review with four numbered tips, reopened from How this works.
+  Done when component tests cover the coach and its dismissal per user.
+  Depends on GUIDE-002. Refs mock: guided/first.
+
+---
+
+## 45 ADJ · Disagreements, adjudication and sign-off
+
+- [ ] ADJ-000 · Research check
+  Done when an ADR records the disagreement rule (reviewers differ, or all differ from the AI above a threshold) and what sign-off locks.
+
+- [ ] ADJ-001 · Disagreement detection
+  When every reviewer has submitted, objects where reviewers differ, or where they all differ from the AI, go into a queue per task.
+  Done when unit tests cover both kinds on a seeded task.
+  Depends on GUIDE-001, TASK-002.
+
+- [ ] ADJ-002 · Disagreement queue
+  A list filtered by all, reviewers differ and both against the AI, the object with the AI's call and each reviewer's verdict side by side, and two decisions, keep the AI's call or go with the reviewers. Editing the object and asking an adjudicator are links under them, and a note can be added. Decisions sit next to the verdicts and never replace them.
+  Done when component tests cover each filter and decision, and E2E resolves a queue.
+  Depends on ADJ-001. Refs mock: disagree, doc 40 D7.
+
+- [ ] ADJ-003 · Adjudicator view
+  The adjudicator gets the guided one-object view with the reviewers anonymous.
+  Done when E2E adjudicates a sent object and the researcher sees the decision.
+  Depends on ADJ-002, GUIDE-002. Refs mock: disagree/adjudicate.
+
+- [ ] ADJ-004 · Sign-off as a soft lock
+  Before signing, a list says what is complete. Signing confirms with single sign-on, makes Evaluation v1 with a checksum and notifies reviewers. The owner can still change things, every change is logged, and reopening is possible.
+  Done when API tests cover signing, a change after sign-off with its log entry and reopening, and E2E signs off a task.
+  Depends on ADJ-002, IAM-002. Refs mock: signoff, doc 40 R2.
+
+- [ ] ADJ-005 · Changes after sign-off
+  The log of changes after sign-off with who, when and what, flagged in the evaluation report.
+  Done when API tests list the changes and the report shows the flag.
+  Depends on ADJ-004, EVAL-002.
+
+---
+
+## 46 EVAL · Evaluation report and exports
+
+The research output of a review task ([ADR 0053](adr/0053-ai-results-review-direction.md)).
+
+- [ ] EVAL-000 · Research check
+  Done when an ADR defines the metrics (sensitivity, precision and Dice for regions against the consensus, Cohen's kappa between reviewers, cell agreement) and confirms the PDF choice (STACK-035).
+
+- [ ] EVAL-001 · Metrics engine
+  Computes the metrics from verdicts, decisions and the reviewed layers per task.
+  Done when unit tests reproduce hand-computed values on a fixture task.
+  Depends on EVAL-000, ADJ-002.
+
+- [ ] EVAL-002 · Evaluation report page
+  A header with the Research output tag, the version and a flag for changes after sign-off, the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
+  Done when component tests render a seeded report and axe passes.
+  Depends on EVAL-001. Refs mock: evaluation, doc 40 D8 and E1.
+
+- [ ] EVAL-003 · Exports
+  PDF, verdicts per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
+  Done when tests check every export's columns and counts and the PDF text.
+  Depends on EVAL-002, RSET-008.
+
+- [ ] EVAL-004 · Compare two evaluations
+  Two result sets of the same slides side by side, for example CAMELYON against PathoSAM.
+  Done when component tests render a comparison of two seeded tasks.
+  Depends on EVAL-002.
+
+- [ ] EVAL-005 · Read-only link for co-authors
+  A link to the report without slides, revocable and logged.
+  Done when API tests cover the link, revocation and the log.
+  Depends on EVAL-002.
+
+---
+
+## 47 JOBS · Model runs, the jobs tray and lab models
+
+- [ ] JOBS-000 · Research check
+  Done when an ADR records the model run contract with Parfocal and lab endpoints, building on AIP-008.
+  Depends on AIP-000.
+
+- [ ] JOBS-001 · Model run API
+  Run a Parfocal or lab model on chosen slides. The latest version is used and recorded. Each slide gets a new result set. The estimate uses measured throughput (AIP-011) and the queue ahead.
+  Done when API tests cover a run, its result sets and the estimate.
+  Depends on AIP-008, RSET-001.
+
+- [ ] JOBS-002 · Run a model window
+  A small window in three parts: the slides as a token field with the slides without results picked, one model dropdown grouped into Parfocal's models and the lab's models with what each makes and its time per slide, and what happens (the result set name, the time with the expected finish and a notification). No version picker. It opens from the project, a slide's menu and the end of an upload.
+  Done when component tests cover each part and the estimate, and E2E runs a model from the upload's end.
+  Depends on JOBS-001, DS-020. Refs mock: runmodel, doc 39.
+
+- [ ] JOBS-003 · Jobs tray
+  A ring in the top bar with the number running opens a list of running and finished uploads and runs. Each row opens its steps.
+  Done when component tests cover the states and E2E opens an upload and a run from the tray.
+  Depends on JOBS-001, DS-019. Refs mock: upload/tray, doc 41.
+
+- [ ] JOBS-004 · Job window with steps per slide
+  One bar for the run, then each slide with its steps (queued, tiles read, tissue found, model running, objects placed, IDs given, result set added). A slide opens once its objects are placed. A paused run says why and offers Resume or Move it to the Parfocal GPU. Cancel keeps what is finished and offers an Undo. Close keeps the run going.
+  Done when component tests cover running, paused and finished runs, and E2E cancels and undoes a run.
+  Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
+
+- [ ] JOBS-005 · Connect a lab model
+  An admin points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it.
+  Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
+  Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
+
+- [ ] JOBS-006 · Show or hide Parfocal models
+  Parfocal's models are always listed unless an admin hides one. A hidden model leaves every model list and its result sets stay. Hiding shows an Undo.
+  Done when API tests cover hiding and E2E hides a model and finds it gone from Run a model.
+  Depends on JOBS-001, DS-021. Refs mock: admin/models, doc 40 R1.
+
+---
+
+## 48 REMOTE · Remote sources, webhooks and events
+
+- [ ] REMOTE-000 · Research check
+  Done when an ADR records read in place with a tile cache, the webhook signature and the event delivery guarantees.
+  Depends on INGEST-026.
+
+- [ ] REMOTE-001 · Read in place from a connected source
+  A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported.
+  Done when E2E opens a remote slide, a test serves tiles from the cache with the source down, and a copy keeps IDs and reviews.
+  Depends on REMOTE-000, TILES-001. Refs mock: upload/remote, mock: states/remoteoff.
+
+- [ ] REMOTE-002 · Webhook in per project
+  A signed URL per project takes a slide link, result links, a case ID and optionally a task, answers what was done, and logs every call.
+  Done when API tests cover a valid call, a bad signature and the log.
+  Depends on REMOTE-000, INGEST-025, RSET-005. Refs mock: upload/webhook.
+
+- [ ] REMOTE-003 · Events out
+  Parfocal calls a pipeline back when a review is submitted, a task has disagreements, a task is signed off or a result set is added, signed, retried and logged.
+  Done when tests deliver each event, retry after a failure and prove the signature.
+  Depends on REMOTE-000. Refs mock: upload/events.
+
+- [ ] REMOTE-004 · Watched folder or bucket
+  New files in a watched folder or bucket arrive in a project, checked like an upload.
+  Done when a test drops files in a bucket fixture and they arrive.
+  Depends on REMOTE-001. Refs mock: upload/watch.
+
+---
+
+## 49 ONB · Sign-up, setup and the sample project
+
+- [ ] ONB-000 · Research check
+  Done when an ADR records the sign-up and setup flow on top of IAM-002 and IAM-007.
+
+- [ ] ONB-001 · Sign-in screens
+  Parfocal with the workspace logo, single sign-on first when the email domain matches, email and password, a sign-in link with a code, and forgot password with a reset checked for length, reuse and leaks. A deep link lands on its target after sign-in.
+  Done when E2E covers each path and the deep link.
+  Depends on IAM-002. Refs mock: signin.
+
+- [ ] ONB-002 · Sign-up and email confirmation
+  Name, work email, password or single sign-on, and what the person mostly does, then a one-time code.
+  Done when E2E signs up, confirms and reaches setup.
+  Depends on ONB-001. Refs mock: signup.
+
+- [ ] ONB-003 · Invite landing
+  Who invited, the project and task, the work, the due date, blinding and the privacy mode, then join in one step and open the first slide.
+  Done when E2E accepts an invite and lands on the first slide.
+  Depends on TASK-006. Refs mock: invite.
+
+- [ ] ONB-004 · First-run setup
+  Five skippable steps whose choices carry through: role and specialties (the role sets the recommended first project and the checklist), the workspace (join, ask or create with a name, logo and default privacy), the first project (sample, create or wait), the input device and the theme (applied at once), and a checklist that ends in the chosen place.
+  Done when component tests cover each choice and its effect, and E2E finishes setup into each of the three first-project choices.
+  Depends on ONB-002, ONB-005. Refs mock: setup, doc 41.
+
+- [ ] ONB-005 · Sample project
+  A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.
+  Done when API tests seed and delete it, and an evaluation test proves it is excluded.
+  Depends on PROJ-001, RSET-001, TASK-001.
+
+- [ ] ONB-006 · Getting-started checklist
+  On Home until each item has been tried once, and hideable.
+  Done when component tests tick items from real events.
+  Depends on ONB-004, HOME-002. Refs mock: home/new.
+
+---
+
+## 50 ADMIN · Admin page
+
+Admin is its own page with its own sidebar and the app's top bar, never a page inside a page (doc 39).
+
+- [ ] ADMIN-000 · Research check
+  Done when the admin sections and their permissions are listed in an ADR.
+
+- [ ] ADMIN-001 · Admin page shell
+  A sidebar with Back to Parfocal, the workspace and the sections (overview, people and roles, projects, AI models, storage and sources, API and webhooks, audit log, security), and flat content.
+  Done when component tests cover navigation and permission tests refuse non-admins.
+  Depends on SHELL-001, IAM-022. Refs mock: admin.
+
+- [ ] ADMIN-002 · Overview
+  Stat tiles and a short summary per section.
+  Done when component tests render seeded data.
+  Depends on ADMIN-001.
+
+- [ ] ADMIN-003 · People and roles
+  People with role dropdowns, projects, last active and status, with invite, resend and search (IAM-014).
+  Done when E2E changes a role and resends an invite, each audited.
+  Depends on ADMIN-001, IAM-014.
+
+- [ ] ADMIN-004 · Projects
+  Every project with its privacy mode, owner, size and status, with archive.
+  Done when component and API tests cover archiving.
+  Depends on ADMIN-001, PROJ-001.
+
+- [ ] ADMIN-005 · AI models
+  Parfocal models with the Shown switch (JOBS-006), the lab's models (JOBS-005) and running jobs with Cancel and Undo.
+  Done when E2E hides a model and cancels a run with undo.
+  Depends on ADMIN-001, JOBS-005, JOBS-006.
+
+- [ ] ADMIN-006 · Storage, sources, API and webhooks
+  Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003).
+  Done when component tests cover each list and E2E creates and revokes a token.
+  Depends on ADMIN-001, REMOTE-002, IAM-011.
+
+- [ ] ADMIN-007 · Audit log and security
+  The audit log with filters and a signed export (SEC-024), and the security settings (single sign-on, session policy, MFA).
+  Done when E2E filters and exports the log.
+  Depends on ADMIN-001, SEC-024.
+
+---
+
+## 51 VIZ · Layers and visualization
+
+- [ ] VIZ-000 · Research check
+  Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026).
+
+- [ ] VIZ-001 · Result sets in the Layers tab
+  Each result set is a row with show or hide, colour and opacity, and a menu to compare, run again or add another. The person's review is its own row.
+  Done when component tests cover each control and E2E hides a set.
+  Depends on RSET-001, VIEW-026. Refs mock: layers, doc 38 answer 2.
+
+- [ ] VIZ-002 · Classes and style
+  Per class visibility with counts and keys, draw as outline, fill or dots, colour by class, score or verdict, ID labels and a score cutoff that filters objects live.
+  Done when golden tests cover each style and a test proves the cutoff hides objects below it.
+  Depends on VIZ-001, VIEW-027.
+
+- [ ] VIZ-003 · Heatmap, density and confidence maps
+  Each with its ramp and a threshold. The heatmap is drawn at 30% by default so the tissue shows through.
+  Done when golden tests cover each map and the default opacity.
+  Depends on VIZ-001, AITUM-002. Refs mock: layers/heat, doc 40 G4.
+
+- [ ] VIZ-004 · Diff and agreement
+  AI against reviewed, model A against B and reviewer against reviewer, coloured by agreement and also drawn differently (dashed for AI only, double for reviewer only), so colour is never the only cue.
+  Done when golden tests cover each comparison and a test proves each kind has a non-colour cue.
+  Depends on VIZ-001, OBJ-002. Refs mock: layers/diff, doc 40 G1.
+
+- [ ] VIZ-005 · Swipe and side by side
+  A swipe line and a side-by-side split between two sets.
+  Done when E2E drags the swipe and both halves stay in sync.
+  Depends on VIZ-004, CMP-002.
+
+- [ ] VIZ-006 · Object table and stats
+  A table of ID, class, score, size and verdict that stays in sync with the slide, with counts and histograms and a CSV download.
+  Done when component tests sync a selection both ways and a test counts the CSV rows.
+  Depends on VIZ-001, OBJ-005. Refs mock: layers/table.
+
+---
+
+## 52 ADAPT · Reverting or reworking the built hospital code
+
+Code built for the hospital direction is reverted or reworked so nothing runs that the product does not use ([ADR 0053](adr/0053-ai-results-review-direction.md)). The ticked tasks that built it stay ticked as history. Each task supersedes the ADR it undoes, regenerates the permission doc and the data map, updates the OpenAPI client, and keeps the isolation suite green. Hospital tasks that remain ideas can be rebuilt from git history if they come back.
+
+- [ ] ADAPT-000 · Inventory and plan
+  List every endpoint, table, column and permission the hospital tasks added (migrations `0005`, `0010`, `0012` to `0019`, `apps/api/src/parfocal_api/` modules `cases`, `case_creation`, `case_states`, `accessions`, `folders`, `folder_access`, `routing`, `signing`, `availability`, `emergency`, `permissions`), mark each as kept, reworked or reverted, and order the work so each step leaves `main` green.
+  Done when an ADR holds the table and the order, and the owner has accepted it. STACK-040 (FHIR) added no code and needs no change.
+  Refs [ADR 0053](adr/0053-ai-results-review-direction.md), ADR 0026, 0032, 0036, 0037, 0038, 0046, 0047, 0051.
+
+- [ ] ADAPT-001 · Roles become researcher, reviewer and admin
+  Replace the six hospital roles in `apps/api/src/parfocal_api/permissions.py` with researcher, reviewer and admin and the project roles (IAM-022). Remove the grants and permissions that only served sign-out (co-sign, needs co-sign, as supervisor, sign out, draft and amend reports, order lab work, tumor boards, team page, second opinions, approve models). A migration maps memberships and pending invitations: consultant and resident to reviewer, lead to researcher, lab staff to reviewer, administrator to admin, and outside consultants are removed with an audit entry.
+  Done when the table-driven permission test runs the new matrix on every endpoint, a migration test maps every old role, invitations keep working, and an ADR supersedes ADR 0026.
+  Depends on ADAPT-000, IAM-022.
+
+- [ ] ADAPT-002 · Revert folders
+  Remove folders, folder members, the folder on a case and folder-scoped permissions (`folders.py`, `folder_access.py`, migrations `0016` and `0017`). Project membership (PROJ-003) scopes access instead.
+  Done when a down migration drops the tables, the isolation suite passes without them, no endpoint refers to folders, and an ADR supersedes ADR 0046.
+  Depends on ADAPT-001, PROJ-003.
+
+- [ ] ADAPT-003 · Revert signing rights and supervision
+  Remove "signs alone", the supervisor and the stored signature image (`signing.py`, migration `0010`). Sign-off confirms with single sign-on (ADJ-004), and supervision and co-sign stay ideas.
+  Done when the columns and endpoints are gone, the signature images are deleted with an audit entry, and an ADR supersedes ADR 0032.
+  Depends on ADAPT-001.
+
+- [ ] ADAPT-004 · Rework cases for projects
+  A case belongs to a project and is optional. Its ID is free text unique within the project, the patient link is allowed only in clinical projects, and the hospital columns (priority, due time, requester, clinical question, assignee, state) are dropped. Specimen and blocks stay optional (`cases.py`, migration `0012`).
+  Done when migrations move existing cases into a default project, API tests cover cases in both privacy modes, isolation tests pass, and an ADR updates ADR 0036.
+  Depends on ADAPT-000, PROJ-000.
+
+- [ ] ADAPT-005 · Rework case creation
+  Creating a case takes a project, an ID and an optional specimen, with patient fields only in a clinical project. Drafts, requester, priority, due time, assignee, AI plan and the rule hooks in `case_creation.RULES` go (`case_creation.py`, migration `0015`).
+  Done when API tests cover creation in each privacy mode and idempotency, and no rule hook is left.
+  Depends on ADAPT-004.
+
+- [ ] ADAPT-006 · Revert accession numbers
+  Remove the per-workspace templates and counters (`accessions.py`, migration `0013`). Case IDs come from file names or are typed, unique within the project.
+  Done when the tables and endpoints are gone, a uniqueness test per project passes, and an ADR supersedes ADR 0037.
+  Depends on ADAPT-004.
+
+- [ ] ADAPT-007 · Revert the case state machine
+  Remove the case states, their history and the transition endpoint (`case_states.py`, migration `0014`). The slide pipeline per task (TASK-002) replaces them and may reuse its table-driven test pattern.
+  Done when the table and endpoint are gone, no code reads a case state, and an ADR supersedes ADR 0038.
+  Depends on ADAPT-004.
+
+- [ ] ADAPT-008 · Revert case routing rules
+  Remove assignment by folder, specimen and load (`routing.py`). Researchers assign reviewers in a task.
+  Done when the module and its tests are gone and nothing calls it.
+  Depends on ADAPT-002.
+
+- [ ] ADAPT-009 · Rework availability
+  Keep "away until" with an optional note, shown when picking reviewers in a task. Remove the back-up and the routing of new cases to it (`availability.py`, migration `0019`).
+  Done when API tests cover the status and its expiry, the back-up column is gone, and an ADR supersedes ADR 0051.
+  Depends on ADAPT-008.
+
+- [ ] ADAPT-010 · Rework emergency access for clinical projects
+  A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. De-identified projects need no emergency path (`emergency.py`, migration `0018`).
+  Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
+  Depends on ADAPT-002, PROJ-002.
+
+- [ ] ADAPT-011 · Patients only in clinical projects
+  Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001).
+  Done when API tests refuse a patient in a de-identified project, the data map is regenerated, and isolation tests pass.
+  Depends on ADAPT-004, PROJ-002.
+
+---
+
+## Ideas for consideration
+
+Kept from the hospital direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). None of this is planned. The REPORT, BOARD, TEAM and TB epics below are ideas as a whole, and these tasks in other epics are ideas too: IAM-010 (guest consultant links), IAM-019 (sign-in by emailed code for outside consultants), SEC-023 (electronic signature record for sign-out), INGEST-023 (what the AI runs, per case), HOME-004 (variant B Department dashboard), HOME-005 (department metrics pipeline), HOME-006 (rebalance suggestion), WL-003 (AI status line), WL-004 (AI cell and dot semantics), WL-007 (case preview on demand), WL-009 (view D Day plan), WL-010 (reading-time estimate model), WL-011 (view E Slide grid), WL-012 (view switcher and persistence), WL-014 (AI queue panel), WL-015 (star and assign), CASE-008 (AI state: model not validated), CASE-012 (case state transitions), MEAS-004 (report linkage), COLLAB-008 (ask for a second opinion), COLLAB-009 (guest view), COLLAB-013 (consult record and structured opinion), COLLAB-014 (secure links for signed reports), CASES-005 (patient history), CASES-007 (FHIR import), CASES-008 (LIS adapter interface), CASES-010 (report output through the adapter), CASES-014 (field ownership between the LIS and the app), CASES-015 (patient matching and duplicates), CASES-018 (expected slides), CASES-019 (cancel, restore and merge cases), CASES-022 (assignment rules with a test run), CASES-025 (folder screens), CASES-023 (due time rules), AIP-005 (validation mapping per site and specimen), AIP-010 (pre-read on arrival), AIP-016 (AI plan per specimen type), AIP-017 (model approval and monitoring), SET-012 (home and worklist choice), NOTIF-003 (STAT banner), EXP-003 (home and worklist experiments).
+
+---
+
+## 19 REPORT · Clinical reports and sign-out
+
+Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Every task here starts with `Idea:` and keeps its ID. The evaluation report (EVAL) is the v1 output.
+
+- [ ] REPORT-000 · Idea: Research check
+  Check ICCR and CAP datasets for sentinel lymph node reporting and IHE PaLM APSR structure, and confirm the template engine and PDF choice (STACK-035). Start from [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md), re-read CAP Breast Invasive Resection 4.11.0.0 (the ADR read the element text from 4.9.0.0), and settle with the supervisor which template, report language and registry coding (ICD-O-3, SNOMED) a Czech laboratory uses. TODO.
+  Done when an ADR names the dataset versions used.
+
+- [ ] REPORT-001 · Idea: Report model and API
+  Report per case with template id and version, field values with source (manual, measurement, AI confirmed), status draft, signed, amended, and signer.
+  Done when API tests cover the lifecycle and audit entries.
+
+- [ ] REPORT-002 · Idea: Template engine
+  Templates as versioned data, with fields, types, conditional visibility, validation and computed fields. Lab admins can enable templates per specimen type.
+  Done when unit tests evaluate conditions and computed fields.
+
+- [ ] REPORT-003 · Idea: Sentinel lymph node template
+  Elements from the ICCR dataset for surgically removed lymph nodes for breast tumours, with CAP's element names and answers and TNM 8 pN: clinical information, operative procedure, laterality, sentinel, non-sentinel and total nodes examined, nodes with metastatic carcinoma, with macrometastases and with micrometastases, isolated tumour cells only, tumour cells in a cluster at or under 0.2 mm, size of largest metastatic deposit, extranodal extension, treatment effect, ancillary studies, pN with (sn), (i+) or mi, and a local AI element. Each element is marked core, conditional or optional. A missing core or applicable conditional value renders as waiting with what it needs, never as a guess. When the breast is reported separately, a comment says "p" needs the primary tumour removed.
+  Done when tests fill the template from seeded findings for a macrometastasis, a micrometastasis, isolated tumour cells only and a negative node, the category and pN are computed from the largest deposit and its count, and missing values render as waiting.
+  Refs mock 14 and 15, kit Sign-out report, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+- [ ] REPORT-004 · Idea: Prefill from confirmed findings
+  Fields fill only from what the doctor confirmed, never from raw AI output, and each AI-derived value names its source.
+  Done when tests confirm unconfirmed AI areas never reach the report.
+
+- [ ] REPORT-005 · Idea: Report tab and editor
+  Field editing, sources shown, validation messages, a way to the full report (REPORT-014) and to sign-out.
+  Done when component tests cover editing and validation.
+
+- [ ] REPORT-006 · Idea: Before-signing checklist
+  Category settled from the largest area, areas confirmed or marked as unable to change the category, unsure areas as a warning, tissue viewed percentage, open threads as a warning, and required report elements still empty, which block signing. Incomplete items link to the area, the element or to "go to unseen tissue".
+  Done when unit tests compute the checklist from coverage and review data and E2E follows a "go to unseen" link.
+
+- [ ] REPORT-007 · Idea: AI disclosure
+  Exact model names and versions for every model whose output influenced a confirmed value, plus validation status. No CAP or ICCR wording exists yet, so the statement follows [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md): which model and version, what it did, what the pathologist reviewed, and that no value was set without review. It is marked as a local element and replaced when guidance appears.
+  Done when tests check the disclosure against the job records.
+
+- [ ] REPORT-008 · Idea: Sign-out
+  Cmd+Enter or the sign-out action wherever it is offered, re-authentication per SEC-023, the case moves to signed, a transition back to the worklist. Sign-out is refused while a core report element is empty.
+  Done when E2E signs out by keyboard, a test refuses sign-out with an empty core element, and the audit log and e-signature record exist.
+
+- [ ] REPORT-009 · Idea: PDF rendering
+  A4 pages in the usual order: laboratory and report status, patient and dates (the items 42 CFR 493.1291(c) lists), an amendment box when amended, specimen, clinical history, final diagnosis, the synoptic block with the standards it follows, comment, gross, microscopic, slides and stains, AI statement and the electronic signature. A running header from page 2, page n of N, and a DRAFT watermark until signed. Optional sections can be left out, and value sources never print. The PDF and the on-screen pages come from the same model and paginate the same.
+  Done when a golden PDF test compares text content and layout fingerprints for a draft, a signed and an amended report, and a test confirms no value source reaches the PDF.
+  Depends on STACK-035. Refs [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+- [ ] REPORT-010 · Idea: Amendments and addenda
+  After sign-out, changes create an amendment with reason, new signature and a visible history. The amended report says at its top what changed, why, when and by whom, and both versions are kept (42 CFR 493.1291(k)). An addendum adds information that does not change the diagnosis, such as a late stain, as its own signed section below the original. Both are sent again through the outbox (REPORT-022).
+  Done when tests confirm the original stays immutable, the amendment chain renders, and an addendum leaves the diagnosis and its signature untouched.
+  Refs kit Flow 19.
+
+- [ ] REPORT-011 · Idea: "No tumor seen" variant
+  For cases with no flagged area that went through a systematic scan.
+  Done when tests require coverage above the lab threshold before this variant can be signed.
+
+- [ ] REPORT-012 · Idea: Report attachments
+  Review CSV, measurement list and selected snapshots attached to the report.
+  Done when tests confirm attachments are generated and stored with the report.
+
+- [ ] REPORT-013 · Idea: Report delivery hook
+  Signed reports are published through the LIS adapter interface (CASES-010) and available as FHIR DiagnosticReport.
+  Done when a contract test validates the FHIR resource.
+
+- [ ] REPORT-014 · Idea: Full report view
+  The doctor can read the whole report as pages before signing, see which required elements are filled and which are waiting, choose which optional sections to include and, in a draft, see where each value came from. From there they can sign, see the PDF, print and share it, and after signing start an amendment.
+  Done when component tests cover a draft with waiting elements, a draft ready to sign, a signed and an amended report, pagination keeps a section title with its first line, axe passes, and E2E signs from this view.
+  Depends on REPORT-001, REPORT-002, REPORT-009. Refs mock 15, kit W37, kit Sign-out report, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+- [ ] REPORT-015 · Idea: PDF preview, print and share
+  The doctor sees the PDF exactly as it is stored, can print it and download it, and can share it according to its state. A draft only goes to a colleague for a read. A signed report goes to the requesting clinician automatically and can join a tumor board pack (HOME-009), go out as a secure expiring link that needs sign-in (IAM-010), or go to another laboratory. Release to a patient portal after the hospital's delay is shown but waits for a portal integration. Every share is audited.
+  Done when E2E shares a signed report each way, a permission test refuses sharing a draft outside the department, audit entries exist, and printing produces the same A4 pages as the PDF.
+  Depends on REPORT-009, IAM-010, HOME-009. Refs mock 15, kit W38, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+- [ ] REPORT-016 · Idea: Tumour cell content for molecular testing
+  For cellularity cases the report gives the block and slide, the field assessed (outlined for macrodissection), the share of nucleated cells that are tumour cells with its likely range, whether it clears the assay minimum set by the lab, the cells counted, the unsure cells the pathologist checked, cells changed by learning and a macrodissection note, following the CAP Molecular Oncology Committee recommendations as confirmed in REPORT-000.
+  Done when tests fill the section from seeded REVIEW-017 data, the verdict is computed against the lab's minimum including the "could be either side" case, and the values match the review panel.
+  Depends on REVIEW-017, REPORT-002, SET-011. Refs mock 15 cell case, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+- [ ] REPORT-017 · Idea: HL7 v2 and IHE APSR output
+  Signed and amended reports also leave as HL7 v2.5 with the synoptic values as coded observations (the NAACCR Volume V style CAP checklists use) and as an IHE APSR document on HL7 CDA R2 with its diagnostic conclusion section, through the adapter interface (CASES-008).
+  Done when contract tests validate the CDA against the APSR templates and the HL7 message with a parser, for a signed and an amended report.
+  Depends on REPORT-013, CASES-008. Refs [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
+
+
+- [ ] REPORT-018 · Idea: Undo window before delivery
+  Signing locks the report version and starts a grace period, set by the lab (default 10 s), before the report goes to the outbox. Unsigning inside it returns the report to draft and is audited. After it only an amendment changes the report.
+  Done when API tests with a fake clock cover unsigning inside and outside the window, and a test proves nothing reaches the outbox before the window ends.
+  Depends on REPORT-008, REPORT-022. Refs kit W61, kit Flow 16, [ADR 0023](adr/0023-gap-review-backend-first.md).
+
+- [ ] REPORT-019 · Idea: Resident draft and supervisor co-sign
+  A resident sends a draft for review, and the case moves to with the supervisor (CASES-012). The supervisor's edits are kept as changes against the resident's version. The supervisor returns the case with a note or co-signs, which records both people (reported by, verified by) with two electronic signature records.
+  Done when API tests cover send, return with a note, co-sign, the change list between versions and both signature records, and a resident's direct sign-out is refused.
+  Depends on IAM-018, SEC-023, CASES-012. Refs kit W55, kit Flow 14, [ADR 0023](adr/0023-gap-review-backend-first.md).
+
+- [ ] REPORT-020 · Idea: Free-text templates and phrases
+  Templates for specimens without a synoptic protocol: sections and required items, enabled per specimen type. A phrase library per lab and per person expands short codes into text. Measurements insert with their source, as in synoptic reports. The sign-out gate refuses a report with an empty required item.
+  Done when unit tests cover expansion, required items and measurement sources, and API tests cover the phrase libraries' permissions.
+  Depends on REPORT-002. Refs kit W72.
+
+- [ ] REPORT-021 · Idea: Report editing lease
+  Only the assignee, or the supervisor during review, edits the calls and the report draft. Editing takes a lease that expires after 10 idle minutes. Anyone else reads, measures and comments. A take-over request reaches the lease holder, who can accept or refuse, and an expired lease can be taken.
+  Done when API tests with two users cover the lease, a refused write, a take-over and expiry with a fake clock.
+  Depends on REPORT-001, COLLAB-007. Refs kit W66, [ADR 0023](adr/0023-gap-review-backend-first.md).
+
+- [ ] REPORT-022 · Idea: Delivery outbox
+  Signed reports, amendments, addenda and their messages leave through an outbox with states waiting, sent, delivered and rejected. Delivery retries with backoff and keeps the order per case. Sign-out succeeds while the LIS is down, and the queue drains when it is back. A rejected message keeps the receiver's error and can be retried after a fix, or answered with an amendment.
+  Done when tests cover retry, ordering, a receiver that is down for an hour, a rejection and a retry after the fix, with the file-drop adapter.
+  Depends on REPORT-013, CASES-008. Refs kit W67, kit W70, kit Flow 30.
+
+- [ ] REPORT-023 · Idea: Code mappings for outgoing reports
+  Each tenant keeps a versioned mapping from report values to the codes its receivers need (HL7 tables, SNOMED CT, ICD-O-3). A value without a mapping stops that message with an error that names the value. Administrators edit the mappings and every change is audited.
+  Done when tests cover a mapped value, an unmapped value that stops the message and names it, and a mapping change that lets a retry through.
+  Depends on REPORT-017, REPORT-022.
+
+---
+
+
 ## 37 BOARD · Status board, tickets and lab work
+
+Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Every task here starts with `Idea:` and keeps its ID.
 
 A page of its own next to the worklist ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)). Cases are tickets, and the lab work hanging off them (recuts, IHC stains, rescans, second opinions) are sub-tasks with their own owner, so hand-offs between pathologists and with the lab are visible. Layout follows the current prototype (mock 3, kit Status board page, kit W16 and W34).
 
-- [ ] BOARD-000 · Research check
+- [ ] BOARD-000 · Idea: Research check
   Board and drag-and-drop libraries, ticket workflow models, and how LIS systems expose lab orders such as recuts, stains and rescans.
   Done when an ADR records the ticket and sub-task model and the library choice.
 
-- [ ] BOARD-001 · Ticket and lab task model and API
+- [ ] BOARD-001 · Idea: Ticket and lab task model and API
   A case ticket carries the case's workflow status, priority, due time, service, assignee, watchers and links (earlier cases, tumor boards). Lab tasks hang off a case with a type (recut, IHC stain, rescan, second opinion), block, notes, owner or team, status (requested, in progress, ready to scan, done) and due time. Every change is an event in the ticket's history.
   Done when API tests cover the lifecycle of tickets and lab tasks, tenant isolation and audit entries.
   Depends on CASES-001, BOARD-000.
 
-- [ ] BOARD-002 · Case workflow status
+- [ ] BOARD-002 · Idea: Case workflow status
   Status is derived where it can be (waiting for AI from the jobs, waiting on others from open lab tasks or second opinions, report drafted from the report) and moved by people where it cannot, within allowed transitions. Signed is reached only by signing out the case (REPORT-008).
   Done when unit tests cover each derivation and every allowed and refused transition.
   Depends on BOARD-001, REPORT-001, AIP-010, CASES-012.
 
-- [ ] BOARD-003 · Board page
+- [ ] BOARD-003 · Idea: Board page
   Case tickets by workflow status, with today's signed cases as a count, reached from the sidebar next to the worklist. Each card identifies the case and patient and shows priority, specimen, service, lab work done of total, comments, due time (due today stands out) and assignee. A work-in-progress limit set by the lab warns when a status is over it.
   Done when component tests cover cards, the limit warning and empty statuses with seeded data, the board stays smooth with 500 tickets, and axe passes.
   Depends on BOARD-002, WL-002.
 
-- [ ] BOARD-004 · Scopes, filters and search
+- [ ] BOARD-004 · Idea: Scopes, filters and search
   Scopes for the whole department, only my tickets and the histology lab. Quick filters for STAT, due today, unassigned and waiting on the lab, a filter by person and a search. The state is kept in the URL.
   Done when component tests cover combined filters and E2E restores a filtered board from its URL.
 
-- [ ] BOARD-005 · Group by person
+- [ ] BOARD-005 · Idea: Group by person
   The board can group tickets into one lane per assignee, with unassigned tickets in their own lane last.
   Done when component tests cover grouping with unassigned and empty lanes.
 
-- [ ] BOARD-006 · Ticket details
+- [ ] BOARD-006 · Idea: Ticket details
   Opening a ticket shows, without leaving the board, its status with the allowed moves, a way to open the case and to request lab work, the AI summary, clinical note, lab work with owners and status, linked items, the activity with comments (mentions through COLLAB-006) and history, and the fields: assignee, requesting clinician, priority, due with time left, time in the current status, service, watchers, created and updated. Closing it keeps the board's scroll, filters and selection.
   Done when component tests cover each part, E2E changes a status from the ticket, and keyboard users can open, read and close a ticket.
   Depends on BOARD-002, COLLAB-002.
 
-- [ ] BOARD-007 · Reassigning
+- [ ] BOARD-007 · Idea: Reassigning
   Anyone can hand off their own ticket or take an unassigned one, and lab leads can move anyone's. The picker shows each person's open cases, specialty and availability (IAM-015). People who are away are not selectable and their back-up is named. It suggests the consultant with the fewest open cases and a matching specialty and never suggests a resident alone. A reason is optional and goes into the history. Both people are notified, a ticket can go back to the unassigned pool, "assign to me" is one action, and a reassignment can be undone right after.
   Done when unit tests cover the suggestion, permission tests cover who may move what, and E2E reassigns with audit, history and notifications.
   Depends on BOARD-001, IAM-015, NOTIF-001.
 
-- [ ] BOARD-008 · Request lab work
+- [ ] BOARD-008 · Idea: Request lab work
   From a ticket or a case, request a recut, an IHC stain, a rescan or a second opinion, with the block, notes and who does it. A second opinion goes through COLLAB-008.
   Done when E2E requests a recut that appears on the histology lab's board and on the case.
   Depends on BOARD-001, COLLAB-008.
 
-- [ ] BOARD-009 · Histology lab view
+- [ ] BOARD-009 · Idea: Histology lab view
   Lab tasks by requested, in progress, ready to scan and done today, for technicians to update. Each task links to its case ticket, and pathologists see the change on the ticket and in the worklist preview.
   Done when E2E has a technician move a task and the pathologist sees the new status.
   Depends on BOARD-004, BOARD-008.
 
-- [ ] BOARD-010 · Moving tickets
+- [ ] BOARD-010 · Idea: Moving tickets
   Tickets move between statuses by drag and drop or by keyboard. Only allowed moves are accepted, and a move to signed is refused with a pointer to sign-out. Every move is audited.
   Done when E2E moves a ticket by pointer and by keyboard, and a refused move leaves the ticket where it was.
   Depends on BOARD-002, BOARD-003.
 
-- [ ] BOARD-011 · Realtime board
+- [ ] BOARD-011 · Idea: Realtime board
   Changes by others appear without a reload.
   Done when E2E with two sessions shows a move, a reassignment and a new lab task within 2 s.
   Depends on COLLAB-001.
 
-- [ ] BOARD-012 · Lab orders from the LIS
+- [ ] BOARD-012 · Idea: Lab orders from the LIS
   Stains and recuts that the LIS already tracks are read through the adapter rather than kept as a second copy.
   Done when a contract test maps a lab order from the file-drop adapter to a lab task and back.
   Depends on CASES-008.
 
 
-- [ ] BOARD-013 · Lab work from the case, with a spot
+- [ ] BOARD-013 · Idea: Lab work from the case, with a spot
   A lab request made while reading carries the spot on the slide (slide, position and zoom) for the lab, and a choice to keep the case in review or put it on hold, which moves it to waiting on others. When the stained or rescanned slide arrives it is linked to the request and marked new in the case.
   Done when API tests cover the spot, both choices, and the new slide linked to its request.
   Depends on BOARD-008, CASES-012. Refs kit W54, kit Flow 13.
@@ -2983,38 +3684,40 @@ A page of its own next to the worklist ([ADR 0021](adr/0021-chosen-home-worklist
 
 ## 38 TEAM · Team, capacity, absences and hand-over
 
+Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Every task here starts with `Idea:` and keeps its ID.
+
 How a lead controls who works on what: absences and back-ups, each person's capacity, moving many cases at once and handing work over. Backend first ([ADR 0023](adr/0023-gap-review-backend-first.md)). The Team page with its People, Capacity and Rota views (kit W45 to W48) gets its UI tasks when the prototype settles.
 
-- [ ] TEAM-000 · Research check
+- [ ] TEAM-000 · Idea: Research check
   How hospitals keep rotas (iCalendar feeds, HR exports, CSV) and how scheduling products model capacity and absence.
   Done when an ADR records the absence and capacity model and the rota import format.
 
-- [ ] TEAM-001 · Absence model and API
+- [ ] TEAM-001 · Idea: Absence model and API
   An absence has a person, dates, a kind (leave, sickness, course, tumor board, on call), a back-up and a source (entered here or imported). On its days the person's availability turns away by itself (IAM-015), except for kinds that only reduce capacity, such as a tumor board or on call. Absences are entered by the person or a lead.
   Done when API tests cover each kind, the availability it produces on its days with a fake clock, and who may enter absences for whom.
   Depends on IAM-015, TEAM-000. Refs kit W47, kit Flow 22.
 
-- [ ] TEAM-002 · Rota import
+- [ ] TEAM-002 · Idea: Rota import
   The hospital's rota is read on a schedule from the format TEAM-000 chooses. Imports are idempotent, entries keep their source, and entries made here are never overwritten.
   Done when tests import the same rota twice without duplicates, update a changed entry and keep a manual one.
   Depends on TEAM-001.
 
-- [ ] TEAM-003 · Capacity and booked reading time
+- [ ] TEAM-003 · Idea: Capacity and booked reading time
   Each person has a capacity per working day, reduced by absences and blocks. Booked reading time per day is the sum of the reading-time estimates (WL-010) of their open cases by due day. The API returns capacity, booked time and overflow per person and day.
   Done when unit tests cover capacity with absences and blocks, and an API test returns the overflow for a seeded week.
   Depends on TEAM-001, WL-010. Refs kit W46.
 
-- [ ] TEAM-004 · Absence hand-over
+- [ ] TEAM-004 · Idea: Absence hand-over
   Creating an absence lists the person's cases due while they are away. Each can stay, go to the back-up or go back to the pool, and the choice is applied on the first day of the absence. Everyone involved is notified.
   Done when API tests with a fake clock apply each choice on the start day and send the notifications.
   Depends on TEAM-001, BOARD-007, NOTIF-001.
 
-- [ ] TEAM-005 · Bulk reassign
+- [ ] TEAM-005 · Idea: Bulk reassign
   Move many cases in one request. Each case gets a suggested person by room and folders, the lead can override any of them, and an optional reason applies to all. The move is all or nothing, it is audited per case, and notifications are batched per person.
   Done when API tests cover a full move, a refused move that leaves every case where it was, the per-case audit entries and one notification per person.
   Depends on BOARD-007, TEAM-003. Refs kit W46, kit Flow 23.
 
-- [ ] TEAM-006 · Team directory API
+- [ ] TEAM-006 · Idea: Team directory API
   People with role, folders, availability, open cases against capacity, back-up and last activity. Leads and administrators see everything, other staff see names, roles, folders and availability only, and outside consultants see nothing.
   Done when API tests cover each role's view and tenant isolation.
   Depends on IAM-016, TEAM-003. Refs kit W45.
@@ -3023,28 +3726,30 @@ How a lead controls who works on what: absences and back-ups, each person's capa
 
 ## 39 TB · Tumor boards
 
+Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Every task here starts with `Idea:` and keeps its ID.
+
 Preparing a multidisciplinary tumor board, presenting at it and bringing its outcome back into the case. Backend first ([ADR 0023](adr/0023-gap-review-backend-first.md)). The session and present-mode screens (kit W58, W59) get their UI tasks when the prototype settles.
 
-- [ ] TB-000 · Research check
+- [ ] TB-000 · Idea: Research check
   How tumor board software prepares sessions, what the board records, and how outcomes reach the clinician.
   Done when an ADR records the session model.
 
-- [ ] TB-001 · Session model and API
+- [ ] TB-001 · Idea: Session model and API
   A session has a board (for example breast), a date and time, a place and a video link, members, and an ordered list of cases, each with the clinician's question, a presenter and whether it is prepared. A case is added from the case or from the session.
   Done when API tests cover sessions, ordering, adding and removing cases, permissions and tenant isolation.
   Depends on TB-000, CASES-001. Refs kit W58, kit Flow 17.
 
-- [ ] TB-002 · Pinned views and talking points
+- [ ] TB-002 · Idea: Pinned views and talking points
   Each case in a session holds pinned views (slide, camera and layers) and talking points for the presenter only.
   Done when API tests cover pinning, reordering and that talking points are visible only to the presenter.
   Depends on TB-001.
 
-- [ ] TB-003 · Outcome
+- [ ] TB-003 · Idea: Outcome
   The board's outcome is written per case during the session, saved to the case history, audited and optionally sent to the requesting clinician.
   Done when API tests cover recording, the case history entry, the audit entry and sending.
   Depends on TB-001, NOTIF-001. Refs kit W59.
 
-- [ ] TB-004 · Handout pack
+- [ ] TB-004 · Idea: Handout pack
   A PDF for the session with each case's report and pinned views, with patients shown by initials when the session asks for it.
   Done when a golden PDF test checks a pack in both identity modes.
   Depends on TB-002, REPORT-009.
@@ -3055,8 +3760,8 @@ Preparing a multidisciplinary tumor board, presenting at it and bringing its out
 
 - DICOMweb reader and DICOM WSI ingest (doc 20 §3.4).
 - MRXS, iSyntax (libisyntax to WASM), CZI and VSI readers.
-- Watch-folder and scanner bucket sync agent, including watching a link or saved source for new slides and SFTP or SMB scanner shares as import sources.
-- LIS integration over HL7 v2 and FHIR with a real LIS.
+- SFTP or SMB scanner shares and watching a link for new slides as import sources. Watched buckets are REMOTE-004.
+- LIS integration over HL7 v2 and FHIR with a real LIS, now an idea with the rest of the hospital direction.
 - Offline cases with a service worker cache.
 - CRDT multiplayer annotation.
 - IVDR, FDA and EU AI Act regulatory evidence packages.

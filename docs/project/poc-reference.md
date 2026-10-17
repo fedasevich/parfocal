@@ -53,6 +53,11 @@ In `BACKLOG.md`, a path such as `poc/src/slide/ventana.ts` means `/Users/yuriife
 | 34 | Every action in the viewer, as a tree | [34-functionality-tree.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/34-functionality-tree.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/34-functionality-tree.md` |
 | 35 | A viewer built around a pathologist's sign-out | [35-ui-ux-for-pathologists.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/35-ui-ux-for-pathologists.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/35-ui-ux-for-pathologists.md` |
 | 36 | Tumor areas for sentinel node review | [36-sentinel-node-areas.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/36-sentinel-node-areas.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/36-sentinel-node-areas.md` |
+| 37 | From hospital sign-out to AI results review | [37-ai-results-review-rework.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/37-ai-results-review-rework.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/37-ai-results-review-rework.md` |
+| 38 | Mock feedback round 2 and its rules | [38-ui-feedback-round-2.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/38-ui-feedback-round-2.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/38-ui-feedback-round-2.md` |
+| 39 | Mock feedback round 3 | [39-ui-feedback-round-3.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/39-ui-feedback-round-3.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/39-ui-feedback-round-3.md` |
+| 40 | UI and UX audit of the Parfocal mock | [40-ui-ux-audit.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/40-ui-ux-audit.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/40-ui-ux-audit.md` |
+| 41 | What is clickable, tags, icons and type | [41-clickable-pass.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/41-clickable-pass.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/41-clickable-pass.md` |
 
 ## Other material
 

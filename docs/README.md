@@ -6,7 +6,7 @@ Last consolidated: 2026-10-14
 
 ## Where we are now
 
-Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 45 are ticked. The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
+Planning is done, and on 2026-10-17 the product changed direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). Parfocal is now an AI results review app: researchers import or run AI and evaluate it, and doctors review it. [BACKLOG.md](BACKLOG.md) holds 716 tasks in 53 epics, 55 are ticked, and 91 are kept as ideas from the hospital direction. The ADAPT epic reverts or reworks the hospital code built so far (roles, folders, cases, accession numbers, the case state machine, routing, signing rights, availability and emergency access). The planning baseline is [ADR 0002](adr/0002-planning-baseline.md) and the platform is [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare for the web app, edge and storage, Modal for Python and GPUs, and Neon for Postgres. Since 2026-10-08 all work runs locally while the owner fixes the cloud side ([knowledge/platform.md](knowledge/platform.md)). Zitadel Cloud is allowed again since 2026-10-13.
 
 | Area | State |
 |---|---|
@@ -26,9 +26,9 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
 1. Follow-ups from today's decisions: the generated client's error type and options under `exactOptionalPropertyTypes` for STACK-008 (generated client), a browser check of the routing spike, and the OME-Zarr reader for INGEST-003 (ingest workflow skeleton).
-2. Backend tasks that need no UI: CASES-023 (due time rules), CASES-015 (patient matching) and CASES-019 (cancel, restore and merge).
-3. The owner should review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0051, which were accepted under standing approval.
-4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen), CASES-025 (folder screens) and FOUND-019 (error toasts). FOUND-014 (dependency and licence scanning) is on hold.
+2. Backend work for the new direction, which needs no UI: ADAPT-000 (inventory and plan for the built hospital code) first, then ADAPT-001 (roles become researcher, reviewer and admin) with IAM-022 (the new roles), and PROJ-000 (project model). CASES-015, CASES-019 and CASES-023 are ideas now.
+3. The owner should read [ADR 0053](adr/0053-ai-results-review-direction.md) and the new backlog epics, accept the ADAPT-000 plan before any hospital code is removed, and review [ADR 0023](adr/0023-gap-review-backend-first.md), still Proposed, because ADRs 0026 to 0032 build on it, and ADRs 0024 to 0051, which were accepted under standing approval.
+4. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen) and FOUND-019 (error toasts). CASES-025 (folder screens) became an idea and its claim was released. FOUND-014 (dependency and licence scanning) is on hold.
 
 ## Index
 
