@@ -59,7 +59,11 @@ def make_lab(database: str) -> Lab:
 
 
 def new_case(api: ApiAs, lab: Lab, **extra: Any) -> dict[str, Any]:
-    body = {"patient": {"name": "Folder Patient"}, "specimens": [{"letter": "A"}]} | extra
+    body = {
+        "patient": {"name": "Folder Patient"},
+        "accession": f"FO-{uuid.uuid4().hex[:8]}",
+        "specimens": [{"letter": "A"}],
+    } | extra
     response = api(lab.people[Role.LEAD]).post("/api/cases", json=body)
     assert response.status_code == 201, response.text
     return response.json()
@@ -141,7 +145,12 @@ def test_another_workspace_cannot_use_a_folder(api: ApiAs, database: str) -> Non
     assert response.status_code == 404
     created = api(theirs.people[Role.LEAD]).post(
         "/api/cases",
-        json={"patient": {"name": "X"}, "specimens": [{"letter": "A"}], "folder_id": folder["id"]},
+        json={
+            "patient": {"name": "X"},
+            "accession": "FO-X",
+            "specimens": [{"letter": "A"}],
+            "folder_id": folder["id"],
+        },
     )
     assert created.status_code == 404
     assert api(theirs.people[Role.LEAD]).get(FOLDERS).json() == []

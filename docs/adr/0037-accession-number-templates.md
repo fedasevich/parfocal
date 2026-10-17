@@ -1,7 +1,7 @@
 # 0037. Accession numbers from a per-workspace template with a counter per prefix and year
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0058
 - Deciders: Yurii Fedas
 - Backlog: CASES-004, CASES-013, CASES-007, CASES-008
 

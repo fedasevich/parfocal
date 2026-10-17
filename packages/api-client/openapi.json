@@ -1754,212 +1754,6 @@
         "x-permission-write": true
       }
     },
-    "/api/tenant/accession-format": {
-      "get": {
-        "tags": [
-          "tenant"
-        ],
-        "summary": "Get Accession Format",
-        "operationId": "getAccessionFormat",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessionFormatView"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in to continue",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "You do not have access to this",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "This changed since you loaded it",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Something went wrong",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "tenant"
-        ],
-        "summary": "Update Accession Format",
-        "operationId": "updateAccessionFormat",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccessionFormatChange"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessionFormatView"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in to continue",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "You do not have access to this",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "This changed since you loaded it",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Something went wrong",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        },
-        "x-permission": "lab-setup",
-        "x-permission-write": true
-      }
-    },
     "/api/me/availability": {
       "get": {
         "tags": [
@@ -5331,57 +5125,6 @@
   },
   "components": {
     "schemas": {
-      "AccessionFormatChange": {
-        "properties": {
-          "template": {
-            "$ref": "#/components/schemas/Template"
-          },
-          "prefixes": {
-            "items": {
-              "$ref": "#/components/schemas/Prefix"
-            },
-            "type": "array",
-            "maxItems": 20,
-            "minItems": 1,
-            "title": "Prefixes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "template",
-          "prefixes"
-        ],
-        "title": "AccessionFormatChange"
-      },
-      "AccessionFormatView": {
-        "properties": {
-          "template": {
-            "type": "string",
-            "title": "Template"
-          },
-          "prefixes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Prefixes"
-          },
-          "next": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Next"
-          }
-        },
-        "type": "object",
-        "required": [
-          "template",
-          "prefixes",
-          "next"
-        ],
-        "title": "AccessionFormatView"
-      },
       "AccountName": {
         "type": "string",
         "maxLength": 100,
@@ -5938,28 +5681,10 @@
             "$ref": "#/components/schemas/Priority",
             "default": "routine"
           },
-          "prefix": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^[A-Z]{1,4}$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Prefix"
-          },
           "accession": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 40
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
             "title": "Accession"
           },
           "service": {
@@ -6018,7 +5743,8 @@
         },
         "type": "object",
         "required": [
-          "specimens"
+          "specimens",
+          "accession"
         ],
         "title": "CaseDraft"
       },
@@ -6874,10 +6600,6 @@
         ],
         "title": "Plan"
       },
-      "Prefix": {
-        "type": "string",
-        "pattern": "^[A-Z]{1,4}$"
-      },
       "Priority": {
         "type": "string",
         "enum": [
@@ -7529,10 +7251,6 @@
         "type": "string",
         "maxLength": 60,
         "minLength": 1
-      },
-      "Template": {
-        "type": "string",
-        "maxLength": 60
       },
       "Tenant": {
         "properties": {

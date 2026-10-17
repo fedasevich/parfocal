@@ -49,6 +49,7 @@ def make_lab(api: ApiAs, database: str) -> Lab:
     ):
         body: dict[str, Any] = {
             "patient": {"name": f"Patient {label}"},
+            "accession": f"FA-{uuid.uuid4().hex[:8]}",
             "specimens": [{"letter": "A"}],
         }
         if folder:
@@ -84,6 +85,7 @@ def test_cases_are_created_and_filed_only_inside_the_folders(api: ApiAs, databas
     clerk = lab.people["lab"]
     body = {
         "patient": {"name": "X"},
+        "accession": f"FA-{uuid.uuid4().hex[:8]}",
         "specimens": [{"letter": "A"}],
         "folder_id": lab.folders["Skin"],
     }

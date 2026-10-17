@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -37,6 +38,7 @@ def test_a_reason_opens_one_case_outside_the_folders(api: ApiAs, database: str) 
             "/api/cases",
             json={
                 "patient": {"name": "Other"},
+                "accession": f"EM-{uuid.uuid4().hex[:8]}",
                 "specimens": [{"letter": "A"}],
                 "folder_id": lab.folders["Skin"],
             },

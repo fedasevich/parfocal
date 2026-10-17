@@ -14,8 +14,6 @@ from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import (
     Role,
-    accession_counters,
-    accession_formats,
     api_tokens,
     audit_events,
     audit_people,
@@ -69,7 +67,6 @@ CASE_TABLES = {
     "specimens",
     "blocks",
     "slides",
-    "accession_counters",
     "case_requests",
     "folder_members",
     "emergency_grants",
@@ -175,21 +172,6 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({case.accession, str(case.case_id)})
 
 
-async def seed_accession_formats(connection: AsyncConnection, seeded: Seeded) -> None:
-    prefix = "".join(chr(ord("A") + int(c, 16) % 26) for c in uuid.uuid4().hex[:4])
-    await connection.execute(
-        insert(accession_formats).values(
-            tenant_id=seeded.tenant_id, template="{prefix}{yy}-{seq:5}", prefixes=[prefix]
-        )
-    )
-    await connection.execute(
-        insert(accession_counters).values(
-            tenant_id=seeded.tenant_id, prefix=prefix, year=2026, last_value=1
-        )
-    )
-    seeded.markers.add(f'"{prefix}"')
-
-
 async def seed_folders(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Folder {uuid.uuid4().hex[:10]}"
     folder_id = await connection.scalar(
@@ -205,7 +187,6 @@ async def seed_folders(connection: AsyncConnection, seeded: Seeded) -> None:
 
 SEEDERS: dict[str, Seeder] = {
     "folders": seed_folders,
-    "accession_formats": seed_accession_formats,
     "invitations": seed_invitations,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
@@ -227,7 +208,6 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
-    "getAccessionFormat": Route(Exposure.TENANT, lambda _: "/api/tenant/accession-format"),
     "listFolders": Route(Exposure.TENANT, lambda _: "/api/tenant/folders"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),

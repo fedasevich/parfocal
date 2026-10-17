@@ -72,6 +72,7 @@ def draft(**changes: Any) -> dict[str, Any]:
             "birth_date": "1970-01-02",
             "sex": "female",
         },
+        "accession": f"S26-{uuid.uuid4().hex[:6].upper()}",
         "specimens": [
             {
                 "letter": "A",
@@ -99,8 +100,6 @@ def test_a_lead_creates_a_case_with_a_new_patient(api: ApiAs, database: str) -> 
     response = create(api, lab.people[Role.LEAD], draft())
     assert response.status_code == 201, response.text
     case = response.json()
-    year = datetime.now(UTC).year % 100
-    assert case["accession"] == f"S{year:02d}-00001"
     assert (case["source"], case["priority"]) == (
         "manual",
         "urgent",
@@ -130,7 +129,6 @@ def test_a_case_for_an_existing_patient(api: ApiAs, database: str) -> None:
     body = draft(patient=None, patient_id=first["patient"]["id"])
     second = create(api, lab.people[Role.LAB], body).json()
     assert second["patient"]["id"] == first["patient"]["id"]
-    assert second["accession"].endswith("-00002")
     missing = create(api, lab.people[Role.LAB], draft(patient=None, patient_id=str(uuid.uuid4())))
     assert missing.status_code == 404
     same_mrn = draft(patient={"name": "Someone", "mrn": first["patient"]["mrn"].lower()})
@@ -226,14 +224,14 @@ def test_concurrent_repeats_create_one_case(api: ApiAs, database: str) -> None:
     assert count == [(1,)]
 
 
-def test_an_accession_from_the_requisition_is_checked(api: ApiAs, database: str) -> None:
-    lab = make_lab(database)
-    taken = create(api, lab.people[Role.LAB], draft(accession="S26-00500"))
-    assert taken.json()["accession"] == "S26-00500"
-    again = create(api, lab.people[Role.LAB], draft(accession="S26-00500"))
+def test_a_typed_case_id_is_unique_within_the_workspace(api: ApiAs, database: str) -> None:
+    lab, other = make_lab(database), make_lab(database)
+    first = create(api, lab.people[Role.LAB], draft(accession="  Batch 7 / 12 "))
+    assert first.json()["accession"] == "Batch 7 / 12"
+    again = create(api, lab.people[Role.LAB], draft(accession="Batch 7 / 12"))
     assert (again.status_code, again.json()["code"]) == (409, "accession-taken")
-    malformed = create(api, lab.people[Role.LAB], draft(accession="26-500"))
-    assert (malformed.status_code, malformed.json()["code"]) == (409, "accession-format")
+    elsewhere = create(api, other.people[Role.LAB], draft(accession="Batch 7 / 12"))
+    assert elsewhere.status_code == 201, elsewhere.text
 
 
 @pytest.mark.parametrize(
@@ -246,6 +244,9 @@ def test_an_accession_from_the_requisition_is_checked(api: ApiAs, database: str)
         {"specimens": [{"letter": "a"}]},
         {"specimens": [{"letter": "A", "blocks": [{"number": 1}, {"number": 1}]}]},
         {"priority": "whenever"},
+        {"accession": None},
+        {"accession": "   "},
+        {"accession": "x" * 41},
     ],
 )
 def test_invalid_drafts_are_refused(api: ApiAs, database: str, changes: dict[str, Any]) -> None:

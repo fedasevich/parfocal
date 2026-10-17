@@ -61,7 +61,6 @@ OPEN_OPERATIONS = {
     "endSession": "signed-in",
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
-    "getAccessionFormat": "member",
     "listFolders": "member",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
@@ -99,11 +98,6 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", f"/api/tenant/folders/{w.folder}/people", {"user_ids": []}
     ),
     "fileCase": lambda w: Call("PUT", f"/api/cases/{w.case}/folder", {"folder_id": None}),
-    "updateAccessionFormat": lambda _: Call(
-        "PUT",
-        "/api/tenant/accession-format",
-        {"template": "{prefix}{yy}-{seq:5}", "prefixes": ["S"]},
-    ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "requestEmergencyAccess": lambda w: Call(
         "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
@@ -115,7 +109,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createCase": lambda _: Call(
         "POST",
         "/api/cases",
-        {"patient": {"name": "Matrix Patient"}, "specimens": [{"letter": "A"}]},
+        {
+            "patient": {"name": "Matrix Patient"},
+            "accession": f"PM-{uuid.uuid4().hex[:8]}",
+            "specimens": [{"letter": "A"}],
+        },
     ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
@@ -162,7 +160,6 @@ PLACEHOLDER = Workspace(
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
-    "getAccessionFormat": lambda _: Call("GET", "/api/tenant/accession-format"),
     "listFolders": lambda _: Call("GET", "/api/tenant/folders"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),

@@ -9,12 +9,6 @@ from sqlalchemy import exists, func, insert, select
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.accessions import (
-    allocate_accession,
-    check_imported_accession,
-    current_year,
-    format_of,
-)
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.cases import CaseDetail, case_detail, keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -94,8 +88,7 @@ class CaseDraft(BaseModel):
     clinical_question: Annotated[str, StringConstraints(max_length=1000)] | None = None
     requester: Text200 | None = None
     priority: Priority = Priority.ROUTINE
-    prefix: Annotated[str, StringConstraints(pattern=r"^[A-Z]{1,4}$")] | None = None
-    accession: Annotated[str, StringConstraints(max_length=40)] | None = None
+    accession: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)]
     service: Annotated[str, StringConstraints(max_length=60)] | None = None
     due_at: datetime | None = None
     assignee_user_id: uuid.UUID | None = None
@@ -138,6 +131,11 @@ RULES: DefaultRules = NoRulesYet()
 class PatientExistsError(ConflictError):
     code = "patient-exists"
     title = "A patient with this MRN already exists. Create the case for that patient"
+
+
+class CaseIdTakenError(ConflictError):
+    code = "accession-taken"
+    title = "This case ID is already used in this workspace"
 
 
 class AssigneeNotMemberError(BadRequestError):
@@ -203,10 +201,12 @@ async def patient_for(connection: AsyncConnection, keys: TenantKeys, draft: Case
 
 
 async def accession_for(connection: AsyncConnection, tenant_id: uuid.UUID, draft: CaseDraft) -> str:
-    if draft.accession is not None:
-        return await check_imported_accession(connection, tenant_id, draft.accession)
-    prefix = draft.prefix or (await format_of(connection, tenant_id)).prefixes[0]
-    return await allocate_accession(connection, tenant_id, prefix, await current_year(connection))
+    taken = await connection.scalar(
+        select(exists().where(cases.c.tenant_id == tenant_id, cases.c.accession == draft.accession))
+    )
+    if taken:
+        raise CaseIdTakenError
+    return draft.accession
 
 
 async def check_assignee(
