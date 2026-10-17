@@ -7,8 +7,8 @@ from pydantic import BaseModel
 from sqlalchemy import literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.case_access import require_case_access
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.folder_access import access_of, require_case_access
 from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, database_scope
@@ -72,7 +72,6 @@ class CaseDetail(BaseModel):
     due_at: datetime | None
     source: CaseSource
     assignee_user_id: uuid.UUID | None
-    folder_id: uuid.UUID | None
     service: str | None
     requester: str | None
     is_draft: bool
@@ -179,7 +178,7 @@ async def case_detail(
     ).one_or_none()
     if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
         raise NotFoundError("Case not found")
-    await require_case_access(connection, principal, case_id, row.folder_id, Permission.SEE_CASES)
+    await require_case_access(connection, principal, case_id, Permission.SEE_CASES)
     slide_rows = (
         await connection.execute(
             select(slides)
@@ -203,7 +202,6 @@ async def case_detail(
         due_at=row.due_at,
         source=CaseSource(row.source),
         assignee_user_id=row.assignee_user_id,
-        folder_id=row.folder_id,
         service=row.service,
         requester=row.requester,
         is_draft=row.is_draft,
@@ -229,7 +227,6 @@ class CaseSummary(BaseModel):
     accession: str
     priority: Priority
     due_at: datetime | None
-    folder_id: uuid.UUID | None
     assignee_user_id: uuid.UUID | None
 
 
@@ -237,8 +234,7 @@ class CaseSummary(BaseModel):
 async def list_cases(
     principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[CaseSummary]:
-    access = await access_of(connection, principal)
-    statement = select(cases).where(cases.c.deleted_at.is_(None), access.condition())
+    statement = select(cases).where(cases.c.deleted_at.is_(None))
     if isinstance(principal, MemberPrincipal):
         statement = statement.where(
             or_(

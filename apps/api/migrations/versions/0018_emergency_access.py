@@ -7,7 +7,7 @@ from alembic import op
 from parfocal_common.schema_sql import enable_tenant_isolation
 
 revision: str = "0018"
-down_revision: str | None = "0017"
+down_revision: str | None = "0015"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

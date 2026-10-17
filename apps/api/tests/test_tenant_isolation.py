@@ -19,8 +19,6 @@ from parfocal_api.tables import (
     audit_people,
     case_requests,
     emergency_grants,
-    folder_members,
-    folders,
     invitations,
     memberships,
     organisations,
@@ -68,7 +66,6 @@ CASE_TABLES = {
     "blocks",
     "slides",
     "case_requests",
-    "folder_members",
     "emergency_grants",
 }
 AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
@@ -172,21 +169,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({case.accession, str(case.case_id)})
 
 
-async def seed_folders(connection: AsyncConnection, seeded: Seeded) -> None:
-    name = f"Folder {uuid.uuid4().hex[:10]}"
-    folder_id = await connection.scalar(
-        insert(folders).values(tenant_id=seeded.tenant_id, name=name).returning(folders.c.id)
-    )
-    await connection.execute(
-        insert(folder_members).values(
-            tenant_id=seeded.tenant_id, folder_id=folder_id, user_id=seeded.ids["user"]
-        )
-    )
-    seeded.markers.add(name)
-
-
 SEEDERS: dict[str, Seeder] = {
-    "folders": seed_folders,
     "invitations": seed_invitations,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
@@ -208,7 +191,6 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
-    "listFolders": Route(Exposure.TENANT, lambda _: "/api/tenant/folders"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),

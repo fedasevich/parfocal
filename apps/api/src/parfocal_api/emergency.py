@@ -35,7 +35,7 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
     "/{case_id}/emergency-access",
     operation_id="requestEmergencyAccess",
     status_code=201,
-    **require(Permission.OPEN_OUTSIDE_FOLDERS, write=True),
+    **require(Permission.EMERGENCY_ACCESS, write=True),
 )
 async def request_emergency_access(
     case_id: uuid.UUID,

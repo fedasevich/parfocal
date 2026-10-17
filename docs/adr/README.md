@@ -47,7 +47,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0039](0039-email-through-resend-with-phi-rules.md) | Send email through Resend, with bounce handling and a rule that email never carries PHI | Accepted | 2026-10-14 |
 | [0040](0040-observability-and-phi-scrubbing.md) | Observability with OpenTelemetry, Grafana Cloud and Sentry, and one PHI scrubbing rule set | Accepted | 2026-10-14 |
 | [0041](0041-identity-and-authorization-rechecked.md) | Identity and authorization rechecked in October 2026: Zitadel Cloud and row-level security with roles in code both confirmed | Accepted | 2026-10-14 |
-| [0046](0046-roles-narrowed-by-folders.md) | Folder-scoped permissions apply inside a person's folders, unfiled cases stay open, and leads may work in every folder | Accepted | 2026-10-14 |
+| [0046](0046-roles-narrowed-by-folders.md) | Folder-scoped permissions apply inside a person's folders, unfiled cases stay open, and leads may work in every folder | Superseded by 0059 | 2026-10-14 |
 | [0042](0042-model-licensing-policy.md) | Model licensing policy: Parfocal is commercial, and the registry blocks any model whose weights or training data licences are not confirmed | Rejected | 2026-10-14 |
 | [0045](0045-forms-and-validation.md) | Forms with TanStack Form and Zod 4, and report forms driven by template data | Accepted | 2026-10-14 |
 | [0044](0044-background-jobs-and-workflows.md) | Background jobs and workflows on Postgres tables with leases, confirming the default of ADR 0003 | Accepted | 2026-10-14 |
@@ -64,3 +64,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0056](0056-no-signing-rights.md) | Signing rights, supervision and stored signatures are removed | Accepted | 2026-10-17 |
 | [0057](0057-no-case-state-machine.md) | Cases have no state machine, and the slide pipeline per task takes its place | Accepted | 2026-10-17 |
 | [0058](0058-typed-case-ids.md) | Case IDs are typed or come from file names, and accession templates and counters are removed | Accepted | 2026-10-17 |
+| [0059](0059-no-folders.md) | Folders are removed, and access is by role across the workspace until project roles land | Accepted | 2026-10-17 |

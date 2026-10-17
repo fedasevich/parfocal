@@ -14,20 +14,17 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.permissions import (
     COLUMNS,
-    FOLDER_SCOPED,
     MATRIX,
     MEMBER_ROLES,
     Grant,
     Permission,
     grant_for,
-    grant_in_folder,
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal, Principal
 from parfocal_api.tables import (
     Role,
     api_tokens,
-    folders,
     invitations,
     memberships,
     organisations,
@@ -36,8 +33,6 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_common.db import async_database_url
-
-NARROWED = {"changeSigningRights": {Role.ADMIN: "only a lead decides who signs alone (W48)"}}
 
 OPEN_OPERATIONS = {
     "getHealth": "public",
@@ -61,7 +56,6 @@ OPEN_OPERATIONS = {
     "endSession": "signed-in",
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
-    "listFolders": "member",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
     "listMembers": "platform",
@@ -79,7 +73,6 @@ class Workspace:
     spare_account: uuid.UUID
     invitations: list[uuid.UUID]
     case: uuid.UUID
-    folder: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -90,22 +83,11 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
-    "createFolder": lambda _: Call(
-        "POST", "/api/tenant/folders", {"name": f"Folder {uuid.uuid4().hex[:8]}"}
-    ),
-    "updateFolder": lambda w: Call("PATCH", f"/api/tenant/folders/{w.folder}", {"colour": 2}),
-    "setFolderPeople": lambda w: Call(
-        "PUT", f"/api/tenant/folders/{w.folder}/people", {"user_ids": []}
-    ),
-    "fileCase": lambda w: Call("PUT", f"/api/cases/{w.case}/folder", {"folder_id": None}),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "requestEmergencyAccess": lambda w: Call(
         "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
     ),
     "listCases": lambda _: Call("GET", "/api/cases"),
-    "setAllFolders": lambda w: Call(
-        "PUT", f"/api/tenant/members/{w.colleague}/all-folders", {"all_folders": False}
-    ),
     "createCase": lambda _: Call(
         "POST",
         "/api/cases",
@@ -155,12 +137,10 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     [uuid.uuid4()],
     uuid.uuid4(),
-    uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
-    "listFolders": lambda _: Call("GET", "/api/tenant/folders"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
 }
@@ -200,7 +180,7 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
 def test_outside_consultants_and_administrators_keep_their_limits() -> None:
     assert Role.OUTSIDE_CONSULTANT not in MEMBER_ROLES
     assert grant_for(Role.ADMIN, Permission.SEE_CASES) is Grant.NONE
-    assert grant_for(Role.ADMIN, Permission.OPEN_OUTSIDE_FOLDERS) is Grant.EMERGENCY
+    assert grant_for(Role.ADMIN, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
     assert grant_for(Role.RESIDENT, Permission.SIGN_OUT) is Grant.NEEDS_CO_SIGN
     assert grant_for(Role.LAB, Permission.DRAFT_REPORTS) is Grant.NONE
     assert all(
@@ -208,7 +188,6 @@ def test_outside_consultants_and_administrators_keep_their_limits() -> None:
         in {Grant.NONE, Grant.SHARED, Grant.MEASURE_AND_COMMENT}
         for permission in Permission
     )
-    assert len(FOLDER_SCOPED) == 10
 
 
 def test_the_permission_page_is_current() -> None:
@@ -300,12 +279,6 @@ async def seed(database: str) -> Workspace:
                 for index in range(len(COLUMNS))
             ]
             case = await seed_case(connection, tenant_id)
-            folder = await connection.scalar(
-                insert(folders)
-                .values(tenant_id=tenant_id, name="Matrix folder")
-                .returning(folders.c.id)
-            )
-            assert isinstance(folder, uuid.UUID)
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
@@ -321,7 +294,6 @@ async def seed(database: str) -> Workspace:
             spare_account,
             ids,
             case.case_id,
-            folder,
         )
     finally:
         await engine.dispose()
@@ -357,8 +329,7 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
     permission = guarded_operations()[operation]
     status = send(api, principal_for(workspace, role), GUARDED_CALLS[operation](workspace))
     grant = grant_for(role, permission)
-    narrowed = role in NARROWED.get(operation, {})
-    if narrowed or grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
+    if grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
         assert status == 403
     else:
         assert 200 <= status < 300
@@ -395,16 +366,3 @@ def test_a_role_change_takes_effect_and_rejects_guest_roles(
     unknown = api(admin).put(f"/api/tenant/members/{uuid.uuid4()}/role", json={"role": "lab"})
     assert unknown.status_code == 404
     api(admin).put(path, json={"role": "resident"})
-
-
-def test_folder_scoped_permissions_apply_only_inside_the_folders() -> None:
-    assert len(FOLDER_SCOPED) == 10
-    for permission in Permission:
-        for role in COLUMNS:
-            inside = grant_in_folder(role, permission, inside=True)
-            outside = grant_in_folder(role, permission, inside=False)
-            assert inside == grant_for(role, permission)
-            if permission in FOLDER_SCOPED and role is not Role.OUTSIDE_CONSULTANT:
-                assert outside is Grant.NONE, (permission, role)
-            else:
-                assert outside == inside, (permission, role)

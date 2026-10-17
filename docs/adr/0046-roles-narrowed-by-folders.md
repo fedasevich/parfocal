@@ -1,7 +1,7 @@
 # 0046. Folder-scoped permissions apply inside a person's folders, unfiled cases stay open, and leads may work in every folder
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0059
 - Deciders: Yurii Fedas
 - Backlog: IAM-016, IAM-017, CASES-003, WL-001, TEAM-006
 

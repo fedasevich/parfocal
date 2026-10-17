@@ -38,9 +38,7 @@ class AuditAction(StrEnum):
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"
     CASE_OPENED = "case.opened"
     CASE_CREATED = "case.created"
-    CASE_FILED = "case.filed"
     CASE_EMERGENCY_ACCESS = "case.emergency-access"
-    FOLDER_CHANGED = "folder.changed"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
     API_TOKEN_ISSUED = "api-token.issued"
@@ -58,7 +56,6 @@ class AuditTarget(StrEnum):
     CASE = "case"
     SERVICE_ACCOUNT = "service-account"
     INVITATION = "invitation"
-    FOLDER = "folder"
 
 
 @dataclass(frozen=True)

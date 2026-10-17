@@ -3,7 +3,6 @@ from pathlib import Path
 
 from parfocal_api.permissions import (
     COLUMNS,
-    FOLDER_SCOPED,
     GRANT_NAMES,
     MATRIX,
     PERMISSION_NAMES,
@@ -20,7 +19,7 @@ def cell(grant: Grant) -> str:
 
 def render() -> str:
     rows = [
-        f"| {PERMISSION_NAMES[permission]}{' (by folder)' if permission in FOLDER_SCOPED else ''}"
+        f"| {PERMISSION_NAMES[permission]}"
         f" | `{permission.value}` | " + " | ".join(cell(grants[role]) for role in COLUMNS) + " |"
         for permission, grants in MATRIX.items()
     ]
@@ -46,8 +45,7 @@ def render() -> str:
             "",
             "## Matrix",
             "",
-            "An empty cell means no. Actions marked by folder apply only inside the folders a "
-            "person works in once IAM-016 adds folders, and to the whole workspace until then.",
+            "An empty cell means no.",
             "",
             header,
             divider,

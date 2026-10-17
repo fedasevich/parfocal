@@ -22,7 +22,6 @@ ROLE_NAMES = {
 
 class Grant(StrEnum):
     ALL = "y"
-    FOLDERS = "f"
     ASSIGNED = "o"
     NEEDS_CO_SIGN = "s"
     AS_SUPERVISOR = "p"
@@ -35,7 +34,6 @@ class Grant(StrEnum):
 
 GRANT_NAMES = {
     Grant.ALL: "Yes",
-    Grant.FOLDERS: "In their folders",
     Grant.ASSIGNED: "Assigned to them",
     Grant.NEEDS_CO_SIGN: "Needs co-sign",
     Grant.AS_SUPERVISOR: "As named supervisor",
@@ -49,7 +47,7 @@ GRANT_NAMES = {
 
 class Permission(StrEnum):
     SEE_CASES = "see-cases"
-    OPEN_OUTSIDE_FOLDERS = "open-outside-folders"
+    EMERGENCY_ACCESS = "emergency-access"
     EDIT_CASES = "edit-cases"
     UPLOAD_SLIDES = "upload-slides"
     MOVE_SLIDES = "move-slides"
@@ -78,7 +76,7 @@ class Permission(StrEnum):
 
 PERMISSION_NAMES = {
     Permission.SEE_CASES: "See cases",
-    Permission.OPEN_OUTSIDE_FOLDERS: "Open a case outside their folders",
+    Permission.EMERGENCY_ACCESS: "Open a case their role does not reach",
     Permission.EDIT_CASES: "Create a case, edit its details",
     Permission.UPLOAD_SLIDES: "Upload slides, fix unmatched slides",
     Permission.MOVE_SLIDES: "Move a slide between cases",
@@ -97,7 +95,7 @@ PERMISSION_NAMES = {
     Permission.TUMOR_BOARDS: "Prepare and present a tumor board",
     Permission.SET_OWN_STATUS: "Set their own status and absence",
     Permission.SEE_TEAM: "See the Team page and rota",
-    Permission.MANAGE_PEOPLE: "Invite people, change roles and folders",
+    Permission.MANAGE_PEOPLE: "Invite people, change roles",
     Permission.LAB_SETUP: "Lab setup: rules, due times, AI plan, templates",
     Permission.APPROVE_MODELS: "Approve a model for a specimen",
     Permission.INTEGRATIONS: "Integrations and upload sources",
@@ -115,9 +113,9 @@ COLUMNS = (
 )
 
 ROWS = {
-    Permission.SEE_CASES: "ffyrcn",
-    Permission.OPEN_OUTSIDE_FOLDERS: "bbynnb",
-    Permission.EDIT_CASES: "fnyynn",
+    Permission.SEE_CASES: "yyyrcn",
+    Permission.EMERGENCY_ACCESS: "nnnnnb",
+    Permission.EDIT_CASES: "ynyynn",
     Permission.UPLOAD_SLIDES: "yyyynn",
     Permission.MOVE_SLIDES: "onyynn",
     Permission.CANCEL_CASES: "nnynnn",
@@ -142,21 +140,6 @@ ROWS = {
     Permission.AUDIT_LOG: "nnrnny",
     Permission.DEVELOPER_MODE: "nnnnny",
 }
-
-FOLDER_SCOPED = frozenset(
-    {
-        Permission.SEE_CASES,
-        Permission.EDIT_CASES,
-        Permission.UPLOAD_SLIDES,
-        Permission.MOVE_SLIDES,
-        Permission.TAKE_CASES,
-        Permission.ANNOTATE,
-        Permission.ORDER_LAB_WORK,
-        Permission.ASK_SECOND_OPINION,
-        Permission.TUMOR_BOARDS,
-        Permission.SEE_TEAM,
-    }
-)
 
 MATRIX: dict[Permission, dict[Role, Grant]] = {
     permission: {role: Grant(code) for role, code in zip(COLUMNS, codes, strict=True)}
@@ -190,7 +173,7 @@ def grant_of(principal: object, permission: Permission) -> Grant:
 
 
 def may_ask_for_emergency_access(principal: object) -> bool:
-    return grant_of(principal, Permission.OPEN_OUTSIDE_FOLDERS) is Grant.EMERGENCY
+    return grant_of(principal, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
 
 
 def require(
@@ -210,10 +193,3 @@ def require(
     if emergency:
         extra["x-permission-emergency"] = True
     return {"dependencies": [Depends(check)], "openapi_extra": extra}
-
-
-def grant_in_folder(role: Role, permission: Permission, inside: bool) -> Grant:
-    grant = grant_for(role, permission)
-    if permission in FOLDER_SCOPED and not inside and role is not Role.OUTSIDE_CONSULTANT:
-        return Grant.NONE
-    return grant
