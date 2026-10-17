@@ -82,6 +82,14 @@ FastAPI 0.142's `TestClient` warns that using `httpx` is deprecated and asks for
 
 `PostgresDsn` parses into `MultiHostUrl`, which has `hosts()` instead of `host`. Read the host as `settings.database_url.hosts()[0]["host"]`.
 
+## An ADR status line holds only the status
+
+`scripts/check_adrs.py` accepts exactly `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`. A note such as "Accepted, its Pages part amended by ADR 0050" turned the docs workflow red on `main`. Put partial changes on their own line, such as `- Amended by: [ADR 0050](0050-deploy-pipeline-and-previews.md), which replaces its Pages part`. See the FOUND-020 (task board) entry of 2026-10-15 in the [log](../log.md).
+
+## Biome lints HTML files too
+
+`biome check .` reads `.html` files, inline scripts and styles included, so a page such as `scripts/board.html` needs `type` on every button and no control characters in regular expressions.
+
 ## Calling a settings class without arguments fails basedpyright
 
 pydantic-settings fills required fields from the environment, but basedpyright reports the missing constructor arguments. `load_settings(SettingsClass)` in `parfocal_common.settings` makes that call in one typed place, so no ignore comments are needed.

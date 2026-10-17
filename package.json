@@ -10,6 +10,8 @@
     "prepare": "lefthook install",
     "test": "turbo run test",
     "test:guards": "node --test \"scripts/*.test.ts\"",
+    "board": "python3 scripts/board.py serve --open",
+    "board:build": "python3 scripts/board.py build",
     "typecheck": "turbo run typecheck && tsc --noEmit -p scripts",
     "check": "biome check . && oxlint --type-aware && uv run ruff check && uv run ruff format --check",
     "secrets": "betterleaks git . --redact --no-banner",

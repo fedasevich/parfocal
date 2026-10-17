@@ -451,6 +451,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
   Depends on FOUND-007, FOUND-008, FOUND-015.
 
+- [ ] FOUND-020 · Task board over the backlog
+  A kanban page and a command-line tool that read `docs/BACKLOG.md` live, so the owner can follow every task and agents can pick, claim and hand over tasks in parallel. Ticks stay in the backlog and claims live in one small file per task under `docs/board/active/` ([ADR 0052](adr/0052-task-board-from-backlog-and-claim-files.md)). The page links each task to its dependencies both ways with a tree view, and to the ADRs, results, knowledge files and log entries that name it.
+  Done when `scripts/test_board.py` covers parsing tasks, dependencies, claim files, status resolution, the trees and `board.py check`, and the docs workflow runs the check.
+
 ---
 
 ## 02 SKEL · Walking skeleton (milestone M1)

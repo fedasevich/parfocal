@@ -17,6 +17,8 @@ Planning is done. [BACKLOG.md](BACKLOG.md) holds 600 tasks in 40 epics, and 45 a
 | Security | A hash-chained audit log naming people by erasable pseudonyms ([ADR 0027](adr/0027-audit-log-hash-chain-in-postgres.md)) a data class on every column with a generated [data map](reference/data-map.md) ([ADR 0028](adr/0028-data-classes-on-columns.md)), and envelope-encrypted patient identifiers with blind indexes ([ADR 0033](adr/0033-envelope-encryption-with-tenant-data-keys.md), [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)) |
 | Web | A Vite build with typed public config and no screens. The UI is not final, so screens wait |
 
+Who is working on what, what is blocked and what is free to start is on the task board: run `pnpm board` ([board/README.md](board/README.md)).
+
 Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-tooling.md).
 
 ## Next up
@@ -34,6 +36,7 @@ No Modal, Neon, staging or production changes and no UI work until the owner say
 |---|---|
 | [BACKLOG.md](BACKLOG.md) | Every task with checkboxes, the Definition of Done and the decisions baseline |
 | [log.md](log.md) | Dated log of what was done |
+| [board/](board/README.md) | The live task board over the backlog, with one claim file per task being worked on (`pnpm board`) |
 | [project/overview.md](project/overview.md) | The product, users, scope, design sources and the POC's role |
 | [project/roadmap.md](project/roadmap.md) | Milestones M0 to M6 and their status |
 | [project/risks.md](project/risks.md) | Risk register |
