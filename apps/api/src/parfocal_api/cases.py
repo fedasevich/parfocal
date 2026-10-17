@@ -15,7 +15,6 @@ from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, 
 from parfocal_api.problems import NotFoundError
 from parfocal_api.tables import (
     CaseSource,
-    CaseState,
     Laterality,
     Priority,
     Role,
@@ -71,7 +70,6 @@ class CaseDetail(BaseModel):
     accession: str
     priority: Priority
     due_at: datetime | None
-    state: CaseState
     source: CaseSource
     assignee_user_id: uuid.UUID | None
     folder_id: uuid.UUID | None
@@ -203,7 +201,6 @@ async def case_detail(
         accession=row.accession,
         priority=Priority(row.priority),
         due_at=row.due_at,
-        state=CaseState(row.state),
         source=CaseSource(row.source),
         assignee_user_id=row.assignee_user_id,
         folder_id=row.folder_id,
@@ -231,7 +228,6 @@ class CaseSummary(BaseModel):
     id: uuid.UUID
     accession: str
     priority: Priority
-    state: CaseState
     due_at: datetime | None
     folder_id: uuid.UUID | None
     assignee_user_id: uuid.UUID | None
@@ -239,7 +235,7 @@ class CaseSummary(BaseModel):
 
 @router.get("", operation_id="listCases", **require(Permission.SEE_CASES))
 async def list_cases(
-    principal: CurrentPrincipal, connection: TenantConnection, state: CaseState | None = None
+    principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[CaseSummary]:
     access = await access_of(connection, principal)
     statement = select(cases).where(cases.c.deleted_at.is_(None), access.condition())
@@ -253,7 +249,5 @@ async def list_cases(
         )
     else:
         statement = statement.where(cases.c.is_draft.is_(False))
-    if state is not None:
-        statement = statement.where(cases.c.state == state)
     rows = await connection.execute(statement.order_by(cases.c.created_at))
     return [CaseSummary.model_validate(row, from_attributes=True) for row in rows]

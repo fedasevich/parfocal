@@ -73,8 +73,6 @@ def test_folders_count_open_cases_and_hold_people(api: ApiAs, database: str) -> 
     new_case(api, lab, folder_id=nodes["id"])
     new_case(api, lab, folder_id=nodes["id"])
     new_case(api, lab, folder_id=nodes["id"], draft=True)
-    signed = new_case(api, lab, folder_id=nodes["id"])
-    owner(database, f"UPDATE cases SET state = 'signed' WHERE id = '{signed['id']}'")
     consultant = lab.people[Role.CONSULTANT].user_id
     people = api(lead).put(f"{FOLDERS}/{nodes['id']}/people", json={"user_ids": [str(consultant)]})
     assert people.json()["people"] == [str(consultant)]

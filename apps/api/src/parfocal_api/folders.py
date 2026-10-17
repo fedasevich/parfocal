@@ -16,7 +16,6 @@ from parfocal_api.principals import database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.tables import (
     AVATAR_COLOURS,
-    CaseState,
     cases,
     folder_members,
     folders,
@@ -24,8 +23,6 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_common.db import CURRENT_TENANT
-
-CLOSED_STATES = (CaseState.SIGNED, CaseState.CANCELLED)
 
 type FolderName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)
@@ -91,7 +88,6 @@ async def list_of(connection: AsyncConnection, folder_id: uuid.UUID | None = Non
         .select_from(cases)
         .where(
             cases.c.folder_id == folders.c.id,
-            cases.c.state.not_in(CLOSED_STATES),
             cases.c.is_draft.is_(False),
             cases.c.deleted_at.is_(None),
         )

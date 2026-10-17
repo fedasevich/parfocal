@@ -101,8 +101,7 @@ def test_a_lead_creates_a_case_with_a_new_patient(api: ApiAs, database: str) -> 
     case = response.json()
     year = datetime.now(UTC).year % 100
     assert case["accession"] == f"S{year:02d}-00001"
-    assert (case["state"], case["source"], case["priority"]) == (
-        "waiting-for-slides",
+    assert (case["source"], case["priority"]) == (
         "manual",
         "urgent",
     )

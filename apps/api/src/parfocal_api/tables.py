@@ -565,19 +565,6 @@ class Priority(StrEnum):
     STAT = "stat"
 
 
-class CaseState(StrEnum):
-    WAITING_FOR_SLIDES = "waiting-for-slides"
-    WAITING_FOR_AI = "waiting-for-ai"
-    READY_TO_REVIEW = "ready-to-review"
-    IN_REVIEW = "in-review"
-    WAITING_ON_OTHERS = "waiting-on-others"
-    REPORT_DRAFTED = "report-drafted"
-    WITH_SUPERVISOR = "with-supervisor"
-    SIGNED = "signed"
-    AMENDING = "amending"
-    CANCELLED = "cancelled"
-
-
 class CaseSource(StrEnum):
     LIS = "lis"
     MANUAL = "manual"
@@ -637,13 +624,6 @@ cases = Table(
         info=OPERATIONAL,
     ),
     Column("due_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
-    Column(
-        "state",
-        String(30),
-        nullable=False,
-        server_default=CaseState.WAITING_FOR_SLIDES.value,
-        info=OPERATIONAL,
-    ),
     Column("source", String(10), nullable=False, info=OPERATIONAL),
     Column(
         "assignee_user_id",
@@ -665,30 +645,12 @@ cases = Table(
     Column("service", String(60), nullable=True, info=OPERATIONAL),
     Column("requester", String(200), nullable=True, info=PERSONAL),
     Column("is_draft", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
-    Column(
-        "state_changed_at",
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        info=OPERATIONAL,
-    ),
-    Column("cancelled_from", String(30), nullable=True, info=OPERATIONAL),
-    Column("cancelled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *case_timestamps(),
     UniqueConstraint("tenant_id", "accession"),
     UniqueConstraint("id", "tenant_id"),
     ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
     one_of("priority", Priority),
-    one_of("state", CaseState),
     one_of("source", CaseSource),
-    CheckConstraint(
-        "(state = 'cancelled') = (cancelled_from IS NOT NULL) "
-        "AND (state = 'cancelled') = (cancelled_at IS NOT NULL) "
-        "AND cancelled_from IS DISTINCT FROM 'cancelled' "
-        "AND cancelled_from IS DISTINCT FROM 'signed' "
-        "AND cancelled_from IS DISTINCT FROM 'amending'",
-        name="cancelled",
-    ),
     ForeignKeyConstraint(["folder_id", "tenant_id"], ["folders.id", "folders.tenant_id"]),
 )
 

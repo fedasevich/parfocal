@@ -1,7 +1,7 @@
 # 0038. Case state machine: named events with allowed actors, derived moves by the system, cancel and restore by leads
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0057
 - Deciders: Yurii Fedas
 - Backlog: CASES-012, CASES-001, REPORT-019, REPORT-010, BOARD-002, INGEST-001, AIP-001
 

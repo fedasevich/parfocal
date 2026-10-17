@@ -117,8 +117,6 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "/api/cases",
         {"patient": {"name": "Matrix Patient"}, "specimens": [{"letter": "A"}]},
     ),
-    "cancelCase": lambda w: Call("POST", f"/api/cases/{w.case}/cancel"),
-    "restoreCase": lambda w: Call("POST", f"/api/cases/{w.case}/restore"),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}

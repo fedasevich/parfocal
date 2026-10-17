@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 20 |
 | `personal` | 22 |
 | `secret` | 9 |
-| `operational` | 154 |
+| `operational` | 150 |
 | `public` | 0 |
 
 ## accession_counters
@@ -121,7 +121,6 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `accession` | phi |
 | `priority` | operational |
 | `due_at` | operational |
-| `state` | operational |
 | `source` | operational |
 | `assignee_user_id` | personal |
 | `clinical_note` | phi |
@@ -131,9 +130,6 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `service` | operational |
 | `requester` | personal |
 | `is_draft` | operational |
-| `state_changed_at` | operational |
-| `cancelled_from` | operational |
-| `cancelled_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |

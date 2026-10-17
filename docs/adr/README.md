@@ -43,7 +43,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0035](0035-fhir-r4-through-fhir-resources-r4b.md) | FHIR R4 on the wire through fhir.resources' R4B models, with codes checked by us and no FHIR server | Accepted | 2026-10-14 |
 | [0036](0036-case-data-model.md) | Case data model: patient, case, specimen, block and slide, with the kit's ten states and FHIR's codes | Accepted | 2026-10-14 |
 | [0037](0037-accession-number-templates.md) | Accession numbers from a per-workspace template with a counter per prefix and year | Accepted | 2026-10-14 |
-| [0038](0038-case-state-machine.md) | Case state machine: named events with allowed actors, derived moves by the system, cancel and restore by leads | Accepted | 2026-10-14 |
+| [0038](0038-case-state-machine.md) | Case state machine: named events with allowed actors, derived moves by the system, cancel and restore by leads | Superseded by 0057 | 2026-10-14 |
 | [0039](0039-email-through-resend-with-phi-rules.md) | Send email through Resend, with bounce handling and a rule that email never carries PHI | Accepted | 2026-10-14 |
 | [0040](0040-observability-and-phi-scrubbing.md) | Observability with OpenTelemetry, Grafana Cloud and Sentry, and one PHI scrubbing rule set | Accepted | 2026-10-14 |
 | [0041](0041-identity-and-authorization-rechecked.md) | Identity and authorization rechecked in October 2026: Zitadel Cloud and row-level security with roles in code both confirmed | Accepted | 2026-10-14 |
@@ -62,3 +62,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0054](0054-hospital-code-inventory-and-revert-order.md) | The built hospital code is reverted first, then the roles change, then cases move into projects, with migrations edited in place | Accepted | 2026-10-17 |
 | [0055](0055-away-until-with-a-note.md) | Availability is available or away, with an optional end and note, and no back-up | Accepted | 2026-10-17 |
 | [0056](0056-no-signing-rights.md) | Signing rights, supervision and stored signatures are removed | Accepted | 2026-10-17 |
+| [0057](0057-no-case-state-machine.md) | Cases have no state machine, and the slide pipeline per task takes its place | Accepted | 2026-10-17 |

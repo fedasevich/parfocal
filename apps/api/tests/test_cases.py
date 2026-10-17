@@ -61,10 +61,9 @@ def test_a_member_reads_the_whole_case(api: ApiAs, database: str) -> None:
     response = api(member(tenant)).get(f"/api/cases/{case.case_id}")
     assert response.status_code == 200, response.text
     body = response.json()
-    assert (body["accession"], body["priority"], body["state"], body["source"]) == (
+    assert (body["accession"], body["priority"], body["source"]) == (
         case.accession,
         "stat",
-        "waiting-for-slides",
         "manual",
     )
     assert (body["clinical_note"], body["clinical_question"]) == (NOTE, QUESTION)
@@ -183,7 +182,7 @@ def test_other_workspaces_admins_and_deleted_cases_get_nothing(api: ApiAs, datab
 
 @pytest.mark.parametrize(
     ("column", "value"),
-    [("priority", "whenever"), ("state", "lost"), ("source", "fax")],
+    [("priority", "whenever"), ("source", "fax")],
 )
 def test_codes_outside_the_model_are_refused(database: str, column: str, value: str) -> None:
     tenant = make_tenant(database)

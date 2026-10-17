@@ -171,21 +171,6 @@ export const Priority = {
   stat: "stat",
 } as const;
 
-export type CaseState = (typeof CaseState)[keyof typeof CaseState];
-
-export const CaseState = {
-  "waiting-for-slides": "waiting-for-slides",
-  "waiting-for-ai": "waiting-for-ai",
-  "ready-to-review": "ready-to-review",
-  "in-review": "in-review",
-  "waiting-on-others": "waiting-on-others",
-  "report-drafted": "report-drafted",
-  "with-supervisor": "with-supervisor",
-  signed: "signed",
-  amending: "amending",
-  cancelled: "cancelled",
-} as const;
-
 export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
 
 export const CaseSource = {
@@ -247,7 +232,6 @@ export interface CaseDetail {
   accession: string;
   priority: Priority;
   due_at: string | null;
-  state: CaseState;
   source: CaseSource;
   assignee_user_id: string | null;
   folder_id: string | null;
@@ -311,16 +295,10 @@ export interface CaseFolder {
   folder_id: string | null;
 }
 
-export interface CaseStateView {
-  id: string;
-  state: CaseState;
-}
-
 export interface CaseSummary {
   id: string;
   accession: string;
   priority: Priority;
-  state: CaseState;
   due_at: string | null;
   folder_id: string | null;
   assignee_user_id: string | null;
@@ -697,10 +675,6 @@ export interface TokenRequest {
 export interface WorkspaceChoice {
   tenant_id: string;
 }
-
-export type ListCasesParams = {
-  state?: CaseState | null;
-};
 
 export type ListAuditEventsParams = {
   target_type?: AuditTarget | null;
@@ -1804,53 +1778,39 @@ export type listCasesResponseError = (
 
 export type listCasesResponse = listCasesResponseSuccess | listCasesResponseError;
 
-export const getListCasesUrl = (params?: ListCasesParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/cases?${stringifiedParams}` : `/api/cases`;
+export const getListCasesUrl = () => {
+  return `/api/cases`;
 };
 
 /**
  * @summary List Cases
  */
 export const listCases = async (
-  params?: ListCasesParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<listCasesResponse> => {
-  return apiFetch<listCasesResponse>(getListCasesUrl(params), {
+  return apiFetch<listCasesResponse>(getListCasesUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListCasesQueryKey = (params?: ListCasesParams) => {
-  return [`/api/cases`, ...(params ? [params] : [])] as const;
+export const getListCasesQueryKey = () => {
+  return [`/api/cases`] as const;
 };
 
 export const getListCasesQueryOptions = <
   TData = Awaited<ReturnType<typeof listCases>>,
   TError = Problem,
->(
-  params?: ListCasesParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-) => {
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListCasesQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getListCasesQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listCases>>> = ({ signal }) =>
-    listCases(params, { signal, ...requestOptions });
+    listCases({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listCases>>,
@@ -1863,7 +1823,6 @@ export type ListCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listCas
 export type ListCasesQueryError = Problem;
 
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
-  params: undefined | ListCasesParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
       Pick<
@@ -1879,7 +1838,6 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
-  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
       Pick<
@@ -1895,7 +1853,6 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
-  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -1907,14 +1864,13 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
  */
 
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
-  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListCasesQueryOptions(params, options);
+  const queryOptions = getListCasesQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -3199,280 +3155,6 @@ export const useSetAllFolders = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetAllFoldersMutationOptions(options), queryClient);
-};
-
-export type cancelCaseResponse200 = {
-  data: CaseStateView;
-  status: 200;
-};
-
-export type cancelCaseResponse400 = {
-  data: Problem;
-  status: 400;
-};
-
-export type cancelCaseResponse401 = {
-  data: Problem;
-  status: 401;
-};
-
-export type cancelCaseResponse403 = {
-  data: Problem;
-  status: 403;
-};
-
-export type cancelCaseResponse404 = {
-  data: Problem;
-  status: 404;
-};
-
-export type cancelCaseResponse409 = {
-  data: Problem;
-  status: 409;
-};
-
-export type cancelCaseResponse422 = {
-  data: Problem;
-  status: 422;
-};
-
-export type cancelCaseResponse500 = {
-  data: Problem;
-  status: 500;
-};
-
-export type cancelCaseResponseSuccess = cancelCaseResponse200 & {
-  headers: Headers;
-};
-export type cancelCaseResponseError = (
-  | cancelCaseResponse400
-  | cancelCaseResponse401
-  | cancelCaseResponse403
-  | cancelCaseResponse404
-  | cancelCaseResponse409
-  | cancelCaseResponse422
-  | cancelCaseResponse500
-) & {
-  headers: Headers;
-};
-
-export type cancelCaseResponse = cancelCaseResponseSuccess | cancelCaseResponseError;
-
-export const getCancelCaseUrl = (caseId: string) => {
-  return `/api/cases/${caseId}/cancel`;
-};
-
-/**
- * @summary Cancel Case
- */
-export const cancelCase = async (
-  caseId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<cancelCaseResponse> => {
-  return apiFetch<cancelCaseResponse>(getCancelCaseUrl(caseId), {
-    ...options,
-    method: "POST",
-  });
-};
-
-export const getCancelCaseMutationKey = () => ["cancelCase"] as const;
-
-export const getCancelCaseMutationOptions = <TError = Problem, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof cancelCase>>,
-    TError,
-    CancelCaseMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof cancelCase>>,
-  TError,
-  CancelCaseMutationVariables,
-  TContext
-> => {
-  const mutationKey = getCancelCaseMutationKey();
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof cancelCase>>,
-    CancelCaseMutationVariables
-  > = (props) => {
-    const { caseId } = props ?? {};
-
-    return cancelCase(caseId, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type CancelCaseMutationResult = NonNullable<Awaited<ReturnType<typeof cancelCase>>>;
-
-export type CancelCaseMutationError = Problem;
-export type CancelCaseMutationVariables = { caseId: string };
-
-/**
- * @summary Cancel Case
- */
-export const useCancelCase = <TError = Problem, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof cancelCase>>,
-      TError,
-      CancelCaseMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof cancelCase>>,
-  TError,
-  CancelCaseMutationVariables,
-  TContext
-> => {
-  return useMutation(getCancelCaseMutationOptions(options), queryClient);
-};
-
-export type restoreCaseResponse200 = {
-  data: CaseStateView;
-  status: 200;
-};
-
-export type restoreCaseResponse400 = {
-  data: Problem;
-  status: 400;
-};
-
-export type restoreCaseResponse401 = {
-  data: Problem;
-  status: 401;
-};
-
-export type restoreCaseResponse403 = {
-  data: Problem;
-  status: 403;
-};
-
-export type restoreCaseResponse404 = {
-  data: Problem;
-  status: 404;
-};
-
-export type restoreCaseResponse409 = {
-  data: Problem;
-  status: 409;
-};
-
-export type restoreCaseResponse422 = {
-  data: Problem;
-  status: 422;
-};
-
-export type restoreCaseResponse500 = {
-  data: Problem;
-  status: 500;
-};
-
-export type restoreCaseResponseSuccess = restoreCaseResponse200 & {
-  headers: Headers;
-};
-export type restoreCaseResponseError = (
-  | restoreCaseResponse400
-  | restoreCaseResponse401
-  | restoreCaseResponse403
-  | restoreCaseResponse404
-  | restoreCaseResponse409
-  | restoreCaseResponse422
-  | restoreCaseResponse500
-) & {
-  headers: Headers;
-};
-
-export type restoreCaseResponse = restoreCaseResponseSuccess | restoreCaseResponseError;
-
-export const getRestoreCaseUrl = (caseId: string) => {
-  return `/api/cases/${caseId}/restore`;
-};
-
-/**
- * @summary Restore Case
- */
-export const restoreCase = async (
-  caseId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<restoreCaseResponse> => {
-  return apiFetch<restoreCaseResponse>(getRestoreCaseUrl(caseId), {
-    ...options,
-    method: "POST",
-  });
-};
-
-export const getRestoreCaseMutationKey = () => ["restoreCase"] as const;
-
-export const getRestoreCaseMutationOptions = <TError = Problem, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof restoreCase>>,
-    TError,
-    RestoreCaseMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof restoreCase>>,
-  TError,
-  RestoreCaseMutationVariables,
-  TContext
-> => {
-  const mutationKey = getRestoreCaseMutationKey();
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof restoreCase>>,
-    RestoreCaseMutationVariables
-  > = (props) => {
-    const { caseId } = props ?? {};
-
-    return restoreCase(caseId, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type RestoreCaseMutationResult = NonNullable<Awaited<ReturnType<typeof restoreCase>>>;
-
-export type RestoreCaseMutationError = Problem;
-export type RestoreCaseMutationVariables = { caseId: string };
-
-/**
- * @summary Restore Case
- */
-export const useRestoreCase = <TError = Problem, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof restoreCase>>,
-      TError,
-      RestoreCaseMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof restoreCase>>,
-  TError,
-  RestoreCaseMutationVariables,
-  TContext
-> => {
-  return useMutation(getRestoreCaseMutationOptions(options), queryClient);
 };
 
 export type getAccessionFormatResponse200 = {

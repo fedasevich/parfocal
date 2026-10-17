@@ -18,18 +18,6 @@ down_revision: str | None = "0011"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-STATES = (
-    "waiting-for-slides",
-    "waiting-for-ai",
-    "ready-to-review",
-    "in-review",
-    "waiting-on-others",
-    "report-drafted",
-    "with-supervisor",
-    "signed",
-    "amending",
-    "cancelled",
-)
 CASE_TABLES = ("cases", "specimens", "blocks", "slides")
 
 
@@ -83,7 +71,6 @@ def upgrade() -> None:
         sa.Column("accession", sa.String(40), nullable=False),
         sa.Column("priority", sa.String(10), nullable=False, server_default="routine"),
         sa.Column("due_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("state", sa.String(30), nullable=False, server_default="waiting-for-slides"),
         sa.Column("source", sa.String(10), nullable=False),
         sa.Column(
             "assignee_user_id", sa.Uuid[uuid.UUID](), sa.ForeignKey("users.id"), nullable=True
@@ -98,7 +85,6 @@ def upgrade() -> None:
         sa.UniqueConstraint("id", "tenant_id"),
         sa.ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
         one_of("priority", ("routine", "urgent", "asap", "stat")),
-        one_of("state", STATES),
         one_of("source", ("lis", "manual", "upload")),
     )
     op.create_table(
