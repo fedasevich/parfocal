@@ -526,6 +526,12 @@ class PrivacyMode(StrEnum):
     CLINICAL = "clinical"
 
 
+class AnalysisTemplate(StrEnum):
+    NONE = "none"
+    SENTINEL_NODE = "sentinel-node"
+    CELL_REVIEW = "cell-review"
+
+
 patients = Table(
     "patients",
     metadata,
@@ -633,11 +639,29 @@ projects = Table(
         info=OPERATIONAL,
     ),
     *case_timestamps(),
+    Column("colour", SmallInteger, nullable=False, server_default="0", info=OPERATIONAL),
+    Column(
+        "template",
+        String(20),
+        nullable=False,
+        server_default=AnalysisTemplate.NONE.value,
+        info=OPERATIONAL,
+    ),
+    Column("archived_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
     UniqueConstraint("tenant_id", "number"),
     UniqueConstraint("id", "tenant_id"),
     UniqueConstraint("id", "privacy_mode"),
     CheckConstraint("number BETWEEN 1 AND 9999", name="number"),
+    CheckConstraint("colour BETWEEN 0 AND 11", name="colour"),
     one_of("privacy_mode", PrivacyMode),
+    one_of("template", AnalysisTemplate),
 )
 
 project_members = Table(

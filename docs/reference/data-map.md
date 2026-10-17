@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 20 |
+| `personal` | 21 |
 | `secret` | 9 |
-| `operational` | 141 |
+| `operational` | 144 |
 | `public` | 0 |
 
 ## api_tokens
@@ -205,6 +205,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+| `colour` | operational |
+| `template` | operational |
+| `archived_at` | operational |
+| `created_by_user_id` | personal |
 
 ## service_accounts
 

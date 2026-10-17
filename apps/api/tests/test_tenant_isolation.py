@@ -153,6 +153,7 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
 async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
+    seeded.ids["project"] = case.project_id
     await connection.execute(
         insert(project_members).values(
             tenant_id=seeded.tenant_id,
@@ -203,6 +204,8 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
+    "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),

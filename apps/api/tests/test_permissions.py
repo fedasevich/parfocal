@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from case_support import seed_case
+from case_support import seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, with_database
 from sqlalchemy import func, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -27,6 +27,7 @@ from parfocal_api.tables import (
     invitations,
     memberships,
     organisations,
+    project_members,
     service_accounts,
     tenants,
     users,
@@ -73,6 +74,7 @@ class Workspace:
     invitations: list[uuid.UUID]
     case: uuid.UUID
     project: uuid.UUID
+    spare_project: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -83,6 +85,18 @@ class Call:
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
+    "listProjects": lambda _: Call("GET", "/api/projects"),
+    "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
+    "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
+    "archiveProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/archive"),
+    "restoreProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/restore"),
+    "setProjectMember": lambda w: Call(
+        "PUT", f"/api/projects/{w.project}/members/{w.colleague}", {"role": "viewer"}
+    ),
+    "removeProjectMember": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/members/{w.colleague}"
+    ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "requestEmergencyAccess": lambda w: Call(
         "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
@@ -137,6 +151,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
 )
@@ -274,6 +289,28 @@ async def seed(database: str) -> Workspace:
                 for index in range(len(COLUMNS))
             ]
             case = await seed_case(connection, tenant_id)
+            spare_project = await seed_project(connection, tenant_id)
+            await connection.execute(
+                insert(project_members),
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "project_id": project,
+                        "user_id": people[Role.RESEARCHER],
+                        "role": "owner",
+                    }
+                    for project in (case.project_id, spare_project)
+                ]
+                + [
+                    {
+                        "tenant_id": tenant_id,
+                        "project_id": case.project_id,
+                        "user_id": user,
+                        "role": role,
+                    }
+                    for user, role in ((people[Role.REVIEWER], "reviewer"), (colleague, "viewer"))
+                ],
+            )
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
@@ -290,6 +327,7 @@ async def seed(database: str) -> Workspace:
             ids,
             case.case_id,
             case.project_id,
+            spare_project,
         )
     finally:
         await engine.dispose()

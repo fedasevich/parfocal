@@ -21,6 +21,7 @@ from parfocal_api.identifiers import (
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
+from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
@@ -141,14 +142,18 @@ async def existing_case(
 
 
 async def privacy_of(connection: AsyncConnection, project_id: uuid.UUID) -> PrivacyMode:
-    mode = await connection.scalar(
-        select(projects.c.privacy_mode).where(
-            projects.c.id == project_id, projects.c.deleted_at.is_(None)
+    row = (
+        await connection.execute(
+            select(projects.c.privacy_mode, projects.c.archived_at).where(
+                projects.c.id == project_id, projects.c.deleted_at.is_(None)
+            )
         )
-    )
-    if mode is None:
+    ).one_or_none()
+    if row is None:
         raise NotFoundError("Project not found")
-    return PrivacyMode(mode)
+    if row.archived_at is not None:
+        raise ProjectArchivedError
+    return PrivacyMode(row.privacy_mode)
 
 
 async def patient_for(

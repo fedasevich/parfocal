@@ -38,6 +38,14 @@ export const ActorKind = {
   service: "service",
 } as const;
 
+export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
+
+export const AnalysisTemplate = {
+  none: "none",
+  "sentinel-node": "sentinel-node",
+  "cell-review": "cell-review",
+} as const;
+
 export interface ApiToken {
   id: string;
   expires_at: string;
@@ -70,6 +78,7 @@ export const AuditTarget = {
   tenant: "tenant",
   person: "person",
   case: "case",
+  project: "project",
   "service-account": "service-account",
   invitation: "invitation",
 } as const;
@@ -240,6 +249,12 @@ export interface CaseSummary {
   created_at: string;
 }
 
+/**
+ * @minimum 0
+ * @maximum 11
+ */
+export type Colour = number;
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -398,6 +413,18 @@ export interface MemberAvailability {
   note: string | null;
 }
 
+export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
+
+export const ProjectRole = {
+  owner: "owner",
+  reviewer: "reviewer",
+  viewer: "viewer",
+} as const;
+
+export interface MemberChange {
+  role: ProjectRole;
+}
+
 export interface Membership {
   id: string;
   tenant_id: string;
@@ -439,6 +466,13 @@ export const Plan = {
   pilot: "pilot",
 } as const;
 
+export type PrivacyMode = (typeof PrivacyMode)[keyof typeof PrivacyMode];
+
+export const PrivacyMode = {
+  "de-identified": "de-identified",
+  clinical: "clinical",
+} as const;
+
 export interface Problem {
   type: string;
   title: string;
@@ -458,6 +492,44 @@ export interface ProfileChange {
   initials?: Initials | null;
   avatar_colour?: number | null;
   title?: Title | null;
+}
+
+export interface ProjectMember {
+  user_id: string;
+  role: ProjectRole;
+}
+
+export interface Project {
+  id: string;
+  code: string;
+  number: number;
+  name: string;
+  colour: number;
+  privacy_mode: PrivacyMode;
+  template: AnalysisTemplate;
+  archived_at: string | null;
+  created_at: string;
+  my_role: ProjectRole | null;
+  members: ProjectMember[];
+}
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type ProjectName = string;
+
+export interface ProjectChange {
+  name?: ProjectName | null;
+  colour?: Colour | null;
+  template?: AnalysisTemplate | null;
+}
+
+export interface ProjectDraft {
+  name: ProjectName;
+  colour?: Colour;
+  privacy_mode?: PrivacyMode;
+  template?: AnalysisTemplate;
 }
 
 export type Region = (typeof Region)[keyof typeof Region];
@@ -569,6 +641,10 @@ export interface TokenRequest {
 export interface WorkspaceChoice {
   tenant_id: string;
 }
+
+export type ListProjectsParams = {
+  archived?: boolean;
+};
 
 export type ListCasesParams = {
   project_id?: string | null;
@@ -1448,6 +1524,1255 @@ export const useEndOtherSessions = <TError = Problem, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof endOtherSessions>>, TError, void, TContext> => {
   return useMutation(getEndOtherSessionsMutationOptions(options), queryClient);
+};
+
+export type createProjectResponse201 = {
+  data: Project;
+  status: 201;
+};
+
+export type createProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createProjectResponseSuccess = createProjectResponse201 & {
+  headers: Headers;
+};
+export type createProjectResponseError = (
+  | createProjectResponse400
+  | createProjectResponse401
+  | createProjectResponse403
+  | createProjectResponse404
+  | createProjectResponse409
+  | createProjectResponse422
+  | createProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type createProjectResponse = createProjectResponseSuccess | createProjectResponseError;
+
+export const getCreateProjectUrl = () => {
+  return `/api/projects`;
+};
+
+/**
+ * @summary Create Project
+ */
+export const createProject = async (
+  projectDraft: ProjectDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createProjectResponse>(getCreateProjectUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectDraft),
+  });
+};
+
+export const getCreateProjectMutationKey = () => ["createProject"] as const;
+
+export const getCreateProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProject>>,
+    TError,
+    CreateProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProject>>,
+  TError,
+  CreateProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProject>>,
+    CreateProjectMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createProject(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof createProject>>>;
+export type CreateProjectMutationBody = ProjectDraft;
+export type CreateProjectMutationError = Problem;
+export type CreateProjectMutationVariables = { data: ProjectDraft };
+
+/**
+ * @summary Create Project
+ */
+export const useCreateProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createProject>>,
+      TError,
+      CreateProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createProject>>,
+  TError,
+  CreateProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateProjectMutationOptions(options), queryClient);
+};
+
+export type listProjectsResponse200 = {
+  data: Project[];
+  status: 200;
+};
+
+export type listProjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectsResponseSuccess = listProjectsResponse200 & {
+  headers: Headers;
+};
+export type listProjectsResponseError = (
+  | listProjectsResponse400
+  | listProjectsResponse401
+  | listProjectsResponse403
+  | listProjectsResponse404
+  | listProjectsResponse409
+  | listProjectsResponse422
+  | listProjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectsResponse = listProjectsResponseSuccess | listProjectsResponseError;
+
+export const getListProjectsUrl = (params?: ListProjectsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/projects?${stringifiedParams}` : `/api/projects`;
+};
+
+/**
+ * @summary List Projects
+ */
+export const listProjects = async (
+  params?: ListProjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectsResponse> => {
+  return apiFetch<listProjectsResponse>(getListProjectsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectsQueryKey = (params?: ListProjectsParams) => {
+  return [`/api/projects`, ...(params ? [params] : [])] as const;
+};
+
+export const getListProjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjects>>,
+  TError = Problem,
+>(
+  params?: ListProjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjects>>> = ({ signal }) =>
+    listProjects(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjects>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjects>>>;
+export type ListProjectsQueryError = Problem;
+
+export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = Problem>(
+  params: undefined | ListProjectsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = Problem>(
+  params?: ListProjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = Problem>(
+  params?: ListProjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Projects
+ */
+
+export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = Problem>(
+  params?: ListProjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getProjectResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type getProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectResponseSuccess = getProjectResponse200 & {
+  headers: Headers;
+};
+export type getProjectResponseError = (
+  | getProjectResponse400
+  | getProjectResponse401
+  | getProjectResponse403
+  | getProjectResponse404
+  | getProjectResponse409
+  | getProjectResponse422
+  | getProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectResponse = getProjectResponseSuccess | getProjectResponseError;
+
+export const getGetProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}`;
+};
+
+/**
+ * @summary Get Project
+ */
+export const getProject = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectResponse> => {
+  return apiFetch<getProjectResponse>(getGetProjectUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}`] as const;
+};
+
+export const getGetProjectQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProject>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProject>>> = ({ signal }) =>
+    getProject(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectQueryResult = NonNullable<Awaited<ReturnType<typeof getProject>>>;
+export type GetProjectQueryError = Problem;
+
+export function useGetProject<TData = Awaited<ReturnType<typeof getProject>>, TError = Problem>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProject>>,
+          TError,
+          Awaited<ReturnType<typeof getProject>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProject<TData = Awaited<ReturnType<typeof getProject>>, TError = Problem>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProject>>,
+          TError,
+          Awaited<ReturnType<typeof getProject>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProject<TData = Awaited<ReturnType<typeof getProject>>, TError = Problem>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project
+ */
+
+export function useGetProject<TData = Awaited<ReturnType<typeof getProject>>, TError = Problem>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type updateProjectResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type updateProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateProjectResponseSuccess = updateProjectResponse200 & {
+  headers: Headers;
+};
+export type updateProjectResponseError = (
+  | updateProjectResponse400
+  | updateProjectResponse401
+  | updateProjectResponse403
+  | updateProjectResponse404
+  | updateProjectResponse409
+  | updateProjectResponse422
+  | updateProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateProjectResponse = updateProjectResponseSuccess | updateProjectResponseError;
+
+export const getUpdateProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}`;
+};
+
+/**
+ * @summary Update Project
+ */
+export const updateProject = async (
+  projectId: string,
+  projectChange: ProjectChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateProjectResponse>(getUpdateProjectUrl(projectId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectChange),
+  });
+};
+
+export const getUpdateProjectMutationKey = () => ["updateProject"] as const;
+
+export const getUpdateProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProject>>,
+    TError,
+    UpdateProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProject>>,
+  TError,
+  UpdateProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProject>>,
+    UpdateProjectMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return updateProject(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof updateProject>>>;
+export type UpdateProjectMutationBody = ProjectChange;
+export type UpdateProjectMutationError = Problem;
+export type UpdateProjectMutationVariables = { projectId: string; data: ProjectChange };
+
+/**
+ * @summary Update Project
+ */
+export const useUpdateProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProject>>,
+      TError,
+      UpdateProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProject>>,
+  TError,
+  UpdateProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectMutationOptions(options), queryClient);
+};
+
+export type archiveProjectResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type archiveProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type archiveProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type archiveProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type archiveProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type archiveProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type archiveProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type archiveProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type archiveProjectResponseSuccess = archiveProjectResponse200 & {
+  headers: Headers;
+};
+export type archiveProjectResponseError = (
+  | archiveProjectResponse400
+  | archiveProjectResponse401
+  | archiveProjectResponse403
+  | archiveProjectResponse404
+  | archiveProjectResponse409
+  | archiveProjectResponse422
+  | archiveProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type archiveProjectResponse = archiveProjectResponseSuccess | archiveProjectResponseError;
+
+export const getArchiveProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/archive`;
+};
+
+/**
+ * @summary Archive Project
+ */
+export const archiveProject = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<archiveProjectResponse> => {
+  return apiFetch<archiveProjectResponse>(getArchiveProjectUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getArchiveProjectMutationKey = () => ["archiveProject"] as const;
+
+export const getArchiveProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof archiveProject>>,
+    TError,
+    ArchiveProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof archiveProject>>,
+  TError,
+  ArchiveProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getArchiveProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof archiveProject>>,
+    ArchiveProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return archiveProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ArchiveProjectMutationResult = NonNullable<Awaited<ReturnType<typeof archiveProject>>>;
+
+export type ArchiveProjectMutationError = Problem;
+export type ArchiveProjectMutationVariables = { projectId: string };
+
+/**
+ * @summary Archive Project
+ */
+export const useArchiveProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof archiveProject>>,
+      TError,
+      ArchiveProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof archiveProject>>,
+  TError,
+  ArchiveProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getArchiveProjectMutationOptions(options), queryClient);
+};
+
+export type restoreProjectResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type restoreProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type restoreProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type restoreProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type restoreProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type restoreProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type restoreProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type restoreProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type restoreProjectResponseSuccess = restoreProjectResponse200 & {
+  headers: Headers;
+};
+export type restoreProjectResponseError = (
+  | restoreProjectResponse400
+  | restoreProjectResponse401
+  | restoreProjectResponse403
+  | restoreProjectResponse404
+  | restoreProjectResponse409
+  | restoreProjectResponse422
+  | restoreProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type restoreProjectResponse = restoreProjectResponseSuccess | restoreProjectResponseError;
+
+export const getRestoreProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/restore`;
+};
+
+/**
+ * @summary Restore Project
+ */
+export const restoreProject = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<restoreProjectResponse> => {
+  return apiFetch<restoreProjectResponse>(getRestoreProjectUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRestoreProjectMutationKey = () => ["restoreProject"] as const;
+
+export const getRestoreProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreProject>>,
+    TError,
+    RestoreProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreProject>>,
+  TError,
+  RestoreProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreProject>>,
+    RestoreProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return restoreProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreProjectMutationResult = NonNullable<Awaited<ReturnType<typeof restoreProject>>>;
+
+export type RestoreProjectMutationError = Problem;
+export type RestoreProjectMutationVariables = { projectId: string };
+
+/**
+ * @summary Restore Project
+ */
+export const useRestoreProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreProject>>,
+      TError,
+      RestoreProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreProject>>,
+  TError,
+  RestoreProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreProjectMutationOptions(options), queryClient);
+};
+
+export type setProjectMemberResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type setProjectMemberResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setProjectMemberResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setProjectMemberResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setProjectMemberResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setProjectMemberResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setProjectMemberResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setProjectMemberResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setProjectMemberResponseSuccess = setProjectMemberResponse200 & {
+  headers: Headers;
+};
+export type setProjectMemberResponseError = (
+  | setProjectMemberResponse400
+  | setProjectMemberResponse401
+  | setProjectMemberResponse403
+  | setProjectMemberResponse404
+  | setProjectMemberResponse409
+  | setProjectMemberResponse422
+  | setProjectMemberResponse500
+) & {
+  headers: Headers;
+};
+
+export type setProjectMemberResponse =
+  | setProjectMemberResponseSuccess
+  | setProjectMemberResponseError;
+
+export const getSetProjectMemberUrl = (projectId: string, userId: string) => {
+  return `/api/projects/${projectId}/members/${userId}`;
+};
+
+/**
+ * @summary Set Project Member
+ */
+export const setProjectMember = async (
+  projectId: string,
+  userId: string,
+  memberChange: MemberChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setProjectMemberResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setProjectMemberResponse>(getSetProjectMemberUrl(projectId, userId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(memberChange),
+  });
+};
+
+export const getSetProjectMemberMutationKey = () => ["setProjectMember"] as const;
+
+export const getSetProjectMemberMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setProjectMember>>,
+    TError,
+    SetProjectMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setProjectMember>>,
+  TError,
+  SetProjectMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetProjectMemberMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setProjectMember>>,
+    SetProjectMemberMutationVariables
+  > = (props) => {
+    const { projectId, userId, data } = props ?? {};
+
+    return setProjectMember(projectId, userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetProjectMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setProjectMember>>
+>;
+export type SetProjectMemberMutationBody = MemberChange;
+export type SetProjectMemberMutationError = Problem;
+export type SetProjectMemberMutationVariables = {
+  projectId: string;
+  userId: string;
+  data: MemberChange;
+};
+
+/**
+ * @summary Set Project Member
+ */
+export const useSetProjectMember = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setProjectMember>>,
+      TError,
+      SetProjectMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setProjectMember>>,
+  TError,
+  SetProjectMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetProjectMemberMutationOptions(options), queryClient);
+};
+
+export type removeProjectMemberResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeProjectMemberResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type removeProjectMemberResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type removeProjectMemberResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type removeProjectMemberResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type removeProjectMemberResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type removeProjectMemberResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type removeProjectMemberResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type removeProjectMemberResponseSuccess = removeProjectMemberResponse204 & {
+  headers: Headers;
+};
+export type removeProjectMemberResponseError = (
+  | removeProjectMemberResponse400
+  | removeProjectMemberResponse401
+  | removeProjectMemberResponse403
+  | removeProjectMemberResponse404
+  | removeProjectMemberResponse409
+  | removeProjectMemberResponse422
+  | removeProjectMemberResponse500
+) & {
+  headers: Headers;
+};
+
+export type removeProjectMemberResponse =
+  | removeProjectMemberResponseSuccess
+  | removeProjectMemberResponseError;
+
+export const getRemoveProjectMemberUrl = (projectId: string, userId: string) => {
+  return `/api/projects/${projectId}/members/${userId}`;
+};
+
+/**
+ * @summary Remove Project Member
+ */
+export const removeProjectMember = async (
+  projectId: string,
+  userId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<removeProjectMemberResponse> => {
+  return apiFetch<removeProjectMemberResponse>(getRemoveProjectMemberUrl(projectId, userId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveProjectMemberMutationKey = () => ["removeProjectMember"] as const;
+
+export const getRemoveProjectMemberMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeProjectMember>>,
+    TError,
+    RemoveProjectMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeProjectMember>>,
+  TError,
+  RemoveProjectMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveProjectMemberMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeProjectMember>>,
+    RemoveProjectMemberMutationVariables
+  > = (props) => {
+    const { projectId, userId } = props ?? {};
+
+    return removeProjectMember(projectId, userId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveProjectMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeProjectMember>>
+>;
+
+export type RemoveProjectMemberMutationError = Problem;
+export type RemoveProjectMemberMutationVariables = { projectId: string; userId: string };
+
+/**
+ * @summary Remove Project Member
+ */
+export const useRemoveProjectMember = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeProjectMember>>,
+      TError,
+      RemoveProjectMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeProjectMember>>,
+  TError,
+  RemoveProjectMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveProjectMemberMutationOptions(options), queryClient);
 };
 
 export type getCaseResponse200 = {

@@ -2946,7 +2946,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
 - [ ] PROJ-001 · Project model and API
   A project has a short ID (P07), a name, a colour, a privacy mode, an analysis template, a class taxonomy, members with project roles and a status. Cases are optional, and loose slides belong to the project directly.
   Done when migrations, API tests for create, list, update and archive, and isolation tests pass, and every change is audited.
-  Builds on the minimal `projects` table from ADAPT-004 and adds the API and the remaining fields ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
+  Builds on the minimal `projects` table from ADAPT-004 and adds the API and the remaining fields ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)). The contract is in [ADR 0064](adr/0064-project-api.md), and the taxonomy table comes with PROJ-004.
   Depends on IAM-004, ADAPT-004. Refs mock: project, kit: Information architecture.
 
 - [ ] PROJ-002 · Privacy modes
@@ -2955,7 +2955,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
 
 - [ ] PROJ-003 · Project roles
-  Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). Opening a project needs a project role, researchers included, and the creator becomes owner. A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project. One API helper turns the workspace grant and the project role into the effective grant, and row-level security stays per workspace ([ADR 0062](adr/0062-project-model.md)).
+  Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). Opening a project needs a project role, researchers included, and the creator becomes owner. A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project. One API helper turns the workspace grant and the project role into the effective grant, and row-level security stays per workspace ([ADR 0062](adr/0062-project-model.md)). The project routes of PROJ-001 already need a role to read and the owner role to change ([ADR 0064](adr/0064-project-api.md)). This task applies the role to the case and slide routes and decides what happens to a project owner whose workspace role becomes reviewer.
   Done when the permission test runs every project endpoint for every project role, and an isolation test hides another project's slides from a reviewer.
   Depends on IAM-022, PROJ-001.
 
