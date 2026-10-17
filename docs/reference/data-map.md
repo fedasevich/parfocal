@@ -197,7 +197,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `supervisor_user_id` | personal |
 | `availability` | operational |
 | `available_again_at` | operational |
-| `backup_user_id` | personal |
+| `availability_note` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 

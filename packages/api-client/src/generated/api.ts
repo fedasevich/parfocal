@@ -111,14 +111,19 @@ export type Availability = (typeof Availability)[keyof typeof Availability];
 
 export const Availability = {
   available: "available",
-  busy: "busy",
   away: "away",
 } as const;
+
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Note = string;
 
 export interface AvailabilityChange {
   status: Availability;
   until?: string | null;
-  backup_user_id?: string | null;
+  note?: Note | null;
 }
 
 export interface BlockDetail {
@@ -537,7 +542,7 @@ export interface MemberAvailability {
   user_id: string;
   status: Availability;
   until: string | null;
-  backup_user_id: string | null;
+  note: string | null;
 }
 
 export type MemberRole = Role;

@@ -120,7 +120,7 @@ def test_a_lead_creates_a_case_with_a_new_patient(api: ApiAs, database: str) -> 
     assert details == [
         (
             "case.created",
-            '{"covered_by_backup":false,"draft":false,"new_patient":true,"priority":"urgent","source":"manual","specimens":2}',
+            '{"draft":false,"new_patient":true,"priority":"urgent","source":"manual","specimens":2}',
         )
     ]
 

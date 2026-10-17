@@ -6260,7 +6260,6 @@
         "type": "string",
         "enum": [
           "available",
-          "busy",
           "away"
         ],
         "title": "Availability"
@@ -6282,17 +6281,15 @@
             ],
             "title": "Until"
           },
-          "backup_user_id": {
+          "note": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "$ref": "#/components/schemas/Note"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Backup User Id"
+            ]
           }
         },
         "type": "object",
@@ -7376,17 +7373,16 @@
             ],
             "title": "Until"
           },
-          "backup_user_id": {
+          "note": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Backup User Id"
+            "title": "Note"
           }
         },
         "type": "object",
@@ -7394,7 +7390,7 @@
           "user_id",
           "status",
           "until",
-          "backup_user_id"
+          "note"
         ],
         "title": "MemberAvailability"
       },
@@ -7507,6 +7503,11 @@
           "name"
         ],
         "title": "NewPatient"
+      },
+      "Note": {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
       },
       "Organisation": {
         "properties": {

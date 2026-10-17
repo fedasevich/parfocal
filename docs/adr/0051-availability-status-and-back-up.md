@@ -1,7 +1,7 @@
 # 0051. Availability status per workspace, with an away person's new cases going to their back-up
 
 - Date: 2026-10-15
-- Status: Accepted
+- Status: Superseded by 0055
 - Deciders: Yurii Fedas (standing approval)
 - Backlog: IAM-015 (availability status and back-up), CASES-011 (case assignment and routing), CASES-022 (assignment rules), BOARD-007 (reassigning), NOTIF-003 (STAT notifications), SHELL-012 (account menu)
 

@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from db_support import OWNER_URL, ApiAs, query, with_database
+from db_support import ApiAs
+from workspace_support import make_tenant, owner, person
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
@@ -19,43 +20,8 @@ class Lab:
     cases: dict[str, str]
 
 
-def owner(database: str, statement: str) -> list[tuple[object, ...]]:
-    return query(with_database(OWNER_URL, database), statement)
-
-
-def person(database: str, tenant_id: uuid.UUID, label: str, role: Role) -> MemberPrincipal:
-    subject = f"fa-{label}-{uuid.uuid4().hex[:8]}"
-    user_id = uuid.UUID(
-        str(
-            owner(
-                database,
-                "INSERT INTO users (subject, display_name, initials, avatar_colour) "
-                f"VALUES ('{subject}', '{label}', 'PP', 1) RETURNING id",
-            )[0][0]
-        )
-    )
-    owner(
-        database,
-        "INSERT INTO memberships (tenant_id, user_id, role) "
-        f"VALUES ('{tenant_id}', '{user_id}', '{role}')",
-    )
-    return MemberPrincipal(subject, tenant_id, user_id, role)
-
-
 def make_lab(api: ApiAs, database: str) -> Lab:
-    slug = f"fa-{uuid.uuid4().hex[:10]}"
-    tenant_id = uuid.UUID(
-        str(
-            owner(
-                database,
-                "WITH organisation AS (INSERT INTO organisations (slug, name) "
-                f"VALUES ('{slug}', '{slug}') RETURNING id) "
-                "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
-                f"SELECT id, '{slug}', '{slug}', 'diagnostic', 'eu', 'pilot' FROM organisation "
-                "RETURNING id",
-            )[0][0]
-        )
-    )
+    tenant_id = make_tenant(database)
     people = {
         "head": person(database, tenant_id, "head", Role.LEAD),
         "lead": person(database, tenant_id, "lead", Role.LEAD),

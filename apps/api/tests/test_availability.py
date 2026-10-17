@@ -3,9 +3,10 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
-from test_folder_access import Lab, make_lab, owner
+from workspace_support import Workspace, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.tables import Role
 
 pytestmark = pytest.mark.db
 
@@ -14,12 +15,20 @@ def later(**delta: float) -> str:
     return (datetime.now(UTC) + timedelta(**delta)).isoformat()
 
 
+def team(database: str) -> Workspace:
+    return make_workspace(database, {"lead": Role.LEAD, "nodes": Role.CONSULTANT, "lab": Role.LAB})
+
+
 def set_status(api: ApiAs, who: MemberPrincipal, **body: Any) -> Any:
     return api(who).put("/api/me/availability", json=body)
 
 
 def status_of(api: ApiAs, who: MemberPrincipal) -> dict[str, Any]:
     return api(who).get("/api/me/availability").json()
+
+
+def available(who: MemberPrincipal) -> dict[str, Any]:
+    return {"user_id": str(who.user_id), "status": "available", "until": None, "note": None}
 
 
 def expire(database: str, who: MemberPrincipal) -> None:
@@ -31,121 +40,81 @@ def expire(database: str, who: MemberPrincipal) -> None:
 
 
 def test_everyone_starts_available(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    assert status_of(api, lab.people["nodes"]) == {
-        "user_id": str(lab.people["nodes"].user_id),
-        "status": "available",
-        "until": None,
-        "backup_user_id": None,
-    }
+    nodes = team(database).people["nodes"]
+    assert status_of(api, nodes) == available(nodes)
 
 
-def test_busy_lasts_until_its_end(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes = lab.people["nodes"]
-    response = set_status(api, nodes, status="busy", until=later(hours=1))
+def test_away_with_a_note_and_no_end_stays_away(api: ApiAs, database: str) -> None:
+    nodes = team(database).people["nodes"]
+    response = set_status(api, nodes, status="away", note="  At a conference ")
     assert response.status_code == 200, response.text
-    assert status_of(api, nodes)["status"] == "busy"
-    expire(database, nodes)
-    assert status_of(api, nodes)["status"] == "available"
-
-
-def test_away_names_a_back_up_and_may_end(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes, lead = lab.people["nodes"], lab.people["lead"]
-    response = set_status(api, nodes, status="away", backup_user_id=str(lead.user_id))
-    assert response.json()["backup_user_id"] == str(lead.user_id)
-    set_status(api, nodes, status="away", backup_user_id=str(lead.user_id), until=later(days=3))
-    assert status_of(api, nodes)["status"] == "away"
-    expire(database, nodes)
     assert status_of(api, nodes) == {
         "user_id": str(nodes.user_id),
-        "status": "available",
+        "status": "away",
         "until": None,
-        "backup_user_id": None,
+        "note": "At a conference",
     }
+
+
+def test_away_until_reads_as_available_after_its_end(api: ApiAs, database: str) -> None:
+    nodes = team(database).people["nodes"]
+    set_status(api, nodes, status="away", until=later(days=3), note="Leave")
+    assert status_of(api, nodes)["status"] == "away"
+    expire(database, nodes)
+    assert status_of(api, nodes) == available(nodes)
 
 
 def test_back_to_available(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes = lab.people["nodes"]
-    set_status(api, nodes, status="busy", until=later(hours=1))
-    assert set_status(api, nodes, status="available").json()["status"] == "available"
+    nodes = team(database).people["nodes"]
+    set_status(api, nodes, status="away", until=later(hours=1))
+    assert set_status(api, nodes, status="available").json() == available(nodes)
 
 
 @pytest.mark.parametrize(
     "body",
     [
-        {"status": "busy"},
-        {"status": "busy", "until": "PAST"},
-        {"status": "busy", "until": "TWO_DAYS"},
-        {"status": "away"},
+        {"status": "away", "until": "PAST"},
         {"status": "available", "until": "HOUR"},
+        {"status": "available", "note": "Here"},
     ],
 )
 def test_invalid_statuses_are_refused(api: ApiAs, database: str, body: dict[str, str]) -> None:
-    lab = make_lab(api, database)
-    times = {"PAST": later(minutes=-1), "TWO_DAYS": later(days=2), "HOUR": later(hours=1)}
+    nodes = team(database).people["nodes"]
+    times = {"PAST": later(minutes=-1), "HOUR": later(hours=1)}
     if "until" in body:
         body = {**body, "until": times[body["until"]]}
-    response = set_status(api, lab.people["nodes"], **body)
+    response = set_status(api, nodes, **body)
     assert (response.status_code, response.json()["code"]) == (400, "invalid-availability")
-    assert status_of(api, lab.people["nodes"])["status"] == "available"
+    assert status_of(api, nodes) == available(nodes)
 
 
-def test_the_back_up_must_be_another_member_who_is_not_away(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes, lead, head = lab.people["nodes"], lab.people["lead"], lab.people["head"]
-    other = make_lab(api, database).people["lead"]
-    for backup in (nodes.user_id, other.user_id):
-        response = set_status(api, nodes, status="away", backup_user_id=str(backup))
-        assert (response.status_code, response.json()["code"]) == (400, "invalid-backup")
-    set_status(api, lead, status="away", backup_user_id=str(head.user_id))
-    response = set_status(api, nodes, status="away", backup_user_id=str(lead.user_id))
-    assert response.json()["code"] == "invalid-backup"
+@pytest.mark.parametrize("body", [{"status": "busy"}, {"status": "away", "note": "x" * 201}])
+def test_unknown_statuses_and_long_notes_are_refused(
+    api: ApiAs, database: str, body: dict[str, str]
+) -> None:
+    nodes = team(database).people["nodes"]
+    assert set_status(api, nodes, **body).status_code == 422
 
 
 def test_the_team_sees_everyones_status(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    set_status(api, lab.people["nodes"], status="busy", until=later(hours=2))
-    team = {
+    workspace = team(database)
+    people = workspace.people
+    set_status(api, people["nodes"], status="away", until=later(hours=2))
+    statuses = {
         row["user_id"]: row["status"]
-        for row in api(lab.people["lab"]).get("/api/tenant/availability").json()
+        for row in api(people["lab"]).get("/api/tenant/availability").json()
     }
-    assert team == {
-        str(lab.people["head"].user_id): "available",
-        str(lab.people["lead"].user_id): "available",
-        str(lab.people["nodes"].user_id): "busy",
-        str(lab.people["lab"].user_id): "available",
+    assert statuses == {
+        str(people["lead"].user_id): "available",
+        str(people["nodes"].user_id): "away",
+        str(people["lab"].user_id): "available",
     }
 
 
-def create_for(api: ApiAs, lab: Lab, assignee: MemberPrincipal) -> Any:
-    response = api(lab.people["head"]).post(
-        "/api/cases",
-        json={
-            "patient": {"name": "Covered"},
-            "specimens": [{"letter": "A"}],
-            "assignee_user_id": str(assignee.user_id),
-        },
-    )
-    assert response.status_code == 201, response.text
-    return response.json()
-
-
-def test_a_new_case_for_an_away_person_goes_to_the_back_up(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes, lead = lab.people["nodes"], lab.people["lead"]
-    set_status(api, nodes, status="away", backup_user_id=str(lead.user_id))
-    case = create_for(api, lab, nodes)
-    assert case["assignee_user_id"] == str(lead.user_id)
-    set_status(api, nodes, status="away", backup_user_id=str(lead.user_id), until=later(days=1))
-    expire(database, nodes)
-    assert create_for(api, lab, nodes)["assignee_user_id"] == str(nodes.user_id)
-
-
-def test_a_busy_person_keeps_new_cases(api: ApiAs, database: str) -> None:
-    lab = make_lab(api, database)
-    nodes = lab.people["nodes"]
-    set_status(api, nodes, status="busy", until=later(hours=1))
-    assert create_for(api, lab, nodes)["assignee_user_id"] == str(nodes.user_id)
+def test_the_team_list_stays_inside_the_workspace(api: ApiAs, database: str) -> None:
+    mine, other = team(database), team(database)
+    set_status(api, other.people["nodes"], status="away")
+    listed = {
+        row["user_id"] for row in api(mine.people["lab"]).get("/api/tenant/availability").json()
+    }
+    assert listed == {str(who.user_id) for who in mine.people.values()}
