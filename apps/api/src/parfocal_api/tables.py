@@ -53,7 +53,6 @@ class Role(StrEnum):
     RESIDENT = "resident"
     LEAD = "lead"
     LAB = "lab"
-    OUTSIDE_CONSULTANT = "outside-consultant"
     ADMIN = "admin"
 
 
@@ -303,7 +302,6 @@ memberships = Table(
 class ActorKind(StrEnum):
     USER = "user"
     MEMBER = "member"
-    GUEST = "guest"
     OPERATOR = "operator"
     SYSTEM = "system"
     SERVICE = "service"

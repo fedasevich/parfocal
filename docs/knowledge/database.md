@@ -30,11 +30,11 @@ The edoburu PgBouncer image writes `auth_user=` into its generated config, which
 
 ## Restrictive policies narrow, permissive ones widen
 
-Postgres ORs permissive policies and ANDs restrictive ones with the result. Guest scopes are `RESTRICTIVE`, so they can only take rows away from what tenant isolation allows. A second permissive policy would have widened access instead. Source: [STACK-023 spike](../results/2026-10-08-guest-scope-rls-spike.md).
+Postgres ORs permissive policies and ANDs restrictive ones with the result. A narrower scope inside a tenant, such as the guest case scope that ADAPT-001 removed, must be `RESTRICTIVE`, so it can only take rows away from what tenant isolation allows. A second permissive policy would have widened access instead. Source: [STACK-023 spike](../results/2026-10-08-guest-scope-rls-spike.md).
 
 ## Request scope and the tenancy tables
 
-Every request transaction starts with one `SET_SCOPE` statement from `scoped_transaction` in `parfocal_common.db`, which sets `app.tenant_id`, `app.scope_case_id`, `app.scope_view_id` and `app.platform` together and clears the ones a scope does not use. In the API only `parfocal_api.context` builds a scope from a principal. Routes take `TenantConnection` or `PlatformConnection` and never set anything themselves ([ADR 0020](../adr/0020-authorization-rls-scopes-and-rbac.md), [ADR 0024](../adr/0024-workspaces-are-tenants.md)).
+Every request transaction starts with one `SET_SCOPE` statement from `scoped_transaction` in `parfocal_common.db`, which sets `app.tenant_id`, `app.user_id`, `app.platform` and `app.auth` together and clears the ones a scope does not use. In the API only `parfocal_api.context` builds a scope from a principal. Routes take `TenantConnection` or `PlatformConnection` and never set anything themselves ([ADR 0020](../adr/0020-authorization-rls-scopes-and-rbac.md), [ADR 0024](../adr/0024-workspaces-are-tenants.md)).
 
 `organisations` and `tenants` have no `tenant_id` but still force row-level security through `enable_platform_management`. Members read only their own rows, and only the platform scope writes. `test_every_table_has_forced_row_security_at_head` fails for any table without forced row-level security except `alembic_version` and PostGIS's `spatial_ref_sys`. A mutation check on 2026-10-13 showed that `getCurrentTenant` stays isolated even with its `WHERE` removed, and that the isolation suite fails when the tenant policy is loosened. Source: IAM-003 and IAM-004 log entries.
 

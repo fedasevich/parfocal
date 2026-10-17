@@ -40,7 +40,6 @@ def render() -> str:
             "|---|---|",
             *roles,
             "",
-            "Outside consultants never hold a membership. They act through a guest link (IAM-010).",
             "Platform operators sit outside the matrix and only reach `/api/platform/*`.",
             "",
             "## Matrix",

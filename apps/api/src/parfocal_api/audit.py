@@ -13,7 +13,6 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.principals import (
-    GuestPrincipal,
     MemberPrincipal,
     PlatformOperator,
     Principal,
@@ -88,8 +87,6 @@ def actor_of(principal: Principal) -> Actor:
             return Actor(ActorKind.MEMBER, subject)
         case SignedInUser(subject=subject):
             return Actor(ActorKind.USER, subject)
-        case GuestPrincipal(subject=subject):
-            return Actor(ActorKind.GUEST, subject)
         case PlatformOperator(subject=subject):
             return Actor(ActorKind.OPERATOR, subject)
         case ServicePrincipal(account_id=account_id):

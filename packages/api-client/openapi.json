@@ -4437,7 +4437,6 @@
         "enum": [
           "user",
           "member",
-          "guest",
           "operator",
           "system",
           "service"
@@ -5242,7 +5241,7 @@
             "$ref": "#/components/schemas/Email"
           },
           "role": {
-            "$ref": "#/components/schemas/MemberRole"
+            "$ref": "#/components/schemas/Role"
           }
         },
         "type": "object",
@@ -5469,9 +5468,6 @@
         ],
         "title": "MemberAvailability"
       },
-      "MemberRole": {
-        "$ref": "#/components/schemas/Role"
-      },
       "Membership": {
         "properties": {
           "id": {
@@ -5510,7 +5506,7 @@
             "title": "User Id"
           },
           "role": {
-            "$ref": "#/components/schemas/MemberRole"
+            "$ref": "#/components/schemas/Role"
           }
         },
         "type": "object",
@@ -5829,7 +5825,6 @@
           "resident",
           "lead",
           "lab",
-          "outside-consultant",
           "admin"
         ],
         "title": "Role"
@@ -5837,7 +5832,7 @@
       "RoleChange": {
         "properties": {
           "role": {
-            "$ref": "#/components/schemas/MemberRole"
+            "$ref": "#/components/schemas/Role"
           }
         },
         "type": "object",

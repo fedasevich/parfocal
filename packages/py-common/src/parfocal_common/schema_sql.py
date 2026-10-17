@@ -1,6 +1,4 @@
-from parfocal_common.db import AUTH_SERVICE, CURRENT_TENANT, PLATFORM_OPERATOR, SCOPE_CASE_SETTING
-
-SCOPED_CASE = f"NULLIF(current_setting('{SCOPE_CASE_SETTING}', true), '')::uuid"
+from parfocal_common.db import AUTH_SERVICE, CURRENT_TENANT, PLATFORM_OPERATOR
 
 TOUCH_UPDATED_AT_FUNCTION = """
 CREATE FUNCTION parfocal_touch_updated_at() RETURNS trigger
@@ -122,19 +120,4 @@ def revoke_app_role(role: str) -> list[str]:
         f"ALTER DEFAULT PRIVILEGES IN SCHEMA public "
         f"REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM {role}",
         f"ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE USAGE, SELECT ON SEQUENCES FROM {role}",
-    ]
-
-
-def enable_guest_case_scope(table: str, case_column: str) -> list[str]:
-    return [
-        f"CREATE POLICY guest_case_scope ON {table} AS RESTRICTIVE "
-        f"USING ({SCOPED_CASE} IS NULL OR {case_column} = {SCOPED_CASE}) "
-        f"WITH CHECK ({SCOPED_CASE} IS NULL OR {case_column} = {SCOPED_CASE})"
-    ]
-
-
-def hide_from_guests(table: str) -> list[str]:
-    return [
-        f"CREATE POLICY guest_hidden ON {table} AS RESTRICTIVE "
-        f"USING ({SCOPED_CASE} IS NULL) WITH CHECK ({SCOPED_CASE} IS NULL)"
     ]

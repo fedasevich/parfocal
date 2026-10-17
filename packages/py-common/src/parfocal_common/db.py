@@ -11,8 +11,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from parfocal_common.data_classes import OPERATIONAL
 
 TENANT_SETTING = "app.tenant_id"
-SCOPE_CASE_SETTING = "app.scope_case_id"
-SCOPE_VIEW_SETTING = "app.scope_view_id"
 PLATFORM_SETTING = "app.platform"
 AUTH_SETTING = "app.auth"
 USER_SETTING = "app.user_id"
@@ -59,8 +57,6 @@ class SoftDeletable:
 class DatabaseScope:
     tenant_id: uuid.UUID | None = None
     user_id: uuid.UUID | None = None
-    case_id: uuid.UUID | None = None
-    view_id: uuid.UUID | None = None
     platform: bool = False
     auth: bool = False
 
@@ -68,8 +64,6 @@ class DatabaseScope:
         return {
             "tenant": str(self.tenant_id or ""),
             "user": str(self.user_id or ""),
-            "case": str(self.case_id or ""),
-            "view": str(self.view_id or ""),
             "platform": "on" if self.platform else "",
             "auth": "on" if self.auth else "",
         }
@@ -78,8 +72,6 @@ class DatabaseScope:
 SET_SCOPE = text(
     f"SELECT set_config('{TENANT_SETTING}', :tenant, true), "
     f"set_config('{USER_SETTING}', :user, true), "
-    f"set_config('{SCOPE_CASE_SETTING}', :case, true), "
-    f"set_config('{SCOPE_VIEW_SETTING}', :view, true), "
     f"set_config('{PLATFORM_SETTING}', :platform, true), "
     f"set_config('{AUTH_SETTING}', :auth, true)"
 )

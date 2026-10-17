@@ -30,7 +30,6 @@ from parfocal_api.tables import (
 )
 from parfocal_api.users import (
     AlreadyAMemberError,
-    MemberRole,
     Workspace,
     own_workspaces,
     signed_in,
@@ -51,7 +50,7 @@ type Email = Annotated[
 
 class InvitationDraft(BaseModel):
     email: Email
-    role: MemberRole
+    role: Role
 
 
 class Invitation(BaseModel):

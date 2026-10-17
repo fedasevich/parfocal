@@ -65,3 +65,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0057](0057-no-case-state-machine.md) | Cases have no state machine, and the slide pipeline per task takes its place | Accepted | 2026-10-17 |
 | [0058](0058-typed-case-ids.md) | Case IDs are typed or come from file names, and accession templates and counters are removed | Accepted | 2026-10-17 |
 | [0059](0059-no-folders.md) | Folders are removed, and access is by role across the workspace until project roles land | Accepted | 2026-10-17 |
+| [0060](0060-no-sign-out-permissions-or-guest-scope.md) | The sign-out permissions, the outside consultant and the guest scope are removed | Accepted | 2026-10-17 |

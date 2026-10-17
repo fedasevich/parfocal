@@ -14,8 +14,6 @@ from parfocal_common.db import (
     AUTH_SETTING,
     NAMING_CONVENTION,
     PLATFORM_SETTING,
-    SCOPE_CASE_SETTING,
-    SCOPE_VIEW_SETTING,
     TENANT_SETTING,
     USER_SETTING,
     DatabaseScope,
@@ -170,8 +168,6 @@ async def test_scope_settings_never_linger_on_a_pooled_connection() -> None:
     names = (
         TENANT_SETTING,
         USER_SETTING,
-        SCOPE_CASE_SETTING,
-        SCOPE_VIEW_SETTING,
         PLATFORM_SETTING,
         AUTH_SETTING,
     )
@@ -181,8 +177,6 @@ async def test_scope_settings_never_linger_on_a_pooled_connection() -> None:
     scope = DatabaseScope(
         tenant_id=TENANT_A,
         user_id=uuid.uuid4(),
-        case_id=uuid.uuid4(),
-        view_id=uuid.uuid4(),
         platform=True,
         auth=True,
     )
@@ -192,13 +186,11 @@ async def test_scope_settings_never_linger_on_a_pooled_connection() -> None:
             assert inside == (
                 str(TENANT_A),
                 str(scope.user_id),
-                str(scope.case_id),
-                str(scope.view_id),
                 "on",
                 "on",
             )
         for _ in range(3):
             async with engine.begin() as connection:
-                assert tuple((await connection.execute(read_settings)).one()) == (None,) * 6
+                assert tuple((await connection.execute(read_settings)).one()) == (None,) * 4
     finally:
         await engine.dispose()

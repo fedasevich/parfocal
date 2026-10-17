@@ -18,7 +18,7 @@ Generated calls go through `apiFetch` in `src/fetcher.ts`, which sends the sessi
 
 ## Who is calling
 
-`authenticate` in `parfocal_api.auth` reads the session cookie and returns a `SignedInUser` or a `PlatformOperator` from `parfocal_api.principals`. `MemberPrincipal` and `GuestPrincipal` arrive with IAM-005 and IAM-010. Tests that are not about login replace it through `app.dependency_overrides`, which `ApiAs` in `apps/api/tests/db_support.py` wraps so a test calls `api(principal).get(...)`. Never add a header or query switch to pick a principal in application code. See [auth.md](auth.md).
+`authenticate` in `parfocal_api.auth` reads the session cookie and returns a `SignedInUser` or a `PlatformOperator` from `parfocal_api.principals`. `MemberPrincipal` arrives with IAM-005, and `ServicePrincipal` comes from an API token. The guest principal was removed by ADAPT-001 ([ADR 0060](../adr/0060-no-sign-out-permissions-or-guest-scope.md)). Tests that are not about login replace it through `app.dependency_overrides`, which `ApiAs` in `apps/api/tests/db_support.py` wraps so a test calls `api(principal).get(...)`. Never add a header or query switch to pick a principal in application code. See [auth.md](auth.md).
 
 ## Every route declares a permission or why it is open
 

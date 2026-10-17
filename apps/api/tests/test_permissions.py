@@ -15,13 +15,12 @@ from parfocal_api.openapi import openapi_schema
 from parfocal_api.permissions import (
     COLUMNS,
     MATRIX,
-    MEMBER_ROLES,
     Grant,
     Permission,
     grant_for,
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
-from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal, Principal
+from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.tables import (
     Role,
     api_tokens,
@@ -177,17 +176,10 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
         assert set(grants) == set(Role)
 
 
-def test_outside_consultants_and_administrators_keep_their_limits() -> None:
-    assert Role.OUTSIDE_CONSULTANT not in MEMBER_ROLES
+def test_administrators_reach_patients_only_through_emergency_access() -> None:
     assert grant_for(Role.ADMIN, Permission.SEE_CASES) is Grant.NONE
     assert grant_for(Role.ADMIN, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
-    assert grant_for(Role.RESIDENT, Permission.SIGN_OUT) is Grant.NEEDS_CO_SIGN
-    assert grant_for(Role.LAB, Permission.DRAFT_REPORTS) is Grant.NONE
-    assert all(
-        grant_for(Role.OUTSIDE_CONSULTANT, permission)
-        in {Grant.NONE, Grant.SHARED, Grant.MEASURE_AND_COMMENT}
-        for permission in Permission
-    )
+    assert set(Grant) == {Grant.ALL, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.EMERGENCY, Grant.NONE}
 
 
 def test_the_permission_page_is_current() -> None:
@@ -243,7 +235,7 @@ async def seed(database: str) -> Workspace:
             assert isinstance(tenant_id, uuid.UUID)
             people = {
                 role: await add_person(connection, tenant_id, f"{slug}-{role}", role)
-                for role in MEMBER_ROLES
+                for role in COLUMNS
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.RESIDENT)
             account, spare_account = [
@@ -305,10 +297,6 @@ def workspace(database: str) -> Workspace:
 
 
 def principal_for(workspace: Workspace, role: Role) -> Principal:
-    if role is Role.OUTSIDE_CONSULTANT:
-        return GuestPrincipal(
-            "outside", GuestGrant(host_tenant_id=workspace.tenant_id, case_id=workspace.case)
-        )
     subject = f"{workspace.slug}-{role}"
     return MemberPrincipal(subject, workspace.tenant_id, workspace.users[role], role)
 
@@ -337,7 +325,7 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
 
 @pytest.mark.db
 @pytest.mark.parametrize(
-    ("operation", "role"), [(name, role) for name in sorted(MEMBER_CALLS) for role in MEMBER_ROLES]
+    ("operation", "role"), [(name, role) for name in sorted(MEMBER_CALLS) for role in COLUMNS]
 )
 def test_every_member_endpoint_is_open_to_every_member_role(
     api: ApiAs, workspace: Workspace, operation: str, role: Role
@@ -355,7 +343,7 @@ def test_nobody_changes_their_own_role(api: ApiAs, workspace: Workspace) -> None
 
 
 @pytest.mark.db
-def test_a_role_change_takes_effect_and_rejects_guest_roles(
+def test_a_role_change_takes_effect_and_rejects_unknown_roles(
     api: ApiAs, workspace: Workspace
 ) -> None:
     admin = principal_for(workspace, Role.ADMIN)

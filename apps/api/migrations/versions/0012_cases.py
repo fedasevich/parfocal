@@ -6,9 +6,7 @@ import sqlalchemy as sa
 from alembic import op
 
 from parfocal_common.schema_sql import (
-    enable_guest_case_scope,
     enable_tenant_isolation,
-    hide_from_guests,
     track_updated_at,
     untrack_updated_at,
 )
@@ -137,16 +135,12 @@ def upgrade() -> None:
     for table in CASE_TABLES:
         for statement in [
             *enable_tenant_isolation(table),
-            *enable_guest_case_scope(table, "id" if table == "cases" else "case_id"),
             *track_updated_at(table),
         ]:
             op.execute(statement)
-    for statement in hide_from_guests("patients"):
-        op.execute(statement)
 
 
 def downgrade() -> None:
-    op.execute("DROP POLICY guest_hidden ON patients")
     for table in reversed(CASE_TABLES):
         op.execute(untrack_updated_at(table)[0])
         op.drop_table(table)

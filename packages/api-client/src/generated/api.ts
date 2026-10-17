@@ -33,7 +33,6 @@ export type ActorKind = (typeof ActorKind)[keyof typeof ActorKind];
 export const ActorKind = {
   user: "user",
   member: "member",
-  guest: "guest",
   operator: "operator",
   system: "system",
   service: "service",
@@ -350,7 +349,6 @@ export const Role = {
   resident: "resident",
   lead: "lead",
   lab: "lab",
-  "outside-consultant": "outside-consultant",
   admin: "admin",
 } as const;
 
@@ -428,8 +426,6 @@ export interface MemberAvailability {
   until: string | null;
   note: string | null;
 }
-
-export type MemberRole = Role;
 
 export interface Membership {
   id: string;

@@ -12,7 +12,7 @@ down_revision: str | None = "0005"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-ACTOR_KIND_CHECK = "actor_kind IN ('user', 'member', 'guest', 'operator', 'system')"
+ACTOR_KIND_CHECK = "actor_kind IN ('user', 'member', 'operator', 'system')"
 
 AUDIT_FIELD_FUNCTION = """
 CREATE FUNCTION parfocal_audit_field(value text) RETURNS text

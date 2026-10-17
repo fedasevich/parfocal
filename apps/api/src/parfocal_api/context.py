@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_api.auth import authenticate
 from parfocal_api.principals import (
-    GuestPrincipal,
     MemberPrincipal,
-    MissingGuestGrantError,
     PlatformOperator,
     Principal,
     ServicePrincipal,
@@ -28,12 +26,9 @@ def engine_of(request: Request) -> AsyncEngine:
 async def tenant_connection(
     request: Request, principal: Annotated[Principal, Depends(authenticate)]
 ) -> AsyncIterator[AsyncConnection]:
-    if not isinstance(principal, MemberPrincipal | GuestPrincipal | ServicePrincipal):
+    if not isinstance(principal, MemberPrincipal | ServicePrincipal):
         raise ForbiddenError
-    try:
-        scope = database_scope(principal)
-    except MissingGuestGrantError as error:
-        raise ForbiddenError from error
+    scope = database_scope(principal)
     async with scoped_transaction(engine_of(request), scope) as connection:
         status = await connection.scalar(
             select(tenants.c.status).where(tenants.c.id == scope.tenant_id)

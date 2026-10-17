@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api import case_creation
 from parfocal_api.case_creation import CaseDefaults, CaseDraft
-from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal
+from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
 
 pytestmark = pytest.mark.db
@@ -188,10 +188,6 @@ def test_a_draft_is_seen_only_by_its_author_and_the_lab(api: ApiAs, database: st
     assert api(lab.people[Role.CONSULTANT]).get(path).status_code == 200
     assert api(lab.people[Role.LAB]).get(path).status_code == 200
     assert api(lab.people[Role.LEAD]).get(path).status_code == 404
-    guest = GuestPrincipal(
-        "outside", GuestGrant(host_tenant_id=lab.tenant_id, case_id=uuid.UUID(case["id"]))
-    )
-    assert api(guest).get(path).status_code == 404
 
 
 def test_repeating_a_request_returns_the_same_case(api: ApiAs, database: str) -> None:

@@ -11,7 +11,7 @@ from parfocal_api.case_access import require_case_access
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import GuestPrincipal, MemberPrincipal, Principal, database_scope
+from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import NotFoundError
 from parfocal_api.tables import (
     CaseSource,
@@ -186,15 +186,12 @@ async def case_detail(
             .order_by(slides.c.created_at)
         )
     ).all()
-    guest = isinstance(principal, GuestPrincipal)
-    patient = note = question = None
-    if not guest:
-        tenant_id = database_scope(principal).tenant_id
-        assert tenant_id is not None
-        keys = await load_keys(connection, keyring, tenant_id)
-        patient = await patient_detail(connection, keys, row.patient_id)
-        note = open_field(keys, "cases", case_id, "clinical_note", row.clinical_note)
-        question = open_field(keys, "cases", case_id, "clinical_question", row.clinical_question)
+    tenant_id = database_scope(principal).tenant_id
+    assert tenant_id is not None
+    keys = await load_keys(connection, keyring, tenant_id)
+    patient = await patient_detail(connection, keys, row.patient_id)
+    note = open_field(keys, "cases", case_id, "clinical_note", row.clinical_note)
+    question = open_field(keys, "cases", case_id, "clinical_question", row.clinical_question)
     return CaseDetail(
         id=row.id,
         accession=row.accession,

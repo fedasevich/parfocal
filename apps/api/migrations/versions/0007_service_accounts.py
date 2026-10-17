@@ -22,7 +22,7 @@ SCOPES_CHECK = (
     "scopes <@ ARRAY['see-cases', 'edit-cases', 'upload-slides', 'see-team']::varchar[] "
     "AND cardinality(scopes) > 0"
 )
-ACTOR_KINDS = "'user', 'member', 'guest', 'operator', 'system'"
+ACTOR_KINDS = "'user', 'member', 'operator', 'system'"
 
 
 def actor_kind_check(kinds: str) -> str:

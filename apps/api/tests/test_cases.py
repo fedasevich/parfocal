@@ -6,11 +6,11 @@ from typing import Any
 import pytest
 from case_support import NOTE, QUESTION, SeededCase, seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
-from sqlalchemy import insert, text
+from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
-from parfocal_api.principals import GuestGrant, GuestPrincipal, MemberPrincipal
+from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role, blocks, cases, specimens
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
@@ -83,41 +83,6 @@ def test_clinical_text_is_ciphertext_at_rest(database: str) -> None:
     )[0][0]
     assert "sentinel" not in str(stored)
     assert b"sentinel".hex() not in str(stored)
-
-
-def test_a_guest_sees_the_shared_case_without_the_patient(api: ApiAs, database: str) -> None:
-    tenant = make_tenant(database)
-    shared, other = seeded(database, tenant), seeded(database, tenant)
-    guest = GuestPrincipal("outside", GuestGrant(host_tenant_id=tenant, case_id=shared.case_id))
-    body = api(guest).get(f"/api/cases/{shared.case_id}").json()
-    assert (body["patient"], body["clinical_note"], body["clinical_question"]) == (None, None, None)
-    assert len(body["specimens"]) == 2
-    assert api(guest).get(f"/api/cases/{other.case_id}").status_code == 404
-
-
-def test_the_guest_scope_hides_patients_and_other_cases_in_the_database(database: str) -> None:
-    tenant = make_tenant(database)
-    shared, other = seeded(database, tenant), seeded(database, tenant)
-
-    async def visible(connection: AsyncConnection) -> dict[str, Any]:
-        counts = {
-            table: await connection.scalar(text(f"SELECT count(*) FROM {table}"))
-            for table in ("patients", "cases", "specimens", "blocks", "slides")
-        }
-        counts["other_case"] = await connection.scalar(
-            text(f"SELECT count(*) FROM specimens WHERE case_id = '{other.case_id}'")
-        )
-        return counts
-
-    scope = DatabaseScope(tenant_id=tenant, case_id=shared.case_id)
-    assert run(database, scope, visible) == {
-        "patients": 0,
-        "cases": 1,
-        "specimens": 2,
-        "blocks": 2,
-        "slides": 2,
-        "other_case": 0,
-    }
 
 
 def test_records_cannot_point_into_another_workspace(database: str) -> None:

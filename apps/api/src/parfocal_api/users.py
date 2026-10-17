@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Request
-from pydantic import AfterValidator, BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import exists, insert, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -42,15 +42,6 @@ type DisplayName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
 ]
 type Title = Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)]
-
-
-def member_role(role: Role) -> Role:
-    if role is Role.OUTSIDE_CONSULTANT:
-        raise ValueError("Outside consultants get a guest link, not a membership")
-    return role
-
-
-type MemberRole = Annotated[Role, AfterValidator(member_role)]
 
 
 class Profile(BaseModel):
@@ -94,11 +85,11 @@ class WorkspaceChoice(BaseModel):
 
 class MembershipDraft(BaseModel):
     user_id: uuid.UUID
-    role: MemberRole
+    role: Role
 
 
 class RoleChange(BaseModel):
-    role: MemberRole
+    role: Role
 
 
 class Membership(BaseModel):
