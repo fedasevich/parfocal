@@ -2954,7 +2954,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when API tests prove no patient field leaves a de-identified project, an upload fixture with a name in its SVS metadata arrives without it, clinical reads are audited, and the mode change needs an admin and a reason.
   Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
 
-- [ ] PROJ-003 · Project roles
+- [x] PROJ-003 · Project roles
   Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). Opening a project needs a project role, researchers included, and the creator becomes owner. A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project. One API helper turns the workspace grant and the project role into the effective grant, and row-level security stays per workspace ([ADR 0062](adr/0062-project-model.md)). The project routes of PROJ-001 already need a role to read and the owner role to change ([ADR 0064](adr/0064-project-api.md)). This task applies the role to the case and slide routes and decides what happens to a project owner whose workspace role becomes reviewer.
   Done when the permission test runs every project endpoint for every project role, and an isolation test hides another project's slides from a reviewer.
   Depends on IAM-022, PROJ-001.
