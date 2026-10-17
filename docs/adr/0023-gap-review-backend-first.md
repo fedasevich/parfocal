@@ -1,7 +1,7 @@
 # 0023. Gap review: one case state model, cases from the LIS first, roles narrowed by folders, team control, and backend before UI
 
 - Date: 2026-10-10
-- Status: Proposed
+- Status: Superseded by 0053
 - Deciders: Yurii Fedas
 - Backlog: CASES-012 to CASES-024, NOTIF-008, IAM-016 to IAM-020, SEC-024, REPORT-018 to REPORT-023, AIP-016, AIP-017, COLLAB-013, COLLAB-014, NOTIF-006, NOTIF-007, BOARD-013, TEAM-000 to TEAM-006, TB-000 to TB-004, and edits to CASES-002, BOARD-002, REPORT-010 and HOME-009
 

@@ -27,3 +27,15 @@ Guard a tenant route with `**require(Permission.X)` from `parfocal_api.permissio
 ## Database dependencies close before the response
 
 `TenantConnection` and `PlatformConnection` use `Depends(..., scope="function")`, so the transaction commits or rolls back before FastAPI sends the response. With the default scope the commit runs after the response is sent, and a failed commit would follow a 200. Source: IAM-004 log entry.
+
+## Project routes go through project_access
+
+A route that touches a project's cases or slides reads the effective grant from `parfocal_api.project_access.project_grant`, which combines the workspace grant with the person's project role through `permissions.in_project`. Reads call `require_reading`, which answers 404 to members without read access and to anyone outside a de-identified project, and 403 `emergency-access-needed` to researchers and admins outside a clinical project. Lists filter with `readable`. Service accounts skip project roles and keep their workspace scopes. Never check `project_members` by hand in a route ([ADR 0065](../adr/0065-project-role-enforcement.md)).
+
+## Test helpers for workspaces and projects
+
+`tests/workspace_support.py` makes a workspace with people (`make_workspace`), a project (`make_project`) and a project role (`join_project`), and `tests/case_support.py` seeds a project with a case, slides and a loose slide. A test that reads cases must give its principal a project role first, or it gets 404. `test_project_roles.py` computes the expected status of every project route from the matrix, so a new project route only needs an entry in `OPERATIONS`.
+
+## The permission matrix test runs calls in a fixed order
+
+`test_every_guarded_endpoint_follows_the_matrix_for_every_role` runs the calls in `GUARDED_CALLS` sorted by operation name, once per role, against one shared workspace. A call that changes state must not break a later one. Archive and restore act on `spare_project`, emergency access asks for `outside_project`, and `revokeInvitation` pops one seeded invitation per role. Building `PLACEHOLDER` runs every lambda once at import, so a test that reuses it copies it with fresh lists (`dataclasses.replace`). The tenant isolation suite gives each GET route in `GET_ROUTES` the role that may call it, because no single role reads them all.
