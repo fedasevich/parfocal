@@ -65,8 +65,6 @@ OPEN_OPERATIONS = {
     "listFolders": "member",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
-    "putSignature": "signed-in",
-    "deleteSignature": "signed-in",
     "listMembers": "platform",
 }
 
@@ -121,13 +119,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "cancelCase": lambda w: Call("POST", f"/api/cases/{w.case}/cancel"),
     "restoreCase": lambda w: Call("POST", f"/api/cases/{w.case}/restore"),
-    "getSigningRights": lambda w: Call("GET", f"/api/tenant/members/{w.colleague}/signing"),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
-    "changeSigningRights": lambda w: Call(
-        "PUT",
-        f"/api/tenant/members/{w.colleague}/signing",
-        {"signs_alone": None, "supervisor_user_id": None},
-    ),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
     ),

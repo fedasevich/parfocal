@@ -245,8 +245,6 @@ users = Table(
     Column("initials", String(3), nullable=False, info=PERSONAL),
     Column("avatar_colour", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("title", String(40), nullable=True, info=PERSONAL),
-    Column("signature", LargeBinary, nullable=True, info=PERSONAL),
-    Column("signature_added_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column(
         "last_tenant_id",
         Uuid[uuid.UUID](),
@@ -257,9 +255,6 @@ users = Table(
     *timestamps(),
     CheckConstraint("initials ~ '^[A-Z]{1,3}$'", name="initials"),
     CheckConstraint("avatar_colour BETWEEN 0 AND 11", name="avatar_colour"),
-    CheckConstraint(
-        "(signature IS NULL) = (signature_added_at IS NULL)", name="signature_added_at"
-    ),
 )
 
 memberships = Table(
@@ -289,15 +284,7 @@ memberships = Table(
         info=PERSONAL,
     ),
     Column("role", String(30), nullable=False, info=OPERATIONAL),
-    Column("signs_alone", Boolean, nullable=True, info=OPERATIONAL),
     Column("all_folders", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
-    Column(
-        "supervisor_user_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("users.id"),
-        nullable=True,
-        info=PERSONAL,
-    ),
     Column(
         "availability",
         String(10),
@@ -311,7 +298,6 @@ memberships = Table(
     UniqueConstraint("tenant_id", "user_id"),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
     CheckConstraint(AVAILABILITY_CHECK, name="availability"),
-    CheckConstraint("supervisor_user_id IS DISTINCT FROM user_id", name="own_supervisor"),
     CheckConstraint("NOT all_folders OR role = 'lead'", name="all_folders"),
 )
 

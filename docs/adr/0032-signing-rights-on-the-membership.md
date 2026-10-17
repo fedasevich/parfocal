@@ -1,7 +1,7 @@
 # 0032. Signing rights on the membership, decided by one function, changed only by a lead
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0056
 - Deciders: Yurii Fedas
 - Backlog: IAM-018, REPORT-019, SEC-023, REPORT-008
 

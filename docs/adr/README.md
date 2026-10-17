@@ -37,7 +37,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0029](0029-service-accounts-with-own-api-tokens.md) | Service accounts per workspace with our own hashed API tokens and narrow scopes | Accepted | 2026-10-14 |
 | [0030](0030-invitations-bound-to-verified-email.md) | Invitations bound to a verified email, accepted by a signed-in person, with operators inviting first administrators | Accepted | 2026-10-14 |
 | [0031](0031-idle-lock-from-explicit-activity.md) | Idle lock driven by explicit activity, unlocked by signing in again, with limits set per workspace | Accepted | 2026-10-14 |
-| [0032](0032-signing-rights-on-the-membership.md) | Signing rights on the membership, decided by one function, changed only by a lead | Accepted | 2026-10-14 |
+| [0032](0032-signing-rights-on-the-membership.md) | Signing rights on the membership, decided by one function, changed only by a lead | Superseded by 0056 | 2026-10-14 |
 | [0033](0033-envelope-encryption-with-tenant-data-keys.md) | Envelope encryption with versioned tenant data keys under a rotating master keyring | Accepted | 2026-10-14 |
 | [0034](0034-blind-indexes-for-encrypted-patient-identifiers.md) | Exact-match blind indexes for encrypted patient identifiers, with name search by whole words | Accepted | 2026-10-14 |
 | [0035](0035-fhir-r4-through-fhir-resources-r4b.md) | FHIR R4 on the wire through fhir.resources' R4B models, with codes checked by us and no FHIR server | Accepted | 2026-10-14 |
@@ -61,3 +61,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0053](0053-ai-results-review-direction.md) | Parfocal becomes an AI results review app, the hospital sign-out workflow is kept as ideas, and the built hospital code is reverted or reworked | Accepted | 2026-10-17 |
 | [0054](0054-hospital-code-inventory-and-revert-order.md) | The built hospital code is reverted first, then the roles change, then cases move into projects, with migrations edited in place | Accepted | 2026-10-17 |
 | [0055](0055-away-until-with-a-note.md) | Availability is available or away, with an optional end and note, and no back-up | Accepted | 2026-10-17 |
+| [0056](0056-no-signing-rights.md) | Signing rights, supervision and stored signatures are removed | Accepted | 2026-10-17 |

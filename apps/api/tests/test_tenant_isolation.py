@@ -231,9 +231,6 @@ GET_ROUTES = {
     "listFolders": Route(Exposure.TENANT, lambda _: "/api/tenant/folders"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
-    "getSigningRights": Route(
-        Exposure.TENANT, lambda a: f"/api/tenant/members/{a.ids['user']}/signing"
-    ),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
