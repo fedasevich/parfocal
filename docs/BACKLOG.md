@@ -2943,7 +2943,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when an ADR records the project model (project, optional case, slide, result sets), the privacy modes and the project roles, and what each existing table (cases, patients, slides) becomes.
   Depends on ADAPT-000. Decided in [ADR 0062](adr/0062-project-model.md).
 
-- [ ] PROJ-001 · Project model and API
+- [x] PROJ-001 · Project model and API
   A project has a short ID (P07), a name, a colour, a privacy mode, an analysis template, a class taxonomy, members with project roles and a status. Cases are optional, and loose slides belong to the project directly.
   Done when migrations, API tests for create, list, update and archive, and isolation tests pass, and every change is audited.
   Builds on the minimal `projects` table from ADAPT-004 and adds the API and the remaining fields ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)). The contract is in [ADR 0064](adr/0064-project-api.md), and the taxonomy table comes with PROJ-004.
