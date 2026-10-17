@@ -22,11 +22,13 @@ from parfocal_api import (
 )
 from parfocal_api.oidc import OidcClient
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
+from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.settings import load_settings
+from parfocal_common.structured_logging import configure_logging
 
 PRODUCTION_FACTORIES = ProductionFactories()
 
@@ -87,6 +89,8 @@ def create_app(
         resolved, select_clients(resolved, production), identity or zitadel_client(resolved)
     )
     install_problem_handlers(app, app.clients.errors)
+    configure_logging("api", resolved.app_env)
+    app.add_middleware(RequestLogging)
 
     @app.get("/api/health", operation_id="getHealth")
     async def health() -> Health:

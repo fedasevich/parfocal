@@ -39,3 +39,7 @@ A route that touches a project's cases or slides reads the effective grant from 
 ## The permission matrix test runs calls in a fixed order
 
 `test_every_guarded_endpoint_follows_the_matrix_for_every_role` runs the calls in `GUARDED_CALLS` sorted by operation name, once per role, against one shared workspace. A call that changes state must not break a later one. Archive and restore act on `spare_project`, emergency access asks for `outside_project`, and `revokeInvitation` pops one seeded invitation per role. Building `PLACEHOLDER` runs every lambda once at import, so a test that reuses it copies it with fresh lists (`dataclasses.replace`). The tenant isolation suite gives each GET route in `GET_ROUTES` the role that may call it, because no single role reads them all.
+
+## Logging
+
+Log with `logging.getLogger("parfocal....")` and put values in `extra` under keys from `scrubbing.ALLOWED_FIELDS`. Any other key is written as `[redacted]`. Code that reads a name, email or identifier calls `structured_logging.register_sensitive` so the rest of the request cannot leak it, as `identifiers.read_patient` does. Tests capture output with `configure_logging(..., stream=io.StringIO())` and must remove the handler afterwards, and should filter lines by logger name because the test client's `httpx2` logs each call ([ADR 0068](../adr/0068-structured-logging-on-the-standard-library.md)).

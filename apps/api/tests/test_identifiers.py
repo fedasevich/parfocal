@@ -1,5 +1,8 @@
 import asyncio
 import base64
+import io
+import json
+import logging
 import os
 import uuid
 from collections.abc import Awaitable, Callable
@@ -31,6 +34,7 @@ from parfocal_common.envelope import (
     MasterKeyring,
     UnknownMasterKeyError,
 )
+from parfocal_common.structured_logging import configure_logging, log_context
 
 pytestmark = pytest.mark.db
 
@@ -272,3 +276,18 @@ def test_rotating_the_master_key_rewraps_without_touching_data(database: str) ->
         f"SELECT name_ciphertext FROM patients WHERE id = '{jana}'",
     )
     assert unchanged == before
+
+
+def test_reading_a_patient_keeps_their_name_out_of_the_log(database: str) -> None:
+    tenant = make_tenant(database)
+    (jana,) = admit(database, tenant, JANA)
+    stream = io.StringIO()
+    handler = configure_logging("api", "test", stream=stream)
+    try:
+        with log_context():
+            read(database, tenant, jana)
+            logging.getLogger("parfocal.test").info(f"Read {JANA.name}, MRN {JANA.mrn}")
+    finally:
+        logging.getLogger().removeHandler(handler)
+    message = json.loads(stream.getvalue())["message"]
+    assert message == "Read [redacted], MRN [redacted]"

@@ -4,7 +4,9 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-18
 
+- FOUND-011 (structured logging with tenant and request context) implemented, not ticked until CI is green on `main`. [ADR 0068](adr/0068-structured-logging-on-the-standard-library.md) builds JSON logs on the standard library in `parfocal_common.structured_logging`, with the ADR 0040 scrubber on the handler. The API middleware `RequestLogging` sets the request id (and returns `X-Request-Id`), the connection dependencies bind the workspace and pseudonymous user ids, and each request ends with one `request finished` line using the route template. Reading or adding a patient registers the name and MRN for redaction. Tests show a patient name and MRN passed to a logger come out as `[redacted]`, in a unit test, inside a request and after `read_patient`.
 - SKEL-003 (minimal tenant, user, project and slide tables) ticked without new code. Its "Done when" was already met by PROJ-001 (project API) and ADAPT-004 (cases and slides in projects): `test_projects.py` creates a project in the user's workspace, `test_another_workspace_gets_nothing` gets 404 for it from another workspace, and CI on `main` is green.
+
 ## 2026-10-17
 
 - Ticked PROJ-004 (class taxonomy per project) after a green `ci` run on `main`.

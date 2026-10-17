@@ -17,6 +17,7 @@ from parfocal_api.principals import (
 from parfocal_api.problems import ForbiddenError, TenantSuspendedError
 from parfocal_api.tables import TenantStatus, tenants
 from parfocal_common.db import scoped_transaction
+from parfocal_common.structured_logging import bind
 
 
 def engine_of(request: Request) -> AsyncEngine:
@@ -29,6 +30,7 @@ async def tenant_connection(
     if not isinstance(principal, MemberPrincipal | ServicePrincipal):
         raise ForbiddenError
     scope = database_scope(principal)
+    bind(tenant_id=scope.tenant_id, user_id=scope.user_id)
     async with scoped_transaction(engine_of(request), scope) as connection:
         status = await connection.scalar(
             select(tenants.c.status).where(tenants.c.id == scope.tenant_id)
@@ -54,7 +56,9 @@ async def user_connection(
 ) -> AsyncIterator[AsyncConnection]:
     if not isinstance(principal, SignedInUser | MemberPrincipal):
         raise ForbiddenError
-    async with scoped_transaction(engine_of(request), database_scope(principal)) as connection:
+    scope = database_scope(principal)
+    bind(tenant_id=scope.tenant_id, user_id=scope.user_id)
+    async with scoped_transaction(engine_of(request), scope) as connection:
         yield connection
 
 

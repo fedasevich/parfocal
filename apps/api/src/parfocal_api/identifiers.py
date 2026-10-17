@@ -20,6 +20,7 @@ from parfocal_common.envelope import (
     encrypt,
     new_data_key,
 )
+from parfocal_common.structured_logging import register_sensitive
 
 INDEX_BYTES = 16
 FIRST_VERSION = 1
@@ -179,6 +180,7 @@ async def add_patient(
     connection: AsyncConnection, keys: TenantKeys, project_id: uuid.UUID, identity: PatientIdentity
 ) -> uuid.UUID:
     patient_id = uuid.uuid4()
+    register_sensitive(identity.name, identity.mrn)
 
     def sealed(field: str, value: str | None) -> bytes | None:
         return seal_field(keys, "patients", patient_id, field, value)
@@ -218,10 +220,12 @@ async def read_patient(
 
     name = opened("name", row.name_ciphertext)
     assert name is not None
+    mrn = opened("mrn", row.mrn_ciphertext)
+    register_sensitive(name, mrn)
     birth_date = opened("birth_date", row.birth_date_ciphertext)
     return PatientIdentity(
         name=name,
-        mrn=opened("mrn", row.mrn_ciphertext),
+        mrn=mrn,
         birth_date=date.fromisoformat(birth_date) if birth_date else None,
     )
 
