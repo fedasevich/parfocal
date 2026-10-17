@@ -75,3 +75,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0067](0067-class-taxonomy-and-colour-check.md) | Each project has up to nine classes on keys 1 to 9, checked by CIEDE2000 under three colour-vision deficiencies, with remembered import mappings | Accepted | 2026-10-17 |
 | [0068](0068-structured-logging-on-the-standard-library.md) | JSON logs from the standard library, with request context in a context variable and one access line per request | Accepted | 2026-10-18 |
 | [0069](0069-slide-pipeline.md) | The slide pipeline is derived from stored facts, and people move only submit, reopen and sign-off | Accepted | 2026-10-18 |
+| [0070](0070-result-file-parsers.md) | Result files are read with msgspec, shapely, the csv module, tifffile and OpenCV into one object form, with Parfocal JSON v1 as the native format | Accepted | 2026-10-18 |

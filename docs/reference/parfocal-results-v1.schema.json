@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parfocal.eu/schemas/parfocal-results-v1.json",
+  "title": "Parfocal results, version 1 (draft)",
+  "type": "object",
+  "required": ["format", "version", "model", "objects"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "parfocal-results" },
+    "version": { "const": 1 },
+    "slide": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file_name": { "type": "string", "maxLength": 255 },
+        "slide_id": { "type": "string", "format": "uuid" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "mpp": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "version": { "type": "string", "maxLength": 60 },
+        "run_at": { "type": "string", "format": "date-time" },
+        "parameters": { "type": "object" }
+      }
+    },
+    "coordinates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "space": { "enum": ["pixel"], "default": "pixel" },
+        "level": { "type": "integer", "minimum": 0, "default": 0 },
+        "scale": { "type": "number", "exclusiveMinimum": 0, "default": 1 },
+        "offset": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+      }
+    },
+    "classes": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/object" }
+    },
+    "rasters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/raster" }
+    }
+  },
+  "$defs": {
+    "object": {
+      "type": "object",
+      "required": ["kind", "geometry"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["region", "cell", "zone"] },
+        "source_id": { "type": "string", "maxLength": 120 },
+        "parent": { "type": "string", "maxLength": 120 },
+        "class": { "type": "string", "maxLength": 120 },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "probabilities": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "geometry": { "$ref": "#/$defs/geometry" },
+        "properties": { "type": "object" }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["type", "coordinates"],
+      "properties": {
+        "type": { "enum": ["Point", "Polygon", "MultiPolygon"] },
+        "coordinates": { "type": "array" }
+      }
+    },
+    "raster": {
+      "type": "object",
+      "required": ["kind", "file"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["heatmap", "mask", "instance-mask"] },
+        "file": { "type": "string", "maxLength": 255 },
+        "class": { "type": "string", "maxLength": 120 },
+        "level": { "type": "integer", "minimum": 0 },
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "value_range": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  }
+}

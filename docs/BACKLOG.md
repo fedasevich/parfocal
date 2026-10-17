@@ -2990,8 +2990,9 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
 
 Importing AI results made elsewhere is first class. A result set is one import or one model run on one slide ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "AI results and import").
 
-- [ ] RSET-000 · Research check
+- [x] RSET-000 · Research check
   Done when an ADR names the parsers for GeoJSON, QuPath exports, CSV and TSV, and masks and heatmaps, and the Parfocal JSON schema is drafted.
+  Decided in [ADR 0070](adr/0070-result-file-parsers.md), with the [draft schema](reference/parfocal-results-v1.schema.json) and a [spike](results/2026-10-18-result-parsers-spike.md).
 
 - [ ] RSET-001 · Result set model and API
   Per slide: model name and version, date, source file or run, imported or run here, class mapping, object count and stats. The AI output is immutable. Result sets list in the project and the slide view.
@@ -3005,7 +3006,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
 
 - [ ] RSET-003 · Readers for GeoJSON, CSV and masks
   GeoJSON including QuPath exports, CSV or TSV of cells or detections with a column-mapping step, and masks and heatmaps as PNG or TIFF aligned to a slide level.
-  Done when parser tests read a fixture of each kind into the same object form, including a QuPath export and a CSV with renamed columns.
+  Done when parser tests read a fixture of each kind into the same object form, including a QuPath export and a CSV with renamed columns. The readers and the object form are in [ADR 0070](adr/0070-result-file-parsers.md), and the fixture must be a real QuPath 0.7 export.
   Depends on RSET-001, RSET-000.
 
 - [ ] RSET-004 · Pairing results with slides
