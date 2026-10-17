@@ -3473,7 +3473,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when API tests cover the status and its expiry, the back-up column is gone, and an ADR supersedes ADR 0051.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-010 · Rework emergency access for clinical projects
+- [x] ADAPT-010 · Rework emergency access for clinical projects
   A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. The grant names the project instead of a case ([ADR 0062](adr/0062-project-model.md)). De-identified projects need no emergency path (`emergency.py`, `folder_access.require_case_access`, migration `0018`).
   Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
   Depends on ADAPT-001, PROJ-003. The privacy mode column exists since ADAPT-004, so it no longer waits for PROJ-002 ([ADR 0065](adr/0065-project-role-enforcement.md)).
