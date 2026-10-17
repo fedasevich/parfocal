@@ -641,7 +641,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a component test and an E2E test lock an open slide, unlock and find the same camera position.
   Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session.
 
-- [ ] IAM-022 · Researcher, reviewer and admin roles with project roles
+- [x] IAM-022 · Researcher, reviewer and admin roles with project roles
   Workspace roles researcher, reviewer and admin, and project roles owner, reviewer and viewer, replace the five membership roles left after ADAPT-001 in the permission matrix, in the `memberships` and `invitations` role checks and in the service account scopes. The kept and reworked permissions are renamed for the new product as [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) lists, and "assigned to them" becomes "in their tasks". No memberships are mapped, because the code is throwaway. A reviewer sees only the projects and tasks they are in. A researcher creates projects, uploads, runs models, creates tasks, resolves disagreements and signs off. An admin manages people, models, sources and security and sees no patient data without IAM-017.
   Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, invitations keep working with the new roles, and an ADR supersedes ADR 0026. Hiding a project from a reviewer who is not in it is tested in PROJ-003.
   Depends on IAM-006, ADAPT-001. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
@@ -3480,7 +3480,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
 - [ ] ADAPT-011 · Patients only in clinical projects
   Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001). Each patient belongs to one clinical project, a key on the project's privacy mode refuses a patient in a de-identified project, and the MRN index is unique per project ([ADR 0062](adr/0062-project-model.md)).
   Done when API tests refuse a patient in a de-identified project, the data map is regenerated, and isolation tests pass.
-  Depends on ADAPT-004, PROJ-002.
+  Depends on ADAPT-004. It needs only the privacy mode column, which ADAPT-004 created ([ADR 0063](adr/0063-cases-and-slides-in-projects.md)), so it no longer waits for PROJ-002 (privacy modes).
 
 ---
 
