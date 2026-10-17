@@ -2980,7 +2980,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
 
 - [ ] PROJ-008 · Project settings
-  Privacy mode, review defaults (blind review, hide the AI for a first read), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002) and members with project roles.
+  Privacy mode, review defaults (blind review, hide the AI for a first read), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles.
   Done when component and API tests cover each setting and its audit entry.
   Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006. Refs mock: project/settings.
 
@@ -3040,11 +3040,12 @@ Importing AI results made elsewhere is first class. A result set is one import o
 
 IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "IDs for objects", kit: ID system).
 
-- [ ] OBJ-000 · Research check
+- [x] OBJ-000 · Research check
   Done when an ADR fixes the ID grammar, the full path, the overlap threshold and the split and merge rules.
+  Decided in [ADR 0071](adr/0071-object-id-grammar.md). The thresholds are project settings with defaults, because the kit lists them as an open question for the owner.
 
 - [ ] OBJ-001 · ID grammar and allocation
-  T for tumor regions, T2·C145 for a cell inside a region, C for other cells, R for regions of interest, Z for unsure zones and M for measurements, allocated per slide and stable. The full path is `P07/S26-04812/A1/T2·C145`.
+  T for AI regions of any class, T2·C145 for a cell inside a region, C for other cells, R for regions of interest, Z for unsure zones and M for measurements, allocated per slide and stable. Cells are numbered once per slide, so T2·C145 and C145 are the same cell. The full path is `P07/S26-04812/A1/T2·C145`, percent-encoded per segment with `~` for a loose slide's case, and `~` is refused as a case label ([ADR 0071](adr/0071-object-id-grammar.md)).
   Done when unit tests cover allocation order, the full path and parsing every form back.
   Depends on OBJ-000, RSET-001.
 
