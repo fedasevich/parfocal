@@ -778,6 +778,41 @@ slides = Table(
     CheckConstraint("block_id IS NULL OR case_id IS NOT NULL", name="block_in_case"),
 )
 
+project_classes = Table(
+    "project_classes",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("key", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("name", String(60), nullable=False, info=OPERATIONAL),
+    Column("colour", String(7), nullable=False, info=OPERATIONAL),
+    *timestamps(),
+    UniqueConstraint("project_id", "key", deferrable=True, initially="DEFERRED"),
+    UniqueConstraint("id", "project_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("key BETWEEN 1 AND 9", name="key"),
+    CheckConstraint("colour ~ '^#[0-9a-f]{6}$'", name="colour"),
+    Index(
+        "ix_project_classes_project_id_name", "project_id", func.lower(text("name")), unique=True
+    ),
+)
+
+class_mappings = Table(
+    "class_mappings",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("source_name", String(120), primary_key=True, info=OPERATIONAL),
+    Column("class_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    *timestamps(),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(
+        ["class_id", "project_id"],
+        ["project_classes.id", "project_classes.project_id"],
+        ondelete="CASCADE",
+    ),
+)
+
 case_requests = Table(
     "case_requests",
     metadata,

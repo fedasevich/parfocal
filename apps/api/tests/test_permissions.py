@@ -27,6 +27,7 @@ from parfocal_api.tables import (
     invitations,
     memberships,
     organisations,
+    project_classes,
     project_members,
     service_accounts,
     tenants,
@@ -41,6 +42,7 @@ OPEN_OPERATIONS = {
     "updateMe": "signed-in",
     "switchWorkspace": "signed-in",
     "getCurrentTenant": "member",
+    "listTaxonomyTemplates": "member",
     "createOrganisation": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
@@ -76,6 +78,7 @@ class Workspace:
     project: uuid.UUID
     spare_project: uuid.UUID
     outside_project: uuid.UUID
+    project_class: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -87,6 +90,21 @@ class Call:
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
+    "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
+    "setProjectClasses": lambda w: Call(
+        "PUT",
+        f"/api/projects/{w.project}/classes",
+        {"classes": [{"id": str(w.project_class), "key": 1, "name": "Tumor", "colour": "#f87171"}]},
+    ),
+    "listClassMappings": lambda w: Call("GET", f"/api/projects/{w.project}/class-mappings"),
+    "rememberClassMappings": lambda w: Call(
+        "PUT",
+        f"/api/projects/{w.project}/class-mappings",
+        {"mappings": [{"source_name": "Neoplastic", "class_id": str(w.project_class)}]},
+    ),
+    "resolveClassNames": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/class-mappings/resolve?name=Neoplastic"
+    ),
     "listProjects": lambda _: Call("GET", "/api/projects"),
     "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
@@ -158,9 +176,11 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
+    uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
+    "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
@@ -295,6 +315,18 @@ async def seed(database: str) -> Workspace:
             case = await seed_case(connection, tenant_id)
             spare_project = await seed_project(connection, tenant_id)
             outside_project = await seed_project(connection, tenant_id)
+            project_class = await connection.scalar(
+                insert(project_classes)
+                .values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    key=1,
+                    name="Tumor",
+                    colour="#f87171",
+                )
+                .returning(project_classes.c.id)
+            )
+            assert isinstance(project_class, uuid.UUID)
             await connection.execute(
                 insert(project_members),
                 [
@@ -334,6 +366,7 @@ async def seed(database: str) -> Workspace:
             case.project_id,
             spare_project,
             outside_project,
+            project_class,
         )
     finally:
         await engine.dispose()

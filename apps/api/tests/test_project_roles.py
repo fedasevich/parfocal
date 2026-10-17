@@ -151,6 +151,20 @@ OPERATIONS: dict[str, Operation] = {
         owner_creates,
     ),
     "getCase": Operation(lambda c, s: c.get(f"/api/cases/{s.case}"), reads),
+    "listProjectClasses": Operation(
+        lambda c, s: c.get(f"/api/projects/{s.project}/classes"), member_reads
+    ),
+    "setProjectClasses": Operation(
+        lambda c, s: c.put(f"/api/projects/{s.project}/classes", json={"classes": []}),
+        owner_changes,
+    ),
+    "listClassMappings": Operation(
+        lambda c, s: c.get(f"/api/projects/{s.project}/class-mappings"), member_reads
+    ),
+    "resolveClassNames": Operation(
+        lambda c, s: c.get(f"/api/projects/{s.project}/class-mappings/resolve?name=Tumor"),
+        member_reads,
+    ),
     "listCases": Operation(listed_cases, lists),
 }
 

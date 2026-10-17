@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 19 |
 | `personal` | 21 |
 | `secret` | 9 |
-| `operational` | 145 |
+| `operational` | 159 |
 | `public` | 0 |
 
 ## api_tokens
@@ -107,6 +107,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `updated_at` | operational |
 | `deleted_at` | operational |
 
+## class_mappings
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `source_name` | operational |
+| `class_id` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## emergency_grants
 
 | Column | Class |
@@ -184,6 +195,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 |---|---|
 | `subject` | personal |
 | `created_at` | operational |
+
+## project_classes
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `key` | operational |
+| `name` | operational |
+| `colour` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## project_members
 

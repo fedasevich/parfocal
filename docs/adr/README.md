@@ -72,3 +72,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0064](0064-project-api.md) | The project API: numbered per workspace, membership to read, owners to change, archive instead of delete | Accepted | 2026-10-17 |
 | [0065](0065-project-role-enforcement.md) | Project roles narrow the workspace grant, only workspace members reach workspace routes, and owners stay researchers | Accepted | 2026-10-17 |
 | [0066](0066-emergency-access-per-clinical-project.md) | Emergency access opens one clinical project for a set time, for researchers and admins outside it | Accepted | 2026-10-17 |
+| [0067](0067-class-taxonomy-and-colour-check.md) | Each project has up to nine classes on keys 1 to 9, checked by CIEDE2000 under three colour-vision deficiencies, with remembered import mappings | Accepted | 2026-10-17 |

@@ -1188,7 +1188,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] DS-002 · Colour measurement scripts in CI
   WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
   Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
-  Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+  Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
 
 - [ ] DS-003 · Typography
   IBM Plex Sans and IBM Plex Mono, self-hosted. Nine sizes and nothing between them: label 11/600 in capitals, caption 12, body small 13, body 14, lead 16, title small 18/600, title 20/600, page title 24/600 and display 28/600. Running text is never under 12 px, and 11 px is only for capital labels, tags, counts and keycaps. Mono only for IDs, numbers in columns, file names and keys.
@@ -2962,7 +2962,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
 - [ ] PROJ-004 · Class taxonomy per project
   Class names, colours and keys 1 to 9, started from a template (PanNuke, sentinel node) and checked for colour distance (DS-002). Mappings from imported class names (Neoplastic, tumour_cell) are stored per project and reused (RSET-005).
   Done when API tests cover templates, custom classes, the colour check rejecting a colour too close to another, and a stored mapping applied to a second import.
-  Depends on PROJ-001, DS-002. Refs doc 37, mock: upload/check.
+  Depends on PROJ-001. Refs doc 37, mock: upload/check. The API carries its own port of the colour check, so this no longer waits for DS-002 ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)).
 
 - [ ] PROJ-005 · Analysis templates
   A project turns on an analysis template. Sentinel node staging adds the staging hero, the area list and the measure step (REVIEW-003, REVIEW-004, CASE-004, MEAS-006). Cell review adds unsure zones and cell typing. None shows objects, layers, verdicts and the opinion form only.

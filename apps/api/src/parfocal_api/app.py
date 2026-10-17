@@ -16,6 +16,7 @@ from parfocal_api import (
     projects,
     service_accounts,
     sessions_api,
+    taxonomy,
     tenants,
     users,
 )
@@ -94,6 +95,8 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
+    app.include_router(taxonomy.router)
+    app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)

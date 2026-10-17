@@ -62,7 +62,9 @@ def test_a_researcher_creates_a_project_and_owns_it(api: ApiAs, database: str) -
     details = owner(
         database, f"SELECT details FROM audit_events WHERE target_id = '{project['id']}'"
     )
-    assert details == [('{"number":1,"privacy_mode":"de-identified","template":"none"}',)]
+    assert details == [
+        ('{"number":1,"privacy_mode":"de-identified","taxonomy":null,"template":"none"}',)
+    ]
 
 
 def test_numbers_count_up_per_workspace_and_are_not_reused(api: ApiAs, database: str) -> None:

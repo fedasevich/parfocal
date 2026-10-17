@@ -250,10 +250,37 @@ export interface CaseSummary {
 }
 
 /**
- * @minimum 0
- * @maximum 11
+ * @minLength 1
+ * @maxLength 60
  */
-export type Colour = number;
+export type ClassName = string;
+
+/**
+ * @pattern ^#[0-9a-fA-F]{6}$
+ */
+export type ParfocalApiTaxonomyColour = string;
+
+export interface ClassDraft {
+  id?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 9
+   */
+  key: number;
+  name: ClassName;
+  colour: ParfocalApiTaxonomyColour;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type SourceName = string;
+
+export interface ClassMapping {
+  source_name: SourceName;
+  class_id: string;
+}
 
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
@@ -359,6 +386,14 @@ export interface InvitationToken {
    * @maxLength 200
    */
   token: string;
+}
+
+export interface MappingChange {
+  /**
+   * @minItems 1
+   * @maxItems 200
+   */
+  mappings: ClassMapping[];
 }
 
 export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];
@@ -519,17 +554,38 @@ export interface Project {
  */
 export type ProjectName = string;
 
+/**
+ * @minimum 0
+ * @maximum 11
+ */
+export type ParfocalApiProjectsColour = number;
+
 export interface ProjectChange {
   name?: ProjectName | null;
-  colour?: Colour | null;
+  colour?: ParfocalApiProjectsColour | null;
   template?: AnalysisTemplate | null;
 }
 
+export interface ProjectClass {
+  id: string;
+  key: number;
+  name: string;
+  colour: string;
+}
+
+export type TaxonomyTemplate = (typeof TaxonomyTemplate)[keyof typeof TaxonomyTemplate];
+
+export const TaxonomyTemplate = {
+  "sentinel-node": "sentinel-node",
+  pannuke: "pannuke",
+} as const;
+
 export interface ProjectDraft {
   name: ProjectName;
-  colour?: Colour;
+  colour?: ParfocalApiProjectsColour;
   privacy_mode?: PrivacyMode;
   template?: AnalysisTemplate;
+  taxonomy?: TaxonomyTemplate | null;
 }
 
 export type Region = (typeof Region)[keyof typeof Region];
@@ -538,6 +594,11 @@ export const Region = {
   eu: "eu",
   us: "us",
 } as const;
+
+export interface Resolved {
+  source_name: string;
+  class_id: string | null;
+}
 
 export interface RoleChange {
   role: Role;
@@ -611,6 +672,22 @@ export interface SessionSummary {
   locked: boolean;
 }
 
+export interface TaxonomyChange {
+  /** @maxItems 9 */
+  classes: ClassDraft[];
+}
+
+export interface TemplateClass {
+  key: number;
+  name: string;
+  colour: string;
+}
+
+export interface Template {
+  template: TaxonomyTemplate;
+  classes: TemplateClass[];
+}
+
 export interface Tenant {
   id: string;
   organisation_id: string;
@@ -644,6 +721,14 @@ export interface WorkspaceChoice {
 
 export type ListProjectsParams = {
   archived?: boolean;
+};
+
+export type ResolveClassNamesParams = {
+  /**
+   * @minItems 1
+   * @maxItems 200
+   */
+  name: string[];
 };
 
 export type ListCasesParams = {
@@ -2774,6 +2859,1108 @@ export const useRemoveProjectMember = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getRemoveProjectMemberMutationOptions(options), queryClient);
 };
+
+export type listProjectClassesResponse200 = {
+  data: ProjectClass[];
+  status: 200;
+};
+
+export type listProjectClassesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectClassesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectClassesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectClassesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectClassesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectClassesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectClassesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectClassesResponseSuccess = listProjectClassesResponse200 & {
+  headers: Headers;
+};
+export type listProjectClassesResponseError = (
+  | listProjectClassesResponse400
+  | listProjectClassesResponse401
+  | listProjectClassesResponse403
+  | listProjectClassesResponse404
+  | listProjectClassesResponse409
+  | listProjectClassesResponse422
+  | listProjectClassesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectClassesResponse =
+  | listProjectClassesResponseSuccess
+  | listProjectClassesResponseError;
+
+export const getListProjectClassesUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/classes`;
+};
+
+/**
+ * @summary List Project Classes
+ */
+export const listProjectClasses = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectClassesResponse> => {
+  return apiFetch<listProjectClassesResponse>(getListProjectClassesUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectClassesQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/classes`] as const;
+};
+
+export const getListProjectClassesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectClasses>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectClassesQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectClasses>>> = ({ signal }) =>
+    listProjectClasses(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListProjectClassesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectClasses>>
+>;
+export type ListProjectClassesQueryError = Problem;
+
+export function useListProjectClasses<
+  TData = Awaited<ReturnType<typeof listProjectClasses>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectClasses>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectClasses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectClasses<
+  TData = Awaited<ReturnType<typeof listProjectClasses>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectClasses>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectClasses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectClasses<
+  TData = Awaited<ReturnType<typeof listProjectClasses>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Classes
+ */
+
+export function useListProjectClasses<
+  TData = Awaited<ReturnType<typeof listProjectClasses>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClasses>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectClassesQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setProjectClassesResponse200 = {
+  data: ProjectClass[];
+  status: 200;
+};
+
+export type setProjectClassesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setProjectClassesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setProjectClassesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setProjectClassesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setProjectClassesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setProjectClassesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setProjectClassesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setProjectClassesResponseSuccess = setProjectClassesResponse200 & {
+  headers: Headers;
+};
+export type setProjectClassesResponseError = (
+  | setProjectClassesResponse400
+  | setProjectClassesResponse401
+  | setProjectClassesResponse403
+  | setProjectClassesResponse404
+  | setProjectClassesResponse409
+  | setProjectClassesResponse422
+  | setProjectClassesResponse500
+) & {
+  headers: Headers;
+};
+
+export type setProjectClassesResponse =
+  | setProjectClassesResponseSuccess
+  | setProjectClassesResponseError;
+
+export const getSetProjectClassesUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/classes`;
+};
+
+/**
+ * @summary Set Project Classes
+ */
+export const setProjectClasses = async (
+  projectId: string,
+  taxonomyChange: TaxonomyChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setProjectClassesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setProjectClassesResponse>(getSetProjectClassesUrl(projectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taxonomyChange),
+  });
+};
+
+export const getSetProjectClassesMutationKey = () => ["setProjectClasses"] as const;
+
+export const getSetProjectClassesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setProjectClasses>>,
+    TError,
+    SetProjectClassesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setProjectClasses>>,
+  TError,
+  SetProjectClassesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetProjectClassesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setProjectClasses>>,
+    SetProjectClassesMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return setProjectClasses(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetProjectClassesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setProjectClasses>>
+>;
+export type SetProjectClassesMutationBody = TaxonomyChange;
+export type SetProjectClassesMutationError = Problem;
+export type SetProjectClassesMutationVariables = { projectId: string; data: TaxonomyChange };
+
+/**
+ * @summary Set Project Classes
+ */
+export const useSetProjectClasses = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setProjectClasses>>,
+      TError,
+      SetProjectClassesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setProjectClasses>>,
+  TError,
+  SetProjectClassesMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetProjectClassesMutationOptions(options), queryClient);
+};
+
+export type listClassMappingsResponse200 = {
+  data: ClassMapping[];
+  status: 200;
+};
+
+export type listClassMappingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listClassMappingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listClassMappingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listClassMappingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listClassMappingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listClassMappingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listClassMappingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listClassMappingsResponseSuccess = listClassMappingsResponse200 & {
+  headers: Headers;
+};
+export type listClassMappingsResponseError = (
+  | listClassMappingsResponse400
+  | listClassMappingsResponse401
+  | listClassMappingsResponse403
+  | listClassMappingsResponse404
+  | listClassMappingsResponse409
+  | listClassMappingsResponse422
+  | listClassMappingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listClassMappingsResponse =
+  | listClassMappingsResponseSuccess
+  | listClassMappingsResponseError;
+
+export const getListClassMappingsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/class-mappings`;
+};
+
+/**
+ * @summary List Class Mappings
+ */
+export const listClassMappings = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listClassMappingsResponse> => {
+  return apiFetch<listClassMappingsResponse>(getListClassMappingsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListClassMappingsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/class-mappings`] as const;
+};
+
+export const getListClassMappingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listClassMappings>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListClassMappingsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listClassMappings>>> = ({ signal }) =>
+    listClassMappings(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListClassMappingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listClassMappings>>
+>;
+export type ListClassMappingsQueryError = Problem;
+
+export function useListClassMappings<
+  TData = Awaited<ReturnType<typeof listClassMappings>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listClassMappings>>,
+          TError,
+          Awaited<ReturnType<typeof listClassMappings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListClassMappings<
+  TData = Awaited<ReturnType<typeof listClassMappings>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listClassMappings>>,
+          TError,
+          Awaited<ReturnType<typeof listClassMappings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListClassMappings<
+  TData = Awaited<ReturnType<typeof listClassMappings>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Class Mappings
+ */
+
+export function useListClassMappings<
+  TData = Awaited<ReturnType<typeof listClassMappings>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listClassMappings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListClassMappingsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type rememberClassMappingsResponse200 = {
+  data: ClassMapping[];
+  status: 200;
+};
+
+export type rememberClassMappingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type rememberClassMappingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type rememberClassMappingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type rememberClassMappingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type rememberClassMappingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type rememberClassMappingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type rememberClassMappingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type rememberClassMappingsResponseSuccess = rememberClassMappingsResponse200 & {
+  headers: Headers;
+};
+export type rememberClassMappingsResponseError = (
+  | rememberClassMappingsResponse400
+  | rememberClassMappingsResponse401
+  | rememberClassMappingsResponse403
+  | rememberClassMappingsResponse404
+  | rememberClassMappingsResponse409
+  | rememberClassMappingsResponse422
+  | rememberClassMappingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type rememberClassMappingsResponse =
+  | rememberClassMappingsResponseSuccess
+  | rememberClassMappingsResponseError;
+
+export const getRememberClassMappingsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/class-mappings`;
+};
+
+/**
+ * @summary Remember Class Mappings
+ */
+export const rememberClassMappings = async (
+  projectId: string,
+  mappingChange: MappingChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<rememberClassMappingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<rememberClassMappingsResponse>(getRememberClassMappingsUrl(projectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(mappingChange),
+  });
+};
+
+export const getRememberClassMappingsMutationKey = () => ["rememberClassMappings"] as const;
+
+export const getRememberClassMappingsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rememberClassMappings>>,
+    TError,
+    RememberClassMappingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rememberClassMappings>>,
+  TError,
+  RememberClassMappingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRememberClassMappingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rememberClassMappings>>,
+    RememberClassMappingsMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return rememberClassMappings(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RememberClassMappingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rememberClassMappings>>
+>;
+export type RememberClassMappingsMutationBody = MappingChange;
+export type RememberClassMappingsMutationError = Problem;
+export type RememberClassMappingsMutationVariables = { projectId: string; data: MappingChange };
+
+/**
+ * @summary Remember Class Mappings
+ */
+export const useRememberClassMappings = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof rememberClassMappings>>,
+      TError,
+      RememberClassMappingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof rememberClassMappings>>,
+  TError,
+  RememberClassMappingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getRememberClassMappingsMutationOptions(options), queryClient);
+};
+
+export type resolveClassNamesResponse200 = {
+  data: Resolved[];
+  status: 200;
+};
+
+export type resolveClassNamesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resolveClassNamesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resolveClassNamesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resolveClassNamesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resolveClassNamesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resolveClassNamesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resolveClassNamesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resolveClassNamesResponseSuccess = resolveClassNamesResponse200 & {
+  headers: Headers;
+};
+export type resolveClassNamesResponseError = (
+  | resolveClassNamesResponse400
+  | resolveClassNamesResponse401
+  | resolveClassNamesResponse403
+  | resolveClassNamesResponse404
+  | resolveClassNamesResponse409
+  | resolveClassNamesResponse422
+  | resolveClassNamesResponse500
+) & {
+  headers: Headers;
+};
+
+export type resolveClassNamesResponse =
+  | resolveClassNamesResponseSuccess
+  | resolveClassNamesResponseError;
+
+export const getResolveClassNamesUrl = (projectId: string, params: ResolveClassNamesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["name"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/class-mappings/resolve?${stringifiedParams}`
+    : `/api/projects/${projectId}/class-mappings/resolve`;
+};
+
+/**
+ * @summary Resolve Class Names
+ */
+export const resolveClassNames = async (
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resolveClassNamesResponse> => {
+  return apiFetch<resolveClassNamesResponse>(getResolveClassNamesUrl(projectId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getResolveClassNamesQueryKey = (
+  projectId: string,
+  params?: ResolveClassNamesParams,
+) => {
+  return [
+    `/api/projects/${projectId}/class-mappings/resolve`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getResolveClassNamesQueryOptions = <
+  TData = Awaited<ReturnType<typeof resolveClassNames>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getResolveClassNamesQueryKey(projectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof resolveClassNames>>> = ({ signal }) =>
+    resolveClassNames(projectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ResolveClassNamesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof resolveClassNames>>
+>;
+export type ResolveClassNamesQueryError = Problem;
+
+export function useResolveClassNames<
+  TData = Awaited<ReturnType<typeof resolveClassNames>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveClassNames>>,
+          TError,
+          Awaited<ReturnType<typeof resolveClassNames>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useResolveClassNames<
+  TData = Awaited<ReturnType<typeof resolveClassNames>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveClassNames>>,
+          TError,
+          Awaited<ReturnType<typeof resolveClassNames>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useResolveClassNames<
+  TData = Awaited<ReturnType<typeof resolveClassNames>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Resolve Class Names
+ */
+
+export function useResolveClassNames<
+  TData = Awaited<ReturnType<typeof resolveClassNames>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ResolveClassNamesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveClassNames>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getResolveClassNamesQueryOptions(projectId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listTaxonomyTemplatesResponse200 = {
+  data: Template[];
+  status: 200;
+};
+
+export type listTaxonomyTemplatesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listTaxonomyTemplatesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listTaxonomyTemplatesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listTaxonomyTemplatesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTaxonomyTemplatesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listTaxonomyTemplatesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listTaxonomyTemplatesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listTaxonomyTemplatesResponseSuccess = listTaxonomyTemplatesResponse200 & {
+  headers: Headers;
+};
+export type listTaxonomyTemplatesResponseError = (
+  | listTaxonomyTemplatesResponse400
+  | listTaxonomyTemplatesResponse401
+  | listTaxonomyTemplatesResponse403
+  | listTaxonomyTemplatesResponse404
+  | listTaxonomyTemplatesResponse409
+  | listTaxonomyTemplatesResponse422
+  | listTaxonomyTemplatesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listTaxonomyTemplatesResponse =
+  | listTaxonomyTemplatesResponseSuccess
+  | listTaxonomyTemplatesResponseError;
+
+export const getListTaxonomyTemplatesUrl = () => {
+  return `/api/taxonomy-templates`;
+};
+
+/**
+ * @summary List Taxonomy Templates
+ */
+export const listTaxonomyTemplates = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listTaxonomyTemplatesResponse> => {
+  return apiFetch<listTaxonomyTemplatesResponse>(getListTaxonomyTemplatesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTaxonomyTemplatesQueryKey = () => {
+  return [`/api/taxonomy-templates`] as const;
+};
+
+export const getListTaxonomyTemplatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listTaxonomyTemplates>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTaxonomyTemplatesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTaxonomyTemplates>>> = ({ signal }) =>
+    listTaxonomyTemplates({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTaxonomyTemplatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTaxonomyTemplates>>
+>;
+export type ListTaxonomyTemplatesQueryError = Problem;
+
+export function useListTaxonomyTemplates<
+  TData = Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTaxonomyTemplates>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listTaxonomyTemplates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTaxonomyTemplates<
+  TData = Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTaxonomyTemplates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listTaxonomyTemplates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTaxonomyTemplates<
+  TData = Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTaxonomyTemplates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Taxonomy Templates
+ */
+
+export function useListTaxonomyTemplates<
+  TData = Awaited<ReturnType<typeof listTaxonomyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTaxonomyTemplates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTaxonomyTemplatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getCaseResponse200 = {
   data: CaseDetail;

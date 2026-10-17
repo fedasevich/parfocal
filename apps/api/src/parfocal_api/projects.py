@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.class_templates import TaxonomyTemplate, insert_template
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
@@ -37,6 +38,7 @@ class ProjectDraft(BaseModel):
     colour: Colour = 0
     privacy_mode: PrivacyMode = PrivacyMode.DE_IDENTIFIED
     template: AnalysisTemplate = AnalysisTemplate.NONE
+    taxonomy: TaxonomyTemplate | None = None
 
 
 class ProjectChange(BaseModel):
@@ -219,7 +221,7 @@ async def create_project(
                 tenant_id=principal.tenant_id,
                 number=number.scalar_subquery(),
                 created_by_user_id=principal.user_id,
-                **draft.model_dump(),
+                **draft.model_dump(exclude={"taxonomy"}),
             )
             .returning(projects.c.id, projects.c.number)
         )
@@ -232,12 +234,19 @@ async def create_project(
             role=ProjectRole.OWNER,
         )
     )
+    if draft.taxonomy is not None:
+        await insert_template(connection, principal.tenant_id, row.id, draft.taxonomy)
     await audit(
         connection,
         principal,
         AuditAction.PROJECT_CREATED,
         row.id,
-        {"number": row.number, "privacy_mode": draft.privacy_mode, "template": draft.template},
+        {
+            "number": row.number,
+            "privacy_mode": draft.privacy_mode,
+            "template": draft.template,
+            "taxonomy": draft.taxonomy,
+        },
     )
     return await project_of(connection, principal, row.id)
 

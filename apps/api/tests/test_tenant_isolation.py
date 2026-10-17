@@ -18,11 +18,13 @@ from parfocal_api.tables import (
     audit_events,
     audit_people,
     case_requests,
+    class_mappings,
     emergency_grants,
     invitations,
     memberships,
     organisations,
     platform_operators,
+    project_classes,
     project_members,
     service_accounts,
     session_policies,
@@ -64,6 +66,8 @@ BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
     "projects",
     "project_members",
+    "project_classes",
+    "class_mappings",
     "tenant_keys",
     "patients",
     "specimens",
@@ -154,6 +158,31 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
     seeded.ids["project"] = case.project_id
+    class_name = f"Class {uuid.uuid4().hex[:8]}"
+    class_id = await connection.scalar(
+        insert(project_classes)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            key=1,
+            name=class_name,
+            colour="#f87171",
+        )
+        .returning(project_classes.c.id)
+    )
+    source = uuid.uuid4()
+    source_name = str(source)
+    await connection.execute(
+        insert(class_mappings).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            source_name=source_name,
+            class_id=class_id,
+        )
+    )
+    assert isinstance(class_id, uuid.UUID)
+    seeded.ids["source"] = source
+    seeded.markers.update({class_name, source_name, str(class_id)})
     await connection.execute(
         insert(project_members).values(
             tenant_id=seeded.tenant_id,
@@ -206,6 +235,17 @@ GET_ROUTES = {
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
+    "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
+    "listProjectClasses": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/classes"
+    ),
+    "listClassMappings": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/class-mappings"
+    ),
+    "resolveClassNames": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/class-mappings/resolve?name={a.ids['source']}",
+    ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
