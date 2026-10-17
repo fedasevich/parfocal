@@ -13,6 +13,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
+from parfocal_api.project_access import role_in
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -105,20 +106,6 @@ router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 def code_of(number: int) -> str:
     return f"P{number:02d}"
-
-
-async def role_in(
-    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
-) -> ProjectRole | None:
-    if not isinstance(principal, MemberPrincipal):
-        return None
-    role = await connection.scalar(
-        select(project_members.c.role).where(
-            project_members.c.project_id == project_id,
-            project_members.c.user_id == principal.user_id,
-        )
-    )
-    return ProjectRole(role) if role else None
 
 
 async def row_of(connection: AsyncConnection, project_id: uuid.UUID) -> Any:

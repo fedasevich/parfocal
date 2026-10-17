@@ -88,6 +88,23 @@ ROWS = {
     Permission.DEVELOPER_MODE: "yny",
 }
 
+PROJECT_COLUMNS = (ProjectRole.OWNER, ProjectRole.REVIEWER, ProjectRole.VIEWER)
+
+PROJECT_ROWS = {
+    Permission.SEE_SLIDES: "yoy",
+    Permission.CREATE_CASES: "ynn",
+    Permission.UPLOAD_SLIDES: "ynn",
+    Permission.MOVE_SLIDES: "ynn",
+    Permission.REVIEW: "yon",
+}
+
+PROJECT_MATRIX: dict[Permission, dict[ProjectRole, Grant]] = {
+    permission: {role: Grant(code) for role, code in zip(PROJECT_COLUMNS, codes, strict=True)}
+    for permission, codes in PROJECT_ROWS.items()
+}
+
+NARROWING = (Grant.NONE, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.ALL)
+
 MATRIX: dict[Permission, dict[Role, Grant]] = {
     permission: {role: Grant(code) for role, code in zip(COLUMNS, codes, strict=True)}
     for permission, codes in ROWS.items()
@@ -115,6 +132,19 @@ def grant_of(principal: object, permission: Permission) -> Grant:
     if isinstance(principal, ServicePrincipal):
         return Grant.ALL if permission.value in principal.scopes else Grant.NONE
     return grant_for(role_of(principal), permission)
+
+
+def narrower(first: Grant, second: Grant) -> Grant:
+    return min(first, second, key=NARROWING.index)
+
+
+def in_project(workspace: Grant, permission: Permission, role: ProjectRole | None) -> Grant:
+    if role is None or workspace not in NARROWING:
+        return Grant.NONE
+    project = PROJECT_MATRIX[permission][role]
+    if workspace is Grant.ASSIGNED and project is Grant.ALL:
+        return Grant.VIEW_ONLY
+    return narrower(workspace, project)
 
 
 def may_ask_for_emergency_access(principal: object) -> bool:

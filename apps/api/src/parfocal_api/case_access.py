@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.permissions import Grant, Permission, grant_for
 from parfocal_api.principals import MemberPrincipal, Principal
-from parfocal_api.problems import ForbiddenError
+from parfocal_api.problems import ForbiddenError, NotFoundError
+from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.tables import emergency_grants
 
 
@@ -31,11 +32,18 @@ async def has_emergency_grant(
 
 
 async def require_case_access(
-    connection: AsyncConnection, principal: Principal, case_id: uuid.UUID, permission: Permission
+    connection: AsyncConnection,
+    principal: Principal,
+    case_id: uuid.UUID,
+    project_id: uuid.UUID,
+    permission: Permission,
 ) -> None:
-    if not isinstance(principal, MemberPrincipal):
+    if (
+        isinstance(principal, MemberPrincipal)
+        and grant_for(principal.role, permission) is Grant.NONE
+    ):
+        if not await has_emergency_grant(connection, principal, case_id):
+            raise EmergencyAccessNeededError
         return
-    if grant_for(principal.role, permission) is not Grant.NONE:
-        return
-    if not await has_emergency_grant(connection, principal, case_id):
-        raise EmergencyAccessNeededError
+    if not reads_whole(await project_grant(connection, principal, project_id, permission)):
+        raise NotFoundError("Case not found")

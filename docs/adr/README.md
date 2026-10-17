@@ -70,3 +70,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0062](0062-project-model.md) | Projects hold optional cases, slides and result sets, need a membership to open, and own their patients | Accepted | 2026-10-17 |
 | [0063](0063-cases-and-slides-in-projects.md) | Cases and slides live in projects, a case is optional, and the hospital case columns are gone | Accepted | 2026-10-17 |
 | [0064](0064-project-api.md) | The project API: numbered per workspace, membership to read, owners to change, archive instead of delete | Accepted | 2026-10-17 |
+| [0065](0065-project-role-enforcement.md) | Project roles narrow the workspace grant, only workspace members reach workspace routes, and owners stay researchers | Accepted | 2026-10-17 |

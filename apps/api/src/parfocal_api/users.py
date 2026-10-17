@@ -26,11 +26,13 @@ from parfocal_api.problems import (
 )
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    ProjectRole,
     Role,
     TenantKind,
     TenantStatus,
     memberships,
     organisations,
+    project_members,
     sessions,
     tenants,
     users,
@@ -109,6 +111,11 @@ class OwnRoleError(ConflictError):
     title = "Ask another person with this right to change your role"
 
 
+class OwnsProjectsError(ConflictError):
+    code = "owns-projects"
+    title = "This person owns projects. Hand them to another owner before making them a reviewer"
+
+
 class AlreadyAMemberError(ConflictError):
     code = "already-a-member"
     title = "This person is already a member of this workspace"
@@ -121,6 +128,20 @@ PROFILE_COLUMNS = (
     users.c.avatar_colour,
     users.c.title,
 )
+
+
+async def owns_projects(connection: AsyncConnection, user_id: uuid.UUID) -> bool:
+    return bool(
+        await connection.scalar(
+            select(
+                exists().where(
+                    project_members.c.user_id == user_id,
+                    project_members.c.role == ProjectRole.OWNER,
+                    project_members.c.tenant_id == literal_column(CURRENT_TENANT),
+                )
+            )
+        )
+    )
 
 
 def profile_of(row: object) -> Profile:
@@ -272,6 +293,8 @@ async def change_member_role(
     ).one_or_none()
     if member is None:
         raise NotFoundError("Member not found")
+    if change.role is Role.REVIEWER and await owns_projects(connection, user_id):
+        raise OwnsProjectsError
     if member.role != change.role:
         await connection.execute(
             update(memberships).where(*in_this_tenant).values(role=change.role)

@@ -13,6 +13,7 @@ from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import NotFoundError
+from parfocal_api.project_access import readable
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
@@ -164,7 +165,7 @@ async def case_detail(
     ).one_or_none()
     if row is None:
         raise NotFoundError("Case not found")
-    await require_case_access(connection, principal, case_id, Permission.SEE_SLIDES)
+    await require_case_access(connection, principal, case_id, row.project_id, Permission.SEE_SLIDES)
     slide_rows = (
         await connection.execute(
             select(slides)
@@ -212,7 +213,9 @@ async def list_cases(
     connection: TenantConnection,
     project_id: uuid.UUID | None = None,
 ) -> list[CaseSummary]:
-    statement = select(cases).where(cases.c.deleted_at.is_(None))
+    statement = select(cases).where(
+        cases.c.deleted_at.is_(None), readable(principal, cases.c.project_id)
+    )
     if project_id is not None:
         statement = statement.where(cases.c.project_id == project_id)
     rows = await connection.execute(statement.order_by(cases.c.created_at))

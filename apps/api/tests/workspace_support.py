@@ -72,3 +72,11 @@ def make_project(database: str, tenant_id: uuid.UUID, privacy_mode: str = "clini
             )[0][0]
         )
     )
+
+
+def join_project(database: str, project_id: uuid.UUID, who: MemberPrincipal, role: str) -> None:
+    owner(
+        database,
+        "INSERT INTO project_members (tenant_id, project_id, user_id, role) "
+        f"VALUES ('{who.tenant_id}', '{project_id}', '{who.user_id}', '{role}')",
+    )

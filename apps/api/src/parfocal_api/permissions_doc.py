@@ -6,6 +6,8 @@ from parfocal_api.permissions import (
     GRANT_NAMES,
     MATRIX,
     PERMISSION_NAMES,
+    PROJECT_COLUMNS,
+    PROJECT_MATRIX,
     PROJECT_ROLE_NAMES,
     ROLE_NAMES,
     Grant,
@@ -28,6 +30,14 @@ def render() -> str:
     divider = "|---|---|" + "---|" * len(COLUMNS)
     roles = [f"| `{role.value}` | {ROLE_NAMES[role]} |" for role in COLUMNS]
     project_roles = [f"| `{role.value}` | {name} |" for role, name in PROJECT_ROLE_NAMES.items()]
+    project_header = "| Action | Key | " + " | ".join(role.value for role in PROJECT_COLUMNS) + " |"
+    project_divider = "|---|---|" + "---|" * len(PROJECT_COLUMNS)
+    project_rows = [
+        f"| {PERMISSION_NAMES[permission]} | `{permission.value}` | "
+        + " | ".join(cell(grants[role]) for role in PROJECT_COLUMNS)
+        + " |"
+        for permission, grants in PROJECT_MATRIX.items()
+    ]
     return "\n".join(
         [
             "# Permissions",
@@ -46,11 +56,20 @@ def render() -> str:
             "",
             "## Project roles",
             "",
-            "A member also holds one of these in each project they are in. PROJ-003 enforces them.",
+            "A member reaches a project only with one of these roles. Service accounts reach "
+            "every project of their workspace through their scopes.",
             "",
             "| Key | Project role |",
             "|---|---|",
             *project_roles,
+            "",
+            "Inside a project the narrower of the workspace grant and the project grant applies. "
+            "A workspace grant of in their tasks with a project grant of yes reads the project "
+            "without changing it.",
+            "",
+            project_header,
+            project_divider,
+            *project_rows,
             "",
             "## Matrix",
             "",

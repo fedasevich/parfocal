@@ -3081,6 +3081,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   A task (RT-14) has a name, a project, slides or cases, a result set, reviewers, a split (everyone reviews all, split evenly, chosen per slide), a scope, an opinion form version, blinding, the start mode (guided or full viewer), a due date and reminders.
   Done when API tests cover create, edit, list and each split, with isolation and audit.
   Depends on PROJ-003, RSET-001, TASK-000.
+  A project reviewer reads only the slides of their tasks, so this task extends `project_access.readable` and the case check with task slides ([ADR 0065](adr/0065-project-role-enforcement.md)).
 
 - [ ] TASK-002 · Slide states per task and reviewer
   Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited.
@@ -3475,7 +3476,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
 - [ ] ADAPT-010 · Rework emergency access for clinical projects
   A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. The grant names the project instead of a case ([ADR 0062](adr/0062-project-model.md)). De-identified projects need no emergency path (`emergency.py`, `folder_access.require_case_access`, migration `0018`).
   Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
-  Depends on ADAPT-001, PROJ-002, PROJ-003.
+  Depends on ADAPT-001, PROJ-003. The privacy mode column exists since ADAPT-004, so it no longer waits for PROJ-002 ([ADR 0065](adr/0065-project-role-enforcement.md)).
 
 - [x] ADAPT-011 · Patients only in clinical projects
   Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001). Each patient belongs to one clinical project, a key on the project's privacy mode refuses a patient in a de-identified project, and the MRN index is unique per project ([ADR 0062](adr/0062-project-model.md)).

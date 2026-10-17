@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +20,7 @@ from parfocal_api.permissions import (
     grant_for,
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
-from parfocal_api.principals import MemberPrincipal, Principal
+from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
 from parfocal_api.tables import (
     Role,
     api_tokens,
@@ -308,7 +308,7 @@ async def seed(database: str) -> Workspace:
                         "user_id": user,
                         "role": role,
                     }
-                    for user, role in ((people[Role.REVIEWER], "reviewer"), (colleague, "viewer"))
+                    for user, role in ((people[Role.REVIEWER], "viewer"), (colleague, "viewer"))
                 ],
             )
         assert isinstance(tenant_id, uuid.UUID)
@@ -398,3 +398,14 @@ def test_a_role_change_takes_effect_and_rejects_unknown_roles(
     )
     assert unknown.status_code == 404
     api(admin).put(path, json={"role": "reviewer"})
+
+
+WORKSPACE_CALLS = GUARDED_CALLS | MEMBER_CALLS
+
+
+@pytest.mark.db
+@pytest.mark.parametrize("operation", sorted(WORKSPACE_CALLS))
+def test_workspace_routes_refuse_people_without_a_membership(api: ApiAs, operation: str) -> None:
+    outsider = SignedInUser("outsider", uuid.uuid4())
+    placeholder = replace(PLACEHOLDER, invitations=[uuid.uuid4()])
+    assert send(api, outsider, WORKSPACE_CALLS[operation](placeholder)) == 403

@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
-from workspace_support import Workspace, make_project, make_workspace, owner
+from workspace_support import Workspace, join_project, make_project, make_workspace, owner
 
 from parfocal_api.tables import Role
 
@@ -29,6 +29,8 @@ def make_lab(api: ApiAs, database: str) -> Lab:
         {"researcher": Role.RESEARCHER, "reviewer": Role.REVIEWER, "admin": Role.ADMIN},
     )
     project = make_project(database, workspace.tenant_id)
+    join_project(database, project, workspace.people["researcher"], "owner")
+    join_project(database, project, workspace.people["reviewer"], "viewer")
     cases = [
         api(workspace.people["researcher"])
         .post(

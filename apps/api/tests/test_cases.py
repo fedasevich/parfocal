@@ -9,6 +9,7 @@ from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from workspace_support import join_project, person
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import PrivacyMode, Role, blocks, cases, slides, specimens
@@ -51,6 +52,13 @@ def seeded(database: str, tenant_id: uuid.UUID) -> SeededCase:
     return run(database, DatabaseScope(tenant_id=tenant_id), work)
 
 
+def reader(database: str, tenant_id: uuid.UUID, *seeds: SeededCase) -> MemberPrincipal:
+    who = person(database, tenant_id, f"reader-{uuid.uuid4().hex[:6]}", Role.RESEARCHER)
+    for case in seeds:
+        join_project(database, case.project_id, who, "viewer")
+    return who
+
+
 def member(tenant_id: uuid.UUID, role: Role = Role.REVIEWER) -> MemberPrincipal:
     return MemberPrincipal(f"case-{role}", tenant_id, uuid.uuid4(), role)
 
@@ -58,7 +66,7 @@ def member(tenant_id: uuid.UUID, role: Role = Role.REVIEWER) -> MemberPrincipal:
 def test_a_member_reads_the_whole_case(api: ApiAs, database: str) -> None:
     tenant = make_tenant(database)
     case = seeded(database, tenant)
-    response = api(member(tenant)).get(f"/api/cases/{case.case_id}")
+    response = api(reader(database, tenant, case)).get(f"/api/cases/{case.case_id}")
     assert response.status_code == 200, response.text
     body = response.json()
     assert (body["project_id"], body["label"], body["source"]) == (
@@ -79,9 +87,10 @@ def test_a_member_reads_the_whole_case(api: ApiAs, database: str) -> None:
 def test_cases_list_by_project(api: ApiAs, database: str) -> None:
     tenant = make_tenant(database)
     first, second = seeded(database, tenant), seeded(database, tenant)
-    listed = api(member(tenant)).get("/api/cases", params={"project_id": str(first.project_id)})
+    both = reader(database, tenant, first, second)
+    listed = api(both).get("/api/cases", params={"project_id": str(first.project_id)})
     assert [row["label"] for row in listed.json()] == [first.label]
-    every = {row["id"] for row in api(member(tenant)).get("/api/cases").json()}
+    every = {row["id"] for row in api(both).get("/api/cases").json()}
     assert every == {str(first.case_id), str(second.case_id)}
 
 
@@ -263,14 +272,16 @@ def test_other_workspaces_admins_and_deleted_cases_get_nothing(api: ApiAs, datab
     mine, theirs = make_tenant(database), make_tenant(database)
     case = seeded(database, mine)
     path = f"/api/cases/{case.case_id}"
+    viewer = reader(database, mine, case)
+    assert api(viewer).get(path).status_code == 200
     assert api(member(theirs)).get(path).status_code == 404
     assert api(member(mine, Role.ADMIN)).get(path).status_code == 403
     query(
         with_database(OWNER_URL, database),
         f"UPDATE cases SET deleted_at = now() WHERE id = '{case.case_id}'",
     )
-    assert api(member(mine)).get(path).status_code == 404
-    assert api(member(mine)).get(f"/api/cases/{uuid.uuid4()}").status_code == 404
+    assert api(viewer).get(path).status_code == 404
+    assert api(viewer).get(f"/api/cases/{uuid.uuid4()}").status_code == 404
 
 
 @pytest.mark.parametrize(

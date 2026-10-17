@@ -18,10 +18,11 @@ from parfocal_api.identifiers import (
     ensure_keys,
     find_patients,
 )
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.projects import ProjectArchivedError
+from parfocal_api.project_access import project_grant, role_in
+from parfocal_api.projects import OwnersOnlyError, ProjectArchivedError
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
@@ -141,6 +142,19 @@ async def existing_case(
     )
 
 
+async def require_owner(
+    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
+) -> None:
+    if await project_grant(connection, principal, project_id, Permission.CREATE_CASES) is Grant.ALL:
+        return
+    if (
+        isinstance(principal, MemberPrincipal)
+        and await role_in(connection, principal, project_id) is None
+    ):
+        raise NotFoundError("Project not found")
+    raise OwnersOnlyError
+
+
 async def privacy_of(connection: AsyncConnection, project_id: uuid.UUID) -> PrivacyMode:
     row = (
         await connection.execute(
@@ -247,6 +261,7 @@ async def create_case(
         response.status_code = 200
         return await case_detail(connection, keyring, principal, repeated)
     mode = await privacy_of(connection, draft.project_id)
+    await require_owner(connection, principal, draft.project_id)
     with_patient = draft.patient_id is not None or draft.patient is not None
     if with_patient and mode is PrivacyMode.DE_IDENTIFIED:
         raise DeIdentifiedProjectError
