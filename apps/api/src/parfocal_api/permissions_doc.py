@@ -6,6 +6,7 @@ from parfocal_api.permissions import (
     GRANT_NAMES,
     MATRIX,
     PERMISSION_NAMES,
+    PROJECT_ROLE_NAMES,
     ROLE_NAMES,
     Grant,
 )
@@ -26,13 +27,14 @@ def render() -> str:
     header = "| Action | Key | " + " | ".join(ROLE_NAMES[role] for role in COLUMNS) + " |"
     divider = "|---|---|" + "---|" * len(COLUMNS)
     roles = [f"| `{role.value}` | {ROLE_NAMES[role]} |" for role in COLUMNS]
+    project_roles = [f"| `{role.value}` | {name} |" for role, name in PROJECT_ROLE_NAMES.items()]
     return "\n".join(
         [
             "# Permissions",
             "",
             "Generated from `apps/api/src/parfocal_api/permissions.py` by `pnpm permissions:doc`.",
-            "Edit the matrix there, never this page. The matrix follows the UX kit's Roles and "
-            "access page, and [ADR 0026](../adr/0026-roles-and-permission-matrix.md) explains it.",
+            "Edit the matrix there, never this page. "
+            "[ADR 0061](../adr/0061-researcher-reviewer-and-admin-roles.md) explains it.",
             "",
             "## Roles",
             "",
@@ -41,6 +43,14 @@ def render() -> str:
             *roles,
             "",
             "Platform operators sit outside the matrix and only reach `/api/platform/*`.",
+            "",
+            "## Project roles",
+            "",
+            "A member also holds one of these in each project they are in. PROJ-003 enforces them.",
+            "",
+            "| Key | Project role |",
+            "|---|---|",
+            *project_roles,
             "",
             "## Matrix",
             "",

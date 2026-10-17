@@ -12,7 +12,7 @@ down_revision: str | None = "0007"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-ROLE_CHECK = "role IN ('consultant', 'resident', 'lead', 'lab', 'admin')"
+ROLE_CHECK = "role IN ('researcher', 'reviewer', 'admin')"
 
 
 def upgrade() -> None:

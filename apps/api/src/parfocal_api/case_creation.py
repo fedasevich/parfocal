@@ -251,7 +251,7 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
     "",
     operation_id="createCase",
     status_code=201,
-    **require(Permission.EDIT_CASES, write=True),
+    **require(Permission.CREATE_CASES, write=True),
 )
 async def create_case(
     draft: CaseDraft,

@@ -51,7 +51,7 @@ def seeded(database: str, tenant_id: uuid.UUID) -> SeededCase:
     return run(database, DatabaseScope(tenant_id=tenant_id), work)
 
 
-def member(tenant_id: uuid.UUID, role: Role = Role.CONSULTANT) -> MemberPrincipal:
+def member(tenant_id: uuid.UUID, role: Role = Role.REVIEWER) -> MemberPrincipal:
     return MemberPrincipal(f"case-{role}", tenant_id, uuid.uuid4(), role)
 
 

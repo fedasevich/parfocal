@@ -249,7 +249,7 @@ async def get_session_policy(connection: TenantConnection) -> SessionPolicy:
 @tenant.put(
     "/tenant/session-policy",
     operation_id="updateSessionPolicy",
-    **require(Permission.LAB_SETUP, write=True),
+    **require(Permission.WORKSPACE_SETTINGS, write=True),
 )
 async def update_session_policy(
     change: SessionPolicyChange, principal: CurrentPrincipal, connection: TenantConnection

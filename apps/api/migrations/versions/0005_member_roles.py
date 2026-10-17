@@ -8,13 +8,13 @@ down_revision: str | None = "0004"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-ROLE_CHECK = "role IN ('consultant', 'resident', 'lead', 'lab', 'admin')"
+ROLE_CHECK = "role IN ('researcher', 'reviewer', 'admin')"
 
 
 def upgrade() -> None:
     op.add_column(
         "memberships",
-        sa.Column("role", sa.String(30), nullable=False, server_default="consultant"),
+        sa.Column("role", sa.String(30), nullable=False, server_default="reviewer"),
     )
     op.alter_column("memberships", "role", server_default=None)
     op.create_check_constraint("role", "memberships", ROLE_CHECK)

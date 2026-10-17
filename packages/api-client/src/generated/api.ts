@@ -270,10 +270,10 @@ export interface CaseSummary {
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
-  "see-cases": "see-cases",
-  "edit-cases": "edit-cases",
+  "see-slides": "see-slides",
+  "create-cases": "create-cases",
   "upload-slides": "upload-slides",
-  "see-team": "see-team",
+  "see-people": "see-people",
 } as const;
 
 export interface ServiceAccount {
@@ -345,10 +345,8 @@ export type Initials = string;
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
-  consultant: "consultant",
-  resident: "resident",
-  lead: "lead",
-  lab: "lab",
+  researcher: "researcher",
+  reviewer: "reviewer",
   admin: "admin",
 } as const;
 

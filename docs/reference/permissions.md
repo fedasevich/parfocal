@@ -1,36 +1,44 @@
 # Permissions
 
 Generated from `apps/api/src/parfocal_api/permissions.py` by `pnpm permissions:doc`.
-Edit the matrix there, never this page. The matrix follows the UX kit's Roles and access page, and [ADR 0026](../adr/0026-roles-and-permission-matrix.md) explains it.
+Edit the matrix there, never this page. [ADR 0061](../adr/0061-researcher-reviewer-and-admin-roles.md) explains it.
 
 ## Roles
 
 | Key | Role |
 |---|---|
-| `consultant` | Consultant pathologist |
-| `resident` | Resident |
-| `lead` | Lab lead or head of department |
-| `lab` | Lab staff |
-| `admin` | Administrator |
+| `researcher` | Researcher |
+| `reviewer` | Reviewer |
+| `admin` | Admin |
 
 Platform operators sit outside the matrix and only reach `/api/platform/*`.
+
+## Project roles
+
+A member also holds one of these in each project they are in. PROJ-003 enforces them.
+
+| Key | Project role |
+|---|---|
+| `owner` | Owner, manages the project, its people and its tasks |
+| `reviewer` | Reviewer, sees only the slides of their tasks |
+| `viewer` | Viewer, reads the project |
 
 ## Matrix
 
 An empty cell means no.
 
-| Action | Key | Consultant pathologist | Resident | Lab lead or head of department | Lab staff | Administrator |
-|---|---|---|---|---|---|---|
-| See cases | `see-cases` | Yes | Yes | Yes | View only |  |
-| Open a case their role does not reach | `emergency-access` |  |  |  |  | Emergency, with reason |
-| Create a case, edit its details | `edit-cases` | Yes |  | Yes | Yes |  |
-| Upload slides, fix unmatched slides | `upload-slides` | Yes | Yes | Yes | Yes |  |
-| Move a slide between cases | `move-slides` | Assigned to them |  | Yes | Yes |  |
-| Make calls, measure, annotate | `annotate` | Assigned to them | Assigned to them | Assigned to them |  |  |
-| Set their own status and absence | `set-own-status` | Yes | Yes | Yes | Yes | Yes |
-| See the Team page and rota | `see-team` | View only | View only | Yes | View only | Yes |
-| Invite people, change roles | `manage-people` |  |  | Yes |  | Yes |
-| Lab setup: rules, due times, AI plan, templates | `lab-setup` |  |  | Yes |  | View only |
-| Integrations and upload sources | `integrations` |  |  | View only |  | Yes |
-| Audit log | `audit-log` |  |  | View only |  | Yes |
-| Developer mode | `developer-mode` |  |  |  |  | Yes |
+| Action | Key | Researcher | Reviewer | Admin |
+|---|---|---|---|---|
+| See projects, cases and slides | `see-slides` | Yes | In their tasks |  |
+| Open a case their role does not reach | `emergency-access` |  |  | Emergency, with reason |
+| Create projects and cases, edit their details | `create-cases` | Yes |  |  |
+| Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
+| Move a slide between cases | `move-slides` | Yes |  |  |
+| Give verdicts, fix results, comment | `review` | Yes | In their tasks |  |
+| Set their own status | `set-own-status` | Yes | Yes | Yes |
+| See the workspace's people and their status | `see-people` | Yes | View only | Yes |
+| Invite people, change roles | `manage-people` |  |  | Yes |
+| Workspace settings and session security | `workspace-settings` | View only |  | Yes |
+| Storage, sources, API and webhooks | `integrations` | View only |  | Yes |
+| Audit log | `audit-log` |  |  | Yes |
+| Developer mode and API tokens | `developer-mode` | Yes |  | Yes |

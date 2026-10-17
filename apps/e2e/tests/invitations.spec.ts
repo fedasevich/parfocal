@@ -57,7 +57,7 @@ async function inviteAsOperator(page: Page, subject: string, tenantId: string): 
   try {
     const invited = await call(page, "POST", `/api/platform/tenants/${tenantId}/invitations`, {
       email: username,
-      role: "lead",
+      role: "researcher",
     });
     expect(invited.status, JSON.stringify(invited.json)).toBe(201);
   } finally {
@@ -76,7 +76,7 @@ function actions(tenantId: string): string[] {
   ).split(",");
 }
 
-test("an invited pathologist accepts and lands in the new workspace", async ({ page }) => {
+test("an invited researcher accepts and lands in the new workspace", async ({ page }) => {
   await signIn(page, "/cases/S26-0101");
   const { subject } = await readSession(page);
   const tenantId = makeWorkspace();
@@ -84,7 +84,7 @@ test("an invited pathologist accepts and lands in the new workspace", async ({ p
 
   const accepted = await call(page, "POST", "/api/invitations/accept", { token });
   expect(accepted.status).toBe(200);
-  expect(accepted.json).toMatchObject({ tenant_id: tenantId, role: "lead" });
+  expect(accepted.json).toMatchObject({ tenant_id: tenantId, role: "researcher" });
   const current = await call(page, "GET", "/api/tenant", undefined);
   expect(current.json).toMatchObject({ id: tenantId });
   expect(actions(tenantId)).toEqual(["invitation.created", "invitation.accepted", "member.added"]);

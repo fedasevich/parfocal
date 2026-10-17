@@ -234,7 +234,7 @@ def member_of(row: object) -> Member:
     return Member.model_validate(row, from_attributes=True)
 
 
-@tenant_router.get("/members", operation_id="listTenantMembers", **require(Permission.SEE_TEAM))
+@tenant_router.get("/members", operation_id="listTenantMembers", **require(Permission.SEE_PEOPLE))
 async def list_tenant_members(connection: TenantConnection) -> list[Member]:
     rows = await connection.execute(
         select(*MEMBER_COLUMNS)

@@ -31,7 +31,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0023](0023-gap-review-backend-first.md) | Gap review: one case state model, cases from the LIS first, roles narrowed by folders, team control, and backend before UI | Proposed | 2026-10-10 |
 | [0024](0024-workspaces-are-tenants.md) | Each workspace is a tenant, organisations group them, and platform operators manage both | Accepted | 2026-10-13 |
 | [0025](0025-zitadel-bff-login.md) | Zitadel Cloud behind a FastAPI backend-for-frontend with sessions in Postgres | Accepted | 2026-10-13 |
-| [0026](0026-roles-and-permission-matrix.md) | Six roles and the UX kit's permission matrix in code, declared on every route | Accepted | 2026-10-13 |
+| [0026](0026-roles-and-permission-matrix.md) | Six roles and the UX kit's permission matrix in code, declared on every route | Superseded by 0061 | 2026-10-13 |
 | [0027](0027-audit-log-hash-chain-in-postgres.md) | Audit log as an append-only Postgres table with a hash chain per workspace and people named by erasable pseudonyms | Accepted | 2026-10-14 |
 | [0028](0028-data-classes-on-columns.md) | Five data classes declared on every column, with a generated data map | Accepted | 2026-10-14 |
 | [0029](0029-service-accounts-with-own-api-tokens.md) | Service accounts per workspace with our own hashed API tokens and narrow scopes | Accepted | 2026-10-14 |
@@ -66,3 +66,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0058](0058-typed-case-ids.md) | Case IDs are typed or come from file names, and accession templates and counters are removed | Accepted | 2026-10-17 |
 | [0059](0059-no-folders.md) | Folders are removed, and access is by role across the workspace until project roles land | Accepted | 2026-10-17 |
 | [0060](0060-no-sign-out-permissions-or-guest-scope.md) | The sign-out permissions, the outside consultant and the guest scope are removed | Accepted | 2026-10-17 |
+| [0061](0061-researcher-reviewer-and-admin-roles.md) | Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project | Accepted | 2026-10-17 |

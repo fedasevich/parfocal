@@ -108,12 +108,12 @@ def test_platform_and_member_actions_form_a_verified_chain(api: ApiAs, database:
     tenant_id = make_tenant(api)
     admin = admin_of(api, database, tenant_id)
     colleague = make_user(database, "colleague")
-    add_member(api, tenant_id, colleague, "resident")
+    add_member(api, tenant_id, colleague, "reviewer")
     api(OPERATOR).post(f"/api/platform/tenants/{tenant_id}/suspend")
     api(OPERATOR).post(f"/api/platform/tenants/{tenant_id}/reactivate")
     path = f"/api/tenant/members/{colleague}/role"
-    assert api(admin).put(path, json={"role": "lab"}).status_code == 200
-    assert api(admin).put(path, json={"role": "lab"}).status_code == 200
+    assert api(admin).put(path, json={"role": "researcher"}).status_code == 200
+    assert api(admin).put(path, json={"role": "researcher"}).status_code == 200
 
     events = trail(api, admin)
     assert [event.action for event in events] == [
@@ -130,7 +130,7 @@ def test_platform_and_member_actions_form_a_verified_chain(api: ApiAs, database:
     assert (changed.actor_kind, changed.actor_subject) == (ActorKind.MEMBER, admin.subject)
     assert (changed.target_subject, changed.details) == (
         subject_of(database, colleague),
-        '{"from":"resident","to":"lab"}',
+        '{"from":"reviewer","to":"researcher"}',
     )
     assert events[0].actor_kind is ActorKind.OPERATOR
 
@@ -164,7 +164,7 @@ def test_even_the_owner_cannot_change_entries_while_the_trigger_stands(
 def test_a_changed_entry_breaks_the_chain(api: ApiAs, database: str) -> None:
     tenant_id = make_tenant(api)
     admin = admin_of(api, database, tenant_id)
-    add_member(api, tenant_id, make_user(database, "other"), "lab")
+    add_member(api, tenant_id, make_user(database, "other"), "researcher")
     assert chain_breaks(trail(api, admin)) == []
     behind_the_trigger(
         database,
@@ -177,7 +177,7 @@ def test_a_changed_entry_breaks_the_chain(api: ApiAs, database: str) -> None:
 def test_a_removed_entry_breaks_the_chain(api: ApiAs, database: str) -> None:
     tenant_id = make_tenant(api)
     admin = admin_of(api, database, tenant_id)
-    add_member(api, tenant_id, make_user(database, "other"), "lab")
+    add_member(api, tenant_id, make_user(database, "other"), "researcher")
     behind_the_trigger(
         database, f"DELETE FROM audit_events WHERE tenant_id = '{tenant_id}' AND seq = 2"
     )
@@ -250,14 +250,14 @@ def test_the_export_lists_a_case_history_in_order(api: ApiAs, database: str) -> 
     assert chain_breaks(trail(api, admin)) == []
 
 
-def test_only_leads_and_administrators_read_the_trail(api: ApiAs, database: str) -> None:
+def test_only_admins_read_the_trail(api: ApiAs, database: str) -> None:
     tenant_id = make_tenant(api)
-    for role in ("consultant", "resident", "lab", "lead"):
+    for role in ("researcher", "reviewer"):
         user = make_user(database, role)
         add_member(api, tenant_id, user, role)
         member = MemberPrincipal(role, uuid.UUID(tenant_id), uuid.UUID(user), Role(role))
         status = api(member).get("/api/tenant/audit-events").status_code
-        assert status == (200 if role == "lead" else 403)
+        assert status == 403
 
 
 def test_sign_in_and_sign_out_are_recorded_on_the_platform_chain(
@@ -309,9 +309,9 @@ def test_forgetting_a_person_keeps_the_chain_and_drops_who_they_were(
     tenant_id = make_tenant(api)
     admin = admin_of(api, database, tenant_id)
     leaver = make_user(database, "leaver")
-    add_member(api, tenant_id, leaver, "resident")
+    add_member(api, tenant_id, leaver, "reviewer")
     leaver_subject = subject_of(database, leaver)
-    api(admin).put(f"/api/tenant/members/{leaver}/role", json={"role": "lab"})
+    api(admin).put(f"/api/tenant/members/{leaver}/role", json={"role": "researcher"})
     before = trail(api, admin)
     assert {event.target_subject for event in before[-2:]} == {leaver_subject}
 
@@ -360,7 +360,7 @@ def test_service_accounts_are_named_by_their_account_id(api: ApiAs, database: st
     tenant_id = make_tenant(api)
     admin = admin_of(api, database, tenant_id)
     account_id = uuid.uuid4()
-    service = ServicePrincipal(account_id, uuid.UUID(tenant_id), frozenset({"see-team"}))
+    service = ServicePrincipal(account_id, uuid.UUID(tenant_id), frozenset({"see-people"}))
 
     async def write(connection: AsyncConnection) -> None:
         await record(

@@ -43,7 +43,7 @@ def member_of_new_workspace(browser: Browser, **policy: int) -> str:
         )
     browser.sql(
         "INSERT INTO memberships (tenant_id, user_id, role) SELECT "
-        f"'{tenant_id}', id, 'lead' FROM users WHERE subject = '{browser.idp.subject}'"
+        f"'{tenant_id}', id, 'researcher' FROM users WHERE subject = '{browser.idp.subject}'"
     )
     assert browser.client.put("/api/me/workspace", json={"tenant_id": tenant_id}).status_code == 200
     return tenant_id
@@ -163,27 +163,28 @@ def test_nobody_ends_someone_elses_session(browser: Browser, database: str) -> N
         assert session_code(stranger)[0] == 200
 
 
-def test_the_lead_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
+def test_an_admin_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
     browser.login()
     tenant_id = member_of_new_workspace(browser)
     user_id = uuid.UUID(
         str(browser.sql(f"SELECT id FROM users WHERE subject = '{browser.idp.subject}'")[0][0])
     )
-    lead = MemberPrincipal(browser.idp.subject, uuid.UUID(tenant_id), user_id, Role.LEAD)
-    assert api(lead).get("/api/tenant/session-policy").json() == {
+    browser.sql(f"UPDATE memberships SET role = 'admin' WHERE user_id = '{user_id}'")
+    admin = MemberPrincipal(browser.idp.subject, uuid.UUID(tenant_id), user_id, Role.ADMIN)
+    assert api(admin).get("/api/tenant/session-policy").json() == {
         "tenant_id": tenant_id,
         "idle_lock_minutes": 15,
         "session_hours": 12,
         "emergency_hours": 4,
     }
     change = {"idle_lock_minutes": 30, "session_hours": 8}
-    assert api(lead).put("/api/tenant/session-policy", json=change).status_code == 200
-    assert api(lead).get("/api/tenant/session-policy").json()["idle_lock_minutes"] == 30
+    assert api(admin).put("/api/tenant/session-policy", json=change).status_code == 200
+    assert api(admin).get("/api/tenant/session-policy").json()["idle_lock_minutes"] == 30
     for invalid in (
         {"idle_lock_minutes": 0, "session_hours": 8},
         {"idle_lock_minutes": 5, "session_hours": 25},
     ):
-        assert api(lead).put("/api/tenant/session-policy", json=invalid).status_code == 422
+        assert api(admin).put("/api/tenant/session-policy", json=invalid).status_code == 422
     actions = browser.sql(
         f"SELECT action FROM audit_events WHERE tenant_id = '{tenant_id}' ORDER BY seq"
     )
@@ -191,5 +192,5 @@ def test_the_lead_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
 
 
 def test_services_have_no_sessions(api: ApiAs) -> None:
-    service = ServicePrincipal(uuid.uuid4(), uuid.uuid4(), frozenset({"see-team"}))
+    service = ServicePrincipal(uuid.uuid4(), uuid.uuid4(), frozenset({"see-people"}))
     assert api(service).get("/api/auth/sessions").status_code == 403

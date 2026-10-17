@@ -39,8 +39,8 @@ class Seeded:
     ids: dict[str, uuid.UUID] = field(default_factory=dict[str, uuid.UUID])
     markers: set[str] = field(default_factory=set[str])
 
-    def member(self) -> MemberPrincipal:
-        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"], Role.LEAD)
+    def member(self, role: Role = Role.RESEARCHER) -> MemberPrincipal:
+        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"], role)
 
 
 type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
@@ -56,6 +56,7 @@ class Exposure(Enum):
 class Route:
     exposure: Exposure
     path: Callable[[Seeded], str]
+    role: Role = Role.RESEARCHER
 
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
@@ -102,7 +103,7 @@ async def seed_service_accounts(connection: AsyncConnection, seeded: Seeded) -> 
     name = f"Service {uuid.uuid4().hex}"
     account = await connection.scalar(
         insert(service_accounts)
-        .values(tenant_id=seeded.tenant_id, name=name, scopes=["see-team"])
+        .values(tenant_id=seeded.tenant_id, name=name, scopes=["see-people"])
         .returning(service_accounts.c.id)
     )
     assert isinstance(account, uuid.UUID)
@@ -130,7 +131,7 @@ async def seed_invitations(connection: AsyncConnection, seeded: Seeded) -> None:
         insert(invitations).values(
             tenant_id=seeded.tenant_id,
             email=email,
-            role="lab",
+            role="researcher",
             token_hash=uuid.uuid4().bytes,
             expires_at=text("now() + interval '1 day'"),
         )
@@ -187,9 +188,9 @@ GET_ROUTES = {
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
-    "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events"),
+    "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events", Role.ADMIN),
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
-    "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations"),
+    "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
@@ -238,7 +239,7 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
         .returning(users.c.id)
     )
     await connection.execute(
-        insert(memberships).values(tenant_id=tenant_id, user_id=user_id, role="lead")
+        insert(memberships).values(tenant_id=tenant_id, user_id=user_id, role="researcher")
     )
     assert isinstance(organisation_id, uuid.UUID)
     assert isinstance(tenant_id, uuid.UUID)
@@ -292,7 +293,8 @@ def test_tenant_routes_show_a_member_their_own_data(
     api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
 ) -> None:
     a, _ = seeded
-    response = api(a.member()).get(GET_ROUTES[operation].path(a))
+    route = GET_ROUTES[operation]
+    response = api(a.member(route.role)).get(route.path(a))
     assert response.status_code == 200, response.text
     assert any(marker in response.text for marker in a.markers)
 
@@ -302,7 +304,8 @@ def test_tenant_routes_show_another_tenant_nothing(
     api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
 ) -> None:
     a, b = seeded
-    response = api(b.member()).get(GET_ROUTES[operation].path(a))
+    route = GET_ROUTES[operation]
+    response = api(b.member(route.role)).get(route.path(a))
     assert response.status_code in {200, 404}, response.text
     assert [marker for marker in a.markers if marker in response.text] == []
 

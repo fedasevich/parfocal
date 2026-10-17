@@ -49,14 +49,18 @@ class Plan(StrEnum):
 
 
 class Role(StrEnum):
-    CONSULTANT = "consultant"
-    RESIDENT = "resident"
-    LEAD = "lead"
-    LAB = "lab"
+    RESEARCHER = "researcher"
+    REVIEWER = "reviewer"
     ADMIN = "admin"
 
 
-MEMBER_ROLE_CHECK = "role IN ('consultant', 'resident', 'lead', 'lab', 'admin')"
+MEMBER_ROLE_CHECK = "role IN ('researcher', 'reviewer', 'admin')"
+
+
+class ProjectRole(StrEnum):
+    OWNER = "owner"
+    REVIEWER = "reviewer"
+    VIEWER = "viewer"
 
 
 class Availability(StrEnum):
@@ -351,7 +355,7 @@ audit_events = Table(
 )
 
 SERVICE_SCOPES_CHECK = (
-    "scopes <@ ARRAY['see-cases', 'edit-cases', 'upload-slides', 'see-team']::varchar[] "
+    "scopes <@ ARRAY['see-slides', 'create-cases', 'upload-slides', 'see-people']::varchar[] "
     "AND cardinality(scopes) > 0"
 )
 

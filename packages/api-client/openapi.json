@@ -700,7 +700,7 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-cases",
+        "x-permission": "see-slides",
         "x-permission-emergency": true
       }
     },
@@ -804,7 +804,7 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-cases"
+        "x-permission": "see-slides"
       },
       "post": {
         "tags": [
@@ -930,7 +930,7 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "edit-cases",
+        "x-permission": "create-cases",
         "x-permission-write": true
       }
     },
@@ -1360,7 +1360,7 @@
             }
           }
         },
-        "x-permission": "see-team"
+        "x-permission": "see-people"
       }
     },
     "/api/platform/organisations": {
@@ -2409,7 +2409,7 @@
             }
           }
         },
-        "x-permission": "lab-setup",
+        "x-permission": "workspace-settings",
         "x-permission-write": true
       }
     },
@@ -2825,7 +2825,7 @@
             }
           }
         },
-        "x-permission": "see-team"
+        "x-permission": "see-people"
       }
     },
     "/api/tenant/members/{user_id}/role": {
@@ -5821,10 +5821,8 @@
       "Role": {
         "type": "string",
         "enum": [
-          "consultant",
-          "resident",
-          "lead",
-          "lab",
+          "researcher",
+          "reviewer",
           "admin"
         ],
         "title": "Role"
@@ -5924,10 +5922,10 @@
       "ServiceScope": {
         "type": "string",
         "enum": [
-          "see-cases",
-          "edit-cases",
+          "see-slides",
+          "create-cases",
           "upload-slides",
-          "see-team"
+          "see-people"
         ],
         "title": "ServiceScope"
       },

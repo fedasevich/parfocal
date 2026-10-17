@@ -114,6 +114,6 @@ async def set_my_availability(
     return (await team_availability(connection, member.user_id))[0]
 
 
-@team_router.get("", operation_id="listAvailability", **require(Permission.SEE_TEAM))
+@team_router.get("", operation_id="listAvailability", **require(Permission.SEE_PEOPLE))
 async def list_availability(connection: TenantConnection) -> list[MemberAvailability]:
     return await team_availability(connection)

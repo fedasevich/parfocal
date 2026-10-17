@@ -4,7 +4,7 @@ from typing import cast
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from sqlalchemy import literal, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.case_access import require_case_access
@@ -17,7 +17,6 @@ from parfocal_api.tables import (
     CaseSource,
     Laterality,
     Priority,
-    Role,
     Sex,
     blocks,
     cases,
@@ -152,10 +151,10 @@ async def specimen_details(connection: AsyncConnection, case_id: uuid.UUID) -> l
 def sees_draft(principal: Principal, created_by: uuid.UUID | None) -> bool:
     if not isinstance(principal, MemberPrincipal):
         return False
-    return principal.role is Role.LAB or principal.user_id == created_by
+    return principal.user_id == created_by
 
 
-@router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_CASES, emergency=True))
+@router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_SLIDES, emergency=True))
 async def get_case(
     case_id: uuid.UUID,
     request: Request,
@@ -178,7 +177,7 @@ async def case_detail(
     ).one_or_none()
     if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
         raise NotFoundError("Case not found")
-    await require_case_access(connection, principal, case_id, Permission.SEE_CASES)
+    await require_case_access(connection, principal, case_id, Permission.SEE_SLIDES)
     slide_rows = (
         await connection.execute(
             select(slides)
@@ -227,7 +226,7 @@ class CaseSummary(BaseModel):
     assignee_user_id: uuid.UUID | None
 
 
-@router.get("", operation_id="listCases", **require(Permission.SEE_CASES))
+@router.get("", operation_id="listCases", **require(Permission.SEE_SLIDES))
 async def list_cases(
     principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[CaseSummary]:
@@ -237,7 +236,6 @@ async def list_cases(
             or_(
                 cases.c.is_draft.is_(False),
                 cases.c.created_by_user_id == principal.user_id,
-                literal(principal.role is Role.LAB),
             )
         )
     else:

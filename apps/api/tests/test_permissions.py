@@ -104,14 +104,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createInvitation": lambda _: Call(
         "POST",
         "/api/tenant/invitations",
-        {"email": f"{uuid.uuid4().hex[:8]}@example.test", "role": "lab"},
+        {"email": f"{uuid.uuid4().hex[:8]}@example.test", "role": "researcher"},
     ),
     "revokeInvitation": lambda w: Call("DELETE", f"/api/tenant/invitations/{w.invitations.pop()}"),
     "listServiceAccounts": lambda _: Call("GET", "/api/tenant/service-accounts"),
     "createServiceAccount": lambda _: Call(
         "POST",
         "/api/tenant/service-accounts",
-        {"name": f"LIS {uuid.uuid4().hex[:8]}", "scopes": ["edit-cases"]},
+        {"name": f"LIS {uuid.uuid4().hex[:8]}", "scopes": ["create-cases"]},
     ),
     "issueApiToken": lambda w: Call("POST", f"/api/tenant/service-accounts/{w.account}/tokens", {}),
     "revokeApiToken": lambda w: Call(
@@ -123,7 +123,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events"),
     "listTenantMembers": lambda _: Call("GET", "/api/tenant/members"),
     "changeMemberRole": lambda w: Call(
-        "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "consultant"}
+        "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
     ),
 }
 PLACEHOLDER = Workspace(
@@ -177,7 +177,7 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
 
 
 def test_administrators_reach_patients_only_through_emergency_access() -> None:
-    assert grant_for(Role.ADMIN, Permission.SEE_CASES) is Grant.NONE
+    assert grant_for(Role.ADMIN, Permission.SEE_SLIDES) is Grant.NONE
     assert grant_for(Role.ADMIN, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
     assert set(Grant) == {Grant.ALL, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.EMERGENCY, Grant.NONE}
 
@@ -237,11 +237,11 @@ async def seed(database: str) -> Workspace:
                 role: await add_person(connection, tenant_id, f"{slug}-{role}", role)
                 for role in COLUMNS
             }
-            colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.RESIDENT)
+            colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.REVIEWER)
             account, spare_account = [
                 await connection.scalar(
                     insert(service_accounts)
-                    .values(tenant_id=tenant_id, name=name, scopes=["edit-cases"])
+                    .values(tenant_id=tenant_id, name=name, scopes=["create-cases"])
                     .returning(service_accounts.c.id)
                 )
                 for name in ("Permission check", "Spare")
@@ -262,7 +262,7 @@ async def seed(database: str) -> Workspace:
                     .values(
                         tenant_id=tenant_id,
                         email=f"pending-{index}@example.test",
-                        role="lab",
+                        role="researcher",
                         token_hash=uuid.uuid4().bytes,
                         expires_at=func.now(),
                     )
@@ -335,9 +335,9 @@ def test_every_member_endpoint_is_open_to_every_member_role(
 
 @pytest.mark.db
 def test_nobody_changes_their_own_role(api: ApiAs, workspace: Workspace) -> None:
-    lead = principal_for(workspace, Role.LEAD)
-    response = api(lead).put(
-        f"/api/tenant/members/{workspace.users[Role.LEAD]}/role", json={"role": "consultant"}
+    admin = principal_for(workspace, Role.ADMIN)
+    response = api(admin).put(
+        f"/api/tenant/members/{workspace.users[Role.ADMIN]}/role", json={"role": "reviewer"}
     )
     assert (response.status_code, response.json()["code"]) == (409, "own-role")
 
@@ -348,9 +348,11 @@ def test_a_role_change_takes_effect_and_rejects_unknown_roles(
 ) -> None:
     admin = principal_for(workspace, Role.ADMIN)
     path = f"/api/tenant/members/{workspace.colleague}/role"
-    changed = api(admin).put(path, json={"role": "lab"})
-    assert (changed.status_code, changed.json()["role"]) == (200, "lab")
+    changed = api(admin).put(path, json={"role": "researcher"})
+    assert (changed.status_code, changed.json()["role"]) == (200, "researcher")
     assert api(admin).put(path, json={"role": "outside-consultant"}).status_code == 422
-    unknown = api(admin).put(f"/api/tenant/members/{uuid.uuid4()}/role", json={"role": "lab"})
+    unknown = api(admin).put(
+        f"/api/tenant/members/{uuid.uuid4()}/role", json={"role": "researcher"}
+    )
     assert unknown.status_code == 404
-    api(admin).put(path, json={"role": "resident"})
+    api(admin).put(path, json={"role": "reviewer"})

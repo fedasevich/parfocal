@@ -26,10 +26,10 @@ class Lab:
 def make_lab(api: ApiAs, database: str) -> Lab:
     workspace = make_workspace(
         database,
-        {"lead": Role.LEAD, "consultant": Role.CONSULTANT, "lab": Role.LAB, "admin": Role.ADMIN},
+        {"researcher": Role.RESEARCHER, "reviewer": Role.REVIEWER, "admin": Role.ADMIN},
     )
     cases = [
-        api(workspace.people["lead"])
+        api(workspace.people["researcher"])
         .post(
             "/api/cases",
             json={
@@ -102,14 +102,14 @@ def test_a_reason_is_required(api: ApiAs, database: str, reason: str) -> None:
 def test_roles_that_see_cases_need_no_reason_and_cannot_ask(api: ApiAs, database: str) -> None:
     lab = make_lab(api, database)
     case = lab.cases[0]
-    for role in ("lead", "consultant", "lab"):
+    for role in ("researcher", "reviewer"):
         assert opens(api, lab, role, case)[0] == 200
         assert ask(api, lab, role, case).status_code == 403
 
 
-def test_the_lab_sets_how_long_a_grant_lasts(api: ApiAs, database: str) -> None:
+def test_the_workspace_sets_how_long_a_grant_lasts(api: ApiAs, database: str) -> None:
     lab = make_lab(api, database)
     policy = {"idle_lock_minutes": 15, "session_hours": 12, "emergency_hours": 1}
-    assert api(lab.who("lead")).put("/api/tenant/session-policy", json=policy).status_code == 200
+    assert api(lab.who("admin")).put("/api/tenant/session-policy", json=policy).status_code == 200
     expires = datetime.fromisoformat(ask(api, lab, "admin", lab.cases[0]).json()["expires_at"])
     assert expires - datetime.now(UTC) <= timedelta(hours=1)

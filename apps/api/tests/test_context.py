@@ -19,7 +19,7 @@ USER = uuid.uuid4()
 
 
 def test_a_member_is_scoped_to_their_tenant() -> None:
-    assert database_scope(MemberPrincipal("user", TENANT, USER, Role.CONSULTANT)) == DatabaseScope(
+    assert database_scope(MemberPrincipal("user", TENANT, USER, Role.REVIEWER)) == DatabaseScope(
         tenant_id=TENANT, user_id=USER
     )
 

@@ -19,7 +19,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 SCOPES_CHECK = (
-    "scopes <@ ARRAY['see-cases', 'edit-cases', 'upload-slides', 'see-team']::varchar[] "
+    "scopes <@ ARRAY['see-slides', 'create-cases', 'upload-slides', 'see-people']::varchar[] "
     "AND cardinality(scopes) > 0"
 )
 ACTOR_KINDS = "'user', 'member', 'operator', 'system'"

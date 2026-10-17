@@ -1,7 +1,7 @@
 # 0026. Six roles and the UX kit's permission matrix in code, declared on every route
 
 - Date: 2026-10-13
-- Status: Accepted
+- Status: Superseded by 0061
 - Deciders: Yurii Fedas
 - Backlog: IAM-006, IAM-010, IAM-014, IAM-016, IAM-017, IAM-018
 

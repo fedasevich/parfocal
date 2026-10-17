@@ -68,7 +68,7 @@ def as_service(browser: Browser, token: str, path: str, method: str = "GET") -> 
 
 def test_a_token_reaches_only_what_its_scopes_allow(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    token = create(api, workspace, ["see-team"])["token"]["token"]
+    token = create(api, workspace, ["see-people"])["token"]["token"]
     assert token.startswith("pf_")
     assert as_service(browser, token, "/api/tenant/members") == 200
     assert as_service(browser, token, "/api/tenant") == 200
@@ -85,7 +85,7 @@ def test_a_token_without_a_scope_is_refused_that_route(api: ApiAs, browser: Brow
 
 def test_a_token_sees_only_its_own_workspace(api: ApiAs, browser: Browser) -> None:
     mine, theirs = make_workspace(api, browser), make_workspace(api, browser)
-    token = create(api, mine, ["see-team"])["token"]["token"]
+    token = create(api, mine, ["see-people"])["token"]["token"]
     response = browser.client.get(
         "/api/tenant/members", headers={"Authorization": f"Bearer {token}"}
     )
@@ -95,7 +95,7 @@ def test_a_token_sees_only_its_own_workspace(api: ApiAs, browser: Browser) -> No
 
 def test_revoking_a_token_takes_effect_on_the_next_request(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     account_id, token = created["account"]["id"], created["token"]
     assert as_service(browser, token["token"], "/api/tenant/members") == 200
     revoke = f"{ACCOUNTS}/{account_id}/tokens/{token['id']}"
@@ -106,7 +106,7 @@ def test_revoking_a_token_takes_effect_on_the_next_request(api: ApiAs, browser: 
 
 def test_rotation_overlaps_old_and_new_tokens(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     account_id, old = created["account"]["id"], created["token"]
     new = api(workspace.admin).post(f"{ACCOUNTS}/{account_id}/tokens", json={"expires_in_days": 30})
     assert new.status_code == 201
@@ -123,7 +123,7 @@ def test_rotation_overlaps_old_and_new_tokens(api: ApiAs, browser: Browser) -> N
 
 def test_disabling_an_account_stops_all_its_tokens(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     account_id = created["account"]["id"]
     disabled = api(workspace.admin).post(f"{ACCOUNTS}/{account_id}/disable")
     assert disabled.json()["disabled_at"] is not None
@@ -134,7 +134,7 @@ def test_disabling_an_account_stops_all_its_tokens(api: ApiAs, browser: Browser)
 
 def test_expired_and_unknown_tokens_are_refused(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     browser.sql(
         "UPDATE api_tokens SET expires_at = now() - interval '1 second' "
         f"WHERE id = '{created['token']['id']}'"
@@ -147,7 +147,7 @@ def test_expired_and_unknown_tokens_are_refused(api: ApiAs, browser: Browser) ->
 
 def test_tokens_are_stored_only_as_hashes(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     rows = browser.sql(
         f"SELECT api_tokens::text FROM api_tokens WHERE id = '{created['token']['id']}'"
     )
@@ -162,8 +162,8 @@ def test_tokens_are_stored_only_as_hashes(api: ApiAs, browser: Browser) -> None:
         {"name": "x", "scopes": []},
         {"name": "x", "scopes": ["sign-out"]},
         {"name": "x", "scopes": ["manage-people"]},
-        {"name": " ", "scopes": ["see-team"]},
-        {"name": "x", "scopes": ["see-team"], "expires_in_days": 366},
+        {"name": " ", "scopes": ["see-people"]},
+        {"name": "x", "scopes": ["see-people"], "expires_in_days": 366},
     ],
 )
 def test_invalid_accounts_are_refused(api: ApiAs, browser: Browser, draft: dict[str, Any]) -> None:
@@ -173,7 +173,7 @@ def test_invalid_accounts_are_refused(api: ApiAs, browser: Browser, draft: dict[
 
 def test_names_are_unique_per_workspace(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    draft = {"name": "LIS adapter", "scopes": ["edit-cases"]}
+    draft = {"name": "LIS adapter", "scopes": ["create-cases"]}
     assert api(workspace.admin).post(ACCOUNTS, json=draft).status_code == 201
     again = api(workspace.admin).post(ACCOUNTS, json=draft)
     assert (again.status_code, again.json()["code"]) == (409, "service-account-name-taken")
@@ -181,7 +181,7 @@ def test_names_are_unique_per_workspace(api: ApiAs, browser: Browser) -> None:
 
 def test_each_step_is_audited(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
-    created = create(api, workspace, ["see-team"])
+    created = create(api, workspace, ["see-people"])
     account_id = created["account"]["id"]
     api(workspace.admin).delete(f"{ACCOUNTS}/{account_id}/tokens/{created['token']['id']}")
     api(workspace.admin).post(f"{ACCOUNTS}/{account_id}/disable")

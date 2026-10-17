@@ -40,7 +40,7 @@ def create_tenant(api: ApiAs, **overrides: object) -> dict[str, Any]:
 
 
 def member_of(tenant: dict[str, Any]) -> MemberPrincipal:
-    return MemberPrincipal("member", uuid.UUID(tenant["id"]), uuid.uuid4(), Role.CONSULTANT)
+    return MemberPrincipal("member", uuid.UUID(tenant["id"]), uuid.uuid4(), Role.REVIEWER)
 
 
 def test_an_operator_creates_an_active_tenant(api: ApiAs) -> None:
@@ -168,7 +168,7 @@ def test_suspending_one_tenant_leaves_the_others_open(api: ApiAs) -> None:
 
 
 def test_a_member_of_an_unknown_tenant_is_refused(api: ApiAs) -> None:
-    stranger = MemberPrincipal("member", uuid.uuid4(), uuid.uuid4(), Role.CONSULTANT)
+    stranger = MemberPrincipal("member", uuid.uuid4(), uuid.uuid4(), Role.REVIEWER)
     response = api(stranger).get("/api/tenant")
     assert response.status_code == 403
     assert response.json()["code"] == "forbidden"

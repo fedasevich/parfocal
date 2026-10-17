@@ -58,7 +58,7 @@ def outbox(api: ApiAs) -> MemoryEmailSender:
     return cast("MemoryEmailSender", cast("Any", api.client.app).clients.email)
 
 
-def invite(api: ApiAs, workspace: Workspace, email: str, role: str = "consultant") -> str:
+def invite(api: ApiAs, workspace: Workspace, email: str, role: str = "reviewer") -> str:
     response = api(workspace.admin).post(INVITATIONS, json={"email": email, "role": role})
     assert response.status_code == 201, response.text
     message = outbox(api).sent[-1]
@@ -89,14 +89,17 @@ def trail(api: ApiAs, workspace: Workspace) -> list[str]:
 def test_an_invited_person_joins_with_the_role(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
     email = fresh_email()
-    token = invite(api, workspace, email.upper(), "lead")
+    token = invite(api, workspace, email.upper(), "researcher")
     listed = api(workspace.admin).get(INVITATIONS).json()
     assert [(item["email"], item["role"], item["expired"]) for item in listed] == [
-        (email, "lead", False)
+        (email, "researcher", False)
     ]
     joined = accept(invitee(browser, email), token)
     assert joined.status_code == 200, joined.text
-    assert (joined.json()["tenant_id"], joined.json()["role"]) == (workspace.tenant_id, "lead")
+    assert (joined.json()["tenant_id"], joined.json()["role"]) == (
+        workspace.tenant_id,
+        "researcher",
+    )
     assert browser.client.get("/api/tenant").json()["id"] == workspace.tenant_id
     assert api(workspace.admin).get(INVITATIONS).json() == []
     assert trail(api, workspace)[-3:] == [
@@ -155,7 +158,7 @@ def test_inviting_again_replaces_the_earlier_link(api: ApiAs, browser: Browser) 
     workspace = make_workspace(api, browser)
     email = fresh_email()
     first = invite(api, workspace, email)
-    second = invite(api, workspace, email, "resident")
+    second = invite(api, workspace, email, "researcher")
     assert trail(api, workspace)[-3:] == [
         "invitation.created",
         "invitation.revoked",
@@ -163,13 +166,13 @@ def test_inviting_again_replaces_the_earlier_link(api: ApiAs, browser: Browser) 
     ]
     invitee(browser, email)
     assert accept(browser, first).status_code == 404
-    assert accept(browser, second).json()["role"] == "resident"
+    assert accept(browser, second).json()["role"] == "researcher"
 
 
 def test_members_cannot_be_invited_again(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
     email = browser.sql(f"SELECT email FROM users WHERE id = '{workspace.admin.user_id}'")[0][0]
-    response = api(workspace.admin).post(INVITATIONS, json={"email": email, "role": "lab"})
+    response = api(workspace.admin).post(INVITATIONS, json={"email": email, "role": "researcher"})
     assert (response.status_code, response.json()["code"]) == (409, "already-a-member")
 
 
@@ -184,7 +187,8 @@ def test_an_operator_invites_the_first_administrator(api: ApiAs, browser: Browse
     token = outbox(api).sent[-1].link.rsplit("/", 1)[1]
     assert accept(invitee(browser, email), token).json()["role"] == "admin"
     unknown = api(OPERATOR).post(
-        f"/api/platform/tenants/{uuid.uuid4()}/invitations", json={"email": email, "role": "lab"}
+        f"/api/platform/tenants/{uuid.uuid4()}/invitations",
+        json={"email": email, "role": "researcher"},
     )
     assert unknown.status_code == 404
 
@@ -209,7 +213,7 @@ def test_unknown_tokens_and_anonymous_callers_are_refused(browser: Browser) -> N
 @pytest.mark.parametrize(
     "draft",
     [
-        {"email": "not-an-address", "role": "lab"},
+        {"email": "not-an-address", "role": "researcher"},
         {"email": "person@example.test", "role": "outside-consultant"},
         {"email": "person@example.test", "role": "secretary"},
     ],
