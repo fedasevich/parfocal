@@ -3442,12 +3442,12 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when the columns and endpoints are gone, no code reads them, and an ADR supersedes ADR 0032.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-004 · Rework cases for projects
+- [x] ADAPT-004 · Rework cases for projects
   Create the minimal `projects` and `project_members` tables that [ADR 0062](adr/0062-project-model.md) names, including the privacy mode and the project number. A case belongs to a project and is optional, and a slide belongs to a project with an optional case. The case ID is free text unique within the project, the patient link is optional and allowed only in clinical projects, and the columns priority, due time, assignee, clinical note, clinical question and requester are dropped. The source loses `lis`. Specimen and blocks stay optional (`cases.py`, migration `0012`). Existing rows need not survive ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
   Done when API tests cover cases in both privacy modes and a loose slide, isolation tests pass, and an ADR updates ADR 0036.
   Depends on PROJ-000, ADAPT-002, ADAPT-006, ADAPT-007.
 
-- [ ] ADAPT-005 · Rework case creation
+- [x] ADAPT-005 · Rework case creation
   Creating a case takes a project, an ID and an optional specimen, with patient fields only in a clinical project. Drafts, service, AI plan and the rule hooks in `case_creation.RULES` go (`case_creation.py`, migration `0015`). Idempotency per request key stays.
   Done when API tests cover creation in each privacy mode and idempotency, and no rule hook is left.
   Depends on ADAPT-004.
@@ -3477,7 +3477,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
   Depends on ADAPT-001, PROJ-002, PROJ-003.
 
-- [ ] ADAPT-011 · Patients only in clinical projects
+- [x] ADAPT-011 · Patients only in clinical projects
   Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001). Each patient belongs to one clinical project, a key on the project's privacy mode refuses a patient in a de-identified project, and the MRN index is unique per project ([ADR 0062](adr/0062-project-model.md)).
   Done when API tests refuse a patient in a de-identified project, the data map is regenerated, and isolation tests pass.
   Depends on ADAPT-004. It needs only the privacy mode column, which ADAPT-004 created ([ADR 0063](adr/0063-cases-and-slides-in-projects.md)), so it no longer waits for PROJ-002 (privacy modes).
