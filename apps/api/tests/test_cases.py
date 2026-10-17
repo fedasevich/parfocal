@@ -4,14 +4,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import pytest
-from case_support import NOTE, QUESTION, SeededCase, seed_case
+from case_support import SeededCase, seed_case, seed_project
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.tables import Role, blocks, cases, specimens
+from parfocal_api.tables import PrivacyMode, Role, blocks, cases, slides, specimens
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
 pytestmark = pytest.mark.db
@@ -61,28 +61,125 @@ def test_a_member_reads_the_whole_case(api: ApiAs, database: str) -> None:
     response = api(member(tenant)).get(f"/api/cases/{case.case_id}")
     assert response.status_code == 200, response.text
     body = response.json()
-    assert (body["accession"], body["priority"], body["source"]) == (
-        case.accession,
-        "stat",
+    assert (body["project_id"], body["label"], body["source"]) == (
+        str(case.project_id),
+        case.label,
         "manual",
     )
-    assert (body["clinical_note"], body["clinical_question"]) == (NOTE, QUESTION)
     assert body["patient"]["name"] == "Eva Testová"
     assert (body["patient"]["birth_date"], body["patient"]["sex"]) == ("1970-01-02", "unknown")
     assert [specimen["letter"] for specimen in body["specimens"]] == ["A", "B"]
     assert [len(specimen["blocks"]) for specimen in body["specimens"]] == [1, 1]
-    assert [slide["block_id"] for slide in body["slides"]] == [str(case.block_ids[0]), None]
+    assert [(slide["label"], slide["block_id"]) for slide in body["slides"]] == [
+        ("A1", str(case.block_ids[0])),
+        ("A2", None),
+    ]
 
 
-def test_clinical_text_is_ciphertext_at_rest(database: str) -> None:
+def test_cases_list_by_project(api: ApiAs, database: str) -> None:
+    tenant = make_tenant(database)
+    first, second = seeded(database, tenant), seeded(database, tenant)
+    listed = api(member(tenant)).get("/api/cases", params={"project_id": str(first.project_id)})
+    assert [row["label"] for row in listed.json()] == [first.label]
+    every = {row["id"] for row in api(member(tenant)).get("/api/cases").json()}
+    assert every == {str(first.case_id), str(second.case_id)}
+
+
+def in_tenant(
+    database: str, tenant: uuid.UUID, work: Callable[[AsyncConnection], Awaitable[Any]]
+) -> Any:
+    return run(database, DatabaseScope(tenant_id=tenant), work)
+
+
+def test_a_loose_slide_belongs_to_the_project_without_a_case(database: str) -> None:
     tenant = make_tenant(database)
     case = seeded(database, tenant)
-    stored = query(
+    rows = query(
         with_database(OWNER_URL, database),
-        f"SELECT cases::text FROM cases WHERE id = '{case.case_id}'",
+        f"SELECT project_id, case_id FROM slides WHERE id = '{case.loose_slide_id}'",
+    )
+    assert rows == [(case.project_id, None)]
+
+
+def test_slide_labels_are_unique_per_case_and_among_loose_slides(database: str) -> None:
+    tenant = make_tenant(database)
+    case = seeded(database, tenant)
+    loose = query(
+        with_database(OWNER_URL, database),
+        f"SELECT label FROM slides WHERE id = '{case.loose_slide_id}'",
     )[0][0]
-    assert "sentinel" not in str(stored)
-    assert b"sentinel".hex() not in str(stored)
+    attempts: list[dict[str, Any]] = [
+        {"case_id": case.case_id, "label": "A1"},
+        {"case_id": None, "label": loose},
+    ]
+    for values in attempts:
+        with pytest.raises(IntegrityError):
+            in_tenant(
+                database,
+                tenant,
+                lambda c, v=values: c.execute(
+                    insert(slides).values(tenant_id=tenant, project_id=case.project_id, **v)
+                ),
+            )
+    in_tenant(
+        database,
+        tenant,
+        lambda c: c.execute(
+            insert(slides).values(
+                tenant_id=tenant, project_id=case.project_id, case_id=None, label="A1"
+            )
+        ),
+    )
+
+
+def test_a_slide_stays_in_its_cases_project_and_a_block_needs_a_case(database: str) -> None:
+    tenant = make_tenant(database)
+    first, second = seeded(database, tenant), seeded(database, tenant)
+    attempts: list[dict[str, Any]] = [
+        {"project_id": second.project_id, "case_id": first.case_id, "label": "X1"},
+        {
+            "project_id": first.project_id,
+            "case_id": None,
+            "block_id": first.block_ids[0],
+            "label": "X2",
+        },
+    ]
+    for values in attempts:
+        with pytest.raises(IntegrityError):
+            in_tenant(
+                database,
+                tenant,
+                lambda c, v=values: c.execute(insert(slides).values(tenant_id=tenant, **v)),
+            )
+
+
+def test_case_labels_are_unique_within_a_project(database: str) -> None:
+    tenant = make_tenant(database)
+    case = seeded(database, tenant)
+
+    async def other_project(connection: AsyncConnection) -> uuid.UUID:
+        return await seed_project(connection, tenant, PrivacyMode.DE_IDENTIFIED)
+
+    elsewhere = in_tenant(database, tenant, other_project)
+    with pytest.raises(IntegrityError):
+        in_tenant(
+            database,
+            tenant,
+            lambda c: c.execute(
+                insert(cases).values(
+                    tenant_id=tenant, project_id=case.project_id, label=case.label, source="manual"
+                )
+            ),
+        )
+    in_tenant(
+        database,
+        tenant,
+        lambda c: c.execute(
+            insert(cases).values(
+                tenant_id=tenant, project_id=elsewhere, label=case.label, source="manual"
+            )
+        ),
+    )
 
 
 def test_records_cannot_point_into_another_workspace(database: str) -> None:
@@ -96,8 +193,20 @@ def test_records_cannot_point_into_another_workspace(database: str) -> None:
         ),
         lambda c: c.execute(
             insert(cases).values(
-                tenant_id=mine, patient_id=their_case.patient_id, accession="X-1", source="manual"
+                tenant_id=mine,
+                project_id=my_case.project_id,
+                patient_id=their_case.patient_id,
+                label="X-1",
+                source="manual",
             )
+        ),
+        lambda c: c.execute(
+            insert(cases).values(
+                tenant_id=mine, project_id=their_case.project_id, label="X-2", source="manual"
+            )
+        ),
+        lambda c: c.execute(
+            insert(slides).values(tenant_id=mine, project_id=their_case.project_id, label="X-3")
         ),
         lambda c: c.execute(
             insert(blocks).values(
@@ -146,14 +255,17 @@ def test_other_workspaces_admins_and_deleted_cases_get_nothing(api: ApiAs, datab
 
 
 @pytest.mark.parametrize(
-    ("column", "value"),
-    [("priority", "whenever"), ("source", "fax")],
+    ("table", "column", "value"),
+    [("cases", "source", "lis"), ("cases", "source", "fax"), ("projects", "privacy_mode", "open")],
 )
-def test_codes_outside_the_model_are_refused(database: str, column: str, value: str) -> None:
+def test_codes_outside_the_model_are_refused(
+    database: str, table: str, column: str, value: str
+) -> None:
     tenant = make_tenant(database)
     case = seeded(database, tenant)
+    row = case.case_id if table == "cases" else case.project_id
     with pytest.raises(Exception, match="check constraint"):
         query(
             with_database(OWNER_URL, database),
-            f"UPDATE cases SET {column} = '{value}' WHERE id = '{case.case_id}'",
+            f"UPDATE {table} SET {column} = '{value}' WHERE id = '{row}'",
         )

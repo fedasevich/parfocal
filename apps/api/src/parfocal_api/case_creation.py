@@ -18,7 +18,6 @@ from parfocal_api.identifiers import (
     add_patient,
     ensure_keys,
     find_patients,
-    seal_field,
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -26,13 +25,13 @@ from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
-    Priority,
+    PrivacyMode,
     Sex,
     blocks,
     case_requests,
     cases,
-    memberships,
     patients,
+    projects,
     specimens,
 )
 
@@ -79,23 +78,18 @@ class SpecimenDraft(BaseModel):
 
 
 class CaseDraft(BaseModel):
+    project_id: uuid.UUID
+    label: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
     patient_id: uuid.UUID | None = None
     patient: NewPatient | None = None
     specimens: Annotated[list[SpecimenDraft], Field(min_length=1, max_length=26)]
-    clinical_note: Annotated[str, StringConstraints(max_length=4000)] | None = None
-    clinical_question: Annotated[str, StringConstraints(max_length=1000)] | None = None
-    requester: Text200 | None = None
-    priority: Priority = Priority.ROUTINE
-    accession: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)]
     service: Annotated[str, StringConstraints(max_length=60)] | None = None
-    due_at: datetime | None = None
-    assignee_user_id: uuid.UUID | None = None
     draft: bool = False
 
     @model_validator(mode="after")
     def one_patient(self) -> CaseDraft:
-        if (self.patient_id is None) == (self.patient is None):
-            raise ValueError("Give either patient_id or patient, not both")
+        if self.patient_id is not None and self.patient is not None:
+            raise ValueError("Give patient_id or patient, not both")
         letters = [specimen.letter for specimen in self.specimens]
         if len(letters) != len(set(letters)):
             raise ValueError("Specimen letters must be unique within a case")
@@ -105,8 +99,6 @@ class CaseDraft(BaseModel):
 @dataclass(frozen=True)
 class CaseDefaults:
     service: str | None = None
-    due_at: datetime | None = None
-    assignee_user_id: uuid.UUID | None = None
 
 
 class DefaultRules(Protocol):
@@ -130,14 +122,14 @@ class PatientExistsError(ConflictError):
     title = "A patient with this MRN already exists. Create the case for that patient"
 
 
-class CaseIdTakenError(ConflictError):
-    code = "accession-taken"
-    title = "This case ID is already used in this workspace"
+class CaseLabelTakenError(ConflictError):
+    code = "case-label-taken"
+    title = "This case ID is already used in this project"
 
 
-class AssigneeNotMemberError(BadRequestError):
-    code = "assignee-not-member"
-    title = "The assignee must be a member of this workspace"
+class DeIdentifiedProjectError(BadRequestError):
+    code = "de-identified-project"
+    title = "A de-identified project holds no patient data"
 
 
 class OnlyMembersCreateError(ForbiddenError):
@@ -172,7 +164,22 @@ async def existing_case(
     )
 
 
-async def patient_for(connection: AsyncConnection, keys: TenantKeys, draft: CaseDraft) -> uuid.UUID:
+async def privacy_of(connection: AsyncConnection, project_id: uuid.UUID) -> PrivacyMode:
+    mode = await connection.scalar(
+        select(projects.c.privacy_mode).where(
+            projects.c.id == project_id, projects.c.deleted_at.is_(None)
+        )
+    )
+    if mode is None:
+        raise NotFoundError("Project not found")
+    return PrivacyMode(mode)
+
+
+async def patient_for(
+    connection: AsyncConnection, keys: TenantKeys, draft: CaseDraft
+) -> uuid.UUID | None:
+    if draft.patient_id is None and draft.patient is None:
+        return None
     if draft.patient_id is not None:
         found = await connection.scalar(
             select(
@@ -197,27 +204,13 @@ async def patient_for(connection: AsyncConnection, keys: TenantKeys, draft: Case
     return patient_id
 
 
-async def accession_for(connection: AsyncConnection, tenant_id: uuid.UUID, draft: CaseDraft) -> str:
+async def label_for(connection: AsyncConnection, draft: CaseDraft) -> str:
     taken = await connection.scalar(
-        select(exists().where(cases.c.tenant_id == tenant_id, cases.c.accession == draft.accession))
+        select(exists().where(cases.c.project_id == draft.project_id, cases.c.label == draft.label))
     )
     if taken:
-        raise CaseIdTakenError
-    return draft.accession
-
-
-async def check_assignee(
-    connection: AsyncConnection, tenant_id: uuid.UUID, assignee: uuid.UUID | None
-) -> None:
-    if assignee is None:
-        return
-    member = await connection.scalar(
-        select(
-            exists().where(memberships.c.tenant_id == tenant_id, memberships.c.user_id == assignee)
-        )
-    )
-    if not member:
-        raise AssigneeNotMemberError
+        raise CaseLabelTakenError
+    return draft.label
 
 
 async def insert_specimens(
@@ -268,29 +261,26 @@ async def create_case(
     if repeated is not None:
         response.status_code = 200
         return await case_detail(connection, keyring, principal, repeated)
+    mode = await privacy_of(connection, draft.project_id)
+    with_patient = draft.patient_id is not None or draft.patient is not None
+    if with_patient and mode is PrivacyMode.DE_IDENTIFIED:
+        raise DeIdentifiedProjectError
     defaults = await RULES.defaults_for(connection, tenant_id, draft)
-    assignee = draft.assignee_user_id or defaults.assignee_user_id
-    await check_assignee(connection, tenant_id, assignee)
-    keys = await ensure_keys(connection, keyring, tenant_id)
-    patient_id = await patient_for(connection, keys, draft)
+    patient_id = None
+    if with_patient:
+        keys = await ensure_keys(connection, keyring, tenant_id)
+        patient_id = await patient_for(connection, keys, draft)
     case_id = uuid.uuid4()
     await connection.execute(
         insert(cases).values(
             id=case_id,
             tenant_id=tenant_id,
+            project_id=draft.project_id,
             patient_id=patient_id,
-            accession=await accession_for(connection, tenant_id, draft),
-            priority=draft.priority,
-            due_at=draft.due_at or defaults.due_at,
+            label=await label_for(connection, draft),
             service=draft.service or defaults.service,
             source=CaseSource.MANUAL,
-            assignee_user_id=assignee,
-            requester=draft.requester,
             is_draft=draft.draft,
-            clinical_note=seal_field(keys, "cases", case_id, "clinical_note", draft.clinical_note),
-            clinical_question=seal_field(
-                keys, "cases", case_id, "clinical_question", draft.clinical_question
-            ),
             created_by_user_id=creator.user_id,
         )
     )
@@ -314,7 +304,7 @@ async def create_case(
         details={
             "source": CaseSource.MANUAL,
             "draft": draft.draft,
-            "priority": draft.priority,
+            "privacy_mode": mode,
             "new_patient": draft.patient is not None,
             "specimens": len(draft.specimens),
         },

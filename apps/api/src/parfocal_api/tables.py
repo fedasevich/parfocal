@@ -558,15 +558,12 @@ patients = Table(
 )
 
 
-class Priority(StrEnum):
-    ROUTINE = "routine"
-    URGENT = "urgent"
-    ASAP = "asap"
-    STAT = "stat"
+class PrivacyMode(StrEnum):
+    DE_IDENTIFIED = "de-identified"
+    CLINICAL = "clinical"
 
 
 class CaseSource(StrEnum):
-    LIS = "lis"
     MANUAL = "manual"
     UPLOAD = "upload"
 
@@ -610,30 +607,51 @@ def case_column() -> Column[uuid.UUID]:
     return Column("case_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL)
 
 
+projects = Table(
+    "projects",
+    metadata,
+    *owned_ids(),
+    Column("number", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("name", String(120), nullable=False, info=OPERATIONAL),
+    Column(
+        "privacy_mode",
+        String(20),
+        nullable=False,
+        server_default=PrivacyMode.DE_IDENTIFIED.value,
+        info=OPERATIONAL,
+    ),
+    *case_timestamps(),
+    UniqueConstraint("tenant_id", "number"),
+    UniqueConstraint("id", "tenant_id"),
+    UniqueConstraint("id", "privacy_mode"),
+    CheckConstraint("number BETWEEN 1 AND 9999", name="number"),
+    one_of("privacy_mode", PrivacyMode),
+)
+
+project_members = Table(
+    "project_members",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=PERSONAL),
+    Column("role", String(10), nullable=False, info=OPERATIONAL),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+    one_of("role", ProjectRole),
+)
+
 cases = Table(
     "cases",
     metadata,
     *owned_ids(),
-    Column("patient_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
-    Column("accession", String(40), nullable=False, info=PHI),
-    Column(
-        "priority",
-        String(10),
-        nullable=False,
-        server_default=Priority.ROUTINE.value,
-        info=OPERATIONAL,
-    ),
-    Column("due_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("patient_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
+    Column("label", String(100), nullable=False, info=PHI),
     Column("source", String(10), nullable=False, info=OPERATIONAL),
-    Column(
-        "assignee_user_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("users.id"),
-        nullable=True,
-        info=PERSONAL,
-    ),
-    Column("clinical_note", LargeBinary, nullable=True, info=PHI),
-    Column("clinical_question", LargeBinary, nullable=True, info=PHI),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),
@@ -642,13 +660,13 @@ cases = Table(
         info=PERSONAL,
     ),
     Column("service", String(60), nullable=True, info=OPERATIONAL),
-    Column("requester", String(200), nullable=True, info=PERSONAL),
     Column("is_draft", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     *case_timestamps(),
-    UniqueConstraint("tenant_id", "accession"),
+    UniqueConstraint("project_id", "label"),
     UniqueConstraint("id", "tenant_id"),
+    UniqueConstraint("id", "project_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
-    one_of("priority", Priority),
     one_of("source", CaseSource),
 )
 
@@ -703,15 +721,27 @@ slides = Table(
     "slides",
     metadata,
     *owned_ids(),
-    case_column(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("block_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
+    Column("label", String(200), nullable=False, info=PHI),
     Column("barcode", String(100), nullable=True, info=PHI),
     Column("stain", String(60), nullable=False, server_default="H&E", info=OPERATIONAL),
     Column("level", SmallInteger, nullable=True, info=OPERATIONAL),
     *case_timestamps(),
-    UniqueConstraint("tenant_id", "barcode"),
-    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+    UniqueConstraint("project_id", "barcode"),
+    UniqueConstraint("case_id", "label"),
+    Index(
+        "ix_slides_project_id_label",
+        "project_id",
+        "label",
+        unique=True,
+        postgresql_where=text("case_id IS NULL"),
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
     ForeignKeyConstraint(["block_id", "case_id"], ["blocks.id", "blocks.case_id"]),
+    CheckConstraint("block_id IS NULL OR case_id IS NOT NULL", name="block_in_case"),
 )
 
 case_requests = Table(

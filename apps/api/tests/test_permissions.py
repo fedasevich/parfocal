@@ -72,6 +72,7 @@ class Workspace:
     spare_account: uuid.UUID
     invitations: list[uuid.UUID]
     case: uuid.UUID
+    project: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -87,12 +88,13 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
     ),
     "listCases": lambda _: Call("GET", "/api/cases"),
-    "createCase": lambda _: Call(
+    "createCase": lambda w: Call(
         "POST",
         "/api/cases",
         {
+            "project_id": str(w.project),
+            "label": f"PM-{uuid.uuid4().hex[:8]}",
             "patient": {"name": "Matrix Patient"},
-            "accession": f"PM-{uuid.uuid4().hex[:8]}",
             "specimens": [{"letter": "A"}],
         },
     ),
@@ -135,6 +137,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -286,6 +289,7 @@ async def seed(database: str) -> Workspace:
             spare_account,
             ids,
             case.case_id,
+            case.project_id,
         )
     finally:
         await engine.dispose()

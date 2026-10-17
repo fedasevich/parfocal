@@ -129,19 +129,9 @@ export interface BlockDraft {
   levels?: number;
 }
 
-export type Priority = (typeof Priority)[keyof typeof Priority];
-
-export const Priority = {
-  routine: "routine",
-  urgent: "urgent",
-  asap: "asap",
-  stat: "stat",
-} as const;
-
 export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
 
 export const CaseSource = {
-  lis: "lis",
   manual: "manual",
   upload: "upload",
 } as const;
@@ -188,6 +178,7 @@ export interface SpecimenDetail {
 
 export interface SlideDetail {
   id: string;
+  label: string;
   block_id: string | null;
   barcode: string | null;
   stain: string;
@@ -196,16 +187,11 @@ export interface SlideDetail {
 
 export interface CaseDetail {
   id: string;
-  accession: string;
-  priority: Priority;
-  due_at: string | null;
+  project_id: string;
+  label: string;
   source: CaseSource;
-  assignee_user_id: string | null;
   service: string | null;
-  requester: string | null;
   is_draft: boolean;
-  clinical_note: string | null;
-  clinical_question: string | null;
   patient: PatientDetail | null;
   specimens: SpecimenDetail[];
   slides: SlideDetail[];
@@ -237,6 +223,12 @@ export interface SpecimenDraft {
 }
 
 export interface CaseDraft {
+  project_id: string;
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
+  label: string;
   patient_id?: string | null;
   patient?: NewPatient | null;
   /**
@@ -244,27 +236,15 @@ export interface CaseDraft {
    * @maxItems 26
    */
   specimens: SpecimenDraft[];
-  clinical_note?: string | null;
-  clinical_question?: string | null;
-  requester?: Text200 | null;
-  priority?: Priority;
-  /**
-   * @minLength 1
-   * @maxLength 40
-   */
-  accession: string;
   service?: string | null;
-  due_at?: string | null;
-  assignee_user_id?: string | null;
   draft?: boolean;
 }
 
 export interface CaseSummary {
   id: string;
-  accession: string;
-  priority: Priority;
-  due_at: string | null;
-  assignee_user_id: string | null;
+  project_id: string;
+  label: string;
+  created_at: string;
 }
 
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
@@ -596,6 +576,10 @@ export interface TokenRequest {
 export interface WorkspaceChoice {
   tenant_id: string;
 }
+
+export type ListCasesParams = {
+  project_id?: string | null;
+};
 
 export type ListAuditEventsParams = {
   target_type?: AuditTarget | null;
@@ -1699,39 +1683,53 @@ export type listCasesResponseError = (
 
 export type listCasesResponse = listCasesResponseSuccess | listCasesResponseError;
 
-export const getListCasesUrl = () => {
-  return `/api/cases`;
+export const getListCasesUrl = (params?: ListCasesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/cases?${stringifiedParams}` : `/api/cases`;
 };
 
 /**
  * @summary List Cases
  */
 export const listCases = async (
+  params?: ListCasesParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<listCasesResponse> => {
-  return apiFetch<listCasesResponse>(getListCasesUrl(), {
+  return apiFetch<listCasesResponse>(getListCasesUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListCasesQueryKey = () => {
-  return [`/api/cases`] as const;
+export const getListCasesQueryKey = (params?: ListCasesParams) => {
+  return [`/api/cases`, ...(params ? [params] : [])] as const;
 };
 
 export const getListCasesQueryOptions = <
   TData = Awaited<ReturnType<typeof listCases>>,
   TError = Problem,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
-  request?: SecondParameter<typeof apiFetch>;
-}) => {
+>(
+  params?: ListCasesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListCasesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListCasesQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listCases>>> = ({ signal }) =>
-    listCases({ signal, ...requestOptions });
+    listCases(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listCases>>,
@@ -1744,6 +1742,7 @@ export type ListCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listCas
 export type ListCasesQueryError = Problem;
 
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params: undefined | ListCasesParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
       Pick<
@@ -1759,6 +1758,7 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>> &
       Pick<
@@ -1774,6 +1774,7 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -1785,13 +1786,14 @@ export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TErr
  */
 
 export function useListCases<TData = Awaited<ReturnType<typeof listCases>>, TError = Problem>(
+  params?: ListCasesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listCases>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListCasesQueryOptions(options);
+  const queryOptions = getListCasesQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

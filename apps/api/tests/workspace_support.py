@@ -58,3 +58,17 @@ def make_workspace(database: str, roles: dict[str, Role]) -> Workspace:
         tenant_id,
         {label: person(database, tenant_id, label, role) for label, role in roles.items()},
     )
+
+
+def make_project(database: str, tenant_id: uuid.UUID, privacy_mode: str = "clinical") -> uuid.UUID:
+    return uuid.UUID(
+        str(
+            owner(
+                database,
+                "INSERT INTO projects (tenant_id, number, name, privacy_mode) "
+                f"SELECT '{tenant_id}', coalesce(max(number), 0) + 1, "
+                f"'Project {uuid.uuid4().hex[:8]}', '{privacy_mode}' "
+                f"FROM projects WHERE tenant_id = '{tenant_id}' RETURNING id",
+            )[0][0]
+        )
+    )

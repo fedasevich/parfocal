@@ -41,7 +41,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0033](0033-envelope-encryption-with-tenant-data-keys.md) | Envelope encryption with versioned tenant data keys under a rotating master keyring | Accepted | 2026-10-14 |
 | [0034](0034-blind-indexes-for-encrypted-patient-identifiers.md) | Exact-match blind indexes for encrypted patient identifiers, with name search by whole words | Accepted | 2026-10-14 |
 | [0035](0035-fhir-r4-through-fhir-resources-r4b.md) | FHIR R4 on the wire through fhir.resources' R4B models, with codes checked by us and no FHIR server | Accepted | 2026-10-14 |
-| [0036](0036-case-data-model.md) | Case data model: patient, case, specimen, block and slide, with the kit's ten states and FHIR's codes | Accepted | 2026-10-14 |
+| [0036](0036-case-data-model.md) | Case data model: patient, case, specimen, block and slide, with the kit's ten states and FHIR's codes | Superseded by 0063 | 2026-10-14 |
 | [0037](0037-accession-number-templates.md) | Accession numbers from a per-workspace template with a counter per prefix and year | Superseded by 0058 | 2026-10-14 |
 | [0038](0038-case-state-machine.md) | Case state machine: named events with allowed actors, derived moves by the system, cancel and restore by leads | Superseded by 0057 | 2026-10-14 |
 | [0039](0039-email-through-resend-with-phi-rules.md) | Send email through Resend, with bounce handling and a rule that email never carries PHI | Accepted | 2026-10-14 |
@@ -68,3 +68,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0060](0060-no-sign-out-permissions-or-guest-scope.md) | The sign-out permissions, the outside consultant and the guest scope are removed | Accepted | 2026-10-17 |
 | [0061](0061-researcher-reviewer-and-admin-roles.md) | Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project | Accepted | 2026-10-17 |
 | [0062](0062-project-model.md) | Projects hold optional cases, slides and result sets, need a membership to open, and own their patients | Accepted | 2026-10-17 |
+| [0063](0063-cases-and-slides-in-projects.md) | Cases and slides live in projects, a case is optional, and the hospital case columns are gone | Accepted | 2026-10-17 |

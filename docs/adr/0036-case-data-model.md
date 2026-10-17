@@ -1,7 +1,7 @@
 # 0036. Case data model: patient, case, specimen, block and slide, with the kit's ten states and FHIR's codes
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0063
 - Deciders: Yurii Fedas
 - Backlog: CASES-000, CASES-001, CASES-003, CASES-004, CASES-012, CASES-013, INGEST-001, IAM-010
 

@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 20 |
-| `personal` | 21 |
+| `phi` | 19 |
+| `personal` | 20 |
 | `secret` | 9 |
-| `operational` | 130 |
+| `operational` | 141 |
 | `public` | 0 |
 
 ## api_tokens
@@ -98,17 +98,12 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 |---|---|
 | `id` | operational |
 | `tenant_id` | operational |
+| `project_id` | operational |
 | `patient_id` | operational |
-| `accession` | phi |
-| `priority` | operational |
-| `due_at` | operational |
+| `label` | phi |
 | `source` | operational |
-| `assignee_user_id` | personal |
-| `clinical_note` | phi |
-| `clinical_question` | phi |
 | `created_by_user_id` | personal |
 | `service` | operational |
-| `requester` | personal |
 | `is_draft` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
@@ -189,6 +184,28 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `subject` | personal |
 | `created_at` | operational |
 
+## project_members
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `user_id` | personal |
+| `role` | operational |
+
+## projects
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `number` | operational |
+| `name` | operational |
+| `privacy_mode` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
+
 ## service_accounts
 
 | Column | Class |
@@ -234,8 +251,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 |---|---|
 | `id` | operational |
 | `tenant_id` | operational |
+| `project_id` | operational |
 | `case_id` | operational |
 | `block_id` | operational |
+| `label` | phi |
 | `barcode` | phi |
 | `stain` | operational |
 | `level` | operational |

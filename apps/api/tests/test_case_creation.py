@@ -1,13 +1,13 @@
 import asyncio
 import uuid
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from typing import Any
 
 import pytest
 from db_support import ApiAs
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncConnection
-from workspace_support import Workspace, make_workspace, owner
+from workspace_support import Workspace, make_project, make_workspace, owner
 
 from parfocal_api import case_creation
 from parfocal_api.case_creation import CaseDefaults, CaseDraft
@@ -23,24 +23,44 @@ PEOPLE = {
     "researcher": Role.RESEARCHER,
     "colleague": Role.RESEARCHER,
     "reviewer": Role.REVIEWER,
-    "second_reviewer": Role.REVIEWER,
     "admin": Role.ADMIN,
 }
 
 
-def make_lab(database: str) -> Workspace:
-    return make_workspace(database, PEOPLE)
+@dataclass(frozen=True)
+class Lab:
+    workspace: Workspace
+    clinical: uuid.UUID
+    de_identified: uuid.UUID
+
+    @property
+    def people(self) -> dict[str, MemberPrincipal]:
+        return self.workspace.people
+
+    @property
+    def tenant_id(self) -> uuid.UUID:
+        return self.workspace.tenant_id
 
 
-def draft(**changes: Any) -> dict[str, Any]:
+def make_lab(database: str) -> Lab:
+    workspace = make_workspace(database, PEOPLE)
+    return Lab(
+        workspace,
+        make_project(database, workspace.tenant_id, "clinical"),
+        make_project(database, workspace.tenant_id, "de-identified"),
+    )
+
+
+def draft(lab: Lab, **changes: Any) -> dict[str, Any]:
     body: dict[str, Any] = {
+        "project_id": str(lab.clinical),
+        "label": f"S26-{uuid.uuid4().hex[:6].upper()}",
         "patient": {
             "name": "Eva Testová",
             "mrn": f"MRN-{uuid.uuid4().hex[:8]}",
             "birth_date": "1970-01-02",
             "sex": "female",
         },
-        "accession": f"S26-{uuid.uuid4().hex[:6].upper()}",
         "specimens": [
             {
                 "letter": "A",
@@ -50,10 +70,6 @@ def draft(**changes: Any) -> dict[str, Any]:
             },
             {"letter": "B", "type": "Breast", "blocks": [{"number": 1}, {"number": 2}]},
         ],
-        "clinical_note": "Lump in the left breast",
-        "clinical_question": "Metastasis?",
-        "requester": "MUDr. Requester",
-        "priority": "urgent",
     }
     return body | changes
 
@@ -63,22 +79,20 @@ def create(api: ApiAs, who: MemberPrincipal, body: dict[str, Any], key: str | No
     return api(who).post(CASES, json=body, headers=headers)
 
 
-def test_a_lead_creates_a_case_with_a_new_patient(api: ApiAs, database: str) -> None:
+def test_a_researcher_creates_a_case_with_a_new_patient_in_a_clinical_project(
+    api: ApiAs, database: str
+) -> None:
     lab = make_lab(database)
-    response = create(api, lab.people["researcher"], draft())
+    response = create(api, lab.people["researcher"], draft(lab))
     assert response.status_code == 201, response.text
     case = response.json()
-    assert (case["source"], case["priority"]) == (
-        "manual",
-        "urgent",
-    )
+    assert (case["project_id"], case["source"]) == (str(lab.clinical), "manual")
     assert (case["patient"]["name"], case["patient"]["sex"]) == ("Eva Testová", "female")
-    assert case["clinical_note"] == "Lump in the left breast"
     assert [s["letter"] for s in case["specimens"]] == ["A", "B"]
     first_block = case["specimens"][0]["blocks"][0]
     assert (first_block["stains"], first_block["levels"]) == (["H&E", "CK"], 3)
     assert [len(s["blocks"]) for s in case["specimens"]] == [1, 2]
-    assert (case["service"], case["due_at"], case["assignee_user_id"]) == (None, None, None)
+    assert case["service"] is None
     details = owner(
         database,
         f"SELECT action, details FROM audit_events WHERE target_id = '{case['id']}'",
@@ -86,22 +100,52 @@ def test_a_lead_creates_a_case_with_a_new_patient(api: ApiAs, database: str) -> 
     assert details == [
         (
             "case.created",
-            '{"draft":false,"new_patient":true,"priority":"urgent","source":"manual","specimens":2}',
+            '{"draft":false,"new_patient":true,"privacy_mode":"clinical",'
+            '"source":"manual","specimens":2}',
         )
     ]
 
 
+def test_a_case_without_a_patient_works_in_both_privacy_modes(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    for project in (lab.clinical, lab.de_identified):
+        response = create(
+            api, lab.people["researcher"], draft(lab, project_id=str(project), patient=None)
+        )
+        assert response.status_code == 201, response.text
+        assert (response.json()["project_id"], response.json()["patient"]) == (str(project), None)
+
+
+def test_a_de_identified_project_refuses_patient_data(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    existing = create(api, lab.people["researcher"], draft(lab)).json()["patient"]["id"]
+    for patient in ({"patient": {"name": "Hidden"}}, {"patient": None, "patient_id": existing}):
+        response = create(
+            api, lab.people["researcher"], draft(lab, project_id=str(lab.de_identified), **patient)
+        )
+        assert (response.status_code, response.json()["code"]) == (400, "de-identified-project")
+    count = owner(database, f"SELECT count(*) FROM cases WHERE project_id = '{lab.de_identified}'")
+    assert count == [(0,)]
+
+
+def test_a_case_needs_a_project_of_this_workspace(api: ApiAs, database: str) -> None:
+    lab, other = make_lab(database), make_lab(database)
+    for project in (other.clinical, uuid.uuid4()):
+        response = create(api, lab.people["researcher"], draft(lab, project_id=str(project)))
+        assert response.status_code == 404
+
+
 def test_a_case_for_an_existing_patient(api: ApiAs, database: str) -> None:
     lab = make_lab(database)
-    first = create(api, lab.people["colleague"], draft()).json()
-    body = draft(patient=None, patient_id=first["patient"]["id"])
+    first = create(api, lab.people["colleague"], draft(lab)).json()
+    body = draft(lab, patient=None, patient_id=first["patient"]["id"])
     second = create(api, lab.people["colleague"], body).json()
     assert second["patient"]["id"] == first["patient"]["id"]
     missing = create(
-        api, lab.people["colleague"], draft(patient=None, patient_id=str(uuid.uuid4()))
+        api, lab.people["colleague"], draft(lab, patient=None, patient_id=str(uuid.uuid4()))
     )
     assert missing.status_code == 404
-    same_mrn = draft(patient={"name": "Someone", "mrn": first["patient"]["mrn"].lower()})
+    same_mrn = draft(lab, patient={"name": "Someone", "mrn": first["patient"]["mrn"].lower()})
     duplicate = create(api, lab.people["colleague"], same_mrn)
     assert (duplicate.status_code, duplicate.json()["code"]) == (409, "patient-exists")
 
@@ -116,45 +160,20 @@ class FixedRules:
         return self.defaults
 
 
-def test_lab_rules_fill_defaults_and_the_form_overrides_them(
+def test_rules_fill_the_service_and_the_form_overrides_it(
     api: ApiAs, database: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     lab = make_lab(database)
-    first_reviewer = lab.people["reviewer"].user_id
-    second_reviewer = lab.people["second_reviewer"].user_id
-    rules = FixedRules(
-        CaseDefaults(
-            service="Lymph nodes",
-            due_at=datetime(2026, 10, 20, 12, tzinfo=UTC),
-            assignee_user_id=first_reviewer,
-        )
-    )
-    monkeypatch.setattr(case_creation, "RULES", rules)
-    defaulted = create(api, lab.people["researcher"], draft()).json()
-    assert (defaulted["service"], defaulted["due_at"], defaulted["assignee_user_id"]) == (
-        "Lymph nodes",
-        "2026-10-20T12:00:00Z",
-        str(first_reviewer),
-    )
-    overridden = create(
-        api,
-        lab.people["researcher"],
-        draft(
-            service="Breast", due_at="2026-10-16T09:00:00Z", assignee_user_id=str(second_reviewer)
-        ),
-    ).json()
-    assert (overridden["service"], overridden["due_at"], overridden["assignee_user_id"]) == (
-        "Breast",
-        "2026-10-16T09:00:00Z",
-        str(second_reviewer),
-    )
-    stranger = create(api, lab.people["researcher"], draft(assignee_user_id=str(uuid.uuid4())))
-    assert (stranger.status_code, stranger.json()["code"]) == (400, "assignee-not-member")
+    monkeypatch.setattr(case_creation, "RULES", FixedRules(CaseDefaults(service="Lymph nodes")))
+    defaulted = create(api, lab.people["researcher"], draft(lab)).json()
+    assert defaulted["service"] == "Lymph nodes"
+    overridden = create(api, lab.people["researcher"], draft(lab, service="Breast")).json()
+    assert overridden["service"] == "Breast"
 
 
 def test_a_draft_is_seen_only_by_its_author(api: ApiAs, database: str) -> None:
     lab = make_lab(database)
-    case = create(api, lab.people["researcher"], draft(draft=True)).json()
+    case = create(api, lab.people["researcher"], draft(lab, draft=True)).json()
     assert case["is_draft"] is True
     path = f"{CASES}/{case['id']}"
     assert api(lab.people["researcher"]).get(path).status_code == 200
@@ -165,11 +184,11 @@ def test_a_draft_is_seen_only_by_its_author(api: ApiAs, database: str) -> None:
 
 def test_repeating_a_request_returns_the_same_case(api: ApiAs, database: str) -> None:
     lab = make_lab(database)
-    first = create(api, lab.people["colleague"], draft(), key="form-1")
-    again = create(api, lab.people["colleague"], draft(), key="form-1")
+    first = create(api, lab.people["colleague"], draft(lab), key="form-1")
+    again = create(api, lab.people["colleague"], draft(lab), key="form-1")
     assert (first.status_code, again.status_code) == (201, 200)
     assert again.json()["id"] == first.json()["id"]
-    other_person = create(api, lab.people["researcher"], draft(), key="form-1")
+    other_person = create(api, lab.people["researcher"], draft(lab), key="form-1")
     assert other_person.json()["id"] != first.json()["id"]
     count = owner(database, f"SELECT count(*) FROM cases WHERE tenant_id = '{lab.tenant_id}'")
     assert count == [(2,)]
@@ -182,7 +201,7 @@ def test_concurrent_repeats_create_one_case(api: ApiAs, database: str) -> None:
     async def burst() -> list[int]:
         def send() -> int:
             return client.post(
-                CASES, json=draft(), headers={"Idempotency-Key": "burst"}
+                CASES, json=draft(lab), headers={"Idempotency-Key": "burst"}
             ).status_code
 
         return list(await asyncio.gather(*(asyncio.to_thread(send) for _ in range(5))))
@@ -193,13 +212,17 @@ def test_concurrent_repeats_create_one_case(api: ApiAs, database: str) -> None:
     assert count == [(1,)]
 
 
-def test_a_typed_case_id_is_unique_within_the_workspace(api: ApiAs, database: str) -> None:
-    lab, other = make_lab(database), make_lab(database)
-    first = create(api, lab.people["colleague"], draft(accession="  Batch 7 / 12 "))
-    assert first.json()["accession"] == "Batch 7 / 12"
-    again = create(api, lab.people["colleague"], draft(accession="Batch 7 / 12"))
-    assert (again.status_code, again.json()["code"]) == (409, "accession-taken")
-    elsewhere = create(api, other.people["researcher"], draft(accession="Batch 7 / 12"))
+def test_a_case_id_is_unique_within_its_project(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    first = create(api, lab.people["colleague"], draft(lab, label="  Batch 7 / 12 "))
+    assert first.json()["label"] == "Batch 7 / 12"
+    again = create(api, lab.people["colleague"], draft(lab, label="Batch 7 / 12"))
+    assert (again.status_code, again.json()["code"]) == (409, "case-label-taken")
+    elsewhere = create(
+        api,
+        lab.people["colleague"],
+        draft(lab, label="Batch 7 / 12", project_id=str(lab.de_identified), patient=None),
+    )
     assert elsewhere.status_code == 201, elsewhere.text
 
 
@@ -207,23 +230,22 @@ def test_a_typed_case_id_is_unique_within_the_workspace(api: ApiAs, database: st
     "changes",
     [
         {"patient_id": str(uuid.uuid4())},
-        {"patient": None},
+        {"project_id": None},
         {"specimens": []},
         {"specimens": [{"letter": "A"}, {"letter": "A"}]},
         {"specimens": [{"letter": "a"}]},
         {"specimens": [{"letter": "A", "blocks": [{"number": 1}, {"number": 1}]}]},
-        {"priority": "whenever"},
-        {"accession": None},
-        {"accession": "   "},
-        {"accession": "x" * 41},
+        {"label": None},
+        {"label": "   "},
+        {"label": "x" * 101},
     ],
 )
 def test_invalid_drafts_are_refused(api: ApiAs, database: str, changes: dict[str, Any]) -> None:
     lab = make_lab(database)
-    assert create(api, lab.people["researcher"], draft(**changes)).status_code == 422
+    assert create(api, lab.people["researcher"], draft(lab, **changes)).status_code == 422
 
 
 def test_reviewers_and_admins_do_not_create_cases(api: ApiAs, database: str) -> None:
     lab = make_lab(database)
     for label in ("reviewer", "admin"):
-        assert create(api, lab.people[label], draft()).status_code == 403
+        assert create(api, lab.people[label], draft(lab)).status_code == 403

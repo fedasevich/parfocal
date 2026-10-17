@@ -23,6 +23,7 @@ from parfocal_api.tables import (
     memberships,
     organisations,
     platform_operators,
+    project_members,
     service_accounts,
     session_policies,
     tenants,
@@ -61,6 +62,8 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "projects",
+    "project_members",
     "tenant_keys",
     "patients",
     "specimens",
@@ -151,6 +154,14 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
     await connection.execute(
+        insert(project_members).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            user_id=seeded.ids["user"],
+            role="owner",
+        )
+    )
+    await connection.execute(
         insert(case_requests).values(
             tenant_id=seeded.tenant_id,
             user_id=seeded.ids["user"],
@@ -167,7 +178,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             expires_at=text("now() + interval '1 hour'"),
         )
     )
-    seeded.markers.update({case.accession, str(case.case_id)})
+    seeded.markers.update({case.label, str(case.case_id), str(case.project_id)})
 
 
 SEEDERS: dict[str, Seeder] = {

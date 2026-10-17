@@ -9,14 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.case_access import require_case_access
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
+from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import NotFoundError
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
-    Priority,
     Sex,
     blocks,
     cases,
@@ -58,6 +57,7 @@ class SpecimenDetail(BaseModel):
 
 class SlideDetail(BaseModel):
     id: uuid.UUID
+    label: str
     block_id: uuid.UUID | None
     barcode: str | None
     stain: str
@@ -66,16 +66,11 @@ class SlideDetail(BaseModel):
 
 class CaseDetail(BaseModel):
     id: uuid.UUID
-    accession: str
-    priority: Priority
-    due_at: datetime | None
+    project_id: uuid.UUID
+    label: str
     source: CaseSource
-    assignee_user_id: uuid.UUID | None
     service: str | None
-    requester: str | None
     is_draft: bool
-    clinical_note: str | None
-    clinical_question: str | None
     patient: PatientDetail | None
     specimens: list[SpecimenDetail]
     slides: list[SlideDetail]
@@ -185,29 +180,25 @@ async def case_detail(
             .order_by(slides.c.created_at)
         )
     ).all()
-    tenant_id = database_scope(principal).tenant_id
-    assert tenant_id is not None
-    keys = await load_keys(connection, keyring, tenant_id)
-    patient = await patient_detail(connection, keys, row.patient_id)
-    note = open_field(keys, "cases", case_id, "clinical_note", row.clinical_note)
-    question = open_field(keys, "cases", case_id, "clinical_question", row.clinical_question)
+    patient = None
+    if row.patient_id is not None:
+        tenant_id = database_scope(principal).tenant_id
+        assert tenant_id is not None
+        keys = await load_keys(connection, keyring, tenant_id)
+        patient = await patient_detail(connection, keys, row.patient_id)
     return CaseDetail(
         id=row.id,
-        accession=row.accession,
-        priority=Priority(row.priority),
-        due_at=row.due_at,
+        project_id=row.project_id,
+        label=row.label,
         source=CaseSource(row.source),
-        assignee_user_id=row.assignee_user_id,
         service=row.service,
-        requester=row.requester,
         is_draft=row.is_draft,
-        clinical_note=note,
-        clinical_question=question,
         patient=patient,
         specimens=await specimen_details(connection, case_id),
         slides=[
             SlideDetail(
                 id=slide.id,
+                label=slide.label,
                 block_id=slide.block_id,
                 barcode=slide.barcode,
                 stain=slide.stain,
@@ -220,17 +211,20 @@ async def case_detail(
 
 class CaseSummary(BaseModel):
     id: uuid.UUID
-    accession: str
-    priority: Priority
-    due_at: datetime | None
-    assignee_user_id: uuid.UUID | None
+    project_id: uuid.UUID
+    label: str
+    created_at: datetime
 
 
 @router.get("", operation_id="listCases", **require(Permission.SEE_SLIDES))
 async def list_cases(
-    principal: CurrentPrincipal, connection: TenantConnection
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    project_id: uuid.UUID | None = None,
 ) -> list[CaseSummary]:
     statement = select(cases).where(cases.c.deleted_at.is_(None))
+    if project_id is not None:
+        statement = statement.where(cases.c.project_id == project_id)
     if isinstance(principal, MemberPrincipal):
         statement = statement.where(
             or_(

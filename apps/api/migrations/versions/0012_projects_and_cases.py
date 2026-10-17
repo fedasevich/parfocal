@@ -16,7 +16,7 @@ down_revision: str | None = "0011"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-CASE_TABLES = ("cases", "specimens", "blocks", "slides")
+CASE_TABLES = ("projects", "cases", "specimens", "blocks", "slides")
 
 
 def one_of(column: str, values: Sequence[str]) -> sa.CheckConstraint:
@@ -63,27 +63,51 @@ def upgrade() -> None:
     op.create_check_constraint("age_years", "patients", "age_years BETWEEN 0 AND 150")
     op.create_unique_constraint(None, "patients", ["id", "tenant_id"])
     op.create_table(
+        "projects",
+        *ids(),
+        sa.Column("number", sa.SmallInteger, nullable=False),
+        sa.Column("name", sa.String(120), nullable=False),
+        sa.Column("privacy_mode", sa.String(20), nullable=False, server_default="de-identified"),
+        *timestamps(),
+        sa.UniqueConstraint("tenant_id", "number"),
+        sa.UniqueConstraint("id", "tenant_id"),
+        sa.UniqueConstraint("id", "privacy_mode"),
+        sa.CheckConstraint("number BETWEEN 1 AND 9999", name="number"),
+        one_of("privacy_mode", ("de-identified", "clinical")),
+    )
+    op.create_table(
+        "project_members",
+        sa.Column("tenant_id", sa.Uuid[uuid.UUID](), nullable=False),
+        sa.Column("project_id", sa.Uuid[uuid.UUID](), nullable=False),
+        sa.Column("user_id", sa.Uuid[uuid.UUID](), nullable=False),
+        sa.Column("role", sa.String(10), nullable=False),
+        sa.PrimaryKeyConstraint("project_id", "user_id"),
+        sa.ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "user_id"],
+            ["memberships.tenant_id", "memberships.user_id"],
+            ondelete="CASCADE",
+        ),
+        one_of("role", ("owner", "reviewer", "viewer")),
+    )
+    op.create_index("ix_project_members_user_id", "project_members", ["user_id"])
+    op.create_table(
         "cases",
         *ids(),
-        sa.Column("patient_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),
-        sa.Column("accession", sa.String(40), nullable=False),
-        sa.Column("priority", sa.String(10), nullable=False, server_default="routine"),
-        sa.Column("due_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("project_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),
+        sa.Column("patient_id", sa.Uuid[uuid.UUID](), nullable=True, index=True),
+        sa.Column("label", sa.String(100), nullable=False),
         sa.Column("source", sa.String(10), nullable=False),
-        sa.Column(
-            "assignee_user_id", sa.Uuid[uuid.UUID](), sa.ForeignKey("users.id"), nullable=True
-        ),
-        sa.Column("clinical_note", sa.LargeBinary, nullable=True),
-        sa.Column("clinical_question", sa.LargeBinary, nullable=True),
         sa.Column(
             "created_by_user_id", sa.Uuid[uuid.UUID](), sa.ForeignKey("users.id"), nullable=True
         ),
         *timestamps(),
-        sa.UniqueConstraint("tenant_id", "accession"),
+        sa.UniqueConstraint("project_id", "label"),
         sa.UniqueConstraint("id", "tenant_id"),
+        sa.UniqueConstraint("id", "project_id"),
+        sa.ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
         sa.ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
-        one_of("priority", ("routine", "urgent", "asap", "stat")),
-        one_of("source", ("lis", "manual", "upload")),
+        one_of("source", ("manual", "upload")),
     )
     op.create_table(
         "specimens",
@@ -122,16 +146,30 @@ def upgrade() -> None:
     op.create_table(
         "slides",
         *ids(),
-        sa.Column("case_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),
+        sa.Column("project_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),
+        sa.Column("case_id", sa.Uuid[uuid.UUID](), nullable=True, index=True),
         sa.Column("block_id", sa.Uuid[uuid.UUID](), nullable=True, index=True),
+        sa.Column("label", sa.String(200), nullable=False),
         sa.Column("barcode", sa.String(100), nullable=True),
         sa.Column("stain", sa.String(60), nullable=False, server_default="H&E"),
         sa.Column("level", sa.SmallInteger, nullable=True),
         *timestamps(),
-        sa.UniqueConstraint("tenant_id", "barcode"),
-        sa.ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+        sa.UniqueConstraint("project_id", "barcode"),
+        sa.UniqueConstraint("case_id", "label"),
+        sa.Index(
+            "ix_slides_project_id_label",
+            "project_id",
+            "label",
+            unique=True,
+            postgresql_where=sa.text("case_id IS NULL"),
+        ),
+        sa.ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+        sa.ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
         sa.ForeignKeyConstraint(["block_id", "case_id"], ["blocks.id", "blocks.case_id"]),
+        sa.CheckConstraint("block_id IS NULL OR case_id IS NOT NULL", name="block_in_case"),
     )
+    for statement in enable_tenant_isolation("project_members"):
+        op.execute(statement)
     for table in CASE_TABLES:
         for statement in [
             *enable_tenant_isolation(table),
@@ -143,6 +181,8 @@ def upgrade() -> None:
 def downgrade() -> None:
     for table in reversed(CASE_TABLES):
         op.execute(untrack_updated_at(table)[0])
+        if table == "projects":
+            op.drop_table("project_members")
         op.drop_table(table)
     op.drop_constraint("age_years", "patients", type_="check")
     op.drop_constraint("sex", "patients", type_="check")

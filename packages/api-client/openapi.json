@@ -711,6 +711,25 @@
         ],
         "summary": "List Cases",
         "operationId": "listCases",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4758,39 +4777,17 @@
             "format": "uuid",
             "title": "Id"
           },
-          "accession": {
+          "project_id": {
             "type": "string",
-            "title": "Accession"
+            "format": "uuid",
+            "title": "Project Id"
           },
-          "priority": {
-            "$ref": "#/components/schemas/Priority"
-          },
-          "due_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Due At"
+          "label": {
+            "type": "string",
+            "title": "Label"
           },
           "source": {
             "$ref": "#/components/schemas/CaseSource"
-          },
-          "assignee_user_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee User Id"
           },
           "service": {
             "anyOf": [
@@ -4803,42 +4800,9 @@
             ],
             "title": "Service"
           },
-          "requester": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Requester"
-          },
           "is_draft": {
             "type": "boolean",
             "title": "Is Draft"
-          },
-          "clinical_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Clinical Note"
-          },
-          "clinical_question": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Clinical Question"
           },
           "patient": {
             "anyOf": [
@@ -4868,16 +4832,11 @@
         "type": "object",
         "required": [
           "id",
-          "accession",
-          "priority",
-          "due_at",
+          "project_id",
+          "label",
           "source",
-          "assignee_user_id",
           "service",
-          "requester",
           "is_draft",
-          "clinical_note",
-          "clinical_question",
           "patient",
           "specimens",
           "slides"
@@ -4886,6 +4845,17 @@
       },
       "CaseDraft": {
         "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Label"
+          },
           "patient_id": {
             "anyOf": [
               {
@@ -4917,50 +4887,6 @@
             "minItems": 1,
             "title": "Specimens"
           },
-          "clinical_note": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 4000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Clinical Note"
-          },
-          "clinical_question": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 1000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Clinical Question"
-          },
-          "requester": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Text200"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "priority": {
-            "$ref": "#/components/schemas/Priority",
-            "default": "routine"
-          },
-          "accession": {
-            "type": "string",
-            "maxLength": 40,
-            "minLength": 1,
-            "title": "Accession"
-          },
           "service": {
             "anyOf": [
               {
@@ -4973,30 +4899,6 @@
             ],
             "title": "Service"
           },
-          "due_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Due At"
-          },
-          "assignee_user_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee User Id"
-          },
           "draft": {
             "type": "boolean",
             "title": "Draft",
@@ -5005,15 +4907,15 @@
         },
         "type": "object",
         "required": [
-          "specimens",
-          "accession"
+          "project_id",
+          "label",
+          "specimens"
         ],
         "title": "CaseDraft"
       },
       "CaseSource": {
         "type": "string",
         "enum": [
-          "lis",
           "manual",
           "upload"
         ],
@@ -5026,45 +4928,27 @@
             "format": "uuid",
             "title": "Id"
           },
-          "accession": {
+          "project_id": {
             "type": "string",
-            "title": "Accession"
+            "format": "uuid",
+            "title": "Project Id"
           },
-          "priority": {
-            "$ref": "#/components/schemas/Priority"
+          "label": {
+            "type": "string",
+            "title": "Label"
           },
-          "due_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Due At"
-          },
-          "assignee_user_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee User Id"
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "accession",
-          "priority",
-          "due_at",
-          "assignee_user_id"
+          "project_id",
+          "label",
+          "created_at"
         ],
         "title": "CaseSummary"
       },
@@ -5693,16 +5577,6 @@
         ],
         "title": "Plan"
       },
-      "Priority": {
-        "type": "string",
-        "enum": [
-          "routine",
-          "urgent",
-          "asap",
-          "stat"
-        ],
-        "title": "Priority"
-      },
       "Problem": {
         "properties": {
           "type": {
@@ -6112,6 +5986,10 @@
             "format": "uuid",
             "title": "Id"
           },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
           "block_id": {
             "anyOf": [
               {
@@ -6154,6 +6032,7 @@
         "type": "object",
         "required": [
           "id",
+          "label",
           "block_id",
           "barcode",
           "stain",
