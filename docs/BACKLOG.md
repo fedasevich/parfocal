@@ -2939,9 +2939,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 A project holds slides, AI results and review tasks. Cases inside it are optional ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Data model").
 
-- [ ] PROJ-000 · Research check
+- [x] PROJ-000 · Research check
   Done when an ADR records the project model (project, optional case, slide, result sets), the privacy modes and the project roles, and what each existing table (cases, patients, slides) becomes.
-  Depends on ADAPT-000.
+  Depends on ADAPT-000. Decided in [ADR 0062](adr/0062-project-model.md).
 
 - [ ] PROJ-001 · Project model and API
   A project has a short ID (P07), a name, a colour, a privacy mode, an analysis template, a class taxonomy, members with project roles and a status. Cases are optional, and loose slides belong to the project directly.
@@ -2955,7 +2955,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
 
 - [ ] PROJ-003 · Project roles
-  Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project.
+  Owner, reviewer and viewer per project, on top of the workspace roles (IAM-022). Opening a project needs a project role, researchers included, and the creator becomes owner. A reviewer sees only the slides of their tasks, a viewer reads, and an owner manages the project. One API helper turns the workspace grant and the project role into the effective grant, and row-level security stays per workspace ([ADR 0062](adr/0062-project-model.md)).
   Done when the permission test runs every project endpoint for every project role, and an isolation test hides another project's slides from a reviewer.
   Depends on IAM-022, PROJ-001.
 
@@ -3443,7 +3443,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Depends on ADAPT-000.
 
 - [ ] ADAPT-004 · Rework cases for projects
-  Create the minimal `projects` table with the columns PROJ-000 names, including the privacy mode. A case belongs to a project and is optional, and a slide belongs to a project with an optional case. The case ID is free text unique within the project, the patient link is optional and allowed only in clinical projects, and the columns priority, due time, assignee, clinical note, clinical question and requester are dropped. The source loses `lis`. Specimen and blocks stay optional (`cases.py`, migration `0012`). Existing rows need not survive ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
+  Create the minimal `projects` and `project_members` tables that [ADR 0062](adr/0062-project-model.md) names, including the privacy mode and the project number. A case belongs to a project and is optional, and a slide belongs to a project with an optional case. The case ID is free text unique within the project, the patient link is optional and allowed only in clinical projects, and the columns priority, due time, assignee, clinical note, clinical question and requester are dropped. The source loses `lis`. Specimen and blocks stay optional (`cases.py`, migration `0012`). Existing rows need not survive ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
   Done when API tests cover cases in both privacy modes and a loose slide, isolation tests pass, and an ADR updates ADR 0036.
   Depends on PROJ-000, ADAPT-002, ADAPT-006, ADAPT-007.
 
@@ -3473,12 +3473,12 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Depends on ADAPT-000.
 
 - [ ] ADAPT-010 · Rework emergency access for clinical projects
-  A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. De-identified projects need no emergency path (`emergency.py`, `folder_access.require_case_access`, migration `0018`).
+  A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. The grant names the project instead of a case ([ADR 0062](adr/0062-project-model.md)). De-identified projects need no emergency path (`emergency.py`, `folder_access.require_case_access`, migration `0018`).
   Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
   Depends on ADAPT-001, PROJ-002, PROJ-003.
 
 - [ ] ADAPT-011 · Patients only in clinical projects
-  Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001).
+  Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001). Each patient belongs to one clinical project, a key on the project's privacy mode refuses a patient in a de-identified project, and the MRN index is unique per project ([ADR 0062](adr/0062-project-model.md)).
   Done when API tests refuse a patient in a de-identified project, the data map is regenerated, and isolation tests pass.
   Depends on ADAPT-004, PROJ-002.
 

@@ -67,3 +67,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0059](0059-no-folders.md) | Folders are removed, and access is by role across the workspace until project roles land | Accepted | 2026-10-17 |
 | [0060](0060-no-sign-out-permissions-or-guest-scope.md) | The sign-out permissions, the outside consultant and the guest scope are removed | Accepted | 2026-10-17 |
 | [0061](0061-researcher-reviewer-and-admin-roles.md) | Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project | Accepted | 2026-10-17 |
+| [0062](0062-project-model.md) | Projects hold optional cases, slides and result sets, need a membership to open, and own their patients | Accepted | 2026-10-17 |
