@@ -59,7 +59,7 @@ def effective(setup: Setup, role: ProjectRole | None, permission: Permission) ->
 type Expect = Callable[[Setup, ProjectRole | None], int]
 
 
-def reads(setup: Setup, role: ProjectRole | None) -> int:
+def lists(setup: Setup, role: ProjectRole | None) -> int:
     return (
         200
         if effective(setup, role, Permission.SEE_SLIDES) in {Grant.ALL, Grant.VIEW_ONLY}
@@ -67,8 +67,23 @@ def reads(setup: Setup, role: ProjectRole | None) -> int:
     )
 
 
-def member_reads(setup: Setup, role: ProjectRole | None) -> int:
+def lists_membership(setup: Setup, role: ProjectRole | None) -> int:
     return 404 if role is None else 200
+
+
+def hidden(setup: Setup) -> int:
+    asks = grant_for(setup.subject.role, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
+    return 403 if asks else 404
+
+
+def reads(setup: Setup, role: ProjectRole | None) -> int:
+    if lists(setup, role) == 200:
+        return 200
+    return 404 if role is not None else hidden(setup)
+
+
+def member_reads(setup: Setup, role: ProjectRole | None) -> int:
+    return hidden(setup) if role is None else 200
 
 
 def owner_changes(setup: Setup, role: ProjectRole | None) -> int:
@@ -109,7 +124,7 @@ def listed_projects(client: TestClient, setup: Setup) -> int:
 
 OPERATIONS: dict[str, Operation] = {
     "getProject": Operation(lambda c, s: c.get(f"/api/projects/{s.project}"), member_reads),
-    "listProjects": Operation(listed_projects, member_reads),
+    "listProjects": Operation(listed_projects, lists_membership),
     "updateProject": Operation(
         lambda c, s: c.patch(f"/api/projects/{s.project}", json={"colour": 5}), owner_changes
     ),
@@ -136,7 +151,7 @@ OPERATIONS: dict[str, Operation] = {
         owner_creates,
     ),
     "getCase": Operation(lambda c, s: c.get(f"/api/cases/{s.case}"), reads),
-    "listCases": Operation(listed_cases, reads),
+    "listCases": Operation(listed_cases, lists),
 }
 
 ROLES: list[tuple[Role, ProjectRole | None]] = [

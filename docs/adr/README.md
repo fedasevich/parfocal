@@ -51,7 +51,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0042](0042-model-licensing-policy.md) | Model licensing policy: Parfocal is commercial, and the registry blocks any model whose weights or training data licences are not confirmed | Rejected | 2026-10-14 |
 | [0045](0045-forms-and-validation.md) | Forms with TanStack Form and Zod 4, and report forms driven by template data | Accepted | 2026-10-14 |
 | [0044](0044-background-jobs-and-workflows.md) | Background jobs and workflows on Postgres tables with leases, confirming the default of ADR 0003 | Accepted | 2026-10-14 |
-| [0047](0047-emergency-access-with-a-reason.md) | Emergency access: a written reason opens one case for a lab-set time, administrators included | Accepted | 2026-10-14 |
+| [0047](0047-emergency-access-with-a-reason.md) | Emergency access: a written reason opens one case for a lab-set time, administrators included | Superseded by 0066 | 2026-10-14 |
 | [0051](0051-availability-status-and-back-up.md) | Availability status per workspace, with an away person's new cases going to their back-up | Superseded by 0055 | 2026-10-15 |
 | [0052](0052-task-board-from-backlog-and-claim-files.md) | A task board read from the backlog, with one claim file per task | Proposed | 2026-10-15 |
 | [0043](0043-server-slide-reading.md) | Server slide reading with OpenSlide first, tiffslide for OME-TIFF and tifffile for validation | Accepted | 2026-10-15 |
@@ -71,3 +71,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0063](0063-cases-and-slides-in-projects.md) | Cases and slides live in projects, a case is optional, and the hospital case columns are gone | Accepted | 2026-10-17 |
 | [0064](0064-project-api.md) | The project API: numbered per workspace, membership to read, owners to change, archive instead of delete | Accepted | 2026-10-17 |
 | [0065](0065-project-role-enforcement.md) | Project roles narrow the workspace grant, only workspace members reach workspace routes, and owners stay researchers | Accepted | 2026-10-17 |
+| [0066](0066-emergency-access-per-clinical-project.md) | Emergency access opens one clinical project for a set time, for researchers and admins outside it | Accepted | 2026-10-17 |

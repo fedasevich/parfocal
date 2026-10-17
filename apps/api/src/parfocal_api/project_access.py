@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ColumnElement, select, true
+from sqlalchemy import ColumnElement, exists, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.permissions import (
@@ -9,15 +9,22 @@ from parfocal_api.permissions import (
     Permission,
     grant_of,
     in_project,
+    may_ask_for_emergency_access,
 )
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
-from parfocal_api.tables import ProjectRole, project_members
+from parfocal_api.problems import ForbiddenError, NotFoundError
+from parfocal_api.tables import PrivacyMode, ProjectRole, emergency_grants, project_members
 
 READERS = tuple(
     role
     for role, grant in PROJECT_MATRIX[Permission.SEE_SLIDES].items()
     if grant in {Grant.ALL, Grant.VIEW_ONLY}
 )
+
+
+class EmergencyAccessNeededError(ForbiddenError):
+    code = "emergency-access-needed"
+    title = "Give a reason to open this clinical project"
 
 
 async def role_in(
@@ -34,6 +41,32 @@ async def role_in(
     return ProjectRole(role) if role else None
 
 
+def open_grants(principal: MemberPrincipal) -> ColumnElement[bool]:
+    return (emergency_grants.c.user_id == principal.user_id) & (
+        emergency_grants.c.expires_at > func.now()
+    )
+
+
+async def emergency_open(
+    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
+) -> bool:
+    if not isinstance(principal, MemberPrincipal):
+        return False
+    return bool(
+        await connection.scalar(
+            select(
+                exists().where(open_grants(principal), emergency_grants.c.project_id == project_id)
+            )
+        )
+    )
+
+
+async def holds_any_grant(connection: AsyncConnection, principal: Principal) -> bool:
+    if not isinstance(principal, MemberPrincipal):
+        return False
+    return bool(await connection.scalar(select(exists().where(open_grants(principal)))))
+
+
 async def project_grant(
     connection: AsyncConnection,
     principal: Principal,
@@ -43,20 +76,46 @@ async def project_grant(
     workspace = grant_of(principal, permission)
     if isinstance(principal, ServicePrincipal):
         return workspace
-    return in_project(workspace, permission, await role_in(connection, principal, project_id))
+    grant = in_project(workspace, permission, await role_in(connection, principal, project_id))
+    if (
+        grant is Grant.NONE
+        and permission is Permission.SEE_SLIDES
+        and may_ask_for_emergency_access(principal)
+        and await emergency_open(connection, principal, project_id)
+    ):
+        return Grant.VIEW_ONLY
+    return grant
 
 
 def reads_whole(grant: Grant) -> bool:
     return grant in {Grant.ALL, Grant.VIEW_ONLY}
 
 
+async def require_reading(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    privacy_mode: PrivacyMode,
+    missing: str,
+) -> None:
+    if reads_whole(await project_grant(connection, principal, project_id, Permission.SEE_SLIDES)):
+        return
+    outside = await role_in(connection, principal, project_id) is None
+    if outside and privacy_mode is PrivacyMode.CLINICAL and may_ask_for_emergency_access(principal):
+        raise EmergencyAccessNeededError
+    raise NotFoundError(missing)
+
+
 def readable(principal: Principal, project_column: ColumnElement[uuid.UUID]) -> ColumnElement[bool]:
     if isinstance(principal, ServicePrincipal):
         return true()
     assert isinstance(principal, MemberPrincipal)
-    return project_column.in_(
-        select(project_members.c.project_id).where(
-            project_members.c.user_id == principal.user_id,
-            project_members.c.role.in_(READERS),
-        )
+    return or_(
+        project_column.in_(
+            select(project_members.c.project_id).where(
+                project_members.c.user_id == principal.user_id,
+                project_members.c.role.in_(READERS),
+            )
+        ),
+        project_column.in_(select(emergency_grants.c.project_id).where(open_grants(principal))),
     )

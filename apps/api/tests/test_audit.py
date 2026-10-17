@@ -224,7 +224,7 @@ def test_the_export_lists_a_case_history_in_order(api: ApiAs, database: str) -> 
         (case_id, AuditAction.CASE_OPENED),
         (other_case, AuditAction.CASE_OPENED),
         (case_id, AuditAction.CASE_CREATED),
-        (case_id, AuditAction.CASE_EMERGENCY_ACCESS),
+        (case_id, AuditAction.PROJECT_EMERGENCY_ACCESS),
     ]
 
     async def write(connection: AsyncConnection) -> None:
@@ -243,7 +243,7 @@ def test_the_export_lists_a_case_history_in_order(api: ApiAs, database: str) -> 
     assert [event.action for event in history] == [
         AuditAction.CASE_OPENED,
         AuditAction.CASE_CREATED,
-        AuditAction.CASE_EMERGENCY_ACCESS,
+        AuditAction.PROJECT_EMERGENCY_ACCESS,
     ]
     assert {event.target_id for event in history} == {case_id}
     assert [event.seq for event in history] == sorted(event.seq for event in history)

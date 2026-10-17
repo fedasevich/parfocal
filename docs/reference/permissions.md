@@ -40,7 +40,7 @@ An empty cell means no.
 | Action | Key | Researcher | Reviewer | Admin |
 |---|---|---|---|---|
 | See projects, cases and slides | `see-slides` | Yes | In their tasks |  |
-| Open a case their role does not reach | `emergency-access` |  |  | Emergency, with reason |
+| Open a clinical project they are not in | `emergency-access` | Emergency, with reason |  | Emergency, with reason |
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |

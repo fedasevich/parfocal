@@ -174,7 +174,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         insert(emergency_grants).values(
             tenant_id=seeded.tenant_id,
             user_id=seeded.ids["user"],
-            case_id=case.case_id,
+            project_id=case.project_id,
             reason="Isolation suite reason",
             expires_at=text("now() + interval '1 hour'"),
         )

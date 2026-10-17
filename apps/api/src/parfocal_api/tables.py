@@ -813,7 +813,14 @@ emergency_grants = Table(
     ),
     Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("user_id", Uuid[uuid.UUID](), nullable=False, info=PERSONAL),
-    Column("case_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column(
+        "privacy_mode",
+        String(20),
+        nullable=False,
+        server_default=PrivacyMode.CLINICAL.value,
+        info=OPERATIONAL,
+    ),
     Column("reason", String(500), nullable=False, info=PHI),
     Column(
         "granted_at",
@@ -823,9 +830,11 @@ emergency_grants = Table(
         info=OPERATIONAL,
     ),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
-    ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["project_id", "privacy_mode"], ["projects.id", "projects.privacy_mode"]),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
-    Index("ix_emergency_grants_user_id_case_id", "user_id", "case_id"),
+    Index("ix_emergency_grants_user_id_project_id", "user_id", "project_id"),
+    CheckConstraint("privacy_mode = 'clinical'", name="clinical_only"),
 )

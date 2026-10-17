@@ -13,7 +13,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import role_in
+from parfocal_api.project_access import emergency_open, require_reading, role_in
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -121,19 +121,24 @@ async def row_of(connection: AsyncConnection, project_id: uuid.UUID) -> Any:
 
 async def visible(connection: AsyncConnection, principal: Principal, project_id: uuid.UUID) -> Any:
     row = await row_of(connection, project_id)
-    if (
-        isinstance(principal, MemberPrincipal)
-        and await role_in(connection, principal, project_id) is None
-    ):
-        raise NotFoundError("Project not found")
+    if not isinstance(principal, MemberPrincipal):
+        return row
+    if await role_in(connection, principal, project_id) is not None:
+        return row
+    await require_reading(
+        connection, principal, project_id, PrivacyMode(row.privacy_mode), "Project not found"
+    )
     return row
 
 
 async def owned(connection: AsyncConnection, principal: Principal, project_id: uuid.UUID) -> Any:
-    row = await visible(connection, principal, project_id)
-    if await role_in(connection, principal, project_id) is not ProjectRole.OWNER:
-        raise OwnersOnlyError
-    return row
+    row = await row_of(connection, project_id)
+    role = await role_in(connection, principal, project_id)
+    if role is ProjectRole.OWNER:
+        return row
+    if role is None and not await emergency_open(connection, principal, project_id):
+        raise NotFoundError("Project not found")
+    raise OwnersOnlyError
 
 
 async def project_of(
@@ -256,7 +261,9 @@ async def list_projects(
     return [await project_of(connection, principal, project_id) for project_id in ids]
 
 
-@router.get("/{project_id}", operation_id="getProject", **require(Permission.SEE_SLIDES))
+@router.get(
+    "/{project_id}", operation_id="getProject", **require(Permission.SEE_SLIDES, emergency=True)
+)
 async def get_project(
     project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> Project:

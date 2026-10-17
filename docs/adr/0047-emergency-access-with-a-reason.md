@@ -1,7 +1,7 @@
 # 0047. Emergency access: a written reason opens one case for a lab-set time, administrators included
 
 - Date: 2026-10-14
-- Status: Accepted
+- Status: Superseded by 0066
 - Deciders: Yurii Fedas
 - Backlog: IAM-017, IAM-016, SEC-003, SEC-024, NOTIF-001
 

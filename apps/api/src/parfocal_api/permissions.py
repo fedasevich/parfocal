@@ -56,7 +56,7 @@ class Permission(StrEnum):
 
 PERMISSION_NAMES = {
     Permission.SEE_SLIDES: "See projects, cases and slides",
-    Permission.EMERGENCY_ACCESS: "Open a case their role does not reach",
+    Permission.EMERGENCY_ACCESS: "Open a clinical project they are not in",
     Permission.CREATE_CASES: "Create projects and cases, edit their details",
     Permission.UPLOAD_SLIDES: "Upload slides and AI results, fix unmatched files",
     Permission.MOVE_SLIDES: "Move a slide between cases",
@@ -74,7 +74,7 @@ COLUMNS = (Role.RESEARCHER, Role.REVIEWER, Role.ADMIN)
 
 ROWS = {
     Permission.SEE_SLIDES: "yon",
-    Permission.EMERGENCY_ACCESS: "nnb",
+    Permission.EMERGENCY_ACCESS: "bnb",
     Permission.CREATE_CASES: "ynn",
     Permission.UPLOAD_SLIDES: "ynn",
     Permission.MOVE_SLIDES: "ynn",

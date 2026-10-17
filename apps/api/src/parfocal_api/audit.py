@@ -37,7 +37,7 @@ class AuditAction(StrEnum):
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"
     CASE_OPENED = "case.opened"
     CASE_CREATED = "case.created"
-    CASE_EMERGENCY_ACCESS = "case.emergency-access"
+    PROJECT_EMERGENCY_ACCESS = "project.emergency-access"
     PROJECT_CREATED = "project.created"
     PROJECT_CHANGED = "project.changed"
     PROJECT_ARCHIVED = "project.archived"

@@ -23,19 +23,24 @@ def upgrade() -> None:
         ),
         sa.Column("tenant_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),
         sa.Column("user_id", sa.Uuid[uuid.UUID](), nullable=False),
-        sa.Column("case_id", sa.Uuid[uuid.UUID](), nullable=False),
+        sa.Column("project_id", sa.Uuid[uuid.UUID](), nullable=False),
+        sa.Column("privacy_mode", sa.String(20), nullable=False, server_default="clinical"),
         sa.Column("reason", sa.String(500), nullable=False),
         sa.Column(
             "granted_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
         ),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
+        sa.ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+        sa.ForeignKeyConstraint(
+            ["project_id", "privacy_mode"], ["projects.id", "projects.privacy_mode"]
+        ),
+        sa.CheckConstraint("privacy_mode = 'clinical'", name="clinical_only"),
         sa.ForeignKeyConstraint(
             ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
         ),
     )
     op.create_index(
-        "ix_emergency_grants_user_id_case_id", "emergency_grants", ["user_id", "case_id"]
+        "ix_emergency_grants_user_id_project_id", "emergency_grants", ["user_id", "project_id"]
     )
     op.add_column(
         "session_policies",

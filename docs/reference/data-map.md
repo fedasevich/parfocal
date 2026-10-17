@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 19 |
 | `personal` | 21 |
 | `secret` | 9 |
-| `operational` | 144 |
+| `operational` | 145 |
 | `public` | 0 |
 
 ## api_tokens
@@ -114,7 +114,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `id` | operational |
 | `tenant_id` | operational |
 | `user_id` | personal |
-| `case_id` | operational |
+| `project_id` | operational |
+| `privacy_mode` | operational |
 | `reason` | phi |
 | `granted_at` | operational |
 | `expires_at` | operational |

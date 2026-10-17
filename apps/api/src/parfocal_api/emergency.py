@@ -4,14 +4,16 @@ from typing import Annotated
 
 from fastapi import APIRouter
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import exists, func, insert, select
+from sqlalchemy import func, insert
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.problems import ForbiddenError, NotFoundError
-from parfocal_api.tables import cases, emergency_grants
+from parfocal_api.problems import ConflictError, ForbiddenError
+from parfocal_api.project_access import role_in
+from parfocal_api.projects import row_of
+from parfocal_api.tables import PrivacyMode, emergency_grants
 from parfocal_api.tenants import current_policy
 
 type Reason = Annotated[
@@ -24,39 +26,49 @@ class EmergencyRequest(BaseModel):
 
 
 class EmergencyGrant(BaseModel):
-    case_id: uuid.UUID
+    project_id: uuid.UUID
     expires_at: datetime
 
 
-router = APIRouter(prefix="/api/cases", tags=["cases"])
+class NoEmergencyAccessError(ConflictError):
+    code = "no-emergency-access"
+    title = "A de-identified project holds no patient data and has no emergency access"
+
+
+class AlreadyInProjectError(ConflictError):
+    code = "already-in-project"
+    title = "You are in this project and need no emergency access"
+
+
+router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 
 @router.post(
-    "/{case_id}/emergency-access",
+    "/{project_id}/emergency-access",
     operation_id="requestEmergencyAccess",
     status_code=201,
     **require(Permission.EMERGENCY_ACCESS, write=True),
 )
 async def request_emergency_access(
-    case_id: uuid.UUID,
+    project_id: uuid.UUID,
     request: EmergencyRequest,
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> EmergencyGrant:
     if not isinstance(principal, MemberPrincipal):
         raise ForbiddenError
-    found = await connection.scalar(
-        select(exists().where(cases.c.id == case_id, cases.c.deleted_at.is_(None)))
-    )
-    if not found:
-        raise NotFoundError("Case not found")
+    project = await row_of(connection, project_id)
+    if project.privacy_mode != PrivacyMode.CLINICAL:
+        raise NoEmergencyAccessError
+    if await role_in(connection, principal, project_id) is not None:
+        raise AlreadyInProjectError
     hours = (await current_policy(connection)).emergency_hours
     expires_at = await connection.scalar(
         insert(emergency_grants)
         .values(
             tenant_id=principal.tenant_id,
             user_id=principal.user_id,
-            case_id=case_id,
+            project_id=project_id,
             reason=request.reason,
             expires_at=func.now() + timedelta(hours=hours),
         )
@@ -66,10 +78,10 @@ async def request_emergency_access(
     await record(
         connection,
         actor_of(principal),
-        AuditAction.CASE_EMERGENCY_ACCESS,
-        AuditTarget.CASE,
-        case_id,
+        AuditAction.PROJECT_EMERGENCY_ACCESS,
+        AuditTarget.PROJECT,
+        project_id,
         tenant_id=principal.tenant_id,
         details={"reason": request.reason, "hours": hours, "role": principal.role},
     )
-    return EmergencyGrant(case_id=case_id, expires_at=expires_at)
+    return EmergencyGrant(project_id=project_id, expires_at=expires_at)

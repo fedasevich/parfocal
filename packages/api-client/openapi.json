@@ -923,7 +923,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-slides"
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
       },
       "patch": {
         "tags": [
@@ -1746,7 +1747,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-slides"
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
       },
       "post": {
         "tags": [
@@ -1876,22 +1878,22 @@
         "x-permission-write": true
       }
     },
-    "/api/cases/{case_id}/emergency-access": {
+    "/api/projects/{project_id}/emergency-access": {
       "post": {
         "tags": [
-          "cases"
+          "projects"
         ],
         "summary": "Request Emergency Access",
         "operationId": "requestEmergencyAccess",
         "parameters": [
           {
-            "name": "case_id",
+            "name": "project_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Case Id"
+              "title": "Project Id"
             }
           }
         ],
@@ -5883,10 +5885,10 @@
       },
       "EmergencyGrant": {
         "properties": {
-          "case_id": {
+          "project_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Case Id"
+            "title": "Project Id"
           },
           "expires_at": {
             "type": "string",
@@ -5896,7 +5898,7 @@
         },
         "type": "object",
         "required": [
-          "case_id",
+          "project_id",
           "expires_at"
         ],
         "title": "EmergencyGrant"

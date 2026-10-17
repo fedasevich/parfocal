@@ -7,20 +7,26 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.case_access import require_case_access
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Grant, Permission, grant_of, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import NotFoundError
-from parfocal_api.project_access import readable
+from parfocal_api.project_access import (
+    EmergencyAccessNeededError,
+    holds_any_grant,
+    readable,
+    require_reading,
+)
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
+    PrivacyMode,
     Sex,
     blocks,
     cases,
     patients,
+    projects,
     slides,
     specimens,
 )
@@ -160,12 +166,16 @@ async def case_detail(
 ) -> CaseDetail:
     row = (
         await connection.execute(
-            select(cases).where(cases.c.id == case_id, cases.c.deleted_at.is_(None))
+            select(cases, projects.c.privacy_mode)
+            .join(projects, projects.c.id == cases.c.project_id)
+            .where(cases.c.id == case_id, cases.c.deleted_at.is_(None))
         )
     ).one_or_none()
     if row is None:
         raise NotFoundError("Case not found")
-    await require_case_access(connection, principal, case_id, row.project_id, Permission.SEE_SLIDES)
+    await require_reading(
+        connection, principal, row.project_id, PrivacyMode(row.privacy_mode), "Case not found"
+    )
     slide_rows = (
         await connection.execute(
             select(slides)
@@ -207,12 +217,16 @@ class CaseSummary(BaseModel):
     created_at: datetime
 
 
-@router.get("", operation_id="listCases", **require(Permission.SEE_SLIDES))
+@router.get("", operation_id="listCases", **require(Permission.SEE_SLIDES, emergency=True))
 async def list_cases(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     project_id: uuid.UUID | None = None,
 ) -> list[CaseSummary]:
+    if grant_of(principal, Permission.SEE_SLIDES) is Grant.NONE and not await holds_any_grant(
+        connection, principal
+    ):
+        raise EmergencyAccessNeededError
     statement = select(cases).where(
         cases.c.deleted_at.is_(None), readable(principal, cases.c.project_id)
     )

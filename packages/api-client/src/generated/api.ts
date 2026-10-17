@@ -297,7 +297,7 @@ export type DisplayName = string;
 export type Email = string;
 
 export interface EmergencyGrant {
-  case_id: string;
+  project_id: string;
   expires_at: string;
 }
 
@@ -3337,15 +3337,15 @@ export type requestEmergencyAccessResponse =
   | requestEmergencyAccessResponseSuccess
   | requestEmergencyAccessResponseError;
 
-export const getRequestEmergencyAccessUrl = (caseId: string) => {
-  return `/api/cases/${caseId}/emergency-access`;
+export const getRequestEmergencyAccessUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/emergency-access`;
 };
 
 /**
  * @summary Request Emergency Access
  */
 export const requestEmergencyAccess = async (
-  caseId: string,
+  projectId: string,
   emergencyRequest: EmergencyRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<requestEmergencyAccessResponse> => {
@@ -3368,7 +3368,7 @@ export const requestEmergencyAccess = async (
     }
     return headers;
   };
-  return apiFetch<requestEmergencyAccessResponse>(getRequestEmergencyAccessUrl(caseId), {
+  return apiFetch<requestEmergencyAccessResponse>(getRequestEmergencyAccessUrl(projectId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
@@ -3406,9 +3406,9 @@ export const getRequestEmergencyAccessMutationOptions = <
     Awaited<ReturnType<typeof requestEmergencyAccess>>,
     RequestEmergencyAccessMutationVariables
   > = (props) => {
-    const { caseId, data } = props ?? {};
+    const { projectId, data } = props ?? {};
 
-    return requestEmergencyAccess(caseId, data, requestOptions);
+    return requestEmergencyAccess(projectId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -3419,7 +3419,7 @@ export type RequestEmergencyAccessMutationResult = NonNullable<
 >;
 export type RequestEmergencyAccessMutationBody = EmergencyRequest;
 export type RequestEmergencyAccessMutationError = Problem;
-export type RequestEmergencyAccessMutationVariables = { caseId: string; data: EmergencyRequest };
+export type RequestEmergencyAccessMutationVariables = { projectId: string; data: EmergencyRequest };
 
 /**
  * @summary Request Emergency Access

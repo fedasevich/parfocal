@@ -82,7 +82,7 @@ def test_people_see_only_the_projects_they_are_in(api: ApiAs, database: str) -> 
     for label in ("colleague", "reviewer"):
         assert api(people[label]).get(PROJECTS).json() == []
         assert api(people[label]).get(path).status_code == 404
-    assert api(people["admin"]).get(path).status_code == 403
+    assert api(people["admin"]).get(path).status_code == 404
     assert (
         add(api, people["owner"], project["id"], people["reviewer"], "reviewer").status_code == 200
     )

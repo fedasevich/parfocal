@@ -75,6 +75,7 @@ class Workspace:
     case: uuid.UUID
     project: uuid.UUID
     spare_project: uuid.UUID
+    outside_project: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -99,7 +100,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "requestEmergencyAccess": lambda w: Call(
-        "POST", f"/api/cases/{w.case}/emergency-access", {"reason": "Matrix check of access"}
+        "POST",
+        f"/api/projects/{w.outside_project}/emergency-access",
+        {"reason": "Matrix check of access"},
     ),
     "listCases": lambda _: Call("GET", "/api/cases"),
     "createCase": lambda w: Call(
@@ -151,6 +154,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -290,6 +294,7 @@ async def seed(database: str) -> Workspace:
             ]
             case = await seed_case(connection, tenant_id)
             spare_project = await seed_project(connection, tenant_id)
+            outside_project = await seed_project(connection, tenant_id)
             await connection.execute(
                 insert(project_members),
                 [
@@ -328,6 +333,7 @@ async def seed(database: str) -> Workspace:
             case.case_id,
             case.project_id,
             spare_project,
+            outside_project,
         )
     finally:
         await engine.dispose()
