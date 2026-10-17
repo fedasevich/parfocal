@@ -3427,12 +3427,12 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when an ADR holds the table and the order, and the owner has accepted it. STACK-040 (FHIR) added no code and needs no change.
   Refs [ADR 0053](adr/0053-ai-results-review-direction.md), ADR 0026, 0032, 0036, 0037, 0038, 0046, 0047, 0051. Planned in [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md).
 
-- [ ] ADAPT-001 · Remove hospital-only permissions, grants and the guest scope
+- [x] ADAPT-001 · Remove hospital-only permissions, grants and the guest scope
   Remove the permissions that only served sign-out (cancel, take and reassign cases, order lab work, draft, sign out, co-sign and amend reports, ask for and give second opinions, share reports, tumor boards, approve models), the grants needs co-sign, as named supervisor, shared with them and measure and comment, the outside consultant column, `GuestPrincipal`, `GuestGrant`, `ActorKind.GUEST`, the case and view settings in `DatabaseScope` and the `guest_case_scope` and `guest_hidden` policies. The five membership roles stay until IAM-022 replaces them. The code is throwaway, so migrations are edited in place ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
   Done when the table-driven permission test runs the smaller matrix on every endpoint, the permission doc is regenerated, no guest code or policy is left and the isolation suite passes.
   Depends on ADAPT-002, ADAPT-003, ADAPT-007.
 
-- [ ] ADAPT-002 · Revert folders
+- [x] ADAPT-002 · Revert folders
   Remove folders, folder members, the folder on a case, `all_folders` on the membership, the "in their folders" grant and folder-scoped permissions (`folders.py`, most of `folder_access.py`, migrations `0016` and `0017`). Until project roles (PROJ-003) land, members see every case their role allows in the workspace. The emergency path keeps working for administrators.
   Done when the migrations are gone, the isolation suite passes without the tables, no endpoint refers to folders, and an ADR supersedes ADR 0046.
   Depends on ADAPT-000.
