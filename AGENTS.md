@@ -10,7 +10,7 @@ The design source is the approved prototype pair, the UX kit (https://claude.ai/
 
 ## The docs folder is the project memory
 
-Everything the project knows, plans, decides and measures lives in `docs/`. Chat history, agent memory tools and session transcripts are not memory. If something is not written in `docs/`, assume the next session does not know it. External memory tools such as ai-memory may hold recall and session history, but they never replace or duplicate what belongs here.
+Everything the project knows, plans, decides and measures lives in `docs/`. Chat history, agent memory tools and session transcripts are not memory. If something is not written in `docs/`, assume the next session does not know it.
 
 ### Before starting any task
 
