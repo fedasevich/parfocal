@@ -3437,7 +3437,7 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when the migrations are gone, the isolation suite passes without the tables, no endpoint refers to folders, and an ADR supersedes ADR 0046.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-003 · Revert signing rights and supervision
+- [x] ADAPT-003 · Revert signing rights and supervision
   Remove "signs alone", the supervisor and the stored signature image (`signing.py`, migration `0010`). Sign-off confirms with single sign-on (ADJ-004), and supervision and co-sign stay ideas.
   Done when the columns and endpoints are gone, no code reads them, and an ADR supersedes ADR 0032.
   Depends on ADAPT-000.
@@ -3452,22 +3452,22 @@ Code built for the hospital direction is reverted or reworked so nothing runs th
   Done when API tests cover creation in each privacy mode and idempotency, and no rule hook is left.
   Depends on ADAPT-004.
 
-- [ ] ADAPT-006 · Revert accession numbers
+- [x] ADAPT-006 · Revert accession numbers
   Remove the per-workspace templates and counters (`accessions.py`, migration `0013`). Case creation takes a typed case ID, unique within the workspace until ADAPT-004 makes it unique within the project. Later the ID can also come from file names (CASES-024).
   Done when the tables and endpoints are gone, a uniqueness test passes, and an ADR supersedes ADR 0037.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-007 · Revert the case state machine
+- [x] ADAPT-007 · Revert the case state machine
   Remove the case states, their history columns, cancel and restore, and the state filter on the case list (`case_states.py`, migration `0014`, the `state` column from `0012`). The slide pipeline per task (TASK-002) replaces them and may reuse its table-driven test pattern.
   Done when the columns and endpoints are gone, no code reads a case state, and an ADR supersedes ADR 0038.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-008 · Revert case routing rules
+- [x] ADAPT-008 · Revert case routing rules
   Remove assignment by folder, specimen and load (`routing.py`). Researchers assign reviewers in a task. Nothing calls the module.
   Done when the module and its tests are gone and nothing calls it.
   Depends on ADAPT-000.
 
-- [ ] ADAPT-009 · Rework availability
+- [x] ADAPT-009 · Rework availability
   Keep "away until" with an optional note, shown when picking reviewers in a task. Remove busy, the back-up and the routing of new cases to it (`availability.py`, `availability.covering` in case creation, migration `0019`).
   Done when API tests cover the status and its expiry, the back-up column is gone, and an ADR supersedes ADR 0051.
   Depends on ADAPT-000.
