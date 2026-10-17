@@ -4,14 +4,14 @@ from typing import cast
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.case_access import require_case_access
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import MemberPrincipal, Principal, database_scope
+from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import NotFoundError
 from parfocal_api.tables import (
     CaseSource,
@@ -69,8 +69,6 @@ class CaseDetail(BaseModel):
     project_id: uuid.UUID
     label: str
     source: CaseSource
-    service: str | None
-    is_draft: bool
     patient: PatientDetail | None
     specimens: list[SpecimenDetail]
     slides: list[SlideDetail]
@@ -143,12 +141,6 @@ async def specimen_details(connection: AsyncConnection, case_id: uuid.UUID) -> l
     ]
 
 
-def sees_draft(principal: Principal, created_by: uuid.UUID | None) -> bool:
-    if not isinstance(principal, MemberPrincipal):
-        return False
-    return principal.user_id == created_by
-
-
 @router.get("/{case_id}", operation_id="getCase", **require(Permission.SEE_SLIDES, emergency=True))
 async def get_case(
     case_id: uuid.UUID,
@@ -170,7 +162,7 @@ async def case_detail(
             select(cases).where(cases.c.id == case_id, cases.c.deleted_at.is_(None))
         )
     ).one_or_none()
-    if row is None or (row.is_draft and not sees_draft(principal, row.created_by_user_id)):
+    if row is None:
         raise NotFoundError("Case not found")
     await require_case_access(connection, principal, case_id, Permission.SEE_SLIDES)
     slide_rows = (
@@ -191,8 +183,6 @@ async def case_detail(
         project_id=row.project_id,
         label=row.label,
         source=CaseSource(row.source),
-        service=row.service,
-        is_draft=row.is_draft,
         patient=patient,
         specimens=await specimen_details(connection, case_id),
         slides=[
@@ -225,14 +215,5 @@ async def list_cases(
     statement = select(cases).where(cases.c.deleted_at.is_(None))
     if project_id is not None:
         statement = statement.where(cases.c.project_id == project_id)
-    if isinstance(principal, MemberPrincipal):
-        statement = statement.where(
-            or_(
-                cases.c.is_draft.is_(False),
-                cases.c.created_by_user_id == principal.user_id,
-            )
-        )
-    else:
-        statement = statement.where(cases.c.is_draft.is_(False))
     rows = await connection.execute(statement.order_by(cases.c.created_at))
     return [CaseSummary.model_validate(row, from_attributes=True) for row in rows]

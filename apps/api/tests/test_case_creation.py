@@ -6,11 +6,8 @@ from typing import Any
 import pytest
 from db_support import ApiAs
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncConnection
 from workspace_support import Workspace, make_project, make_workspace, owner
 
-from parfocal_api import case_creation
-from parfocal_api.case_creation import CaseDefaults, CaseDraft
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
 
@@ -92,7 +89,6 @@ def test_a_researcher_creates_a_case_with_a_new_patient_in_a_clinical_project(
     first_block = case["specimens"][0]["blocks"][0]
     assert (first_block["stains"], first_block["levels"]) == (["H&E", "CK"], 3)
     assert [len(s["blocks"]) for s in case["specimens"]] == [1, 2]
-    assert case["service"] is None
     details = owner(
         database,
         f"SELECT action, details FROM audit_events WHERE target_id = '{case['id']}'",
@@ -100,8 +96,7 @@ def test_a_researcher_creates_a_case_with_a_new_patient_in_a_clinical_project(
     assert details == [
         (
             "case.created",
-            '{"draft":false,"new_patient":true,"privacy_mode":"clinical",'
-            '"source":"manual","specimens":2}',
+            '{"new_patient":true,"privacy_mode":"clinical","source":"manual","specimens":2}',
         )
     ]
 
@@ -128,6 +123,21 @@ def test_a_de_identified_project_refuses_patient_data(api: ApiAs, database: str)
     assert count == [(0,)]
 
 
+def test_a_case_needs_only_a_project_and_an_id(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    body = {"project_id": str(lab.de_identified), "label": "tcga-0042"}
+    response = create(api, lab.people["researcher"], body)
+    assert response.status_code == 201, response.text
+    case = response.json()
+    assert (case["label"], case["patient"], case["specimens"], case["slides"]) == (
+        "tcga-0042",
+        None,
+        [],
+        [],
+    )
+    assert {"is_draft", "service"}.isdisjoint(case)
+
+
 def test_a_case_needs_a_project_of_this_workspace(api: ApiAs, database: str) -> None:
     lab, other = make_lab(database), make_lab(database)
     for project in (other.clinical, uuid.uuid4()):
@@ -148,38 +158,6 @@ def test_a_case_for_an_existing_patient(api: ApiAs, database: str) -> None:
     same_mrn = draft(lab, patient={"name": "Someone", "mrn": first["patient"]["mrn"].lower()})
     duplicate = create(api, lab.people["colleague"], same_mrn)
     assert (duplicate.status_code, duplicate.json()["code"]) == (409, "patient-exists")
-
-
-class FixedRules:
-    def __init__(self, defaults: CaseDefaults) -> None:
-        self.defaults = defaults
-
-    async def defaults_for(
-        self, connection: AsyncConnection, tenant_id: uuid.UUID, draft: CaseDraft
-    ) -> CaseDefaults:
-        return self.defaults
-
-
-def test_rules_fill_the_service_and_the_form_overrides_it(
-    api: ApiAs, database: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    lab = make_lab(database)
-    monkeypatch.setattr(case_creation, "RULES", FixedRules(CaseDefaults(service="Lymph nodes")))
-    defaulted = create(api, lab.people["researcher"], draft(lab)).json()
-    assert defaulted["service"] == "Lymph nodes"
-    overridden = create(api, lab.people["researcher"], draft(lab, service="Breast")).json()
-    assert overridden["service"] == "Breast"
-
-
-def test_a_draft_is_seen_only_by_its_author(api: ApiAs, database: str) -> None:
-    lab = make_lab(database)
-    case = create(api, lab.people["researcher"], draft(lab, draft=True)).json()
-    assert case["is_draft"] is True
-    path = f"{CASES}/{case['id']}"
-    assert api(lab.people["researcher"]).get(path).status_code == 200
-    assert api(lab.people["colleague"]).get(path).status_code == 404
-    listed = api(lab.people["colleague"]).get(CASES).json()
-    assert case["id"] not in {row["id"] for row in listed}
 
 
 def test_repeating_a_request_returns_the_same_case(api: ApiAs, database: str) -> None:
@@ -231,7 +209,6 @@ def test_a_case_id_is_unique_within_its_project(api: ApiAs, database: str) -> No
     [
         {"patient_id": str(uuid.uuid4())},
         {"project_id": None},
-        {"specimens": []},
         {"specimens": [{"letter": "A"}, {"letter": "A"}]},
         {"specimens": [{"letter": "a"}]},
         {"specimens": [{"letter": "A", "blocks": [{"number": 1}, {"number": 1}]}]},

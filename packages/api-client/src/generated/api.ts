@@ -190,8 +190,6 @@ export interface CaseDetail {
   project_id: string;
   label: string;
   source: CaseSource;
-  service: string | null;
-  is_draft: boolean;
   patient: PatientDetail | null;
   specimens: SpecimenDetail[];
   slides: SlideDetail[];
@@ -231,13 +229,8 @@ export interface CaseDraft {
   label: string;
   patient_id?: string | null;
   patient?: NewPatient | null;
-  /**
-   * @minItems 1
-   * @maxItems 26
-   */
-  specimens: SpecimenDraft[];
-  service?: string | null;
-  draft?: boolean;
+  /** @maxItems 26 */
+  specimens?: SpecimenDraft[];
 }
 
 export interface CaseSummary {

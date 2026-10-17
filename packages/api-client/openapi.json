@@ -4789,21 +4789,6 @@
           "source": {
             "$ref": "#/components/schemas/CaseSource"
           },
-          "service": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service"
-          },
-          "is_draft": {
-            "type": "boolean",
-            "title": "Is Draft"
-          },
           "patient": {
             "anyOf": [
               {
@@ -4835,8 +4820,6 @@
           "project_id",
           "label",
           "source",
-          "service",
-          "is_draft",
           "patient",
           "specimens",
           "slides"
@@ -4884,32 +4867,14 @@
             },
             "type": "array",
             "maxItems": 26,
-            "minItems": 1,
-            "title": "Specimens"
-          },
-          "service": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 60
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service"
-          },
-          "draft": {
-            "type": "boolean",
-            "title": "Draft",
-            "default": false
+            "title": "Specimens",
+            "default": []
           }
         },
         "type": "object",
         "required": [
           "project_id",
-          "label",
-          "specimens"
+          "label"
         ],
         "title": "CaseDraft"
       },

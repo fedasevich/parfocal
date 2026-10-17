@@ -1,7 +1,6 @@
 import uuid
-from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Annotated, Protocol
+from typing import Annotated
 
 from fastapi import APIRouter, Header, Request, Response
 from pydantic import BaseModel, Field, StringConstraints, model_validator
@@ -82,9 +81,7 @@ class CaseDraft(BaseModel):
     label: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
     patient_id: uuid.UUID | None = None
     patient: NewPatient | None = None
-    specimens: Annotated[list[SpecimenDraft], Field(min_length=1, max_length=26)]
-    service: Annotated[str, StringConstraints(max_length=60)] | None = None
-    draft: bool = False
+    specimens: Annotated[list[SpecimenDraft], Field(max_length=26)] = []
 
     @model_validator(mode="after")
     def one_patient(self) -> CaseDraft:
@@ -94,27 +91,6 @@ class CaseDraft(BaseModel):
         if len(letters) != len(set(letters)):
             raise ValueError("Specimen letters must be unique within a case")
         return self
-
-
-@dataclass(frozen=True)
-class CaseDefaults:
-    service: str | None = None
-
-
-class DefaultRules(Protocol):
-    async def defaults_for(
-        self, connection: AsyncConnection, tenant_id: uuid.UUID, draft: CaseDraft
-    ) -> CaseDefaults: ...
-
-
-class NoRulesYet:
-    async def defaults_for(
-        self, connection: AsyncConnection, tenant_id: uuid.UUID, draft: CaseDraft
-    ) -> CaseDefaults:
-        return CaseDefaults()
-
-
-RULES: DefaultRules = NoRulesYet()
 
 
 class PatientExistsError(ConflictError):
@@ -265,7 +241,6 @@ async def create_case(
     with_patient = draft.patient_id is not None or draft.patient is not None
     if with_patient and mode is PrivacyMode.DE_IDENTIFIED:
         raise DeIdentifiedProjectError
-    defaults = await RULES.defaults_for(connection, tenant_id, draft)
     patient_id = None
     if with_patient:
         keys = await ensure_keys(connection, keyring, tenant_id)
@@ -278,9 +253,7 @@ async def create_case(
             project_id=draft.project_id,
             patient_id=patient_id,
             label=await label_for(connection, draft),
-            service=draft.service or defaults.service,
             source=CaseSource.MANUAL,
-            is_draft=draft.draft,
             created_by_user_id=creator.user_id,
         )
     )
@@ -303,7 +276,6 @@ async def create_case(
         tenant_id=tenant_id,
         details={
             "source": CaseSource.MANUAL,
-            "draft": draft.draft,
             "privacy_mode": mode,
             "new_patient": draft.patient is not None,
             "specimens": len(draft.specimens),

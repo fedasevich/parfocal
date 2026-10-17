@@ -4,7 +4,6 @@ from enum import StrEnum
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
     CheckConstraint,
     Column,
     DateTime,
@@ -659,8 +658,6 @@ cases = Table(
         nullable=True,
         info=PERSONAL,
     ),
-    Column("service", String(60), nullable=True, info=OPERATIONAL),
-    Column("is_draft", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     *case_timestamps(),
     UniqueConstraint("project_id", "label"),
     UniqueConstraint("id", "tenant_id"),

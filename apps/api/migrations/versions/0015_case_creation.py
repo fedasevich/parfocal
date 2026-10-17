@@ -14,10 +14,6 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("cases", sa.Column("service", sa.String(60), nullable=True))
-    op.add_column(
-        "cases", sa.Column("is_draft", sa.Boolean, nullable=False, server_default=sa.false())
-    )
     op.add_column(
         "blocks",
         sa.Column("stains", postgresql.ARRAY(sa.String(60)), nullable=False, server_default="{}"),
@@ -47,5 +43,3 @@ def downgrade() -> None:
     op.drop_constraint("levels", "blocks", type_="check")
     op.drop_column("blocks", "levels")
     op.drop_column("blocks", "stains")
-    op.drop_column("cases", "is_draft")
-    op.drop_column("cases", "service")
