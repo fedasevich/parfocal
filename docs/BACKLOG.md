@@ -2959,7 +2959,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when the permission test runs every project endpoint for every project role, and an isolation test hides another project's slides from a reviewer.
   Depends on IAM-022, PROJ-001.
 
-- [ ] PROJ-004 · Class taxonomy per project
+- [x] PROJ-004 · Class taxonomy per project
   Class names, colours and keys 1 to 9, started from a template (PanNuke, sentinel node) and checked for colour distance (DS-002). Mappings from imported class names (Neoplastic, tumour_cell) are stored per project and reused (RSET-005).
   Done when API tests cover templates, custom classes, the colour check rejecting a colour too close to another, and a stored mapping applied to a second import.
   Depends on PROJ-001. Refs doc 37, mock: upload/check. The API carries its own port of the colour check, so this no longer waits for DS-002 ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)).
