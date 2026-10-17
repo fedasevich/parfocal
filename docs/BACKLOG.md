@@ -3073,9 +3073,9 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
 
 A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Pipeline").
 
-- [ ] TASK-000 · Research check
+- [x] TASK-000 · Research check
   Done when an ADR records the slide pipeline (uploaded, AI running or imported, ready, assigned, in review, submitted, disagreement queue, signed off, exported), what is derived and who moves each state.
-  Depends on ADAPT-007.
+  Depends on ADAPT-007. Decided in [ADR 0069](adr/0069-slide-pipeline.md).
 
 - [ ] TASK-001 · Review task model and API
   A task (RT-14) has a name, a project, slides or cases, a result set, reviewers, a split (everyone reviews all, split evenly, chosen per slide), a scope, an opinion form version, blinding, the start mode (guided or full viewer), a due date and reminders.
@@ -3084,7 +3084,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   A project reviewer reads only the slides of their tasks, so this task extends `project_access.readable` and the case check with task slides ([ADR 0065](adr/0065-project-role-enforcement.md)).
 
 - [ ] TASK-002 · Slide states per task and reviewer
-  Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited.
+  Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited. One pure function derives the states from stored facts, and only submit, reopen, sign-off and task reopen are stored moves ([ADR 0069](adr/0069-slide-pipeline.md)).
   Done when a table-driven test covers every allowed and refused transition with its actor.
   Depends on TASK-001.
 
@@ -3172,7 +3172,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
 - [ ] ADJ-000 · Research check
-  Done when an ADR records the disagreement rule (reviewers differ, or all differ from the AI above a threshold) and what sign-off locks.
+  Done when an ADR records the disagreement rule (reviewers differ, or all differ from the AI above a threshold) and what sign-off locks, including when sign-off is allowed ([ADR 0069](adr/0069-slide-pipeline.md) left that open for the owner).
 
 - [ ] ADJ-001 · Disagreement detection
   When every reviewer has submitted, objects where reviewers differ, or where they all differ from the AI, go into a queue per task.

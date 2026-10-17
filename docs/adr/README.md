@@ -74,3 +74,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0066](0066-emergency-access-per-clinical-project.md) | Emergency access opens one clinical project for a set time, for researchers and admins outside it | Accepted | 2026-10-17 |
 | [0067](0067-class-taxonomy-and-colour-check.md) | Each project has up to nine classes on keys 1 to 9, checked by CIEDE2000 under three colour-vision deficiencies, with remembered import mappings | Accepted | 2026-10-17 |
 | [0068](0068-structured-logging-on-the-standard-library.md) | JSON logs from the standard library, with request context in a context variable and one access line per request | Accepted | 2026-10-18 |
+| [0069](0069-slide-pipeline.md) | The slide pipeline is derived from stored facts, and people move only submit, reopen and sign-off | Accepted | 2026-10-18 |
