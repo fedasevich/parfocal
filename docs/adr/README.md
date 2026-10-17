@@ -59,3 +59,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0049](0049-server-state-and-data-fetching.md) | Server state in TanStack Query v5 on the generated client, with event-driven invalidation | Accepted | 2026-10-15 |
 | [0050](0050-deploy-pipeline-and-previews.md) | Deploy pipeline and per-pull-request previews on Cloudflare, Modal and Neon | Accepted | 2026-10-15 |
 | [0053](0053-ai-results-review-direction.md) | Parfocal becomes an AI results review app, the hospital sign-out workflow is kept as ideas, and the built hospital code is reverted or reworked | Accepted | 2026-10-17 |
+| [0054](0054-hospital-code-inventory-and-revert-order.md) | The built hospital code is reverted first, then the roles change, then cases move into projects, with migrations edited in place | Accepted | 2026-10-17 |

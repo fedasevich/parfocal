@@ -47,7 +47,7 @@ Task format:
 | Release bar | Research and pilot grade, production-quality code, no regulatory claims in v1. IVDR, FDA and CE marking are later epics |
 | Deployment | Cloud SaaS, multi-tenant. Region is a tenant attribute. No residency pinning during the pilot, and EU pinning is a trigger before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)) |
 | Product direction | AI results review: researchers import or run AI and evaluate it, doctors review, fix, comment and give an opinion. The viewer stays. The hospital sign-out workflow is kept as ideas ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
-| Roles | Researcher, reviewer and admin in a workspace. Owner, reviewer and viewer in a project. They replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) (ADAPT-001, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Roles | Researcher, reviewer and admin in a workspace. Owner, reviewer and viewer in a project. They replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) (IAM-022, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Data model | Project, then an optional case, then slide, then result sets. Loose slides sit directly in a project. Every import or model run is a result set with its model, version, date and source, and reviewer edits form a separate reviewed layer ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Privacy | Each project is de-identified (the default, no patient fields, names stripped on upload) or clinical (patient fields optional, names can be hidden, access logged) ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Object IDs | Short IDs per slide (T2, T2·C145, C3021, R4, Z1, M1), a full path for links and exports (`P07/S26-04812/A1/T2·C145`), carried across result sets by overlap ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
@@ -642,9 +642,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session.
 
 - [ ] IAM-022 · Researcher, reviewer and admin roles with project roles
-  Workspace roles researcher, reviewer and admin, and project roles owner, reviewer and viewer, replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) in the permission matrix. ADAPT-001 migrates existing memberships and removes the hospital roles and grants. A reviewer sees only the projects and tasks they are in. A researcher creates projects, uploads, runs models, creates tasks, resolves disagreements and signs off. An admin manages people, models, sources and security and sees no patient data without IAM-017.
-  Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, and an isolation test proves a reviewer cannot list a project they are not in.
-  Depends on IAM-006. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
+  Workspace roles researcher, reviewer and admin, and project roles owner, reviewer and viewer, replace the five membership roles left after ADAPT-001 in the permission matrix, in the `memberships` and `invitations` role checks and in the service account scopes. The kept and reworked permissions are renamed for the new product as [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) lists, and "assigned to them" becomes "in their tasks". No memberships are mapped, because the code is throwaway. A reviewer sees only the projects and tasks they are in. A researcher creates projects, uploads, runs models, creates tasks, resolves disagreements and signs off. An admin manages people, models, sources and security and sees no patient data without IAM-017.
+  Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, invitations keep working with the new roles, and an ADR supersedes ADR 0026. Hiding a project from a reviewer who is not in it is tested in PROJ-003.
+  Depends on IAM-006, ADAPT-001. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 ---
 
@@ -2946,6 +2946,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
 - [ ] PROJ-001 · Project model and API
   A project has a short ID (P07), a name, a colour, a privacy mode, an analysis template, a class taxonomy, members with project roles and a status. Cases are optional, and loose slides belong to the project directly.
   Done when migrations, API tests for create, list, update and archive, and isolation tests pass, and every change is audited.
+  Builds on the minimal `projects` table from ADAPT-004 and adds the API and the remaining fields ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
   Depends on IAM-004, ADAPT-004. Refs mock: project, kit: Information architecture.
 
 - [ ] PROJ-002 · Privacy modes
@@ -3421,60 +3422,60 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
 
 Code built for the hospital direction is reverted or reworked so nothing runs that the product does not use ([ADR 0053](adr/0053-ai-results-review-direction.md)). The ticked tasks that built it stay ticked as history. Each task supersedes the ADR it undoes, regenerates the permission doc and the data map, updates the OpenAPI client, and keeps the isolation suite green. Hospital tasks that remain ideas can be rebuilt from git history if they come back.
 
-- [ ] ADAPT-000 · Inventory and plan
+- [x] ADAPT-000 · Inventory and plan
   List every endpoint, table, column and permission the hospital tasks added (migrations `0005`, `0010`, `0012` to `0019`, `apps/api/src/parfocal_api/` modules `cases`, `case_creation`, `case_states`, `accessions`, `folders`, `folder_access`, `routing`, `signing`, `availability`, `emergency`, `permissions`), mark each as kept, reworked or reverted, and order the work so each step leaves `main` green.
   Done when an ADR holds the table and the order, and the owner has accepted it. STACK-040 (FHIR) added no code and needs no change.
-  Refs [ADR 0053](adr/0053-ai-results-review-direction.md), ADR 0026, 0032, 0036, 0037, 0038, 0046, 0047, 0051.
+  Refs [ADR 0053](adr/0053-ai-results-review-direction.md), ADR 0026, 0032, 0036, 0037, 0038, 0046, 0047, 0051. Planned in [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md).
 
-- [ ] ADAPT-001 · Roles become researcher, reviewer and admin
-  Replace the six hospital roles in `apps/api/src/parfocal_api/permissions.py` with researcher, reviewer and admin and the project roles (IAM-022). Remove the grants and permissions that only served sign-out (co-sign, needs co-sign, as supervisor, sign out, draft and amend reports, order lab work, tumor boards, team page, second opinions, approve models). A migration maps memberships and pending invitations: consultant and resident to reviewer, lead to researcher, lab staff to reviewer, administrator to admin, and outside consultants are removed with an audit entry.
-  Done when the table-driven permission test runs the new matrix on every endpoint, a migration test maps every old role, invitations keep working, and an ADR supersedes ADR 0026.
-  Depends on ADAPT-000, IAM-022.
+- [ ] ADAPT-001 · Remove hospital-only permissions, grants and the guest scope
+  Remove the permissions that only served sign-out (cancel, take and reassign cases, order lab work, draft, sign out, co-sign and amend reports, ask for and give second opinions, share reports, tumor boards, approve models), the grants needs co-sign, as named supervisor, shared with them and measure and comment, the outside consultant column, `GuestPrincipal`, `GuestGrant`, `ActorKind.GUEST`, the case and view settings in `DatabaseScope` and the `guest_case_scope` and `guest_hidden` policies. The five membership roles stay until IAM-022 replaces them. The code is throwaway, so migrations are edited in place ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
+  Done when the table-driven permission test runs the smaller matrix on every endpoint, the permission doc is regenerated, no guest code or policy is left and the isolation suite passes.
+  Depends on ADAPT-002, ADAPT-003, ADAPT-007.
 
 - [ ] ADAPT-002 · Revert folders
-  Remove folders, folder members, the folder on a case and folder-scoped permissions (`folders.py`, `folder_access.py`, migrations `0016` and `0017`). Project membership (PROJ-003) scopes access instead.
-  Done when a down migration drops the tables, the isolation suite passes without them, no endpoint refers to folders, and an ADR supersedes ADR 0046.
-  Depends on ADAPT-001, PROJ-003.
+  Remove folders, folder members, the folder on a case, `all_folders` on the membership, the "in their folders" grant and folder-scoped permissions (`folders.py`, most of `folder_access.py`, migrations `0016` and `0017`). Until project roles (PROJ-003) land, members see every case their role allows in the workspace. The emergency path keeps working for administrators.
+  Done when the migrations are gone, the isolation suite passes without the tables, no endpoint refers to folders, and an ADR supersedes ADR 0046.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-003 · Revert signing rights and supervision
   Remove "signs alone", the supervisor and the stored signature image (`signing.py`, migration `0010`). Sign-off confirms with single sign-on (ADJ-004), and supervision and co-sign stay ideas.
-  Done when the columns and endpoints are gone, the signature images are deleted with an audit entry, and an ADR supersedes ADR 0032.
-  Depends on ADAPT-001.
+  Done when the columns and endpoints are gone, no code reads them, and an ADR supersedes ADR 0032.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-004 · Rework cases for projects
-  A case belongs to a project and is optional. Its ID is free text unique within the project, the patient link is allowed only in clinical projects, and the hospital columns (priority, due time, requester, clinical question, assignee, state) are dropped. Specimen and blocks stay optional (`cases.py`, migration `0012`).
-  Done when migrations move existing cases into a default project, API tests cover cases in both privacy modes, isolation tests pass, and an ADR updates ADR 0036.
-  Depends on ADAPT-000, PROJ-000.
+  Create the minimal `projects` table with the columns PROJ-000 names, including the privacy mode. A case belongs to a project and is optional, and a slide belongs to a project with an optional case. The case ID is free text unique within the project, the patient link is optional and allowed only in clinical projects, and the columns priority, due time, assignee, clinical note, clinical question and requester are dropped. The source loses `lis`. Specimen and blocks stay optional (`cases.py`, migration `0012`). Existing rows need not survive ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)).
+  Done when API tests cover cases in both privacy modes and a loose slide, isolation tests pass, and an ADR updates ADR 0036.
+  Depends on PROJ-000, ADAPT-002, ADAPT-006, ADAPT-007.
 
 - [ ] ADAPT-005 · Rework case creation
-  Creating a case takes a project, an ID and an optional specimen, with patient fields only in a clinical project. Drafts, requester, priority, due time, assignee, AI plan and the rule hooks in `case_creation.RULES` go (`case_creation.py`, migration `0015`).
+  Creating a case takes a project, an ID and an optional specimen, with patient fields only in a clinical project. Drafts, service, AI plan and the rule hooks in `case_creation.RULES` go (`case_creation.py`, migration `0015`). Idempotency per request key stays.
   Done when API tests cover creation in each privacy mode and idempotency, and no rule hook is left.
   Depends on ADAPT-004.
 
 - [ ] ADAPT-006 · Revert accession numbers
-  Remove the per-workspace templates and counters (`accessions.py`, migration `0013`). Case IDs come from file names or are typed, unique within the project.
-  Done when the tables and endpoints are gone, a uniqueness test per project passes, and an ADR supersedes ADR 0037.
-  Depends on ADAPT-004.
+  Remove the per-workspace templates and counters (`accessions.py`, migration `0013`). Case creation takes a typed case ID, unique within the workspace until ADAPT-004 makes it unique within the project. Later the ID can also come from file names (CASES-024).
+  Done when the tables and endpoints are gone, a uniqueness test passes, and an ADR supersedes ADR 0037.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-007 · Revert the case state machine
-  Remove the case states, their history and the transition endpoint (`case_states.py`, migration `0014`). The slide pipeline per task (TASK-002) replaces them and may reuse its table-driven test pattern.
-  Done when the table and endpoint are gone, no code reads a case state, and an ADR supersedes ADR 0038.
-  Depends on ADAPT-004.
+  Remove the case states, their history columns, cancel and restore, and the state filter on the case list (`case_states.py`, migration `0014`, the `state` column from `0012`). The slide pipeline per task (TASK-002) replaces them and may reuse its table-driven test pattern.
+  Done when the columns and endpoints are gone, no code reads a case state, and an ADR supersedes ADR 0038.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-008 · Revert case routing rules
-  Remove assignment by folder, specimen and load (`routing.py`). Researchers assign reviewers in a task.
+  Remove assignment by folder, specimen and load (`routing.py`). Researchers assign reviewers in a task. Nothing calls the module.
   Done when the module and its tests are gone and nothing calls it.
-  Depends on ADAPT-002.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-009 · Rework availability
-  Keep "away until" with an optional note, shown when picking reviewers in a task. Remove the back-up and the routing of new cases to it (`availability.py`, migration `0019`).
+  Keep "away until" with an optional note, shown when picking reviewers in a task. Remove busy, the back-up and the routing of new cases to it (`availability.py`, `availability.covering` in case creation, migration `0019`).
   Done when API tests cover the status and its expiry, the back-up column is gone, and an ADR supersedes ADR 0051.
-  Depends on ADAPT-008.
+  Depends on ADAPT-000.
 
 - [ ] ADAPT-010 · Rework emergency access for clinical projects
-  A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. De-identified projects need no emergency path (`emergency.py`, migration `0018`).
+  A person outside a clinical project, administrators included, opens it only with a reason, for a set time, audited and notified to the owner. De-identified projects need no emergency path (`emergency.py`, `folder_access.require_case_access`, migration `0018`).
   Done when API tests cover grant, expiry, refusal without a reason and an administrator reading a clinical project's patient only through it, and an ADR updates ADR 0047.
-  Depends on ADAPT-002, PROJ-002.
+  Depends on ADAPT-001, PROJ-002, PROJ-003.
 
 - [ ] ADAPT-011 · Patients only in clinical projects
   Keep the encrypted patient table and blind indexes (SEC-004) for clinical projects, refuse patient data in de-identified ones, and update the data classes (SEC-001).

@@ -24,6 +24,8 @@ Through PgBouncer in transaction mode with `max_prepared_statements = 0`, asyncp
 
 Every column passes `info=` with its data class from `parfocal_common.data_classes` ([ADR 0028](../adr/0028-data-classes-on-columns.md)), and `pnpm data-map:doc` must be rerun after a schema change or `test_data_map.py` fails. A new tenant-owned table uses the `TenantOwned` and `Timestamped` mixins and, in its migration, the statements from `enable_tenant_isolation` and `track_updated_at` in `parfocal_common.schema_sql`. `test_every_tenant_table_is_isolated_at_head` fails when any table with a `tenant_id` column lacks forced row-level security and the `tenant_isolation` policy. Names follow the convention in `parfocal_common.db`, so constraints read like `pk_notes` and `ix_notes_tenant_id`. Soft delete follows [ADR 0019](../adr/0019-soft-delete-policy.md).
 
+Migrations `0010` to `0019` are edited in place by the ADAPT tasks, because no shared database ever ran them and the hospital code is throwaway ([ADR 0054](../adr/0054-hospital-code-inventory-and-revert-order.md)). After pulling such a change, a local database at an older head fails to migrate or no longer matches the models, so recreate it with `docker compose down -v`, `pnpm db:up` and `pnpm db:migrate`. Removed migration numbers are not reused, and a new migration takes the number after the highest file left.
+
 The edoburu PgBouncer image writes `auth_user=` into its generated config, which fails with "bouncer config error" under `auth_type = any`. The compose file mounts `infra/local/pgbouncer.ini` instead, which names a fixed `user=`.
 
 ## Restrictive policies narrow, permissive ones widen
