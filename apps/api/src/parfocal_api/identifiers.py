@@ -176,7 +176,7 @@ def open_field(
 
 
 async def add_patient(
-    connection: AsyncConnection, keys: TenantKeys, identity: PatientIdentity
+    connection: AsyncConnection, keys: TenantKeys, project_id: uuid.UUID, identity: PatientIdentity
 ) -> uuid.UUID:
     patient_id = uuid.uuid4()
 
@@ -188,6 +188,7 @@ async def add_patient(
         insert(patients).values(
             id=patient_id,
             tenant_id=keys.tenant_id,
+            project_id=project_id,
             name_ciphertext=sealed("name", identity.name),
             name_tokens=[blind(keys, "name", token) for token in name_tokens(identity.name)],
             mrn_ciphertext=sealed("mrn", identity.mrn),
@@ -228,13 +229,16 @@ async def read_patient(
 async def find_patients(
     connection: AsyncConnection,
     keys: TenantKeys,
+    project_id: uuid.UUID,
     *,
     name: str | None = None,
     mrn: str | None = None,
     birth_date: date | None = None,
 ) -> list[uuid.UUID]:
     statement = select(patients.c.id).where(
-        patients.c.tenant_id == keys.tenant_id, patients.c.deleted_at.is_(None)
+        patients.c.tenant_id == keys.tenant_id,
+        patients.c.project_id == project_id,
+        patients.c.deleted_at.is_(None),
     )
     if name is not None:
         tokens = [blind(keys, "name", token) for token in name_tokens(name)]

@@ -182,6 +182,25 @@ def test_case_labels_are_unique_within_a_project(database: str) -> None:
     )
 
 
+def test_a_cases_patient_comes_from_its_own_project(database: str) -> None:
+    tenant = make_tenant(database)
+    first, second = seeded(database, tenant), seeded(database, tenant)
+    with pytest.raises(IntegrityError):
+        in_tenant(
+            database,
+            tenant,
+            lambda c: c.execute(
+                insert(cases).values(
+                    tenant_id=tenant,
+                    project_id=second.project_id,
+                    patient_id=first.patient_id,
+                    label="Borrowed",
+                    source="manual",
+                )
+            ),
+        )
+
+
 def test_records_cannot_point_into_another_workspace(database: str) -> None:
     mine, theirs = make_tenant(database), make_tenant(database)
     their_case = seeded(database, theirs)

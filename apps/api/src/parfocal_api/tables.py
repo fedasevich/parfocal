@@ -520,6 +520,12 @@ tenant_keys = Table(
     CheckConstraint("version BETWEEN 1 AND 65535", name="version"),
 )
 
+
+class PrivacyMode(StrEnum):
+    DE_IDENTIFIED = "de-identified"
+    CLINICAL = "clinical"
+
+
 patients = Table(
     "patients",
     metadata,
@@ -538,6 +544,14 @@ patients = Table(
         index=True,
         info=OPERATIONAL,
     ),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "privacy_mode",
+        String(20),
+        nullable=False,
+        server_default=PrivacyMode.CLINICAL.value,
+        info=OPERATIONAL,
+    ),
     Column("name_ciphertext", LargeBinary, nullable=False, info=PHI),
     Column("name_tokens", ARRAY(LargeBinary), nullable=False, info=PHI),
     Column("mrn_ciphertext", LargeBinary, nullable=True, info=PHI),
@@ -548,18 +562,17 @@ patients = Table(
     Column("age_years", SmallInteger, nullable=True, info=PHI),
     *timestamps(),
     Column("deleted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
-    UniqueConstraint("tenant_id", "mrn_index"),
+    UniqueConstraint("project_id", "mrn_index"),
     Index("ix_patients_name_tokens", "name_tokens", postgresql_using="gin"),
-    Index("ix_patients_birth_date_index", "tenant_id", "birth_date_index"),
+    Index("ix_patients_birth_date_index", "project_id", "birth_date_index"),
     UniqueConstraint("id", "tenant_id"),
+    UniqueConstraint("id", "project_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["project_id", "privacy_mode"], ["projects.id", "projects.privacy_mode"]),
+    CheckConstraint("privacy_mode = 'clinical'", name="clinical_only"),
     one_of("sex", Sex),
     CheckConstraint("age_years BETWEEN 0 AND 150", name="age_years"),
 )
-
-
-class PrivacyMode(StrEnum):
-    DE_IDENTIFIED = "de-identified"
-    CLINICAL = "clinical"
 
 
 class CaseSource(StrEnum):
@@ -663,7 +676,7 @@ cases = Table(
     UniqueConstraint("id", "tenant_id"),
     UniqueConstraint("id", "project_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
+    ForeignKeyConstraint(["patient_id", "project_id"], ["patients.id", "patients.project_id"]),
     one_of("source", CaseSource),
 )
 

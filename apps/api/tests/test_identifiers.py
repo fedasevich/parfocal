@@ -10,6 +10,8 @@ import pytest
 from db_support import APP_URL, OWNER_URL, query, with_database
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from workspace_support import make_project
+from workspace_support import make_tenant as workspace_tenant
 
 from parfocal_api.identifiers import (
     PatientIdentity,
@@ -44,14 +46,15 @@ KEYRING = MasterKeyring.from_setting(f"m1:{master_key()}")
 
 
 def make_tenant(database: str) -> uuid.UUID:
-    slug = f"phi-{uuid.uuid4().hex[:10]}"
+    tenant_id = workspace_tenant(database)
+    make_project(database, tenant_id)
+    return tenant_id
+
+
+def project_of(database: str, tenant_id: uuid.UUID) -> uuid.UUID:
     rows = query(
         with_database(OWNER_URL, database),
-        "WITH organisation AS (INSERT INTO organisations (slug, name) "
-        f"VALUES ('{slug}', '{slug}') RETURNING id) "
-        "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
-        f"SELECT id, '{slug}', '{slug}', 'diagnostic', 'eu', 'pilot' FROM organisation "
-        "RETURNING id",
+        f"SELECT id FROM projects WHERE tenant_id = '{tenant_id}' ORDER BY number LIMIT 1",
     )
     return uuid.UUID(str(rows[0][0]))
 
@@ -81,7 +84,9 @@ def admit(
 ) -> list[uuid.UUID]:
     async def work(connection: AsyncConnection) -> list[uuid.UUID]:
         keys = await ensure_keys(connection, keyring, tenant_id)
-        return [await add_patient(connection, keys, person) for person in people]
+        return [await add_patient(connection, keys, project, person) for person in people]
+
+    project = project_of(database, tenant_id)
 
     return in_tenant(database, tenant_id, work)
 
@@ -100,8 +105,9 @@ def read(
 def find(database: str, tenant_id: uuid.UUID, **criteria: Any) -> list[uuid.UUID]:
     async def work(connection: AsyncConnection) -> list[uuid.UUID]:
         keys = await load_keys(connection, KEYRING, tenant_id)
-        return await find_patients(connection, keys, **criteria)
+        return await find_patients(connection, keys, project, **criteria)
 
+    project = project_of(database, tenant_id)
     return in_tenant(database, tenant_id, work)
 
 
@@ -151,11 +157,41 @@ def test_another_workspace_finds_nothing_and_gets_other_indexes(database: str) -
     assert find(database, theirs, mrn="AB123456") == [other_jana]
 
 
-def test_one_mrn_per_workspace(database: str) -> None:
+def test_one_mrn_per_project(database: str) -> None:
     tenant = make_tenant(database)
     admit(database, tenant, JANA)
     with pytest.raises(IntegrityError):
         admit(database, tenant, PatientIdentity("Someone Else", "AB 123456"))
+    other = make_project(database, tenant)
+
+    async def elsewhere(connection: AsyncConnection) -> uuid.UUID:
+        keys = await load_keys(connection, KEYRING, tenant)
+        return await add_patient(connection, keys, other, JANA)
+
+    assert in_tenant(database, tenant, elsewhere) not in admit(database, tenant)
+
+
+def test_a_de_identified_project_holds_no_patient(database: str) -> None:
+    tenant = make_tenant(database)
+    hidden = make_project(database, tenant, "de-identified")
+
+    async def add(connection: AsyncConnection) -> uuid.UUID:
+        keys = await ensure_keys(connection, KEYRING, tenant)
+        return await add_patient(connection, keys, hidden, JANA)
+
+    with pytest.raises(IntegrityError):
+        in_tenant(database, tenant, add)
+
+
+def test_a_clinical_project_with_patients_stays_clinical(database: str) -> None:
+    tenant = make_tenant(database)
+    admit(database, tenant, JANA)
+    owner = with_database(OWNER_URL, database)
+    project = project_of(database, tenant)
+    with pytest.raises(Exception, match="foreign key"):
+        query(owner, f"UPDATE projects SET privacy_mode = 'de-identified' WHERE id = '{project}'")
+    empty = make_project(database, tenant)
+    query(owner, f"UPDATE projects SET privacy_mode = 'de-identified' WHERE id = '{empty}'")
 
 
 def test_a_value_moved_to_another_patient_does_not_open(database: str) -> None:

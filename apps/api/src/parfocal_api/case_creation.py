@@ -159,7 +159,11 @@ async def patient_for(
     if draft.patient_id is not None:
         found = await connection.scalar(
             select(
-                exists().where(patients.c.id == draft.patient_id, patients.c.deleted_at.is_(None))
+                exists().where(
+                    patients.c.id == draft.patient_id,
+                    patients.c.project_id == draft.project_id,
+                    patients.c.deleted_at.is_(None),
+                )
             )
         )
         if not found:
@@ -167,10 +171,10 @@ async def patient_for(
         return draft.patient_id
     assert draft.patient is not None
     new = draft.patient
-    if new.mrn is not None and await find_patients(connection, keys, mrn=new.mrn):
+    if new.mrn is not None and await find_patients(connection, keys, draft.project_id, mrn=new.mrn):
         raise PatientExistsError
     patient_id = await add_patient(
-        connection, keys, PatientIdentity(new.name, new.mrn, new.birth_date)
+        connection, keys, draft.project_id, PatientIdentity(new.name, new.mrn, new.birth_date)
     )
     await connection.execute(
         patients.update()

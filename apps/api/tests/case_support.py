@@ -53,6 +53,7 @@ async def seed_case(connection: AsyncConnection, tenant_id: uuid.UUID) -> Seeded
     patient_id = await add_patient(
         connection,
         keys,
+        project_id,
         PatientIdentity("Eva Testová", f"MRN{uuid.uuid4().hex[:6]}", date(1970, 1, 2)),
     )
     case_id = uuid.uuid4()

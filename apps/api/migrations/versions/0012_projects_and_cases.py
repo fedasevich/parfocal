@@ -91,6 +91,24 @@ def upgrade() -> None:
         one_of("role", ("owner", "reviewer", "viewer")),
     )
     op.create_index("ix_project_members_user_id", "project_members", ["user_id"])
+    op.add_column("patients", sa.Column("project_id", sa.Uuid[uuid.UUID](), nullable=False))
+    op.add_column(
+        "patients",
+        sa.Column("privacy_mode", sa.String(20), nullable=False, server_default="clinical"),
+    )
+    op.create_index("ix_patients_project_id", "patients", ["project_id"])
+    op.create_check_constraint("clinical_only", "patients", "privacy_mode = 'clinical'")
+    op.create_foreign_key(
+        None, "patients", "projects", ["project_id", "tenant_id"], ["id", "tenant_id"]
+    )
+    op.create_foreign_key(
+        None, "patients", "projects", ["project_id", "privacy_mode"], ["id", "privacy_mode"]
+    )
+    op.drop_constraint("uq_patients_tenant_id_mrn_index", "patients", type_="unique")
+    op.create_unique_constraint(None, "patients", ["project_id", "mrn_index"])
+    op.create_unique_constraint(None, "patients", ["id", "project_id"])
+    op.drop_index("ix_patients_birth_date_index", "patients")
+    op.create_index("ix_patients_birth_date_index", "patients", ["project_id", "birth_date_index"])
     op.create_table(
         "cases",
         *ids(),
@@ -106,7 +124,9 @@ def upgrade() -> None:
         sa.UniqueConstraint("id", "tenant_id"),
         sa.UniqueConstraint("id", "project_id"),
         sa.ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-        sa.ForeignKeyConstraint(["patient_id", "tenant_id"], ["patients.id", "patients.tenant_id"]),
+        sa.ForeignKeyConstraint(
+            ["patient_id", "project_id"], ["patients.id", "patients.project_id"]
+        ),
         one_of("source", ("manual", "upload")),
     )
     op.create_table(
@@ -178,11 +198,28 @@ def upgrade() -> None:
             op.execute(statement)
 
 
+def unlink_patients() -> None:
+    op.drop_index("ix_patients_birth_date_index", "patients")
+    op.create_index("ix_patients_birth_date_index", "patients", ["tenant_id", "birth_date_index"])
+    op.drop_constraint("uq_patients_id_project_id", "patients", type_="unique")
+    op.drop_constraint("uq_patients_project_id_mrn_index", "patients", type_="unique")
+    op.create_unique_constraint(None, "patients", ["tenant_id", "mrn_index"])
+    op.drop_constraint(
+        "fk_patients_project_id_privacy_mode_projects", "patients", type_="foreignkey"
+    )
+    op.drop_constraint("fk_patients_project_id_tenant_id_projects", "patients", type_="foreignkey")
+    op.drop_constraint("clinical_only", "patients", type_="check")
+    op.drop_index("ix_patients_project_id", "patients")
+    op.drop_column("patients", "privacy_mode")
+    op.drop_column("patients", "project_id")
+
+
 def downgrade() -> None:
     for table in reversed(CASE_TABLES):
         op.execute(untrack_updated_at(table)[0])
         if table == "projects":
             op.drop_table("project_members")
+            unlink_patients()
         op.drop_table(table)
     op.drop_constraint("age_years", "patients", type_="check")
     op.drop_constraint("sex", "patients", type_="check")
