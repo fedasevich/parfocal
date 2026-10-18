@@ -2061,7 +2061,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Earlier cases and reports for a patient across years.
   Done when E2E opens a historic report from the patient view.
 
-- [ ] CASES-006 · CSV import
+- [x] CASES-006 · CSV import
   Patients, cases and slide manifests with a dry run, validation report and idempotent re-run.
   Done when tests import a 500-row file twice without duplicates.
 
