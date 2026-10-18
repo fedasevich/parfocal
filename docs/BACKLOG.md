@@ -706,7 +706,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a header test runs against staging and the ONNX WASM threads and module workers still work.
   Refs doc 14.
 
-- [ ] SEC-012 · Rate limiting and abuse protection
+- [x] SEC-012 · Rate limiting and abuse protection
   Per user and per tenant limits on API and upload, bot protection on auth.
   Done when load tests show limits enforced with proper 429 responses.
   Refs [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md). Per-IP limits and bot protection on login moved to SEC-027.
