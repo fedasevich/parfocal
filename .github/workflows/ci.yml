@@ -85,6 +85,22 @@ jobs:
       - if: failure()
         run: docker compose logs
 
+  formats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: formats
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-formats-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+      - run: pnpm fixtures small formats
+      - run: uv run pytest workers/ingest/tests
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,formats
+
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -121,7 +137,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, db, e2e]
+    needs: [lint, typecheck, test, db, formats, e2e]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"
