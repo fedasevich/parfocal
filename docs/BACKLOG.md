@@ -1405,11 +1405,12 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
 
 My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.md)). To review lists the reviewer's tasks behind one Continue card, Assigned by me shows the researcher's tasks with progress per reviewer, and All slides is a filterable table. The worklist views, the case preview and the AI queue are ideas.
 
-- [ ] WL-000 · Research check
+- [x] WL-000 · Research check
   Done when the My work query API and the data needs of its three tabs are captured in an ADR.
+  Decided in [ADR 0082](adr/0082-my-work-query-api.md).
 
 - [ ] WL-001 · My work query API
-  Tasks for me with my progress and due date, tasks I created with progress per reviewer and their status (in review, not started, disagreements, ready to sign off), and all slides I can see with project, result sets, reviews and status. Filters by project, status, result set, reviewer and storage. Cursor pagination.
+  Tasks for me with my progress and due date, tasks I created with progress per reviewer and their status (in review, not started, disagreements, ready to sign off), and all slides I can see with project, result sets, reviews and status. Filters by project, status, result set and reviewer, and a label search. Cursor pagination. The storage filter moved to REMOTE-001 ([ADR 0082](adr/0082-my-work-query-api.md)).
   Done when API tests cover every filter and tenant isolation.
 
 - [ ] WL-002 · Worklist sidebar (moved)
@@ -1485,7 +1486,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on COLLAB-001.
 
 - [ ] WL-017 · Filter popover
-  Project, status, result set, reviewer and storage, for the All slides tab, kept in the URL.
+  Project, status, result set and reviewer, for the All slides tab, kept in the URL. Storage joins with REMOTE-001 ([ADR 0082](adr/0082-my-work-query-api.md)).
   Done when component tests cover combined filters and URL persistence.
 
 - [ ] WL-018 · Assigned by me tab
@@ -3292,7 +3293,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on INGEST-026.
 
 - [ ] REMOTE-001 · Read in place from a connected source
-  A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported.
+  A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported. Slides get their storage (uploaded or the connected source), and My work's All slides gains the storage filter ([ADR 0082](adr/0082-my-work-query-api.md)).
   Done when E2E opens a remote slide, a test serves tiles from the cache with the source down, and a copy keeps IDs and reviews.
   Depends on REMOTE-000, TILES-001. Refs mock: upload/remote, mock: states/remoteoff.
 
