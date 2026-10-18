@@ -811,7 +811,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a table test identifies every fixture in the OpenSlide corpus and rejects unsupported formats with a named reason.
   Refs [`poc/scripts/probe-format.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/probe-format.mjs), doc 08.
 
-- [ ] INGEST-005 · Malware and integrity scan
+- [x] INGEST-005 · Malware and integrity scan
   Done when an EICAR test file is rejected and a truncated TIFF fails validation with a user-readable error.
   The owner chose structure checks without an antivirus scanner ([ADR 0081](adr/0081-uploads-are-checked-by-structure.md)).
 
