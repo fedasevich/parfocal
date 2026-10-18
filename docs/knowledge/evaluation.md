@@ -30,3 +30,7 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 ## Datasets come through the registry
 
 `parfocal_ml.datasets.REGISTRY` lists every evaluation dataset with its role, licence, source and citation ([ADR 0093](../adr/0093-evaluation-metrics-and-datasets.md)). `fetch` downloads an archive into `~/.cache/parfocal/datasets/<name>/` (or `PARFOCAL_DATASETS_DIR`) and refuses it unless its size and MD5 match what Zenodo publishes, and `samples(name)` reads images, instance labels, vague areas and the organ or slide straight from the zip. A dataset without a public download raises `ManualDownloadError` with its source. An archive that is already on disk can be symlinked into the cache under the published file name. TNBC v1.1 has three nuclei fewer than the copy the POC used ([result](../results/2026-10-18-dataset-loaders.md)).
+
+## Typing is scored on viewer classes with a temperature fitted on another fold
+
+`parfocal_ml.type_evaluation.evaluate` takes probabilities already mapped to the viewer classes (`mapped` turns dataset labels into viewer classes, such as PanNuke's five into four). The temperature is fitted on a different fold by NLL over 0.50 to 10.00, and only the calibrated probabilities go into the bands, while accuracy, recall and precision do not change with it. Doc 29 rounds 0.955 to 96%, so compare against the POC's `calibration.json`, which keeps three decimals ([result](../results/2026-10-18-typing-calibration-reproduction.md)).

@@ -2528,6 +2528,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] MLEVAL-004 · Typing and calibration evaluation
   Accuracy, balanced accuracy, confusion matrix with viewer-class mapping, ECE and band accuracy.
   Done when the harness reproduces doc 29's HoVer-NeXt numbers on the same fold.
+  Result: [typing and calibration reproduction](results/2026-10-18-typing-calibration-reproduction.md).
 
 - [ ] MLEVAL-005 · Tumor map evaluation
   FROC and Dice on CAMELYON16 test slides.
