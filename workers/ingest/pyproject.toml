@@ -4,8 +4,11 @@ version = "0.0.0"
 description = "Slide validation, indexing and thumbnails"
 requires-python = ">=3.14,<3.15"
 dependencies = [
+    "openslide-bin>=4.0.1,<5",
+    "openslide-python>=1.4.6,<2",
     "parfocal-common",
     "tifffile>=2026.10.15,<2027",
+    "wsidicom>=0.36,<0.37",
 ]
 
 [build-system]

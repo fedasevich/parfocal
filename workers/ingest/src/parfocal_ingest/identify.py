@@ -36,6 +36,9 @@ class Refusal(StrEnum):
     PLAIN_IMAGE = "plain-image"
     DAMAGED_TIFF = "damaged-tiff"
     ARCHIVE_WITHOUT_SLIDE = "archive-without-slide"
+    MULTI_REGION = "multi-region"
+    NO_PYRAMID = "no-pyramid"
+    UNREADABLE = "unreadable"
     UNKNOWN = "unknown"
 
 
@@ -53,6 +56,15 @@ REASONS = {
     Refusal.PLAIN_IMAGE: "This is an ordinary picture, not a whole slide image.",
     Refusal.DAMAGED_TIFF: "The file looks like a TIFF but cannot be read. It may be damaged.",
     Refusal.ARCHIVE_WITHOUT_SLIDE: "The .zip holds no slide that Parfocal can read.",
+    Refusal.MULTI_REGION: (
+        "This Leica file holds several separately scanned regions. Export each region as its own "
+        "slide."
+    ),
+    Refusal.NO_PYRAMID: "The file holds no image large enough to be a whole slide.",
+    Refusal.UNREADABLE: (
+        "Parfocal recognises this format but cannot read the pixels of this file. It may be "
+        "damaged or written by a scanner version that is not supported yet."
+    ),
     Refusal.UNKNOWN: "Parfocal does not recognise this file as a whole slide image.",
 }
 
