@@ -37,6 +37,8 @@ class Refusal(StrEnum):
     DAMAGED_TIFF = "damaged-tiff"
     ARCHIVE_WITHOUT_SLIDE = "archive-without-slide"
     MULTI_REGION = "multi-region"
+    TRUNCATED = "truncated"
+    DAMAGED_ARCHIVE = "damaged-archive"
     NO_PYRAMID = "no-pyramid"
     UNREADABLE = "unreadable"
     UNKNOWN = "unknown"
@@ -61,6 +63,12 @@ REASONS = {
         "slide."
     ),
     Refusal.NO_PYRAMID: "The file holds no image large enough to be a whole slide.",
+    Refusal.TRUNCATED: (
+        "The file is cut short, so parts of the slide are missing. Upload it again."
+    ),
+    Refusal.DAMAGED_ARCHIVE: (
+        "A file inside the .zip is damaged. Make the .zip again and upload it."
+    ),
     Refusal.UNREADABLE: (
         "Parfocal recognises this format but cannot read the pixels of this file. It may be "
         "damaged or written by a scanner version that is not supported yet."

@@ -813,6 +813,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 - [ ] INGEST-005 · Malware and integrity scan
   Done when an EICAR test file is rejected and a truncated TIFF fails validation with a user-readable error.
+  The owner chose structure checks without an antivirus scanner ([ADR 0081](adr/0081-uploads-are-checked-by-structure.md)).
 
 - [x] INGEST-006 · Pyramid and level validation
   Read every level's size, tile size, compression and photometric interpretation. Recover true downsample factors with the tile-padding rule. Pick the right pyramid in multi-pyramid files (Leica SCN). Record microns per pixel and objective power, with a fallback and a warning when missing.
@@ -3181,11 +3182,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
-- [ ] ADJ-000 · Research check
+- [x] ADJ-000 · Research check
   Done when an ADR records the disagreement rule (reviewers differ, or all differ from the AI above a threshold) and what sign-off locks, including when sign-off is allowed ([ADR 0069](adr/0069-slide-pipeline.md) left that open for the owner).
+  Decided by the owner in [ADR 0080](adr/0080-disagreement-rule-and-sign-off.md): reviewers differ or more than half disagree with the AI, and sign-off needs every slide submitted and no undecided object.
 
 - [ ] ADJ-001 · Disagreement detection
-  When every reviewer has submitted, objects where reviewers differ, or where they all differ from the AI, go into a queue per task.
+  When every reviewer has submitted, objects where reviewers differ, or where more than half of them disagree with the AI, go into a queue per task ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)).
   Done when unit tests cover both kinds on a seeded task.
   Depends on GUIDE-001, TASK-002.
 
@@ -3200,7 +3202,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-002, GUIDE-002. Refs mock: disagree/adjudicate.
 
 - [ ] ADJ-004 · Sign-off as a soft lock
-  Before signing, a list says what is complete. Signing confirms with single sign-on, makes Evaluation v1 with a checksum and notifies reviewers. The owner can still change things, every change is logged, and reopening is possible.
+  Before signing, a list says what is complete. Signing is allowed only when every assigned reviewer has submitted every slide and no queued object is undecided ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)). Signing confirms with single sign-on, makes Evaluation v1 with a checksum and notifies reviewers. The owner can still change things, every change is logged, and reopening is possible.
   Done when API tests cover signing, a change after sign-off with its log entry and reopening, and E2E signs off a task.
   Depends on ADJ-002, IAM-002. Refs mock: signoff, doc 40 R2.
 

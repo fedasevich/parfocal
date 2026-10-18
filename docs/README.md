@@ -28,11 +28,11 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 No Modal, Neon, staging or production changes and no UI work until the owner says so.
 
-1. The review loop backend, in this order: RSET-001 (result set model and API), OBJ-001 (ID grammar and allocation, taking numbers from `slide_counters`), RSET-003 (readers for GeoJSON, CSV and masks, writing ADR 0076 chunks), then TASK-001 (review task model), which must give project reviewers their task slides and open annotation writes to them.
-2. Decisions waiting for the owner: when sign-off is allowed (ADJ-000), the ID matching defaults of IoU 0.5 and 4 µm ([ADR 0071](adr/0071-object-id-grammar.md)), PanNuke's Epithelial colour `#43999d` ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)), the options of the "main error type" question, and the malware scanner for INGEST-005, because ClamAV scans at most a few GB and slides reach 7 GB.
+1. Built for the review loop since the last consolidation: result sets (RSET-001), object IDs and their matching across sets (OBJ-001, OBJ-002), the result file readers (RSET-003), review tasks (TASK-001) and the reviewed layer (RSET-007). Writing imported objects into result sets waits for uploads to reach storage (STACK-039, INGEST-001).
+2. With sign-off decided ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)), the review chain continues: TASK-002 (slide states per task and reviewer), then GUIDE-001 (verdict model and API), TASK-003 (scope and progress), ADJ-001 (disagreement detection) and ADJ-004 (sign-off). WL-001 (My work query API) follows TASK-002.
 3. Ingest work that needs the browser viewer waits with the UI: INGEST-009 (seams check), INGEST-013 (derived levels for ladder gaps) and INGEST-016 (big-endian BigTIFF).
 4. Follow-ups from earlier decisions: the generated client's error type and options under `exactOptionalPropertyTypes` for STACK-008 (generated client), a browser check of the routing spike, and the OME-Zarr reader.
-5. The owner should read [ADR 0053](adr/0053-ai-results-review-direction.md) and ADRs 0054 to 0076, which were accepted under standing approval on 2026-10-17 and 2026-10-18, and ADRs 0024 to 0051.
+5. The owner should read [ADR 0053](adr/0053-ai-results-review-direction.md) and ADRs 0054 to 0079, which were accepted under standing approval on 2026-10-17 and 2026-10-18, and ADRs 0024 to 0051. ADRs 0080 and 0081 record the owner's own choices.
 6. Waiting for the owner: STACK-019 (Modal cold starts, blocked by the spend limit), STACK-020 (Postgres hosting, needs a Neon region measurement), IAM-001 (Zitadel set up from code, needs CI credentials). Waiting for the final UI: IAM-008 (workspace switcher), IAM-014 (admin console), IAM-021 (lock screen) and FOUND-019 (error toasts). PROJ-002 (privacy modes) waits for SEC-009 (label and macro images). FOUND-014 (dependency and licence scanning) is on hold.
 
 ## Index

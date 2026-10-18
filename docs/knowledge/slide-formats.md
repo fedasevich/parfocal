@@ -39,3 +39,7 @@ Goldens live in `workers/ingest/tests/golden/overviews` at 128 px. After a delib
 ## The tissue mask is a grid of 64 px cells
 
 `parfocal_ingest.tissue.tissue_mask` returns one boolean per 64×64 level-0 pixel cell, as the POC did. Saturation separates stain from glass better than brightness, because pen marks and the label edge are dark but grey. The Otsu threshold has a floor of 20, so empty glass gives an empty mask instead of thresholding noise. The mask is grown by one cell, because a cell at the tissue edge is half glass and the plain threshold missed about 2.5% of the annotated tumour on CAMELYON16 ([result](../results/2026-10-18-tissue-mask-camelyon.md)).
+
+## Uploads are checked by structure, not by an antivirus
+
+There is no malware scanner ([ADR 0081](../adr/0081-uploads-are-checked-by-structure.md)). Anything that is not a supported slide or archive is refused at identification, including the EICAR test file whatever its name. `parfocal_ingest.integrity.check_integrity` then refuses a TIFF-family file when any tile or strip of any page ends past the end of the file (a cut-off upload still has a valid header, so identification alone passes it), and a zip when any member fails its CRC. Sparse tiles with a byte count of 0 are allowed, because Philips files leave tiles out on purpose.
