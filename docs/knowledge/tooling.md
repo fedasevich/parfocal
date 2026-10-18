@@ -97,3 +97,7 @@ pydantic-settings fills required fields from the environment, but basedpyright r
 ## Run the repository typecheck, not one package's
 
 `pnpm turbo run typecheck` runs basedpyright in every Python package (`apps/api`, `packages/py-common`, `workers/ingest`, `workers/ml`) and `tsc` in the TypeScript ones, as the CI `typecheck` job does. Running basedpyright only in the package you edited misses a test added to another package. A `Mapping[object, str]` parameter, for example, rejects a `dict[str, str]` argument because mapping keys are invariant, and only the `py-common` check saw it. Use a type parameter (`def f[K](values: Mapping[K, str])`) instead.
+
+## `pnpm check` also checks files you have not staged
+
+Biome and ruff in `pnpm check` read the working tree, so an untracked file of the next task can fail the check of the one being committed, as an unformatted JSON fixture did. Biome formats JSON too: run `pnpm exec biome format --write <file>` on new JSON fixtures, while `.geojson` files are not checked. Before trusting a red check, look at which file it names.
