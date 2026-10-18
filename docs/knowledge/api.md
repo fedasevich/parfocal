@@ -109,3 +109,7 @@ Emails link to `/go/{notification id}`, and the app asks `GET /api/me/notificati
 ## Email delivery takes the time as an argument
 
 `deliver_pending_emails(connection, sender, origin, now)` decides per person from their schedule on the user row, so tests pass `now` instead of waiting ([ADR 0092](../adr/0092-email-digest-and-quiet-hours.md)). Quiet hours are compared in the person's time zone and may cross midnight. Digest windows count from the oldest waiting email's `created_at`, which the database sets, so a test adds the window to the real current time. Emergency access is never held or batched.
+
+## Every call is also sent from another workspace
+
+`test_no_call_from_another_workspace_changes_this_one` in `test_permissions.py` seeds two fresh workspaces, sends every guarded and member call with the first workspace's ids as each role of the second, and compares an MD5 of every row of every tenant table of the first before and after. `test_every_operation_declares_a_permission_or_why_it_is_open` already forces a new route into `GUARDED_CALLS` or `MEMBER_CALLS`, so a new route that writes across workspaces fails this test without any extra work, and a 5xx from a foreign id fails it too. Run as the first workspace's own members, the same calls change several tables, among them annotations, cases, review assignments and disagreement decisions, which is how the test was checked. Reads are covered by the isolation suite, writes by this test.

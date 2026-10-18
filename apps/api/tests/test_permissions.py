@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
-from db_support import OWNER_URL, ApiAs, with_database
+from db_support import OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
@@ -44,7 +44,7 @@ from parfocal_api.tables import (
     users,
     verdicts,
 )
-from parfocal_common.db import async_database_url
+from parfocal_common.db import async_database_url, metadata
 from parfocal_common.jobs import enqueue
 from parfocal_ingest.workflow import INGEST
 
@@ -893,3 +893,35 @@ def test_workspace_routes_refuse_people_without_a_membership(api: ApiAs, operati
     outsider = SignedInUser("outsider", uuid.uuid4())
     placeholder = replace(PLACEHOLDER, invitations=[uuid.uuid4()])
     assert send(api, outsider, WORKSPACE_CALLS[operation](placeholder)) == 403
+
+
+def tenant_fingerprint(database: str, tenant_id: uuid.UUID) -> dict[str, str]:
+    tables = [table.name for table in metadata.sorted_tables if "tenant_id" in table.c]
+    return {
+        name: str(
+            query(
+                with_database(OWNER_URL, database),
+                f"SELECT md5(coalesce(string_agg(t::text, ',' ORDER BY t::text), '')) "
+                f"FROM {name} t WHERE tenant_id = '{tenant_id}'",
+            )[0][0]
+        )
+        for name in tables
+    }
+
+
+@pytest.mark.db
+def test_no_call_from_another_workspace_changes_this_one(api: ApiAs, database: str) -> None:
+    mine = asyncio.run(seed(database))
+    theirs = asyncio.run(seed(database))
+    before = tenant_fingerprint(database, mine.tenant_id)
+    for operation in sorted(WORKSPACE_CALLS):
+        for role in COLUMNS:
+            call = WORKSPACE_CALLS[operation](replace(mine, invitations=list(mine.invitations)))
+            status = send(api, principal_for(theirs, role), call)
+            assert status < 500, (operation, role, status)
+    changed = {
+        name
+        for name, value in tenant_fingerprint(database, mine.tenant_id).items()
+        if value != before[name]
+    }
+    assert changed == set()
