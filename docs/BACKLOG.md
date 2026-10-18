@@ -3196,7 +3196,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 - [ ] ADJ-002 · Disagreement queue
   A list filtered by all, reviewers differ and both against the AI, the object with the AI's call and each reviewer's verdict side by side, and two decisions, keep the AI's call or go with the reviewers. Editing the object and asking an adjudicator are links under them, and a note can be added. Decisions sit next to the verdicts and never replace them.
   Done when component tests cover each filter and decision, and E2E resolves a queue.
-  Depends on ADJ-001. Refs mock: disagree, doc 40 D7.
+  Depends on ADJ-001, ADJ-006. Refs mock: disagree, doc 40 D7.
 
 - [ ] ADJ-003 · Adjudicator view
   The adjudicator gets the guided one-object view with the reviewers anonymous.
@@ -3213,19 +3213,26 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests list the changes and the report shows the flag.
   Depends on ADJ-004, EVAL-002.
 
+- [ ] ADJ-006 · Decisions on queued objects
+  The researcher or an adjudicator decides a queued object: keep the AI's call or go with the reviewers, with an optional note. A decision sits next to the verdicts, can be changed until sign-off, removes the object from the open count and is audited.
+  Done when API tests cover each decision, a change, a refused change after sign-off, the open count and the audit entry.
+  Depends on ADJ-001. Split from ADJ-002 by [ADR 0084](adr/0084-evaluation-metrics.md).
+
+
 ---
 
 ## 46 EVAL · Evaluation report and exports
 
 The research output of a review task ([ADR 0053](adr/0053-ai-results-review-direction.md)).
 
-- [ ] EVAL-000 · Research check
+- [x] EVAL-000 · Research check
   Done when an ADR defines the metrics (sensitivity, precision and Dice for regions against the consensus, Cohen's kappa between reviewers, cell agreement) and confirms the PDF choice (STACK-035).
+  Decided in [ADR 0084](adr/0084-evaluation-metrics.md), with the PDF in [ADR 0083](adr/0083-typst-for-report-pdfs.md).
 
 - [ ] EVAL-001 · Metrics engine
-  Computes the metrics from verdicts, decisions and the reviewed layers per task.
+  Computes the metrics from verdicts, decisions and the reviewed layers per task, as [ADR 0084](adr/0084-evaluation-metrics.md) defines them.
   Done when unit tests reproduce hand-computed values on a fixture task.
-  Depends on EVAL-000, ADJ-002.
+  Depends on EVAL-000, ADJ-006.
 
 - [ ] EVAL-002 · Evaluation report page
   A header with the Research output tag, the version and a flag for changes after sign-off, the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
