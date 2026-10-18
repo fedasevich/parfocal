@@ -77,3 +77,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0069](0069-slide-pipeline.md) | The slide pipeline is derived from stored facts, and people move only submit, reopen and sign-off | Accepted | 2026-10-18 |
 | [0070](0070-result-file-parsers.md) | Result files are read with msgspec, shapely, the csv module, tifffile and OpenCV into one object form, with Parfocal JSON v1 as the native format | Accepted | 2026-10-18 |
 | [0071](0071-object-id-grammar.md) | Object IDs are a kind letter and a per-slide number, paths are percent-encoded with `~` for loose slides, and IDs carry across result sets by IoU 0.5 or 4 µm | Accepted | 2026-10-18 |
+| [0072](0072-verdicts-reasons-and-opinion-forms.md) | A verdict is one current answer per reviewer, task and object with a coded reason, and the opinion form is a versioned list of four question kinds | Accepted | 2026-10-18 |

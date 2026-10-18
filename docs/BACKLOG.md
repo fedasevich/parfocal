@@ -3126,8 +3126,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
 
-- [ ] GUIDE-000 · Research check
+- [x] GUIDE-000 · Research check
   Done when an ADR records the verdict model, the disagree reasons per object kind and the opinion form schema.
+  Decided in [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md).
 
 - [ ] GUIDE-001 · Verdict model and API
   Agree, Disagree or Not sure per object and reviewer, a reason on Disagree, saved at once, changeable until sign-off, and audited.
@@ -3140,7 +3141,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, VIEW-020. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
 
 - [ ] GUIDE-003 · Disagree reasons and optional fixes
-  Disagree asks what is wrong with four quick reasons per object kind. Redrawing the outline or changing the type is optional.
+  Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
   Done when component tests cover reasons for a region and a cell, and E2E redraws an outline from guided review.
   Depends on GUIDE-002, RSET-007. Refs mock: guided/disagree.
 
