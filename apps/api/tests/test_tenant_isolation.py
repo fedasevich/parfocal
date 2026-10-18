@@ -39,11 +39,12 @@ pytestmark = pytest.mark.db
 @dataclass(frozen=True)
 class Seeded:
     tenant_id: uuid.UUID
+    subject: str
     ids: dict[str, uuid.UUID] = field(default_factory=dict[str, uuid.UUID])
     markers: set[str] = field(default_factory=set[str])
 
     def member(self, role: Role = Role.RESEARCHER) -> MemberPrincipal:
-        return MemberPrincipal("isolation-member", self.tenant_id, self.ids["user"], role)
+        return MemberPrincipal(self.subject, self.tenant_id, self.ids["user"], role)
 
 
 type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
@@ -231,6 +232,12 @@ GET_ROUTES = {
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
     "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events", Role.ADMIN),
+    "exportAuditEvents": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/audit-events/export", Role.ADMIN
+    ),
+    "listAuditSigningKeys": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/audit-events/signing-keys", Role.ADMIN
+    ),
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
@@ -311,6 +318,7 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
     assert isinstance(user_id, uuid.UUID)
     seeded = Seeded(
         tenant_id=tenant_id,
+        subject=f"subject-{slug}",
         ids={"organisation": organisation_id, "tenant": tenant_id, "user": user_id},
         markers={str(organisation_id), str(tenant_id), str(user_id), slug, name, member_name},
     )

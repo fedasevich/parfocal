@@ -171,6 +171,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/tenant/service-accounts/{w.spare_account}/disable"
     ),
     "listAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events"),
+    "exportAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events/export"),
+    "listAuditSigningKeys": lambda _: Call("GET", "/api/tenant/audit-events/signing-keys"),
     "listTenantMembers": lambda _: Call("GET", "/api/tenant/members"),
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
