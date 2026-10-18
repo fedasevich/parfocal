@@ -1403,7 +1403,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   The launchpad for everyone. A reviewer's continue card and tasks come first, a researcher's projects and Start something come first, set from the role chosen at setup (ONB-004) and changeable in settings.
   Done when tests cover defaults per role and the override.
 
-- [ ] HOME-011 · Announcements API
+- [x] HOME-011 · Announcements API
   Workspace admins post announcements with a kind (`model`, `slowdown`, `change`), a text and an optional end time, end them early, and members list the current ones newest first.
   Done when API tests cover create, list, ending early and expiry, with permission and tenant isolation tests.
   Depends on IAM-004. Split from HOME-009 by [ADR 0085](adr/0085-home-aggregate-api.md).

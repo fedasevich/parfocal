@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-18
 
+- Ticked HOME-011 (announcements API) after a green `ci` run on `main`.
 - Ticked HOME-000 (research check for Home) after a green `ci` run on `main`.
 - HOME-011 (announcements API) implemented, not ticked until CI is green on `main`. `announcements` (migration `0034`, under row-level security) holds a kind (`model`, `slowdown` or `change`), a text of at most 280 characters, an optional end time and who posted it. `GET /api/announcements` lists the current ones newest first to every member, and `POST /api/announcements` and `POST /api/announcements/{id}/end` need the workspace settings write grant, so only admins post and end them. Ending is idempotent, an end time in the past is refused, and the audit entry carries the kind but not the text. API tests cover posting, listing for each role, expiry, ending early, validation and refusals, and the route joins the permission matrix, the member routes and the isolation suite.
 - Ticked RSET-008 (export reviewed annotations) after a green `ci` run on `main`.
