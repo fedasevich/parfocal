@@ -801,12 +801,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Drag and drop or file picker on a case, per-file progress, pause, resume after reload, retry on failure, multiple files. The window and its states are INGEST-021.
   Done when an E2E test interrupts a throttled 1 GB upload, reloads the page, and the upload resumes to completion.
 
-- [ ] INGEST-003 · Ingest workflow skeleton
+- [x] INGEST-003 · Ingest workflow skeleton
   Durable workflow per uploaded file: quarantine, scan, identify, validate, index, derive, publish. Each step idempotent, with status visible to the UI.
   Done when a workflow test kills the worker mid-step and the run completes after restart without duplicate outputs.
   Depends on STACK-022. Built on [ADR 0044](adr/0044-background-jobs-and-workflows.md) in `parfocal_common.jobs` ([knowledge/jobs.md](knowledge/jobs.md)). The steps are placeholders until INGEST-004 to INGEST-017.
 
-- [ ] INGEST-004 · Format identification
+- [x] INGEST-004 · Format identification
   Magic bytes and TIFF tag inspection to identify vendor and variant, including multi-file formats rejected with a clear message.
   Done when a table test identifies every fixture in the OpenSlide corpus and rejects unsupported formats with a named reason.
   Refs [`poc/scripts/probe-format.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/probe-format.mjs), doc 08.
