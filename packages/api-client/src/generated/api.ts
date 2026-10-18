@@ -696,6 +696,25 @@ export interface EditDraft {
  */
 export type Email = string;
 
+export type EmailDigest = (typeof EmailDigest)[keyof typeof EmailDigest];
+
+export const EmailDigest = {
+  off: "off",
+  hourly: "hourly",
+  daily: "daily",
+} as const;
+
+export interface EmailSchedule {
+  digest?: EmailDigest;
+  quiet_from?: string | null;
+  quiet_until?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 60
+   */
+  time_zone?: string;
+}
+
 export interface EmergencyGrant {
   project_id: string;
   expires_at: string;
@@ -14597,6 +14616,359 @@ export function useGetNotificationTarget<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getMyEmailScheduleResponse200 = {
+  data: EmailSchedule;
+  status: 200;
+};
+
+export type getMyEmailScheduleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyEmailScheduleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyEmailScheduleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyEmailScheduleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyEmailScheduleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyEmailScheduleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyEmailScheduleResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMyEmailScheduleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyEmailScheduleResponseSuccess = getMyEmailScheduleResponse200 & {
+  headers: Headers;
+};
+export type getMyEmailScheduleResponseError = (
+  | getMyEmailScheduleResponse400
+  | getMyEmailScheduleResponse401
+  | getMyEmailScheduleResponse403
+  | getMyEmailScheduleResponse404
+  | getMyEmailScheduleResponse409
+  | getMyEmailScheduleResponse422
+  | getMyEmailScheduleResponse429
+  | getMyEmailScheduleResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyEmailScheduleResponse =
+  | getMyEmailScheduleResponseSuccess
+  | getMyEmailScheduleResponseError;
+
+export const getGetMyEmailScheduleUrl = () => {
+  return `/api/me/email-schedule`;
+};
+
+/**
+ * @summary Get My Email Schedule
+ */
+export const getMyEmailSchedule = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyEmailScheduleResponse> => {
+  return apiFetch<getMyEmailScheduleResponse>(getGetMyEmailScheduleUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyEmailScheduleQueryKey = () => {
+  return [`/api/me/email-schedule`] as const;
+};
+
+export const getGetMyEmailScheduleQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyEmailSchedule>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEmailSchedule>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyEmailScheduleQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyEmailSchedule>>> = ({ signal }) =>
+    getMyEmailSchedule({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyEmailSchedule>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyEmailScheduleQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyEmailSchedule>>
+>;
+export type GetMyEmailScheduleQueryError = Problem;
+
+export function useGetMyEmailSchedule<
+  TData = Awaited<ReturnType<typeof getMyEmailSchedule>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEmailSchedule>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyEmailSchedule>>,
+          TError,
+          Awaited<ReturnType<typeof getMyEmailSchedule>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyEmailSchedule<
+  TData = Awaited<ReturnType<typeof getMyEmailSchedule>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMyEmailSchedule>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyEmailSchedule>>,
+          TError,
+          Awaited<ReturnType<typeof getMyEmailSchedule>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyEmailSchedule<
+  TData = Awaited<ReturnType<typeof getMyEmailSchedule>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEmailSchedule>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Email Schedule
+ */
+
+export function useGetMyEmailSchedule<
+  TData = Awaited<ReturnType<typeof getMyEmailSchedule>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEmailSchedule>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyEmailScheduleQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setMyEmailScheduleResponse200 = {
+  data: EmailSchedule;
+  status: 200;
+};
+
+export type setMyEmailScheduleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setMyEmailScheduleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setMyEmailScheduleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setMyEmailScheduleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setMyEmailScheduleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setMyEmailScheduleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setMyEmailScheduleResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setMyEmailScheduleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setMyEmailScheduleResponseSuccess = setMyEmailScheduleResponse200 & {
+  headers: Headers;
+};
+export type setMyEmailScheduleResponseError = (
+  | setMyEmailScheduleResponse400
+  | setMyEmailScheduleResponse401
+  | setMyEmailScheduleResponse403
+  | setMyEmailScheduleResponse404
+  | setMyEmailScheduleResponse409
+  | setMyEmailScheduleResponse422
+  | setMyEmailScheduleResponse429
+  | setMyEmailScheduleResponse500
+) & {
+  headers: Headers;
+};
+
+export type setMyEmailScheduleResponse =
+  | setMyEmailScheduleResponseSuccess
+  | setMyEmailScheduleResponseError;
+
+export const getSetMyEmailScheduleUrl = () => {
+  return `/api/me/email-schedule`;
+};
+
+/**
+ * @summary Set My Email Schedule
+ */
+export const setMyEmailSchedule = async (
+  emailSchedule: EmailSchedule,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setMyEmailScheduleResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setMyEmailScheduleResponse>(getSetMyEmailScheduleUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(emailSchedule),
+  });
+};
+
+export const getSetMyEmailScheduleMutationKey = () => ["setMyEmailSchedule"] as const;
+
+export const getSetMyEmailScheduleMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setMyEmailSchedule>>,
+    TError,
+    SetMyEmailScheduleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setMyEmailSchedule>>,
+  TError,
+  SetMyEmailScheduleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetMyEmailScheduleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setMyEmailSchedule>>,
+    SetMyEmailScheduleMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setMyEmailSchedule(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetMyEmailScheduleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setMyEmailSchedule>>
+>;
+export type SetMyEmailScheduleMutationBody = EmailSchedule;
+export type SetMyEmailScheduleMutationError = Problem;
+export type SetMyEmailScheduleMutationVariables = { data: EmailSchedule };
+
+/**
+ * @summary Set My Email Schedule
+ */
+export const useSetMyEmailSchedule = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setMyEmailSchedule>>,
+      TError,
+      SetMyEmailScheduleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setMyEmailSchedule>>,
+  TError,
+  SetMyEmailScheduleMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetMyEmailScheduleMutationOptions(options), queryClient);
+};
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;

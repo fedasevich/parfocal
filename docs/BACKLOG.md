@@ -2723,6 +2723,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] NOTIF-005 · Digest and quiet hours
   Done when tests cover batching and quiet hours.
+  Refs [ADR 0092](adr/0092-email-digest-and-quiet-hours.md).
 
 
 - [x] NOTIF-006 · Event catalogue with deep links

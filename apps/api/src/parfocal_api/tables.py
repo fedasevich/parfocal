@@ -19,6 +19,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    Time,
     UniqueConstraint,
     Uuid,
     func,
@@ -253,6 +254,10 @@ users = Table(
     Column("initials", String(3), nullable=False, info=PERSONAL),
     Column("avatar_colour", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("title", String(40), nullable=True, info=PERSONAL),
+    Column("email_digest", String(10), nullable=False, server_default="off", info=OPERATIONAL),
+    Column("quiet_from", Time, nullable=True, info=OPERATIONAL),
+    Column("quiet_until", Time, nullable=True, info=OPERATIONAL),
+    Column("time_zone", String(60), nullable=False, server_default="UTC", info=OPERATIONAL),
     Column(
         "last_tenant_id",
         Uuid[uuid.UUID](),
@@ -263,6 +268,8 @@ users = Table(
     *timestamps(),
     CheckConstraint("initials ~ '^[A-Z]{1,3}$'", name="initials"),
     CheckConstraint("avatar_colour BETWEEN 0 AND 11", name="avatar_colour"),
+    CheckConstraint("email_digest IN ('off', 'hourly', 'daily')", name="email_digest"),
+    CheckConstraint("(quiet_from IS NULL) = (quiet_until IS NULL)", name="quiet_hours"),
 )
 
 memberships = Table(
@@ -847,6 +854,12 @@ opinion_forms = Table(
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("version >= 1", name="version"),
 )
+
+
+class EmailDigest(StrEnum):
+    OFF = "off"
+    HOURLY = "hourly"
+    DAILY = "daily"
 
 
 class NotificationKind(StrEnum):

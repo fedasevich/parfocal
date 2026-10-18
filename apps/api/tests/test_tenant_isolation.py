@@ -647,6 +647,7 @@ GET_ROUTES = {
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
+    "getMyEmailSchedule": Route(Exposure.PUBLIC, lambda _: "/api/me/email-schedule"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

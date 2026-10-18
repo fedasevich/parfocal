@@ -18,6 +18,7 @@ def test_the_template_set_and_its_parameters_are_the_reviewed_ones() -> None:
             f"notification.{kind}": ["link", "recipient_name", "workspace_name"]
             for kind in NotificationKind
         },
+        "notification.digest": ["link", "recipient_name", "workspace_name"],
     }
 
 

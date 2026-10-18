@@ -105,3 +105,7 @@ Emails link to `/go/{notification id}`, and the app asks `GET /api/me/notificati
 ## Emails are rendered from the reviewed template set
 
 `parfocal_api.email_templates` holds the only email templates: the invitation and one per notification kind, built from the catalogue's subject and line ([ADR 0039](../adr/0039-email-through-resend-with-phi-rules.md)). A template takes only `recipient_name`, `workspace_name` and `link`, and `render` refuses any other value, so a case or patient field cannot reach an email. The rendered subject, text and HTML travel in `EmailMessage`, and the senders still log only the template name and link. Adding a template or a parameter fails `test_the_template_set_and_its_parameters_are_the_reviewed_ones` until the test is updated, which is the review the ADR asks for. The catalogue lives in `parfocal_api.notification_catalogue`, apart from `notifications`, because the templates and the notification service import each other otherwise.
+
+## Email delivery takes the time as an argument
+
+`deliver_pending_emails(connection, sender, origin, now)` decides per person from their schedule on the user row, so tests pass `now` instead of waiting ([ADR 0092](../adr/0092-email-digest-and-quiet-hours.md)). Quiet hours are compared in the person's time zone and may cross midnight. Digest windows count from the oldest waiting email's `created_at`, which the database sets, so a test adds the window to the real current time. Emergency access is never held or batched.

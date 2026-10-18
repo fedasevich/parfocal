@@ -7,6 +7,7 @@ from parfocal_api.notification_catalogue import CATALOGUE
 from parfocal_api.tables import NotificationKind
 
 PARAMETERS = frozenset({"recipient_name", "workspace_name", "link"})
+DIGEST_TEMPLATE = "notification.digest"
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,16 @@ TEMPLATES: Mapping[str, Template] = {
         action="Accept the invitation",
     ),
     **{f"notification.{kind}": notification_template(kind) for kind in NotificationKind},
+    DIGEST_TEMPLATE: Template(
+        name=DIGEST_TEMPLATE,
+        subject="New activity in {workspace_name}",
+        lines=(
+            "Hello {recipient_name},",
+            "Several things happened that need your attention.",
+            "Sign in to Parfocal to see them.",
+        ),
+        action="Open your notifications",
+    ),
 }
 
 

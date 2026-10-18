@@ -1,19 +1,22 @@
 import uuid
 from collections.abc import Iterable, Mapping
-from typing import Annotated, Any
+from datetime import UTC, datetime, time, timedelta
+from typing import Annotated, Any, Self
+from zoneinfo import ZoneInfo, available_timezones
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
-from sqlalchemy import func, insert, literal_column, select, update
+from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import insert, literal_column, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.email_templates import render
+from parfocal_api.context import CurrentPrincipal, TenantConnection, UserConnection
+from parfocal_api.email_templates import DIGEST_TEMPLATE, render
 from parfocal_api.notification_catalogue import DEFAULTS, Channels
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ForbiddenError
 from parfocal_api.tables import (
+    EmailDigest,
     EmailStatus,
     NotificationKind,
     notification_preferences,
@@ -21,9 +24,11 @@ from parfocal_api.tables import (
     tenants,
     users,
 )
+from parfocal_api.users import signed_in
 from parfocal_common.clients import EmailMessage, EmailSender
 from parfocal_common.db import CURRENT_TENANT, DatabaseScope, scoped_transaction
 
+DIGEST_WINDOWS = {EmailDigest.HOURLY: timedelta(hours=1), EmailDigest.DAILY: timedelta(days=1)}
 MANDATORY = frozenset({NotificationKind.EMERGENCY_ACCESS})
 
 
@@ -115,18 +120,61 @@ def link_to(origin: str, notification_id: uuid.UUID) -> str:
     return f"{origin}/go/{notification_id}"
 
 
+def link_to_inbox(origin: str) -> str:
+    return f"{origin}/inbox"
+
+
+def in_quiet_hours(moment: datetime, row: Any) -> bool:
+    if row.quiet_from is None or row.quiet_until is None or row.quiet_from == row.quiet_until:
+        return False
+    local = moment.astimezone(ZoneInfo(row.time_zone)).time()
+    if row.quiet_from < row.quiet_until:
+        return row.quiet_from <= local < row.quiet_until
+    return local >= row.quiet_from or local < row.quiet_until
+
+
+def due(moment: datetime, row: Any, waiting: list[Any]) -> bool:
+    window = DIGEST_WINDOWS.get(EmailDigest(row.email_digest))
+    if window is None:
+        return True
+    return waiting[0].created_at <= moment - window
+
+
+def message(template: str, row: Any, link: str) -> EmailMessage:
+    rendered = render(
+        template,
+        {"recipient_name": row.display_name, "workspace_name": row.workspace_name, "link": link},
+    )
+    return EmailMessage(
+        to=row.email,
+        template=template,
+        link=link,
+        subject=rendered.subject,
+        text=rendered.text,
+        html=rendered.html,
+    )
+
+
 async def deliver_pending_emails(
-    connection: AsyncConnection, sender: EmailSender, origin: str
+    connection: AsyncConnection,
+    sender: EmailSender,
+    origin: str,
+    now: datetime | None = None,
 ) -> int:
+    moment = now or datetime.now(UTC)
     pending = (
         await connection.execute(
             select(
                 notifications.c.id,
+                notifications.c.user_id,
                 notifications.c.kind,
-                notifications.c.target_type,
-                notifications.c.target_id,
+                notifications.c.created_at,
                 users.c.email,
                 users.c.display_name,
+                users.c.email_digest,
+                users.c.quiet_from,
+                users.c.quiet_until,
+                users.c.time_zone,
                 tenants.c.name.label("workspace_name"),
             )
             .join(users, users.c.id == notifications.c.user_id)
@@ -139,37 +187,43 @@ async def deliver_pending_emails(
             .with_for_update(of=notifications, skip_locked=True)
         )
     ).all()
-    sent = 0
+    people: dict[uuid.UUID, list[Any]] = {}
     for row in pending:
-        if row.email:
-            template = f"notification.{row.kind}"
-            link = link_to(origin, row.id)
-            rendered = render(
-                template,
-                {
-                    "recipient_name": row.display_name,
-                    "workspace_name": row.workspace_name,
-                    "link": link,
-                },
-            )
-            sender.send(
-                EmailMessage(
-                    to=row.email,
-                    template=template,
-                    link=link,
-                    subject=rendered.subject,
-                    text=rendered.text,
-                    html=rendered.html,
-                )
-            )
-            sent += 1
+        people.setdefault(row.user_id, []).append(row)
+    sent = 0
+    skipped: list[uuid.UUID] = []
+    delivered: list[uuid.UUID] = []
+    for rows in people.values():
+        first = rows[0]
+        if not first.email:
+            skipped.extend(row.id for row in rows)
+            continue
+        for row in rows:
+            if NotificationKind(row.kind) in MANDATORY:
+                sender.send(message(f"notification.{row.kind}", row, link_to(origin, row.id)))
+                delivered.append(row.id)
+                sent += 1
+        waiting = [row for row in rows if NotificationKind(row.kind) not in MANDATORY]
+        if not waiting or in_quiet_hours(moment, first) or not due(moment, first, waiting):
+            continue
+        if len(waiting) == 1:
+            only = waiting[0]
+            sender.send(message(f"notification.{only.kind}", only, link_to(origin, only.id)))
+        else:
+            sender.send(message(DIGEST_TEMPLATE, first, link_to_inbox(origin)))
+        delivered.extend(row.id for row in waiting)
+        sent += 1
+    if skipped:
         await connection.execute(
             update(notifications)
-            .where(notifications.c.id == row.id)
-            .values(
-                email_status=EmailStatus.SENT if row.email else EmailStatus.SKIPPED,
-                emailed_at=func.now() if row.email else None,
-            )
+            .where(notifications.c.id.in_(skipped))
+            .values(email_status=EmailStatus.SKIPPED)
+        )
+    if delivered:
+        await connection.execute(
+            update(notifications)
+            .where(notifications.c.id.in_(delivered))
+            .values(email_status=EmailStatus.SENT, emailed_at=moment)
         )
     return sent
 
@@ -233,3 +287,68 @@ async def set_notification_preferences(
             )
         )
     return await preferences_of(connection, member.user_id)
+
+
+class EmailSchedule(BaseModel):
+    digest: EmailDigest = EmailDigest.OFF
+    quiet_from: time | None = None
+    quiet_until: time | None = None
+    time_zone: Annotated[str, Field(min_length=1, max_length=60)] = "UTC"
+
+    @model_validator(mode="after")
+    def check(self) -> Self:
+        if (self.quiet_from is None) != (self.quiet_until is None):
+            raise ValueError("Quiet hours need both a start and an end")
+        if self.time_zone not in available_timezones():
+            raise ValueError(f"Unknown time zone {self.time_zone}")
+        return self
+
+
+schedule_router = APIRouter(prefix="/api/me/email-schedule", tags=["me"])
+SCHEDULE_COLUMNS = (
+    users.c.email_digest,
+    users.c.quiet_from,
+    users.c.quiet_until,
+    users.c.time_zone,
+)
+
+
+def schedule_of(row: Any) -> EmailSchedule:
+    return EmailSchedule(
+        digest=EmailDigest(row.email_digest),
+        quiet_from=row.quiet_from,
+        quiet_until=row.quiet_until,
+        time_zone=row.time_zone,
+    )
+
+
+@schedule_router.get("", operation_id="getMyEmailSchedule")
+async def get_my_email_schedule(
+    principal: CurrentPrincipal, connection: UserConnection
+) -> EmailSchedule:
+    person = signed_in(principal)
+    row = (
+        await connection.execute(select(*SCHEDULE_COLUMNS).where(users.c.id == person.user_id))
+    ).one()
+    return schedule_of(row)
+
+
+@schedule_router.put("", operation_id="setMyEmailSchedule")
+async def set_my_email_schedule(
+    schedule: EmailSchedule, principal: CurrentPrincipal, connection: UserConnection
+) -> EmailSchedule:
+    person = signed_in(principal)
+    row = (
+        await connection.execute(
+            update(users)
+            .where(users.c.id == person.user_id)
+            .values(
+                email_digest=schedule.digest,
+                quiet_from=schedule.quiet_from,
+                quiet_until=schedule.quiet_until,
+                time_zone=schedule.time_zone,
+            )
+            .returning(*SCHEDULE_COLUMNS)
+        )
+    ).one()
+    return schedule_of(row)
