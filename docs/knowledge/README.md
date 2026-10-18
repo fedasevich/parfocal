@@ -20,3 +20,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Login through Zitadel, sessions and the login E2E | [auth.md](auth.md) |
 | Background jobs, workflows, claims and the kill test | [jobs.md](jobs.md) |
 | Identifying slide formats at ingest and the formats CI job | [slide-formats.md](slide-formats.md) |
+| Reading imported AI result files and keeping IDs across sets | [results.md](results.md) |

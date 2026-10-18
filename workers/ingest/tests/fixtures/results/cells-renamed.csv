@@ -1,0 +1,5 @@
+Cell ID,Centroid X px,Centroid Y px,Cell type,Confidence,Area
+c-1,100.5,200.25,Tumor,0.93,40
+c-2,110,210,Lymphocyte,0.71,22
+c-3,not-a-number,215,Tumor,0.5,30
+c-4,130,230,,,19

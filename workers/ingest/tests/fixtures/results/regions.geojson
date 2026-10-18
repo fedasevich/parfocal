@@ -1,0 +1,12 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type": "Feature", "id": "tumor-1", "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [400, 0], [400, 300], [0, 300], [0, 0]]]}, "properties": {"objectType": "annotation", "classification": {"name": "Tumor", "color": 16711680}, "score": 0.91, "probabilities": {"Tumor": 0.91, "Stroma": 0.09}}},
+    {"type": "Feature", "id": "zone-1", "geometry": {"type": "Polygon", "coordinates": [[[500, 0], [600, 0], [600, 100], [500, 100], [500, 0]]]}, "properties": {"kind": "zone"}},
+    {"type": "Feature", "id": "bowtie", "geometry": {"type": "Polygon", "coordinates": [[[0, 500], [100, 600], [100, 500], [0, 600], [0, 500]]]}, "properties": {"classification": {"name": "Stroma"}}},
+    {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [10, 0], [10, 10], [0, 0]]]}, "properties": {"objectType": "tile"}},
+    {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[0, 0], [50, 50]]}, "properties": {}},
+    {"type": "Feature", "geometry": null, "properties": {"class": "Tumor"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [700, 700]}, "properties": {"class": "Lymphocyte", "measurements": [{"name": "Area", "value": 31.5}]}}
+  ]
+}
