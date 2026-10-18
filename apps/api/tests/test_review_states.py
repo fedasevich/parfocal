@@ -121,6 +121,7 @@ def pair(first: str, second: str) -> dict[str, str]:
     return {"first": first, "second": second}
 
 
+@pytest.mark.db
 def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, database: str) -> None:
     r = review(api, database)
     task = f"/api/review-tasks/{r.task}"
@@ -166,6 +167,7 @@ def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, databa
     ]
 
 
+@pytest.mark.db
 def test_a_reviewer_sees_only_their_slides_states(api: ApiAs, database: str) -> None:
     r = review(api, database)
     assert states(api, r, "first") == [("assigned", pair("assigned", "assigned"))]
