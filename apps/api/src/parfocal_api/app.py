@@ -35,6 +35,7 @@ from parfocal_api import (
     review_tasks,
     reviewed_export,
     reviewed_layer,
+    search,
     service_accounts,
     sessions_api,
     taxonomy,
@@ -152,6 +153,7 @@ def create_app(
     app.include_router(neighbours.router)
     app.include_router(notification_targets.router)
     app.include_router(notifications.schedule_router)
+    app.include_router(search.router)
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
     app.include_router(opinions.router)

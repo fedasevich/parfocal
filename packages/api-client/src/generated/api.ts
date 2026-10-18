@@ -882,6 +882,17 @@ export interface Health {
   status: string;
 }
 
+export type HitKind = (typeof HitKind)[keyof typeof HitKind];
+
+export const HitKind = {
+  project: "project",
+  case: "case",
+  slide: "slide",
+  object: "object",
+  person: "person",
+  "patient-case": "patient-case",
+} as const;
+
 export type ResumeTargetCamera = { [key: string]: number } | null;
 
 export interface ResumeTarget {
@@ -1694,6 +1705,33 @@ export interface SchemaProblem {
   message: string;
 }
 
+export interface SearchHit {
+  kind: HitKind;
+  id: string;
+  label: string;
+  project?: ProjectRef | null;
+  case_label?: string | null;
+  slide_id?: string | null;
+  object_id?: string | null;
+}
+
+export interface SearchResults {
+  query: string;
+  hits: SearchHit[];
+}
+
+export type SearchScope = (typeof SearchScope)[keyof typeof SearchScope];
+
+export const SearchScope = {
+  all: "all",
+  projects: "projects",
+  cases: "cases",
+  slides: "slides",
+  objects: "objects",
+  people: "people",
+  patients: "patients",
+} as const;
+
 /**
  * @minimum 1
  * @maximum 365
@@ -2014,6 +2052,15 @@ export type GetSlideNeighboursParams = {
   result_set?: string | null;
   reviewer_id?: string | null;
   q?: string | null;
+};
+
+export type SearchParams = {
+  /**
+   * @minLength 2
+   * @maxLength 200
+   */
+  q: string;
+  scope?: SearchScope;
 };
 
 export type ListVerdictsParams = {
@@ -14969,6 +15016,185 @@ export const useSetMyEmailSchedule = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getSetMyEmailScheduleMutationOptions(options), queryClient);
 };
+
+export type searchResponse200 = {
+  data: SearchResults;
+  status: 200;
+};
+
+export type searchResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type searchResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type searchResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type searchResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type searchResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type searchResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type searchResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type searchResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type searchResponseSuccess = searchResponse200 & {
+  headers: Headers;
+};
+export type searchResponseError = (
+  | searchResponse400
+  | searchResponse401
+  | searchResponse403
+  | searchResponse404
+  | searchResponse409
+  | searchResponse422
+  | searchResponse429
+  | searchResponse500
+) & {
+  headers: Headers;
+};
+
+export type searchResponse = searchResponseSuccess | searchResponseError;
+
+export const getSearchUrl = (params: SearchParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/search?${stringifiedParams}` : `/api/search`;
+};
+
+/**
+ * @summary Search
+ */
+export const search = async (
+  params: SearchParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<searchResponse> => {
+  return apiFetch<searchResponse>(getSearchUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSearchQueryKey = (params?: SearchParams) => {
+  return [`/api/search`, ...(params ? [params] : [])] as const;
+};
+
+export const getSearchQueryOptions = <TData = Awaited<ReturnType<typeof search>>, TError = Problem>(
+  params: SearchParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSearchQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof search>>> = ({ signal }) =>
+    search(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof search>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SearchQueryResult = NonNullable<Awaited<ReturnType<typeof search>>>;
+export type SearchQueryError = Problem;
+
+export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = Problem>(
+  params: SearchParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof search>>,
+          TError,
+          Awaited<ReturnType<typeof search>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = Problem>(
+  params: SearchParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof search>>,
+          TError,
+          Awaited<ReturnType<typeof search>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = Problem>(
+  params: SearchParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Search
+ */
+
+export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = Problem>(
+  params: SearchParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSearchQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;

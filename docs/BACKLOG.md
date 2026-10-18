@@ -351,7 +351,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: GrowthBook, PostHog (self-hosted EU), Unleash, Statsig. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostHog Cloud for flags, experiments, analytics and surveys, with autocapture and session replay off. Only production sends events and evaluates flags in PostHog, and other environments read flag defaults from a local file ([ADR 0005](adr/0005-external-sends-only-in-production.md)). No PHI ever leaves the platform in events.
   Done when a spike assigns users to the arms of an experiment, such as the lab leads' default home, and records an exposure event without identifiers beyond a pseudonymous user id.
 
-- [ ] STACK-034 · Search
+- [x] STACK-034 · Search
   Candidates: PostgreSQL full-text search with pg_trgm, Meilisearch, OpenSearch. Default: PostgreSQL FTS and trigram, because patients, cases and reports are tenant-scoped and small per tenant, and RLS then covers search too.
   Done when the spike returns patient, case and report results for a partial name in under 100 ms on 100,000 seeded cases.
   Decided in [ADR 0094](adr/0094-search-on-postgres.md) with the [search spike](results/2026-10-18-search-spike.md). Reports are not stored yet and patient names are searched by whole words by ADR 0034, so the spike measured cases, slides and whole-word patients.
@@ -2932,7 +2932,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the nightly matrix runs and results are published.
   Refs doc 20 (Safari and Firefox WebGPU parity untested).
 
-- [ ] TEST-016 · Test data hygiene
+- [x] TEST-016 · Test data hygiene
   No real PHI in any fixture, generated patient names marked as synthetic.
   Done when a scanner flags non-synthetic names in fixtures.
 

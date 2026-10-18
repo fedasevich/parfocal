@@ -238,6 +238,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getReviewedLayer": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/layer"),
+    "search": lambda _: Call("GET", "/api/search?q=A1"),
     "getSlideNeighbours": lambda w: Call(
         "GET", f"/api/slides/{w.slide}/neighbours?from=task&task_id={w.task}&skip_submitted=false"
     ),

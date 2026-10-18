@@ -541,6 +541,7 @@ GET_ROUTES = {
     "getNotificationTarget": Route(
         Exposure.TENANT, lambda a: f"/api/me/notifications/{a.ids['notification']}/target"
     ),
+    "search": Route(Exposure.TENANT, lambda _: "/api/search?q=A1"),
     "getSlideNeighbours": Route(
         Exposure.TENANT,
         lambda a: (
