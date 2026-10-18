@@ -814,7 +814,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] INGEST-005 · Malware and integrity scan
   Done when an EICAR test file is rejected and a truncated TIFF fails validation with a user-readable error.
 
-- [ ] INGEST-006 · Pyramid and level validation
+- [x] INGEST-006 · Pyramid and level validation
   Read every level's size, tile size, compression and photometric interpretation. Recover true downsample factors with the tile-padding rule. Pick the right pyramid in multi-pyramid files (Leica SCN). Record microns per pixel and objective power, with a fallback and a warning when missing.
   Done when fixture tests assert the level table for every supported format, including the SCN case that has a 1616×4668 decoy and the 36832×38432 real slide.
   Refs docs 03, 06 (confident wrong answers).
