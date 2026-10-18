@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.notifications import CATALOGUE, TargetKind, member_of
+from parfocal_api.notification_catalogue import CATALOGUE, TargetKind
+from parfocal_api.notifications import member_of
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.project_access import reads_slide, role_in
 from parfocal_api.review_tasks import readable_task

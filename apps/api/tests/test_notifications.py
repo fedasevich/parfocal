@@ -9,7 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from workspace_support import Workspace, join_project, make_project, make_workspace, owner
 
-from parfocal_api.notifications import DEFAULTS, deliver_pending_emails, notify
+from parfocal_api.notification_catalogue import DEFAULTS
+from parfocal_api.notifications import deliver_pending_emails, notify
 from parfocal_api.tables import NotificationKind, Role
 from parfocal_common.clients import MemoryEmailSender
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
@@ -127,6 +128,9 @@ def test_pending_emails_are_sent_once_with_a_link_and_no_details(database: str) 
     assert run(database, workspace.tenant_id, deliver) == 0
     (message,) = sender.sent
     assert message.template == "notification.task-assigned"
+    assert message.subject.startswith("New review task in ")
+    assert message.link in message.text
+    assert "Hello ana," in message.text
     [(sent_id,)] = owner(
         database,
         "SELECT id FROM notifications WHERE email_status = 'sent' "

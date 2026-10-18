@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, auth_state, digest
 from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
+from parfocal_api.email_templates import render
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import (
@@ -164,8 +165,17 @@ async def invite(
         details={"role": draft.role},
     )
     link = f"{auth_state(request).public_origin}/invitations/{token}"
+    workspace = await connection.scalar(select(tenants.c.name).where(tenants.c.id == tenant_id))
+    rendered = render(INVITATION_TEMPLATE, {"workspace_name": str(workspace), "link": link})
     clients_of(request).email.send(
-        EmailMessage(to=draft.email, template=INVITATION_TEMPLATE, link=link)
+        EmailMessage(
+            to=draft.email,
+            template=INVITATION_TEMPLATE,
+            link=link,
+            subject=rendered.subject,
+            text=rendered.text,
+            html=rendered.html,
+        )
     )
     return invitation_of(row)
 

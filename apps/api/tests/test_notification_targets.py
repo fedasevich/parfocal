@@ -8,7 +8,7 @@ from test_my_work import task
 from test_review_tasks import Study, study
 from workspace_support import owner
 
-from parfocal_api.notifications import CATALOGUE, TargetKind
+from parfocal_api.notification_catalogue import CATALOGUE, TargetKind
 from parfocal_api.tables import NotificationKind
 
 

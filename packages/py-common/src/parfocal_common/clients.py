@@ -15,6 +15,9 @@ class EmailMessage:
     to: str
     template: str
     link: str
+    subject: str = ""
+    text: str = ""
+    html: str = ""
 
 
 class EmailSender(Protocol):

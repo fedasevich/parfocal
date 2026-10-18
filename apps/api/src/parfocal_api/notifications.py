@@ -1,7 +1,5 @@
 import uuid
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
-from enum import StrEnum
 from typing import Annotated, Any
 
 from fastapi import APIRouter
@@ -11,6 +9,8 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.email_templates import render
+from parfocal_api.notification_catalogue import DEFAULTS, Channels
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ForbiddenError
 from parfocal_api.tables import (
@@ -18,90 +18,12 @@ from parfocal_api.tables import (
     NotificationKind,
     notification_preferences,
     notifications,
+    tenants,
     users,
 )
 from parfocal_common.clients import EmailMessage, EmailSender
 from parfocal_common.db import CURRENT_TENANT, DatabaseScope, scoped_transaction
 
-
-@dataclass(frozen=True)
-class Channels:
-    in_app: bool
-    email: bool
-    realtime: bool
-
-
-class TargetKind(StrEnum):
-    SLIDE = "slide"
-    THREAD = "thread"
-    TASK = "task"
-    EVALUATION = "evaluation"
-    JOB = "job"
-    DELIVERY = "delivery"
-    PROJECT = "project"
-
-
-@dataclass(frozen=True)
-class Entry:
-    target: TargetKind
-    subject: str
-    line: str
-    channels: Channels
-
-
-ALL = Channels(in_app=True, email=True, realtime=True)
-QUIET = Channels(in_app=True, email=False, realtime=True)
-
-CATALOGUE: Mapping[NotificationKind, Entry] = {
-    NotificationKind.MENTION: Entry(
-        TargetKind.THREAD, "You were mentioned", "Someone mentioned you in a thread.", ALL
-    ),
-    NotificationKind.REPLY: Entry(
-        TargetKind.THREAD, "New reply", "There is a new reply in a thread you follow.", QUIET
-    ),
-    NotificationKind.TASK_ASSIGNED: Entry(
-        TargetKind.TASK, "New review task", "A review task was handed to you.", ALL
-    ),
-    NotificationKind.TASK_DUE_SOON: Entry(
-        TargetKind.TASK, "Review task due soon", "A review task of yours is due soon.", ALL
-    ),
-    NotificationKind.MODEL_RUN_FINISHED: Entry(
-        TargetKind.JOB, "Model run finished", "A model run you started has finished.", QUIET
-    ),
-    NotificationKind.MODEL_RUN_PAUSED: Entry(
-        TargetKind.JOB, "Model run paused", "A model run you started is paused.", ALL
-    ),
-    NotificationKind.UPLOAD_DONE: Entry(
-        TargetKind.JOB, "Upload done", "Your upload has been checked and is ready.", QUIET
-    ),
-    NotificationKind.DISAGREEMENTS_READY: Entry(
-        TargetKind.TASK,
-        "Disagreements to decide",
-        "Every reviewer has submitted and some objects need your decision.",
-        ALL,
-    ),
-    NotificationKind.TASK_SIGNED_OFF: Entry(
-        TargetKind.EVALUATION, "Task signed off", "A review task was signed off.", ALL
-    ),
-    NotificationKind.RESULT_SET_ADDED: Entry(
-        TargetKind.SLIDE, "Results added", "A pipeline added AI results to a slide.", QUIET
-    ),
-    NotificationKind.INTEGRATION_DOWN: Entry(
-        TargetKind.DELIVERY,
-        "Integration down",
-        "Parfocal could not reach a connected service.",
-        ALL,
-    ),
-    NotificationKind.EMERGENCY_ACCESS: Entry(
-        TargetKind.PROJECT,
-        "Emergency access to your project",
-        "Someone opened your clinical project with emergency access.",
-        ALL,
-    ),
-}
-DEFAULTS: Mapping[NotificationKind, Channels] = {
-    kind: entry.channels for kind, entry in CATALOGUE.items()
-}
 MANDATORY = frozenset({NotificationKind.EMERGENCY_ACCESS})
 
 
@@ -204,8 +126,11 @@ async def deliver_pending_emails(
                 notifications.c.target_type,
                 notifications.c.target_id,
                 users.c.email,
+                users.c.display_name,
+                tenants.c.name.label("workspace_name"),
             )
             .join(users, users.c.id == notifications.c.user_id)
+            .join(tenants, tenants.c.id == notifications.c.tenant_id)
             .where(
                 notifications.c.tenant_id == literal_column(CURRENT_TENANT),
                 notifications.c.email_status == EmailStatus.PENDING,
@@ -217,11 +142,24 @@ async def deliver_pending_emails(
     sent = 0
     for row in pending:
         if row.email:
+            template = f"notification.{row.kind}"
+            link = link_to(origin, row.id)
+            rendered = render(
+                template,
+                {
+                    "recipient_name": row.display_name,
+                    "workspace_name": row.workspace_name,
+                    "link": link,
+                },
+            )
             sender.send(
                 EmailMessage(
                     to=row.email,
-                    template=f"notification.{row.kind}",
-                    link=link_to(origin, row.id),
+                    template=template,
+                    link=link,
+                    subject=rendered.subject,
+                    text=rendered.text,
+                    html=rendered.html,
                 )
             )
             sent += 1
