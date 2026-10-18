@@ -3173,12 +3173,18 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 - [ ] GUIDE-007 · Opinion form for the reviewer
   Three quick questions when a slide is done in guided review, and the whole form in the Opinion tab, saved as a draft.
   Done when component tests cover each question kind and E2E answers in guided review and finds the answers in the tab.
-  Depends on GUIDE-006, GUIDE-002. Refs mock: opinion, mock: guided/done.
+  Depends on GUIDE-006, GUIDE-002, GUIDE-009. Refs mock: opinion, mock: guided/done.
 
 - [ ] GUIDE-008 · How this works
   A first-time coach in guided review with four numbered tips, reopened from How this works.
   Done when component tests cover the coach and its dismissal per user.
   Depends on GUIDE-002. Refs mock: guided/first.
+
+- [ ] GUIDE-009 · Opinion answers API
+  One opinion per task, reviewer and slide on the form version the task pinned, saved as a draft by merging answers, checked against each question's kind, locked once the slide is submitted until it is reopened, and audited without the answers. The reviewer and project owners read it.
+  Done when API tests cover every question kind, a merge, a refused answer, the pinned version, the lock after submit and the roles.
+  Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
+
 
 ---
 
@@ -3213,7 +3219,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests list the changes and the report shows the flag.
   Depends on ADJ-004, EVAL-002.
 
-- [ ] ADJ-006 · Decisions on queued objects
+- [x] ADJ-006 · Decisions on queued objects
   The researcher or an adjudicator decides a queued object: keep the AI's call or go with the reviewers, with an optional note. A decision sits next to the verdicts, can be changed until sign-off, removes the object from the open count and is audited.
   Done when API tests cover each decision, a change, a refused change after sign-off, the open count and the audit entry.
   Depends on ADJ-001. Split from ADJ-002 by [ADR 0084](adr/0084-evaluation-metrics.md).
@@ -3237,7 +3243,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 - [ ] EVAL-002 · Evaluation report page
   A header with the Research output tag, the version and a flag for changes after sign-off, the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
   Done when component tests render a seeded report and axe passes.
-  Depends on EVAL-001. Refs mock: evaluation, doc 40 D8 and E1.
+  Depends on EVAL-001, EVAL-006. Refs mock: evaluation, doc 40 D8 and E1.
 
 - [ ] EVAL-003 · Exports
   PDF, verdicts per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
@@ -3253,6 +3259,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   A link to the report without slides, revocable and logged.
   Done when API tests cover the link, revocation and the log.
   Depends on EVAL-002.
+
+- [ ] EVAL-006 · Task evaluation API
+  An endpoint that gathers a task's verdicts, decisions, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
+  Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
+  Depends on EVAL-001. Split out so EVAL-002 (evaluation report page) has no backend work.
+
 
 ---
 
