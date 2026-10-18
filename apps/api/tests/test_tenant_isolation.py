@@ -528,6 +528,9 @@ GET_ROUTES = {
     "listMyReviewTasks": Route(Exposure.TENANT, lambda _: "/api/me/review-tasks"),
     "listTasksAssignedByMe": Route(Exposure.TENANT, lambda _: "/api/me/assigned-tasks"),
     "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
+    "getTaskEvaluation": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation"
+    ),
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",

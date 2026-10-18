@@ -13,3 +13,12 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 - Every rate is a `Ratio` with its numerator and denominator, and a zero denominator gives `None`, never 0.
 - Cohen's kappa is computed per pair of reviewers over the objects both judged, with agree, disagree and unsure as categories. `fleiss` reproduces the textbook example (κ ≈ 0.210, 10 subjects, 14 raters, 5 categories), and returns `None` when the subjects do not all have the same number of raters.
 - The fixture `packages/py-common/tests/fixtures/evaluation-task.json` holds the hand-computed values. The two reviewers there give κ = 51/87.
+
+## The task evaluation endpoint gathers the inputs
+
+`GET /api/review-tasks/{id}/evaluation` (`parfocal_api.evaluation`) is for project owners and viewers, and reviewers get 403 `evaluation-hidden`. It builds the engine inputs from the database:
+
+- AI regions take their class from the result set's class list, mapped to the project class when there is a mapping. Cells have no class in the database, because their classes are in the chunk files, so they count as `unclassified` until the cell summary is in storage. TODO: read cell classes from the summary then.
+- Added objects from different reviewers are merged when two regions overlap at IoU 0.5 or two cells' centroids are within 16 px, because slides have no stored pixel size yet ([ADR 0071](../adr/0071-object-id-grammar.md) asks for 4 µm).
+- Region areas come from one PostGIS query per slide and class: the union of the AI's regions, the union of the agreed regions (reshaped where a reviewer reshaped them) and the added regions, and the area of their intersection. The task does not store an order of reviewers, so the reshape that counts is the earliest one saved, not "the first reviewer in task order" as ADR 0084 puts it.
+- Opinions are summarised per question of the task's pinned form.

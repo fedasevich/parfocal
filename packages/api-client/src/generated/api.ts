@@ -572,6 +572,24 @@ export interface ClassMapping {
   class_id: string;
 }
 
+export interface RateOut {
+  value: number | null;
+  numerator: number;
+  denominator: number;
+}
+
+export interface ClassMetrics {
+  kind: string;
+  class_name: string;
+  true_positives: number;
+  false_positives: number;
+  false_negatives: number;
+  unsure: number;
+  undecided: number;
+  precision: RateOut;
+  sensitivity: RateOut;
+}
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -654,6 +672,44 @@ export type EndLabel = string;
 
 export interface EndedSessions {
   ended: number;
+}
+
+export type EvaluationDice = { [key: string]: RateOut };
+
+export interface KappaOut {
+  first: string;
+  second: string;
+  value: number | null;
+  objects: number;
+}
+
+export type OpinionOutCounts = { [key: string]: number };
+
+export interface OpinionOut {
+  key: string;
+  count: number;
+  mean: number | null;
+  spread: number | null;
+  counts: OpinionOutCounts;
+  texts: string[];
+}
+
+export interface Evaluation {
+  task_id: string;
+  classes: ClassMetrics[];
+  overall: ClassMetrics[];
+  dice: EvaluationDice;
+  kappa: KappaOut[];
+  mean_kappa: number | null;
+  fleiss_kappa: number | null;
+  cell_agreement_with_ai: RateOut;
+  cell_agreement_between_reviewers: RateOut;
+  /**
+   * @items.minItems 2
+   * @items.maxItems 2
+   */
+  reasons: [string, number][];
+  opinions: OpinionOut[];
 }
 
 export interface FieldError {
@@ -12731,6 +12787,191 @@ export const useClearDisagreementDecision = <TError = Problem, TContext = unknow
 > => {
   return useMutation(getClearDisagreementDecisionMutationOptions(options), queryClient);
 };
+
+export type getTaskEvaluationResponse200 = {
+  data: Evaluation;
+  status: 200;
+};
+
+export type getTaskEvaluationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskEvaluationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskEvaluationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskEvaluationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskEvaluationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskEvaluationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskEvaluationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskEvaluationResponseSuccess = getTaskEvaluationResponse200 & {
+  headers: Headers;
+};
+export type getTaskEvaluationResponseError = (
+  | getTaskEvaluationResponse400
+  | getTaskEvaluationResponse401
+  | getTaskEvaluationResponse403
+  | getTaskEvaluationResponse404
+  | getTaskEvaluationResponse409
+  | getTaskEvaluationResponse422
+  | getTaskEvaluationResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskEvaluationResponse =
+  | getTaskEvaluationResponseSuccess
+  | getTaskEvaluationResponseError;
+
+export const getGetTaskEvaluationUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation`;
+};
+
+/**
+ * @summary Get Task Evaluation
+ */
+export const getTaskEvaluation = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskEvaluationResponse> => {
+  return apiFetch<getTaskEvaluationResponse>(getGetTaskEvaluationUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskEvaluationQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation`] as const;
+};
+
+export const getGetTaskEvaluationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskEvaluationQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskEvaluation>>> = ({ signal }) =>
+    getTaskEvaluation(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskEvaluationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTaskEvaluation>>
+>;
+export type GetTaskEvaluationQueryError = Problem;
+
+export function useGetTaskEvaluation<
+  TData = Awaited<ReturnType<typeof getTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskEvaluation<
+  TData = Awaited<ReturnType<typeof getTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskEvaluation<
+  TData = Awaited<ReturnType<typeof getTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Evaluation
+ */
+
+export function useGetTaskEvaluation<
+  TData = Awaited<ReturnType<typeof getTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskEvaluation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskEvaluationQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listMyReviewTasksResponse200 = {
   data: MyTask[];
