@@ -478,6 +478,9 @@ GET_ROUTES = {
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
     ),
+    "getReviewTaskStates": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/states"
+    ),
     "getReviewedLayer": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/layer",

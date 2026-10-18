@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 20 |
-| `personal` | 30 |
+| `personal` | 31 |
 | `secret` | 9 |
-| `operational` | 319 |
+| `operational` | 320 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -478,6 +478,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reminder_days` | operational |
 | `created_by_user_id` | personal |
 | `archived_at` | operational |
+| `signed_off_at` | operational |
+| `signed_off_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 

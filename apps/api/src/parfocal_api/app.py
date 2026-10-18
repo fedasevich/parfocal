@@ -19,6 +19,7 @@ from parfocal_api import (
     project_jobs,
     projects,
     result_sets,
+    review_states,
     review_tasks,
     reviewed_layer,
     service_accounts,
@@ -120,6 +121,7 @@ def create_app(
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(reviewed_layer.router)
+    app.include_router(review_states.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)

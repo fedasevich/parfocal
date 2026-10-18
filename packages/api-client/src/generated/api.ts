@@ -1204,6 +1204,27 @@ export interface ReviewedLayer {
   summary: LayerSummary;
 }
 
+export type State = (typeof State)[keyof typeof State];
+
+export const State = {
+  uploaded: "uploaded",
+  "ai-running": "ai-running",
+  imported: "imported",
+  ready: "ready",
+  assigned: "assigned",
+  "in-review": "in-review",
+  submitted: "submitted",
+  "disagreement-queue": "disagreement-queue",
+  "signed-off": "signed-off",
+  exported: "exported",
+} as const;
+
+export interface ReviewerState {
+  user_id: string;
+  state: State;
+  submitted_at: string | null;
+}
+
 export interface RoleChange {
   role: Role;
 }
@@ -1289,6 +1310,12 @@ export interface SlideSet {
   result_set_id: string;
 }
 
+export interface SlideState {
+  slide_id: string;
+  state: State;
+  reviewers: ReviewerState[];
+}
+
 /**
  * @minLength 1
  * @maxLength 120
@@ -1329,6 +1356,12 @@ export interface TaskDraft {
   start_mode?: StartMode;
   due_on?: string | null;
   reminder_days?: Reminders;
+}
+
+export interface TaskStates {
+  task_id: string;
+  signed_off_at: string | null;
+  slides: SlideState[];
 }
 
 export interface TaxonomyChange {
@@ -10313,6 +10346,776 @@ export function useGetReviewedLayer<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getReviewTaskStatesResponse200 = {
+  data: TaskStates;
+  status: 200;
+};
+
+export type getReviewTaskStatesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getReviewTaskStatesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getReviewTaskStatesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getReviewTaskStatesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getReviewTaskStatesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getReviewTaskStatesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getReviewTaskStatesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getReviewTaskStatesResponseSuccess = getReviewTaskStatesResponse200 & {
+  headers: Headers;
+};
+export type getReviewTaskStatesResponseError = (
+  | getReviewTaskStatesResponse400
+  | getReviewTaskStatesResponse401
+  | getReviewTaskStatesResponse403
+  | getReviewTaskStatesResponse404
+  | getReviewTaskStatesResponse409
+  | getReviewTaskStatesResponse422
+  | getReviewTaskStatesResponse500
+) & {
+  headers: Headers;
+};
+
+export type getReviewTaskStatesResponse =
+  | getReviewTaskStatesResponseSuccess
+  | getReviewTaskStatesResponseError;
+
+export const getGetReviewTaskStatesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/states`;
+};
+
+/**
+ * @summary Get Review Task States
+ */
+export const getReviewTaskStates = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getReviewTaskStatesResponse> => {
+  return apiFetch<getReviewTaskStatesResponse>(getGetReviewTaskStatesUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetReviewTaskStatesQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/states`] as const;
+};
+
+export const getGetReviewTaskStatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReviewTaskStates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReviewTaskStatesQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewTaskStates>>> = ({ signal }) =>
+    getReviewTaskStates(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetReviewTaskStatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getReviewTaskStates>>
+>;
+export type GetReviewTaskStatesQueryError = Problem;
+
+export function useGetReviewTaskStates<
+  TData = Awaited<ReturnType<typeof getReviewTaskStates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTaskStates>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTaskStates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTaskStates<
+  TData = Awaited<ReturnType<typeof getReviewTaskStates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTaskStates>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTaskStates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTaskStates<
+  TData = Awaited<ReturnType<typeof getReviewTaskStates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Review Task States
+ */
+
+export function useGetReviewTaskStates<
+  TData = Awaited<ReturnType<typeof getReviewTaskStates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskStates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReviewTaskStatesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type submitSlideReviewResponse200 = {
+  data: TaskStates;
+  status: 200;
+};
+
+export type submitSlideReviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type submitSlideReviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type submitSlideReviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type submitSlideReviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type submitSlideReviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type submitSlideReviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type submitSlideReviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type submitSlideReviewResponseSuccess = submitSlideReviewResponse200 & {
+  headers: Headers;
+};
+export type submitSlideReviewResponseError = (
+  | submitSlideReviewResponse400
+  | submitSlideReviewResponse401
+  | submitSlideReviewResponse403
+  | submitSlideReviewResponse404
+  | submitSlideReviewResponse409
+  | submitSlideReviewResponse422
+  | submitSlideReviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type submitSlideReviewResponse =
+  | submitSlideReviewResponseSuccess
+  | submitSlideReviewResponseError;
+
+export const getSubmitSlideReviewUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/submit`;
+};
+
+/**
+ * @summary Submit Slide Review
+ */
+export const submitSlideReview = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<submitSlideReviewResponse> => {
+  return apiFetch<submitSlideReviewResponse>(getSubmitSlideReviewUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSubmitSlideReviewMutationKey = () => ["submitSlideReview"] as const;
+
+export const getSubmitSlideReviewMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitSlideReview>>,
+    TError,
+    SubmitSlideReviewMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitSlideReview>>,
+  TError,
+  SubmitSlideReviewMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSubmitSlideReviewMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitSlideReview>>,
+    SubmitSlideReviewMutationVariables
+  > = (props) => {
+    const { taskId, slideId } = props ?? {};
+
+    return submitSlideReview(taskId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitSlideReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitSlideReview>>
+>;
+
+export type SubmitSlideReviewMutationError = Problem;
+export type SubmitSlideReviewMutationVariables = { taskId: string; slideId: string };
+
+/**
+ * @summary Submit Slide Review
+ */
+export const useSubmitSlideReview = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof submitSlideReview>>,
+      TError,
+      SubmitSlideReviewMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof submitSlideReview>>,
+  TError,
+  SubmitSlideReviewMutationVariables,
+  TContext
+> => {
+  return useMutation(getSubmitSlideReviewMutationOptions(options), queryClient);
+};
+
+export type reopenSlideReviewResponse200 = {
+  data: TaskStates;
+  status: 200;
+};
+
+export type reopenSlideReviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reopenSlideReviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reopenSlideReviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reopenSlideReviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reopenSlideReviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reopenSlideReviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reopenSlideReviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reopenSlideReviewResponseSuccess = reopenSlideReviewResponse200 & {
+  headers: Headers;
+};
+export type reopenSlideReviewResponseError = (
+  | reopenSlideReviewResponse400
+  | reopenSlideReviewResponse401
+  | reopenSlideReviewResponse403
+  | reopenSlideReviewResponse404
+  | reopenSlideReviewResponse409
+  | reopenSlideReviewResponse422
+  | reopenSlideReviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type reopenSlideReviewResponse =
+  | reopenSlideReviewResponseSuccess
+  | reopenSlideReviewResponseError;
+
+export const getReopenSlideReviewUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/reopen`;
+};
+
+/**
+ * @summary Reopen Slide Review
+ */
+export const reopenSlideReview = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reopenSlideReviewResponse> => {
+  return apiFetch<reopenSlideReviewResponse>(getReopenSlideReviewUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReopenSlideReviewMutationKey = () => ["reopenSlideReview"] as const;
+
+export const getReopenSlideReviewMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reopenSlideReview>>,
+    TError,
+    ReopenSlideReviewMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reopenSlideReview>>,
+  TError,
+  ReopenSlideReviewMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReopenSlideReviewMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reopenSlideReview>>,
+    ReopenSlideReviewMutationVariables
+  > = (props) => {
+    const { taskId, slideId } = props ?? {};
+
+    return reopenSlideReview(taskId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReopenSlideReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reopenSlideReview>>
+>;
+
+export type ReopenSlideReviewMutationError = Problem;
+export type ReopenSlideReviewMutationVariables = { taskId: string; slideId: string };
+
+/**
+ * @summary Reopen Slide Review
+ */
+export const useReopenSlideReview = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reopenSlideReview>>,
+      TError,
+      ReopenSlideReviewMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reopenSlideReview>>,
+  TError,
+  ReopenSlideReviewMutationVariables,
+  TContext
+> => {
+  return useMutation(getReopenSlideReviewMutationOptions(options), queryClient);
+};
+
+export type signOffReviewTaskResponse200 = {
+  data: TaskStates;
+  status: 200;
+};
+
+export type signOffReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type signOffReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type signOffReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type signOffReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type signOffReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type signOffReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type signOffReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type signOffReviewTaskResponseSuccess = signOffReviewTaskResponse200 & {
+  headers: Headers;
+};
+export type signOffReviewTaskResponseError = (
+  | signOffReviewTaskResponse400
+  | signOffReviewTaskResponse401
+  | signOffReviewTaskResponse403
+  | signOffReviewTaskResponse404
+  | signOffReviewTaskResponse409
+  | signOffReviewTaskResponse422
+  | signOffReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type signOffReviewTaskResponse =
+  | signOffReviewTaskResponseSuccess
+  | signOffReviewTaskResponseError;
+
+export const getSignOffReviewTaskUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/sign-off`;
+};
+
+/**
+ * @summary Sign Off Review Task
+ */
+export const signOffReviewTask = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<signOffReviewTaskResponse> => {
+  return apiFetch<signOffReviewTaskResponse>(getSignOffReviewTaskUrl(taskId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSignOffReviewTaskMutationKey = () => ["signOffReviewTask"] as const;
+
+export const getSignOffReviewTaskMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signOffReviewTask>>,
+    TError,
+    SignOffReviewTaskMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signOffReviewTask>>,
+  TError,
+  SignOffReviewTaskMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSignOffReviewTaskMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signOffReviewTask>>,
+    SignOffReviewTaskMutationVariables
+  > = (props) => {
+    const { taskId } = props ?? {};
+
+    return signOffReviewTask(taskId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SignOffReviewTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof signOffReviewTask>>
+>;
+
+export type SignOffReviewTaskMutationError = Problem;
+export type SignOffReviewTaskMutationVariables = { taskId: string };
+
+/**
+ * @summary Sign Off Review Task
+ */
+export const useSignOffReviewTask = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof signOffReviewTask>>,
+      TError,
+      SignOffReviewTaskMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof signOffReviewTask>>,
+  TError,
+  SignOffReviewTaskMutationVariables,
+  TContext
+> => {
+  return useMutation(getSignOffReviewTaskMutationOptions(options), queryClient);
+};
+
+export type reopenReviewTaskResponse200 = {
+  data: TaskStates;
+  status: 200;
+};
+
+export type reopenReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reopenReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reopenReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reopenReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reopenReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reopenReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reopenReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reopenReviewTaskResponseSuccess = reopenReviewTaskResponse200 & {
+  headers: Headers;
+};
+export type reopenReviewTaskResponseError = (
+  | reopenReviewTaskResponse400
+  | reopenReviewTaskResponse401
+  | reopenReviewTaskResponse403
+  | reopenReviewTaskResponse404
+  | reopenReviewTaskResponse409
+  | reopenReviewTaskResponse422
+  | reopenReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type reopenReviewTaskResponse =
+  | reopenReviewTaskResponseSuccess
+  | reopenReviewTaskResponseError;
+
+export const getReopenReviewTaskUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/reopen`;
+};
+
+/**
+ * @summary Reopen Review Task
+ */
+export const reopenReviewTask = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reopenReviewTaskResponse> => {
+  return apiFetch<reopenReviewTaskResponse>(getReopenReviewTaskUrl(taskId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReopenReviewTaskMutationKey = () => ["reopenReviewTask"] as const;
+
+export const getReopenReviewTaskMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reopenReviewTask>>,
+    TError,
+    ReopenReviewTaskMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reopenReviewTask>>,
+  TError,
+  ReopenReviewTaskMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReopenReviewTaskMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reopenReviewTask>>,
+    ReopenReviewTaskMutationVariables
+  > = (props) => {
+    const { taskId } = props ?? {};
+
+    return reopenReviewTask(taskId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReopenReviewTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reopenReviewTask>>
+>;
+
+export type ReopenReviewTaskMutationError = Problem;
+export type ReopenReviewTaskMutationVariables = { taskId: string };
+
+/**
+ * @summary Reopen Review Task
+ */
+export const useReopenReviewTask = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reopenReviewTask>>,
+      TError,
+      ReopenReviewTaskMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reopenReviewTask>>,
+  TError,
+  ReopenReviewTaskMutationVariables,
+  TContext
+> => {
+  return useMutation(getReopenReviewTaskMutationOptions(options), queryClient);
+};
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

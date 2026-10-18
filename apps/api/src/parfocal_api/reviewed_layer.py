@@ -27,7 +27,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
-from parfocal_api.problems import BadRequestError, ForbiddenError, NotFoundError
+from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole, require_slide_reading
 from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
@@ -112,6 +112,11 @@ class UnknownObjectError(NotFoundError):
     title = "The result set has no such object"
 
 
+class TaskSignedOffError(ConflictError):
+    code = "task-signed-off"
+    title = "The task is signed off. An owner can reopen it"
+
+
 class OtherReviewerError(ForbiddenError):
     code = "other-reviewer"
     title = "Only a project owner reads another reviewer's layer"
@@ -131,6 +136,7 @@ async def task_slide(
                 review_task_slides.c.result_set_id,
                 review_tasks.c.project_id,
                 review_tasks.c.tenant_id,
+                review_tasks.c.signed_off_at,
                 projects.c.privacy_mode,
                 projects.c.archived_at,
             )
@@ -171,6 +177,8 @@ async def assigned_slide(
     )
     if not await connection.scalar(select(assigned.exists())):
         raise NotAssignedError
+    if row.signed_off_at is not None:
+        raise TaskSignedOffError
     if row.archived_at is not None:
         raise ProjectArchivedError
     return row

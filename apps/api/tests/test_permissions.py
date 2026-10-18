@@ -99,6 +99,9 @@ class Workspace:
     result_set: uuid.UUID
     doomed_result_set: uuid.UUID
     task: uuid.UUID
+    submitted_task: uuid.UUID
+    ready_task: uuid.UUID
+    signed_task: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -123,6 +126,8 @@ NEEDS_A_TASK = frozenset(
         "saveReviewEdit",
         "clearReviewEdit",
         "addReviewObject",
+        "submitSlideReview",
+        "reopenSlideReview",
     }
 )
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -222,6 +227,15 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
         {"kind": "region", "geometry": SQUARE},
     ),
+    "getReviewTaskStates": lambda w: Call("GET", f"/api/review-tasks/{w.task}/states"),
+    "submitSlideReview": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/submit"
+    ),
+    "reopenSlideReview": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.submitted_task}/slides/{w.slide}/reopen"
+    ),
+    "signOffReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.ready_task}/sign-off"),
+    "reopenReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.signed_task}/reopen"),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
     "createCase": lambda w: Call(
         "POST",
@@ -274,6 +288,9 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -392,6 +409,55 @@ async def seed_annotation(
     )
     assert isinstance(annotation_id, uuid.UUID)
     return annotation_id
+
+
+async def seed_task(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    result_set_id: uuid.UUID,
+    user_id: uuid.UUID,
+    number: int,
+    *,
+    signed: bool,
+) -> uuid.UUID:
+    task_id = await connection.scalar(
+        insert(review_tasks)
+        .values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            number=number,
+            name=f"Seeded task {number}",
+            split="everyone",
+            scope="all-regions",
+            opinion_form_version=1,
+            start_mode="guided",
+            signed_off_at=func.now() if signed else None,
+        )
+        .returning(review_tasks.c.id)
+    )
+    assert isinstance(task_id, uuid.UUID)
+    await connection.execute(
+        insert(review_task_slides).values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            position=0,
+            result_set_id=result_set_id,
+        )
+    )
+    await connection.execute(
+        insert(review_assignments).values(
+            tenant_id=tenant_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            user_id=user_id,
+            submitted_at=func.now(),
+        )
+    )
+    return task_id
 
 
 async def seed(database: str) -> Workspace:
@@ -534,6 +600,20 @@ async def seed(database: str) -> Workspace:
                     user_id=people[Role.RESEARCHER],
                 )
             )
+            assert isinstance(result_set, uuid.UUID)
+            submitted_task, ready_task, signed_task = [
+                await seed_task(
+                    connection,
+                    tenant_id,
+                    case.project_id,
+                    case.loose_slide_id,
+                    result_set,
+                    people[Role.RESEARCHER],
+                    number,
+                    signed=number == 4,
+                )
+                for number in (2, 3, 4)
+            ]
             await connection.execute(
                 insert(slide_counters).values(
                     tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
@@ -595,6 +675,9 @@ async def seed(database: str) -> Workspace:
             result_set,
             doomed_result_set,
             task,
+            submitted_task,
+            ready_task,
+            signed_task,
         )
     finally:
         await engine.dispose()
