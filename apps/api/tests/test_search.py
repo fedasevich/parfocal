@@ -1,4 +1,5 @@
 import asyncio
+import os
 import statistics
 import time
 import uuid
@@ -98,6 +99,9 @@ def test_patients_are_found_by_whole_words_and_never_named_in_the_answer(
     assert found(api, s, "viewer", "Testová", scope="patients") == []
 
 
+@pytest.mark.skipif(
+    not os.environ.get("PARFOCAL_PERF"), reason="latency runs on demand, see the search spike"
+)
 def test_search_meets_the_latency_budget_on_100_000_cases(api: ApiAs, database: str) -> None:
     s = study(database)
     project = make_project(database, s.tenant_id, "de-identified")
