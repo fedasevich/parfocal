@@ -24,3 +24,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-18 | [Paging 1.6 million cells from binary chunks in the browser](2026-10-18-cell-chunk-paging-spike.md) | STACK-021 | spike |
 | 2026-10-18 | [Bulk annotation insert and listing on local Postgres](2026-10-18-annotation-bulk-latency.md) | ANN-020 | baseline |
 | 2026-10-18 | [Typst and WeasyPrint for the evaluation report PDF](2026-10-18-pdf-generation-spike.md) | STACK-035 | spike |
+| 2026-10-18 | [The geometric scorer reproduces the POC's TNBC numbers](2026-10-18-geometric-scorer-reproduction.md) | MLEVAL-002 | ML evaluation |

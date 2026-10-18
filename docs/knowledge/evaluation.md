@@ -22,3 +22,7 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 - Added objects from different reviewers are merged when two regions overlap at IoU 0.5 or two cells' centroids are within 16 px, because slides have no stored pixel size yet ([ADR 0071](../adr/0071-object-id-grammar.md) asks for 4 µm).
 - Region areas come from one PostGIS query per slide and class: the union of the AI's regions, the union of the agreed regions (reshaped where a reviewer reshaped them) and the added regions, and the area of their intersection. The task does not store an order of reviewers, so the reshape that counts is the earliest one saved, not "the first reviewer in task order" as ADR 0084 puts it.
 - Opinions are summarised per question of the task's pinned form.
+
+## The geometric scorer counts pixels as squares on a 4x grid
+
+`parfocal_ml.scoring` rasterises each predicted ring by centre sampling on a 4x supersampled grid, where a label pixel's centre sits on its integer coordinate, so its edges are at ±0.5. A ring through the boundary pixels' centres covers only part of the nucleus (9 of 16 fine cells for a 4-pixel square), and a ring on the true edge scores 1. A ground-truth nucleus more than half inside the ignore mask is dropped, and so is a ring mostly inside it. The POC's stored `region.all.json` is stale for `classical-batch` and `pathosam-auto-hv`, so compare against the POC scorer itself, not that file ([result](../results/2026-10-18-geometric-scorer-reproduction.md)).

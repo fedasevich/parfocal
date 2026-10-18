@@ -2518,7 +2518,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] MLEVAL-002 · Geometric scorer
   4× supersampled centre sampling, PQ, AJI, F1, per-organ and per-tissue breakdowns.
   Done when the scorer reproduces POC numbers on the same inputs.
-  Refs [`poc/server/tools/score_*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/tools), doc 26.
+  Refs [`poc/server/tools/score_*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/tools), doc 26. Result: [geometric scorer reproduction](results/2026-10-18-geometric-scorer-reproduction.md).
 
 - [ ] MLEVAL-003 · Interactive protocol
   Realistic clicks (centroid with jitter), loose boxes, refinement clicks, NoC@85 and NoC@90.
