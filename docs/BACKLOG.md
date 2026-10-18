@@ -2725,7 +2725,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover batching and quiet hours.
 
 
-- [ ] NOTIF-006 · Event catalogue with deep links
+- [x] NOTIF-006 · Event catalogue with deep links
   Every notification has a kind from a documented catalogue and a target link to the exact place: a slide at an object, a thread, a task, a job, an evaluation or a failed delivery. Kinds include mention, reply, task assigned, task due soon, model run finished, run paused, upload done, disagreements ready, task signed off, result set added by a webhook and integration down.
   Done when a test checks every catalogue kind has a target and a template, and API tests resolve each target for its recipient.
   Depends on NOTIF-001. Refs kit W52, kit Flow 18, [ADR 0091](adr/0091-notification-catalogue-and-targets.md). Thread and delivery targets resolve in COLLAB-002 and REMOTE-003, which do not exist yet.
