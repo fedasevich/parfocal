@@ -27,3 +27,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-18 | [The geometric scorer reproduces the POC's TNBC numbers](2026-10-18-geometric-scorer-reproduction.md) | MLEVAL-002 | ML evaluation |
 | 2026-10-18 | [TNBC and NuInsSeg load from their verified Zenodo archives](2026-10-18-dataset-loaders.md) | MLEVAL-001 | baseline |
 | 2026-10-18 | [The typing and calibration harness reproduces POC doc 29 for HoVer-NeXt](2026-10-18-typing-calibration-reproduction.md) | MLEVAL-004 | ML evaluation |
+| 2026-10-18 | [Postgres search over 100,000 cases answers in under 30 ms, and row-level security keeps it off the trigram index](2026-10-18-search-spike.md) | STACK-034 | spike |

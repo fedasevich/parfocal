@@ -354,6 +354,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-034 · Search
   Candidates: PostgreSQL full-text search with pg_trgm, Meilisearch, OpenSearch. Default: PostgreSQL FTS and trigram, because patients, cases and reports are tenant-scoped and small per tenant, and RLS then covers search too.
   Done when the spike returns patient, case and report results for a partial name in under 100 ms on 100,000 seeded cases.
+  Decided in [ADR 0094](adr/0094-search-on-postgres.md) with the [search spike](results/2026-10-18-search-spike.md). Reports are not stored yet and patient names are searched by whole words by ADR 0034, so the spike measured cases, slides and whole-word patients.
 
 - [x] STACK-035 · PDF generation for reports
   Candidates: Typst, WeasyPrint, headless Chromium (Playwright) print, ReportLab. Default: Typst for deterministic, versionable templates, or WeasyPrint if templates must share HTML and CSS with the web preview.
