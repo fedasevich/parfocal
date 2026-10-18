@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Header, Request, Response
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import exists, func, insert, select
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -35,6 +35,7 @@ from parfocal_api.tables import (
     projects,
     specimens,
 )
+from parfocal_common.object_ids import LOOSE_CASE
 
 type Text200 = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
@@ -78,9 +79,19 @@ class SpecimenDraft(BaseModel):
         return self
 
 
+def not_the_loose_case(label: str) -> str:
+    if label == LOOSE_CASE:
+        raise ValueError("~ stands for slides without a case and cannot be a case label")
+    return label
+
+
 class CaseDraft(BaseModel):
     project_id: uuid.UUID
-    label: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    label: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
+        AfterValidator(not_the_loose_case),
+    ]
     patient_id: uuid.UUID | None = None
     patient: NewPatient | None = None
     specimens: Annotated[list[SpecimenDraft], Field(max_length=26)] = []

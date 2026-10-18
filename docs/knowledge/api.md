@@ -47,3 +47,7 @@ Log with `logging.getLogger("parfocal....")` and put values in `extra` under key
 ## Review writes need a task for reviewers
 
 Reviewers hold `review` as "in their tasks". Until TASK-001 (review task model) exists there are no tasks, so annotation writes need the project grant `ALL` (project owners) and everyone else gets 403 `annotating-not-allowed`, or 404 when they cannot read the slide. The permission matrix test lists these operations in `NEEDS_A_TASK` and expects 403 for the `ASSIGNED` grant. TASK-001 must open them to reviewers on their task slides and shrink that set.
+
+## Object IDs
+
+`parfocal_common.object_ids` writes and parses every ID form of [ADR 0071](../adr/0071-object-id-grammar.md): `T2·C145` on screen and `T2.C145` in ASCII, `T6⁺` and `T6+`, split suffixes such as `T2a`, and the full path `P07/S26-04812/A1/T2.C145` with each segment percent-encoded and `~` for a loose slide. Parsing ignores case and spaces, keeps split suffixes lowercase, and `ObjectId.key` drops the region prefix, so `T2·C145` and `C145` compare as the same cell. Python's `quote` leaves `~` unencoded, which is why a case may not be called `~` (`CaseDraft` refuses it), while `S26~1` is fine. `by_area` numbers regions and zones largest first, and `in_reading_order` numbers cells by centroid y, then x, then input order. Every number comes from `parfocal_api.numbering.reserve`, which takes a contiguous range from `slide_counters`, so annotations and imports share one counter per slide and letter.

@@ -142,6 +142,15 @@ def test_a_case_needs_only_a_project_and_an_id(api: ApiAs, database: str) -> Non
     assert {"is_draft", "service"}.isdisjoint(case)
 
 
+def test_a_tilde_cannot_be_a_case_label(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    body = {"project_id": str(lab.de_identified), "label": " ~ "}
+    response = create(api, lab.people["researcher"], body)
+    assert (response.status_code, response.json()["code"]) == (422, "validation")
+    tilde_inside = {"project_id": str(lab.de_identified), "label": "S26~1"}
+    assert create(api, lab.people["researcher"], tilde_inside).status_code == 201
+
+
 def test_a_case_needs_a_project_of_this_workspace(api: ApiAs, database: str) -> None:
     lab, other = make_lab(database), make_lab(database)
     for project in (other.clinical, uuid.uuid4()):

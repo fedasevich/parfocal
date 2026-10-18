@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.types import Integer, String, Uuid
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -27,14 +28,15 @@ from parfocal_api.tables import (
     projects,
     slides,
 )
+from parfocal_common.object_ids import Letter, ObjectId
 
 MAX_BULK = 10_000
 MAX_VERTICES = 20_000
 LETTERS = {
-    AnnotationKind.ROI: "R",
-    AnnotationKind.MEASUREMENT: "M",
-    AnnotationKind.REGION: "T",
-    AnnotationKind.CELL: "C",
+    AnnotationKind.ROI: Letter.ROI,
+    AnnotationKind.MEASUREMENT: Letter.MEASUREMENT,
+    AnnotationKind.REGION: Letter.REGION,
+    AnnotationKind.CELL: Letter.CELL,
 }
 PERSON_MADE_AI_KINDS = frozenset({AnnotationKind.REGION, AnnotationKind.CELL})
 SHAPES = {
@@ -204,8 +206,8 @@ COLUMNS = (
 
 
 def code_of(kind: AnnotationKind, number: int) -> str:
-    mark = "+" if kind in PERSON_MADE_AI_KINDS else ""
-    return f"{LETTERS[kind]}{number}{mark}"
+    person = kind in PERSON_MADE_AI_KINDS
+    return ObjectId(LETTERS[kind], number, person=person).text(ascii=True)
 
 
 def annotation_of(row: Any) -> Annotation:
@@ -294,13 +296,6 @@ async def check_shapes(connection: AsyncConnection, shapes: Sequence[str]) -> No
     raise InvalidShapeError(f"{where} is not valid: {invalid.reason}")
 
 
-NEXT_NUMBERS = text(
-    "INSERT INTO slide_counters (tenant_id, slide_id, letter, last) "
-    "VALUES (:tenant_id, :slide_id, :letter, :count) "
-    "ON CONFLICT (slide_id, letter) DO UPDATE SET last = slide_counters.last + EXCLUDED.last "
-    "RETURNING last"
-)
-
 INSERT_ANNOTATIONS = text(
     "INSERT INTO annotations "
     "(tenant_id, project_id, slide_id, kind, number, geometry, class_id, created_by_user_id) "
@@ -351,18 +346,10 @@ async def add(
         positions = [index for index, draft in enumerate(drafts) if draft.kind is kind]
         if not positions:
             continue
-        last = await connection.scalar(
-            NEXT_NUMBERS,
-            {
-                "tenant_id": tenant_id,
-                "slide_id": slide.id,
-                "letter": LETTERS[kind],
-                "count": len(positions),
-            },
-        )
-        assert isinstance(last, int)
+        assert tenant_id is not None
+        first = await reserve(connection, tenant_id, slide.id, LETTERS[kind], len(positions))
         for offset, index in enumerate(positions):
-            numbers[index] = last - len(positions) + 1 + offset
+            numbers[index] = first + offset
     rows = (
         await connection.execute(
             INSERT_ANNOTATIONS,
