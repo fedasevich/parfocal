@@ -95,3 +95,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0087](0087-origin-check-on-cookie-writes.md) | Cookie-authenticated writes must come from the app origin, checked by `Origin` or `Sec-Fetch-Site` | Accepted | 2026-10-18 |
 | [0088](0088-rate-limits-in-postgres-and-at-the-edge.md) | Rate limits per person and per workspace are counted in Postgres by the API, and per-IP limits sit at the edge | Accepted | 2026-10-18 |
 | [0089](0089-retention-purge-and-audit-re-anchor.md) | Retention purges expired soft-deleted records through one database function, and old audit entries are purged with a re-anchor | Accepted | 2026-10-18 |
+| [0090](0090-access-export-and-erasure.md) | People export their own data, project owners export and erase patients, and an erased person keeps their work under "Former member" | Accepted | 2026-10-18 |

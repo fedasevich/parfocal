@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from case_support import seed_case, seed_project
+from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, with_database
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
+from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.permissions import (
     COLUMNS,
@@ -78,6 +79,8 @@ OPEN_OPERATIONS = {
     "getSessionPolicy": "member",
     "listAnnouncements": "member",
     "getMyHome": "member",
+    "exportMyPersonalData": "signed-in",
+    "erasePerson": "platform",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
     "listMembers": "platform",
@@ -113,6 +116,8 @@ class Workspace:
     queued_task: uuid.UUID
     announcement: uuid.UUID
     legal_hold: uuid.UUID
+    patient: uuid.UUID
+    doomed_patient: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -253,6 +258,12 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),
     "releaseLegalHold": lambda w: Call("POST", f"/api/tenant/legal-holds/{w.legal_hold}/release"),
+    "exportPatientData": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/patients/{w.patient}/personal-data"
+    ),
+    "erasePatient": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/patients/{w.doomed_patient}"
+    ),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
     "saveOpinion": lambda w: Call(
@@ -343,6 +354,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -584,6 +597,12 @@ async def seed(database: str) -> Workspace:
                 for index in range(len(COLUMNS))
             ]
             case = await seed_case(connection, tenant_id)
+            doomed_patient = await add_patient(
+                connection,
+                await ensure_keys(connection, TEST_KEYRING, tenant_id),
+                case.project_id,
+                PatientIdentity("Doomed Patient"),
+            )
             spare_project = await seed_project(connection, tenant_id)
             outside_project = await seed_project(connection, tenant_id)
             project_class = await connection.scalar(
@@ -714,7 +733,7 @@ async def seed(database: str) -> Workspace:
             )
             legal_hold = await connection.scalar(
                 insert(legal_holds)
-                .values(tenant_id=tenant_id, reason="Matrix hold")
+                .values(tenant_id=tenant_id, project_id=spare_project, reason="Matrix hold")
                 .returning(legal_holds.c.id)
             )
             await connection.execute(
@@ -781,6 +800,8 @@ async def seed(database: str) -> Workspace:
             queued_task,
             announcement,
             legal_hold,
+            case.patient_id,
+            doomed_patient,
         )
     finally:
         await engine.dispose()

@@ -688,6 +688,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-007 · Right to access and erasure workflows
   Export all personal data for a data subject. Erase or pseudonymise on request where law allows, with reports kept per legal duty.
   Done when tests cover both workflows end to end.
+  Refs [ADR 0090](adr/0090-access-export-and-erasure.md).
 
 - [ ] SEC-008 · De-identified projects
   A de-identified project never holds a direct identifier. Upload strips names and record numbers from file metadata and hides label and macro images. Copying slides from a clinical project into a de-identified one replaces case IDs with stable pseudonyms and removes label images.

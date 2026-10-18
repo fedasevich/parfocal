@@ -359,6 +359,7 @@ export const AuditTarget = {
   annotation: "annotation",
   slide: "slide",
   "legal-hold": "legal-hold",
+  patient: "patient",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -718,6 +719,18 @@ export type EndLabel = string;
 
 export interface EndedSessions {
   ended: number;
+}
+
+export interface ErasedPatient {
+  patient_id: string;
+  cases_unlinked: number;
+}
+
+export interface ErasedPerson {
+  user_id: string;
+  sessions_ended: number;
+  memberships_removed: number;
+  memberships_kept: number;
 }
 
 export type EvaluationDice = { [key: string]: RateOut };
@@ -1214,6 +1227,56 @@ export interface OrganisationDraft {
 export interface Pair {
   slide_id: string;
   user_id: string;
+}
+
+export interface PatientCase {
+  id: string;
+  label: string;
+  created_at: string;
+}
+
+export interface PatientSlide {
+  id: string;
+  case_id: string;
+  label: string;
+  stain: string | null;
+  result_sets: string[];
+  review_tasks: string[];
+}
+
+export interface PatientData {
+  patient_id: string;
+  name: string;
+  mrn: string | null;
+  birth_date: string | null;
+  sex: string;
+  age_years: number | null;
+  cases: PatientCase[];
+  slides: PatientSlide[];
+}
+
+export type PersonalDataProfile = { [key: string]: unknown };
+
+export type PersonalDataSessionsItem = { [key: string]: unknown };
+
+export type WorkspaceDataRecordsItem = { [key: string]: unknown };
+
+export type WorkspaceDataRecords = { [key: string]: WorkspaceDataRecordsItem[] };
+
+export type WorkspaceDataAuditItem = { [key: string]: unknown };
+
+export interface WorkspaceData {
+  tenant_id: string;
+  name: string;
+  records: WorkspaceDataRecords;
+  audit: WorkspaceDataAuditItem[];
+}
+
+export interface PersonalData {
+  exported_at: string;
+  profile: PersonalDataProfile;
+  sessions: PersonalDataSessionsItem[];
+  workspaces: WorkspaceData[];
 }
 
 export type Plan = (typeof Plan)[keyof typeof Plan];
@@ -13374,6 +13437,682 @@ export const useReleaseLegalHold = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getReleaseLegalHoldMutationOptions(options), queryClient);
+};
+
+export type exportMyPersonalDataResponse200 = {
+  data: PersonalData;
+  status: 200;
+};
+
+export type exportMyPersonalDataResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportMyPersonalDataResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportMyPersonalDataResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportMyPersonalDataResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportMyPersonalDataResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportMyPersonalDataResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportMyPersonalDataResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportMyPersonalDataResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportMyPersonalDataResponseSuccess = exportMyPersonalDataResponse200 & {
+  headers: Headers;
+};
+export type exportMyPersonalDataResponseError = (
+  | exportMyPersonalDataResponse400
+  | exportMyPersonalDataResponse401
+  | exportMyPersonalDataResponse403
+  | exportMyPersonalDataResponse404
+  | exportMyPersonalDataResponse409
+  | exportMyPersonalDataResponse422
+  | exportMyPersonalDataResponse429
+  | exportMyPersonalDataResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportMyPersonalDataResponse =
+  | exportMyPersonalDataResponseSuccess
+  | exportMyPersonalDataResponseError;
+
+export const getExportMyPersonalDataUrl = () => {
+  return `/api/me/personal-data`;
+};
+
+/**
+ * @summary Export My Personal Data
+ */
+export const exportMyPersonalData = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportMyPersonalDataResponse> => {
+  return apiFetch<exportMyPersonalDataResponse>(getExportMyPersonalDataUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportMyPersonalDataQueryKey = () => {
+  return [`/api/me/personal-data`] as const;
+};
+
+export const getExportMyPersonalDataQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportMyPersonalData>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportMyPersonalData>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportMyPersonalDataQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportMyPersonalData>>> = ({ signal }) =>
+    exportMyPersonalData({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportMyPersonalData>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportMyPersonalDataQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportMyPersonalData>>
+>;
+export type ExportMyPersonalDataQueryError = Problem;
+
+export function useExportMyPersonalData<
+  TData = Awaited<ReturnType<typeof exportMyPersonalData>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportMyPersonalData>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportMyPersonalData>>,
+          TError,
+          Awaited<ReturnType<typeof exportMyPersonalData>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportMyPersonalData<
+  TData = Awaited<ReturnType<typeof exportMyPersonalData>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportMyPersonalData>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportMyPersonalData>>,
+          TError,
+          Awaited<ReturnType<typeof exportMyPersonalData>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportMyPersonalData<
+  TData = Awaited<ReturnType<typeof exportMyPersonalData>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportMyPersonalData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export My Personal Data
+ */
+
+export function useExportMyPersonalData<
+  TData = Awaited<ReturnType<typeof exportMyPersonalData>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportMyPersonalData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportMyPersonalDataQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportPatientDataResponse200 = {
+  data: PatientData;
+  status: 200;
+};
+
+export type exportPatientDataResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportPatientDataResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportPatientDataResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportPatientDataResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportPatientDataResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportPatientDataResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportPatientDataResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportPatientDataResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportPatientDataResponseSuccess = exportPatientDataResponse200 & {
+  headers: Headers;
+};
+export type exportPatientDataResponseError = (
+  | exportPatientDataResponse400
+  | exportPatientDataResponse401
+  | exportPatientDataResponse403
+  | exportPatientDataResponse404
+  | exportPatientDataResponse409
+  | exportPatientDataResponse422
+  | exportPatientDataResponse429
+  | exportPatientDataResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportPatientDataResponse =
+  | exportPatientDataResponseSuccess
+  | exportPatientDataResponseError;
+
+export const getExportPatientDataUrl = (projectId: string, patientId: string) => {
+  return `/api/projects/${projectId}/patients/${patientId}/personal-data`;
+};
+
+/**
+ * @summary Export Patient Data
+ */
+export const exportPatientData = async (
+  projectId: string,
+  patientId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportPatientDataResponse> => {
+  return apiFetch<exportPatientDataResponse>(getExportPatientDataUrl(projectId, patientId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportPatientDataQueryKey = (projectId: string, patientId: string) => {
+  return [`/api/projects/${projectId}/patients/${patientId}/personal-data`] as const;
+};
+
+export const getExportPatientDataQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportPatientData>>,
+  TError = Problem,
+>(
+  projectId: string,
+  patientId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportPatientDataQueryKey(projectId, patientId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportPatientData>>> = ({ signal }) =>
+    exportPatientData(projectId, patientId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      patientId !== null &&
+      patientId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportPatientDataQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportPatientData>>
+>;
+export type ExportPatientDataQueryError = Problem;
+
+export function useExportPatientData<
+  TData = Awaited<ReturnType<typeof exportPatientData>>,
+  TError = Problem,
+>(
+  projectId: string,
+  patientId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportPatientData>>,
+          TError,
+          Awaited<ReturnType<typeof exportPatientData>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportPatientData<
+  TData = Awaited<ReturnType<typeof exportPatientData>>,
+  TError = Problem,
+>(
+  projectId: string,
+  patientId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportPatientData>>,
+          TError,
+          Awaited<ReturnType<typeof exportPatientData>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportPatientData<
+  TData = Awaited<ReturnType<typeof exportPatientData>>,
+  TError = Problem,
+>(
+  projectId: string,
+  patientId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Patient Data
+ */
+
+export function useExportPatientData<
+  TData = Awaited<ReturnType<typeof exportPatientData>>,
+  TError = Problem,
+>(
+  projectId: string,
+  patientId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPatientData>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportPatientDataQueryOptions(projectId, patientId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type erasePatientResponse200 = {
+  data: ErasedPatient;
+  status: 200;
+};
+
+export type erasePatientResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type erasePatientResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type erasePatientResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type erasePatientResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type erasePatientResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type erasePatientResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type erasePatientResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type erasePatientResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type erasePatientResponseSuccess = erasePatientResponse200 & {
+  headers: Headers;
+};
+export type erasePatientResponseError = (
+  | erasePatientResponse400
+  | erasePatientResponse401
+  | erasePatientResponse403
+  | erasePatientResponse404
+  | erasePatientResponse409
+  | erasePatientResponse422
+  | erasePatientResponse429
+  | erasePatientResponse500
+) & {
+  headers: Headers;
+};
+
+export type erasePatientResponse = erasePatientResponseSuccess | erasePatientResponseError;
+
+export const getErasePatientUrl = (projectId: string, patientId: string) => {
+  return `/api/projects/${projectId}/patients/${patientId}`;
+};
+
+/**
+ * @summary Erase Patient
+ */
+export const erasePatient = async (
+  projectId: string,
+  patientId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<erasePatientResponse> => {
+  return apiFetch<erasePatientResponse>(getErasePatientUrl(projectId, patientId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getErasePatientMutationKey = () => ["erasePatient"] as const;
+
+export const getErasePatientMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof erasePatient>>,
+    TError,
+    ErasePatientMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof erasePatient>>,
+  TError,
+  ErasePatientMutationVariables,
+  TContext
+> => {
+  const mutationKey = getErasePatientMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof erasePatient>>,
+    ErasePatientMutationVariables
+  > = (props) => {
+    const { projectId, patientId } = props ?? {};
+
+    return erasePatient(projectId, patientId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ErasePatientMutationResult = NonNullable<Awaited<ReturnType<typeof erasePatient>>>;
+
+export type ErasePatientMutationError = Problem;
+export type ErasePatientMutationVariables = { projectId: string; patientId: string };
+
+/**
+ * @summary Erase Patient
+ */
+export const useErasePatient = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof erasePatient>>,
+      TError,
+      ErasePatientMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof erasePatient>>,
+  TError,
+  ErasePatientMutationVariables,
+  TContext
+> => {
+  return useMutation(getErasePatientMutationOptions(options), queryClient);
+};
+
+export type erasePersonResponse200 = {
+  data: ErasedPerson;
+  status: 200;
+};
+
+export type erasePersonResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type erasePersonResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type erasePersonResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type erasePersonResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type erasePersonResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type erasePersonResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type erasePersonResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type erasePersonResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type erasePersonResponseSuccess = erasePersonResponse200 & {
+  headers: Headers;
+};
+export type erasePersonResponseError = (
+  | erasePersonResponse400
+  | erasePersonResponse401
+  | erasePersonResponse403
+  | erasePersonResponse404
+  | erasePersonResponse409
+  | erasePersonResponse422
+  | erasePersonResponse429
+  | erasePersonResponse500
+) & {
+  headers: Headers;
+};
+
+export type erasePersonResponse = erasePersonResponseSuccess | erasePersonResponseError;
+
+export const getErasePersonUrl = (userId: string) => {
+  return `/api/platform/users/${userId}/erase`;
+};
+
+/**
+ * @summary Erase Person
+ */
+export const erasePerson = async (
+  userId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<erasePersonResponse> => {
+  return apiFetch<erasePersonResponse>(getErasePersonUrl(userId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getErasePersonMutationKey = () => ["erasePerson"] as const;
+
+export const getErasePersonMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof erasePerson>>,
+    TError,
+    ErasePersonMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof erasePerson>>,
+  TError,
+  ErasePersonMutationVariables,
+  TContext
+> => {
+  const mutationKey = getErasePersonMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof erasePerson>>,
+    ErasePersonMutationVariables
+  > = (props) => {
+    const { userId } = props ?? {};
+
+    return erasePerson(userId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ErasePersonMutationResult = NonNullable<Awaited<ReturnType<typeof erasePerson>>>;
+
+export type ErasePersonMutationError = Problem;
+export type ErasePersonMutationVariables = { userId: string };
+
+/**
+ * @summary Erase Person
+ */
+export const useErasePerson = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof erasePerson>>,
+      TError,
+      ErasePersonMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof erasePerson>>,
+  TError,
+  ErasePersonMutationVariables,
+  TContext
+> => {
+  return useMutation(getErasePersonMutationOptions(options), queryClient);
 };
 
 export type getReviewTaskStatesResponse200 = {

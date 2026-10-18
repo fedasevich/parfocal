@@ -78,6 +78,10 @@ class AuditAction(StrEnum):
     LEGAL_HOLD_PLACED = "legal-hold.placed"
     LEGAL_HOLD_RELEASED = "legal-hold.released"
     AUDIT_PURGED = "audit.purged"
+    PERSONAL_DATA_EXPORTED = "person.data-exported"
+    PERSON_ERASED = "person.erased"
+    PATIENT_DATA_EXPORTED = "patient.data-exported"
+    PATIENT_ERASED = "patient.erased"
 
 
 class AuditTarget(StrEnum):
@@ -94,6 +98,7 @@ class AuditTarget(StrEnum):
     ANNOTATION = "annotation"
     SLIDE = "slide"
     LEGAL_HOLD = "legal-hold"
+    PATIENT = "patient"
 
 
 @dataclass(frozen=True)

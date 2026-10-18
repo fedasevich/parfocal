@@ -249,6 +249,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
     seeded.ids["project"] = case.project_id
+    seeded.ids["patient"] = case.patient_id
     job_id = await connection.scalar(
         insert(jobs)
         .values(tenant_id=seeded.tenant_id, project_id=case.project_id, kind="isolation-seed")
@@ -523,6 +524,11 @@ GET_ROUTES = {
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
     "getRetentionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/retention", Role.ADMIN),
     "listLegalHolds": Route(Exposure.TENANT, lambda _: "/api/tenant/legal-holds", Role.ADMIN),
+    "exportMyPersonalData": Route(Exposure.TENANT, lambda _: "/api/me/personal-data"),
+    "exportPatientData": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/patients/{a.ids['patient']}/personal-data",
+    ),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
