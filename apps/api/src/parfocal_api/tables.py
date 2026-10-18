@@ -26,6 +26,9 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata
+from parfocal_common.jobs import job_steps as job_steps
+from parfocal_common.jobs import job_units as job_units
+from parfocal_common.jobs import jobs as jobs
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
 DEFAULT_IDLE_LOCK_MINUTES = 15

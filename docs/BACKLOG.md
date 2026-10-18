@@ -804,7 +804,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] INGEST-003 · Ingest workflow skeleton
   Durable workflow per uploaded file: quarantine, scan, identify, validate, index, derive, publish. Each step idempotent, with status visible to the UI.
   Done when a workflow test kills the worker mid-step and the run completes after restart without duplicate outputs.
-  Depends on STACK-022.
+  Depends on STACK-022. Built on [ADR 0044](adr/0044-background-jobs-and-workflows.md) in `parfocal_common.jobs` ([knowledge/jobs.md](knowledge/jobs.md)). The steps are placeholders until INGEST-004 to INGEST-017.
 
 - [ ] INGEST-004 · Format identification
   Magic bytes and TIFF tag inspection to identify vendor and variant, including multi-file formats rejected with a clear message.

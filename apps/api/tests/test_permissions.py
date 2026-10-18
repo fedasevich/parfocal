@@ -34,6 +34,8 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_common.db import async_database_url
+from parfocal_common.jobs import enqueue
+from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
     "getHealth": "public",
@@ -82,6 +84,7 @@ class Workspace:
     spare_project: uuid.UUID
     outside_project: uuid.UUID
     project_class: uuid.UUID
+    job: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -95,6 +98,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
+    "getProjectJob": lambda w: Call("GET", f"/api/projects/{w.project}/jobs/{w.job}"),
     "listOpinionFormVersions": lambda w: Call(
         "GET", f"/api/projects/{w.project}/opinion-form/versions"
     ),
@@ -189,6 +193,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -351,6 +356,7 @@ async def seed(database: str) -> Workspace:
                 .returning(project_classes.c.id)
             )
             assert isinstance(project_class, uuid.UUID)
+            job = await enqueue(connection, INGEST, tenant_id, case.project_id)
             await connection.execute(
                 insert(project_members),
                 [
@@ -391,6 +397,7 @@ async def seed(database: str) -> Workspace:
             spare_project,
             outside_project,
             project_class,
+            job,
         )
     finally:
         await engine.dispose()

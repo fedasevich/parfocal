@@ -548,6 +548,44 @@ export interface InvitationToken {
   token: string;
 }
 
+export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
+
+export const JobStatus = {
+  queued: "queued",
+  running: "running",
+  done: "done",
+  failed: "failed",
+} as const;
+
+export type StepStatus = (typeof StepStatus)[keyof typeof StepStatus];
+
+export const StepStatus = {
+  pending: "pending",
+  running: "running",
+  done: "done",
+  failed: "failed",
+} as const;
+
+export interface JobStep {
+  name: string;
+  status: StepStatus;
+  runs: number;
+  units_done: number;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface Job {
+  id: string;
+  project_id: string;
+  kind: string;
+  status: JobStatus;
+  error_code: string | null;
+  created_at: string;
+  finished_at: string | null;
+  steps: JobStep[];
+}
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -4748,6 +4786,193 @@ export function useGetOpinionFormVersion<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetOpinionFormVersionQueryOptions(projectId, version, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getProjectJobResponse200 = {
+  data: Job;
+  status: 200;
+};
+
+export type getProjectJobResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectJobResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectJobResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectJobResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectJobResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectJobResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectJobResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectJobResponseSuccess = getProjectJobResponse200 & {
+  headers: Headers;
+};
+export type getProjectJobResponseError = (
+  | getProjectJobResponse400
+  | getProjectJobResponse401
+  | getProjectJobResponse403
+  | getProjectJobResponse404
+  | getProjectJobResponse409
+  | getProjectJobResponse422
+  | getProjectJobResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectJobResponse = getProjectJobResponseSuccess | getProjectJobResponseError;
+
+export const getGetProjectJobUrl = (projectId: string, jobId: string) => {
+  return `/api/projects/${projectId}/jobs/${jobId}`;
+};
+
+/**
+ * @summary Get Project Job
+ */
+export const getProjectJob = async (
+  projectId: string,
+  jobId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectJobResponse> => {
+  return apiFetch<getProjectJobResponse>(getGetProjectJobUrl(projectId, jobId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectJobQueryKey = (projectId: string, jobId: string) => {
+  return [`/api/projects/${projectId}/jobs/${jobId}`] as const;
+};
+
+export const getGetProjectJobQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectJob>>,
+  TError = Problem,
+>(
+  projectId: string,
+  jobId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectJobQueryKey(projectId, jobId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectJob>>> = ({ signal }) =>
+    getProjectJob(projectId, jobId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined && jobId !== null && jobId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectJobQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectJob>>>;
+export type GetProjectJobQueryError = Problem;
+
+export function useGetProjectJob<
+  TData = Awaited<ReturnType<typeof getProjectJob>>,
+  TError = Problem,
+>(
+  projectId: string,
+  jobId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectJob>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectJob>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectJob<
+  TData = Awaited<ReturnType<typeof getProjectJob>>,
+  TError = Problem,
+>(
+  projectId: string,
+  jobId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectJob>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectJob>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectJob<
+  TData = Awaited<ReturnType<typeof getProjectJob>>,
+  TError = Problem,
+>(
+  projectId: string,
+  jobId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Job
+ */
+
+export function useGetProjectJob<
+  TData = Awaited<ReturnType<typeof getProjectJob>>,
+  TError = Problem,
+>(
+  projectId: string,
+  jobId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectJob>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectJobQueryOptions(projectId, jobId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 19 |
 | `personal` | 24 |
 | `secret` | 9 |
-| `operational` | 184 |
+| `operational` | 211 |
 | `public` | 0 |
 
 ## api_tokens
@@ -144,6 +144,48 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `accepted_at` | operational |
 | `revoked_at` | operational |
 | `created_at` | operational |
+
+## job_steps
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `job_id` | operational |
+| `ordinal` | operational |
+| `name` | operational |
+| `status` | operational |
+| `runs` | operational |
+| `result` | operational |
+| `started_at` | operational |
+| `finished_at` | operational |
+
+## job_units
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `job_id` | operational |
+| `ordinal` | operational |
+| `unit` | operational |
+| `worker` | operational |
+| `done_at` | operational |
+
+## jobs
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `kind` | operational |
+| `status` | operational |
+| `input` | operational |
+| `claimed_by` | operational |
+| `claims` | operational |
+| `lease_until` | operational |
+| `error_code` | operational |
+| `created_at` | operational |
+| `finished_at` | operational |
 
 ## memberships
 

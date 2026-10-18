@@ -21,6 +21,9 @@ from parfocal_api.tables import (
     class_mappings,
     emergency_grants,
     invitations,
+    job_steps,
+    job_units,
+    jobs,
     memberships,
     notification_preferences,
     notifications,
@@ -67,6 +70,9 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "jobs",
+    "job_steps",
+    "job_units",
     "notification_preferences",
     "projects",
     "project_members",
@@ -190,6 +196,22 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
     seeded.ids["project"] = case.project_id
+    job_id = await connection.scalar(
+        insert(jobs)
+        .values(tenant_id=seeded.tenant_id, project_id=case.project_id, kind="isolation-seed")
+        .returning(jobs.c.id)
+    )
+    assert isinstance(job_id, uuid.UUID)
+    await connection.execute(
+        insert(job_steps).values(tenant_id=seeded.tenant_id, job_id=job_id, ordinal=0, name="scan")
+    )
+    await connection.execute(
+        insert(job_units).values(
+            tenant_id=seeded.tenant_id, job_id=job_id, ordinal=0, unit=0, worker="seed"
+        )
+    )
+    seeded.ids["job"] = job_id
+    seeded.markers.add(str(job_id))
     class_name = f"Class {uuid.uuid4().hex[:8]}"
     class_id = await connection.scalar(
         insert(project_classes)
@@ -297,6 +319,9 @@ GET_ROUTES = {
     "resolveClassNames": Route(
         Exposure.TENANT,
         lambda a: f"/api/projects/{a.ids['project']}/class-mappings/resolve?name={a.ids['source']}",
+    ),
+    "getProjectJob": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/jobs/{a.ids['job']}"
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
