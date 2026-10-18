@@ -91,3 +91,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0083](0083-typst-for-report-pdfs.md) | Report PDFs are rendered with Typst from the evaluation data, deterministic with the sign-off time as timestamp | Accepted | 2026-10-18 |
 | [0084](0084-evaluation-metrics.md) | Evaluation metrics count AI objects against the reviewers' consensus, with kappa between reviewers, and the decisions API moves to ADJ-006 | Accepted | 2026-10-18 |
 | [0085](0085-home-aggregate-api.md) | Home is one aggregate read, `GET /api/me/home`, with resume derived from review activity and the announcements API split into HOME-011 | Accepted | 2026-10-18 |
+| [0086](0086-node-staging-rules.md) | Node staging is a pure function, the largest area by its best size leads, and a node settles only when no other area can outrank it | Accepted | 2026-10-18 |

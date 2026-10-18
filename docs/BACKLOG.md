@@ -1673,8 +1673,8 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] REVIEW-003 · Staging computation API
   Per node, the lead area (the largest not ruled out), its size (the measurement when there is one, else the AI size with its evaluated range), its category (over 2 mm macro, over 0.2 mm or more than 200 cells micro, else ITC), whether it needs a cell count (size at or under 0.2 mm), the suggested pN stage with the (sn) suffix, and the state open, so far or settled. Settled means the lead area is confirmed tumor, measured, and its count range is under 200 when a count is needed. The count range reuses doc 33's expected-mistakes method.
-  Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and the property that firm answers are never wrong on the validation fixture.
-  Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and an area that could still outrank the lead.
+  Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0086](adr/0086-node-staging-rules.md). The validation fixture property moved to REVIEW-020.
 
 - [ ] REVIEW-004 · Staging hero and size scale
   Plain-words heading, chip, sub-line and a log size scale from 0.05 to 20 mm with ITC, micro and macro zones, a dot per area, and the current area's range band and numbered point. For a cluster, a count bar with the 200-cell line.
@@ -1754,6 +1754,11 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   A bar beside the selected cell with Keep, Tumor, Stroma, Immune, Other and Not a cell, each with its key in a keycap (K, 1 to 4, X), placed below or above the cell so it never covers it, and the only place the type buttons appear. Each type names what it covers on hover (immune: lymphocytes, plasma cells, histiocytes). Clicking any cell on the slide selects it. While a cell is selected the arrow keys jump to the nearest unsure cell in that direction (within a cone, undecided cells first, across zones), Shift+arrows pan, J and Shift+J step through the zone, Esc goes back to the zone and then to the list.
   Done when E2E answers cells with the mouse only and with the keyboard only, and unit tests cover the direction search and its edge cases (no cell that way, cells already decided).
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+
+- [ ] REVIEW-020 · Firm staging answers on a validation set
+  Run the node staging of REVIEW-003 on labelled small clusters and confirm that a firm count (its range cannot cross 200) is never on the wrong side of the pathologist's count, as POC doc 33 found for the tumor share on PanNuke.
+  Done when a result file records the clusters, the firm share and every wrong firm answer, and a test replays the fixture.
+  Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
 
 ---
 
