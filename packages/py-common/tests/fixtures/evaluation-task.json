@@ -1,0 +1,150 @@
+{
+  "objects": [
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 1,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["agree"]
+    },
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 2,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["agree"]
+    },
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 3,
+      "class": "tumor",
+      "a": ["disagree", "not_class"],
+      "b": ["disagree", "boundary_off"]
+    },
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 4,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["disagree", "boundary_off"],
+      "decision": "keep-ai"
+    },
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 5,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["unsure"],
+      "decision": "go-with-reviewers"
+    },
+    {
+      "slide": "s1",
+      "kind": "region",
+      "number": 6,
+      "class": "tumor",
+      "a": ["unsure"],
+      "b": ["unsure"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 1,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["agree"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 2,
+      "class": "tumor",
+      "a": ["disagree", "wrong_class", "lymphocyte"],
+      "b": ["disagree", "wrong_class", "lymphocyte"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 3,
+      "class": "lymphocyte",
+      "a": ["agree"],
+      "b": ["agree"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 4,
+      "class": "lymphocyte",
+      "a": ["agree"],
+      "b": ["disagree", "not_a_cell"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 5,
+      "class": "tumor",
+      "a": ["agree"],
+      "b": ["agree"]
+    },
+    {
+      "slide": "s1",
+      "kind": "cell",
+      "number": 6,
+      "class": "lymphocyte",
+      "a": ["disagree", "not_a_cell"],
+      "b": ["disagree", "not_a_cell"]
+    }
+  ],
+  "added": [{ "slide": "s1", "kind": "region", "class": "tumor" }],
+  "areas": [
+    { "slide": "s1", "class": "tumor", "ai": 100, "consensus": 90, "overlap": 80 },
+    { "slide": "s2", "class": "tumor", "ai": 50, "consensus": 50, "overlap": 50 }
+  ],
+  "opinions": [
+    { "key": "acceptable", "kind": "scale", "answers": [4, 2] },
+    { "key": "main_error", "kind": "choice", "answers": ["Boundaries", "Boundaries"] },
+    { "key": "sign_as_is", "kind": "yesno", "answers": [true, false] },
+    { "key": "comment", "kind": "text", "answers": ["Edges are loose", null] }
+  ],
+  "expected": {
+    "regions": {
+      "tumor": {
+        "tp": 3,
+        "fp": 2,
+        "fn": 1,
+        "unsure": 1,
+        "undecided": 0,
+        "precision": [3, 5],
+        "sensitivity": [3, 4]
+      }
+    },
+    "cells": {
+      "tumor": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "unsure": 0,
+        "undecided": 0,
+        "precision": [2, 3],
+        "sensitivity": [2, 2]
+      },
+      "lymphocyte": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "unsure": 0,
+        "undecided": 1,
+        "precision": [1, 2],
+        "sensitivity": [1, 2]
+      }
+    },
+    "kappa": [51, 87, 12],
+    "dice": { "tumor": [0.9210526315789473, 2] },
+    "cell_agreement": [[3, 5], [5, 6]],
+    "reasons": [["not_a_cell", 3], ["boundary_off", 2], ["wrong_class", 2], ["not_class", 1]]
+  }
+}
