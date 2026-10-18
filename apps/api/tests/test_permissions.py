@@ -24,6 +24,7 @@ from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
 from parfocal_api.tables import (
     Role,
     annotations,
+    announcements,
     api_tokens,
     invitations,
     memberships,
@@ -74,6 +75,7 @@ OPEN_OPERATIONS = {
     "endSession": "signed-in",
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
+    "listAnnouncements": "member",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
     "listMembers": "platform",
@@ -107,6 +109,7 @@ class Workspace:
     ready_task: uuid.UUID
     signed_task: uuid.UUID
     queued_task: uuid.UUID
+    announcement: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -238,6 +241,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
         {"kind": "region", "geometry": SQUARE},
     ),
+    "createAnnouncement": lambda _: Call(
+        "POST", "/api/announcements", {"kind": "change", "text": "Matrix announcement"}
+    ),
+    "endAnnouncement": lambda w: Call("POST", f"/api/announcements/{w.announcement}/end"),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
     "saveOpinion": lambda w: Call(
@@ -345,8 +352,10 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
+    uuid.uuid4(),
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
     "getOpinionFormTemplate": lambda _: Call("GET", "/api/opinion-form-template"),
@@ -688,6 +697,11 @@ async def seed(database: str) -> Workspace:
                     tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
                 )
             )
+            announcement = await connection.scalar(
+                insert(announcements)
+                .values(tenant_id=tenant_id, kind="change", text="Matrix announcement")
+                .returning(announcements.c.id)
+            )
             await connection.execute(
                 update(annotations)
                 .where(annotations.c.id == deleted_annotation)
@@ -721,6 +735,7 @@ async def seed(database: str) -> Workspace:
         assert isinstance(result_set, uuid.UUID)
         assert isinstance(doomed_result_set, uuid.UUID)
         assert isinstance(task, uuid.UUID)
+        assert isinstance(announcement, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
         return Workspace(
             tenant_id,
@@ -748,6 +763,7 @@ async def seed(database: str) -> Workspace:
             ready_task,
             signed_task,
             queued_task,
+            announcement,
         )
     finally:
         await engine.dispose()

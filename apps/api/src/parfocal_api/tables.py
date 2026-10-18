@@ -1469,3 +1469,29 @@ opinions = Table(
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
 )
+
+
+class AnnouncementKind(StrEnum):
+    MODEL = "model"
+    SLOWDOWN = "slowdown"
+    CHANGE = "change"
+
+
+announcements = Table(
+    "announcements",
+    metadata,
+    *owned_ids(),
+    Column("kind", String(10), nullable=False, info=OPERATIONAL),
+    Column("text", String(280), nullable=False, info=OPERATIONAL),
+    Column("ends_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    Index("ix_announcements_tenant_id_created_at", "tenant_id", "created_at"),
+    one_of("kind", AnnouncementKind),
+)

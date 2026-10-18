@@ -71,6 +71,8 @@ class AuditAction(StrEnum):
     INVITATION_REVOKED = "invitation.revoked"
     INVITATION_ACCEPTED = "invitation.accepted"
     INVITATION_EXPIRED = "invitation.expired"
+    ANNOUNCEMENT_POSTED = "announcement.posted"
+    ANNOUNCEMENT_ENDED = "announcement.ended"
 
 
 class AuditTarget(StrEnum):
@@ -83,6 +85,7 @@ class AuditTarget(StrEnum):
     REVIEW_TASK = "review-task"
     SERVICE_ACCOUNT = "service-account"
     INVITATION = "invitation"
+    ANNOUNCEMENT = "announcement"
 
 
 @dataclass(frozen=True)

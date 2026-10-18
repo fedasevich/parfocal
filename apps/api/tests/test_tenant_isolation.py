@@ -16,6 +16,7 @@ from parfocal_api.tables import (
     Role,
     annotation_versions,
     annotations,
+    announcements,
     api_tokens,
     audit_events,
     audit_people,
@@ -183,6 +184,14 @@ async def seed_invitations(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.add(email)
+
+
+async def seed_announcements(connection: AsyncConnection, seeded: Seeded) -> None:
+    text_ = f"Announcement {uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(announcements).values(tenant_id=seeded.tenant_id, kind="change", text=text_)
+    )
+    seeded.markers.add(text_)
 
 
 async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -465,6 +474,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "invitations": seed_invitations,
+    "announcements": seed_announcements,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
     "audit_people": seed_audit_people,
@@ -491,6 +501,7 @@ GET_ROUTES = {
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),

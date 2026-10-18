@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 23 |
-| `personal` | 34 |
+| `personal` | 35 |
 | `secret` | 9 |
-| `operational` | 347 |
+| `operational` | 354 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -49,6 +49,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## announcements
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `kind` | operational |
+| `text` | operational |
+| `ends_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## api_tokens
 

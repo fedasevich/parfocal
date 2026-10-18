@@ -205,6 +205,33 @@ export interface AnnotationVersion {
   changed_at: string;
 }
 
+export type AnnouncementKind = (typeof AnnouncementKind)[keyof typeof AnnouncementKind];
+
+export const AnnouncementKind = {
+  model: "model",
+  slowdown: "slowdown",
+  change: "change",
+} as const;
+
+export interface Announcement {
+  id: string;
+  kind: AnnouncementKind;
+  text: string;
+  ends_at: string | null;
+  created_by_user_id: string | null;
+  created_at: string;
+}
+
+export interface AnnouncementDraft {
+  kind: AnnouncementKind;
+  /**
+   * @minLength 1
+   * @maxLength 280
+   */
+  text: string;
+  ends_at?: string | null;
+}
+
 export interface ApiToken {
   id: string;
   expires_at: string;
@@ -328,6 +355,7 @@ export const AuditTarget = {
   "review-task": "review-task",
   "service-account": "service-account",
   invitation: "invitation",
+  announcement: "announcement",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -11428,6 +11456,484 @@ export function useExportReviewedLayer<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listAnnouncementsResponse200 = {
+  data: Announcement[];
+  status: 200;
+};
+
+export type listAnnouncementsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAnnouncementsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAnnouncementsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAnnouncementsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAnnouncementsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAnnouncementsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAnnouncementsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAnnouncementsResponseSuccess = listAnnouncementsResponse200 & {
+  headers: Headers;
+};
+export type listAnnouncementsResponseError = (
+  | listAnnouncementsResponse400
+  | listAnnouncementsResponse401
+  | listAnnouncementsResponse403
+  | listAnnouncementsResponse404
+  | listAnnouncementsResponse409
+  | listAnnouncementsResponse422
+  | listAnnouncementsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAnnouncementsResponse =
+  | listAnnouncementsResponseSuccess
+  | listAnnouncementsResponseError;
+
+export const getListAnnouncementsUrl = () => {
+  return `/api/announcements`;
+};
+
+/**
+ * @summary List Announcements
+ */
+export const listAnnouncements = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAnnouncementsResponse> => {
+  return apiFetch<listAnnouncementsResponse>(getListAnnouncementsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAnnouncementsQueryKey = () => {
+  return [`/api/announcements`] as const;
+};
+
+export const getListAnnouncementsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnnouncements>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnnouncementsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnnouncements>>> = ({ signal }) =>
+    listAnnouncements({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAnnouncements>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAnnouncementsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAnnouncements>>
+>;
+export type ListAnnouncementsQueryError = Problem;
+
+export function useListAnnouncements<
+  TData = Awaited<ReturnType<typeof listAnnouncements>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnouncements>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnouncements>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnouncements<
+  TData = Awaited<ReturnType<typeof listAnnouncements>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnouncements>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnouncements>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnouncements<
+  TData = Awaited<ReturnType<typeof listAnnouncements>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Announcements
+ */
+
+export function useListAnnouncements<
+  TData = Awaited<ReturnType<typeof listAnnouncements>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAnnouncementsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createAnnouncementResponse201 = {
+  data: Announcement;
+  status: 201;
+};
+
+export type createAnnouncementResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createAnnouncementResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createAnnouncementResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createAnnouncementResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createAnnouncementResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createAnnouncementResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createAnnouncementResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createAnnouncementResponseSuccess = createAnnouncementResponse201 & {
+  headers: Headers;
+};
+export type createAnnouncementResponseError = (
+  | createAnnouncementResponse400
+  | createAnnouncementResponse401
+  | createAnnouncementResponse403
+  | createAnnouncementResponse404
+  | createAnnouncementResponse409
+  | createAnnouncementResponse422
+  | createAnnouncementResponse500
+) & {
+  headers: Headers;
+};
+
+export type createAnnouncementResponse =
+  | createAnnouncementResponseSuccess
+  | createAnnouncementResponseError;
+
+export const getCreateAnnouncementUrl = () => {
+  return `/api/announcements`;
+};
+
+/**
+ * @summary Create Announcement
+ */
+export const createAnnouncement = async (
+  announcementDraft: AnnouncementDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createAnnouncementResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createAnnouncementResponse>(getCreateAnnouncementUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(announcementDraft),
+  });
+};
+
+export const getCreateAnnouncementMutationKey = () => ["createAnnouncement"] as const;
+
+export const getCreateAnnouncementMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAnnouncement>>,
+    TError,
+    CreateAnnouncementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAnnouncement>>,
+  TError,
+  CreateAnnouncementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateAnnouncementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAnnouncement>>,
+    CreateAnnouncementMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAnnouncement(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAnnouncementMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAnnouncement>>
+>;
+export type CreateAnnouncementMutationBody = AnnouncementDraft;
+export type CreateAnnouncementMutationError = Problem;
+export type CreateAnnouncementMutationVariables = { data: AnnouncementDraft };
+
+/**
+ * @summary Create Announcement
+ */
+export const useCreateAnnouncement = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAnnouncement>>,
+      TError,
+      CreateAnnouncementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAnnouncement>>,
+  TError,
+  CreateAnnouncementMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateAnnouncementMutationOptions(options), queryClient);
+};
+
+export type endAnnouncementResponse200 = {
+  data: Announcement;
+  status: 200;
+};
+
+export type endAnnouncementResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type endAnnouncementResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type endAnnouncementResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type endAnnouncementResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type endAnnouncementResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type endAnnouncementResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type endAnnouncementResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type endAnnouncementResponseSuccess = endAnnouncementResponse200 & {
+  headers: Headers;
+};
+export type endAnnouncementResponseError = (
+  | endAnnouncementResponse400
+  | endAnnouncementResponse401
+  | endAnnouncementResponse403
+  | endAnnouncementResponse404
+  | endAnnouncementResponse409
+  | endAnnouncementResponse422
+  | endAnnouncementResponse500
+) & {
+  headers: Headers;
+};
+
+export type endAnnouncementResponse = endAnnouncementResponseSuccess | endAnnouncementResponseError;
+
+export const getEndAnnouncementUrl = (announcementId: string) => {
+  return `/api/announcements/${announcementId}/end`;
+};
+
+/**
+ * @summary End Announcement
+ */
+export const endAnnouncement = async (
+  announcementId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<endAnnouncementResponse> => {
+  return apiFetch<endAnnouncementResponse>(getEndAnnouncementUrl(announcementId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getEndAnnouncementMutationKey = () => ["endAnnouncement"] as const;
+
+export const getEndAnnouncementMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof endAnnouncement>>,
+    TError,
+    EndAnnouncementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof endAnnouncement>>,
+  TError,
+  EndAnnouncementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEndAnnouncementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof endAnnouncement>>,
+    EndAnnouncementMutationVariables
+  > = (props) => {
+    const { announcementId } = props ?? {};
+
+    return endAnnouncement(announcementId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EndAnnouncementMutationResult = NonNullable<
+  Awaited<ReturnType<typeof endAnnouncement>>
+>;
+
+export type EndAnnouncementMutationError = Problem;
+export type EndAnnouncementMutationVariables = { announcementId: string };
+
+/**
+ * @summary End Announcement
+ */
+export const useEndAnnouncement = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof endAnnouncement>>,
+      TError,
+      EndAnnouncementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof endAnnouncement>>,
+  TError,
+  EndAnnouncementMutationVariables,
+  TContext
+> => {
+  return useMutation(getEndAnnouncementMutationOptions(options), queryClient);
+};
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;
