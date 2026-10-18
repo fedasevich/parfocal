@@ -187,7 +187,59 @@ def read_geojson(data: bytes) -> ReadResult:
                 source_id=None if feature.id is None else str(feature.id),
                 parent=properties.get("parent"),
                 nucleus=nucleus,
-                properties=measurements_of(properties.get("measurements")),
+                properties={
+                    **measurements_of(properties.get("measurements")),
+                    **({"parfocal": properties["parfocal"]} if "parfocal" in properties else {}),
+                },
+            )
+        )
+    return result
+
+
+class ParfocalObject(msgspec.Struct):
+    kind: str
+    geometry: dict[str, Any]
+    source_id: str | None = None
+    parent: str | None = None
+    class_: str | None = msgspec.field(name="class", default=None)
+    score: float | None = None
+    probabilities: dict[str, float] | None = None
+    properties: dict[str, Any] | None = None
+
+
+class ParfocalFile(msgspec.Struct):
+    format: str
+    version: int
+    objects: list[ParfocalObject]
+
+
+def read_parfocal_json(data: bytes) -> ReadResult:
+    result = ReadResult()
+    try:
+        document = msgspec.json.decode(data, type=ParfocalFile)
+    except (msgspec.DecodeError, msgspec.ValidationError) as error:
+        result.problems.append(Problem("file", str(error)))
+        return result
+    if document.format != "parfocal-results" or document.version != 1:
+        result.problems.append(Problem("file", "This is not a Parfocal results file, version 1"))
+        return result
+    for index, item in enumerate(document.objects, start=1):
+        try:
+            geometry = geometry_of(item.geometry)
+            kind = ObjectKind(item.kind)
+        except (ValueError, TypeError) as error:
+            result.problems.append(Problem(f"object {index}", str(error)))
+            continue
+        result.objects.append(
+            ResultObject(
+                kind=kind,
+                geometry=geometry,
+                class_name=item.class_,
+                score=item.score,
+                probabilities=item.probabilities,
+                source_id=item.source_id,
+                parent=item.parent,
+                properties=dict(item.properties or {}),
             )
         )
     return result

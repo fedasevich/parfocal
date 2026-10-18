@@ -727,6 +727,13 @@ export interface Evaluation {
   opinions: OpinionOut[];
 }
 
+export type ExportFormat = (typeof ExportFormat)[keyof typeof ExportFormat];
+
+export const ExportFormat = {
+  geojson: "geojson",
+  parfocal: "parfocal",
+} as const;
+
 export interface FieldError {
   location: (string | number)[];
   message: string;
@@ -1748,6 +1755,14 @@ export type GetResultsTemplate200 = { [key: string]: unknown };
 export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
 };
+
+export type ExportReviewedLayerParams = {
+  format?: ExportFormat;
+  reviewer_id?: string | null;
+  consensus?: boolean;
+};
+
+export type ExportReviewedLayer200 = { [key: string]: unknown };
 
 export type ListVerdictsParams = {
   reviewer_id?: string | null;
@@ -11175,6 +11190,237 @@ export function useGetReviewedLayer<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetReviewedLayerQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportReviewedLayerResponse200 = {
+  data: ExportReviewedLayer200;
+  status: 200;
+};
+
+export type exportReviewedLayerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportReviewedLayerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportReviewedLayerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportReviewedLayerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportReviewedLayerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportReviewedLayerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportReviewedLayerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportReviewedLayerResponseSuccess = exportReviewedLayerResponse200 & {
+  headers: Headers;
+};
+export type exportReviewedLayerResponseError = (
+  | exportReviewedLayerResponse400
+  | exportReviewedLayerResponse401
+  | exportReviewedLayerResponse403
+  | exportReviewedLayerResponse404
+  | exportReviewedLayerResponse409
+  | exportReviewedLayerResponse422
+  | exportReviewedLayerResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportReviewedLayerResponse =
+  | exportReviewedLayerResponseSuccess
+  | exportReviewedLayerResponseError;
+
+export const getExportReviewedLayerUrl = (
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/export?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/export`;
+};
+
+/**
+ * @summary Export Reviewed Layer
+ */
+export const exportReviewedLayer = async (
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportReviewedLayerResponse> => {
+  return apiFetch<exportReviewedLayerResponse>(getExportReviewedLayerUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportReviewedLayerQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/export`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getExportReviewedLayerQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getExportReviewedLayerQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportReviewedLayer>>> = ({ signal }) =>
+    exportReviewedLayer(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportReviewedLayerQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportReviewedLayer>>
+>;
+export type ExportReviewedLayerQueryError = Problem;
+
+export function useExportReviewedLayer<
+  TData = Awaited<ReturnType<typeof exportReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params: undefined | ExportReviewedLayerParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportReviewedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof exportReviewedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportReviewedLayer<
+  TData = Awaited<ReturnType<typeof exportReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportReviewedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof exportReviewedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportReviewedLayer<
+  TData = Awaited<ReturnType<typeof exportReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Reviewed Layer
+ */
+
+export function useExportReviewedLayer<
+  TData = Awaited<ReturnType<typeof exportReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ExportReviewedLayerParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportReviewedLayer>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportReviewedLayerQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

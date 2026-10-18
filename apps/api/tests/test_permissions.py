@@ -224,6 +224,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getReviewedLayer": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/layer"),
+    "exportReviewedLayer": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/export"
+    ),
     "saveReviewEdit": lambda w: Call(
         "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T1", {"deleted": True}
     ),

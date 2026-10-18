@@ -23,3 +23,9 @@ On Python 3.14 the annotations of a class are evaluated lazily, and msgspec 0.19
 ## The chunk codec lives in py-common
 
 `parfocal_common.cell_chunks` writes and reads the `PFC1` container of [ADR 0076](../adr/0076-annotation-and-ai-result-storage.md) without numpy: `field(name, type, values)` takes anything with the buffer protocol (an `array.array` or a numpy array), `encode` aligns every field to 8 bytes after the header, and `decode` returns `memoryview`s cast to the field type, so a reader copies nothing. `problems_with(header, arrays, from_run=...)` names every missing, mistyped or miscounted field. A chunk from a model run must carry `probs`, one byte per cell and class, while an imported chunk may leave them out. It refuses a big-endian machine, because the format is little-endian and the browser reads it as such.
+
+## Exporting a reviewed layer
+
+`GET /api/review-tasks/{task}/slides/{slide}/export` writes one reviewer's layer, or with `consensus=true` the consensus, as GeoJSON (the default) or as Parfocal JSON (`format=parfocal`). Each object keeps its full ID and path in `properties.parfocal`, with `changed` (`retyped`, `reshaped`, `added`), the AI class and the verdict, so the file reads back through `read_geojson` or `read_parfocal_json` with nothing lost. A reviewer exports only their own layer. Project owners and viewers export anyone's layer and the consensus.
+
+The consensus keeps the AI regions whose consensus is agree, with the earliest saved reshape, and the objects reviewers added, merged across reviewers by the same rule as the evaluation (`SAME_ADDED`: regions overlapping by half their union, cells within 16 pixels, same class, different reviewers). `first_of_each_match` in `evaluation.py` keeps the earliest added object of each group, so the kept ID does not depend on UUID order.

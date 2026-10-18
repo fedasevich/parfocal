@@ -555,6 +555,12 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/layer",
     ),
+    "exportReviewedLayer": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/export?format=parfocal"
+        ),
+    ),
     "getReviewTask": Route(Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}"),
     "listSlideResultSets": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/result-sets"

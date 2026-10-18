@@ -188,6 +188,25 @@ SAME_ADDED = text(
 )
 
 
+async def first_of_each_match(
+    connection: AsyncConnection, task_id: uuid.UUID, in_order: list[uuid.UUID]
+) -> set[uuid.UUID]:
+    rank = {identifier: position for position, identifier in enumerate(in_order)}
+    parent = {identifier: identifier for identifier in in_order}
+
+    def root(identifier: uuid.UUID) -> uuid.UUID:
+        while parent[identifier] != identifier:
+            identifier = parent[identifier]
+        return identifier
+
+    for first, second in await connection.execute(
+        SAME_ADDED, {"task_id": task_id, "cell": CELL_PIXELS}
+    ):
+        earlier, later = sorted((root(first), root(second)), key=rank.__getitem__)
+        parent[later] = earlier
+    return {identifier for identifier in in_order if root(identifier) == identifier}
+
+
 async def added_objects(
     connection: AsyncConnection, task_id: uuid.UUID, names: dict[uuid.UUID, str]
 ) -> tuple[list[engine.Added], dict[tuple[uuid.UUID, str], list[uuid.UUID]]]:
@@ -204,18 +223,8 @@ async def added_objects(
             .order_by(annotations.c.created_at, annotations.c.id)
         )
     ).all()
-    parent = {row.id: row.id for row in rows}
-
-    def root(item: uuid.UUID) -> uuid.UUID:
-        while parent[item] != item:
-            item = parent[item]
-        return item
-
-    for first, second in await connection.execute(
-        SAME_ADDED, {"task_id": task_id, "cell": CELL_PIXELS}
-    ):
-        parent[root(second)] = root(first)
-    kept = [row for row in rows if root(row.id) == row.id]
+    roots = await first_of_each_match(connection, task_id, [row.id for row in rows])
+    kept = [row for row in rows if row.id in roots]
     region_ids: dict[tuple[uuid.UUID, str], list[uuid.UUID]] = {}
     for row in rows:
         if row.kind == "region":

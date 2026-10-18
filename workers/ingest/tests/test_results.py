@@ -14,6 +14,7 @@ from parfocal_ingest.results import (
     read_geojson,
     read_heatmap,
     read_instance_mask,
+    read_parfocal_json,
     read_table,
 )
 
@@ -161,3 +162,18 @@ def test_a_heatmap_stays_a_raster_aligned_to_its_level() -> None:
     assert float(heatmap.values.max()) == 1.0
     colour = read_heatmap(values[..., None].repeat(3, axis=2), level=2, downsample=4)
     assert colour.problems[0].message == "A heatmap is a single-channel image"
+
+
+def test_the_parfocal_template_reads_into_the_same_object_form() -> None:
+    template = Path(__file__).resolve().parents[3] / "docs" / "reference"
+    data = (template / "parfocal-results-v1.template.json").read_bytes()
+    result = read_parfocal_json(data)
+    assert result.problems == []
+    assert [(o.kind, o.class_name, o.source_id) for o in result.objects] == [
+        (ObjectKind.REGION, "Tumor", "region-1"),
+        (ObjectKind.CELL, "Tumor", "cell-1"),
+        (ObjectKind.CELL, "Lymphocyte", "cell-2"),
+    ]
+    assert result.objects[1].parent == "region-1"
+    assert result.objects[2].properties == {"area_um2": 31.5}
+    assert read_parfocal_json(b'{"format": "geojson", "version": 1, "objects": []}').problems
