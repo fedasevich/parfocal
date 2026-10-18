@@ -13,6 +13,7 @@ from parfocal_api import (
     cases,
     emergency,
     invitations,
+    opinion_forms,
     projects,
     service_accounts,
     sessions_api,
@@ -100,6 +101,8 @@ def create_app(
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
     app.include_router(taxonomy.router)
+    app.include_router(opinion_forms.router)
+    app.include_router(opinion_forms.template_router)
     app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
     app.include_router(case_creation.router)

@@ -66,6 +66,7 @@ BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
     "projects",
     "project_members",
+    "opinion_forms",
     "project_classes",
     "class_mappings",
     "tenant_keys",
@@ -236,6 +237,16 @@ GET_ROUTES = {
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
+    "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),
+    "getOpinionForm": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
+    ),
+    "listOpinionFormVersions": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form/versions"
+    ),
+    "getOpinionFormVersion": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form/versions/1"
+    ),
     "listProjectClasses": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/classes"
     ),

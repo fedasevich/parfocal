@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 21 |
+| `personal` | 22 |
 | `secret` | 9 |
-| `operational` | 159 |
+| `operational` | 165 |
 | `public` | 0 |
 
 ## api_tokens
@@ -158,6 +158,18 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `availability_note` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## opinion_forms
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `version` | operational |
+| `questions` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
 
 ## organisations
 

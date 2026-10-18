@@ -43,6 +43,7 @@ OPEN_OPERATIONS = {
     "switchWorkspace": "signed-in",
     "getCurrentTenant": "member",
     "listTaxonomyTemplates": "member",
+    "getOpinionFormTemplate": "member",
     "createOrganisation": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
@@ -91,6 +92,18 @@ class Call:
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
+    "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
+    "listOpinionFormVersions": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/opinion-form/versions"
+    ),
+    "getOpinionFormVersion": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/opinion-form/versions/1"
+    ),
+    "publishOpinionForm": lambda w: Call(
+        "PUT",
+        f"/api/projects/{w.project}/opinion-form",
+        {"questions": [{"kind": "yesno", "key": "fine", "label": "Is it fine?"}]},
+    ),
     "setProjectClasses": lambda w: Call(
         "PUT",
         f"/api/projects/{w.project}/classes",
@@ -181,6 +194,7 @@ PLACEHOLDER = Workspace(
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
+    "getOpinionFormTemplate": lambda _: Call("GET", "/api/opinion-form-template"),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),

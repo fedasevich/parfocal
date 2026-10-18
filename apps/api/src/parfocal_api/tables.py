@@ -21,7 +21,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata
@@ -811,6 +811,33 @@ class_mappings = Table(
         ["project_classes.id", "project_classes.project_id"],
         ondelete="CASCADE",
     ),
+)
+
+opinion_forms = Table(
+    "opinion_forms",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("questions", JSONB, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    UniqueConstraint("project_id", "version"),
+    UniqueConstraint("id", "project_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("version >= 1", name="version"),
 )
 
 case_requests = Table(

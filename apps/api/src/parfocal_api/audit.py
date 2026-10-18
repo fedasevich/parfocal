@@ -46,6 +46,7 @@ class AuditAction(StrEnum):
     PROJECT_MEMBER_REMOVED = "project.member-removed"
     PROJECT_TAXONOMY_CHANGED = "project.taxonomy-changed"
     PROJECT_MAPPINGS_CHANGED = "project.mappings-changed"
+    PROJECT_OPINION_FORM_PUBLISHED = "project.opinion-form-published"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
     API_TOKEN_ISSUED = "api-token.issued"

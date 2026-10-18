@@ -1,8 +1,10 @@
+import json
 import uuid
 from dataclasses import dataclass
 
 from db_support import OWNER_URL, query, with_database
 
+from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, dumped
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
 
@@ -61,7 +63,7 @@ def make_workspace(database: str, roles: dict[str, Role]) -> Workspace:
 
 
 def make_project(database: str, tenant_id: uuid.UUID, privacy_mode: str = "clinical") -> uuid.UUID:
-    return uuid.UUID(
+    project_id = uuid.UUID(
         str(
             owner(
                 database,
@@ -72,6 +74,13 @@ def make_project(database: str, tenant_id: uuid.UUID, privacy_mode: str = "clini
             )[0][0]
         )
     )
+    questions = json.dumps(dumped(DEFAULT_QUESTIONS)).replace("'", "''")
+    owner(
+        database,
+        "INSERT INTO opinion_forms (tenant_id, project_id, version, questions) "
+        f"VALUES ('{tenant_id}', '{project_id}', 1, '{questions}'::jsonb)",
+    )
+    return project_id
 
 
 def join_project(database: str, project_id: uuid.UUID, who: MemberPrincipal, role: str) -> None:

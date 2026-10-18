@@ -7,6 +7,7 @@ from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
+from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, publish
 from parfocal_api.tables import PrivacyMode, blocks, cases, projects, slides, specimens
 from parfocal_common.envelope import MasterKeyring
 
@@ -44,6 +45,7 @@ async def seed_project(
         .returning(projects.c.id)
     )
     assert isinstance(project_id, uuid.UUID)
+    await publish(connection, tenant_id, project_id, None, DEFAULT_QUESTIONS)
     return project_id
 
 

@@ -151,6 +151,16 @@ OPERATIONS: dict[str, Operation] = {
         owner_creates,
     ),
     "getCase": Operation(lambda c, s: c.get(f"/api/cases/{s.case}"), reads),
+    "getOpinionForm": Operation(
+        lambda c, s: c.get(f"/api/projects/{s.project}/opinion-form"), member_reads
+    ),
+    "publishOpinionForm": Operation(
+        lambda c, s: c.put(
+            f"/api/projects/{s.project}/opinion-form",
+            json={"questions": [{"kind": "text", "key": "note", "label": "Note"}]},
+        ),
+        owner_changes,
+    ),
     "listProjectClasses": Operation(
         lambda c, s: c.get(f"/api/projects/{s.project}/classes"), member_reads
     ),

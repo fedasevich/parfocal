@@ -249,6 +249,42 @@ export interface CaseSummary {
   created_at: string;
 }
 
+export type ChoiceQuestionKind = (typeof ChoiceQuestionKind)[keyof typeof ChoiceQuestionKind];
+
+export const ChoiceQuestionKind = {
+  choice: "choice",
+} as const;
+
+/**
+ * @pattern ^[a-z][a-z0-9_]{0,39}$
+ */
+export type Key = string;
+
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Label = string;
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type Option = string;
+
+export interface ChoiceQuestion {
+  key: Key;
+  label: Label;
+  required?: boolean;
+  quick?: boolean;
+  kind: ChoiceQuestionKind;
+  /**
+   * @minItems 2
+   * @maxItems 12
+   */
+  options: Option[];
+}
+
 /**
  * @minLength 1
  * @maxLength 60
@@ -338,6 +374,12 @@ export interface EmergencyRequest {
   reason: Reason;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 40
+ */
+export type EndLabel = string;
+
 export interface EndedSessions {
   ended: number;
 }
@@ -346,6 +388,81 @@ export interface FieldError {
   location: (string | number)[];
   message: string;
   code: string;
+}
+
+export type ScaleQuestionKind = (typeof ScaleQuestionKind)[keyof typeof ScaleQuestionKind];
+
+export const ScaleQuestionKind = {
+  scale: "scale",
+} as const;
+
+export interface ScaleQuestion {
+  key: Key;
+  label: Label;
+  required?: boolean;
+  quick?: boolean;
+  kind: ScaleQuestionKind;
+  /**
+   * @minimum 0
+   * @maximum 10
+   */
+  min?: number;
+  /**
+   * @minimum 1
+   * @maximum 10
+   */
+  max?: number;
+  min_label?: EndLabel | null;
+  max_label?: EndLabel | null;
+}
+
+export type YesNoQuestionKind = (typeof YesNoQuestionKind)[keyof typeof YesNoQuestionKind];
+
+export const YesNoQuestionKind = {
+  yesno: "yesno",
+} as const;
+
+export interface YesNoQuestion {
+  key: Key;
+  label: Label;
+  required?: boolean;
+  quick?: boolean;
+  kind: YesNoQuestionKind;
+}
+
+export type TextQuestionKind = (typeof TextQuestionKind)[keyof typeof TextQuestionKind];
+
+export const TextQuestionKind = {
+  text: "text",
+} as const;
+
+export interface TextQuestion {
+  key: Key;
+  label: Label;
+  required?: boolean;
+  quick?: boolean;
+  kind: TextQuestionKind;
+  /**
+   * @minimum 1
+   * @maximum 2000
+   */
+  max_length?: number;
+}
+
+export type Question = ScaleQuestion | ChoiceQuestion | YesNoQuestion | TextQuestion;
+
+export interface FormChange {
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  questions: Question[];
+}
+
+export interface FormVersion {
+  project_id: string;
+  version: number;
+  created_at: string;
 }
 
 export interface Health {
@@ -477,6 +594,13 @@ export interface MembershipDraft {
  * @maxLength 200
  */
 export type Name = string;
+
+export interface OpinionForm {
+  project_id: string;
+  version: number;
+  questions: Question[];
+  created_at: string;
+}
 
 export interface Organisation {
   id: string;
@@ -3770,6 +3894,935 @@ export function useResolveClassNames<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getResolveClassNamesQueryOptions(projectId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getOpinionFormResponse200 = {
+  data: OpinionForm;
+  status: 200;
+};
+
+export type getOpinionFormResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getOpinionFormResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getOpinionFormResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getOpinionFormResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getOpinionFormResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getOpinionFormResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getOpinionFormResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getOpinionFormResponseSuccess = getOpinionFormResponse200 & {
+  headers: Headers;
+};
+export type getOpinionFormResponseError = (
+  | getOpinionFormResponse400
+  | getOpinionFormResponse401
+  | getOpinionFormResponse403
+  | getOpinionFormResponse404
+  | getOpinionFormResponse409
+  | getOpinionFormResponse422
+  | getOpinionFormResponse500
+) & {
+  headers: Headers;
+};
+
+export type getOpinionFormResponse = getOpinionFormResponseSuccess | getOpinionFormResponseError;
+
+export const getGetOpinionFormUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/opinion-form`;
+};
+
+/**
+ * @summary Get Opinion Form
+ */
+export const getOpinionForm = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getOpinionFormResponse> => {
+  return apiFetch<getOpinionFormResponse>(getGetOpinionFormUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOpinionFormQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/opinion-form`] as const;
+};
+
+export const getGetOpinionFormQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOpinionForm>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOpinionFormQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOpinionForm>>> = ({ signal }) =>
+    getOpinionForm(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetOpinionFormQueryResult = NonNullable<Awaited<ReturnType<typeof getOpinionForm>>>;
+export type GetOpinionFormQueryError = Problem;
+
+export function useGetOpinionForm<
+  TData = Awaited<ReturnType<typeof getOpinionForm>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionForm>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionForm>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionForm<
+  TData = Awaited<ReturnType<typeof getOpinionForm>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionForm>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionForm>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionForm<
+  TData = Awaited<ReturnType<typeof getOpinionForm>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Opinion Form
+ */
+
+export function useGetOpinionForm<
+  TData = Awaited<ReturnType<typeof getOpinionForm>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinionForm>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetOpinionFormQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type publishOpinionFormResponse200 = {
+  data: OpinionForm;
+  status: 200;
+};
+
+export type publishOpinionFormResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type publishOpinionFormResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type publishOpinionFormResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type publishOpinionFormResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type publishOpinionFormResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type publishOpinionFormResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type publishOpinionFormResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type publishOpinionFormResponseSuccess = publishOpinionFormResponse200 & {
+  headers: Headers;
+};
+export type publishOpinionFormResponseError = (
+  | publishOpinionFormResponse400
+  | publishOpinionFormResponse401
+  | publishOpinionFormResponse403
+  | publishOpinionFormResponse404
+  | publishOpinionFormResponse409
+  | publishOpinionFormResponse422
+  | publishOpinionFormResponse500
+) & {
+  headers: Headers;
+};
+
+export type publishOpinionFormResponse =
+  | publishOpinionFormResponseSuccess
+  | publishOpinionFormResponseError;
+
+export const getPublishOpinionFormUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/opinion-form`;
+};
+
+/**
+ * @summary Publish Opinion Form
+ */
+export const publishOpinionForm = async (
+  projectId: string,
+  formChange: FormChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<publishOpinionFormResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<publishOpinionFormResponse>(getPublishOpinionFormUrl(projectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(formChange),
+  });
+};
+
+export const getPublishOpinionFormMutationKey = () => ["publishOpinionForm"] as const;
+
+export const getPublishOpinionFormMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof publishOpinionForm>>,
+    TError,
+    PublishOpinionFormMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof publishOpinionForm>>,
+  TError,
+  PublishOpinionFormMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPublishOpinionFormMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof publishOpinionForm>>,
+    PublishOpinionFormMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return publishOpinionForm(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PublishOpinionFormMutationResult = NonNullable<
+  Awaited<ReturnType<typeof publishOpinionForm>>
+>;
+export type PublishOpinionFormMutationBody = FormChange;
+export type PublishOpinionFormMutationError = Problem;
+export type PublishOpinionFormMutationVariables = { projectId: string; data: FormChange };
+
+/**
+ * @summary Publish Opinion Form
+ */
+export const usePublishOpinionForm = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof publishOpinionForm>>,
+      TError,
+      PublishOpinionFormMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof publishOpinionForm>>,
+  TError,
+  PublishOpinionFormMutationVariables,
+  TContext
+> => {
+  return useMutation(getPublishOpinionFormMutationOptions(options), queryClient);
+};
+
+export type listOpinionFormVersionsResponse200 = {
+  data: FormVersion[];
+  status: 200;
+};
+
+export type listOpinionFormVersionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listOpinionFormVersionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listOpinionFormVersionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listOpinionFormVersionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listOpinionFormVersionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listOpinionFormVersionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listOpinionFormVersionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listOpinionFormVersionsResponseSuccess = listOpinionFormVersionsResponse200 & {
+  headers: Headers;
+};
+export type listOpinionFormVersionsResponseError = (
+  | listOpinionFormVersionsResponse400
+  | listOpinionFormVersionsResponse401
+  | listOpinionFormVersionsResponse403
+  | listOpinionFormVersionsResponse404
+  | listOpinionFormVersionsResponse409
+  | listOpinionFormVersionsResponse422
+  | listOpinionFormVersionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listOpinionFormVersionsResponse =
+  | listOpinionFormVersionsResponseSuccess
+  | listOpinionFormVersionsResponseError;
+
+export const getListOpinionFormVersionsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/opinion-form/versions`;
+};
+
+/**
+ * @summary List Opinion Form Versions
+ */
+export const listOpinionFormVersions = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listOpinionFormVersionsResponse> => {
+  return apiFetch<listOpinionFormVersionsResponse>(getListOpinionFormVersionsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListOpinionFormVersionsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/opinion-form/versions`] as const;
+};
+
+export const getListOpinionFormVersionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listOpinionFormVersions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListOpinionFormVersionsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listOpinionFormVersions>>> = ({
+    signal,
+  }) => listOpinionFormVersions(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListOpinionFormVersionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listOpinionFormVersions>>
+>;
+export type ListOpinionFormVersionsQueryError = Problem;
+
+export function useListOpinionFormVersions<
+  TData = Awaited<ReturnType<typeof listOpinionFormVersions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpinionFormVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listOpinionFormVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListOpinionFormVersions<
+  TData = Awaited<ReturnType<typeof listOpinionFormVersions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpinionFormVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listOpinionFormVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListOpinionFormVersions<
+  TData = Awaited<ReturnType<typeof listOpinionFormVersions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Opinion Form Versions
+ */
+
+export function useListOpinionFormVersions<
+  TData = Awaited<ReturnType<typeof listOpinionFormVersions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listOpinionFormVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListOpinionFormVersionsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getOpinionFormVersionResponse200 = {
+  data: OpinionForm;
+  status: 200;
+};
+
+export type getOpinionFormVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getOpinionFormVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getOpinionFormVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getOpinionFormVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getOpinionFormVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getOpinionFormVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getOpinionFormVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getOpinionFormVersionResponseSuccess = getOpinionFormVersionResponse200 & {
+  headers: Headers;
+};
+export type getOpinionFormVersionResponseError = (
+  | getOpinionFormVersionResponse400
+  | getOpinionFormVersionResponse401
+  | getOpinionFormVersionResponse403
+  | getOpinionFormVersionResponse404
+  | getOpinionFormVersionResponse409
+  | getOpinionFormVersionResponse422
+  | getOpinionFormVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getOpinionFormVersionResponse =
+  | getOpinionFormVersionResponseSuccess
+  | getOpinionFormVersionResponseError;
+
+export const getGetOpinionFormVersionUrl = (projectId: string, version: number) => {
+  return `/api/projects/${projectId}/opinion-form/versions/${version}`;
+};
+
+/**
+ * @summary Get Opinion Form Version
+ */
+export const getOpinionFormVersion = async (
+  projectId: string,
+  version: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getOpinionFormVersionResponse> => {
+  return apiFetch<getOpinionFormVersionResponse>(getGetOpinionFormVersionUrl(projectId, version), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOpinionFormVersionQueryKey = (projectId: string, version: number) => {
+  return [`/api/projects/${projectId}/opinion-form/versions/${version}`] as const;
+};
+
+export const getGetOpinionFormVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOpinionFormVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOpinionFormVersionQueryKey(projectId, version);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOpinionFormVersion>>> = ({ signal }) =>
+    getOpinionFormVersion(projectId, version, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && version !== null && version !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetOpinionFormVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOpinionFormVersion>>
+>;
+export type GetOpinionFormVersionQueryError = Problem;
+
+export function useGetOpinionFormVersion<
+  TData = Awaited<ReturnType<typeof getOpinionFormVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  version: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionFormVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionFormVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionFormVersion<
+  TData = Awaited<ReturnType<typeof getOpinionFormVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionFormVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionFormVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionFormVersion<
+  TData = Awaited<ReturnType<typeof getOpinionFormVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Opinion Form Version
+ */
+
+export function useGetOpinionFormVersion<
+  TData = Awaited<ReturnType<typeof getOpinionFormVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetOpinionFormVersionQueryOptions(projectId, version, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getOpinionFormTemplateResponse200 = {
+  data: Question[];
+  status: 200;
+};
+
+export type getOpinionFormTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getOpinionFormTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getOpinionFormTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getOpinionFormTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getOpinionFormTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getOpinionFormTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getOpinionFormTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getOpinionFormTemplateResponseSuccess = getOpinionFormTemplateResponse200 & {
+  headers: Headers;
+};
+export type getOpinionFormTemplateResponseError = (
+  | getOpinionFormTemplateResponse400
+  | getOpinionFormTemplateResponse401
+  | getOpinionFormTemplateResponse403
+  | getOpinionFormTemplateResponse404
+  | getOpinionFormTemplateResponse409
+  | getOpinionFormTemplateResponse422
+  | getOpinionFormTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type getOpinionFormTemplateResponse =
+  | getOpinionFormTemplateResponseSuccess
+  | getOpinionFormTemplateResponseError;
+
+export const getGetOpinionFormTemplateUrl = () => {
+  return `/api/opinion-form-template`;
+};
+
+/**
+ * @summary Get Opinion Form Template
+ */
+export const getOpinionFormTemplate = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getOpinionFormTemplateResponse> => {
+  return apiFetch<getOpinionFormTemplateResponse>(getGetOpinionFormTemplateUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOpinionFormTemplateQueryKey = () => {
+  return [`/api/opinion-form-template`] as const;
+};
+
+export const getGetOpinionFormTemplateQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormTemplate>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOpinionFormTemplateQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOpinionFormTemplate>>> = ({ signal }) =>
+    getOpinionFormTemplate({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetOpinionFormTemplateQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOpinionFormTemplate>>
+>;
+export type GetOpinionFormTemplateQueryError = Problem;
+
+export function useGetOpinionFormTemplate<
+  TData = Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormTemplate>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionFormTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionFormTemplate<
+  TData = Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormTemplate>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinionFormTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinionFormTemplate<
+  TData = Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormTemplate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Opinion Form Template
+ */
+
+export function useGetOpinionFormTemplate<
+  TData = Awaited<ReturnType<typeof getOpinionFormTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getOpinionFormTemplate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetOpinionFormTemplateQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

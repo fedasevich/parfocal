@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.class_templates import TaxonomyTemplate, insert_template
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, publish
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -236,6 +237,7 @@ async def create_project(
     )
     if draft.taxonomy is not None:
         await insert_template(connection, principal.tenant_id, row.id, draft.taxonomy)
+    await publish(connection, principal.tenant_id, row.id, principal.user_id, DEFAULT_QUESTIONS)
     await audit(
         connection,
         principal,
