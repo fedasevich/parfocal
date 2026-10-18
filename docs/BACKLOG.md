@@ -3004,7 +3004,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when API tests cover create, list and delete, isolation tests pass, and a test proves an imported set cannot be edited. The confirmation before deleting a reviewed set moved to RSET-009 ([ADR 0077](adr/0077-result-sets.md)).
   Depends on PROJ-001, ANN-020.
 
-- [ ] RSET-002 · Parfocal JSON schema and validator
+- [x] RSET-002 · Parfocal JSON schema and validator
   A documented schema with a template to download and a validator in the API and as a command line tool.
   Done when schema tests accept the template and reject each documented error with its line. The help drawer moved to RSET-010.
   Depends on RSET-000. Refs mock: formats, doc 38 answer 7.
@@ -3265,7 +3265,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover the link, revocation and the log.
   Depends on EVAL-002.
 
-- [ ] EVAL-006 · Task evaluation API
+- [x] EVAL-006 · Task evaluation API
   An endpoint that gathers a task's verdicts, decisions, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
   Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
   Depends on EVAL-001. Split out so EVAL-002 (evaluation report page) has no backend work.
