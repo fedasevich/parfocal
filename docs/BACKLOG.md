@@ -680,7 +680,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a test fails if a job for an EU tenant is scheduled on a non-EU queue.
 
-- [ ] SEC-006 · Retention policies
+- [x] SEC-006 · Retention policies
   Per tenant retention for slides, annotations, reports and audit records, with legal hold.
   Done when a scheduled job test deletes expired data, skips held data and audits the deletion.
   Refs [ADR 0089](adr/0089-retention-purge-and-audit-re-anchor.md).
