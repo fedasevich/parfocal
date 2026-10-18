@@ -3180,7 +3180,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when component tests cover the coach and its dismissal per user.
   Depends on GUIDE-002. Refs mock: guided/first.
 
-- [ ] GUIDE-009 · Opinion answers API
+- [x] GUIDE-009 · Opinion answers API
   One opinion per task, reviewer and slide on the form version the task pinned, saved as a draft by merging answers, checked against each question's kind, locked once the slide is submitted until it is reopened, and audited without the answers. The reviewer and project owners read it.
   Done when API tests cover every question kind, a merge, a refused answer, the pinned version, the lock after submit and the roles.
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
@@ -3235,7 +3235,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when an ADR defines the metrics (sensitivity, precision and Dice for regions against the consensus, Cohen's kappa between reviewers, cell agreement) and confirms the PDF choice (STACK-035).
   Decided in [ADR 0084](adr/0084-evaluation-metrics.md), with the PDF in [ADR 0083](adr/0083-typst-for-report-pdfs.md).
 
-- [ ] EVAL-001 · Metrics engine
+- [x] EVAL-001 · Metrics engine
   Computes the metrics from verdicts, decisions and the reviewed layers per task, as [ADR 0084](adr/0084-evaluation-metrics.md) defines them.
   Done when unit tests reproduce hand-computed values on a fixture task.
   Depends on EVAL-000, ADJ-006.
