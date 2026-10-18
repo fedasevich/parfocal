@@ -1365,7 +1365,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when the data each variant needs is mapped to API endpoints in an ADR.
   Refs [ADR 0085](adr/0085-home-aggregate-api.md).
 
-- [ ] HOME-001 · Home API aggregates
+- [x] HOME-001 · Home API aggregates
   Resume target (task, slide, object, camera), the user's tasks with due dates, projects with a strip of slide thumbnails and review progress, the week in numbers (objects checked, share agreeing with the AI, open disagreements), what is coming up and announcements, as one `GET /api/me/home`.
   Done when API tests cover each aggregate with tenant isolation.
   Depends on HOME-000, HOME-011. Refs [ADR 0085](adr/0085-home-aggregate-api.md).
@@ -1681,7 +1681,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 36, mock 6, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Done when component tests cover what the panel shows and does in every situation of mock 6 (nothing selected, zone, cell, outline, after learning, node staging).
 
-- [ ] REVIEW-003 · Staging computation API
+- [x] REVIEW-003 · Staging computation API
   Per node, the lead area (the largest not ruled out), its size (the measurement when there is one, else the AI size with its evaluated range), its category (over 2 mm macro, over 0.2 mm or more than 200 cells micro, else ITC), whether it needs a cell count (size at or under 0.2 mm), the suggested pN stage with the (sn) suffix, and the state open, so far or settled. Settled means the lead area is confirmed tumor, measured, and its count range is under 200 when a count is needed. The count range reuses doc 33's expected-mistakes method.
   Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and an area that could still outrank the lead.
   Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0086](adr/0086-node-staging-rules.md). The validation fixture property moved to REVIEW-020.
