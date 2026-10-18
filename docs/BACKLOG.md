@@ -1351,7 +1351,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md), [ADR 0053](adr/0053-ai-results-review-direction.md)). The department dashboard is an idea. The feed and search-first ideas live on as the launchpad's activity, the bell and the search page.
 
-- [ ] HOME-000 · Research check
+- [x] HOME-000 · Research check
   Done when the data each variant needs is mapped to API endpoints in an ADR.
   Refs [ADR 0085](adr/0085-home-aggregate-api.md).
 
