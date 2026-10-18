@@ -38,47 +38,11 @@ export const ActorKind = {
   service: "service",
 } as const;
 
-export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
+export type AddedDraftKind = (typeof AddedDraftKind)[keyof typeof AddedDraftKind];
 
-export const AnalysisTemplate = {
-  none: "none",
-  "sentinel-node": "sentinel-node",
-  "cell-review": "cell-review",
-} as const;
-
-export type AnnotationGeometry = { [key: string]: unknown };
-
-export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
-
-export const AnnotationKind = {
-  roi: "roi",
-  measurement: "measurement",
+export const AddedDraftKind = {
   region: "region",
   cell: "cell",
-} as const;
-
-export interface Annotation {
-  id: string;
-  slide_id: string;
-  kind: AnnotationKind;
-  number: number;
-  code: string;
-  geometry: AnnotationGeometry;
-  class_id: string | null;
-  version: number;
-  created_by_user_id: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-export type AnnotationChange = (typeof AnnotationChange)[keyof typeof AnnotationChange];
-
-export const AnnotationChange = {
-  created: "created",
-  edited: "edited",
-  deleted: "deleted",
-  restored: "restored",
 } as const;
 
 export type PointGeometryType = (typeof PointGeometryType)[keyof typeof PointGeometryType];
@@ -151,6 +115,56 @@ export interface MultiPolygonGeometry {
 }
 
 export type Geometry = PointGeometry | LineStringGeometry | PolygonGeometry | MultiPolygonGeometry;
+
+export interface AddedDraft {
+  kind: AddedDraftKind;
+  geometry: Geometry;
+  class_id?: string | null;
+}
+
+export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
+
+export const AnalysisTemplate = {
+  none: "none",
+  "sentinel-node": "sentinel-node",
+  "cell-review": "cell-review",
+} as const;
+
+export type AnnotationGeometry = { [key: string]: unknown };
+
+export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
+
+export const AnnotationKind = {
+  roi: "roi",
+  measurement: "measurement",
+  region: "region",
+  cell: "cell",
+} as const;
+
+export interface Annotation {
+  id: string;
+  slide_id: string;
+  kind: AnnotationKind;
+  number: number;
+  code: string;
+  geometry: AnnotationGeometry;
+  class_id: string | null;
+  task_id: string | null;
+  version: number;
+  created_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type AnnotationChange = (typeof AnnotationChange)[keyof typeof AnnotationChange];
+
+export const AnnotationChange = {
+  created: "created",
+  edited: "edited",
+  deleted: "deleted",
+  restored: "restored",
+} as const;
 
 export interface AnnotationDraft {
   kind: AnnotationKind;
@@ -543,6 +557,12 @@ export interface CreatedServiceAccount {
  */
 export type DisplayName = string;
 
+export interface EditDraft {
+  class_id?: string | null;
+  geometry?: Geometry | null;
+  deleted?: boolean;
+}
+
 /**
  * @maxLength 320
  * @pattern ^[^@\s]+@[^@\s]+\.[^@\s]+$
@@ -731,6 +751,15 @@ export interface Job {
   created_at: string;
   finished_at: string | null;
   steps: JobStep[];
+}
+
+export interface LayerSummary {
+  regions: number;
+  cells: number;
+  retyped: number;
+  reshaped: number;
+  deleted: number;
+  added: number;
 }
 
 export interface MappingChange {
@@ -1075,6 +1104,18 @@ export interface ResultSetDraft {
   classes?: ParfocalApiResultSetsName[];
 }
 
+export type ReviewEditGeometry = { [key: string]: unknown } | null;
+
+export interface ReviewEdit {
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+  class_id: string | null;
+  geometry: ReviewEditGeometry;
+  deleted: boolean;
+  updated_at: string;
+}
+
 export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
 
 export const TaskSplit = {
@@ -1151,6 +1192,16 @@ export interface ReviewTaskDetail {
   slide_count: number;
   reviewer_count: number;
   slides: TaskSlide[];
+}
+
+export interface ReviewedLayer {
+  task_id: string;
+  slide_id: string;
+  result_set_id: string;
+  reviewer_id: string;
+  edits: ReviewEdit[];
+  added: Annotation[];
+  summary: LayerSummary;
 }
 
 export interface RoleChange {
@@ -1358,6 +1409,10 @@ export type DeleteAnnotationParams = {
    * @minimum 1
    */
   version: number;
+};
+
+export type GetReviewedLayerParams = {
+  reviewer_id?: string | null;
 };
 
 export type ListAuditEventsParams = {
@@ -9563,6 +9618,701 @@ export const useChangeReviewTask = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getChangeReviewTaskMutationOptions(options), queryClient);
 };
+
+export type saveReviewEditResponse200 = {
+  data: ReviewEdit;
+  status: 200;
+};
+
+export type saveReviewEditResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveReviewEditResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveReviewEditResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveReviewEditResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveReviewEditResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveReviewEditResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveReviewEditResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveReviewEditResponseSuccess = saveReviewEditResponse200 & {
+  headers: Headers;
+};
+export type saveReviewEditResponseError = (
+  | saveReviewEditResponse400
+  | saveReviewEditResponse401
+  | saveReviewEditResponse403
+  | saveReviewEditResponse404
+  | saveReviewEditResponse409
+  | saveReviewEditResponse422
+  | saveReviewEditResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveReviewEditResponse = saveReviewEditResponseSuccess | saveReviewEditResponseError;
+
+export const getSaveReviewEditUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}`;
+};
+
+/**
+ * @summary Save Review Edit
+ */
+export const saveReviewEdit = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  editDraft: EditDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveReviewEditResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveReviewEditResponse>(getSaveReviewEditUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(editDraft),
+  });
+};
+
+export const getSaveReviewEditMutationKey = () => ["saveReviewEdit"] as const;
+
+export const getSaveReviewEditMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveReviewEdit>>,
+    TError,
+    SaveReviewEditMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveReviewEdit>>,
+  TError,
+  SaveReviewEditMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveReviewEditMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveReviewEdit>>,
+    SaveReviewEditMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return saveReviewEdit(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveReviewEditMutationResult = NonNullable<Awaited<ReturnType<typeof saveReviewEdit>>>;
+export type SaveReviewEditMutationBody = EditDraft;
+export type SaveReviewEditMutationError = Problem;
+export type SaveReviewEditMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: EditDraft;
+};
+
+/**
+ * @summary Save Review Edit
+ */
+export const useSaveReviewEdit = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveReviewEdit>>,
+      TError,
+      SaveReviewEditMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveReviewEdit>>,
+  TError,
+  SaveReviewEditMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveReviewEditMutationOptions(options), queryClient);
+};
+
+export type clearReviewEditResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearReviewEditResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearReviewEditResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearReviewEditResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearReviewEditResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearReviewEditResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearReviewEditResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearReviewEditResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearReviewEditResponseSuccess = clearReviewEditResponse204 & {
+  headers: Headers;
+};
+export type clearReviewEditResponseError = (
+  | clearReviewEditResponse400
+  | clearReviewEditResponse401
+  | clearReviewEditResponse403
+  | clearReviewEditResponse404
+  | clearReviewEditResponse409
+  | clearReviewEditResponse422
+  | clearReviewEditResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearReviewEditResponse = clearReviewEditResponseSuccess | clearReviewEditResponseError;
+
+export const getClearReviewEditUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}`;
+};
+
+/**
+ * @summary Clear Review Edit
+ */
+export const clearReviewEdit = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearReviewEditResponse> => {
+  return apiFetch<clearReviewEditResponse>(getClearReviewEditUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearReviewEditMutationKey = () => ["clearReviewEdit"] as const;
+
+export const getClearReviewEditMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearReviewEdit>>,
+    TError,
+    ClearReviewEditMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearReviewEdit>>,
+  TError,
+  ClearReviewEditMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearReviewEditMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearReviewEdit>>,
+    ClearReviewEditMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearReviewEdit(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearReviewEditMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearReviewEdit>>
+>;
+
+export type ClearReviewEditMutationError = Problem;
+export type ClearReviewEditMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+};
+
+/**
+ * @summary Clear Review Edit
+ */
+export const useClearReviewEdit = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearReviewEdit>>,
+      TError,
+      ClearReviewEditMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearReviewEdit>>,
+  TError,
+  ClearReviewEditMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearReviewEditMutationOptions(options), queryClient);
+};
+
+export type addReviewObjectResponse201 = {
+  data: Annotation;
+  status: 201;
+};
+
+export type addReviewObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type addReviewObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type addReviewObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type addReviewObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type addReviewObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type addReviewObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type addReviewObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type addReviewObjectResponseSuccess = addReviewObjectResponse201 & {
+  headers: Headers;
+};
+export type addReviewObjectResponseError = (
+  | addReviewObjectResponse400
+  | addReviewObjectResponse401
+  | addReviewObjectResponse403
+  | addReviewObjectResponse404
+  | addReviewObjectResponse409
+  | addReviewObjectResponse422
+  | addReviewObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type addReviewObjectResponse = addReviewObjectResponseSuccess | addReviewObjectResponseError;
+
+export const getAddReviewObjectUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/added`;
+};
+
+/**
+ * @summary Add Review Object
+ */
+export const addReviewObject = async (
+  taskId: string,
+  slideId: string,
+  addedDraft: AddedDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<addReviewObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<addReviewObjectResponse>(getAddReviewObjectUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(addedDraft),
+  });
+};
+
+export const getAddReviewObjectMutationKey = () => ["addReviewObject"] as const;
+
+export const getAddReviewObjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addReviewObject>>,
+    TError,
+    AddReviewObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addReviewObject>>,
+  TError,
+  AddReviewObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddReviewObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addReviewObject>>,
+    AddReviewObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return addReviewObject(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddReviewObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addReviewObject>>
+>;
+export type AddReviewObjectMutationBody = AddedDraft;
+export type AddReviewObjectMutationError = Problem;
+export type AddReviewObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: AddedDraft;
+};
+
+/**
+ * @summary Add Review Object
+ */
+export const useAddReviewObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addReviewObject>>,
+      TError,
+      AddReviewObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addReviewObject>>,
+  TError,
+  AddReviewObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddReviewObjectMutationOptions(options), queryClient);
+};
+
+export type getReviewedLayerResponse200 = {
+  data: ReviewedLayer;
+  status: 200;
+};
+
+export type getReviewedLayerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getReviewedLayerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getReviewedLayerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getReviewedLayerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getReviewedLayerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getReviewedLayerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getReviewedLayerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getReviewedLayerResponseSuccess = getReviewedLayerResponse200 & {
+  headers: Headers;
+};
+export type getReviewedLayerResponseError = (
+  | getReviewedLayerResponse400
+  | getReviewedLayerResponse401
+  | getReviewedLayerResponse403
+  | getReviewedLayerResponse404
+  | getReviewedLayerResponse409
+  | getReviewedLayerResponse422
+  | getReviewedLayerResponse500
+) & {
+  headers: Headers;
+};
+
+export type getReviewedLayerResponse =
+  | getReviewedLayerResponseSuccess
+  | getReviewedLayerResponseError;
+
+export const getGetReviewedLayerUrl = (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/layer?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/layer`;
+};
+
+/**
+ * @summary Get Reviewed Layer
+ */
+export const getReviewedLayer = async (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getReviewedLayerResponse> => {
+  return apiFetch<getReviewedLayerResponse>(getGetReviewedLayerUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetReviewedLayerQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/layer`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetReviewedLayerQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReviewedLayerQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewedLayer>>> = ({ signal }) =>
+    getReviewedLayer(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetReviewedLayerQueryResult = NonNullable<Awaited<ReturnType<typeof getReviewedLayer>>>;
+export type GetReviewedLayerQueryError = Problem;
+
+export function useGetReviewedLayer<
+  TData = Awaited<ReturnType<typeof getReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params: undefined | GetReviewedLayerParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewedLayer<
+  TData = Awaited<ReturnType<typeof getReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewedLayer<
+  TData = Awaited<ReturnType<typeof getReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Reviewed Layer
+ */
+
+export function useGetReviewedLayer<
+  TData = Awaited<ReturnType<typeof getReviewedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewedLayerParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReviewedLayerQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

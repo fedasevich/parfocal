@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 20 |
-| `personal` | 29 |
+| `personal` | 30 |
 | `secret` | 9 |
-| `operational` | 307 |
+| `operational` | 319 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -43,6 +43,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `number` | operational |
 | `geometry` | operational |
 | `class_id` | operational |
+| `task_id` | operational |
 | `version` | operational |
 | `created_by_user_id` | personal |
 | `created_at` | operational |
@@ -426,6 +427,23 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `user_id` | personal |
 | `submitted_at` | operational |
 | `assigned_at` | operational |
+
+## review_edits
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `number` | operational |
+| `class_id` | operational |
+| `geometry` | operational |
+| `deleted` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## review_task_slides
 

@@ -16,7 +16,7 @@ from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import require_slide_reading, reviews_slide
+from parfocal_api.project_access import project_grant, require_slide_reading, reviews_slide
 from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     AnnotationChange,
@@ -145,6 +145,7 @@ class Annotation(BaseModel):
     code: str
     geometry: dict[str, Any]
     class_id: uuid.UUID | None
+    task_id: uuid.UUID | None
     version: int
     created_by_user_id: uuid.UUID | None
     created_at: datetime
@@ -198,6 +199,7 @@ COLUMNS = (
     annotations.c.number,
     GEOJSON,
     annotations.c.class_id,
+    annotations.c.task_id,
     annotations.c.version,
     annotations.c.created_by_user_id,
     annotations.c.created_at,
@@ -221,6 +223,7 @@ def annotation_of(row: Any) -> Annotation:
         code=code_of(kind, row.number),
         geometry=json.loads(row.geojson),
         class_id=row.class_id,
+        task_id=row.task_id,
         version=row.version,
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
@@ -300,13 +303,14 @@ async def check_shapes(connection: AsyncConnection, shapes: Sequence[str]) -> No
 
 
 INSERT_ANNOTATIONS = text(
-    "INSERT INTO annotations "
-    "(tenant_id, project_id, slide_id, kind, number, geometry, class_id, created_by_user_id) "
+    "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry, "
+    "class_id, task_id, created_by_user_id) "
     "SELECT :tenant_id, :project_id, :slide_id, kind, number, "
-    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, :user_id "
+    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, :task_id, :user_id "
     "FROM unnest(:kinds, :numbers, :shapes, :class_ids) AS given(kind, number, shape, class_id) "
     "RETURNING id, kind, number"
 ).bindparams(
+    bindparam("task_id", type_=Uuid()),
     bindparam("kinds", type_=ARRAY(String)),
     bindparam("numbers", type_=ARRAY(Integer)),
     bindparam("shapes", type_=ARRAY(String)),
@@ -337,6 +341,7 @@ async def add(
     principal: Principal,
     slide: Any,
     drafts: Sequence[AnnotationDraft],
+    task_id: uuid.UUID | None = None,
 ) -> list[AnnotationRef]:
     await check_classes(
         connection, slide.project_id, {d.class_id for d in drafts if d.class_id is not None}
@@ -360,6 +365,7 @@ async def add(
                 "tenant_id": tenant_id,
                 "project_id": slide.project_id,
                 "slide_id": slide.id,
+                "task_id": task_id,
                 "user_id": author_of(principal),
                 "kinds": [draft.kind.value for draft in drafts],
                 "numbers": numbers,
@@ -379,6 +385,18 @@ async def add(
         )
         for draft, number in zip(drafts, numbers, strict=True)
     ]
+
+
+async def changeable(
+    connection: AsyncConnection, principal: Principal, slide: Any, annotation_id: uuid.UUID
+) -> Annotation:
+    current = await one_annotation(connection, slide.id, annotation_id)
+    if current.task_id is None or current.created_by_user_id == author_of(principal):
+        return current
+    grant = await project_grant(connection, principal, slide.project_id, Permission.REVIEW)
+    if grant is not Grant.ALL:
+        raise AnnotatingNotAllowedError("Only its author changes a shape added in a review task")
+    return current
 
 
 async def one_annotation(
@@ -406,7 +424,9 @@ async def list_annotations(
 ) -> list[Annotation]:
     await slide_row(connection, principal, slide_id)
     statement = select(*COLUMNS).where(
-        annotations.c.slide_id == slide_id, annotations.c.deleted_at.is_(None)
+        annotations.c.slide_id == slide_id,
+        annotations.c.deleted_at.is_(None),
+        annotations.c.task_id.is_(None),
     )
     if bbox is not None:
         envelope = func.ST_MakeEnvelope(*bbox, 0)
@@ -509,7 +529,7 @@ async def change_annotation(
     connection: TenantConnection,
 ) -> Annotation:
     slide = await drawable_slide(connection, principal, slide_id)
-    current = await one_annotation(connection, slide_id, annotation_id)
+    current = await changeable(connection, principal, slide, annotation_id)
     values: dict[str, Any] = {}
     if edit.geometry is not None:
         if edit.geometry.type not in SHAPES[current.kind]:
@@ -546,7 +566,8 @@ async def delete_annotation(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> Response:
-    await drawable_slide(connection, principal, slide_id)
+    slide = await drawable_slide(connection, principal, slide_id)
+    await changeable(connection, principal, slide, annotation_id)
     await bump(
         connection,
         principal,
@@ -572,7 +593,8 @@ async def restore_annotation(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> Annotation:
-    await drawable_slide(connection, principal, slide_id)
+    slide = await drawable_slide(connection, principal, slide_id)
+    await changeable(connection, principal, slide, annotation_id)
     return await bump(
         connection,
         principal,

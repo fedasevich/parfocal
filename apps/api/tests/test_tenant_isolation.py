@@ -38,6 +38,7 @@ from parfocal_api.tables import (
     result_set_classes,
     result_sets,
     review_assignments,
+    review_edits,
     review_task_slides,
     review_tasks,
     service_accounts,
@@ -80,6 +81,7 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "review_edits",
     "review_tasks",
     "review_task_slides",
     "review_assignments",
@@ -394,6 +396,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             user_id=seeded.ids["user"],
         )
     )
+    await connection.execute(
+        insert(review_edits).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+            kind="region",
+            number=1,
+            deleted=True,
+        )
+    )
     seeded.ids["task"] = task_id
     seeded.markers.update({str(task_id), task_name})
     seeded.markers.update({str(set_id), set_name})
@@ -463,6 +477,10 @@ GET_ROUTES = {
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
+    ),
+    "getReviewedLayer": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/layer",
     ),
     "getReviewTask": Route(Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}"),
     "listSlideResultSets": Route(

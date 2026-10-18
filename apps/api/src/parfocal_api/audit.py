@@ -51,6 +51,8 @@ class AuditAction(StrEnum):
     RESULT_SET_DELETED = "result-set.deleted"
     TASK_CREATED = "task.created"
     TASK_CHANGED = "task.changed"
+    REVIEW_OBJECT_EDITED = "review.object-edited"
+    REVIEW_OBJECT_RESTORED = "review.object-restored"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"

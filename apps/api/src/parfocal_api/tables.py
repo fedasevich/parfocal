@@ -1024,6 +1024,7 @@ annotations = Table(
         info=OPERATIONAL,
     ),
     Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("version", Integer, nullable=False, server_default="1", info=OPERATIONAL),
     Column(
         "created_by_user_id",
@@ -1038,6 +1039,9 @@ annotations = Table(
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
         ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
     Index("ix_annotations_geometry", "geometry", postgresql_using="gist"),
     one_of("kind", AnnotationKind),
@@ -1315,4 +1319,35 @@ review_assignments = Table(
     ForeignKeyConstraint(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
+)
+
+
+review_edits = Table(
+    "review_edits",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column[object]("geometry", Geometry(spatial_index=False), nullable=True, info=OPERATIONAL),
+    Column("deleted", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "user_id"],
+        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+    ),
+    ForeignKeyConstraint(
+        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint(
+        "deleted OR class_id IS NOT NULL OR geometry IS NOT NULL", name="changes_something"
+    ),
+    CheckConstraint("geometry IS NULL OR ST_IsValid(geometry)", name="geometry_valid"),
 )

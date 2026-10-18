@@ -30,7 +30,10 @@ from parfocal_api.tables import (
     organisations,
     project_classes,
     project_members,
+    result_objects,
     result_sets,
+    review_assignments,
+    review_task_slides,
     review_tasks,
     service_accounts,
     slide_counters,
@@ -117,6 +120,9 @@ NEEDS_A_TASK = frozenset(
         "changeAnnotation",
         "deleteAnnotation",
         "restoreAnnotation",
+        "saveReviewEdit",
+        "clearReviewEdit",
+        "addReviewObject",
     }
 )
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -203,6 +209,18 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "split": "everyone",
             "scope": {"kind": "all-regions"},
         },
+    ),
+    "getReviewedLayer": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/layer"),
+    "saveReviewEdit": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T1", {"deleted": True}
+    ),
+    "clearReviewEdit": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T1"
+    ),
+    "addReviewObject": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
+        {"kind": "region", "geometry": SQUARE},
     ),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
     "createCase": lambda w: Call(
@@ -465,12 +483,25 @@ async def seed(database: str) -> Workspace:
                         slide_id=case.loose_slide_id,
                         name=name,
                         source="import",
-                        status="ready",
                     )
                     .returning(result_sets.c.id)
                 )
                 for name in ("Matrix set", "Doomed set")
             ]
+            await connection.execute(
+                insert(result_objects).values(
+                    tenant_id=tenant_id,
+                    result_set_id=result_set,
+                    kind="region",
+                    number=1,
+                    geometry="SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
+                )
+            )
+            await connection.execute(
+                update(result_sets)
+                .where(result_sets.c.id.in_([result_set, doomed_result_set]))
+                .values(status="ready", region_count=1)
+            )
             task = await connection.scalar(
                 insert(review_tasks)
                 .values(
@@ -484,6 +515,24 @@ async def seed(database: str) -> Workspace:
                     start_mode="guided",
                 )
                 .returning(review_tasks.c.id)
+            )
+            await connection.execute(
+                insert(review_task_slides).values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    task_id=task,
+                    slide_id=case.loose_slide_id,
+                    position=0,
+                    result_set_id=result_set,
+                )
+            )
+            await connection.execute(
+                insert(review_assignments).values(
+                    tenant_id=tenant_id,
+                    task_id=task,
+                    slide_id=case.loose_slide_id,
+                    user_id=people[Role.RESEARCHER],
+                )
             )
             await connection.execute(
                 insert(slide_counters).values(
