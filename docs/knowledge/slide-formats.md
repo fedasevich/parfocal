@@ -25,3 +25,9 @@ The `formats` job in `.github/workflows/ci.yml` fetches the `small` and `formats
 - The photometric value is the colour space of the decoded samples. Aperio JPEG 2000 33003 is tagged RGB but decodes to YCbCr, so it is reported as `ycbcr`. DICOM `YBR_ICT` and `YBR_RCT` are reported as `rgb`, because the JPEG 2000 decoder undoes that transform.
 - A pixel size above 100 µm or missing is unusable (CMU-1.tiff reports 1000). When it is missing and the objective power is known, it is estimated as `10 / power` with an `mpp-estimated` notice. When the power is missing it is estimated as the nearest of 1.25x, 2.5x, 5x, 10x, 20x and 40x to `10 / mpp` with an `objective-estimated` notice. Philips and Huron files never state the power. With neither value the slide gets `mpp-missing` and `objective-missing`.
 - Argos stacked files have 5 focal planes. OpenSlide shows the first, so they get a `first-plane-only` notice.
+
+## Thumbnails and overviews are rendered from the pyramid
+
+`parfocal_ingest.thumbnail.previews` renders a 1024 px overview and a 256 px thumbnail as JPEG ([ADR 0075](../adr/0075-slide-thumbnails-and-overviews.md)). OpenSlide's own `get_thumbnail` is not used, because for Leica SCN it draws the whole glass canvas (53130×153470 for `Leica-1.scn`) with the slide as a small patch. The render crops to `openslide.region[0]` instead. OpenSlide returns RGBA with transparent absent tiles, so the image is flattened onto the slide's background colour. wsidicom's `read_region` takes the level as the power of two (0, 2, 4), not the index.
+
+Goldens live in `workers/ingest/tests/golden/overviews` at 128 px. After a deliberate change, rewrite them with `PARFOCAL_UPDATE_GOLDEN=1 uv run pytest workers/ingest/tests/test_thumbnail.py` and look at every changed image before committing.

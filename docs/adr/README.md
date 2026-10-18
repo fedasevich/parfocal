@@ -80,3 +80,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0072](0072-verdicts-reasons-and-opinion-forms.md) | A verdict is one current answer per reviewer, task and object with a coded reason, and the opinion form is a versioned list of four question kinds | Accepted | 2026-10-18 |
 | [0073](0073-audit-queries-and-signed-export.md) | Audit queries for admins, and exports signed with an Ed25519 key derived per workspace from the master key | Accepted | 2026-10-18 |
 | [0074](0074-notifications-as-rows-with-an-email-outbox.md) | Notifications are rows routed by per-kind preferences, with email sent from an outbox after commit and STACK-036 confirmed | Accepted | 2026-10-18 |
+| [0075](0075-slide-thumbnails-and-overviews.md) | Thumbnails (256 px) and overviews (1024 px) are JPEG renders of the slide pyramid through the reader of record, with goldens for colour | Accepted | 2026-10-18 |

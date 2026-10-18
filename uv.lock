@@ -661,6 +661,7 @@ dependencies = [
     { name = "openslide-bin" },
     { name = "openslide-python" },
     { name = "parfocal-common" },
+    { name = "pillow" },
     { name = "tifffile" },
     { name = "wsidicom" },
 ]
@@ -670,6 +671,7 @@ requires-dist = [
     { name = "openslide-bin", specifier = ">=4.0.1,<5" },
     { name = "openslide-python", specifier = ">=1.4.6,<2" },
     { name = "parfocal-common", editable = "packages/py-common" },
+    { name = "pillow", specifier = ">=13,<14" },
     { name = "tifffile", specifier = ">=2026.10.15,<2027" },
     { name = "wsidicom", specifier = ">=0.36,<0.37" },
 ]

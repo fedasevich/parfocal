@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from fixture_support import fixture_path
+from slide_support import opened
 
-from parfocal_ingest.identify import Format, Identified, Refusal, identify
+from parfocal_ingest.identify import Format, Identified, Refusal
 from parfocal_ingest.pyramid import (
     Notice,
     Pyramid,
@@ -326,15 +326,10 @@ TABLES = {
 
 
 def read(name: str, workdir: Path) -> Pyramid | Refusal:
-    path = fixture_path(name)
-    with path.open("rb") as handle:
-        found = identify(handle, path.name)
-    if found.variant == "zip" and found.format is not None:
-        unpacked = unpack(path, workdir, found.format)
-        if isinstance(unpacked, Refusal):
-            return unpacked
-        path = unpacked
-    return read_pyramid(path, found)
+    slide = opened(name, workdir)
+    if isinstance(slide, Refusal):
+        return slide
+    return read_pyramid(*slide)
 
 
 def row(level_downsample: int, width: int, height: int, stored: Stored) -> str:
