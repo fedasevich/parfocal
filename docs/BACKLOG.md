@@ -725,6 +725,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-016 · Threat model
   STRIDE threat model for upload, tile access, guest links, AI jobs and realtime.
   Done when `docs/security/threat-model.md` exists and each high risk links to a mitigation task.
+  Refs [threat model](security/threat-model.md).
 
 - [ ] SEC-017 · Access reviews and least privilege for staff
   Break-glass access for support with justification and audit, quarterly access review export.
@@ -760,6 +761,15 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Query the audit log by person, patient, case, kind of action and dates. Leads see their department, administrators everything, nobody can change it. An export is a signed file that lists every matching entry with emergency access and its reason marked, for a patient's access request or an inspection.
   Done when API tests cover each filter and the permission split, and a test verifies the export's signature and that it matches the hash chain from SEC-003.
   Depends on SEC-003, IAM-017. Refs kit W71, kit Flow 29. Built as [ADR 0073](adr/0073-audit-queries-and-signed-export.md) says: leads and departments are gone, so admins see the whole workspace.
+
+- [ ] SEC-025 · Origin check on cookie writes
+  Requests with an unsafe method and the session cookie are refused unless their `Origin` header, or `Sec-Fetch-Site: same-origin` when it is absent, matches the app origin. SameSite=Strict does not stop a sibling subdomain of the same site ([threat model](security/threat-model.md) X1).
+  Done when API tests refuse a write from another origin and from a same-site subdomain, accept one from the app origin, and leave service tokens and the login callback working.
+
+- [ ] SEC-026 · Isolated parsing of uploaded files
+  Slide readers and result parsers run in a worker with no network egress except the job's own storage keys, no secrets beyond a job token scoped to one tenant and slide, a memory and time limit and a non-root user ([threat model](security/threat-model.md) U2).
+  Done when a test shows a parser job cannot reach the network or read another key, and an oversized or slow parse is stopped and reported as a failed check.
+  Depends on AIP-006, INGEST-003.
 
 ---
 
@@ -1938,7 +1948,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when STACK-024 is confirmed and the event model (topics per tenant, case and user) is written as an ADR.
 
 - [ ] COLLAB-001 · Realtime infrastructure
-  Authenticated connections to Durable Object rooms per slide, per task and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Authenticated connections to Durable Object rooms per slide, per task and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Room tokens expire within minutes, a reconnect rechecks the grant, and removing someone from a project or workspace closes their sockets ([threat model](security/threat-model.md) R2).
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
 - [ ] COLLAB-002 · Threads API
@@ -3313,7 +3323,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
 
 - [ ] JOBS-005 · Connect a lab model
-  An admin points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it.
+  An admin points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
   Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
 
@@ -3331,7 +3341,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on INGEST-026.
 
 - [ ] REMOTE-001 · Read in place from a connected source
-  A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported. Slides get their storage (uploaded or the connected source), and My work's All slides gains the storage filter ([ADR 0082](adr/0082-my-work-query-api.md)).
+  A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported. Slides get their storage (uploaded or the connected source), and My work's All slides gains the storage filter ([ADR 0082](adr/0082-my-work-query-api.md)). Source credentials are sealed with the tenant data key and source addresses follow the rules of INGEST-025 ([threat model](security/threat-model.md) T5).
   Done when E2E opens a remote slide, a test serves tiles from the cache with the source down, and a copy keeps IDs and reviews.
   Depends on REMOTE-000, TILES-001. Refs mock: upload/remote, mock: states/remoteoff.
 
