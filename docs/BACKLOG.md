@@ -834,14 +834,14 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when the check catches each of the POC's known failures re-introduced as test cases.
   Refs [`poc/scripts/probe-seams.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/probe-seams.mjs), doc 06.
 
-- [ ] INGEST-010 · Thumbnail and overview image
+- [x] INGEST-010 · Thumbnail and overview image
   Done when every fixture produces a thumbnail with correct colours, checked against a golden image.
 
-- [ ] INGEST-011 · Label and macro image extraction
+- [x] INGEST-011 · Label and macro image extraction
   Stored separately under restricted access (SEC-009).
   Done when fixture tests extract them for SVS, NDPI and SCN where present.
 
-- [ ] INGEST-012 · Tissue mask
+- [x] INGEST-012 · Tissue mask
   Otsu or a small model at low resolution, stored as a raster for coverage tracking, job planning and the systematic scan path.
   Done when tests on CAMELYON16 slides cover more than 98% of annotated tumour and exclude glass, with a golden mask image.
   Refs [`poc/server/app/nuclei/wsi.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/app/nuclei/wsi.py) (tissue mask at 64 px cells).
