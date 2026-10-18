@@ -2996,7 +2996,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when an ADR names the parsers for GeoJSON, QuPath exports, CSV and TSV, and masks and heatmaps, and the Parfocal JSON schema is drafted.
   Decided in [ADR 0070](adr/0070-result-file-parsers.md), with the [draft schema](reference/parfocal-results-v1.schema.json) and a [spike](results/2026-10-18-result-parsers-spike.md).
 
-- [ ] RSET-001 · Result set model and API
+- [x] RSET-001 · Result set model and API
   Per slide: model name and version, date, source file or run, imported or run here, class mapping, object count and stats. The AI output is immutable. Result sets list in the project and the slide view.
   Done when API tests cover create, list and delete, isolation tests pass, and a test proves an imported set cannot be edited. The confirmation before deleting a reviewed set moved to RSET-009 ([ADR 0077](adr/0077-result-sets.md)).
   Depends on PROJ-001, ANN-020.
