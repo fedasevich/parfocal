@@ -2525,7 +2525,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Realistic clicks (centroid with jitter), loose boxes, refinement clicks, NoC@85 and NoC@90.
   Done when the harness reproduces doc 26's held-out click and box numbers within tolerance.
 
-- [ ] MLEVAL-004 · Typing and calibration evaluation
+- [x] MLEVAL-004 · Typing and calibration evaluation
   Accuracy, balanced accuracy, confusion matrix with viewer-class mapping, ECE and band accuracy.
   Done when the harness reproduces doc 29's HoVer-NeXt numbers on the same fold.
   Result: [typing and calibration reproduction](results/2026-10-18-typing-calibration-reproduction.md).

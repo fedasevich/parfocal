@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-18
 
+- Ticked MLEVAL-004 (typing and calibration evaluation) after a green `ci` run on `main`.
 - TEST-003 (tenant isolation test generator) done, not ticked until CI is green on `main`. The isolation suite already failed for an unlisted GET route or an unseeded table. A new test now sends all 100 guarded and member calls with one workspace's ids as each role of another workspace and checks that no row of the first workspace's tenant tables changed and that no call answers 5xx. A new route must be listed for the permission suite anyway, so it joins this check automatically. Sent by the first workspace's own members, the same calls do change its rows, which shows the test can fail ([knowledge/api.md](knowledge/api.md)).
 - TEST-002 (API test harness) done, not ticked until CI is green on `main`. The harness already had a migrated database per test run, factories for workspaces, people and projects and a client per principal. `make_case` and `make_slide` now complete the factories, and `tests/test_harness.py` uses every factory, a client for each role and a signed-in browser in one test ([knowledge/api.md](knowledge/api.md)).
 - Ticked MLEVAL-000 (research check) and MLEVAL-001 (dataset registry and loaders) after a green `ci` run on `main`.
