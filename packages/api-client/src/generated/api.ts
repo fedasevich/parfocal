@@ -847,6 +847,111 @@ export interface Health {
   status: string;
 }
 
+export type ResumeTargetCamera = { [key: string]: number } | null;
+
+export interface ResumeTarget {
+  task_id: string;
+  task_code: string;
+  task_name: string;
+  project: ProjectRef;
+  slide_id: string;
+  slide_label: string;
+  case_label: string | null;
+  position: number;
+  slides_assigned: number;
+  object_id: string | null;
+  verdicts_on_slide: number;
+  due_on: string | null;
+  blinded: boolean;
+  camera: ResumeTargetCamera;
+}
+
+export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
+
+export const TaskScope = {
+  "all-regions": "all-regions",
+  "random-cells": "random-cells",
+  "cells-below-score": "cells-below-score",
+  "inside-rois": "inside-rois",
+  "unsure-zones": "unsure-zones",
+} as const;
+
+export type StartMode = (typeof StartMode)[keyof typeof StartMode];
+
+export const StartMode = {
+  guided: "guided",
+  viewer: "viewer",
+} as const;
+
+export interface MyTask {
+  id: string;
+  code: string;
+  name: string;
+  project: ProjectRef;
+  scope: TaskScope;
+  due_on: string | null;
+  blinded: boolean;
+  start_mode: StartMode;
+  slides_submitted: number;
+  slides_assigned: number;
+  verdicts: number;
+  status: MyStatus;
+  next_slide_id: string | null;
+  created_by_user_id: string | null;
+}
+
+export type PrivacyMode = (typeof PrivacyMode)[keyof typeof PrivacyMode];
+
+export const PrivacyMode = {
+  "de-identified": "de-identified",
+  clinical: "clinical",
+} as const;
+
+export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
+
+export const ProjectRole = {
+  owner: "owner",
+  reviewer: "reviewer",
+  viewer: "viewer",
+} as const;
+
+export interface StripSlide {
+  id: string;
+  label: string;
+  reviewed: boolean;
+}
+
+export interface HomeProject {
+  id: string;
+  code: string;
+  name: string;
+  colour: number;
+  privacy_mode: PrivacyMode;
+  my_role: ProjectRole;
+  members: number;
+  slides: number;
+  result_sets: number;
+  reviewed_slides: number;
+  strip: StripSlide[];
+}
+
+export interface Week {
+  since: string;
+  objects_checked: number;
+  agreed: number;
+  agree_share: number | null;
+  open_disagreements: number | null;
+}
+
+export interface Home {
+  resume: ResumeTarget | null;
+  tasks: MyTask[];
+  projects: HomeProject[];
+  slides_without_results: number;
+  week: Week;
+  announcements: Announcement[];
+}
+
 export interface RowProblem {
   row: number;
   column: string | null;
@@ -1008,14 +1113,6 @@ export interface MemberAvailability {
   note: string | null;
 }
 
-export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
-
-export const ProjectRole = {
-  owner: "owner",
-  reviewer: "reviewer",
-  viewer: "viewer",
-} as const;
-
 export interface MemberChange {
   role: ProjectRole;
 }
@@ -1030,39 +1127,6 @@ export interface Membership {
 export interface MembershipDraft {
   user_id: string;
   role: Role;
-}
-
-export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
-
-export const TaskScope = {
-  "all-regions": "all-regions",
-  "random-cells": "random-cells",
-  "cells-below-score": "cells-below-score",
-  "inside-rois": "inside-rois",
-  "unsure-zones": "unsure-zones",
-} as const;
-
-export type StartMode = (typeof StartMode)[keyof typeof StartMode];
-
-export const StartMode = {
-  guided: "guided",
-  viewer: "viewer",
-} as const;
-
-export interface MyTask {
-  id: string;
-  code: string;
-  name: string;
-  project: ProjectRef;
-  scope: TaskScope;
-  due_on: string | null;
-  blinded: boolean;
-  start_mode: StartMode;
-  slides_submitted: number;
-  slides_assigned: number;
-  verdicts: number;
-  status: MyStatus;
-  next_slide_id: string | null;
 }
 
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
@@ -1159,13 +1223,6 @@ export interface PreferenceChanges {
    */
   preferences: PreferenceChange[];
 }
-
-export type PrivacyMode = (typeof PrivacyMode)[keyof typeof PrivacyMode];
-
-export const PrivacyMode = {
-  "de-identified": "de-identified",
-  clinical: "clinical",
-} as const;
 
 export interface Problem {
   type: string;
@@ -11934,6 +11991,164 @@ export const useEndAnnouncement = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getEndAnnouncementMutationOptions(options), queryClient);
 };
+
+export type getMyHomeResponse200 = {
+  data: Home;
+  status: 200;
+};
+
+export type getMyHomeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyHomeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyHomeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyHomeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyHomeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyHomeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyHomeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyHomeResponseSuccess = getMyHomeResponse200 & {
+  headers: Headers;
+};
+export type getMyHomeResponseError = (
+  | getMyHomeResponse400
+  | getMyHomeResponse401
+  | getMyHomeResponse403
+  | getMyHomeResponse404
+  | getMyHomeResponse409
+  | getMyHomeResponse422
+  | getMyHomeResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyHomeResponse = getMyHomeResponseSuccess | getMyHomeResponseError;
+
+export const getGetMyHomeUrl = () => {
+  return `/api/me/home`;
+};
+
+/**
+ * @summary Get My Home
+ */
+export const getMyHome = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyHomeResponse> => {
+  return apiFetch<getMyHomeResponse>(getGetMyHomeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyHomeQueryKey = () => {
+  return [`/api/me/home`] as const;
+};
+
+export const getGetMyHomeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyHome>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyHome>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyHomeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyHome>>> = ({ signal }) =>
+    getMyHome({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyHome>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyHomeQueryResult = NonNullable<Awaited<ReturnType<typeof getMyHome>>>;
+export type GetMyHomeQueryError = Problem;
+
+export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyHome>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyHome>>,
+          TError,
+          Awaited<ReturnType<typeof getMyHome>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyHome>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyHome>>,
+          TError,
+          Awaited<ReturnType<typeof getMyHome>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyHome>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Home
+ */
+
+export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyHome>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyHomeQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;

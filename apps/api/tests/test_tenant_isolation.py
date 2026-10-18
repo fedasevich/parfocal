@@ -502,6 +502,7 @@ GET_ROUTES = {
     "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
+    "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),

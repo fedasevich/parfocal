@@ -76,6 +76,7 @@ OPEN_OPERATIONS = {
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
     "listAnnouncements": "member",
+    "getMyHome": "member",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
     "listMembers": "platform",
@@ -356,6 +357,7 @@ PLACEHOLDER = Workspace(
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
+    "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
     "getOpinionFormTemplate": lambda _: Call("GET", "/api/opinion-form-template"),

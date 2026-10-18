@@ -6886,6 +6886,104 @@
         "x-permission-write": true
       }
     },
+    "/api/me/home": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get My Home",
+        "operationId": "getMyHome",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/review-tasks/{task_id}/states": {
       "get": {
         "tags": [
@@ -14913,6 +15011,123 @@
         ],
         "title": "Health"
       },
+      "Home": {
+        "properties": {
+          "resume": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/MyTask"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/HomeProject"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "slides_without_results": {
+            "type": "integer",
+            "title": "Slides Without Results"
+          },
+          "week": {
+            "$ref": "#/components/schemas/Week"
+          },
+          "announcements": {
+            "items": {
+              "$ref": "#/components/schemas/Announcement"
+            },
+            "type": "array",
+            "title": "Announcements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resume",
+          "tasks",
+          "projects",
+          "slides_without_results",
+          "week",
+          "announcements"
+        ],
+        "title": "Home"
+      },
+      "HomeProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "colour": {
+            "type": "integer",
+            "title": "Colour"
+          },
+          "privacy_mode": {
+            "$ref": "#/components/schemas/PrivacyMode"
+          },
+          "my_role": {
+            "$ref": "#/components/schemas/ProjectRole"
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members"
+          },
+          "slides": {
+            "type": "integer",
+            "title": "Slides"
+          },
+          "result_sets": {
+            "type": "integer",
+            "title": "Result Sets"
+          },
+          "reviewed_slides": {
+            "type": "integer",
+            "title": "Reviewed Slides"
+          },
+          "strip": {
+            "items": {
+              "$ref": "#/components/schemas/StripSlide"
+            },
+            "type": "array",
+            "title": "Strip"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "colour",
+          "privacy_mode",
+          "my_role",
+          "members",
+          "slides",
+          "result_sets",
+          "reviewed_slides",
+          "strip"
+        ],
+        "title": "HomeProject"
+      },
       "ImportReport": {
         "properties": {
           "dry_run": {
@@ -15671,6 +15886,18 @@
               }
             ],
             "title": "Next Slide Id"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id"
           }
         },
         "type": "object",
@@ -15687,7 +15914,8 @@
           "slides_assigned",
           "verdicts",
           "status",
-          "next_slide_id"
+          "next_slide_id",
+          "created_by_user_id"
         ],
         "title": "MyTask"
       },
@@ -17070,6 +17298,117 @@
           "content"
         ],
         "title": "ResultsFile"
+      },
+      "ResumeTarget": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "task_code": {
+            "type": "string",
+            "title": "Task Code"
+          },
+          "task_name": {
+            "type": "string",
+            "title": "Task Name"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectRef"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "case_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Label"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "slides_assigned": {
+            "type": "integer",
+            "title": "Slides Assigned"
+          },
+          "object_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Id"
+          },
+          "verdicts_on_slide": {
+            "type": "integer",
+            "title": "Verdicts On Slide"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "blinded": {
+            "type": "boolean",
+            "title": "Blinded"
+          },
+          "camera": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "task_code",
+          "task_name",
+          "project",
+          "slide_id",
+          "slide_label",
+          "case_label",
+          "position",
+          "slides_assigned",
+          "object_id",
+          "verdicts_on_slide",
+          "due_on",
+          "blinded",
+          "camera"
+        ],
+        "title": "ResumeTarget"
       },
       "ReviewEdit": {
         "properties": {
@@ -18497,6 +18836,30 @@
         ],
         "title": "StepStatus"
       },
+      "StripSlide": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "reviewed": {
+            "type": "boolean",
+            "title": "Reviewed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "reviewed"
+        ],
+        "title": "StripSlide"
+      },
       "TaskChange": {
         "properties": {
           "name": {
@@ -19221,6 +19584,54 @@
           "version"
         ],
         "title": "VersionCheck"
+      },
+      "Week": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          },
+          "objects_checked": {
+            "type": "integer",
+            "title": "Objects Checked"
+          },
+          "agreed": {
+            "type": "integer",
+            "title": "Agreed"
+          },
+          "agree_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agree Share"
+          },
+          "open_disagreements": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Disagreements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "objects_checked",
+          "agreed",
+          "agree_share",
+          "open_disagreements"
+        ],
+        "title": "Week"
       },
       "Why": {
         "type": "string",

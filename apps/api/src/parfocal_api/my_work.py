@@ -77,6 +77,7 @@ class MyTask(BaseModel):
     verdicts: int
     status: MyStatus
     next_slide_id: uuid.UUID | None
+    created_by_user_id: uuid.UUID | None
 
 
 class ReviewerProgress(BaseModel):
@@ -164,11 +165,7 @@ def worked_on(states: TaskStates, user_id: uuid.UUID) -> bool:
     )
 
 
-@router.get("/review-tasks", operation_id="listMyReviewTasks", **require(Permission.SEE_SLIDES))
-async def list_my_review_tasks(
-    principal: CurrentPrincipal, connection: TenantConnection
-) -> list[MyTask]:
-    me = member_of(principal).user_id
+async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[MyTask]:
     rows = (
         await connection.execute(
             select(*TASK_COLUMNS)
@@ -221,12 +218,20 @@ async def list_my_review_tasks(
                 verdicts=int(counted.get(row.id, 0)),
                 status=status,
                 next_slide_id=next((slide for slide, done in mine if not done), None),
+                created_by_user_id=row.created_by_user_id,
             )
         )
     return sorted(
         tasks,
         key=lambda task: (MY_ORDER.index(task.status), task.due_on or date.max, task.code),
     )
+
+
+@router.get("/review-tasks", operation_id="listMyReviewTasks", **require(Permission.SEE_SLIDES))
+async def list_my_review_tasks(
+    principal: CurrentPrincipal, connection: TenantConnection
+) -> list[MyTask]:
+    return await my_review_tasks(connection, member_of(principal).user_id)
 
 
 @router.get(
