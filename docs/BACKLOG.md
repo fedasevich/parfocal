@@ -3051,7 +3051,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when an ADR fixes the ID grammar, the full path, the overlap threshold and the split and merge rules.
   Decided in [ADR 0071](adr/0071-object-id-grammar.md). The thresholds are project settings with defaults, because the kit lists them as an open question for the owner.
 
-- [ ] OBJ-001 · ID grammar and allocation
+- [x] OBJ-001 · ID grammar and allocation
   T for AI regions of any class, T2·C145 for a cell inside a region, C for other cells, R for regions of interest, Z for unsure zones and M for measurements, allocated per slide and stable. Cells are numbered once per slide, so T2·C145 and C145 are the same cell. The full path is `P07/S26-04812/A1/T2·C145`, percent-encoded per segment with `~` for a loose slide's case, and `~` is refused as a case label ([ADR 0071](adr/0071-object-id-grammar.md)).
   Done when unit tests cover allocation order, the full path and parsing every form back.
   Depends on OBJ-000, RSET-001.
