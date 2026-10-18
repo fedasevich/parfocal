@@ -1409,7 +1409,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when the My work query API and the data needs of its three tabs are captured in an ADR.
   Decided in [ADR 0082](adr/0082-my-work-query-api.md).
 
-- [ ] WL-001 · My work query API
+- [x] WL-001 · My work query API
   Tasks for me with my progress and due date, tasks I created with progress per reviewer and their status (in review, not started, disagreements, ready to sign off), and all slides I can see with project, result sets, reviews and status. Filters by project, status, result set and reviewer, and a label search. Cursor pagination. The storage filter moved to REMOTE-001 ([ADR 0082](adr/0082-my-work-query-api.md)).
   Done when API tests cover every filter and tenant isolation.
 
@@ -2353,7 +2353,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm probabilities sum to 1 and the tissue default applies.
   Refs doc 21.
 
-- [ ] AINUC-003 · Chunk schema with probabilities
+- [x] AINUC-003 · Chunk schema with probabilities
   Every chunk carries type probabilities and flags so confidence features work on paged results.
   Done when a schema test fails if probabilities are missing.
   Refs docs 31, 33, [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
@@ -3187,7 +3187,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when an ADR records the disagreement rule (reviewers differ, or all differ from the AI above a threshold) and what sign-off locks, including when sign-off is allowed ([ADR 0069](adr/0069-slide-pipeline.md) left that open for the owner).
   Decided by the owner in [ADR 0080](adr/0080-disagreement-rule-and-sign-off.md): reviewers differ or more than half disagree with the AI, and sign-off needs every slide submitted and no undecided object.
 
-- [ ] ADJ-001 · Disagreement detection
+- [x] ADJ-001 · Disagreement detection
   When every reviewer has submitted, objects where reviewers differ, or where more than half of them disagree with the AI, go into a queue per task ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)).
   Done when unit tests cover both kinds on a seeded task.
   Depends on GUIDE-001, TASK-002.
