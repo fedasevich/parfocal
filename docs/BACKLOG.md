@@ -2164,7 +2164,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when API tests cover cancel, restore, the refusal on a signed case, a merge and an old link that resolves after it.
   Depends on CASES-012. Refs kit W43, kit W65.
 
-- [ ] CASES-020 · Next slide in a task
+- [x] CASES-020 · Next slide in a task
   Given a slide and the task or list it was opened from (a task, the All slides tab or search results), return the next and previous slide, skipping slides already submitted where the task says so. The end of the task is reported as the end.
   Done when API tests cover each list kind, skipping and the end of the list.
   Depends on WL-001, TASK-001. Refs kit Navigation map, kit W61, kit Flow 16.
