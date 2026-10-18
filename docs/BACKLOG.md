@@ -3042,7 +3042,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when API tests cover each edit, prove the AI set is unchanged, and compare a reviewed layer with its set.
   Depends on RSET-001, OBJ-001, ANN-020.
 
-- [ ] RSET-008 · Export reviewed annotations
+- [x] RSET-008 · Export reviewed annotations
   Reviewed annotations export as Parfocal JSON and GeoJSON with full IDs, per reviewer or as the consensus after adjudication.
   Done when round-trip tests export and re-import a reviewed layer with no loss.
   Depends on RSET-007, OBJ-001.
