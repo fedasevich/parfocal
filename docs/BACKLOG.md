@@ -2872,11 +2872,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] TEST-001 · Unit test setup for TS and Python
   Done when both run in CI with coverage reports and a minimum coverage gate per package.
 
-- [ ] TEST-002 · API test harness
+- [x] TEST-002 · API test harness
   Ephemeral database per test run, factories for tenants, users, cases and slides, authenticated clients per role.
   Done when a sample test uses every factory.
 
-- [ ] TEST-003 · Tenant isolation test generator
+- [x] TEST-003 · Tenant isolation test generator
   Automatically runs cross-tenant access against every endpoint and table.
   Done when adding an endpoint without tenant scoping fails CI.
   Depends on IAM-004.

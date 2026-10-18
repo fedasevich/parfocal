@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-10-18
 
+- Ticked TEST-002 (API test harness) and TEST-003 (tenant isolation test generator) after a green `ci` run on `main`.
 - STACK-034 (search) decided, not ticked until CI is green on `main`. A spike on 100,000 synthetic cases, 240,000 slides and 100,000 patients answered case searches in 27 ms, slides in 37 ms and whole-word patients in 10 ms at p50, all under the 100 ms budget ([result](results/2026-10-18-search-spike.md)). Under row-level security the trigram index is never used, because `ILIKE` is not leakproof, so the scan grows with the table. [ADR 0094](adr/0094-search-on-postgres.md) keeps search in Postgres under the policies, with no trigram index, and reopens the choice above 300,000 cases in a workspace ([knowledge/database.md](knowledge/database.md)).
 - TEST-016 (test data hygiene) done, not ticked until CI is green on `main`. Patient names used by tests now come from a registry of synthetic names (`tests/synthetic_people.py`), and a scanner fails on any patient name in the test folders or their fixtures that is not registered. It reads names given to `PatientIdentity`, in patient bodies of API calls and in the name column of case import CSVs, and a second test shows it finds a name in each of those places. The eleven names in use today are registered ([knowledge/test-fixtures.md](knowledge/test-fixtures.md)).
 - Ticked MLEVAL-004 (typing and calibration evaluation) after a green `ci` run on `main`.
