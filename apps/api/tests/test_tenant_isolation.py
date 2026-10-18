@@ -116,7 +116,7 @@ CASE_TABLES = {
     "case_requests",
     "emergency_grants",
 }
-AUTH_TABLES = {"platform_operators", "auth_logins", "sessions"}
+AUTH_TABLES = {"platform_operators", "auth_logins", "sessions", "rate_counters"}
 
 
 async def seed_audit_people(connection: AsyncConnection, seeded: Seeded) -> None:

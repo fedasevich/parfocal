@@ -41,6 +41,7 @@ from parfocal_api import (
 from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
+from parfocal_api.rate_limits import RateLimits
 from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
@@ -95,6 +96,9 @@ class ParfocalApi(FastAPI):
             identity=identity,
             cipher=auth.SessionCipher(settings.session_key.get_secret_value()),
             public_origin=public_origin(settings),
+            limits=RateLimits(
+                settings.rate_limit_person_per_minute, settings.rate_limit_tenant_per_minute
+            ),
         )
 
 

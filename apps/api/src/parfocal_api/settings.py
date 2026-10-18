@@ -1,4 +1,4 @@
-from pydantic import AnyHttpUrl, HttpUrl, PostgresDsn, SecretStr
+from pydantic import AnyHttpUrl, HttpUrl, PositiveInt, PostgresDsn, SecretStr
 
 from parfocal_common.settings import ServiceSettings
 
@@ -11,3 +11,5 @@ class ApiSettings(ServiceSettings):
     zitadel_issuer: HttpUrl
     zitadel_client_id: str
     zitadel_client_secret: SecretStr
+    rate_limit_person_per_minute: PositiveInt = 600
+    rate_limit_tenant_per_minute: PositiveInt = 3000

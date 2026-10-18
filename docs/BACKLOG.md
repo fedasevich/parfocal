@@ -709,6 +709,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-012 · Rate limiting and abuse protection
   Per user and per tenant limits on API and upload, bot protection on auth.
   Done when load tests show limits enforced with proper 429 responses.
+  Refs [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md). Per-IP limits and bot protection on login moved to SEC-027.
 
 - [ ] SEC-013 · Secrets management in all environments
   Done when no secret exists in the repo (scanner in CI), runtime secrets come from the secret store, and rotation is documented and tested on staging.
@@ -770,6 +771,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Slide readers and result parsers run in a worker with no network egress except the job's own storage keys, no secrets beyond a job token scoped to one tenant and slide, a memory and time limit and a non-root user ([threat model](security/threat-model.md) U2).
   Done when a test shows a parser job cannot reach the network or read another key, and an oversized or slow parse is stopped and reported as a failed check.
   Depends on AIP-006, INGEST-003.
+
+- [ ] SEC-027 · Edge limits per IP
+  The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
+  Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
+  Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
 
 ---
 

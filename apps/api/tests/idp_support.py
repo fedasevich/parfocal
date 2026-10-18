@@ -152,9 +152,9 @@ class Browser:
 
 
 @contextmanager
-def signed_in_browser(database: str) -> Generator[Browser]:
+def signed_in_browser(database: str, **changes: object) -> Generator[Browser]:
     idp = FakeIdp(subject=f"user-{secrets.token_hex(6)}")
-    settings = api_settings(database)
+    settings = api_settings(database).model_copy(update=changes)
     identity = OidcClient(
         issuer=ISSUER,
         client_id=CLIENT_ID,

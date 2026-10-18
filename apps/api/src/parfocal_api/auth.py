@@ -26,7 +26,13 @@ from parfocal_api.principals import (
     ServicePrincipal,
     SignedInUser,
 )
-from parfocal_api.problems import ForbiddenError, ProblemError, UnauthenticatedError
+from parfocal_api.problems import (
+    ForbiddenError,
+    ProblemError,
+    TooManyRequestsError,
+    UnauthenticatedError,
+)
+from parfocal_api.rate_limits import RateLimits, seconds_to_wait
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -90,6 +96,7 @@ class AuthState:
     identity: OidcClient
     cipher: SessionCipher
     public_origin: str
+    limits: RateLimits
 
 
 class Session(BaseModel):
@@ -237,7 +244,11 @@ async def service_principal(state: AuthState, token: str) -> ServicePrincipal:
             await connection.execute(
                 update(api_tokens).where(api_tokens.c.id == row.id).values(last_used_at=func.now())
             )
-    return ServicePrincipal(row.account_id, row.tenant_id, frozenset(row.scopes))
+        principal = ServicePrincipal(row.account_id, row.tenant_id, frozenset(row.scopes))
+        wait = await seconds_to_wait(connection, principal, state.limits)
+    if wait is not None:
+        raise TooManyRequestsError(wait)
+    return principal
 
 
 class SessionLockedError(UnauthenticatedError):
@@ -277,6 +288,7 @@ async def authenticate(request: Request) -> Principal:
     state = auth_state(request)
     resolved: Resolved | None = None
     locked = False
+    wait: int | None = None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         loaded = await load_session(connection, state, session_id)
         if loaded is not None:
@@ -301,10 +313,14 @@ async def authenticate(request: Request) -> Principal:
                 )
             if alive:
                 resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
+            if resolved is not None:
+                wait = await seconds_to_wait(connection, principal_of(resolved), state.limits)
     if locked:
         raise SessionLockedError
     if resolved is None:
         raise UnauthenticatedError
+    if wait is not None:
+        raise TooManyRequestsError(wait)
     return principal_of(resolved)
 
 

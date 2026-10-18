@@ -1495,3 +1495,13 @@ announcements = Table(
     Index("ix_announcements_tenant_id_created_at", "tenant_id", "created_at"),
     one_of("kind", AnnouncementKind),
 )
+
+
+rate_counters = Table(
+    "rate_counters",
+    metadata,
+    Column("key", String(80), primary_key=True, info=PERSONAL),
+    Column("window_start", DateTime(timezone=True), primary_key=True, info=OPERATIONAL),
+    Column("count", Integer, nullable=False, info=OPERATIONAL),
+    prefixes=["UNLOGGED"],
+)

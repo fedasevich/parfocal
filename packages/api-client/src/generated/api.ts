@@ -1953,6 +1953,11 @@ export type getHealthResponse422 = {
   status: 422;
 };
 
+export type getHealthResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getHealthResponse500 = {
   data: Problem;
   status: 500;
@@ -1968,6 +1973,7 @@ export type getHealthResponseError = (
   | getHealthResponse404
   | getHealthResponse409
   | getHealthResponse422
+  | getHealthResponse429
   | getHealthResponse500
 ) & {
   headers: Headers;
@@ -2111,6 +2117,11 @@ export type getSessionResponse422 = {
   status: 422;
 };
 
+export type getSessionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getSessionResponse500 = {
   data: Problem;
   status: 500;
@@ -2126,6 +2137,7 @@ export type getSessionResponseError = (
   | getSessionResponse404
   | getSessionResponse409
   | getSessionResponse422
+  | getSessionResponse429
   | getSessionResponse500
 ) & {
   headers: Headers;
@@ -2269,6 +2281,11 @@ export type listSessionsResponse422 = {
   status: 422;
 };
 
+export type listSessionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listSessionsResponse500 = {
   data: Problem;
   status: 500;
@@ -2284,6 +2301,7 @@ export type listSessionsResponseError = (
   | listSessionsResponse404
   | listSessionsResponse409
   | listSessionsResponse422
+  | listSessionsResponse429
   | listSessionsResponse500
 ) & {
   headers: Headers;
@@ -2427,6 +2445,11 @@ export type recordActivityResponse422 = {
   status: 422;
 };
 
+export type recordActivityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type recordActivityResponse500 = {
   data: Problem;
   status: 500;
@@ -2442,6 +2465,7 @@ export type recordActivityResponseError = (
   | recordActivityResponse404
   | recordActivityResponse409
   | recordActivityResponse422
+  | recordActivityResponse429
   | recordActivityResponse500
 ) & {
   headers: Headers;
@@ -2542,6 +2566,11 @@ export type endSessionResponse422 = {
   status: 422;
 };
 
+export type endSessionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type endSessionResponse500 = {
   data: Problem;
   status: 500;
@@ -2557,6 +2586,7 @@ export type endSessionResponseError = (
   | endSessionResponse404
   | endSessionResponse409
   | endSessionResponse422
+  | endSessionResponse429
   | endSessionResponse500
 ) & {
   headers: Headers;
@@ -2679,6 +2709,11 @@ export type endOtherSessionsResponse422 = {
   status: 422;
 };
 
+export type endOtherSessionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type endOtherSessionsResponse500 = {
   data: Problem;
   status: 500;
@@ -2694,6 +2729,7 @@ export type endOtherSessionsResponseError = (
   | endOtherSessionsResponse404
   | endOtherSessionsResponse409
   | endOtherSessionsResponse422
+  | endOtherSessionsResponse429
   | endOtherSessionsResponse500
 ) & {
   headers: Headers;
@@ -2803,6 +2839,11 @@ export type createProjectResponse422 = {
   status: 422;
 };
 
+export type createProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createProjectResponse500 = {
   data: Problem;
   status: 500;
@@ -2818,6 +2859,7 @@ export type createProjectResponseError = (
   | createProjectResponse404
   | createProjectResponse409
   | createProjectResponse422
+  | createProjectResponse429
   | createProjectResponse500
 ) & {
   headers: Headers;
@@ -2961,6 +3003,11 @@ export type listProjectsResponse422 = {
   status: 422;
 };
 
+export type listProjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listProjectsResponse500 = {
   data: Problem;
   status: 500;
@@ -2976,6 +3023,7 @@ export type listProjectsResponseError = (
   | listProjectsResponse404
   | listProjectsResponse409
   | listProjectsResponse422
+  | listProjectsResponse429
   | listProjectsResponse500
 ) & {
   headers: Headers;
@@ -3137,6 +3185,11 @@ export type getProjectResponse422 = {
   status: 422;
 };
 
+export type getProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getProjectResponse500 = {
   data: Problem;
   status: 500;
@@ -3152,6 +3205,7 @@ export type getProjectResponseError = (
   | getProjectResponse404
   | getProjectResponse409
   | getProjectResponse422
+  | getProjectResponse429
   | getProjectResponse500
 ) & {
   headers: Headers;
@@ -3306,6 +3360,11 @@ export type updateProjectResponse422 = {
   status: 422;
 };
 
+export type updateProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type updateProjectResponse500 = {
   data: Problem;
   status: 500;
@@ -3321,6 +3380,7 @@ export type updateProjectResponseError = (
   | updateProjectResponse404
   | updateProjectResponse409
   | updateProjectResponse422
+  | updateProjectResponse429
   | updateProjectResponse500
 ) & {
   headers: Headers;
@@ -3465,6 +3525,11 @@ export type archiveProjectResponse422 = {
   status: 422;
 };
 
+export type archiveProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type archiveProjectResponse500 = {
   data: Problem;
   status: 500;
@@ -3480,6 +3545,7 @@ export type archiveProjectResponseError = (
   | archiveProjectResponse404
   | archiveProjectResponse409
   | archiveProjectResponse422
+  | archiveProjectResponse429
   | archiveProjectResponse500
 ) & {
   headers: Headers;
@@ -3602,6 +3668,11 @@ export type restoreProjectResponse422 = {
   status: 422;
 };
 
+export type restoreProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type restoreProjectResponse500 = {
   data: Problem;
   status: 500;
@@ -3617,6 +3688,7 @@ export type restoreProjectResponseError = (
   | restoreProjectResponse404
   | restoreProjectResponse409
   | restoreProjectResponse422
+  | restoreProjectResponse429
   | restoreProjectResponse500
 ) & {
   headers: Headers;
@@ -3739,6 +3811,11 @@ export type setProjectMemberResponse422 = {
   status: 422;
 };
 
+export type setProjectMemberResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type setProjectMemberResponse500 = {
   data: Problem;
   status: 500;
@@ -3754,6 +3831,7 @@ export type setProjectMemberResponseError = (
   | setProjectMemberResponse404
   | setProjectMemberResponse409
   | setProjectMemberResponse422
+  | setProjectMemberResponse429
   | setProjectMemberResponse500
 ) & {
   headers: Headers;
@@ -3907,6 +3985,11 @@ export type removeProjectMemberResponse422 = {
   status: 422;
 };
 
+export type removeProjectMemberResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type removeProjectMemberResponse500 = {
   data: Problem;
   status: 500;
@@ -3922,6 +4005,7 @@ export type removeProjectMemberResponseError = (
   | removeProjectMemberResponse404
   | removeProjectMemberResponse409
   | removeProjectMemberResponse422
+  | removeProjectMemberResponse429
   | removeProjectMemberResponse500
 ) & {
   headers: Headers;
@@ -4052,6 +4136,11 @@ export type listProjectClassesResponse422 = {
   status: 422;
 };
 
+export type listProjectClassesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listProjectClassesResponse500 = {
   data: Problem;
   status: 500;
@@ -4067,6 +4156,7 @@ export type listProjectClassesResponseError = (
   | listProjectClassesResponse404
   | listProjectClassesResponse409
   | listProjectClassesResponse422
+  | listProjectClassesResponse429
   | listProjectClassesResponse500
 ) & {
   headers: Headers;
@@ -4239,6 +4329,11 @@ export type setProjectClassesResponse422 = {
   status: 422;
 };
 
+export type setProjectClassesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type setProjectClassesResponse500 = {
   data: Problem;
   status: 500;
@@ -4254,6 +4349,7 @@ export type setProjectClassesResponseError = (
   | setProjectClassesResponse404
   | setProjectClassesResponse409
   | setProjectClassesResponse422
+  | setProjectClassesResponse429
   | setProjectClassesResponse500
 ) & {
   headers: Headers;
@@ -4405,6 +4501,11 @@ export type listClassMappingsResponse422 = {
   status: 422;
 };
 
+export type listClassMappingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listClassMappingsResponse500 = {
   data: Problem;
   status: 500;
@@ -4420,6 +4521,7 @@ export type listClassMappingsResponseError = (
   | listClassMappingsResponse404
   | listClassMappingsResponse409
   | listClassMappingsResponse422
+  | listClassMappingsResponse429
   | listClassMappingsResponse500
 ) & {
   headers: Headers;
@@ -4590,6 +4692,11 @@ export type rememberClassMappingsResponse422 = {
   status: 422;
 };
 
+export type rememberClassMappingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type rememberClassMappingsResponse500 = {
   data: Problem;
   status: 500;
@@ -4605,6 +4712,7 @@ export type rememberClassMappingsResponseError = (
   | rememberClassMappingsResponse404
   | rememberClassMappingsResponse409
   | rememberClassMappingsResponse422
+  | rememberClassMappingsResponse429
   | rememberClassMappingsResponse500
 ) & {
   headers: Headers;
@@ -4756,6 +4864,11 @@ export type resolveClassNamesResponse422 = {
   status: 422;
 };
 
+export type resolveClassNamesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type resolveClassNamesResponse500 = {
   data: Problem;
   status: 500;
@@ -4771,6 +4884,7 @@ export type resolveClassNamesResponseError = (
   | resolveClassNamesResponse404
   | resolveClassNamesResponse409
   | resolveClassNamesResponse422
+  | resolveClassNamesResponse429
   | resolveClassNamesResponse500
 ) & {
   headers: Headers;
@@ -4970,6 +5084,11 @@ export type getOpinionFormResponse422 = {
   status: 422;
 };
 
+export type getOpinionFormResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getOpinionFormResponse500 = {
   data: Problem;
   status: 500;
@@ -4985,6 +5104,7 @@ export type getOpinionFormResponseError = (
   | getOpinionFormResponse404
   | getOpinionFormResponse409
   | getOpinionFormResponse422
+  | getOpinionFormResponse429
   | getOpinionFormResponse500
 ) & {
   headers: Headers;
@@ -5151,6 +5271,11 @@ export type publishOpinionFormResponse422 = {
   status: 422;
 };
 
+export type publishOpinionFormResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type publishOpinionFormResponse500 = {
   data: Problem;
   status: 500;
@@ -5166,6 +5291,7 @@ export type publishOpinionFormResponseError = (
   | publishOpinionFormResponse404
   | publishOpinionFormResponse409
   | publishOpinionFormResponse422
+  | publishOpinionFormResponse429
   | publishOpinionFormResponse500
 ) & {
   headers: Headers;
@@ -5317,6 +5443,11 @@ export type listOpinionFormVersionsResponse422 = {
   status: 422;
 };
 
+export type listOpinionFormVersionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listOpinionFormVersionsResponse500 = {
   data: Problem;
   status: 500;
@@ -5332,6 +5463,7 @@ export type listOpinionFormVersionsResponseError = (
   | listOpinionFormVersionsResponse404
   | listOpinionFormVersionsResponse409
   | listOpinionFormVersionsResponse422
+  | listOpinionFormVersionsResponse429
   | listOpinionFormVersionsResponse500
 ) & {
   headers: Headers;
@@ -5513,6 +5645,11 @@ export type getOpinionFormVersionResponse422 = {
   status: 422;
 };
 
+export type getOpinionFormVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getOpinionFormVersionResponse500 = {
   data: Problem;
   status: 500;
@@ -5528,6 +5665,7 @@ export type getOpinionFormVersionResponseError = (
   | getOpinionFormVersionResponse404
   | getOpinionFormVersionResponse409
   | getOpinionFormVersionResponse422
+  | getOpinionFormVersionResponse429
   | getOpinionFormVersionResponse500
 ) & {
   headers: Headers;
@@ -5715,6 +5853,11 @@ export type getProjectJobResponse422 = {
   status: 422;
 };
 
+export type getProjectJobResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getProjectJobResponse500 = {
   data: Problem;
   status: 500;
@@ -5730,6 +5873,7 @@ export type getProjectJobResponseError = (
   | getProjectJobResponse404
   | getProjectJobResponse409
   | getProjectJobResponse422
+  | getProjectJobResponse429
   | getProjectJobResponse500
 ) & {
   headers: Headers;
@@ -5902,6 +6046,11 @@ export type listNotificationPreferencesResponse422 = {
   status: 422;
 };
 
+export type listNotificationPreferencesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listNotificationPreferencesResponse500 = {
   data: Problem;
   status: 500;
@@ -5917,6 +6066,7 @@ export type listNotificationPreferencesResponseError = (
   | listNotificationPreferencesResponse404
   | listNotificationPreferencesResponse409
   | listNotificationPreferencesResponse422
+  | listNotificationPreferencesResponse429
   | listNotificationPreferencesResponse500
 ) & {
   headers: Headers;
@@ -6087,6 +6237,11 @@ export type setNotificationPreferencesResponse422 = {
   status: 422;
 };
 
+export type setNotificationPreferencesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type setNotificationPreferencesResponse500 = {
   data: Problem;
   status: 500;
@@ -6102,6 +6257,7 @@ export type setNotificationPreferencesResponseError = (
   | setNotificationPreferencesResponse404
   | setNotificationPreferencesResponse409
   | setNotificationPreferencesResponse422
+  | setNotificationPreferencesResponse429
   | setNotificationPreferencesResponse500
 ) & {
   headers: Headers;
@@ -6253,6 +6409,11 @@ export type getOpinionFormTemplateResponse422 = {
   status: 422;
 };
 
+export type getOpinionFormTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getOpinionFormTemplateResponse500 = {
   data: Problem;
   status: 500;
@@ -6268,6 +6429,7 @@ export type getOpinionFormTemplateResponseError = (
   | getOpinionFormTemplateResponse404
   | getOpinionFormTemplateResponse409
   | getOpinionFormTemplateResponse422
+  | getOpinionFormTemplateResponse429
   | getOpinionFormTemplateResponse500
 ) & {
   headers: Headers;
@@ -6437,6 +6599,11 @@ export type listTaxonomyTemplatesResponse422 = {
   status: 422;
 };
 
+export type listTaxonomyTemplatesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listTaxonomyTemplatesResponse500 = {
   data: Problem;
   status: 500;
@@ -6452,6 +6619,7 @@ export type listTaxonomyTemplatesResponseError = (
   | listTaxonomyTemplatesResponse404
   | listTaxonomyTemplatesResponse409
   | listTaxonomyTemplatesResponse422
+  | listTaxonomyTemplatesResponse429
   | listTaxonomyTemplatesResponse500
 ) & {
   headers: Headers;
@@ -6621,6 +6789,11 @@ export type getCaseResponse422 = {
   status: 422;
 };
 
+export type getCaseResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getCaseResponse500 = {
   data: Problem;
   status: 500;
@@ -6636,6 +6809,7 @@ export type getCaseResponseError = (
   | getCaseResponse404
   | getCaseResponse409
   | getCaseResponse422
+  | getCaseResponse429
   | getCaseResponse500
 ) & {
   headers: Headers;
@@ -6790,6 +6964,11 @@ export type listCasesResponse422 = {
   status: 422;
 };
 
+export type listCasesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listCasesResponse500 = {
   data: Problem;
   status: 500;
@@ -6805,6 +6984,7 @@ export type listCasesResponseError = (
   | listCasesResponse404
   | listCasesResponse409
   | listCasesResponse422
+  | listCasesResponse429
   | listCasesResponse500
 ) & {
   headers: Headers;
@@ -6966,6 +7146,11 @@ export type createCaseResponse422 = {
   status: 422;
 };
 
+export type createCaseResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createCaseResponse500 = {
   data: Problem;
   status: 500;
@@ -6981,6 +7166,7 @@ export type createCaseResponseError = (
   | createCaseResponse404
   | createCaseResponse409
   | createCaseResponse422
+  | createCaseResponse429
   | createCaseResponse500
 ) & {
   headers: Headers;
@@ -7124,6 +7310,11 @@ export type listAnnotationsResponse422 = {
   status: 422;
 };
 
+export type listAnnotationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAnnotationsResponse500 = {
   data: Problem;
   status: 500;
@@ -7139,6 +7330,7 @@ export type listAnnotationsResponseError = (
   | listAnnotationsResponse404
   | listAnnotationsResponse409
   | listAnnotationsResponse422
+  | listAnnotationsResponse429
   | listAnnotationsResponse500
 ) & {
   headers: Headers;
@@ -7332,6 +7524,11 @@ export type createAnnotationResponse422 = {
   status: 422;
 };
 
+export type createAnnotationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createAnnotationResponse500 = {
   data: Problem;
   status: 500;
@@ -7347,6 +7544,7 @@ export type createAnnotationResponseError = (
   | createAnnotationResponse404
   | createAnnotationResponse409
   | createAnnotationResponse422
+  | createAnnotationResponse429
   | createAnnotationResponse500
 ) & {
   headers: Headers;
@@ -7495,6 +7693,11 @@ export type createAnnotationsResponse422 = {
   status: 422;
 };
 
+export type createAnnotationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createAnnotationsResponse500 = {
   data: Problem;
   status: 500;
@@ -7510,6 +7713,7 @@ export type createAnnotationsResponseError = (
   | createAnnotationsResponse404
   | createAnnotationsResponse409
   | createAnnotationsResponse422
+  | createAnnotationsResponse429
   | createAnnotationsResponse500
 ) & {
   headers: Headers;
@@ -7661,6 +7865,11 @@ export type getAnnotationResponse422 = {
   status: 422;
 };
 
+export type getAnnotationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getAnnotationResponse500 = {
   data: Problem;
   status: 500;
@@ -7676,6 +7885,7 @@ export type getAnnotationResponseError = (
   | getAnnotationResponse404
   | getAnnotationResponse409
   | getAnnotationResponse422
+  | getAnnotationResponse429
   | getAnnotationResponse500
 ) & {
   headers: Headers;
@@ -7852,6 +8062,11 @@ export type changeAnnotationResponse422 = {
   status: 422;
 };
 
+export type changeAnnotationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type changeAnnotationResponse500 = {
   data: Problem;
   status: 500;
@@ -7867,6 +8082,7 @@ export type changeAnnotationResponseError = (
   | changeAnnotationResponse404
   | changeAnnotationResponse409
   | changeAnnotationResponse422
+  | changeAnnotationResponse429
   | changeAnnotationResponse500
 ) & {
   headers: Headers;
@@ -8020,6 +8236,11 @@ export type deleteAnnotationResponse422 = {
   status: 422;
 };
 
+export type deleteAnnotationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type deleteAnnotationResponse500 = {
   data: Problem;
   status: 500;
@@ -8035,6 +8256,7 @@ export type deleteAnnotationResponseError = (
   | deleteAnnotationResponse404
   | deleteAnnotationResponse409
   | deleteAnnotationResponse422
+  | deleteAnnotationResponse429
   | deleteAnnotationResponse500
 ) & {
   headers: Headers;
@@ -8183,6 +8405,11 @@ export type restoreAnnotationResponse422 = {
   status: 422;
 };
 
+export type restoreAnnotationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type restoreAnnotationResponse500 = {
   data: Problem;
   status: 500;
@@ -8198,6 +8425,7 @@ export type restoreAnnotationResponseError = (
   | restoreAnnotationResponse404
   | restoreAnnotationResponse409
   | restoreAnnotationResponse422
+  | restoreAnnotationResponse429
   | restoreAnnotationResponse500
 ) & {
   headers: Headers;
@@ -8354,6 +8582,11 @@ export type listAnnotationHistoryResponse422 = {
   status: 422;
 };
 
+export type listAnnotationHistoryResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAnnotationHistoryResponse500 = {
   data: Problem;
   status: 500;
@@ -8369,6 +8602,7 @@ export type listAnnotationHistoryResponseError = (
   | listAnnotationHistoryResponse404
   | listAnnotationHistoryResponse409
   | listAnnotationHistoryResponse422
+  | listAnnotationHistoryResponse429
   | listAnnotationHistoryResponse500
 ) & {
   headers: Headers;
@@ -8563,6 +8797,11 @@ export type createResultSetResponse422 = {
   status: 422;
 };
 
+export type createResultSetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createResultSetResponse500 = {
   data: Problem;
   status: 500;
@@ -8578,6 +8817,7 @@ export type createResultSetResponseError = (
   | createResultSetResponse404
   | createResultSetResponse409
   | createResultSetResponse422
+  | createResultSetResponse429
   | createResultSetResponse500
 ) & {
   headers: Headers;
@@ -8724,6 +8964,11 @@ export type listSlideResultSetsResponse422 = {
   status: 422;
 };
 
+export type listSlideResultSetsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listSlideResultSetsResponse500 = {
   data: Problem;
   status: 500;
@@ -8739,6 +8984,7 @@ export type listSlideResultSetsResponseError = (
   | listSlideResultSetsResponse404
   | listSlideResultSetsResponse409
   | listSlideResultSetsResponse422
+  | listSlideResultSetsResponse429
   | listSlideResultSetsResponse500
 ) & {
   headers: Headers;
@@ -8919,6 +9165,11 @@ export type listProjectResultSetsResponse422 = {
   status: 422;
 };
 
+export type listProjectResultSetsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listProjectResultSetsResponse500 = {
   data: Problem;
   status: 500;
@@ -8934,6 +9185,7 @@ export type listProjectResultSetsResponseError = (
   | listProjectResultSetsResponse404
   | listProjectResultSetsResponse409
   | listProjectResultSetsResponse422
+  | listProjectResultSetsResponse429
   | listProjectResultSetsResponse500
 ) & {
   headers: Headers;
@@ -9114,6 +9366,11 @@ export type getResultSetResponse422 = {
   status: 422;
 };
 
+export type getResultSetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getResultSetResponse500 = {
   data: Problem;
   status: 500;
@@ -9129,6 +9386,7 @@ export type getResultSetResponseError = (
   | getResultSetResponse404
   | getResultSetResponse409
   | getResultSetResponse422
+  | getResultSetResponse429
   | getResultSetResponse500
 ) & {
   headers: Headers;
@@ -9283,6 +9541,11 @@ export type deleteResultSetResponse422 = {
   status: 422;
 };
 
+export type deleteResultSetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type deleteResultSetResponse500 = {
   data: Problem;
   status: 500;
@@ -9298,6 +9561,7 @@ export type deleteResultSetResponseError = (
   | deleteResultSetResponse404
   | deleteResultSetResponse409
   | deleteResultSetResponse422
+  | deleteResultSetResponse429
   | deleteResultSetResponse500
 ) & {
   headers: Headers;
@@ -9422,6 +9686,11 @@ export type getResultsSchemaResponse422 = {
   status: 422;
 };
 
+export type getResultsSchemaResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getResultsSchemaResponse500 = {
   data: Problem;
   status: 500;
@@ -9437,6 +9706,7 @@ export type getResultsSchemaResponseError = (
   | getResultsSchemaResponse404
   | getResultsSchemaResponse409
   | getResultsSchemaResponse422
+  | getResultsSchemaResponse429
   | getResultsSchemaResponse500
 ) & {
   headers: Headers;
@@ -9594,6 +9864,11 @@ export type getResultsTemplateResponse422 = {
   status: 422;
 };
 
+export type getResultsTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getResultsTemplateResponse500 = {
   data: Problem;
   status: 500;
@@ -9609,6 +9884,7 @@ export type getResultsTemplateResponseError = (
   | getResultsTemplateResponse404
   | getResultsTemplateResponse409
   | getResultsTemplateResponse422
+  | getResultsTemplateResponse429
   | getResultsTemplateResponse500
 ) & {
   headers: Headers;
@@ -9770,6 +10046,11 @@ export type validateResultsFileResponse422 = {
   status: 422;
 };
 
+export type validateResultsFileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type validateResultsFileResponse500 = {
   data: Problem;
   status: 500;
@@ -9785,6 +10066,7 @@ export type validateResultsFileResponseError = (
   | validateResultsFileResponse404
   | validateResultsFileResponse409
   | validateResultsFileResponse422
+  | validateResultsFileResponse429
   | validateResultsFileResponse500
 ) & {
   headers: Headers;
@@ -9935,6 +10217,11 @@ export type createReviewTaskResponse422 = {
   status: 422;
 };
 
+export type createReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createReviewTaskResponse500 = {
   data: Problem;
   status: 500;
@@ -9950,6 +10237,7 @@ export type createReviewTaskResponseError = (
   | createReviewTaskResponse404
   | createReviewTaskResponse409
   | createReviewTaskResponse422
+  | createReviewTaskResponse429
   | createReviewTaskResponse500
 ) & {
   headers: Headers;
@@ -10098,6 +10386,11 @@ export type listReviewTasksResponse422 = {
   status: 422;
 };
 
+export type listReviewTasksResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listReviewTasksResponse500 = {
   data: Problem;
   status: 500;
@@ -10113,6 +10406,7 @@ export type listReviewTasksResponseError = (
   | listReviewTasksResponse404
   | listReviewTasksResponse409
   | listReviewTasksResponse422
+  | listReviewTasksResponse429
   | listReviewTasksResponse500
 ) & {
   headers: Headers;
@@ -10279,6 +10573,11 @@ export type getReviewTaskResponse422 = {
   status: 422;
 };
 
+export type getReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getReviewTaskResponse500 = {
   data: Problem;
   status: 500;
@@ -10294,6 +10593,7 @@ export type getReviewTaskResponseError = (
   | getReviewTaskResponse404
   | getReviewTaskResponse409
   | getReviewTaskResponse422
+  | getReviewTaskResponse429
   | getReviewTaskResponse500
 ) & {
   headers: Headers;
@@ -10460,6 +10760,11 @@ export type changeReviewTaskResponse422 = {
   status: 422;
 };
 
+export type changeReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type changeReviewTaskResponse500 = {
   data: Problem;
   status: 500;
@@ -10475,6 +10780,7 @@ export type changeReviewTaskResponseError = (
   | changeReviewTaskResponse404
   | changeReviewTaskResponse409
   | changeReviewTaskResponse422
+  | changeReviewTaskResponse429
   | changeReviewTaskResponse500
 ) & {
   headers: Headers;
@@ -10623,6 +10929,11 @@ export type saveReviewEditResponse422 = {
   status: 422;
 };
 
+export type saveReviewEditResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type saveReviewEditResponse500 = {
   data: Problem;
   status: 500;
@@ -10638,6 +10949,7 @@ export type saveReviewEditResponseError = (
   | saveReviewEditResponse404
   | saveReviewEditResponse409
   | saveReviewEditResponse422
+  | saveReviewEditResponse429
   | saveReviewEditResponse500
 ) & {
   headers: Headers;
@@ -10789,6 +11101,11 @@ export type clearReviewEditResponse422 = {
   status: 422;
 };
 
+export type clearReviewEditResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type clearReviewEditResponse500 = {
   data: Problem;
   status: 500;
@@ -10804,6 +11121,7 @@ export type clearReviewEditResponseError = (
   | clearReviewEditResponse404
   | clearReviewEditResponse409
   | clearReviewEditResponse422
+  | clearReviewEditResponse429
   | clearReviewEditResponse500
 ) & {
   headers: Headers;
@@ -10934,6 +11252,11 @@ export type addReviewObjectResponse422 = {
   status: 422;
 };
 
+export type addReviewObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type addReviewObjectResponse500 = {
   data: Problem;
   status: 500;
@@ -10949,6 +11272,7 @@ export type addReviewObjectResponseError = (
   | addReviewObjectResponse404
   | addReviewObjectResponse409
   | addReviewObjectResponse422
+  | addReviewObjectResponse429
   | addReviewObjectResponse500
 ) & {
   headers: Headers;
@@ -11100,6 +11424,11 @@ export type getReviewedLayerResponse422 = {
   status: 422;
 };
 
+export type getReviewedLayerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getReviewedLayerResponse500 = {
   data: Problem;
   status: 500;
@@ -11115,6 +11444,7 @@ export type getReviewedLayerResponseError = (
   | getReviewedLayerResponse404
   | getReviewedLayerResponse409
   | getReviewedLayerResponse422
+  | getReviewedLayerResponse429
   | getReviewedLayerResponse500
 ) & {
   headers: Headers;
@@ -11318,6 +11648,11 @@ export type exportReviewedLayerResponse422 = {
   status: 422;
 };
 
+export type exportReviewedLayerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type exportReviewedLayerResponse500 = {
   data: Problem;
   status: 500;
@@ -11333,6 +11668,7 @@ export type exportReviewedLayerResponseError = (
   | exportReviewedLayerResponse404
   | exportReviewedLayerResponse409
   | exportReviewedLayerResponse422
+  | exportReviewedLayerResponse429
   | exportReviewedLayerResponse500
 ) & {
   headers: Headers;
@@ -11549,6 +11885,11 @@ export type listAnnouncementsResponse422 = {
   status: 422;
 };
 
+export type listAnnouncementsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAnnouncementsResponse500 = {
   data: Problem;
   status: 500;
@@ -11564,6 +11905,7 @@ export type listAnnouncementsResponseError = (
   | listAnnouncementsResponse404
   | listAnnouncementsResponse409
   | listAnnouncementsResponse422
+  | listAnnouncementsResponse429
   | listAnnouncementsResponse500
 ) & {
   headers: Headers;
@@ -11723,6 +12065,11 @@ export type createAnnouncementResponse422 = {
   status: 422;
 };
 
+export type createAnnouncementResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createAnnouncementResponse500 = {
   data: Problem;
   status: 500;
@@ -11738,6 +12085,7 @@ export type createAnnouncementResponseError = (
   | createAnnouncementResponse404
   | createAnnouncementResponse409
   | createAnnouncementResponse422
+  | createAnnouncementResponse429
   | createAnnouncementResponse500
 ) & {
   headers: Headers;
@@ -11888,6 +12236,11 @@ export type endAnnouncementResponse422 = {
   status: 422;
 };
 
+export type endAnnouncementResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type endAnnouncementResponse500 = {
   data: Problem;
   status: 500;
@@ -11903,6 +12256,7 @@ export type endAnnouncementResponseError = (
   | endAnnouncementResponse404
   | endAnnouncementResponse409
   | endAnnouncementResponse422
+  | endAnnouncementResponse429
   | endAnnouncementResponse500
 ) & {
   headers: Headers;
@@ -12027,6 +12381,11 @@ export type getMyHomeResponse422 = {
   status: 422;
 };
 
+export type getMyHomeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getMyHomeResponse500 = {
   data: Problem;
   status: 500;
@@ -12042,6 +12401,7 @@ export type getMyHomeResponseError = (
   | getMyHomeResponse404
   | getMyHomeResponse409
   | getMyHomeResponse422
+  | getMyHomeResponse429
   | getMyHomeResponse500
 ) & {
   headers: Headers;
@@ -12185,6 +12545,11 @@ export type getReviewTaskStatesResponse422 = {
   status: 422;
 };
 
+export type getReviewTaskStatesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getReviewTaskStatesResponse500 = {
   data: Problem;
   status: 500;
@@ -12200,6 +12565,7 @@ export type getReviewTaskStatesResponseError = (
   | getReviewTaskStatesResponse404
   | getReviewTaskStatesResponse409
   | getReviewTaskStatesResponse422
+  | getReviewTaskStatesResponse429
   | getReviewTaskStatesResponse500
 ) & {
   headers: Headers;
@@ -12380,6 +12746,11 @@ export type submitSlideReviewResponse422 = {
   status: 422;
 };
 
+export type submitSlideReviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type submitSlideReviewResponse500 = {
   data: Problem;
   status: 500;
@@ -12395,6 +12766,7 @@ export type submitSlideReviewResponseError = (
   | submitSlideReviewResponse404
   | submitSlideReviewResponse409
   | submitSlideReviewResponse422
+  | submitSlideReviewResponse429
   | submitSlideReviewResponse500
 ) & {
   headers: Headers;
@@ -12525,6 +12897,11 @@ export type reopenSlideReviewResponse422 = {
   status: 422;
 };
 
+export type reopenSlideReviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type reopenSlideReviewResponse500 = {
   data: Problem;
   status: 500;
@@ -12540,6 +12917,7 @@ export type reopenSlideReviewResponseError = (
   | reopenSlideReviewResponse404
   | reopenSlideReviewResponse409
   | reopenSlideReviewResponse422
+  | reopenSlideReviewResponse429
   | reopenSlideReviewResponse500
 ) & {
   headers: Headers;
@@ -12670,6 +13048,11 @@ export type signOffReviewTaskResponse422 = {
   status: 422;
 };
 
+export type signOffReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type signOffReviewTaskResponse500 = {
   data: Problem;
   status: 500;
@@ -12685,6 +13068,7 @@ export type signOffReviewTaskResponseError = (
   | signOffReviewTaskResponse404
   | signOffReviewTaskResponse409
   | signOffReviewTaskResponse422
+  | signOffReviewTaskResponse429
   | signOffReviewTaskResponse500
 ) & {
   headers: Headers;
@@ -12814,6 +13198,11 @@ export type reopenReviewTaskResponse422 = {
   status: 422;
 };
 
+export type reopenReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type reopenReviewTaskResponse500 = {
   data: Problem;
   status: 500;
@@ -12829,6 +13218,7 @@ export type reopenReviewTaskResponseError = (
   | reopenReviewTaskResponse404
   | reopenReviewTaskResponse409
   | reopenReviewTaskResponse422
+  | reopenReviewTaskResponse429
   | reopenReviewTaskResponse500
 ) & {
   headers: Headers;
@@ -12955,6 +13345,11 @@ export type saveVerdictResponse422 = {
   status: 422;
 };
 
+export type saveVerdictResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type saveVerdictResponse500 = {
   data: Problem;
   status: 500;
@@ -12970,6 +13365,7 @@ export type saveVerdictResponseError = (
   | saveVerdictResponse404
   | saveVerdictResponse409
   | saveVerdictResponse422
+  | saveVerdictResponse429
   | saveVerdictResponse500
 ) & {
   headers: Headers;
@@ -13121,6 +13517,11 @@ export type clearVerdictResponse422 = {
   status: 422;
 };
 
+export type clearVerdictResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type clearVerdictResponse500 = {
   data: Problem;
   status: 500;
@@ -13136,6 +13537,7 @@ export type clearVerdictResponseError = (
   | clearVerdictResponse404
   | clearVerdictResponse409
   | clearVerdictResponse422
+  | clearVerdictResponse429
   | clearVerdictResponse500
 ) & {
   headers: Headers;
@@ -13260,6 +13662,11 @@ export type listVerdictsResponse422 = {
   status: 422;
 };
 
+export type listVerdictsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listVerdictsResponse500 = {
   data: Problem;
   status: 500;
@@ -13275,6 +13682,7 @@ export type listVerdictsResponseError = (
   | listVerdictsResponse404
   | listVerdictsResponse409
   | listVerdictsResponse422
+  | listVerdictsResponse429
   | listVerdictsResponse500
 ) & {
   headers: Headers;
@@ -13464,6 +13872,11 @@ export type saveOpinionResponse422 = {
   status: 422;
 };
 
+export type saveOpinionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type saveOpinionResponse500 = {
   data: Problem;
   status: 500;
@@ -13479,6 +13892,7 @@ export type saveOpinionResponseError = (
   | saveOpinionResponse404
   | saveOpinionResponse409
   | saveOpinionResponse422
+  | saveOpinionResponse429
   | saveOpinionResponse500
 ) & {
   headers: Headers;
@@ -13624,6 +14038,11 @@ export type getOpinionResponse422 = {
   status: 422;
 };
 
+export type getOpinionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getOpinionResponse500 = {
   data: Problem;
   status: 500;
@@ -13639,6 +14058,7 @@ export type getOpinionResponseError = (
   | getOpinionResponse404
   | getOpinionResponse409
   | getOpinionResponse422
+  | getOpinionResponse429
   | getOpinionResponse500
 ) & {
   headers: Headers;
@@ -13824,6 +14244,11 @@ export type listDisagreementsResponse422 = {
   status: 422;
 };
 
+export type listDisagreementsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listDisagreementsResponse500 = {
   data: Problem;
   status: 500;
@@ -13839,6 +14264,7 @@ export type listDisagreementsResponseError = (
   | listDisagreementsResponse404
   | listDisagreementsResponse409
   | listDisagreementsResponse422
+  | listDisagreementsResponse429
   | listDisagreementsResponse500
 ) & {
   headers: Headers;
@@ -14009,6 +14435,11 @@ export type decideDisagreementResponse422 = {
   status: 422;
 };
 
+export type decideDisagreementResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type decideDisagreementResponse500 = {
   data: Problem;
   status: 500;
@@ -14024,6 +14455,7 @@ export type decideDisagreementResponseError = (
   | decideDisagreementResponse404
   | decideDisagreementResponse409
   | decideDisagreementResponse422
+  | decideDisagreementResponse429
   | decideDisagreementResponse500
 ) & {
   headers: Headers;
@@ -14182,6 +14614,11 @@ export type clearDisagreementDecisionResponse422 = {
   status: 422;
 };
 
+export type clearDisagreementDecisionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type clearDisagreementDecisionResponse500 = {
   data: Problem;
   status: 500;
@@ -14197,6 +14634,7 @@ export type clearDisagreementDecisionResponseError = (
   | clearDisagreementDecisionResponse404
   | clearDisagreementDecisionResponse409
   | clearDisagreementDecisionResponse422
+  | clearDisagreementDecisionResponse429
   | clearDisagreementDecisionResponse500
 ) & {
   headers: Headers;
@@ -14339,6 +14777,11 @@ export type getTaskEvaluationResponse422 = {
   status: 422;
 };
 
+export type getTaskEvaluationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getTaskEvaluationResponse500 = {
   data: Problem;
   status: 500;
@@ -14354,6 +14797,7 @@ export type getTaskEvaluationResponseError = (
   | getTaskEvaluationResponse404
   | getTaskEvaluationResponse409
   | getTaskEvaluationResponse422
+  | getTaskEvaluationResponse429
   | getTaskEvaluationResponse500
 ) & {
   headers: Headers;
@@ -14524,6 +14968,11 @@ export type listMyReviewTasksResponse422 = {
   status: 422;
 };
 
+export type listMyReviewTasksResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listMyReviewTasksResponse500 = {
   data: Problem;
   status: 500;
@@ -14539,6 +14988,7 @@ export type listMyReviewTasksResponseError = (
   | listMyReviewTasksResponse404
   | listMyReviewTasksResponse409
   | listMyReviewTasksResponse422
+  | listMyReviewTasksResponse429
   | listMyReviewTasksResponse500
 ) & {
   headers: Headers;
@@ -14698,6 +15148,11 @@ export type listTasksAssignedByMeResponse422 = {
   status: 422;
 };
 
+export type listTasksAssignedByMeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listTasksAssignedByMeResponse500 = {
   data: Problem;
   status: 500;
@@ -14713,6 +15168,7 @@ export type listTasksAssignedByMeResponseError = (
   | listTasksAssignedByMeResponse404
   | listTasksAssignedByMeResponse409
   | listTasksAssignedByMeResponse422
+  | listTasksAssignedByMeResponse429
   | listTasksAssignedByMeResponse500
 ) & {
   headers: Headers;
@@ -14882,6 +15338,11 @@ export type listMySlidesResponse422 = {
   status: 422;
 };
 
+export type listMySlidesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listMySlidesResponse500 = {
   data: Problem;
   status: 500;
@@ -14897,6 +15358,7 @@ export type listMySlidesResponseError = (
   | listMySlidesResponse404
   | listMySlidesResponse409
   | listMySlidesResponse422
+  | listMySlidesResponse429
   | listMySlidesResponse500
 ) & {
   headers: Headers;
@@ -15058,6 +15520,11 @@ export type importCasesResponse422 = {
   status: 422;
 };
 
+export type importCasesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type importCasesResponse500 = {
   data: Problem;
   status: 500;
@@ -15073,6 +15540,7 @@ export type importCasesResponseError = (
   | importCasesResponse404
   | importCasesResponse409
   | importCasesResponse422
+  | importCasesResponse429
   | importCasesResponse500
 ) & {
   headers: Headers;
@@ -15217,6 +15685,11 @@ export type requestEmergencyAccessResponse422 = {
   status: 422;
 };
 
+export type requestEmergencyAccessResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type requestEmergencyAccessResponse500 = {
   data: Problem;
   status: 500;
@@ -15232,6 +15705,7 @@ export type requestEmergencyAccessResponseError = (
   | requestEmergencyAccessResponse404
   | requestEmergencyAccessResponse409
   | requestEmergencyAccessResponse422
+  | requestEmergencyAccessResponse429
   | requestEmergencyAccessResponse500
 ) & {
   headers: Headers;
@@ -15383,6 +15857,11 @@ export type getMyAvailabilityResponse422 = {
   status: 422;
 };
 
+export type getMyAvailabilityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getMyAvailabilityResponse500 = {
   data: Problem;
   status: 500;
@@ -15398,6 +15877,7 @@ export type getMyAvailabilityResponseError = (
   | getMyAvailabilityResponse404
   | getMyAvailabilityResponse409
   | getMyAvailabilityResponse422
+  | getMyAvailabilityResponse429
   | getMyAvailabilityResponse500
 ) & {
   headers: Headers;
@@ -15557,6 +16037,11 @@ export type setMyAvailabilityResponse422 = {
   status: 422;
 };
 
+export type setMyAvailabilityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type setMyAvailabilityResponse500 = {
   data: Problem;
   status: 500;
@@ -15572,6 +16057,7 @@ export type setMyAvailabilityResponseError = (
   | setMyAvailabilityResponse404
   | setMyAvailabilityResponse409
   | setMyAvailabilityResponse422
+  | setMyAvailabilityResponse429
   | setMyAvailabilityResponse500
 ) & {
   headers: Headers;
@@ -15722,6 +16208,11 @@ export type listAvailabilityResponse422 = {
   status: 422;
 };
 
+export type listAvailabilityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAvailabilityResponse500 = {
   data: Problem;
   status: 500;
@@ -15737,6 +16228,7 @@ export type listAvailabilityResponseError = (
   | listAvailabilityResponse404
   | listAvailabilityResponse409
   | listAvailabilityResponse422
+  | listAvailabilityResponse429
   | listAvailabilityResponse500
 ) & {
   headers: Headers;
@@ -15894,6 +16386,11 @@ export type listOrganisationsResponse422 = {
   status: 422;
 };
 
+export type listOrganisationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listOrganisationsResponse500 = {
   data: Problem;
   status: 500;
@@ -15909,6 +16406,7 @@ export type listOrganisationsResponseError = (
   | listOrganisationsResponse404
   | listOrganisationsResponse409
   | listOrganisationsResponse422
+  | listOrganisationsResponse429
   | listOrganisationsResponse500
 ) & {
   headers: Headers;
@@ -16068,6 +16566,11 @@ export type createOrganisationResponse422 = {
   status: 422;
 };
 
+export type createOrganisationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createOrganisationResponse500 = {
   data: Problem;
   status: 500;
@@ -16083,6 +16586,7 @@ export type createOrganisationResponseError = (
   | createOrganisationResponse404
   | createOrganisationResponse409
   | createOrganisationResponse422
+  | createOrganisationResponse429
   | createOrganisationResponse500
 ) & {
   headers: Headers;
@@ -16233,6 +16737,11 @@ export type listTenantsResponse422 = {
   status: 422;
 };
 
+export type listTenantsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listTenantsResponse500 = {
   data: Problem;
   status: 500;
@@ -16248,6 +16757,7 @@ export type listTenantsResponseError = (
   | listTenantsResponse404
   | listTenantsResponse409
   | listTenantsResponse422
+  | listTenantsResponse429
   | listTenantsResponse500
 ) & {
   headers: Headers;
@@ -16391,6 +16901,11 @@ export type createTenantResponse422 = {
   status: 422;
 };
 
+export type createTenantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createTenantResponse500 = {
   data: Problem;
   status: 500;
@@ -16406,6 +16921,7 @@ export type createTenantResponseError = (
   | createTenantResponse404
   | createTenantResponse409
   | createTenantResponse422
+  | createTenantResponse429
   | createTenantResponse500
 ) & {
   headers: Headers;
@@ -16549,6 +17065,11 @@ export type getTenantResponse422 = {
   status: 422;
 };
 
+export type getTenantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getTenantResponse500 = {
   data: Problem;
   status: 500;
@@ -16564,6 +17085,7 @@ export type getTenantResponseError = (
   | getTenantResponse404
   | getTenantResponse409
   | getTenantResponse422
+  | getTenantResponse429
   | getTenantResponse500
 ) & {
   headers: Headers;
@@ -16718,6 +17240,11 @@ export type suspendTenantResponse422 = {
   status: 422;
 };
 
+export type suspendTenantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type suspendTenantResponse500 = {
   data: Problem;
   status: 500;
@@ -16733,6 +17260,7 @@ export type suspendTenantResponseError = (
   | suspendTenantResponse404
   | suspendTenantResponse409
   | suspendTenantResponse422
+  | suspendTenantResponse429
   | suspendTenantResponse500
 ) & {
   headers: Headers;
@@ -16855,6 +17383,11 @@ export type reactivateTenantResponse422 = {
   status: 422;
 };
 
+export type reactivateTenantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type reactivateTenantResponse500 = {
   data: Problem;
   status: 500;
@@ -16870,6 +17403,7 @@ export type reactivateTenantResponseError = (
   | reactivateTenantResponse404
   | reactivateTenantResponse409
   | reactivateTenantResponse422
+  | reactivateTenantResponse429
   | reactivateTenantResponse500
 ) & {
   headers: Headers;
@@ -16996,6 +17530,11 @@ export type getCurrentTenantResponse422 = {
   status: 422;
 };
 
+export type getCurrentTenantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getCurrentTenantResponse500 = {
   data: Problem;
   status: 500;
@@ -17011,6 +17550,7 @@ export type getCurrentTenantResponseError = (
   | getCurrentTenantResponse404
   | getCurrentTenantResponse409
   | getCurrentTenantResponse422
+  | getCurrentTenantResponse429
   | getCurrentTenantResponse500
 ) & {
   headers: Headers;
@@ -17168,6 +17708,11 @@ export type getSessionPolicyResponse422 = {
   status: 422;
 };
 
+export type getSessionPolicyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getSessionPolicyResponse500 = {
   data: Problem;
   status: 500;
@@ -17183,6 +17728,7 @@ export type getSessionPolicyResponseError = (
   | getSessionPolicyResponse404
   | getSessionPolicyResponse409
   | getSessionPolicyResponse422
+  | getSessionPolicyResponse429
   | getSessionPolicyResponse500
 ) & {
   headers: Headers;
@@ -17340,6 +17886,11 @@ export type updateSessionPolicyResponse422 = {
   status: 422;
 };
 
+export type updateSessionPolicyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type updateSessionPolicyResponse500 = {
   data: Problem;
   status: 500;
@@ -17355,6 +17906,7 @@ export type updateSessionPolicyResponseError = (
   | updateSessionPolicyResponse404
   | updateSessionPolicyResponse409
   | updateSessionPolicyResponse422
+  | updateSessionPolicyResponse429
   | updateSessionPolicyResponse500
 ) & {
   headers: Headers;
@@ -17505,6 +18057,11 @@ export type getMeResponse422 = {
   status: 422;
 };
 
+export type getMeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type getMeResponse500 = {
   data: Problem;
   status: 500;
@@ -17520,6 +18077,7 @@ export type getMeResponseError = (
   | getMeResponse404
   | getMeResponse409
   | getMeResponse422
+  | getMeResponse429
   | getMeResponse500
 ) & {
   headers: Headers;
@@ -17661,6 +18219,11 @@ export type updateMeResponse422 = {
   status: 422;
 };
 
+export type updateMeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type updateMeResponse500 = {
   data: Problem;
   status: 500;
@@ -17676,6 +18239,7 @@ export type updateMeResponseError = (
   | updateMeResponse404
   | updateMeResponse409
   | updateMeResponse422
+  | updateMeResponse429
   | updateMeResponse500
 ) & {
   headers: Headers;
@@ -17819,6 +18383,11 @@ export type switchWorkspaceResponse422 = {
   status: 422;
 };
 
+export type switchWorkspaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type switchWorkspaceResponse500 = {
   data: Problem;
   status: 500;
@@ -17834,6 +18403,7 @@ export type switchWorkspaceResponseError = (
   | switchWorkspaceResponse404
   | switchWorkspaceResponse409
   | switchWorkspaceResponse422
+  | switchWorkspaceResponse429
   | switchWorkspaceResponse500
 ) & {
   headers: Headers;
@@ -17979,6 +18549,11 @@ export type listTenantMembersResponse422 = {
   status: 422;
 };
 
+export type listTenantMembersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listTenantMembersResponse500 = {
   data: Problem;
   status: 500;
@@ -17994,6 +18569,7 @@ export type listTenantMembersResponseError = (
   | listTenantMembersResponse404
   | listTenantMembersResponse409
   | listTenantMembersResponse422
+  | listTenantMembersResponse429
   | listTenantMembersResponse500
 ) & {
   headers: Headers;
@@ -18153,6 +18729,11 @@ export type changeMemberRoleResponse422 = {
   status: 422;
 };
 
+export type changeMemberRoleResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type changeMemberRoleResponse500 = {
   data: Problem;
   status: 500;
@@ -18168,6 +18749,7 @@ export type changeMemberRoleResponseError = (
   | changeMemberRoleResponse404
   | changeMemberRoleResponse409
   | changeMemberRoleResponse422
+  | changeMemberRoleResponse429
   | changeMemberRoleResponse500
 ) & {
   headers: Headers;
@@ -18316,6 +18898,11 @@ export type addMemberResponse422 = {
   status: 422;
 };
 
+export type addMemberResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type addMemberResponse500 = {
   data: Problem;
   status: 500;
@@ -18331,6 +18918,7 @@ export type addMemberResponseError = (
   | addMemberResponse404
   | addMemberResponse409
   | addMemberResponse422
+  | addMemberResponse429
   | addMemberResponse500
 ) & {
   headers: Headers;
@@ -18475,6 +19063,11 @@ export type listMembersResponse422 = {
   status: 422;
 };
 
+export type listMembersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listMembersResponse500 = {
   data: Problem;
   status: 500;
@@ -18490,6 +19083,7 @@ export type listMembersResponseError = (
   | listMembersResponse404
   | listMembersResponse409
   | listMembersResponse422
+  | listMembersResponse429
   | listMembersResponse500
 ) & {
   headers: Headers;
@@ -18644,6 +19238,11 @@ export type listAuditEventsResponse422 = {
   status: 422;
 };
 
+export type listAuditEventsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAuditEventsResponse500 = {
   data: Problem;
   status: 500;
@@ -18659,6 +19258,7 @@ export type listAuditEventsResponseError = (
   | listAuditEventsResponse404
   | listAuditEventsResponse409
   | listAuditEventsResponse422
+  | listAuditEventsResponse429
   | listAuditEventsResponse500
 ) & {
   headers: Headers;
@@ -18843,6 +19443,11 @@ export type exportAuditEventsResponse422 = {
   status: 422;
 };
 
+export type exportAuditEventsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type exportAuditEventsResponse500 = {
   data: Problem;
   status: 500;
@@ -18858,6 +19463,7 @@ export type exportAuditEventsResponseError = (
   | exportAuditEventsResponse404
   | exportAuditEventsResponse409
   | exportAuditEventsResponse422
+  | exportAuditEventsResponse429
   | exportAuditEventsResponse500
 ) & {
   headers: Headers;
@@ -19046,6 +19652,11 @@ export type listAuditSigningKeysResponse422 = {
   status: 422;
 };
 
+export type listAuditSigningKeysResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listAuditSigningKeysResponse500 = {
   data: Problem;
   status: 500;
@@ -19061,6 +19672,7 @@ export type listAuditSigningKeysResponseError = (
   | listAuditSigningKeysResponse404
   | listAuditSigningKeysResponse409
   | listAuditSigningKeysResponse422
+  | listAuditSigningKeysResponse429
   | listAuditSigningKeysResponse500
 ) & {
   headers: Headers;
@@ -19228,6 +19840,11 @@ export type listServiceAccountsResponse422 = {
   status: 422;
 };
 
+export type listServiceAccountsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listServiceAccountsResponse500 = {
   data: Problem;
   status: 500;
@@ -19243,6 +19860,7 @@ export type listServiceAccountsResponseError = (
   | listServiceAccountsResponse404
   | listServiceAccountsResponse409
   | listServiceAccountsResponse422
+  | listServiceAccountsResponse429
   | listServiceAccountsResponse500
 ) & {
   headers: Headers;
@@ -19410,6 +20028,11 @@ export type createServiceAccountResponse422 = {
   status: 422;
 };
 
+export type createServiceAccountResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createServiceAccountResponse500 = {
   data: Problem;
   status: 500;
@@ -19425,6 +20048,7 @@ export type createServiceAccountResponseError = (
   | createServiceAccountResponse404
   | createServiceAccountResponse409
   | createServiceAccountResponse422
+  | createServiceAccountResponse429
   | createServiceAccountResponse500
 ) & {
   headers: Headers;
@@ -19575,6 +20199,11 @@ export type issueApiTokenResponse422 = {
   status: 422;
 };
 
+export type issueApiTokenResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type issueApiTokenResponse500 = {
   data: Problem;
   status: 500;
@@ -19590,6 +20219,7 @@ export type issueApiTokenResponseError = (
   | issueApiTokenResponse404
   | issueApiTokenResponse409
   | issueApiTokenResponse422
+  | issueApiTokenResponse429
   | issueApiTokenResponse500
 ) & {
   headers: Headers;
@@ -19734,6 +20364,11 @@ export type revokeApiTokenResponse422 = {
   status: 422;
 };
 
+export type revokeApiTokenResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type revokeApiTokenResponse500 = {
   data: Problem;
   status: 500;
@@ -19749,6 +20384,7 @@ export type revokeApiTokenResponseError = (
   | revokeApiTokenResponse404
   | revokeApiTokenResponse409
   | revokeApiTokenResponse422
+  | revokeApiTokenResponse429
   | revokeApiTokenResponse500
 ) & {
   headers: Headers;
@@ -19872,6 +20508,11 @@ export type disableServiceAccountResponse422 = {
   status: 422;
 };
 
+export type disableServiceAccountResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type disableServiceAccountResponse500 = {
   data: Problem;
   status: 500;
@@ -19887,6 +20528,7 @@ export type disableServiceAccountResponseError = (
   | disableServiceAccountResponse404
   | disableServiceAccountResponse409
   | disableServiceAccountResponse422
+  | disableServiceAccountResponse429
   | disableServiceAccountResponse500
 ) & {
   headers: Headers;
@@ -20016,6 +20658,11 @@ export type listInvitationsResponse422 = {
   status: 422;
 };
 
+export type listInvitationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type listInvitationsResponse500 = {
   data: Problem;
   status: 500;
@@ -20031,6 +20678,7 @@ export type listInvitationsResponseError = (
   | listInvitationsResponse404
   | listInvitationsResponse409
   | listInvitationsResponse422
+  | listInvitationsResponse429
   | listInvitationsResponse500
 ) & {
   headers: Headers;
@@ -20186,6 +20834,11 @@ export type createInvitationResponse422 = {
   status: 422;
 };
 
+export type createInvitationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type createInvitationResponse500 = {
   data: Problem;
   status: 500;
@@ -20201,6 +20854,7 @@ export type createInvitationResponseError = (
   | createInvitationResponse404
   | createInvitationResponse409
   | createInvitationResponse422
+  | createInvitationResponse429
   | createInvitationResponse500
 ) & {
   headers: Headers;
@@ -20348,6 +21002,11 @@ export type revokeInvitationResponse422 = {
   status: 422;
 };
 
+export type revokeInvitationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type revokeInvitationResponse500 = {
   data: Problem;
   status: 500;
@@ -20363,6 +21022,7 @@ export type revokeInvitationResponseError = (
   | revokeInvitationResponse404
   | revokeInvitationResponse409
   | revokeInvitationResponse422
+  | revokeInvitationResponse429
   | revokeInvitationResponse500
 ) & {
   headers: Headers;
@@ -20489,6 +21149,11 @@ export type invitePlatformMemberResponse422 = {
   status: 422;
 };
 
+export type invitePlatformMemberResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type invitePlatformMemberResponse500 = {
   data: Problem;
   status: 500;
@@ -20504,6 +21169,7 @@ export type invitePlatformMemberResponseError = (
   | invitePlatformMemberResponse404
   | invitePlatformMemberResponse409
   | invitePlatformMemberResponse422
+  | invitePlatformMemberResponse429
   | invitePlatformMemberResponse500
 ) & {
   headers: Headers;
@@ -20655,6 +21321,11 @@ export type acceptInvitationResponse422 = {
   status: 422;
 };
 
+export type acceptInvitationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
 export type acceptInvitationResponse500 = {
   data: Problem;
   status: 500;
@@ -20670,6 +21341,7 @@ export type acceptInvitationResponseError = (
   | acceptInvitationResponse404
   | acceptInvitationResponse409
   | acceptInvitationResponse422
+  | acceptInvitationResponse429
   | acceptInvitationResponse500
 ) & {
   headers: Headers;

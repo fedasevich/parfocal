@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 23 |
-| `personal` | 35 |
+| `personal` | 36 |
 | `secret` | 9 |
-| `operational` | 354 |
+| `operational` | 356 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -394,6 +394,14 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `template` | operational |
 | `archived_at` | operational |
 | `created_by_user_id` | personal |
+
+## rate_counters
+
+| Column | Class |
+|---|---|
+| `key` | personal |
+| `window_start` | operational |
+| `count` | operational |
 
 ## result_chunks
 

@@ -38,6 +38,7 @@ class ProblemError(Exception):
     def __init__(self, detail: str | None = None) -> None:
         super().__init__(detail or self.title)
         self.detail = detail
+        self.headers: dict[str, str] = {}
 
 
 class BadRequestError(ProblemError):
@@ -75,6 +76,16 @@ class ConflictError(ProblemError):
     title = "This changed since you loaded it"
 
 
+class TooManyRequestsError(ProblemError):
+    status = 429
+    code = "rate-limited"
+    title = "Too many requests, try again shortly"
+
+    def __init__(self, retry_after: int) -> None:
+        super().__init__()
+        self.headers = {"Retry-After": str(retry_after)}
+
+
 STATUS_CODES: dict[int, type[ProblemError]] = {
     problem.status: problem
     for problem in (
@@ -83,6 +94,7 @@ STATUS_CODES: dict[int, type[ProblemError]] = {
         ForbiddenError,
         NotFoundError,
         ConflictError,
+        TooManyRequestsError,
     )
 }
 
@@ -126,7 +138,9 @@ def field_errors(error: RequestValidationError) -> list[FieldError]:
 def install_problem_handlers(app: FastAPI, errors: ErrorReporter) -> None:
     async def known_problem(_: Request, problem: Exception) -> JSONResponse:
         assert isinstance(problem, ProblemError)
-        return problem_response(problem.status, problem.code, problem.title, problem.detail)
+        response = problem_response(problem.status, problem.code, problem.title, problem.detail)
+        response.headers.update(problem.headers)
+        return response
 
     async def validation(_: Request, error: Exception) -> JSONResponse:
         assert isinstance(error, RequestValidationError)
