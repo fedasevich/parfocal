@@ -432,7 +432,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Typed settings in Python (pydantic-settings) and a typed runtime config for the web app. No secrets in the frontend bundle. One `APP_ENV` setting (`dev`, `test`, `preview`, `staging`, `prod`) picks the email, error reporting, telemetry export, analytics and flag clients at startup, and only `prod` talks to Resend, Sentry, Grafana Cloud and PostHog ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when a test fails startup on a missing required setting, the web build fails if a non-public variable is referenced, and a test shows that with any `APP_ENV` other than `prod` no client for those services is created.
 
-- [ ] FOUND-011 · Structured logging with tenant and request context
+- [x] FOUND-011 · Structured logging with tenant and request context
   JSON logs, request id, tenant id, user id as pseudonymous ids, PHI scrubber.
   Done when a test shows a patient name passed to a logger is redacted.
   Depends on STACK-032.
