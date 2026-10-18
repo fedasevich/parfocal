@@ -3006,7 +3006,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when schema tests accept the template and reject each documented error with its line, and the help drawer has a component test.
   Depends on RSET-000. Refs mock: formats, doc 38 answer 7.
 
-- [ ] RSET-003 · Readers for GeoJSON, CSV and masks
+- [x] RSET-003 · Readers for GeoJSON, CSV and masks
   GeoJSON including QuPath exports, CSV or TSV of cells or detections with a column-mapping step, and masks and heatmaps as PNG or TIFF aligned to a slide level.
   Done when parser tests read a fixture of each kind into the same object form, including a QuPath export and a CSV with renamed columns. The readers and the object form are in [ADR 0070](adr/0070-result-file-parsers.md), and the fixture must be a real QuPath 0.7 export.
   Depends on RSET-001, RSET-000.
@@ -3026,7 +3026,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when E2E adds a GeoJSON from the slide view, fixes its offset and sees it in Layers.
   Depends on RSET-005, VIZ-001. Refs mock: upload/viewer.
 
-- [ ] RSET-007 · Reviewed layer
+- [x] RSET-007 · Reviewed layer
   Reviewer edits (retype, outline, delete, add) are recorded per reviewer in a layer over the AI set, so the AI output is never overwritten and can be compared with what reviewers made of it. Added objects get IDs with a plus (OBJ-003).
   Done when API tests cover each edit, prove the AI set is unchanged, and compare a reviewed layer with its set.
   Depends on RSET-001, OBJ-001, ANN-020.
@@ -3056,7 +3056,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when unit tests cover allocation order, the full path and parsing every form back.
   Depends on OBJ-000, RSET-001.
 
-- [ ] OBJ-002 · IDs across result sets
+- [x] OBJ-002 · IDs across result sets
   When a new set arrives on a slide, objects that overlap an existing object above the threshold inherit its ID, new objects get new IDs, and missing ones show as "not in this set".
   Done when tests on two fixture sets cover inherited, new and missing objects.
   Depends on OBJ-001.
