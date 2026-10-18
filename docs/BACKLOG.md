@@ -1841,7 +1841,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when the overlay perf test meets the TEST-006 budget during a drag with 100k shapes.
   Refs doc 24.
 
-- [ ] ANN-020 · Annotation persistence API
+- [x] ANN-020 · Annotation persistence API
   CRUD with versioning, append-only history, bulk operations, tenant isolation, PostGIS geometry in level-0 coordinates.
   Done when API tests cover CRUD, history and bulk accept of 10,000 shapes under the latency budget.
   Depends on STACK-021. Tables in [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
