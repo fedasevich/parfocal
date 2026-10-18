@@ -20,3 +20,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-15 | [Server state with TanStack Query, SWR and RTK Query](2026-10-15-server-state-spike.md) | STACK-004 | spike |
 | 2026-10-17 | [Class colour separation for the taxonomy templates and the API check](2026-10-17-class-colour-separation.md) | PROJ-004 | baseline |
 | 2026-10-18 | [Parsers for imported AI results on Python 3.14](2026-10-18-result-parsers-spike.md) | RSET-000 | spike |
+| 2026-10-18 | [Tissue mask on CAMELYON16](2026-10-18-tissue-mask-camelyon.md) | INGEST-012 | ML evaluation |
