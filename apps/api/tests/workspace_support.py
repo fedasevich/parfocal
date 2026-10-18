@@ -89,3 +89,34 @@ def join_project(database: str, project_id: uuid.UUID, who: MemberPrincipal, rol
         "INSERT INTO project_members (tenant_id, project_id, user_id, role) "
         f"VALUES ('{who.tenant_id}', '{project_id}', '{who.user_id}', '{role}')",
     )
+
+
+def make_case(database: str, tenant_id: uuid.UUID, project_id: uuid.UUID, label: str) -> uuid.UUID:
+    return uuid.UUID(
+        str(
+            owner(
+                database,
+                "INSERT INTO cases (tenant_id, project_id, label, source) "
+                f"VALUES ('{tenant_id}', '{project_id}', '{label}', 'manual') RETURNING id",
+            )[0][0]
+        )
+    )
+
+
+def make_slide(
+    database: str,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    label: str,
+    case_id: uuid.UUID | None = None,
+) -> uuid.UUID:
+    case = f"'{case_id}'" if case_id else "NULL"
+    return uuid.UUID(
+        str(
+            owner(
+                database,
+                "INSERT INTO slides (tenant_id, project_id, case_id, label) "
+                f"VALUES ('{tenant_id}', '{project_id}', {case}, '{label}') RETURNING id",
+            )[0][0]
+        )
+    )
