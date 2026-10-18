@@ -37,6 +37,9 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    review_assignments,
+    review_task_slides,
+    review_tasks,
     service_accounts,
     session_policies,
     slide_counters,
@@ -77,6 +80,9 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "review_tasks",
+    "review_task_slides",
+    "review_assignments",
     "result_sets",
     "result_set_classes",
     "result_objects",
@@ -354,6 +360,42 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["result_set"] = set_id
+    task_name = f"Task {uuid.uuid4().hex[:8]}"
+    task_id = await connection.scalar(
+        insert(review_tasks)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            number=1,
+            name=task_name,
+            split="everyone",
+            scope="all-regions",
+            opinion_form_version=1,
+            start_mode="guided",
+        )
+        .returning(review_tasks.c.id)
+    )
+    assert isinstance(task_id, uuid.UUID)
+    await connection.execute(
+        insert(review_task_slides).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            position=0,
+            result_set_id=set_id,
+        )
+    )
+    await connection.execute(
+        insert(review_assignments).values(
+            tenant_id=seeded.tenant_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+        )
+    )
+    seeded.ids["task"] = task_id
+    seeded.markers.update({str(task_id), task_name})
     seeded.markers.update({str(set_id), set_name})
     seeded.ids["annotation"] = annotation_id
     seeded.markers.add(str(annotation_id))
@@ -419,6 +461,10 @@ GET_ROUTES = {
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
+    "listReviewTasks": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
+    ),
+    "getReviewTask": Route(Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}"),
     "listSlideResultSets": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/result-sets"
     ),

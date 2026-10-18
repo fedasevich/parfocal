@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ColumnElement, exists, func, or_, select, true
+from sqlalchemy import ColumnElement, Select, exists, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.permissions import (
@@ -13,7 +13,14 @@ from parfocal_api.permissions import (
 )
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
 from parfocal_api.problems import ForbiddenError, NotFoundError
-from parfocal_api.tables import PrivacyMode, ProjectRole, emergency_grants, project_members
+from parfocal_api.tables import (
+    PrivacyMode,
+    ProjectRole,
+    emergency_grants,
+    project_members,
+    review_assignments,
+    review_tasks,
+)
 
 READERS = tuple(
     role
@@ -119,3 +126,64 @@ def readable(principal: Principal, project_column: ColumnElement[uuid.UUID]) -> 
         ),
         project_column.in_(select(emergency_grants.c.project_id).where(open_grants(principal))),
     )
+
+
+def assigned_slides(principal: Principal) -> Select[tuple[uuid.UUID]]:
+    user_id = principal.user_id if isinstance(principal, MemberPrincipal) else None
+    return (
+        select(review_assignments.c.slide_id)
+        .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
+        .where(review_assignments.c.user_id == user_id, review_tasks.c.archived_at.is_(None))
+    )
+
+
+async def reads_slide(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+) -> bool:
+    grant = await project_grant(connection, principal, project_id, Permission.SEE_SLIDES)
+    if reads_whole(grant):
+        return True
+    if grant is not Grant.ASSIGNED or not isinstance(principal, MemberPrincipal):
+        return False
+    mine = assigned_slides(principal).where(review_assignments.c.slide_id == slide_id)
+    return bool(await connection.scalar(select(mine.exists())))
+
+
+async def require_slide_reading(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    privacy_mode: PrivacyMode,
+    slide_id: uuid.UUID,
+    missing: str,
+) -> None:
+    if await reads_slide(connection, principal, project_id, slide_id):
+        return
+    await require_reading(connection, principal, project_id, privacy_mode, missing)
+
+
+async def reviews_slide(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+) -> Grant:
+    grant = await project_grant(connection, principal, project_id, Permission.REVIEW)
+    if grant is Grant.ASSIGNED and not await reads_slide(
+        connection, principal, project_id, slide_id
+    ):
+        return Grant.NONE
+    return grant
+
+
+def readable_slide(
+    principal: Principal,
+    project_column: ColumnElement[uuid.UUID],
+    slide_column: ColumnElement[uuid.UUID],
+) -> ColumnElement[bool]:
+    if isinstance(principal, ServicePrincipal):
+        return true()
+    return or_(readable(principal, project_column), slide_column.in_(assigned_slides(principal)))

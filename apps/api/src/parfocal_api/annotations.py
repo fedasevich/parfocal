@@ -16,7 +16,7 @@ from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import project_grant, require_reading
+from parfocal_api.project_access import require_slide_reading, reviews_slide
 from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     AnnotationChange,
@@ -31,6 +31,7 @@ from parfocal_api.tables import (
 from parfocal_common.object_ids import Letter, ObjectId
 
 MAX_BULK = 10_000
+DRAWS = frozenset({Grant.ALL, Grant.ASSIGNED})
 MAX_VERTICES = 20_000
 LETTERS = {
     AnnotationKind.ROI: Letter.ROI,
@@ -169,7 +170,7 @@ class AnnotationVersion(BaseModel):
 
 class AnnotatingNotAllowedError(ForbiddenError):
     code = "annotating-not-allowed"
-    title = "Only an owner of this project draws on its slides"
+    title = "Only project owners and this slide's reviewers draw on it"
 
 
 class InvalidShapeError(BadRequestError):
@@ -240,8 +241,13 @@ async def slide_row(connection: AsyncConnection, principal: Principal, slide_id:
     ).one_or_none()
     if row is None:
         raise NotFoundError("Slide not found")
-    await require_reading(
-        connection, principal, row.project_id, PrivacyMode(row.privacy_mode), "Slide not found"
+    await require_slide_reading(
+        connection,
+        principal,
+        row.project_id,
+        PrivacyMode(row.privacy_mode),
+        slide_id,
+        "Slide not found",
     )
     return row
 
@@ -250,10 +256,7 @@ async def drawable_slide(
     connection: AsyncConnection, principal: Principal, slide_id: uuid.UUID
 ) -> Any:
     row = await slide_row(connection, principal, slide_id)
-    if (
-        await project_grant(connection, principal, row.project_id, Permission.REVIEW)
-        is not Grant.ALL
-    ):
+    if await reviews_slide(connection, principal, row.project_id, slide_id) not in DRAWS:
         raise AnnotatingNotAllowedError
     if row.archived_at is not None:
         raise ProjectArchivedError

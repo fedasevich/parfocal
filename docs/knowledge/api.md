@@ -34,6 +34,8 @@ A route that touches a project's cases or slides reads the effective grant from 
 
 ## Test helpers for workspaces and projects
 
+`ApiAs` sets one dependency override for the signed-in principal, so `api(person)` changes who every client acts as. Call `api(person)` right before each request and never keep a client for one person across a call made as another, or the request silently runs as the last person used.
+
 `tests/workspace_support.py` makes a workspace with people (`make_workspace`), a project (`make_project`) and a project role (`join_project`), and `tests/case_support.py` seeds a project with a case, slides and a loose slide. A test that reads cases must give its principal a project role first, or it gets 404. `test_project_roles.py` computes the expected status of every project route from the matrix, so a new project route only needs an entry in `OPERATIONS`.
 
 ## The permission matrix test runs calls in a fixed order
@@ -44,9 +46,9 @@ A route that touches a project's cases or slides reads the effective grant from 
 
 Log with `logging.getLogger("parfocal....")` and put values in `extra` under keys from `scrubbing.ALLOWED_FIELDS`. Any other key is written as `[redacted]`. Code that reads a name, email or identifier calls `structured_logging.register_sensitive` so the rest of the request cannot leak it, as `identifiers.read_patient` does. Tests capture output with `configure_logging(..., stream=io.StringIO())` and must remove the handler afterwards, and should filter lines by logger name because the test client's `httpx2` logs each call ([ADR 0068](../adr/0068-structured-logging-on-the-standard-library.md)).
 
-## Review writes need a task for reviewers
+## Reviewers reach only their task slides
 
-Reviewers hold `review` as "in their tasks". Until TASK-001 (review task model) exists there are no tasks, so annotation writes need the project grant `ALL` (project owners) and everyone else gets 403 `annotating-not-allowed`, or 404 when they cannot read the slide. The permission matrix test lists these operations in `NEEDS_A_TASK` and expects 403 for the `ASSIGNED` grant. TASK-001 must open them to reviewers on their task slides and shrink that set.
+A project reviewer holds `see-slides` and `review` as "in their tasks". `project_access.reads_slide` and `require_slide_reading` let them read a slide only when they hold an assignment on it in a task that is not archived, and `reviews_slide` lets them draw annotations there. A case shows them only their task slides, `listCases` lists the cases that hold those slides, and `readable_slide` filters result set lists the same way ([ADR 0078](../adr/0078-review-task-model.md)). Task lists and task details filter on the reviewer's own assignments in that task, not on any task that shares a slide with them. The permission matrix test seeds the reviewer as a project viewer, so annotation writes there stay in `NEEDS_A_TASK` and get 403.
 
 ## Object IDs
 

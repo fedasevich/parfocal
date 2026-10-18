@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 20 |
-| `personal` | 27 |
+| `personal` | 29 |
 | `secret` | 9 |
-| `operational` | 277 |
+| `operational` | 307 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -415,6 +415,53 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## review_assignments
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `submitted_at` | operational |
+| `assigned_at` | operational |
+
+## review_task_slides
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `position` | operational |
+| `result_set_id` | operational |
+
+## review_tasks
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `number` | operational |
+| `name` | operational |
+| `split` | operational |
+| `scope` | operational |
+| `scope_count` | operational |
+| `scope_seed` | operational |
+| `scope_score` | operational |
+| `opinion_form_version` | operational |
+| `blinded` | operational |
+| `ai_hidden_first_read` | operational |
+| `start_mode` | operational |
+| `due_on` | operational |
+| `reminder_days` | operational |
+| `created_by_user_id` | personal |
+| `archived_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## service_accounts
 

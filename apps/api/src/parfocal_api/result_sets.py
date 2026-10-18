@@ -14,7 +14,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import project_grant, readable, require_reading
+from parfocal_api.project_access import project_grant, readable_slide, require_slide_reading
 from parfocal_api.projects import ProjectArchivedError, visible
 from parfocal_api.tables import (
     PrivacyMode,
@@ -121,8 +121,13 @@ async def slide_row(connection: AsyncConnection, principal: Principal, slide_id:
     ).one_or_none()
     if row is None:
         raise NotFoundError("Slide not found")
-    await require_reading(
-        connection, principal, row.project_id, PrivacyMode(row.privacy_mode), "Slide not found"
+    await require_slide_reading(
+        connection,
+        principal,
+        row.project_id,
+        PrivacyMode(row.privacy_mode),
+        slide_id,
+        "Slide not found",
     )
     return row
 
@@ -147,8 +152,13 @@ async def set_row(connection: AsyncConnection, principal: Principal, set_id: uui
     ).one_or_none()
     if row is None:
         raise NotFoundError("Result set not found")
-    await require_reading(
-        connection, principal, row.project_id, PrivacyMode(row.privacy_mode), "Result set not found"
+    await require_slide_reading(
+        connection,
+        principal,
+        row.project_id,
+        PrivacyMode(row.privacy_mode),
+        row.slide_id,
+        "Result set not found",
     )
     return row
 
@@ -411,7 +421,7 @@ async def list_project_result_sets(
         .where(
             result_sets.c.project_id == project_id,
             result_sets.c.deleted_at.is_(None),
-            readable(principal, result_sets.c.project_id),
+            readable_slide(principal, result_sets.c.project_id, result_sets.c.slide_id),
         )
         .order_by(result_sets.c.created_at)
     )

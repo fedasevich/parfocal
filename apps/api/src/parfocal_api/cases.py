@@ -4,7 +4,7 @@ from typing import cast
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -14,8 +14,11 @@ from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import NotFoundError
 from parfocal_api.project_access import (
     EmergencyAccessNeededError,
+    assigned_slides,
     holds_any_grant,
+    project_grant,
     readable,
+    reads_whole,
     require_reading,
 )
 from parfocal_api.tables import (
@@ -173,16 +176,19 @@ async def case_detail(
     ).one_or_none()
     if row is None:
         raise NotFoundError("Case not found")
-    await require_reading(
-        connection, principal, row.project_id, PrivacyMode(row.privacy_mode), "Case not found"
-    )
-    slide_rows = (
-        await connection.execute(
-            select(slides)
-            .where(slides.c.case_id == case_id, slides.c.deleted_at.is_(None))
-            .order_by(slides.c.created_at)
-        )
-    ).all()
+    in_case = select(slides).where(slides.c.case_id == case_id, slides.c.deleted_at.is_(None))
+    grant = await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
+    if not reads_whole(grant):
+        in_case = in_case.where(slides.c.id.in_(assigned_slides(principal)))
+        if grant is not Grant.ASSIGNED or not await connection.scalar(select(in_case.exists())):
+            await require_reading(
+                connection,
+                principal,
+                row.project_id,
+                PrivacyMode(row.privacy_mode),
+                "Case not found",
+            )
+    slide_rows = (await connection.execute(in_case.order_by(slides.c.created_at))).all()
     patient = None
     if row.patient_id is not None:
         tenant_id = database_scope(principal).tenant_id
@@ -227,8 +233,12 @@ async def list_cases(
         connection, principal
     ):
         raise EmergencyAccessNeededError
+    with_task_slides = cases.c.id.in_(
+        select(slides.c.case_id).where(slides.c.id.in_(assigned_slides(principal)))
+    )
     statement = select(cases).where(
-        cases.c.deleted_at.is_(None), readable(principal, cases.c.project_id)
+        cases.c.deleted_at.is_(None),
+        or_(readable(principal, cases.c.project_id), with_task_slides),
     )
     if project_id is not None:
         statement = statement.where(cases.c.project_id == project_id)

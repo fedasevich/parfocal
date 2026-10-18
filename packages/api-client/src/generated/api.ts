@@ -268,6 +268,7 @@ export const AuditTarget = {
   case: "case",
   project: "project",
   "result-set": "result-set",
+  "review-task": "review-task",
   "service-account": "service-account",
   invitation: "invitation",
 } as const;
@@ -860,6 +861,11 @@ export interface OrganisationDraft {
   name: ParfocalApiTenantsName;
 }
 
+export interface Pair {
+  slide_id: string;
+  user_id: string;
+}
+
 export type Plan = (typeof Plan)[keyof typeof Plan];
 
 export const Plan = {
@@ -983,6 +989,13 @@ export const Region = {
   us: "us",
 } as const;
 
+/**
+ * @maxItems 3
+ * @items.minimum 0
+ * @items.maximum 60
+ */
+export type Reminders = number[];
+
 export interface Resolved {
   source_name: string;
   class_id: string | null;
@@ -1060,6 +1073,84 @@ export interface ResultSetDraft {
   produced_at?: string | null;
   /** @maxItems 255 */
   classes?: ParfocalApiResultSetsName[];
+}
+
+export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
+
+export const TaskSplit = {
+  everyone: "everyone",
+  even: "even",
+  chosen: "chosen",
+} as const;
+
+export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
+
+export const TaskScope = {
+  "all-regions": "all-regions",
+  "random-cells": "random-cells",
+  "cells-below-score": "cells-below-score",
+  "inside-rois": "inside-rois",
+  "unsure-zones": "unsure-zones",
+} as const;
+
+export interface Scope {
+  kind: TaskScope;
+  count?: number | null;
+  score?: number | null;
+}
+
+export type StartMode = (typeof StartMode)[keyof typeof StartMode];
+
+export const StartMode = {
+  guided: "guided",
+  viewer: "viewer",
+} as const;
+
+export interface ReviewTask {
+  id: string;
+  project_id: string;
+  number: number;
+  code: string;
+  name: string;
+  split: TaskSplit;
+  scope: Scope;
+  opinion_form_version: number;
+  blinded: boolean;
+  ai_hidden_first_read: boolean;
+  start_mode: StartMode;
+  due_on: string | null;
+  reminder_days: number[];
+  created_by_user_id: string | null;
+  created_at: string;
+  slide_count: number;
+  reviewer_count: number;
+}
+
+export interface TaskSlide {
+  slide_id: string;
+  result_set_id: string;
+  reviewer_ids: string[];
+}
+
+export interface ReviewTaskDetail {
+  id: string;
+  project_id: string;
+  number: number;
+  code: string;
+  name: string;
+  split: TaskSplit;
+  scope: Scope;
+  opinion_form_version: number;
+  blinded: boolean;
+  ai_hidden_first_read: boolean;
+  start_mode: StartMode;
+  due_on: string | null;
+  reminder_days: number[];
+  created_by_user_id: string | null;
+  created_at: string;
+  slide_count: number;
+  reviewer_count: number;
+  slides: TaskSlide[];
 }
 
 export interface RoleChange {
@@ -1140,6 +1231,53 @@ export interface SigningKey {
   algorithm?: "Ed25519";
   public_key: string;
   current: boolean;
+}
+
+export interface SlideSet {
+  slide_id: string;
+  result_set_id: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type TaskName = string;
+
+export interface TaskChange {
+  name?: TaskName | null;
+  scope?: Scope | null;
+  blinded?: boolean | null;
+  ai_hidden_first_read?: boolean | null;
+  start_mode?: StartMode | null;
+  due_on?: string | null;
+  reminder_days?: Reminders | null;
+}
+
+export interface TaskDraft {
+  name: TaskName;
+  /** @maxItems 500 */
+  slide_ids?: string[];
+  /** @maxItems 500 */
+  case_ids?: string[];
+  /** @maxItems 500 */
+  result_sets?: SlideSet[];
+  model_name?: string | null;
+  /**
+   * @minItems 1
+   * @maxItems 50
+   */
+  reviewer_ids: string[];
+  split: TaskSplit;
+  /** @maxItems 25000 */
+  pairs?: Pair[];
+  scope: Scope;
+  opinion_form_version?: number | null;
+  blinded?: boolean;
+  ai_hidden_first_read?: boolean;
+  start_mode?: StartMode;
+  due_on?: string | null;
+  reminder_days?: Reminders;
 }
 
 export interface TaxonomyChange {
@@ -8736,6 +8874,694 @@ export const useDeleteResultSet = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getDeleteResultSetMutationOptions(options), queryClient);
+};
+
+export type createReviewTaskResponse201 = {
+  data: ReviewTaskDetail;
+  status: 201;
+};
+
+export type createReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createReviewTaskResponseSuccess = createReviewTaskResponse201 & {
+  headers: Headers;
+};
+export type createReviewTaskResponseError = (
+  | createReviewTaskResponse400
+  | createReviewTaskResponse401
+  | createReviewTaskResponse403
+  | createReviewTaskResponse404
+  | createReviewTaskResponse409
+  | createReviewTaskResponse422
+  | createReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type createReviewTaskResponse =
+  | createReviewTaskResponseSuccess
+  | createReviewTaskResponseError;
+
+export const getCreateReviewTaskUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/review-tasks`;
+};
+
+/**
+ * @summary Create Review Task
+ */
+export const createReviewTask = async (
+  projectId: string,
+  taskDraft: TaskDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createReviewTaskResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createReviewTaskResponse>(getCreateReviewTaskUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskDraft),
+  });
+};
+
+export const getCreateReviewTaskMutationKey = () => ["createReviewTask"] as const;
+
+export const getCreateReviewTaskMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createReviewTask>>,
+    TError,
+    CreateReviewTaskMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createReviewTask>>,
+  TError,
+  CreateReviewTaskMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateReviewTaskMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createReviewTask>>,
+    CreateReviewTaskMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return createReviewTask(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateReviewTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createReviewTask>>
+>;
+export type CreateReviewTaskMutationBody = TaskDraft;
+export type CreateReviewTaskMutationError = Problem;
+export type CreateReviewTaskMutationVariables = { projectId: string; data: TaskDraft };
+
+/**
+ * @summary Create Review Task
+ */
+export const useCreateReviewTask = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createReviewTask>>,
+      TError,
+      CreateReviewTaskMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createReviewTask>>,
+  TError,
+  CreateReviewTaskMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateReviewTaskMutationOptions(options), queryClient);
+};
+
+export type listReviewTasksResponse200 = {
+  data: ReviewTask[];
+  status: 200;
+};
+
+export type listReviewTasksResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listReviewTasksResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listReviewTasksResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listReviewTasksResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listReviewTasksResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listReviewTasksResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listReviewTasksResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listReviewTasksResponseSuccess = listReviewTasksResponse200 & {
+  headers: Headers;
+};
+export type listReviewTasksResponseError = (
+  | listReviewTasksResponse400
+  | listReviewTasksResponse401
+  | listReviewTasksResponse403
+  | listReviewTasksResponse404
+  | listReviewTasksResponse409
+  | listReviewTasksResponse422
+  | listReviewTasksResponse500
+) & {
+  headers: Headers;
+};
+
+export type listReviewTasksResponse = listReviewTasksResponseSuccess | listReviewTasksResponseError;
+
+export const getListReviewTasksUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/review-tasks`;
+};
+
+/**
+ * @summary List Review Tasks
+ */
+export const listReviewTasks = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listReviewTasksResponse> => {
+  return apiFetch<listReviewTasksResponse>(getListReviewTasksUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListReviewTasksQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/review-tasks`] as const;
+};
+
+export const getListReviewTasksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listReviewTasks>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListReviewTasksQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewTasks>>> = ({ signal }) =>
+    listReviewTasks(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListReviewTasksQueryResult = NonNullable<Awaited<ReturnType<typeof listReviewTasks>>>;
+export type ListReviewTasksQueryError = Problem;
+
+export function useListReviewTasks<
+  TData = Awaited<ReturnType<typeof listReviewTasks>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewTasks>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewTasks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewTasks<
+  TData = Awaited<ReturnType<typeof listReviewTasks>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewTasks>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewTasks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewTasks<
+  TData = Awaited<ReturnType<typeof listReviewTasks>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Review Tasks
+ */
+
+export function useListReviewTasks<
+  TData = Awaited<ReturnType<typeof listReviewTasks>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewTasks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListReviewTasksQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getReviewTaskResponse200 = {
+  data: ReviewTaskDetail;
+  status: 200;
+};
+
+export type getReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getReviewTaskResponseSuccess = getReviewTaskResponse200 & {
+  headers: Headers;
+};
+export type getReviewTaskResponseError = (
+  | getReviewTaskResponse400
+  | getReviewTaskResponse401
+  | getReviewTaskResponse403
+  | getReviewTaskResponse404
+  | getReviewTaskResponse409
+  | getReviewTaskResponse422
+  | getReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type getReviewTaskResponse = getReviewTaskResponseSuccess | getReviewTaskResponseError;
+
+export const getGetReviewTaskUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}`;
+};
+
+/**
+ * @summary Get Review Task
+ */
+export const getReviewTask = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getReviewTaskResponse> => {
+  return apiFetch<getReviewTaskResponse>(getGetReviewTaskUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetReviewTaskQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}`] as const;
+};
+
+export const getGetReviewTaskQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReviewTask>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReviewTaskQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewTask>>> = ({ signal }) =>
+    getReviewTask(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetReviewTaskQueryResult = NonNullable<Awaited<ReturnType<typeof getReviewTask>>>;
+export type GetReviewTaskQueryError = Problem;
+
+export function useGetReviewTask<
+  TData = Awaited<ReturnType<typeof getReviewTask>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTask>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTask>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTask<
+  TData = Awaited<ReturnType<typeof getReviewTask>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTask>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTask>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTask<
+  TData = Awaited<ReturnType<typeof getReviewTask>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Review Task
+ */
+
+export function useGetReviewTask<
+  TData = Awaited<ReturnType<typeof getReviewTask>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewTask>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReviewTaskQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type changeReviewTaskResponse200 = {
+  data: ReviewTaskDetail;
+  status: 200;
+};
+
+export type changeReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeReviewTaskResponseSuccess = changeReviewTaskResponse200 & {
+  headers: Headers;
+};
+export type changeReviewTaskResponseError = (
+  | changeReviewTaskResponse400
+  | changeReviewTaskResponse401
+  | changeReviewTaskResponse403
+  | changeReviewTaskResponse404
+  | changeReviewTaskResponse409
+  | changeReviewTaskResponse422
+  | changeReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeReviewTaskResponse =
+  | changeReviewTaskResponseSuccess
+  | changeReviewTaskResponseError;
+
+export const getChangeReviewTaskUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}`;
+};
+
+/**
+ * @summary Change Review Task
+ */
+export const changeReviewTask = async (
+  taskId: string,
+  taskChange: TaskChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeReviewTaskResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeReviewTaskResponse>(getChangeReviewTaskUrl(taskId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskChange),
+  });
+};
+
+export const getChangeReviewTaskMutationKey = () => ["changeReviewTask"] as const;
+
+export const getChangeReviewTaskMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeReviewTask>>,
+    TError,
+    ChangeReviewTaskMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeReviewTask>>,
+  TError,
+  ChangeReviewTaskMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeReviewTaskMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeReviewTask>>,
+    ChangeReviewTaskMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return changeReviewTask(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeReviewTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeReviewTask>>
+>;
+export type ChangeReviewTaskMutationBody = TaskChange;
+export type ChangeReviewTaskMutationError = Problem;
+export type ChangeReviewTaskMutationVariables = { taskId: string; data: TaskChange };
+
+/**
+ * @summary Change Review Task
+ */
+export const useChangeReviewTask = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeReviewTask>>,
+      TError,
+      ChangeReviewTaskMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeReviewTask>>,
+  TError,
+  ChangeReviewTaskMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeReviewTaskMutationOptions(options), queryClient);
 };
 
 export type requestEmergencyAccessResponse201 = {

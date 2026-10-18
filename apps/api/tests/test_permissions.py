@@ -31,6 +31,7 @@ from parfocal_api.tables import (
     project_classes,
     project_members,
     result_sets,
+    review_tasks,
     service_accounts,
     slide_counters,
     tenants,
@@ -94,6 +95,7 @@ class Workspace:
     deleted_annotation: uuid.UUID
     result_set: uuid.UUID
     doomed_result_set: uuid.UUID
+    task: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -188,6 +190,21 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/slides/{w.slide}/result-sets", {"name": "Matrix model"}
     ),
     "deleteResultSet": lambda w: Call("DELETE", f"/api/result-sets/{w.doomed_result_set}"),
+    "listReviewTasks": lambda w: Call("GET", f"/api/projects/{w.project}/review-tasks"),
+    "getReviewTask": lambda w: Call("GET", f"/api/review-tasks/{w.task}"),
+    "createReviewTask": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/review-tasks",
+        {
+            "name": "Matrix task",
+            "slide_ids": [str(w.slide)],
+            "result_sets": [{"slide_id": str(w.slide), "result_set_id": str(w.result_set)}],
+            "reviewer_ids": [str(w.users.get(Role.RESEARCHER, w.colleague))],
+            "split": "everyone",
+            "scope": {"kind": "all-regions"},
+        },
+    ),
+    "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
     "createCase": lambda w: Call(
         "POST",
         "/api/cases",
@@ -239,6 +256,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -447,11 +465,26 @@ async def seed(database: str) -> Workspace:
                         slide_id=case.loose_slide_id,
                         name=name,
                         source="import",
+                        status="ready",
                     )
                     .returning(result_sets.c.id)
                 )
                 for name in ("Matrix set", "Doomed set")
             ]
+            task = await connection.scalar(
+                insert(review_tasks)
+                .values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    number=1,
+                    name="Seeded task",
+                    split="everyone",
+                    scope="all-regions",
+                    opinion_form_version=1,
+                    start_mode="guided",
+                )
+                .returning(review_tasks.c.id)
+            )
             await connection.execute(
                 insert(slide_counters).values(
                     tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
@@ -489,6 +522,7 @@ async def seed(database: str) -> Workspace:
         assert isinstance(spare_account, uuid.UUID)
         assert isinstance(result_set, uuid.UUID)
         assert isinstance(doomed_result_set, uuid.UUID)
+        assert isinstance(task, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
         return Workspace(
             tenant_id,
@@ -511,6 +545,7 @@ async def seed(database: str) -> Workspace:
             deleted_annotation,
             result_set,
             doomed_result_set,
+            task,
         )
     finally:
         await engine.dispose()

@@ -83,3 +83,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0075](0075-slide-thumbnails-and-overviews.md) | Thumbnails (256 px) and overviews (1024 px) are JPEG renders of the slide pyramid through the reader of record, with goldens for colour | Accepted | 2026-10-18 |
 | [0076](0076-annotation-and-ai-result-storage.md) | AI cells are binary chunks with a summary in object storage, AI regions and human annotations are PostGIS rows with a version table | Accepted | 2026-10-18 |
 | [0077](0077-result-sets.md) | A result set is created importing, filled by the worker and then immutable in the database, soft-deleted, and the reviewed-delete confirmation moves to RSET-009 | Accepted | 2026-10-18 |
+| [0078](0078-review-task-model.md) | A review task pins one finished result set per slide, stores assignments from its split, and opens task slides to their reviewers | Accepted | 2026-10-18 |

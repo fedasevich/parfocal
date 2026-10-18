@@ -49,6 +49,8 @@ class AuditAction(StrEnum):
     PROJECT_OPINION_FORM_PUBLISHED = "project.opinion-form-published"
     RESULT_SET_CREATED = "result-set.created"
     RESULT_SET_DELETED = "result-set.deleted"
+    TASK_CREATED = "task.created"
+    TASK_CHANGED = "task.changed"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
@@ -67,6 +69,7 @@ class AuditTarget(StrEnum):
     CASE = "case"
     PROJECT = "project"
     RESULT_SET = "result-set"
+    REVIEW_TASK = "review-task"
     SERVICE_ACCOUNT = "service-account"
     INVITATION = "invitation"
 

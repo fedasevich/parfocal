@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -1192,4 +1193,126 @@ result_chunks = Table(
     CheckConstraint("chunk >= 0", name="chunk"),
     CheckConstraint("width > 0 AND height > 0", name="size"),
     CheckConstraint("cell_count > 0 AND vertex_count >= 0", name="counts"),
+)
+
+
+class TaskSplit(StrEnum):
+    EVERYONE = "everyone"
+    EVEN = "even"
+    CHOSEN = "chosen"
+
+
+class TaskScope(StrEnum):
+    ALL_REGIONS = "all-regions"
+    RANDOM_CELLS = "random-cells"
+    CELLS_BELOW_SCORE = "cells-below-score"
+    INSIDE_ROIS = "inside-rois"
+    UNSURE_ZONES = "unsure-zones"
+
+
+class StartMode(StrEnum):
+    GUIDED = "guided"
+    VIEWER = "viewer"
+
+
+review_tasks = Table(
+    "review_tasks",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column("name", String(120), nullable=False, info=OPERATIONAL),
+    Column("split", String(10), nullable=False, info=OPERATIONAL),
+    Column("scope", String(20), nullable=False, info=OPERATIONAL),
+    Column("scope_count", Integer, nullable=True, info=OPERATIONAL),
+    Column("scope_seed", BigInteger, nullable=True, info=OPERATIONAL),
+    Column("scope_score", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column("opinion_form_version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("blinded", Boolean, nullable=False, server_default=text("true"), info=OPERATIONAL),
+    Column(
+        "ai_hidden_first_read",
+        Boolean,
+        nullable=False,
+        server_default=text("false"),
+        info=OPERATIONAL,
+    ),
+    Column("start_mode", String(10), nullable=False, info=OPERATIONAL),
+    Column("due_on", Date, nullable=True, info=OPERATIONAL),
+    Column(
+        "reminder_days",
+        ARRAY(SmallInteger),
+        nullable=False,
+        server_default=text("'{}'"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("archived_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    UniqueConstraint("project_id", "number"),
+    UniqueConstraint("id", "project_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(
+        ["project_id", "opinion_form_version"],
+        ["opinion_forms.project_id", "opinion_forms.version"],
+    ),
+    one_of("split", TaskSplit),
+    one_of("scope", TaskScope),
+    one_of("start_mode", StartMode),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint(
+        "(scope = 'random-cells') = (scope_count IS NOT NULL AND scope_seed IS NOT NULL)",
+        name="random_cells",
+    ),
+    CheckConstraint("scope_count IS NULL OR scope_count BETWEEN 1 AND 10000", name="scope_count"),
+    CheckConstraint(
+        "(scope = 'cells-below-score') = (scope_score IS NOT NULL)", name="cells_below_score"
+    ),
+    CheckConstraint("scope_score IS NULL OR scope_score BETWEEN 0 AND 255", name="scope_score"),
+    CheckConstraint("cardinality(reminder_days) <= 3", name="reminders"),
+)
+
+review_task_slides = Table(
+    "review_task_slides",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=OPERATIONAL),
+    Column("position", Integer, nullable=False, info=OPERATIONAL),
+    Column("result_set_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    UniqueConstraint("task_id", "position"),
+    ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
+    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    ForeignKeyConstraint(
+        ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]
+    ),
+)
+
+review_assignments = Table(
+    "review_assignments",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=PERSONAL),
+    Column("submitted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "assigned_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+    ),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
+    ),
 )
