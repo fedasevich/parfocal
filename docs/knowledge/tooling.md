@@ -93,3 +93,7 @@ FastAPI 0.142's `TestClient` warns that using `httpx` is deprecated and asks for
 ## Calling a settings class without arguments fails basedpyright
 
 pydantic-settings fills required fields from the environment, but basedpyright reports the missing constructor arguments. `load_settings(SettingsClass)` in `parfocal_common.settings` makes that call in one typed place, so no ignore comments are needed.
+
+## Run the repository typecheck, not one package's
+
+`pnpm turbo run typecheck` runs basedpyright in every Python package (`apps/api`, `packages/py-common`, `workers/ingest`, `workers/ml`) and `tsc` in the TypeScript ones, as the CI `typecheck` job does. Running basedpyright only in the package you edited misses a test added to another package. A `Mapping[object, str]` parameter, for example, rejects a `dict[str, str]` argument because mapping keys are invariant, and only the `py-common` check saw it. Use a type parameter (`def f[K](values: Mapping[K, str])`) instead.

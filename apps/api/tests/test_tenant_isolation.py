@@ -376,6 +376,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             scope="all-regions",
             opinion_form_version=1,
             start_mode="guided",
+            created_by_user_id=seeded.ids["user"],
         )
         .returning(review_tasks.c.id)
     )
@@ -498,6 +499,9 @@ GET_ROUTES = {
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
     ),
+    "listMyReviewTasks": Route(Exposure.TENANT, lambda _: "/api/me/review-tasks"),
+    "listTasksAssignedByMe": Route(Exposure.TENANT, lambda _: "/api/me/assigned-tasks"),
+    "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
     "listDisagreements": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements"
     ),

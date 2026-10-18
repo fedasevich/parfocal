@@ -15,6 +15,7 @@ from parfocal_api import (
     disagreements,
     emergency,
     invitations,
+    my_work,
     notifications,
     opinion_forms,
     project_jobs,
@@ -126,6 +127,7 @@ def create_app(
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
     app.include_router(disagreements.router)
+    app.include_router(my_work.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)

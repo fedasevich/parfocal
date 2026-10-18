@@ -213,6 +213,49 @@ export interface ApiToken {
   created_at: string;
 }
 
+export interface ProjectRef {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
+
+export const TaskStatus = {
+  "not-started": "not-started",
+  "in-review": "in-review",
+  disagreements: "disagreements",
+  "ready-to-sign-off": "ready-to-sign-off",
+  "signed-off": "signed-off",
+} as const;
+
+export type MyStatus = (typeof MyStatus)[keyof typeof MyStatus];
+
+export const MyStatus = {
+  "not-started": "not-started",
+  "in-review": "in-review",
+  submitted: "submitted",
+  "signed-off": "signed-off",
+} as const;
+
+export interface ReviewerProgress {
+  user_id: string;
+  slides_submitted: number;
+  slides_assigned: number;
+  state: MyStatus;
+}
+
+export interface AssignedTask {
+  id: string;
+  code: string;
+  name: string;
+  project: ProjectRef;
+  due_on: string | null;
+  status: TaskStatus;
+  open_disagreements: number;
+  reviewers: ReviewerProgress[];
+}
+
 export interface AuditEvent {
   id: string;
   tenant_id: string | null;
@@ -846,6 +889,39 @@ export interface MembershipDraft {
   role: Role;
 }
 
+export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
+
+export const TaskScope = {
+  "all-regions": "all-regions",
+  "random-cells": "random-cells",
+  "cells-below-score": "cells-below-score",
+  "inside-rois": "inside-rois",
+  "unsure-zones": "unsure-zones",
+} as const;
+
+export type StartMode = (typeof StartMode)[keyof typeof StartMode];
+
+export const StartMode = {
+  guided: "guided",
+  viewer: "viewer",
+} as const;
+
+export interface MyTask {
+  id: string;
+  code: string;
+  name: string;
+  project: ProjectRef;
+  scope: TaskScope;
+  due_on: string | null;
+  blinded: boolean;
+  start_mode: StartMode;
+  slides_submitted: number;
+  slides_assigned: number;
+  verdicts: number;
+  status: MyStatus;
+  next_slide_id: string | null;
+}
+
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
 
 export const NotificationKind = {
@@ -1165,28 +1241,11 @@ export const TaskSplit = {
   chosen: "chosen",
 } as const;
 
-export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
-
-export const TaskScope = {
-  "all-regions": "all-regions",
-  "random-cells": "random-cells",
-  "cells-below-score": "cells-below-score",
-  "inside-rois": "inside-rois",
-  "unsure-zones": "unsure-zones",
-} as const;
-
 export interface Scope {
   kind: TaskScope;
   count?: number | null;
   score?: number | null;
 }
-
-export type StartMode = (typeof StartMode)[keyof typeof StartMode];
-
-export const StartMode = {
-  guided: "guided",
-  viewer: "viewer",
-} as const;
 
 export interface ReviewTask {
   id: string;
@@ -1338,12 +1397,42 @@ export interface SessionSummary {
   locked: boolean;
 }
 
+export interface SetRef {
+  id: string;
+  name: string;
+  status: ResultStatus;
+}
+
 export interface SigningKey {
   tenant_id: string;
   key_id: string;
   algorithm?: "Ed25519";
   public_key: string;
   current: boolean;
+}
+
+export interface SlideReview {
+  task_id: string;
+  task_code: string;
+  user_id: string;
+  state: State;
+}
+
+export interface SlideRow {
+  id: string;
+  label: string;
+  project: ProjectRef;
+  case_id: string | null;
+  case_label: string | null;
+  result_sets: SetRef[];
+  reviews: SlideReview[];
+  status: State;
+  created_at: string;
+}
+
+export interface SlidePage {
+  slides: SlideRow[];
+  next_cursor: string | null;
 }
 
 export interface SlideSet {
@@ -1514,6 +1603,20 @@ export type GetReviewedLayerParams = {
 
 export type ListVerdictsParams = {
   reviewer_id?: string | null;
+};
+
+export type ListMySlidesParams = {
+  project_id?: string | null;
+  status?: State | null;
+  result_set?: string | null;
+  reviewer_id?: string | null;
+  q?: string | null;
+  cursor?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
 };
 
 export type ListAuditEventsParams = {
@@ -11871,6 +11974,540 @@ export function useListDisagreements<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListDisagreementsQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listMyReviewTasksResponse200 = {
+  data: MyTask[];
+  status: 200;
+};
+
+export type listMyReviewTasksResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMyReviewTasksResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMyReviewTasksResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMyReviewTasksResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMyReviewTasksResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMyReviewTasksResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMyReviewTasksResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMyReviewTasksResponseSuccess = listMyReviewTasksResponse200 & {
+  headers: Headers;
+};
+export type listMyReviewTasksResponseError = (
+  | listMyReviewTasksResponse400
+  | listMyReviewTasksResponse401
+  | listMyReviewTasksResponse403
+  | listMyReviewTasksResponse404
+  | listMyReviewTasksResponse409
+  | listMyReviewTasksResponse422
+  | listMyReviewTasksResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMyReviewTasksResponse =
+  | listMyReviewTasksResponseSuccess
+  | listMyReviewTasksResponseError;
+
+export const getListMyReviewTasksUrl = () => {
+  return `/api/me/review-tasks`;
+};
+
+/**
+ * @summary List My Review Tasks
+ */
+export const listMyReviewTasks = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMyReviewTasksResponse> => {
+  return apiFetch<listMyReviewTasksResponse>(getListMyReviewTasksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyReviewTasksQueryKey = () => {
+  return [`/api/me/review-tasks`] as const;
+};
+
+export const getListMyReviewTasksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyReviewTasks>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyReviewTasks>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyReviewTasksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyReviewTasks>>> = ({ signal }) =>
+    listMyReviewTasks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyReviewTasks>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMyReviewTasksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyReviewTasks>>
+>;
+export type ListMyReviewTasksQueryError = Problem;
+
+export function useListMyReviewTasks<
+  TData = Awaited<ReturnType<typeof listMyReviewTasks>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyReviewTasks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyReviewTasks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyReviewTasks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyReviewTasks<
+  TData = Awaited<ReturnType<typeof listMyReviewTasks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyReviewTasks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyReviewTasks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyReviewTasks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyReviewTasks<
+  TData = Awaited<ReturnType<typeof listMyReviewTasks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyReviewTasks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List My Review Tasks
+ */
+
+export function useListMyReviewTasks<
+  TData = Awaited<ReturnType<typeof listMyReviewTasks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyReviewTasks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMyReviewTasksQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listTasksAssignedByMeResponse200 = {
+  data: AssignedTask[];
+  status: 200;
+};
+
+export type listTasksAssignedByMeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listTasksAssignedByMeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listTasksAssignedByMeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listTasksAssignedByMeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTasksAssignedByMeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listTasksAssignedByMeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listTasksAssignedByMeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listTasksAssignedByMeResponseSuccess = listTasksAssignedByMeResponse200 & {
+  headers: Headers;
+};
+export type listTasksAssignedByMeResponseError = (
+  | listTasksAssignedByMeResponse400
+  | listTasksAssignedByMeResponse401
+  | listTasksAssignedByMeResponse403
+  | listTasksAssignedByMeResponse404
+  | listTasksAssignedByMeResponse409
+  | listTasksAssignedByMeResponse422
+  | listTasksAssignedByMeResponse500
+) & {
+  headers: Headers;
+};
+
+export type listTasksAssignedByMeResponse =
+  | listTasksAssignedByMeResponseSuccess
+  | listTasksAssignedByMeResponseError;
+
+export const getListTasksAssignedByMeUrl = () => {
+  return `/api/me/assigned-tasks`;
+};
+
+/**
+ * @summary List Tasks Assigned By Me
+ */
+export const listTasksAssignedByMe = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listTasksAssignedByMeResponse> => {
+  return apiFetch<listTasksAssignedByMeResponse>(getListTasksAssignedByMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTasksAssignedByMeQueryKey = () => {
+  return [`/api/me/assigned-tasks`] as const;
+};
+
+export const getListTasksAssignedByMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listTasksAssignedByMe>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTasksAssignedByMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTasksAssignedByMe>>> = ({ signal }) =>
+    listTasksAssignedByMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTasksAssignedByMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTasksAssignedByMe>>
+>;
+export type ListTasksAssignedByMeQueryError = Problem;
+
+export function useListTasksAssignedByMe<
+  TData = Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTasksAssignedByMe>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+          TError,
+          Awaited<ReturnType<typeof listTasksAssignedByMe>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTasksAssignedByMe<
+  TData = Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTasksAssignedByMe>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+          TError,
+          Awaited<ReturnType<typeof listTasksAssignedByMe>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTasksAssignedByMe<
+  TData = Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTasksAssignedByMe>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Tasks Assigned By Me
+ */
+
+export function useListTasksAssignedByMe<
+  TData = Awaited<ReturnType<typeof listTasksAssignedByMe>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTasksAssignedByMe>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTasksAssignedByMeQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listMySlidesResponse200 = {
+  data: SlidePage;
+  status: 200;
+};
+
+export type listMySlidesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMySlidesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMySlidesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMySlidesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMySlidesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMySlidesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMySlidesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMySlidesResponseSuccess = listMySlidesResponse200 & {
+  headers: Headers;
+};
+export type listMySlidesResponseError = (
+  | listMySlidesResponse400
+  | listMySlidesResponse401
+  | listMySlidesResponse403
+  | listMySlidesResponse404
+  | listMySlidesResponse409
+  | listMySlidesResponse422
+  | listMySlidesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMySlidesResponse = listMySlidesResponseSuccess | listMySlidesResponseError;
+
+export const getListMySlidesUrl = (params?: ListMySlidesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/me/slides?${stringifiedParams}` : `/api/me/slides`;
+};
+
+/**
+ * @summary List My Slides
+ */
+export const listMySlides = async (
+  params?: ListMySlidesParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMySlidesResponse> => {
+  return apiFetch<listMySlidesResponse>(getListMySlidesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMySlidesQueryKey = (params?: ListMySlidesParams) => {
+  return [`/api/me/slides`, ...(params ? [params] : [])] as const;
+};
+
+export const getListMySlidesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMySlides>>,
+  TError = Problem,
+>(
+  params?: ListMySlidesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMySlidesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMySlides>>> = ({ signal }) =>
+    listMySlides(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMySlides>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMySlidesQueryResult = NonNullable<Awaited<ReturnType<typeof listMySlides>>>;
+export type ListMySlidesQueryError = Problem;
+
+export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>, TError = Problem>(
+  params: undefined | ListMySlidesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySlides>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMySlides>>,
+          TError,
+          Awaited<ReturnType<typeof listMySlides>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>, TError = Problem>(
+  params?: ListMySlidesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySlides>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMySlides>>,
+          TError,
+          Awaited<ReturnType<typeof listMySlides>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>, TError = Problem>(
+  params?: ListMySlidesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List My Slides
+ */
+
+export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>, TError = Problem>(
+  params?: ListMySlidesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMySlidesQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
