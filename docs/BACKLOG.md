@@ -2516,7 +2516,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when loaders pass checksum and sample tests.
   Refs docs 20, 26, [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md), [result](results/2026-10-18-dataset-loaders.md). Loaders exist for TNBC and NuInsSeg, and CAMELYON16 comes through `packages/test-fixtures`. The datasets behind a sign-in or without a published checksum moved to MLEVAL-010.
 
-- [ ] MLEVAL-002 · Geometric scorer
+- [x] MLEVAL-002 · Geometric scorer
   4× supersampled centre sampling, PQ, AJI, F1, per-organ and per-tissue breakdowns.
   Done when the scorer reproduces POC numbers on the same inputs.
   Refs [`poc/server/tools/score_*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/tools), doc 26. Result: [geometric scorer reproduction](results/2026-10-18-geometric-scorer-reproduction.md).
