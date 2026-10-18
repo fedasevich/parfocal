@@ -3155,7 +3155,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when E2E gives the same verdicts in both modes and sees one review.
   Depends on GUIDE-001, CASE-014.
 
-- [ ] GUIDE-006 · Opinion form builder
+- [x] GUIDE-006 · Opinion form builder
   The researcher builds a short form per project from a default template (acceptable 1 to 5, main error type, a free comment), with scale, choice, yes or no and text questions, versioned.
   Done when API tests cover each question kind and a new version leaving old answers intact.
   Depends on PROJ-001.
