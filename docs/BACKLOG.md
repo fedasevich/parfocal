@@ -2668,7 +2668,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-036 is confirmed.
   Confirmed in [ADR 0074](adr/0074-notifications-as-rows-with-an-email-outbox.md) on 2026-10-18.
 
-- [ ] NOTIF-001 · Notification service
+- [x] NOTIF-001 · Notification service
   Events (mention, reply, review task assigned, model run finished or paused, upload done, disagreements ready, task signed off, emergency access to a clinical project for its owners) to in-app, email and realtime channels by preference.
   Done when tests cover routing by preference and tenant isolation.
   Built as [ADR 0074](adr/0074-notifications-as-rows-with-an-email-outbox.md) says. Realtime delivery waits for STACK-024.
