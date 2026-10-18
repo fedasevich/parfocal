@@ -1353,10 +1353,12 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
 
 - [ ] HOME-000 · Research check
   Done when the data each variant needs is mapped to API endpoints in an ADR.
+  Refs [ADR 0085](adr/0085-home-aggregate-api.md).
 
 - [ ] HOME-001 · Home API aggregates
-  Resume target (task, slide, object, camera), the user's tasks with due dates, projects with a strip of slide thumbnails and review progress, the week in numbers (objects checked, share agreeing with the AI, open disagreements), what is coming up and announcements.
+  Resume target (task, slide, object, camera), the user's tasks with due dates, projects with a strip of slide thumbnails and review progress, the week in numbers (objects checked, share agreeing with the AI, open disagreements), what is coming up and announcements, as one `GET /api/me/home`.
   Done when API tests cover each aggregate with tenant isolation.
+  Depends on HOME-000, HOME-011. Refs [ADR 0085](adr/0085-home-aggregate-api.md).
 
 - [ ] HOME-002 · Launchpad home
   A greeting with the date and what is due, then a large continue card with the slide image, the task, slide n of N, progress and the due date, with Continue and Open in the full viewer. Start something tiles with one line each (Upload, Run a model, New review task, Find an object, New project), the projects as cards with a strip of their slides and review dots, and a side column with the week in numbers, coming up and announcements. A first-week variant leads with the sample project and the getting-started checklist (ONB-006).
@@ -1364,7 +1366,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Refs mock: home, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] HOME-003 · Resume state
-  Persist the last task, slide, camera, mode, selected object and review position per user.
+  Persist the last task, slide, camera, mode, selected object and review position per user. The home aggregate prefers the stored state when it is newer than the review activity it derives the resume target from ([ADR 0085](adr/0085-home-aggregate-api.md)).
   Done when E2E closes the browser mid-review and resumes at the same object.
 
 - [ ] HOME-004 · Idea: Variant B Department dashboard
@@ -1394,11 +1396,17 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
 
 - [ ] HOME-009 · Announcements
   Admins post announcements, shown on Home with a coloured dot by kind (a new model, a slow server, a change).
-  Done when API and component tests cover create, list and expiry.
+  Done when component tests cover create, list and expiry.
+  Depends on HOME-011. The API moved to HOME-011 by [ADR 0085](adr/0085-home-aggregate-api.md).
 
 - [ ] HOME-010 · Role-based default home
   The launchpad for everyone. A reviewer's continue card and tasks come first, a researcher's projects and Start something come first, set from the role chosen at setup (ONB-004) and changeable in settings.
   Done when tests cover defaults per role and the override.
+
+- [ ] HOME-011 · Announcements API
+  Workspace admins post announcements with a kind (`model`, `slowdown`, `change`), a text and an optional end time, end them early, and members list the current ones newest first.
+  Done when API tests cover create, list, ending early and expiry, with permission and tenant isolation tests.
+  Depends on IAM-004. Split from HOME-009 by [ADR 0085](adr/0085-home-aggregate-api.md).
 
 ---
 
