@@ -685,7 +685,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a scheduled job test deletes expired data, skips held data and audits the deletion.
   Refs [ADR 0089](adr/0089-retention-purge-and-audit-re-anchor.md).
 
-- [ ] SEC-007 · Right to access and erasure workflows
+- [x] SEC-007 · Right to access and erasure workflows
   Export all personal data for a data subject. Erase or pseudonymise on request where law allows, with reports kept per legal duty.
   Done when tests cover both workflows end to end.
   Refs [ADR 0090](adr/0090-access-export-and-erasure.md).
