@@ -285,10 +285,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Refs Cytomine and EXACT reports in [`poc/docs/presentation2`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation2) (PostGIS bloat, bulk insert costs).
   Decided in [ADR 0018](adr/0018-postgres-sqlalchemy-rls.md) except the Neon region, which needs a measurement from Modal once the cloud is back.
 
-- [ ] STACK-021 · Annotation and AI result storage model
+- [x] STACK-021 · Annotation and AI result storage model
   Options: PostGIS rows for human annotations plus columnar chunk files in object storage for model output (the POC split), everything in PostGIS, GeoParquet or FlatGeobuf files per job. Default: the split. Human annotations go in PostGIS with an append-only version table. Model output is stored as typed-array chunks per job tile in object storage with a summary index, and FlatGeobuf is used for export.
   Done when the ADR defines the chunk schema (including type probabilities, which the POC paged format dropped) and a spike pages 1.6M nuclei in the browser under the doc 31 budgets.
-  Refs docs 11, 19, 31, 33.
+  Refs docs 11, 19, 31, 33. Decided in [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
 
 - [x] STACK-022 · Background jobs and durable workflows
   Candidates: Temporal, Hatchet, Celery, Dramatiq, arq. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): job, step and tile tables in Postgres, steps run as Modal functions started with `spawn`, and a Modal cron function that resumes orphaned steps from the last completed tile. Temporal and Hatchet were set aside because they need always-on workers.
@@ -1844,7 +1844,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] ANN-020 · Annotation persistence API
   CRUD with versioning, append-only history, bulk operations, tenant isolation, PostGIS geometry in level-0 coordinates.
   Done when API tests cover CRUD, history and bulk accept of 10,000 shapes under the latency budget.
-  Depends on STACK-021.
+  Depends on STACK-021. Tables in [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
 
 - [ ] ANN-021 · Autosave with optimistic updates and retry
   Every edit saves in the background with batching, an offline-tolerant retry queue and a visible save state. A leave-page guard triggers only when unsaved edits exist.
@@ -2354,7 +2354,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AINUC-003 · Chunk schema with probabilities
   Every chunk carries type probabilities and flags so confidence features work on paged results.
   Done when a schema test fails if probabilities are missing.
-  Refs docs 31, 33.
+  Refs docs 31, 33, [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
 
 - [ ] AINUC-004 · Summary points API
   Per nucleus centroid, size, class, score, type probabilities and flags, without outlines.
