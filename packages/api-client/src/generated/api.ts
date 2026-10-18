@@ -1087,6 +1087,14 @@ export interface LegalHoldDraft {
   reason: string;
 }
 
+export type ListKind = (typeof ListKind)[keyof typeof ListKind];
+
+export const ListKind = {
+  task: "task",
+  "all-slides": "all-slides",
+  list: "list",
+} as const;
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -1161,6 +1169,21 @@ export interface Membership {
 export interface MembershipDraft {
   user_id: string;
   role: Role;
+}
+
+export interface SlideRef {
+  id: string;
+  label: string;
+  case_label: string | null;
+}
+
+export interface Neighbours {
+  current: SlideRef;
+  previous: SlideRef | null;
+  next: SlideRef | null;
+  position: number;
+  total: number;
+  at_end: boolean;
 }
 
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
@@ -1937,6 +1960,18 @@ export type ExportReviewedLayerParams = {
 };
 
 export type ExportReviewedLayer200 = { [key: string]: unknown };
+
+export type GetSlideNeighboursParams = {
+  from: ListKind;
+  task_id?: string | null;
+  skip_submitted?: boolean;
+  ids?: string[] | null;
+  project_id?: string | null;
+  status?: State | null;
+  result_set?: string | null;
+  reviewer_id?: string | null;
+  q?: string | null;
+};
 
 export type ListVerdictsParams = {
   reviewer_id?: string | null;
@@ -14114,6 +14149,229 @@ export const useErasePerson = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getErasePersonMutationOptions(options), queryClient);
 };
+
+export type getSlideNeighboursResponse200 = {
+  data: Neighbours;
+  status: 200;
+};
+
+export type getSlideNeighboursResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideNeighboursResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideNeighboursResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideNeighboursResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideNeighboursResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideNeighboursResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideNeighboursResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideNeighboursResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideNeighboursResponseSuccess = getSlideNeighboursResponse200 & {
+  headers: Headers;
+};
+export type getSlideNeighboursResponseError = (
+  | getSlideNeighboursResponse400
+  | getSlideNeighboursResponse401
+  | getSlideNeighboursResponse403
+  | getSlideNeighboursResponse404
+  | getSlideNeighboursResponse409
+  | getSlideNeighboursResponse422
+  | getSlideNeighboursResponse429
+  | getSlideNeighboursResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideNeighboursResponse =
+  | getSlideNeighboursResponseSuccess
+  | getSlideNeighboursResponseError;
+
+export const getGetSlideNeighboursUrl = (slideId: string, params: GetSlideNeighboursParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["ids"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/neighbours?${stringifiedParams}`
+    : `/api/slides/${slideId}/neighbours`;
+};
+
+/**
+ * @summary Get Slide Neighbours
+ */
+export const getSlideNeighbours = async (
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideNeighboursResponse> => {
+  return apiFetch<getSlideNeighboursResponse>(getGetSlideNeighboursUrl(slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideNeighboursQueryKey = (
+  slideId: string,
+  params?: GetSlideNeighboursParams,
+) => {
+  return [`/api/slides/${slideId}/neighbours`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetSlideNeighboursQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideNeighbours>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideNeighboursQueryKey(slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideNeighbours>>> = ({ signal }) =>
+    getSlideNeighbours(slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideNeighboursQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideNeighbours>>
+>;
+export type GetSlideNeighboursQueryError = Problem;
+
+export function useGetSlideNeighbours<
+  TData = Awaited<ReturnType<typeof getSlideNeighbours>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideNeighbours>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideNeighbours>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideNeighbours<
+  TData = Awaited<ReturnType<typeof getSlideNeighbours>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideNeighbours>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideNeighbours>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideNeighbours<
+  TData = Awaited<ReturnType<typeof getSlideNeighbours>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Neighbours
+ */
+
+export function useGetSlideNeighbours<
+  TData = Awaited<ReturnType<typeof getSlideNeighbours>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: GetSlideNeighboursParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideNeighbours>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideNeighboursQueryOptions(slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;

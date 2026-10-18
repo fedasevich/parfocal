@@ -522,6 +522,13 @@ GET_ROUTES = {
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
+    "getSlideNeighbours": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/slides/{a.ids['slide']}/neighbours?from=task&task_id={a.ids['task']}"
+            "&skip_submitted=false"
+        ),
+    ),
     "getRetentionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/retention", Role.ADMIN),
     "listLegalHolds": Route(Exposure.TENANT, lambda _: "/api/tenant/legal-holds", Role.ADMIN),
     "exportMyPersonalData": Route(Exposure.TENANT, lambda _: "/api/me/personal-data"),
