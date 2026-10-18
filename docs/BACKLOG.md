@@ -2998,7 +2998,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
 
 - [ ] RSET-001 · Result set model and API
   Per slide: model name and version, date, source file or run, imported or run here, class mapping, object count and stats. The AI output is immutable. Result sets list in the project and the slide view.
-  Done when API tests cover create, list and delete with a confirmation when reviews exist, isolation tests pass, and a test proves an imported set cannot be edited.
+  Done when API tests cover create, list and delete, isolation tests pass, and a test proves an imported set cannot be edited. The confirmation before deleting a reviewed set moved to RSET-009 ([ADR 0077](adr/0077-result-sets.md)).
   Depends on PROJ-001, ANN-020.
 
 - [ ] RSET-002 · Parfocal JSON schema and validator
@@ -3035,6 +3035,11 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Reviewed annotations export as Parfocal JSON and GeoJSON with full IDs, per reviewer or as the consensus after adjudication.
   Done when round-trip tests export and re-import a reviewed layer with no loss.
   Depends on RSET-007, OBJ-001.
+
+- [ ] RSET-009 · Confirm deleting a reviewed result set
+  Deleting a result set that a review task or a verdict uses needs `confirm=true`, and the response says how many tasks and verdicts it touches.
+  Done when API tests refuse the delete without confirmation when a task uses the set, allow it with confirmation, and allow an unreviewed set without it.
+  Depends on RSET-001, TASK-001. Split from RSET-001 by [ADR 0077](adr/0077-result-sets.md).
 
 ---
 
@@ -3084,7 +3089,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 - [ ] TASK-001 · Review task model and API
   A task (RT-14) has a name, a project, slides or cases, a result set, reviewers, a split (everyone reviews all, split evenly, chosen per slide), a scope, an opinion form version, blinding, the start mode (guided or full viewer), a due date and reminders.
   Done when API tests cover create, edit, list and each split, with isolation and audit.
-  Depends on PROJ-003, RSET-001, TASK-000.
+  Depends on PROJ-003, RSET-001, TASK-000. A task refuses a result set that is not `ready` or is deleted ([ADR 0077](adr/0077-result-sets.md)).
   A project reviewer reads only the slides of their tasks, so this task extends `project_access.readable` and the case check with task slides ([ADR 0065](adr/0065-project-role-enforcement.md)).
 
 - [ ] TASK-002 · Slide states per task and reviewer

@@ -18,6 +18,7 @@ from parfocal_api import (
     opinion_forms,
     project_jobs,
     projects,
+    result_sets,
     service_accounts,
     sessions_api,
     taxonomy,
@@ -111,6 +112,9 @@ def create_app(
     app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
     app.include_router(annotations.router)
+    app.include_router(result_sets.slide_router)
+    app.include_router(result_sets.project_router)
+    app.include_router(result_sets.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)

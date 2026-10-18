@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 19 |
-| `personal` | 26 |
+| `phi` | 20 |
+| `personal` | 27 |
 | `secret` | 9 |
-| `operational` | 234 |
+| `operational` | 277 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -350,6 +350,71 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `template` | operational |
 | `archived_at` | operational |
 | `created_by_user_id` | personal |
+
+## result_chunks
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `result_set_id` | operational |
+| `chunk` | operational |
+| `x` | operational |
+| `y` | operational |
+| `width` | operational |
+| `height` | operational |
+| `cell_count` | operational |
+| `vertex_count` | operational |
+| `object_key` | operational |
+
+## result_objects
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `result_set_id` | operational |
+| `kind` | operational |
+| `number` | operational |
+| `geometry` | operational |
+| `class_index` | operational |
+| `score` | operational |
+| `probabilities` | operational |
+| `parent_number` | operational |
+
+## result_set_classes
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `result_set_id` | operational |
+| `position` | operational |
+| `source_name` | operational |
+| `class_id` | operational |
+| `object_count` | operational |
+
+## result_sets
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `slide_id` | operational |
+| `name` | operational |
+| `model_version` | operational |
+| `source` | operational |
+| `source_file` | phi |
+| `produced_at` | operational |
+| `status` | operational |
+| `error_code` | operational |
+| `cell_count` | operational |
+| `region_count` | operational |
+| `zone_count` | operational |
+| `job_id` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
 
 ## service_accounts
 

@@ -267,6 +267,7 @@ export const AuditTarget = {
   person: "person",
   case: "case",
   project: "project",
+  "result-set": "result-set",
   "service-account": "service-account",
   invitation: "invitation",
 } as const;
@@ -815,12 +816,6 @@ export interface MembershipDraft {
   role: Role;
 }
 
-/**
- * @minLength 1
- * @maxLength 200
- */
-export type Name = string;
-
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
 
 export const NotificationKind = {
@@ -854,9 +849,15 @@ export interface Organisation {
  */
 export type Slug = string;
 
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type ParfocalApiTenantsName = string;
+
 export interface OrganisationDraft {
   slug: Slug;
-  name: Name;
+  name: ParfocalApiTenantsName;
 }
 
 export type Plan = (typeof Plan)[keyof typeof Plan];
@@ -987,6 +988,80 @@ export interface Resolved {
   class_id: string | null;
 }
 
+export type ResultSource = (typeof ResultSource)[keyof typeof ResultSource];
+
+export const ResultSource = {
+  import: "import",
+  run: "run",
+} as const;
+
+export type ResultStatus = (typeof ResultStatus)[keyof typeof ResultStatus];
+
+export const ResultStatus = {
+  importing: "importing",
+  ready: "ready",
+  failed: "failed",
+} as const;
+
+export interface ResultSet {
+  id: string;
+  project_id: string;
+  slide_id: string;
+  name: string;
+  model_version: string | null;
+  source: ResultSource;
+  source_file: string | null;
+  produced_at: string | null;
+  status: ResultStatus;
+  error_code: string | null;
+  cell_count: number;
+  region_count: number;
+  zone_count: number;
+  created_by_user_id: string | null;
+  created_at: string;
+}
+
+export interface ResultSetClass {
+  position: number;
+  source_name: string;
+  class_id: string | null;
+  object_count: number;
+}
+
+export interface ResultSetDetail {
+  id: string;
+  project_id: string;
+  slide_id: string;
+  name: string;
+  model_version: string | null;
+  source: ResultSource;
+  source_file: string | null;
+  produced_at: string | null;
+  status: ResultStatus;
+  error_code: string | null;
+  cell_count: number;
+  region_count: number;
+  zone_count: number;
+  created_by_user_id: string | null;
+  created_at: string;
+  classes: ResultSetClass[];
+}
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type ParfocalApiResultSetsName = string;
+
+export interface ResultSetDraft {
+  name: ParfocalApiResultSetsName;
+  model_version?: string | null;
+  source_file?: string | null;
+  produced_at?: string | null;
+  /** @maxItems 255 */
+  classes?: ParfocalApiResultSetsName[];
+}
+
 export interface RoleChange {
   role: Role;
 }
@@ -1100,7 +1175,7 @@ export interface Tenant {
 export interface TenantDraft {
   organisation_id: string;
   slug: Slug;
-  name: Name;
+  name: ParfocalApiTenantsName;
   kind: TenantKind;
   region: Region;
   plan?: Plan;
@@ -7803,6 +7878,865 @@ export function useListAnnotationHistory<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type createResultSetResponse201 = {
+  data: ResultSetDetail;
+  status: 201;
+};
+
+export type createResultSetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createResultSetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createResultSetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createResultSetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createResultSetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createResultSetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createResultSetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createResultSetResponseSuccess = createResultSetResponse201 & {
+  headers: Headers;
+};
+export type createResultSetResponseError = (
+  | createResultSetResponse400
+  | createResultSetResponse401
+  | createResultSetResponse403
+  | createResultSetResponse404
+  | createResultSetResponse409
+  | createResultSetResponse422
+  | createResultSetResponse500
+) & {
+  headers: Headers;
+};
+
+export type createResultSetResponse = createResultSetResponseSuccess | createResultSetResponseError;
+
+export const getCreateResultSetUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/result-sets`;
+};
+
+/**
+ * @summary Create Result Set
+ */
+export const createResultSet = async (
+  slideId: string,
+  resultSetDraft: ResultSetDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createResultSetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createResultSetResponse>(getCreateResultSetUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(resultSetDraft),
+  });
+};
+
+export const getCreateResultSetMutationKey = () => ["createResultSet"] as const;
+
+export const getCreateResultSetMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createResultSet>>,
+    TError,
+    CreateResultSetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createResultSet>>,
+  TError,
+  CreateResultSetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateResultSetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createResultSet>>,
+    CreateResultSetMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return createResultSet(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateResultSetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createResultSet>>
+>;
+export type CreateResultSetMutationBody = ResultSetDraft;
+export type CreateResultSetMutationError = Problem;
+export type CreateResultSetMutationVariables = { slideId: string; data: ResultSetDraft };
+
+/**
+ * @summary Create Result Set
+ */
+export const useCreateResultSet = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createResultSet>>,
+      TError,
+      CreateResultSetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createResultSet>>,
+  TError,
+  CreateResultSetMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateResultSetMutationOptions(options), queryClient);
+};
+
+export type listSlideResultSetsResponse200 = {
+  data: ResultSet[];
+  status: 200;
+};
+
+export type listSlideResultSetsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSlideResultSetsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSlideResultSetsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSlideResultSetsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSlideResultSetsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSlideResultSetsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSlideResultSetsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSlideResultSetsResponseSuccess = listSlideResultSetsResponse200 & {
+  headers: Headers;
+};
+export type listSlideResultSetsResponseError = (
+  | listSlideResultSetsResponse400
+  | listSlideResultSetsResponse401
+  | listSlideResultSetsResponse403
+  | listSlideResultSetsResponse404
+  | listSlideResultSetsResponse409
+  | listSlideResultSetsResponse422
+  | listSlideResultSetsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSlideResultSetsResponse =
+  | listSlideResultSetsResponseSuccess
+  | listSlideResultSetsResponseError;
+
+export const getListSlideResultSetsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/result-sets`;
+};
+
+/**
+ * @summary List Slide Result Sets
+ */
+export const listSlideResultSets = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSlideResultSetsResponse> => {
+  return apiFetch<listSlideResultSetsResponse>(getListSlideResultSetsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSlideResultSetsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/result-sets`] as const;
+};
+
+export const getListSlideResultSetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSlideResultSets>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSlideResultSetsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSlideResultSets>>> = ({ signal }) =>
+    listSlideResultSets(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSlideResultSetsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSlideResultSets>>
+>;
+export type ListSlideResultSetsQueryError = Problem;
+
+export function useListSlideResultSets<
+  TData = Awaited<ReturnType<typeof listSlideResultSets>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideResultSets>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideResultSets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideResultSets<
+  TData = Awaited<ReturnType<typeof listSlideResultSets>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideResultSets>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideResultSets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideResultSets<
+  TData = Awaited<ReturnType<typeof listSlideResultSets>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Slide Result Sets
+ */
+
+export function useListSlideResultSets<
+  TData = Awaited<ReturnType<typeof listSlideResultSets>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSlideResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSlideResultSetsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listProjectResultSetsResponse200 = {
+  data: ResultSet[];
+  status: 200;
+};
+
+export type listProjectResultSetsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectResultSetsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectResultSetsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectResultSetsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectResultSetsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectResultSetsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectResultSetsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectResultSetsResponseSuccess = listProjectResultSetsResponse200 & {
+  headers: Headers;
+};
+export type listProjectResultSetsResponseError = (
+  | listProjectResultSetsResponse400
+  | listProjectResultSetsResponse401
+  | listProjectResultSetsResponse403
+  | listProjectResultSetsResponse404
+  | listProjectResultSetsResponse409
+  | listProjectResultSetsResponse422
+  | listProjectResultSetsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectResultSetsResponse =
+  | listProjectResultSetsResponseSuccess
+  | listProjectResultSetsResponseError;
+
+export const getListProjectResultSetsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/result-sets`;
+};
+
+/**
+ * @summary List Project Result Sets
+ */
+export const listProjectResultSets = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectResultSetsResponse> => {
+  return apiFetch<listProjectResultSetsResponse>(getListProjectResultSetsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectResultSetsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/result-sets`] as const;
+};
+
+export const getListProjectResultSetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectResultSets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectResultSetsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectResultSets>>> = ({ signal }) =>
+    listProjectResultSets(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListProjectResultSetsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectResultSets>>
+>;
+export type ListProjectResultSetsQueryError = Problem;
+
+export function useListProjectResultSets<
+  TData = Awaited<ReturnType<typeof listProjectResultSets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectResultSets>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectResultSets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectResultSets<
+  TData = Awaited<ReturnType<typeof listProjectResultSets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectResultSets>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectResultSets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectResultSets<
+  TData = Awaited<ReturnType<typeof listProjectResultSets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Result Sets
+ */
+
+export function useListProjectResultSets<
+  TData = Awaited<ReturnType<typeof listProjectResultSets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectResultSets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectResultSetsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getResultSetResponse200 = {
+  data: ResultSetDetail;
+  status: 200;
+};
+
+export type getResultSetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getResultSetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getResultSetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getResultSetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getResultSetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getResultSetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getResultSetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getResultSetResponseSuccess = getResultSetResponse200 & {
+  headers: Headers;
+};
+export type getResultSetResponseError = (
+  | getResultSetResponse400
+  | getResultSetResponse401
+  | getResultSetResponse403
+  | getResultSetResponse404
+  | getResultSetResponse409
+  | getResultSetResponse422
+  | getResultSetResponse500
+) & {
+  headers: Headers;
+};
+
+export type getResultSetResponse = getResultSetResponseSuccess | getResultSetResponseError;
+
+export const getGetResultSetUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}`;
+};
+
+/**
+ * @summary Get Result Set
+ */
+export const getResultSet = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getResultSetResponse> => {
+  return apiFetch<getResultSetResponse>(getGetResultSetUrl(resultSetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResultSetQueryKey = (resultSetId: string) => {
+  return [`/api/result-sets/${resultSetId}`] as const;
+};
+
+export const getGetResultSetQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResultSet>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResultSetQueryKey(resultSetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResultSet>>> = ({ signal }) =>
+    getResultSet(resultSetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetResultSetQueryResult = NonNullable<Awaited<ReturnType<typeof getResultSet>>>;
+export type GetResultSetQueryError = Problem;
+
+export function useGetResultSet<TData = Awaited<ReturnType<typeof getResultSet>>, TError = Problem>(
+  resultSetId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultSet>>,
+          TError,
+          Awaited<ReturnType<typeof getResultSet>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultSet<TData = Awaited<ReturnType<typeof getResultSet>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultSet>>,
+          TError,
+          Awaited<ReturnType<typeof getResultSet>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultSet<TData = Awaited<ReturnType<typeof getResultSet>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Result Set
+ */
+
+export function useGetResultSet<TData = Awaited<ReturnType<typeof getResultSet>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSet>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetResultSetQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type deleteResultSetResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteResultSetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteResultSetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteResultSetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteResultSetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteResultSetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteResultSetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteResultSetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteResultSetResponseSuccess = deleteResultSetResponse204 & {
+  headers: Headers;
+};
+export type deleteResultSetResponseError = (
+  | deleteResultSetResponse400
+  | deleteResultSetResponse401
+  | deleteResultSetResponse403
+  | deleteResultSetResponse404
+  | deleteResultSetResponse409
+  | deleteResultSetResponse422
+  | deleteResultSetResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteResultSetResponse = deleteResultSetResponseSuccess | deleteResultSetResponseError;
+
+export const getDeleteResultSetUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}`;
+};
+
+/**
+ * @summary Delete Result Set
+ */
+export const deleteResultSet = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteResultSetResponse> => {
+  return apiFetch<deleteResultSetResponse>(getDeleteResultSetUrl(resultSetId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteResultSetMutationKey = () => ["deleteResultSet"] as const;
+
+export const getDeleteResultSetMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteResultSet>>,
+    TError,
+    DeleteResultSetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteResultSet>>,
+  TError,
+  DeleteResultSetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteResultSetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteResultSet>>,
+    DeleteResultSetMutationVariables
+  > = (props) => {
+    const { resultSetId } = props ?? {};
+
+    return deleteResultSet(resultSetId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteResultSetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteResultSet>>
+>;
+
+export type DeleteResultSetMutationError = Problem;
+export type DeleteResultSetMutationVariables = { resultSetId: string };
+
+/**
+ * @summary Delete Result Set
+ */
+export const useDeleteResultSet = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteResultSet>>,
+      TError,
+      DeleteResultSetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteResultSet>>,
+  TError,
+  DeleteResultSetMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteResultSetMutationOptions(options), queryClient);
+};
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

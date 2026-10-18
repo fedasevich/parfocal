@@ -30,6 +30,7 @@ from parfocal_api.tables import (
     organisations,
     project_classes,
     project_members,
+    result_sets,
     service_accounts,
     slide_counters,
     tenants,
@@ -91,6 +92,8 @@ class Workspace:
     annotation: uuid.UUID
     doomed_annotation: uuid.UUID
     deleted_annotation: uuid.UUID
+    result_set: uuid.UUID
+    doomed_result_set: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -178,6 +181,13 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "restoreAnnotation": lambda w: Call(
         "POST", f"{w.annotations}/{w.deleted_annotation}/restore", {"version": 2}
     ),
+    "listSlideResultSets": lambda w: Call("GET", f"/api/slides/{w.slide}/result-sets"),
+    "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
+    "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
+    "createResultSet": lambda w: Call(
+        "POST", f"/api/slides/{w.slide}/result-sets", {"name": "Matrix model"}
+    ),
+    "deleteResultSet": lambda w: Call("DELETE", f"/api/result-sets/{w.doomed_result_set}"),
     "createCase": lambda w: Call(
         "POST",
         "/api/cases",
@@ -229,6 +239,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -426,6 +438,20 @@ async def seed(database: str) -> Workspace:
                 )
                 for n in (1, 2, 3)
             ]
+            result_set, doomed_result_set = [
+                await connection.scalar(
+                    insert(result_sets)
+                    .values(
+                        tenant_id=tenant_id,
+                        project_id=case.project_id,
+                        slide_id=case.loose_slide_id,
+                        name=name,
+                        source="import",
+                    )
+                    .returning(result_sets.c.id)
+                )
+                for name in ("Matrix set", "Doomed set")
+            ]
             await connection.execute(
                 insert(slide_counters).values(
                     tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
@@ -461,6 +487,8 @@ async def seed(database: str) -> Workspace:
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
         assert isinstance(spare_account, uuid.UUID)
+        assert isinstance(result_set, uuid.UUID)
+        assert isinstance(doomed_result_set, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
         return Workspace(
             tenant_id,
@@ -481,6 +509,8 @@ async def seed(database: str) -> Workspace:
             annotation,
             doomed_annotation,
             deleted_annotation,
+            result_set,
+            doomed_result_set,
         )
     finally:
         await engine.dispose()

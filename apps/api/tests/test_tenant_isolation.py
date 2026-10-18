@@ -33,6 +33,10 @@ from parfocal_api.tables import (
     platform_operators,
     project_classes,
     project_members,
+    result_chunks,
+    result_objects,
+    result_set_classes,
+    result_sets,
     service_accounts,
     session_policies,
     slide_counters,
@@ -73,6 +77,10 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "result_sets",
+    "result_set_classes",
+    "result_objects",
+    "result_chunks",
     "annotations",
     "annotation_versions",
     "slide_counters",
@@ -299,6 +307,54 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["slide"] = case.loose_slide_id
+    set_name = f"Model {uuid.uuid4().hex[:8]}"
+    set_id = await connection.scalar(
+        insert(result_sets)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            name=set_name,
+            source="import",
+        )
+        .returning(result_sets.c.id)
+    )
+    assert isinstance(set_id, uuid.UUID)
+    await connection.execute(
+        insert(result_set_classes).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            result_set_id=set_id,
+            position=0,
+            source_name="tumor",
+            class_id=class_id,
+        )
+    )
+    await connection.execute(
+        insert(result_objects).values(
+            tenant_id=seeded.tenant_id,
+            result_set_id=set_id,
+            kind="region",
+            number=1,
+            geometry="SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
+        )
+    )
+    await connection.execute(
+        insert(result_chunks).values(
+            tenant_id=seeded.tenant_id,
+            result_set_id=set_id,
+            chunk=0,
+            x=0,
+            y=0,
+            width=2048,
+            height=2048,
+            cell_count=1,
+            vertex_count=16,
+            object_key=f"cells/{set_id}/chunk-00000.pfc",
+        )
+    )
+    seeded.ids["result_set"] = set_id
+    seeded.markers.update({str(set_id), set_name})
     seeded.ids["annotation"] = annotation_id
     seeded.markers.add(str(annotation_id))
 
@@ -363,6 +419,13 @@ GET_ROUTES = {
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
+    "listSlideResultSets": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/result-sets"
+    ),
+    "listProjectResultSets": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/result-sets"
+    ),
+    "getResultSet": Route(Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}"),
     "listAnnotations": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"
     ),
