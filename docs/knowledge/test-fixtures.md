@@ -17,3 +17,7 @@ The OpenSlide test data publishes `index.json` with a SHA-256, size and licence 
 ## Synthetic OME-TIFFs change on every run
 
 tifffile writes a random UUID into the OME-XML, so regenerating the synthetic slides changes their checksums even when the pixels are the same. `make_synthetic.py` rewrites the `synthetic` checksums in `fixtures.json`, and the manifest test catches a slide committed without them.
+
+## Patient names in tests come from one registry
+
+Every patient name a test or fixture uses must be in `SYNTHETIC_PATIENT_NAMES` in `apps/api/tests/synthetic_people.py`, which marks it as made up. `test_fixture_hygiene.py` scans the Python test folders and their JSON, CSV and GeoJSON fixtures for names given to `PatientIdentity`, in a `"patient": {"name": ...}` body or in the name column of a case import CSV, and fails on any name that is not registered. A new test patient is added to the registry in the same change, which is the moment to check the name is invented. The scanner cannot tell a real person from an invented one, so the registry is the review.
