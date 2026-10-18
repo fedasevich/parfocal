@@ -25,3 +25,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-18 | [Bulk annotation insert and listing on local Postgres](2026-10-18-annotation-bulk-latency.md) | ANN-020 | baseline |
 | 2026-10-18 | [Typst and WeasyPrint for the evaluation report PDF](2026-10-18-pdf-generation-spike.md) | STACK-035 | spike |
 | 2026-10-18 | [The geometric scorer reproduces the POC's TNBC numbers](2026-10-18-geometric-scorer-reproduction.md) | MLEVAL-002 | ML evaluation |
+| 2026-10-18 | [TNBC and NuInsSeg load from their verified Zenodo archives](2026-10-18-dataset-loaders.md) | MLEVAL-001 | baseline |

@@ -2514,7 +2514,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] MLEVAL-001 · Dataset registry and loaders
   MoNuSeg and PanNuke as reference only (in PathoSAM's training set), TNBC, CryoNuSeg, NuInsSeg as held-out, Lizard as native 20×, CAMELYON16 test slides for tumor maps.
   Done when loaders pass checksum and sample tests.
-  Refs docs 20, 26.
+  Refs docs 20, 26, [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md), [result](results/2026-10-18-dataset-loaders.md). Loaders exist for TNBC and NuInsSeg, and CAMELYON16 comes through `packages/test-fixtures`. The datasets behind a sign-in or without a published checksum moved to MLEVAL-010.
 
 - [ ] MLEVAL-002 · Geometric scorer
   4× supersampled centre sampling, PQ, AJI, F1, per-organ and per-tissue breakdowns.
@@ -2547,6 +2547,11 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] MLEVAL-009 · Evaluation dashboard
   Done when results from on-demand evaluation runs are published as a static report with trends ([ADR 0011](adr/0011-hosted-ci-only.md)).
+
+- [ ] MLEVAL-010 · Loaders for datasets behind a sign-in
+  Loaders for PanNuke (Warwick publishes no checksum, so the first verified download becomes the reference), MoNuSeg (Google Drive), CryoNuSeg (Kaggle sign-in, licence still unknown) and Lizard (CoNIC registration), registered as in MLEVAL-001.
+  Done when each loader passes checksum and sample tests against an archive in the dataset cache.
+  Depends on MLEVAL-001. Split from MLEVAL-001, see [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md).
 
 ---
 

@@ -6,6 +6,7 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "numpy>=2.5.4",
     "parfocal-common",
+    "pillow>=13.0.0",
     "scikit-image>=0.26.0",
     "scipy>=1.18.1",
 ]
