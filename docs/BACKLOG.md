@@ -3086,7 +3086,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when an ADR records the slide pipeline (uploaded, AI running or imported, ready, assigned, in review, submitted, disagreement queue, signed off, exported), what is derived and who moves each state.
   Depends on ADAPT-007. Decided in [ADR 0069](adr/0069-slide-pipeline.md).
 
-- [ ] TASK-001 · Review task model and API
+- [x] TASK-001 · Review task model and API
   A task (RT-14) has a name, a project, slides or cases, a result set, reviewers, a split (everyone reviews all, split evenly, chosen per slide), a scope, an opinion form version, blinding, the start mode (guided or full viewer), a due date and reminders.
   Done when API tests cover create, edit, list and each split, with isolation and audit.
   Depends on PROJ-003, RSET-001, TASK-000. A task refuses a result set that is not `ready` or is deleted ([ADR 0077](adr/0077-result-sets.md)).
