@@ -2506,12 +2506,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ## 26 MLEVAL · Evaluation harness and promotion gate
 
-- [ ] MLEVAL-000 · Research check
+- [x] MLEVAL-000 · Research check
   Confirm metrics and datasets (PQ, AJI, mIoU, NoC@85 and @90, ECE, FROC) and dataset licences.
   Done when an ADR lists the datasets and their allowed use.
   Refs [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md).
 
-- [ ] MLEVAL-001 · Dataset registry and loaders
+- [x] MLEVAL-001 · Dataset registry and loaders
   MoNuSeg and PanNuke as reference only (in PathoSAM's training set), TNBC, CryoNuSeg, NuInsSeg as held-out, Lizard as native 20×, CAMELYON16 test slides for tumor maps.
   Done when loaders pass checksum and sample tests.
   Refs docs 20, 26, [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md), [result](results/2026-10-18-dataset-loaders.md). Loaders exist for TNBC and NuInsSeg, and CAMELYON16 comes through `packages/test-fixtures`. The datasets behind a sign-in or without a published checksum moved to MLEVAL-010.
