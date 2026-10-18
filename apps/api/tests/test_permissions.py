@@ -27,6 +27,7 @@ from parfocal_api.tables import (
     announcements,
     api_tokens,
     invitations,
+    legal_holds,
     memberships,
     organisations,
     project_classes,
@@ -111,6 +112,7 @@ class Workspace:
     signed_task: uuid.UUID
     queued_task: uuid.UUID
     announcement: uuid.UUID
+    legal_hold: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -246,6 +248,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", "/api/announcements", {"kind": "change", "text": "Matrix announcement"}
     ),
     "endAnnouncement": lambda w: Call("POST", f"/api/announcements/{w.announcement}/end"),
+    "getRetentionPolicy": lambda _: Call("GET", "/api/tenant/retention"),
+    "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
+    "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
+    "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),
+    "releaseLegalHold": lambda w: Call("POST", f"/api/tenant/legal-holds/{w.legal_hold}/release"),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
     "saveOpinion": lambda w: Call(
@@ -336,6 +343,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -704,6 +712,11 @@ async def seed(database: str) -> Workspace:
                 .values(tenant_id=tenant_id, kind="change", text="Matrix announcement")
                 .returning(announcements.c.id)
             )
+            legal_hold = await connection.scalar(
+                insert(legal_holds)
+                .values(tenant_id=tenant_id, reason="Matrix hold")
+                .returning(legal_holds.c.id)
+            )
             await connection.execute(
                 update(annotations)
                 .where(annotations.c.id == deleted_annotation)
@@ -738,6 +751,7 @@ async def seed(database: str) -> Workspace:
         assert isinstance(doomed_result_set, uuid.UUID)
         assert isinstance(task, uuid.UUID)
         assert isinstance(announcement, uuid.UUID)
+        assert isinstance(legal_hold, uuid.UUID)
         ids = [invitation for invitation in pending if isinstance(invitation, uuid.UUID)]
         return Workspace(
             tenant_id,
@@ -766,6 +780,7 @@ async def seed(database: str) -> Workspace:
             signed_task,
             queued_task,
             announcement,
+            legal_hold,
         )
     finally:
         await engine.dispose()

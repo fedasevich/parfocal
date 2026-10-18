@@ -1505,3 +1505,39 @@ rate_counters = Table(
     Column("count", Integer, nullable=False, info=OPERATIONAL),
     prefixes=["UNLOGGED"],
 )
+
+MIN_AUDIT_DAYS = 365
+
+retention_policies = Table(
+    "retention_policies",
+    metadata,
+    Column(
+        "tenant_id", Uuid[uuid.UUID](), ForeignKey("tenants.id"), primary_key=True, info=OPERATIONAL
+    ),
+    Column("deleted_after_days", Integer, nullable=True, info=OPERATIONAL),
+    Column("audit_after_days", Integer, nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    CheckConstraint("deleted_after_days >= 1", name="deleted_after_days"),
+    CheckConstraint(f"audit_after_days >= {MIN_AUDIT_DAYS}", name="audit_after_days"),
+)
+
+legal_holds = Table(
+    "legal_holds",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("reason", String(500), nullable=False, info=PERSONAL),
+    Column(
+        "placed_by_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=True, info=PERSONAL
+    ),
+    Column("released_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "released_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+)

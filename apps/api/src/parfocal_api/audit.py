@@ -73,6 +73,11 @@ class AuditAction(StrEnum):
     INVITATION_EXPIRED = "invitation.expired"
     ANNOUNCEMENT_POSTED = "announcement.posted"
     ANNOUNCEMENT_ENDED = "announcement.ended"
+    RETENTION_POLICY_SET = "retention.policy-set"
+    RETENTION_PURGED = "retention.purged"
+    LEGAL_HOLD_PLACED = "legal-hold.placed"
+    LEGAL_HOLD_RELEASED = "legal-hold.released"
+    AUDIT_PURGED = "audit.purged"
 
 
 class AuditTarget(StrEnum):
@@ -86,6 +91,9 @@ class AuditTarget(StrEnum):
     SERVICE_ACCOUNT = "service-account"
     INVITATION = "invitation"
     ANNOUNCEMENT = "announcement"
+    ANNOTATION = "annotation"
+    SLIDE = "slide"
+    LEGAL_HOLD = "legal-hold"
 
 
 @dataclass(frozen=True)
@@ -214,11 +222,22 @@ def event_hash(event: AuditEvent) -> str:
     return hashlib.sha256(bytes.fromhex(event.prev_hash) + payload.encode()).hexdigest()
 
 
+def anchor_of(ordered: list[AuditEvent]) -> tuple[int, str]:
+    if not ordered or ordered[0].seq == 1:
+        return 1, GENESIS.hex()
+    for event in ordered:
+        if event.action == AuditAction.AUDIT_PURGED:
+            details = json.loads(event.details)
+            if details.get("through_seq") == ordered[0].seq - 1:
+                return ordered[0].seq, str(details["last_hash"])
+    return 1, GENESIS.hex()
+
+
 def chain_breaks(events: Iterable[AuditEvent]) -> list[int]:
-    expected_seq = 1
-    expected_prev = GENESIS.hex()
+    ordered = sorted(events, key=lambda item: item.seq)
+    expected_seq, expected_prev = anchor_of(ordered)
     breaks: list[int] = []
-    for event in sorted(events, key=lambda item: item.seq):
+    for event in ordered:
         if (
             event.seq != expected_seq
             or event.prev_hash != expected_prev

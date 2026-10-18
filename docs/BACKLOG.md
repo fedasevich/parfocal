@@ -683,6 +683,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-006 · Retention policies
   Per tenant retention for slides, annotations, reports and audit records, with legal hold.
   Done when a scheduled job test deletes expired data, skips held data and audits the deletion.
+  Refs [ADR 0089](adr/0089-retention-purge-and-audit-re-anchor.md).
 
 - [ ] SEC-007 · Right to access and erasure workflows
   Export all personal data for a data subject. Erase or pseudonymise on request where law allows, with reports kept per legal duty.

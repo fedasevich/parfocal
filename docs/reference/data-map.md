@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 23 |
-| `personal` | 36 |
+| `personal` | 39 |
 | `secret` | 9 |
-| `operational` | 356 |
+| `operational` | 367 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -248,6 +248,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `finished_at` | operational |
 
+## legal_holds
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `reason` | personal |
+| `placed_by_user_id` | personal |
+| `released_at` | operational |
+| `released_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## memberships
 
 | Column | Class |
@@ -467,6 +481,16 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## retention_policies
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `deleted_after_days` | operational |
+| `audit_after_days` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## review_assignments
 

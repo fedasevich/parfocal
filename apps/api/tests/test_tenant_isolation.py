@@ -28,6 +28,7 @@ from parfocal_api.tables import (
     job_steps,
     job_units,
     jobs,
+    legal_holds,
     memberships,
     notification_preferences,
     notifications,
@@ -40,6 +41,7 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    retention_policies,
     review_assignments,
     review_edits,
     review_task_slides,
@@ -192,6 +194,20 @@ async def seed_announcements(connection: AsyncConnection, seeded: Seeded) -> Non
         insert(announcements).values(tenant_id=seeded.tenant_id, kind="change", text=text_)
     )
     seeded.markers.add(text_)
+
+
+async def seed_retention_policies(connection: AsyncConnection, seeded: Seeded) -> None:
+    days = 100_000 + uuid.uuid4().int % 900_000
+    await connection.execute(
+        insert(retention_policies).values(tenant_id=seeded.tenant_id, deleted_after_days=days)
+    )
+    seeded.markers.add(str(days))
+
+
+async def seed_legal_holds(connection: AsyncConnection, seeded: Seeded) -> None:
+    reason = f"Hold {uuid.uuid4().hex[:12]}"
+    await connection.execute(insert(legal_holds).values(tenant_id=seeded.tenant_id, reason=reason))
+    seeded.markers.add(reason)
 
 
 async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -475,6 +491,8 @@ SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "invitations": seed_invitations,
     "announcements": seed_announcements,
+    "retention_policies": seed_retention_policies,
+    "legal_holds": seed_legal_holds,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
     "audit_people": seed_audit_people,
@@ -503,6 +521,8 @@ GET_ROUTES = {
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
+    "getRetentionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/retention", Role.ADMIN),
+    "listLegalHolds": Route(Exposure.TENANT, lambda _: "/api/tenant/legal-holds", Role.ADMIN),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),

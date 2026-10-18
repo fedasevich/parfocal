@@ -356,6 +356,9 @@ export const AuditTarget = {
   "service-account": "service-account",
   invitation: "invitation",
   announcement: "announcement",
+  annotation: "annotation",
+  slide: "slide",
+  "legal-hold": "legal-hold",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -1053,6 +1056,24 @@ export interface LayerSummary {
   added: number;
 }
 
+export interface LegalHold {
+  id: string;
+  project_id: string | null;
+  reason: string;
+  placed_by_user_id: string | null;
+  created_at: string;
+  released_at: string | null;
+}
+
+export interface LegalHoldDraft {
+  project_id?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  reason: string;
+}
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -1443,6 +1464,11 @@ export interface ResultSetDraft {
 export interface ResultsFile {
   /** @maxLength 20000000 */
   content: string;
+}
+
+export interface RetentionPolicy {
+  deleted_after_days?: number | null;
+  audit_after_days?: number | null;
 }
 
 export type ReviewEditGeometry = { [key: string]: unknown } | null;
@@ -12509,6 +12535,846 @@ export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TErr
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getRetentionPolicyResponse200 = {
+  data: RetentionPolicy;
+  status: 200;
+};
+
+export type getRetentionPolicyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRetentionPolicyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRetentionPolicyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRetentionPolicyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRetentionPolicyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRetentionPolicyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRetentionPolicyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRetentionPolicyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRetentionPolicyResponseSuccess = getRetentionPolicyResponse200 & {
+  headers: Headers;
+};
+export type getRetentionPolicyResponseError = (
+  | getRetentionPolicyResponse400
+  | getRetentionPolicyResponse401
+  | getRetentionPolicyResponse403
+  | getRetentionPolicyResponse404
+  | getRetentionPolicyResponse409
+  | getRetentionPolicyResponse422
+  | getRetentionPolicyResponse429
+  | getRetentionPolicyResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRetentionPolicyResponse =
+  | getRetentionPolicyResponseSuccess
+  | getRetentionPolicyResponseError;
+
+export const getGetRetentionPolicyUrl = () => {
+  return `/api/tenant/retention`;
+};
+
+/**
+ * @summary Get Retention Policy
+ */
+export const getRetentionPolicy = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRetentionPolicyResponse> => {
+  return apiFetch<getRetentionPolicyResponse>(getGetRetentionPolicyUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRetentionPolicyQueryKey = () => {
+  return [`/api/tenant/retention`] as const;
+};
+
+export const getGetRetentionPolicyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRetentionPolicy>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRetentionPolicy>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRetentionPolicyQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRetentionPolicy>>> = ({ signal }) =>
+    getRetentionPolicy({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRetentionPolicy>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetRetentionPolicyQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRetentionPolicy>>
+>;
+export type GetRetentionPolicyQueryError = Problem;
+
+export function useGetRetentionPolicy<
+  TData = Awaited<ReturnType<typeof getRetentionPolicy>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRetentionPolicy>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRetentionPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getRetentionPolicy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRetentionPolicy<
+  TData = Awaited<ReturnType<typeof getRetentionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getRetentionPolicy>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRetentionPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getRetentionPolicy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRetentionPolicy<
+  TData = Awaited<ReturnType<typeof getRetentionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRetentionPolicy>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Retention Policy
+ */
+
+export function useGetRetentionPolicy<
+  TData = Awaited<ReturnType<typeof getRetentionPolicy>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRetentionPolicy>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRetentionPolicyQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setRetentionPolicyResponse200 = {
+  data: RetentionPolicy;
+  status: 200;
+};
+
+export type setRetentionPolicyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setRetentionPolicyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setRetentionPolicyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setRetentionPolicyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setRetentionPolicyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setRetentionPolicyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setRetentionPolicyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setRetentionPolicyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setRetentionPolicyResponseSuccess = setRetentionPolicyResponse200 & {
+  headers: Headers;
+};
+export type setRetentionPolicyResponseError = (
+  | setRetentionPolicyResponse400
+  | setRetentionPolicyResponse401
+  | setRetentionPolicyResponse403
+  | setRetentionPolicyResponse404
+  | setRetentionPolicyResponse409
+  | setRetentionPolicyResponse422
+  | setRetentionPolicyResponse429
+  | setRetentionPolicyResponse500
+) & {
+  headers: Headers;
+};
+
+export type setRetentionPolicyResponse =
+  | setRetentionPolicyResponseSuccess
+  | setRetentionPolicyResponseError;
+
+export const getSetRetentionPolicyUrl = () => {
+  return `/api/tenant/retention`;
+};
+
+/**
+ * @summary Set Retention Policy
+ */
+export const setRetentionPolicy = async (
+  retentionPolicy: RetentionPolicy,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setRetentionPolicyResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setRetentionPolicyResponse>(getSetRetentionPolicyUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(retentionPolicy),
+  });
+};
+
+export const getSetRetentionPolicyMutationKey = () => ["setRetentionPolicy"] as const;
+
+export const getSetRetentionPolicyMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setRetentionPolicy>>,
+    TError,
+    SetRetentionPolicyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setRetentionPolicy>>,
+  TError,
+  SetRetentionPolicyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetRetentionPolicyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setRetentionPolicy>>,
+    SetRetentionPolicyMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setRetentionPolicy(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetRetentionPolicyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setRetentionPolicy>>
+>;
+export type SetRetentionPolicyMutationBody = RetentionPolicy;
+export type SetRetentionPolicyMutationError = Problem;
+export type SetRetentionPolicyMutationVariables = { data: RetentionPolicy };
+
+/**
+ * @summary Set Retention Policy
+ */
+export const useSetRetentionPolicy = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setRetentionPolicy>>,
+      TError,
+      SetRetentionPolicyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setRetentionPolicy>>,
+  TError,
+  SetRetentionPolicyMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetRetentionPolicyMutationOptions(options), queryClient);
+};
+
+export type listLegalHoldsResponse200 = {
+  data: LegalHold[];
+  status: 200;
+};
+
+export type listLegalHoldsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listLegalHoldsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listLegalHoldsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listLegalHoldsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listLegalHoldsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listLegalHoldsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listLegalHoldsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listLegalHoldsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listLegalHoldsResponseSuccess = listLegalHoldsResponse200 & {
+  headers: Headers;
+};
+export type listLegalHoldsResponseError = (
+  | listLegalHoldsResponse400
+  | listLegalHoldsResponse401
+  | listLegalHoldsResponse403
+  | listLegalHoldsResponse404
+  | listLegalHoldsResponse409
+  | listLegalHoldsResponse422
+  | listLegalHoldsResponse429
+  | listLegalHoldsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listLegalHoldsResponse = listLegalHoldsResponseSuccess | listLegalHoldsResponseError;
+
+export const getListLegalHoldsUrl = () => {
+  return `/api/tenant/legal-holds`;
+};
+
+/**
+ * @summary List Legal Holds
+ */
+export const listLegalHolds = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listLegalHoldsResponse> => {
+  return apiFetch<listLegalHoldsResponse>(getListLegalHoldsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListLegalHoldsQueryKey = () => {
+  return [`/api/tenant/legal-holds`] as const;
+};
+
+export const getListLegalHoldsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listLegalHolds>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegalHolds>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListLegalHoldsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegalHolds>>> = ({ signal }) =>
+    listLegalHolds({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listLegalHolds>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListLegalHoldsQueryResult = NonNullable<Awaited<ReturnType<typeof listLegalHolds>>>;
+export type ListLegalHoldsQueryError = Problem;
+
+export function useListLegalHolds<
+  TData = Awaited<ReturnType<typeof listLegalHolds>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegalHolds>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegalHolds>>,
+          TError,
+          Awaited<ReturnType<typeof listLegalHolds>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListLegalHolds<
+  TData = Awaited<ReturnType<typeof listLegalHolds>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegalHolds>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegalHolds>>,
+          TError,
+          Awaited<ReturnType<typeof listLegalHolds>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListLegalHolds<
+  TData = Awaited<ReturnType<typeof listLegalHolds>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegalHolds>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Legal Holds
+ */
+
+export function useListLegalHolds<
+  TData = Awaited<ReturnType<typeof listLegalHolds>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegalHolds>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListLegalHoldsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type placeLegalHoldResponse201 = {
+  data: LegalHold;
+  status: 201;
+};
+
+export type placeLegalHoldResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type placeLegalHoldResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type placeLegalHoldResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type placeLegalHoldResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type placeLegalHoldResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type placeLegalHoldResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type placeLegalHoldResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type placeLegalHoldResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type placeLegalHoldResponseSuccess = placeLegalHoldResponse201 & {
+  headers: Headers;
+};
+export type placeLegalHoldResponseError = (
+  | placeLegalHoldResponse400
+  | placeLegalHoldResponse401
+  | placeLegalHoldResponse403
+  | placeLegalHoldResponse404
+  | placeLegalHoldResponse409
+  | placeLegalHoldResponse422
+  | placeLegalHoldResponse429
+  | placeLegalHoldResponse500
+) & {
+  headers: Headers;
+};
+
+export type placeLegalHoldResponse = placeLegalHoldResponseSuccess | placeLegalHoldResponseError;
+
+export const getPlaceLegalHoldUrl = () => {
+  return `/api/tenant/legal-holds`;
+};
+
+/**
+ * @summary Place Legal Hold
+ */
+export const placeLegalHold = async (
+  legalHoldDraft: LegalHoldDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<placeLegalHoldResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<placeLegalHoldResponse>(getPlaceLegalHoldUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(legalHoldDraft),
+  });
+};
+
+export const getPlaceLegalHoldMutationKey = () => ["placeLegalHold"] as const;
+
+export const getPlaceLegalHoldMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof placeLegalHold>>,
+    TError,
+    PlaceLegalHoldMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof placeLegalHold>>,
+  TError,
+  PlaceLegalHoldMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPlaceLegalHoldMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof placeLegalHold>>,
+    PlaceLegalHoldMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return placeLegalHold(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlaceLegalHoldMutationResult = NonNullable<Awaited<ReturnType<typeof placeLegalHold>>>;
+export type PlaceLegalHoldMutationBody = LegalHoldDraft;
+export type PlaceLegalHoldMutationError = Problem;
+export type PlaceLegalHoldMutationVariables = { data: LegalHoldDraft };
+
+/**
+ * @summary Place Legal Hold
+ */
+export const usePlaceLegalHold = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof placeLegalHold>>,
+      TError,
+      PlaceLegalHoldMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof placeLegalHold>>,
+  TError,
+  PlaceLegalHoldMutationVariables,
+  TContext
+> => {
+  return useMutation(getPlaceLegalHoldMutationOptions(options), queryClient);
+};
+
+export type releaseLegalHoldResponse200 = {
+  data: LegalHold;
+  status: 200;
+};
+
+export type releaseLegalHoldResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type releaseLegalHoldResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type releaseLegalHoldResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type releaseLegalHoldResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type releaseLegalHoldResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type releaseLegalHoldResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type releaseLegalHoldResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type releaseLegalHoldResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type releaseLegalHoldResponseSuccess = releaseLegalHoldResponse200 & {
+  headers: Headers;
+};
+export type releaseLegalHoldResponseError = (
+  | releaseLegalHoldResponse400
+  | releaseLegalHoldResponse401
+  | releaseLegalHoldResponse403
+  | releaseLegalHoldResponse404
+  | releaseLegalHoldResponse409
+  | releaseLegalHoldResponse422
+  | releaseLegalHoldResponse429
+  | releaseLegalHoldResponse500
+) & {
+  headers: Headers;
+};
+
+export type releaseLegalHoldResponse =
+  | releaseLegalHoldResponseSuccess
+  | releaseLegalHoldResponseError;
+
+export const getReleaseLegalHoldUrl = (holdId: string) => {
+  return `/api/tenant/legal-holds/${holdId}/release`;
+};
+
+/**
+ * @summary Release Legal Hold
+ */
+export const releaseLegalHold = async (
+  holdId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<releaseLegalHoldResponse> => {
+  return apiFetch<releaseLegalHoldResponse>(getReleaseLegalHoldUrl(holdId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReleaseLegalHoldMutationKey = () => ["releaseLegalHold"] as const;
+
+export const getReleaseLegalHoldMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof releaseLegalHold>>,
+    TError,
+    ReleaseLegalHoldMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof releaseLegalHold>>,
+  TError,
+  ReleaseLegalHoldMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReleaseLegalHoldMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof releaseLegalHold>>,
+    ReleaseLegalHoldMutationVariables
+  > = (props) => {
+    const { holdId } = props ?? {};
+
+    return releaseLegalHold(holdId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReleaseLegalHoldMutationResult = NonNullable<
+  Awaited<ReturnType<typeof releaseLegalHold>>
+>;
+
+export type ReleaseLegalHoldMutationError = Problem;
+export type ReleaseLegalHoldMutationVariables = { holdId: string };
+
+/**
+ * @summary Release Legal Hold
+ */
+export const useReleaseLegalHold = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof releaseLegalHold>>,
+      TError,
+      ReleaseLegalHoldMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof releaseLegalHold>>,
+  TError,
+  ReleaseLegalHoldMutationVariables,
+  TContext
+> => {
+  return useMutation(getReleaseLegalHoldMutationOptions(options), queryClient);
+};
 
 export type getReviewTaskStatesResponse200 = {
   data: TaskStates;

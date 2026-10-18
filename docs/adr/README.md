@@ -94,3 +94,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0086](0086-node-staging-rules.md) | Node staging is a pure function, the largest area by its best size leads, and a node settles only when no other area can outrank it | Accepted | 2026-10-18 |
 | [0087](0087-origin-check-on-cookie-writes.md) | Cookie-authenticated writes must come from the app origin, checked by `Origin` or `Sec-Fetch-Site` | Accepted | 2026-10-18 |
 | [0088](0088-rate-limits-in-postgres-and-at-the-edge.md) | Rate limits per person and per workspace are counted in Postgres by the API, and per-IP limits sit at the edge | Accepted | 2026-10-18 |
+| [0089](0089-retention-purge-and-audit-re-anchor.md) | Retention purges expired soft-deleted records through one database function, and old audit entries are purged with a re-anchor | Accepted | 2026-10-18 |
