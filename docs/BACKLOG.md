@@ -3093,7 +3093,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on PROJ-003, RSET-001, TASK-000. A task refuses a result set that is not `ready` or is deleted ([ADR 0077](adr/0077-result-sets.md)).
   A project reviewer reads only the slides of their tasks, so this task extends `project_access.readable` and the case check with task slides ([ADR 0065](adr/0065-project-role-enforcement.md)).
 
-- [ ] TASK-002 · Slide states per task and reviewer
+- [x] TASK-002 · Slide states per task and reviewer
   Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited. One pure function derives the states from stored facts, and only submit, reopen, sign-off and task reopen are stored moves ([ADR 0069](adr/0069-slide-pipeline.md)).
   Done when a table-driven test covers every allowed and refused transition with its actor.
   Depends on TASK-001.
