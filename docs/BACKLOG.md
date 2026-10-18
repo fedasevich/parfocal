@@ -3098,7 +3098,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when a table-driven test covers every allowed and refused transition with its actor.
   Depends on TASK-001.
 
-- [ ] TASK-003 · Scope and progress
+- [x] TASK-003 · Scope and progress
   Scopes are all regions, a random N cells per slide that is the same for every reviewer, cells below a score, objects inside ROIs, and unsure zones. Progress counts against the scope, as in 37 of 50 sampled cells.
   Done when unit tests prove the sample is deterministic and shared, and progress counts match on a fixture.
   Depends on TASK-001, OBJ-001.
@@ -3138,7 +3138,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when an ADR records the verdict model, the disagree reasons per object kind and the opinion form schema.
   Decided in [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md).
 
-- [ ] GUIDE-001 · Verdict model and API
+- [x] GUIDE-001 · Verdict model and API
   Agree, Disagree or Not sure per object and reviewer, a reason on Disagree, saved at once, changeable until sign-off, and audited.
   Done when API tests cover each verdict, a change, a refused change after sign-off and the audit entry.
   Depends on OBJ-001, TASK-002.
