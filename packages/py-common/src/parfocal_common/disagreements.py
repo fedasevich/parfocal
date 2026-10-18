@@ -10,7 +10,7 @@ class Why(StrEnum):
     AGAINST_THE_AI = "against-the-ai"
 
 
-def why_queued(values: Mapping[object, str]) -> Why | None:
+def why_queued[K](values: Mapping[K, str]) -> Why | None:
     judged = list(values.values())
     if not judged:
         return None
