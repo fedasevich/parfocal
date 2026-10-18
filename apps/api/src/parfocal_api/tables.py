@@ -590,6 +590,7 @@ patients = Table(
 class CaseSource(StrEnum):
     MANUAL = "manual"
     UPLOAD = "upload"
+    IMPORT = "import"
 
 
 class Laterality(StrEnum):

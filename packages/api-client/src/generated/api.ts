@@ -390,6 +390,7 @@ export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
 export const CaseSource = {
   manual: "manual",
   upload: "upload",
+  import: "import",
 } as const;
 
 export type Sex = (typeof Sex)[keyof typeof Sex];
@@ -487,6 +488,12 @@ export interface CaseDraft {
   patient?: NewPatient | null;
   /** @maxItems 26 */
   specimens?: SpecimenDraft[];
+}
+
+export interface CaseImport {
+  /** @maxLength 2000000 */
+  csv: string;
+  dry_run?: boolean;
 }
 
 export interface CaseSummary {
@@ -720,6 +727,24 @@ export interface FormVersion {
 
 export interface Health {
   status: string;
+}
+
+export interface RowProblem {
+  row: number;
+  column: string | null;
+  message: string;
+}
+
+export interface ImportReport {
+  dry_run: boolean;
+  imported: boolean;
+  rows: number;
+  cases_created: number;
+  cases_existing: number;
+  patients_created: number;
+  slides_created: number;
+  slides_existing: number;
+  problems: RowProblem[];
 }
 
 /**
@@ -12515,6 +12540,165 @@ export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type importCasesResponse200 = {
+  data: ImportReport;
+  status: 200;
+};
+
+export type importCasesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type importCasesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type importCasesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type importCasesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type importCasesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type importCasesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type importCasesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type importCasesResponseSuccess = importCasesResponse200 & {
+  headers: Headers;
+};
+export type importCasesResponseError = (
+  | importCasesResponse400
+  | importCasesResponse401
+  | importCasesResponse403
+  | importCasesResponse404
+  | importCasesResponse409
+  | importCasesResponse422
+  | importCasesResponse500
+) & {
+  headers: Headers;
+};
+
+export type importCasesResponse = importCasesResponseSuccess | importCasesResponseError;
+
+export const getImportCasesUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/case-imports`;
+};
+
+/**
+ * @summary Import Cases
+ */
+export const importCases = async (
+  projectId: string,
+  caseImport: CaseImport,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<importCasesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<importCasesResponse>(getImportCasesUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseImport),
+  });
+};
+
+export const getImportCasesMutationKey = () => ["importCases"] as const;
+
+export const getImportCasesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importCases>>,
+    TError,
+    ImportCasesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importCases>>,
+  TError,
+  ImportCasesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportCasesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importCases>>,
+    ImportCasesMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return importCases(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportCasesMutationResult = NonNullable<Awaited<ReturnType<typeof importCases>>>;
+export type ImportCasesMutationBody = CaseImport;
+export type ImportCasesMutationError = Problem;
+export type ImportCasesMutationVariables = { projectId: string; data: CaseImport };
+
+/**
+ * @summary Import Cases
+ */
+export const useImportCases = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importCases>>,
+      TError,
+      ImportCasesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importCases>>,
+  TError,
+  ImportCasesMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportCasesMutationOptions(options), queryClient);
+};
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

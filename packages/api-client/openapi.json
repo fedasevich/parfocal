@@ -7617,6 +7617,128 @@
         "x-permission": "see-slides"
       }
     },
+    "/api/projects/{project_id}/case-imports": {
+      "post": {
+        "tags": [
+          "cases"
+        ],
+        "summary": "Import Cases",
+        "operationId": "importCases",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/emergency-access": {
       "post": {
         "tags": [
@@ -12513,11 +12635,31 @@
         ],
         "title": "CaseDraft"
       },
+      "CaseImport": {
+        "properties": {
+          "csv": {
+            "type": "string",
+            "maxLength": 2000000,
+            "title": "Csv"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "csv"
+        ],
+        "title": "CaseImport"
+      },
       "CaseSource": {
         "type": "string",
         "enum": [
           "manual",
-          "upload"
+          "upload",
+          "import"
         ],
         "title": "CaseSource"
       },
@@ -13029,6 +13171,62 @@
           "status"
         ],
         "title": "Health"
+      },
+      "ImportReport": {
+        "properties": {
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run"
+          },
+          "imported": {
+            "type": "boolean",
+            "title": "Imported"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "cases_created": {
+            "type": "integer",
+            "title": "Cases Created"
+          },
+          "cases_existing": {
+            "type": "integer",
+            "title": "Cases Existing"
+          },
+          "patients_created": {
+            "type": "integer",
+            "title": "Patients Created"
+          },
+          "slides_created": {
+            "type": "integer",
+            "title": "Slides Created"
+          },
+          "slides_existing": {
+            "type": "integer",
+            "title": "Slides Existing"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/RowProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dry_run",
+          "imported",
+          "rows",
+          "cases_created",
+          "cases_existing",
+          "patients_created",
+          "slides_created",
+          "slides_existing",
+          "problems"
+        ],
+        "title": "ImportReport"
       },
       "Initials": {
         "type": "string",
@@ -15364,6 +15562,36 @@
           "role"
         ],
         "title": "RoleChange"
+      },
+      "RowProblem": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "column",
+          "message"
+        ],
+        "title": "RowProblem"
       },
       "ScaleQuestion": {
         "properties": {
