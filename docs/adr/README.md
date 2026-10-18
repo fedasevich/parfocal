@@ -88,3 +88,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0080](0080-disagreement-rule-and-sign-off.md) | Disagreements are reviewers who differ or a majority against the AI, and sign-off needs every slide submitted and an empty queue | Accepted | 2026-10-18 |
 | [0081](0081-uploads-are-checked-by-structure.md) | Uploads are checked by structure (format, byte ranges, zip CRCs) without an antivirus scanner | Accepted | 2026-10-18 |
 | [0082](0082-my-work-query-api.md) | My work is three read endpoints, one per tab, with keyset pages for All slides and the storage filter moved to REMOTE-001 | Accepted | 2026-10-18 |
+| [0083](0083-typst-for-report-pdfs.md) | Report PDFs are rendered with Typst from the evaluation data, deterministic with the sign-off time as timestamp | Accepted | 2026-10-18 |

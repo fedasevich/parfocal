@@ -355,9 +355,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: PostgreSQL full-text search with pg_trgm, Meilisearch, OpenSearch. Default: PostgreSQL FTS and trigram, because patients, cases and reports are tenant-scoped and small per tenant, and RLS then covers search too.
   Done when the spike returns patient, case and report results for a partial name in under 100 ms on 100,000 seeded cases.
 
-- [ ] STACK-035 · PDF generation for reports
+- [x] STACK-035 · PDF generation for reports
   Candidates: Typst, WeasyPrint, headless Chromium (Playwright) print, ReportLab. Default: Typst for deterministic, versionable templates, or WeasyPrint if templates must share HTML and CSS with the web preview.
   Done when the spike renders the sentinel node report with a signature block and AI disclosure in both preview and PDF with matching content.
+  The report is now the evaluation report ([ADR 0053](adr/0053-ai-results-review-direction.md)). Decided in [ADR 0083](adr/0083-typst-for-report-pdfs.md): Typst, after a [spike](results/2026-10-18-pdf-generation-spike.md) rendered it with a signature line and the AI disclosure, as PDF and as an SVG preview of the same compile.
 
 - [x] STACK-036 · Email and transactional notifications
   Candidates: Amazon SES, Postmark, Resend, SendGrid, with EU data processing and BAA where needed. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Resend through its HTTP API in production only. Other environments use a console sender and automated tests an in-memory fake ([ADR 0005](adr/0005-external-sends-only-in-production.md)). Templates are rendered server-side and no PHI goes in subject lines.
