@@ -2110,6 +2110,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
 - [ ] CASES-009 · Search API
   Projects, cases, slides, object IDs by any part of the full path (OBJ-004) and people, with scopes, and patients only in clinical projects, tenant-scoped, PHI-safe ranking.
   Done when tests meet the STACK-034 latency on seeded data.
+  Refs [ADR 0094](adr/0094-search-on-postgres.md).
 
 - [ ] CASES-010 · Idea: Report output through the adapter
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
