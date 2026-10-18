@@ -298,12 +298,12 @@ export const Availability = {
  * @minLength 1
  * @maxLength 200
  */
-export type Note = string;
+export type ParfocalApiAvailabilityNote = string;
 
 export interface AvailabilityChange {
   status: Availability;
   until?: string | null;
-  note?: Note | null;
+  note?: ParfocalApiAvailabilityNote | null;
 }
 
 export interface BlockDetail {
@@ -1407,6 +1407,48 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
+
+export const VerdictValue = {
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "unsure",
+} as const;
+
+export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
+
+export const VerdictReason = {
+  not_class: "not_class",
+  boundary_off: "boundary_off",
+  two_regions: "two_regions",
+  artefact: "artefact",
+  not_a_cell: "not_a_cell",
+  wrong_class: "wrong_class",
+} as const;
+
+export interface Verdict {
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+  value: VerdictValue;
+  reason: VerdictReason | null;
+  reason_class_id: string | null;
+  note: string | null;
+  updated_at: string;
+}
+
+/**
+ * @maxLength 500
+ */
+export type ParfocalApiVerdictsNote = string;
+
+export interface VerdictDraft {
+  value: VerdictValue;
+  reason?: VerdictReason | null;
+  reason_class_id?: string | null;
+  note?: ParfocalApiVerdictsNote | null;
+}
+
 export interface VersionCheck {
   /** @minimum 1 */
   version: number;
@@ -1445,6 +1487,10 @@ export type DeleteAnnotationParams = {
 };
 
 export type GetReviewedLayerParams = {
+  reviewer_id?: string | null;
+};
+
+export type ListVerdictsParams = {
   reviewer_id?: string | null;
 };
 
@@ -11116,6 +11162,515 @@ export const useReopenReviewTask = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getReopenReviewTaskMutationOptions(options), queryClient);
 };
+
+export type saveVerdictResponse200 = {
+  data: Verdict;
+  status: 200;
+};
+
+export type saveVerdictResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveVerdictResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveVerdictResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveVerdictResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveVerdictResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveVerdictResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveVerdictResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveVerdictResponseSuccess = saveVerdictResponse200 & {
+  headers: Headers;
+};
+export type saveVerdictResponseError = (
+  | saveVerdictResponse400
+  | saveVerdictResponse401
+  | saveVerdictResponse403
+  | saveVerdictResponse404
+  | saveVerdictResponse409
+  | saveVerdictResponse422
+  | saveVerdictResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveVerdictResponse = saveVerdictResponseSuccess | saveVerdictResponseError;
+
+export const getSaveVerdictUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/verdicts/${objectId}`;
+};
+
+/**
+ * @summary Save Verdict
+ */
+export const saveVerdict = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  verdictDraft: VerdictDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveVerdictResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveVerdictResponse>(getSaveVerdictUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(verdictDraft),
+  });
+};
+
+export const getSaveVerdictMutationKey = () => ["saveVerdict"] as const;
+
+export const getSaveVerdictMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveVerdict>>,
+    TError,
+    SaveVerdictMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveVerdict>>,
+  TError,
+  SaveVerdictMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveVerdictMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveVerdict>>,
+    SaveVerdictMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return saveVerdict(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveVerdictMutationResult = NonNullable<Awaited<ReturnType<typeof saveVerdict>>>;
+export type SaveVerdictMutationBody = VerdictDraft;
+export type SaveVerdictMutationError = Problem;
+export type SaveVerdictMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: VerdictDraft;
+};
+
+/**
+ * @summary Save Verdict
+ */
+export const useSaveVerdict = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveVerdict>>,
+      TError,
+      SaveVerdictMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveVerdict>>,
+  TError,
+  SaveVerdictMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveVerdictMutationOptions(options), queryClient);
+};
+
+export type clearVerdictResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearVerdictResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearVerdictResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearVerdictResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearVerdictResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearVerdictResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearVerdictResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearVerdictResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearVerdictResponseSuccess = clearVerdictResponse204 & {
+  headers: Headers;
+};
+export type clearVerdictResponseError = (
+  | clearVerdictResponse400
+  | clearVerdictResponse401
+  | clearVerdictResponse403
+  | clearVerdictResponse404
+  | clearVerdictResponse409
+  | clearVerdictResponse422
+  | clearVerdictResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearVerdictResponse = clearVerdictResponseSuccess | clearVerdictResponseError;
+
+export const getClearVerdictUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/verdicts/${objectId}`;
+};
+
+/**
+ * @summary Clear Verdict
+ */
+export const clearVerdict = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearVerdictResponse> => {
+  return apiFetch<clearVerdictResponse>(getClearVerdictUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearVerdictMutationKey = () => ["clearVerdict"] as const;
+
+export const getClearVerdictMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearVerdict>>,
+    TError,
+    ClearVerdictMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearVerdict>>,
+  TError,
+  ClearVerdictMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearVerdictMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearVerdict>>,
+    ClearVerdictMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearVerdict(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearVerdictMutationResult = NonNullable<Awaited<ReturnType<typeof clearVerdict>>>;
+
+export type ClearVerdictMutationError = Problem;
+export type ClearVerdictMutationVariables = { taskId: string; slideId: string; objectId: string };
+
+/**
+ * @summary Clear Verdict
+ */
+export const useClearVerdict = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearVerdict>>,
+      TError,
+      ClearVerdictMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearVerdict>>,
+  TError,
+  ClearVerdictMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearVerdictMutationOptions(options), queryClient);
+};
+
+export type listVerdictsResponse200 = {
+  data: Verdict[];
+  status: 200;
+};
+
+export type listVerdictsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listVerdictsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listVerdictsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listVerdictsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listVerdictsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listVerdictsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listVerdictsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listVerdictsResponseSuccess = listVerdictsResponse200 & {
+  headers: Headers;
+};
+export type listVerdictsResponseError = (
+  | listVerdictsResponse400
+  | listVerdictsResponse401
+  | listVerdictsResponse403
+  | listVerdictsResponse404
+  | listVerdictsResponse409
+  | listVerdictsResponse422
+  | listVerdictsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listVerdictsResponse = listVerdictsResponseSuccess | listVerdictsResponseError;
+
+export const getListVerdictsUrl = (
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/verdicts?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/verdicts`;
+};
+
+/**
+ * @summary List Verdicts
+ */
+export const listVerdicts = async (
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listVerdictsResponse> => {
+  return apiFetch<listVerdictsResponse>(getListVerdictsUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListVerdictsQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/verdicts`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListVerdictsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVerdicts>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListVerdictsQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listVerdicts>>> = ({ signal }) =>
+    listVerdicts(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListVerdictsQueryResult = NonNullable<Awaited<ReturnType<typeof listVerdicts>>>;
+export type ListVerdictsQueryError = Problem;
+
+export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params: undefined | ListVerdictsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listVerdicts>>,
+          TError,
+          Awaited<ReturnType<typeof listVerdicts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listVerdicts>>,
+          TError,
+          Awaited<ReturnType<typeof listVerdicts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Verdicts
+ */
+
+export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListVerdictsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

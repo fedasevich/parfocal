@@ -46,6 +46,7 @@ from parfocal_api.tables import (
     slide_counters,
     tenants,
     users,
+    verdicts,
 )
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
@@ -81,6 +82,7 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "verdicts",
     "review_edits",
     "review_tasks",
     "review_task_slides",
@@ -408,6 +410,21 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             deleted=True,
         )
     )
+    verdict_note = f"Verdict note {uuid.uuid4().hex[:8]}"
+    await connection.execute(
+        insert(verdicts).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+            kind="region",
+            number=1,
+            value="agree",
+            note=verdict_note,
+        )
+    )
+    seeded.markers.add(verdict_note)
     seeded.ids["task"] = task_id
     seeded.markers.update({str(task_id), task_name})
     seeded.markers.update({str(set_id), set_name})
@@ -477,6 +494,10 @@ GET_ROUTES = {
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
+    ),
+    "listVerdicts": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
     ),
     "getReviewTaskStates": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/states"

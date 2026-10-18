@@ -6676,6 +6676,412 @@
         "x-permission-write": true
       }
     },
+    "/api/review-tasks/{task_id}/slides/{slide_id}/verdicts/{object_id}": {
+      "put": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Save Verdict",
+        "operationId": "saveVerdict",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Object Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerdictDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review",
+        "x-permission-write": true
+      },
+      "delete": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Clear Verdict",
+        "operationId": "clearVerdict",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Object Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review",
+        "x-permission-write": true
+      }
+    },
+    "/api/review-tasks/{task_id}/slides/{slide_id}/verdicts": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "List Verdicts",
+        "operationId": "listVerdicts",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "reviewer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Verdict"
+                  },
+                  "title": "Response Listverdicts"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/projects/{project_id}/emergency-access": {
       "post": {
         "tags": [
@@ -11305,7 +11711,7 @@
           "note": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Note"
+                "$ref": "#/components/schemas/parfocal_api__availability__Note"
               },
               {
                 "type": "null"
@@ -12673,11 +13079,6 @@
           "name"
         ],
         "title": "NewPatient"
-      },
-      "Note": {
-        "type": "string",
-        "maxLength": 200,
-        "minLength": 1
       },
       "NotificationKind": {
         "type": "string",
@@ -15456,6 +15857,139 @@
         "type": "object",
         "title": "TokenRequest"
       },
+      "Verdict": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "value": {
+            "$ref": "#/components/schemas/VerdictValue"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Class Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object",
+          "kind",
+          "number",
+          "value",
+          "reason",
+          "reason_class_id",
+          "note",
+          "updated_at"
+        ],
+        "title": "Verdict"
+      },
+      "VerdictDraft": {
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/VerdictValue"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Class Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/parfocal_api__verdicts__Note"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "VerdictDraft"
+      },
+      "VerdictReason": {
+        "type": "string",
+        "enum": [
+          "not_class",
+          "boundary_off",
+          "two_regions",
+          "artefact",
+          "not_a_cell",
+          "wrong_class"
+        ],
+        "title": "VerdictReason"
+      },
+      "VerdictValue": {
+        "type": "string",
+        "enum": [
+          "agree",
+          "disagree",
+          "unsure"
+        ],
+        "title": "VerdictValue"
+      },
       "VersionCheck": {
         "properties": {
           "version": {
@@ -15557,6 +16091,11 @@
         ],
         "title": "YesNoQuestion"
       },
+      "parfocal_api__availability__Note": {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
+      },
       "parfocal_api__projects__Colour": {
         "type": "integer",
         "maximum": 11.0,
@@ -15575,6 +16114,10 @@
         "type": "string",
         "maxLength": 200,
         "minLength": 1
+      },
+      "parfocal_api__verdicts__Note": {
+        "type": "string",
+        "maxLength": 500
       }
     }
   }

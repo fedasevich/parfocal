@@ -1359,3 +1359,57 @@ review_edits = Table(
     ),
     CheckConstraint("geometry IS NULL OR ST_IsValid(geometry)", name="geometry_valid"),
 )
+
+
+class VerdictValue(StrEnum):
+    AGREE = "agree"
+    DISAGREE = "disagree"
+    UNSURE = "unsure"
+
+
+class VerdictReason(StrEnum):
+    NOT_CLASS = "not_class"
+    BOUNDARY_OFF = "boundary_off"
+    TWO_REGIONS = "two_regions"
+    ARTEFACT = "artefact"
+    NOT_A_CELL = "not_a_cell"
+    WRONG_CLASS = "wrong_class"
+
+
+verdicts = Table(
+    "verdicts",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column("value", String(10), nullable=False, info=OPERATIONAL),
+    Column("reason", String(20), nullable=True, info=OPERATIONAL),
+    Column("reason_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("note", String(500), nullable=True, info=PHI),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "user_id"],
+        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+    ),
+    ForeignKeyConstraint(
+        ["reason_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    one_of("value", VerdictValue),
+    CheckConstraint("(value = 'disagree') = (reason IS NOT NULL)", name="reason_on_disagree"),
+    CheckConstraint(
+        "(reason = 'wrong_class') = (reason_class_id IS NOT NULL)", name="wrong_class_names_class"
+    ),
+    CheckConstraint(
+        "reason IS NULL OR (kind = 'region' AND reason IN "
+        "('not_class', 'boundary_off', 'two_regions', 'artefact')) OR (kind = 'cell' AND reason IN "
+        "('not_a_cell', 'wrong_class', 'boundary_off', 'artefact'))",
+        name="reason_fits_kind",
+    ),
+)
