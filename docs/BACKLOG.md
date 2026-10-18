@@ -2509,6 +2509,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] MLEVAL-000 · Research check
   Confirm metrics and datasets (PQ, AJI, mIoU, NoC@85 and @90, ECE, FROC) and dataset licences.
   Done when an ADR lists the datasets and their allowed use.
+  Refs [ADR 0093](adr/0093-evaluation-metrics-and-datasets.md).
 
 - [ ] MLEVAL-001 · Dataset registry and loaders
   MoNuSeg and PanNuke as reference only (in PathoSAM's training set), TNBC, CryoNuSeg, NuInsSeg as held-out, Lizard as native 20×, CAMELYON16 test slides for tumor maps.

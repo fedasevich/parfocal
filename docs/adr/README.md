@@ -98,3 +98,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0090](0090-access-export-and-erasure.md) | People export their own data, project owners export and erase patients, and an erased person keeps their work under "Former member" | Accepted | 2026-10-18 |
 | [0091](0091-notification-catalogue-and-targets.md) | Notifications follow one catalogue of kinds with a target and a template each, and links open the notification, which resolves its target (replaces the link form of 0074) | Accepted | 2026-10-18 |
 | [0092](0092-email-digest-and-quiet-hours.md) | Each person chooses immediate, hourly or daily email and quiet hours in their own time zone, and mandatory kinds are never held | Accepted | 2026-10-18 |
+| [0093](0093-evaluation-metrics-and-datasets.md) | Model evaluation uses PQ, AJI, mIoU, NoC, ECE and FROC on held-out sets kept outside the repository, each used within its licence | Accepted | 2026-10-18 |
