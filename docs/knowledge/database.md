@@ -63,3 +63,11 @@ Patient name, MRN and birth date are stored only as ciphertext from `parfocal_ap
 ## Foreign keys bypass row-level security
 
 Postgres checks a foreign key without row-level security, so a workspace that knows another workspace's row id could reference it. Every tenant-owned child table therefore points at its parent with a composite key that includes `tenant_id`, such as `specimens (case_id, tenant_id) → cases (id, tenant_id)`, and the parent carries a matching unique constraint. Guest scopes use restrictive policies from `parfocal_common.schema_sql`: `enable_guest_case_scope(table, column)` for rows of the shared case and `hide_from_guests(table)` for tables a guest must never see, such as `patients`. Source: CASES-001 log entry.
+
+## Geometry columns and SRID 0
+
+Annotation geometry is PostGIS `geometry` without a type modifier, in level-0 slide pixels with y down and SRID 0. Declare it as `Geometry(spatial_index=False)` and add the GiST index by hand (`ix_annotations_geometry`), because geoalchemy2 creates its own index outside the metadata and `test_models_match_the_migrations` then sees a stray index. `Geometry(srid=0)` does not work either: the column is created without a type modifier, it reflects with SRID -1, and the comparison reports a type change. `ST_GeomFromGeoJSON` gives SRID 4326 by default, so every write wraps it in `ST_SetSRID(..., 0)`, and the viewport filter builds its envelope with SRID 0.
+
+## Annotations are never deleted by the app
+
+The app role has no `DELETE` on `annotations` and no `UPDATE` or `DELETE` on `annotation_versions`. A delete sets `deleted_at` and adds a version, so undo is a restore. Each change bumps `version` only when the caller sends the current one, and a stale version gets 409 `annotation-changed`. Numbers come from `slide_counters`, one row per slide and letter, with `INSERT ... ON CONFLICT DO UPDATE ... RETURNING last` so a bulk insert gets one contiguous range. OBJ-001 (ID grammar and allocation) must take AI numbers from the same table, so that a reviewer's T⁺ and the next imported T never share a number. Source: [ADR 0076](../adr/0076-annotation-and-ai-result-storage.md).

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
+from geoalchemy2 import Geometry
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -769,6 +770,7 @@ slides = Table(
     *case_timestamps(),
     UniqueConstraint("project_id", "barcode"),
     UniqueConstraint("case_id", "label"),
+    UniqueConstraint("id", "project_id"),
     Index(
         "ix_slides_project_id_label",
         "project_id",
@@ -977,4 +979,100 @@ emergency_grants = Table(
     ),
     Index("ix_emergency_grants_user_id_project_id", "user_id", "project_id"),
     CheckConstraint("privacy_mode = 'clinical'", name="clinical_only"),
+)
+
+
+class AnnotationKind(StrEnum):
+    ROI = "roi"
+    MEASUREMENT = "measurement"
+    REGION = "region"
+    CELL = "cell"
+
+
+class AnnotationChange(StrEnum):
+    CREATED = "created"
+    EDITED = "edited"
+    DELETED = "deleted"
+    RESTORED = "restored"
+
+
+slide_counters = Table(
+    "slide_counters",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("letter", String(1), primary_key=True, info=OPERATIONAL),
+    Column("last", Integer, nullable=False, info=OPERATIONAL),
+    ForeignKeyConstraint(["slide_id"], ["slides.id"]),
+    CheckConstraint("letter IN ('T', 'C', 'R', 'Z', 'M')", name="letter"),
+    CheckConstraint("last >= 0", name="last"),
+)
+
+annotations = Table(
+    "annotations",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("kind", String(20), nullable=False, info=OPERATIONAL),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column[object](
+        "geometry",
+        Geometry(spatial_index=False),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("version", Integer, nullable=False, server_default="1", info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *case_timestamps(),
+    UniqueConstraint("slide_id", "kind", "number"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    ForeignKeyConstraint(
+        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+    ),
+    Index("ix_annotations_geometry", "geometry", postgresql_using="gist"),
+    one_of("kind", AnnotationKind),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint("version > 0", name="version"),
+    CheckConstraint("ST_IsValid(geometry)", name="geometry_valid"),
+)
+
+annotation_versions = Table(
+    "annotation_versions",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("annotation_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("version", Integer, primary_key=True, info=OPERATIONAL),
+    Column("change", String(20), nullable=False, info=OPERATIONAL),
+    Column[object](
+        "geometry",
+        Geometry(spatial_index=False),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column(
+        "changed_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "changed_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(["annotation_id"], ["annotations.id"]),
+    one_of("change", AnnotationChange),
 )

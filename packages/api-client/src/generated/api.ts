@@ -46,6 +46,151 @@ export const AnalysisTemplate = {
   "cell-review": "cell-review",
 } as const;
 
+export type AnnotationGeometry = { [key: string]: unknown };
+
+export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
+
+export const AnnotationKind = {
+  roi: "roi",
+  measurement: "measurement",
+  region: "region",
+  cell: "cell",
+} as const;
+
+export interface Annotation {
+  id: string;
+  slide_id: string;
+  kind: AnnotationKind;
+  number: number;
+  code: string;
+  geometry: AnnotationGeometry;
+  class_id: string | null;
+  version: number;
+  created_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type AnnotationChange = (typeof AnnotationChange)[keyof typeof AnnotationChange];
+
+export const AnnotationChange = {
+  created: "created",
+  edited: "edited",
+  deleted: "deleted",
+  restored: "restored",
+} as const;
+
+export type PointGeometryType = (typeof PointGeometryType)[keyof typeof PointGeometryType];
+
+export const PointGeometryType = {
+  Point: "Point",
+} as const;
+
+/**
+ * @minimum -10000000
+ * @maximum 10000000
+ */
+export type Coordinate = number;
+
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type Position = [Coordinate, Coordinate];
+
+export interface PointGeometry {
+  type: PointGeometryType;
+  coordinates: Position;
+}
+
+export type LineStringGeometryType =
+  (typeof LineStringGeometryType)[keyof typeof LineStringGeometryType];
+
+export const LineStringGeometryType = {
+  LineString: "LineString",
+} as const;
+
+export interface LineStringGeometry {
+  type: LineStringGeometryType;
+  /** @minItems 2 */
+  coordinates: Position[];
+}
+
+export type PolygonGeometryType = (typeof PolygonGeometryType)[keyof typeof PolygonGeometryType];
+
+export const PolygonGeometryType = {
+  Polygon: "Polygon",
+} as const;
+
+/**
+ * @minItems 4
+ */
+export type Ring = Position[];
+
+export interface PolygonGeometry {
+  type: PolygonGeometryType;
+  /** @minItems 1 */
+  coordinates: Ring[];
+}
+
+export type MultiPolygonGeometryType =
+  (typeof MultiPolygonGeometryType)[keyof typeof MultiPolygonGeometryType];
+
+export const MultiPolygonGeometryType = {
+  MultiPolygon: "MultiPolygon",
+} as const;
+
+export interface MultiPolygonGeometry {
+  type: MultiPolygonGeometryType;
+  /**
+   * @minItems 1
+   * @items.minItems 1
+   */
+  coordinates: Ring[][];
+}
+
+export type Geometry = PointGeometry | LineStringGeometry | PolygonGeometry | MultiPolygonGeometry;
+
+export interface AnnotationDraft {
+  kind: AnnotationKind;
+  geometry: Geometry;
+  class_id?: string | null;
+}
+
+export interface AnnotationDrafts {
+  /**
+   * @minItems 1
+   * @maxItems 10000
+   */
+  annotations: AnnotationDraft[];
+}
+
+export interface AnnotationEdit {
+  /** @minimum 1 */
+  version: number;
+  geometry?: Geometry | null;
+  class_id?: string | null;
+}
+
+export interface AnnotationRef {
+  id: string;
+  kind: AnnotationKind;
+  number: number;
+  code: string;
+}
+
+export type AnnotationVersionGeometry = { [key: string]: unknown };
+
+export interface AnnotationVersion {
+  version: number;
+  change: AnnotationChange;
+  geometry: AnnotationVersionGeometry;
+  class_id: string | null;
+  changed_by_user_id: string | null;
+  changed_at: string;
+}
+
 export interface ApiToken {
   id: string;
   expires_at: string;
@@ -965,6 +1110,11 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export interface VersionCheck {
+  /** @minimum 1 */
+  version: number;
+}
+
 export interface WorkspaceChoice {
   tenant_id: string;
 }
@@ -983,6 +1133,18 @@ export type ResolveClassNamesParams = {
 
 export type ListCasesParams = {
   project_id?: string | null;
+};
+
+export type ListAnnotationsParams = {
+  bbox?: number[] | null;
+  kind?: AnnotationKind | null;
+};
+
+export type DeleteAnnotationParams = {
+  /**
+   * @minimum 1
+   */
+  version: number;
 };
 
 export type ListAuditEventsParams = {
@@ -6202,6 +6364,1445 @@ export const useCreateCase = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getCreateCaseMutationOptions(options), queryClient);
 };
+
+export type listAnnotationsResponse200 = {
+  data: Annotation[];
+  status: 200;
+};
+
+export type listAnnotationsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAnnotationsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAnnotationsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAnnotationsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAnnotationsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAnnotationsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAnnotationsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAnnotationsResponseSuccess = listAnnotationsResponse200 & {
+  headers: Headers;
+};
+export type listAnnotationsResponseError = (
+  | listAnnotationsResponse400
+  | listAnnotationsResponse401
+  | listAnnotationsResponse403
+  | listAnnotationsResponse404
+  | listAnnotationsResponse409
+  | listAnnotationsResponse422
+  | listAnnotationsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAnnotationsResponse = listAnnotationsResponseSuccess | listAnnotationsResponseError;
+
+export const getListAnnotationsUrl = (slideId: string, params?: ListAnnotationsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["bbox"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/annotations?${stringifiedParams}`
+    : `/api/slides/${slideId}/annotations`;
+};
+
+/**
+ * @summary List Annotations
+ */
+export const listAnnotations = async (
+  slideId: string,
+  params?: ListAnnotationsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAnnotationsResponse> => {
+  return apiFetch<listAnnotationsResponse>(getListAnnotationsUrl(slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAnnotationsQueryKey = (slideId: string, params?: ListAnnotationsParams) => {
+  return [`/api/slides/${slideId}/annotations`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAnnotationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnnotations>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ListAnnotationsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnnotationsQueryKey(slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnnotations>>> = ({ signal }) =>
+    listAnnotations(slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListAnnotationsQueryResult = NonNullable<Awaited<ReturnType<typeof listAnnotations>>>;
+export type ListAnnotationsQueryError = Problem;
+
+export function useListAnnotations<
+  TData = Awaited<ReturnType<typeof listAnnotations>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: undefined | ListAnnotationsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotations>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotations<
+  TData = Awaited<ReturnType<typeof listAnnotations>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ListAnnotationsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotations>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotations<
+  TData = Awaited<ReturnType<typeof listAnnotations>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ListAnnotationsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Annotations
+ */
+
+export function useListAnnotations<
+  TData = Awaited<ReturnType<typeof listAnnotations>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ListAnnotationsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnotations>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAnnotationsQueryOptions(slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createAnnotationResponse201 = {
+  data: Annotation;
+  status: 201;
+};
+
+export type createAnnotationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createAnnotationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createAnnotationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createAnnotationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createAnnotationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createAnnotationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createAnnotationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createAnnotationResponseSuccess = createAnnotationResponse201 & {
+  headers: Headers;
+};
+export type createAnnotationResponseError = (
+  | createAnnotationResponse400
+  | createAnnotationResponse401
+  | createAnnotationResponse403
+  | createAnnotationResponse404
+  | createAnnotationResponse409
+  | createAnnotationResponse422
+  | createAnnotationResponse500
+) & {
+  headers: Headers;
+};
+
+export type createAnnotationResponse =
+  | createAnnotationResponseSuccess
+  | createAnnotationResponseError;
+
+export const getCreateAnnotationUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/annotations`;
+};
+
+/**
+ * @summary Create Annotation
+ */
+export const createAnnotation = async (
+  slideId: string,
+  annotationDraft: AnnotationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createAnnotationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createAnnotationResponse>(getCreateAnnotationUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(annotationDraft),
+  });
+};
+
+export const getCreateAnnotationMutationKey = () => ["createAnnotation"] as const;
+
+export const getCreateAnnotationMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAnnotation>>,
+    TError,
+    CreateAnnotationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAnnotation>>,
+  TError,
+  CreateAnnotationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateAnnotationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAnnotation>>,
+    CreateAnnotationMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return createAnnotation(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAnnotationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAnnotation>>
+>;
+export type CreateAnnotationMutationBody = AnnotationDraft;
+export type CreateAnnotationMutationError = Problem;
+export type CreateAnnotationMutationVariables = { slideId: string; data: AnnotationDraft };
+
+/**
+ * @summary Create Annotation
+ */
+export const useCreateAnnotation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAnnotation>>,
+      TError,
+      CreateAnnotationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAnnotation>>,
+  TError,
+  CreateAnnotationMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateAnnotationMutationOptions(options), queryClient);
+};
+
+export type createAnnotationsResponse201 = {
+  data: AnnotationRef[];
+  status: 201;
+};
+
+export type createAnnotationsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createAnnotationsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createAnnotationsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createAnnotationsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createAnnotationsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createAnnotationsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createAnnotationsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createAnnotationsResponseSuccess = createAnnotationsResponse201 & {
+  headers: Headers;
+};
+export type createAnnotationsResponseError = (
+  | createAnnotationsResponse400
+  | createAnnotationsResponse401
+  | createAnnotationsResponse403
+  | createAnnotationsResponse404
+  | createAnnotationsResponse409
+  | createAnnotationsResponse422
+  | createAnnotationsResponse500
+) & {
+  headers: Headers;
+};
+
+export type createAnnotationsResponse =
+  | createAnnotationsResponseSuccess
+  | createAnnotationsResponseError;
+
+export const getCreateAnnotationsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/annotations/bulk`;
+};
+
+/**
+ * @summary Create Annotations
+ */
+export const createAnnotations = async (
+  slideId: string,
+  annotationDrafts: AnnotationDrafts,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createAnnotationsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createAnnotationsResponse>(getCreateAnnotationsUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(annotationDrafts),
+  });
+};
+
+export const getCreateAnnotationsMutationKey = () => ["createAnnotations"] as const;
+
+export const getCreateAnnotationsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAnnotations>>,
+    TError,
+    CreateAnnotationsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAnnotations>>,
+  TError,
+  CreateAnnotationsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateAnnotationsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAnnotations>>,
+    CreateAnnotationsMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return createAnnotations(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAnnotationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAnnotations>>
+>;
+export type CreateAnnotationsMutationBody = AnnotationDrafts;
+export type CreateAnnotationsMutationError = Problem;
+export type CreateAnnotationsMutationVariables = { slideId: string; data: AnnotationDrafts };
+
+/**
+ * @summary Create Annotations
+ */
+export const useCreateAnnotations = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAnnotations>>,
+      TError,
+      CreateAnnotationsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAnnotations>>,
+  TError,
+  CreateAnnotationsMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateAnnotationsMutationOptions(options), queryClient);
+};
+
+export type getAnnotationResponse200 = {
+  data: Annotation;
+  status: 200;
+};
+
+export type getAnnotationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAnnotationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAnnotationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAnnotationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAnnotationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAnnotationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAnnotationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAnnotationResponseSuccess = getAnnotationResponse200 & {
+  headers: Headers;
+};
+export type getAnnotationResponseError = (
+  | getAnnotationResponse400
+  | getAnnotationResponse401
+  | getAnnotationResponse403
+  | getAnnotationResponse404
+  | getAnnotationResponse409
+  | getAnnotationResponse422
+  | getAnnotationResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAnnotationResponse = getAnnotationResponseSuccess | getAnnotationResponseError;
+
+export const getGetAnnotationUrl = (slideId: string, annotationId: string) => {
+  return `/api/slides/${slideId}/annotations/${annotationId}`;
+};
+
+/**
+ * @summary Get Annotation
+ */
+export const getAnnotation = async (
+  slideId: string,
+  annotationId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAnnotationResponse> => {
+  return apiFetch<getAnnotationResponse>(getGetAnnotationUrl(slideId, annotationId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnnotationQueryKey = (slideId: string, annotationId: string) => {
+  return [`/api/slides/${slideId}/annotations/${annotationId}`] as const;
+};
+
+export const getGetAnnotationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnnotation>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnnotationQueryKey(slideId, annotationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnnotation>>> = ({ signal }) =>
+    getAnnotation(slideId, annotationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      annotationId !== null &&
+      annotationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAnnotationQueryResult = NonNullable<Awaited<ReturnType<typeof getAnnotation>>>;
+export type GetAnnotationQueryError = Problem;
+
+export function useGetAnnotation<
+  TData = Awaited<ReturnType<typeof getAnnotation>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnotation>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnotation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnnotation<
+  TData = Awaited<ReturnType<typeof getAnnotation>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnotation>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnotation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnnotation<
+  TData = Awaited<ReturnType<typeof getAnnotation>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Annotation
+ */
+
+export function useGetAnnotation<
+  TData = Awaited<ReturnType<typeof getAnnotation>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnotation>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAnnotationQueryOptions(slideId, annotationId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type changeAnnotationResponse200 = {
+  data: Annotation;
+  status: 200;
+};
+
+export type changeAnnotationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeAnnotationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeAnnotationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeAnnotationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeAnnotationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeAnnotationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeAnnotationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeAnnotationResponseSuccess = changeAnnotationResponse200 & {
+  headers: Headers;
+};
+export type changeAnnotationResponseError = (
+  | changeAnnotationResponse400
+  | changeAnnotationResponse401
+  | changeAnnotationResponse403
+  | changeAnnotationResponse404
+  | changeAnnotationResponse409
+  | changeAnnotationResponse422
+  | changeAnnotationResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeAnnotationResponse =
+  | changeAnnotationResponseSuccess
+  | changeAnnotationResponseError;
+
+export const getChangeAnnotationUrl = (slideId: string, annotationId: string) => {
+  return `/api/slides/${slideId}/annotations/${annotationId}`;
+};
+
+/**
+ * @summary Change Annotation
+ */
+export const changeAnnotation = async (
+  slideId: string,
+  annotationId: string,
+  annotationEdit: AnnotationEdit,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeAnnotationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeAnnotationResponse>(getChangeAnnotationUrl(slideId, annotationId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(annotationEdit),
+  });
+};
+
+export const getChangeAnnotationMutationKey = () => ["changeAnnotation"] as const;
+
+export const getChangeAnnotationMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeAnnotation>>,
+    TError,
+    ChangeAnnotationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeAnnotation>>,
+  TError,
+  ChangeAnnotationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeAnnotationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeAnnotation>>,
+    ChangeAnnotationMutationVariables
+  > = (props) => {
+    const { slideId, annotationId, data } = props ?? {};
+
+    return changeAnnotation(slideId, annotationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeAnnotationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeAnnotation>>
+>;
+export type ChangeAnnotationMutationBody = AnnotationEdit;
+export type ChangeAnnotationMutationError = Problem;
+export type ChangeAnnotationMutationVariables = {
+  slideId: string;
+  annotationId: string;
+  data: AnnotationEdit;
+};
+
+/**
+ * @summary Change Annotation
+ */
+export const useChangeAnnotation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeAnnotation>>,
+      TError,
+      ChangeAnnotationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeAnnotation>>,
+  TError,
+  ChangeAnnotationMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeAnnotationMutationOptions(options), queryClient);
+};
+
+export type deleteAnnotationResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteAnnotationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteAnnotationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteAnnotationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteAnnotationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteAnnotationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteAnnotationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteAnnotationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteAnnotationResponseSuccess = deleteAnnotationResponse204 & {
+  headers: Headers;
+};
+export type deleteAnnotationResponseError = (
+  | deleteAnnotationResponse400
+  | deleteAnnotationResponse401
+  | deleteAnnotationResponse403
+  | deleteAnnotationResponse404
+  | deleteAnnotationResponse409
+  | deleteAnnotationResponse422
+  | deleteAnnotationResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteAnnotationResponse =
+  | deleteAnnotationResponseSuccess
+  | deleteAnnotationResponseError;
+
+export const getDeleteAnnotationUrl = (
+  slideId: string,
+  annotationId: string,
+  params: DeleteAnnotationParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/annotations/${annotationId}?${stringifiedParams}`
+    : `/api/slides/${slideId}/annotations/${annotationId}`;
+};
+
+/**
+ * @summary Delete Annotation
+ */
+export const deleteAnnotation = async (
+  slideId: string,
+  annotationId: string,
+  params: DeleteAnnotationParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteAnnotationResponse> => {
+  return apiFetch<deleteAnnotationResponse>(getDeleteAnnotationUrl(slideId, annotationId, params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAnnotationMutationKey = () => ["deleteAnnotation"] as const;
+
+export const getDeleteAnnotationMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAnnotation>>,
+    TError,
+    DeleteAnnotationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAnnotation>>,
+  TError,
+  DeleteAnnotationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteAnnotationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAnnotation>>,
+    DeleteAnnotationMutationVariables
+  > = (props) => {
+    const { slideId, annotationId, params } = props ?? {};
+
+    return deleteAnnotation(slideId, annotationId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAnnotationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAnnotation>>
+>;
+
+export type DeleteAnnotationMutationError = Problem;
+export type DeleteAnnotationMutationVariables = {
+  slideId: string;
+  annotationId: string;
+  params: DeleteAnnotationParams;
+};
+
+/**
+ * @summary Delete Annotation
+ */
+export const useDeleteAnnotation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAnnotation>>,
+      TError,
+      DeleteAnnotationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAnnotation>>,
+  TError,
+  DeleteAnnotationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteAnnotationMutationOptions(options), queryClient);
+};
+
+export type restoreAnnotationResponse200 = {
+  data: Annotation;
+  status: 200;
+};
+
+export type restoreAnnotationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type restoreAnnotationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type restoreAnnotationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type restoreAnnotationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type restoreAnnotationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type restoreAnnotationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type restoreAnnotationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type restoreAnnotationResponseSuccess = restoreAnnotationResponse200 & {
+  headers: Headers;
+};
+export type restoreAnnotationResponseError = (
+  | restoreAnnotationResponse400
+  | restoreAnnotationResponse401
+  | restoreAnnotationResponse403
+  | restoreAnnotationResponse404
+  | restoreAnnotationResponse409
+  | restoreAnnotationResponse422
+  | restoreAnnotationResponse500
+) & {
+  headers: Headers;
+};
+
+export type restoreAnnotationResponse =
+  | restoreAnnotationResponseSuccess
+  | restoreAnnotationResponseError;
+
+export const getRestoreAnnotationUrl = (slideId: string, annotationId: string) => {
+  return `/api/slides/${slideId}/annotations/${annotationId}/restore`;
+};
+
+/**
+ * @summary Restore Annotation
+ */
+export const restoreAnnotation = async (
+  slideId: string,
+  annotationId: string,
+  versionCheck: VersionCheck,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<restoreAnnotationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<restoreAnnotationResponse>(getRestoreAnnotationUrl(slideId, annotationId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(versionCheck),
+  });
+};
+
+export const getRestoreAnnotationMutationKey = () => ["restoreAnnotation"] as const;
+
+export const getRestoreAnnotationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreAnnotation>>,
+    TError,
+    RestoreAnnotationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreAnnotation>>,
+  TError,
+  RestoreAnnotationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreAnnotationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreAnnotation>>,
+    RestoreAnnotationMutationVariables
+  > = (props) => {
+    const { slideId, annotationId, data } = props ?? {};
+
+    return restoreAnnotation(slideId, annotationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreAnnotationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof restoreAnnotation>>
+>;
+export type RestoreAnnotationMutationBody = VersionCheck;
+export type RestoreAnnotationMutationError = Problem;
+export type RestoreAnnotationMutationVariables = {
+  slideId: string;
+  annotationId: string;
+  data: VersionCheck;
+};
+
+/**
+ * @summary Restore Annotation
+ */
+export const useRestoreAnnotation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreAnnotation>>,
+      TError,
+      RestoreAnnotationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreAnnotation>>,
+  TError,
+  RestoreAnnotationMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreAnnotationMutationOptions(options), queryClient);
+};
+
+export type listAnnotationHistoryResponse200 = {
+  data: AnnotationVersion[];
+  status: 200;
+};
+
+export type listAnnotationHistoryResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAnnotationHistoryResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAnnotationHistoryResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAnnotationHistoryResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAnnotationHistoryResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAnnotationHistoryResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAnnotationHistoryResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAnnotationHistoryResponseSuccess = listAnnotationHistoryResponse200 & {
+  headers: Headers;
+};
+export type listAnnotationHistoryResponseError = (
+  | listAnnotationHistoryResponse400
+  | listAnnotationHistoryResponse401
+  | listAnnotationHistoryResponse403
+  | listAnnotationHistoryResponse404
+  | listAnnotationHistoryResponse409
+  | listAnnotationHistoryResponse422
+  | listAnnotationHistoryResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAnnotationHistoryResponse =
+  | listAnnotationHistoryResponseSuccess
+  | listAnnotationHistoryResponseError;
+
+export const getListAnnotationHistoryUrl = (slideId: string, annotationId: string) => {
+  return `/api/slides/${slideId}/annotations/${annotationId}/history`;
+};
+
+/**
+ * @summary List Annotation History
+ */
+export const listAnnotationHistory = async (
+  slideId: string,
+  annotationId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAnnotationHistoryResponse> => {
+  return apiFetch<listAnnotationHistoryResponse>(
+    getListAnnotationHistoryUrl(slideId, annotationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAnnotationHistoryQueryKey = (slideId: string, annotationId: string) => {
+  return [`/api/slides/${slideId}/annotations/${annotationId}/history`] as const;
+};
+
+export const getListAnnotationHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnnotationHistory>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListAnnotationHistoryQueryKey(slideId, annotationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnnotationHistory>>> = ({ signal }) =>
+    listAnnotationHistory(slideId, annotationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      annotationId !== null &&
+      annotationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListAnnotationHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAnnotationHistory>>
+>;
+export type ListAnnotationHistoryQueryError = Problem;
+
+export function useListAnnotationHistory<
+  TData = Awaited<ReturnType<typeof listAnnotationHistory>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotationHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotationHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotationHistory<
+  TData = Awaited<ReturnType<typeof listAnnotationHistory>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotationHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotationHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotationHistory<
+  TData = Awaited<ReturnType<typeof listAnnotationHistory>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Annotation History
+ */
+
+export function useListAnnotationHistory<
+  TData = Awaited<ReturnType<typeof listAnnotationHistory>>,
+  TError = Problem,
+>(
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAnnotationHistoryQueryOptions(slideId, annotationId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type requestEmergencyAccessResponse201 = {
   data: EmergencyGrant;

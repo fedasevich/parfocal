@@ -22,3 +22,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-18 | [Parsers for imported AI results on Python 3.14](2026-10-18-result-parsers-spike.md) | RSET-000 | spike |
 | 2026-10-18 | [Tissue mask on CAMELYON16](2026-10-18-tissue-mask-camelyon.md) | INGEST-012 | ML evaluation |
 | 2026-10-18 | [Paging 1.6 million cells from binary chunks in the browser](2026-10-18-cell-chunk-paging-spike.md) | STACK-021 | spike |
+| 2026-10-18 | [Bulk annotation insert and listing on local Postgres](2026-10-18-annotation-bulk-latency.md) | ANN-020 | baseline |

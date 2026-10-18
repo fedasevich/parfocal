@@ -13,10 +13,41 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 24 |
+| `personal` | 26 |
 | `secret` | 9 |
-| `operational` | 211 |
+| `operational` | 234 |
 | `public` | 0 |
+
+## annotation_versions
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `annotation_id` | operational |
+| `version` | operational |
+| `change` | operational |
+| `geometry` | operational |
+| `class_id` | operational |
+| `changed_by_user_id` | personal |
+| `changed_at` | operational |
+
+## annotations
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `slide_id` | operational |
+| `kind` | operational |
+| `number` | operational |
+| `geometry` | operational |
+| `class_id` | operational |
+| `version` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+| `deleted_at` | operational |
 
 ## api_tokens
 
@@ -358,6 +389,15 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `active_tenant_id` | operational |
 | `active_at` | operational |
 | `user_agent` | personal |
+
+## slide_counters
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `slide_id` | operational |
+| `letter` | operational |
+| `last` | operational |
 
 ## slides
 

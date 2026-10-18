@@ -7,13 +7,15 @@ from enum import Enum, auto
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
-from sqlalchemy import insert, select, text
+from sqlalchemy import func, insert, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import (
     Role,
+    annotation_versions,
+    annotations,
     api_tokens,
     audit_events,
     audit_people,
@@ -33,6 +35,7 @@ from parfocal_api.tables import (
     project_members,
     service_accounts,
     session_policies,
+    slide_counters,
     tenants,
     users,
 )
@@ -70,6 +73,9 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "annotations",
+    "annotation_versions",
+    "slide_counters",
     "jobs",
     "job_steps",
     "job_units",
@@ -263,6 +269,38 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.update({case.label, str(case.case_id), str(case.project_id)})
+    annotation_id = await connection.scalar(
+        insert(annotations)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            kind="roi",
+            number=1,
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(annotations.c.id)
+    )
+    assert isinstance(annotation_id, uuid.UUID)
+    await connection.execute(
+        insert(annotation_versions).values(
+            tenant_id=seeded.tenant_id,
+            annotation_id=annotation_id,
+            version=1,
+            change="created",
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            changed_by_user_id=seeded.ids["user"],
+        )
+    )
+    await connection.execute(
+        insert(slide_counters).values(
+            tenant_id=seeded.tenant_id, slide_id=case.loose_slide_id, letter="R", last=1
+        )
+    )
+    seeded.ids["slide"] = case.loose_slide_id
+    seeded.ids["annotation"] = annotation_id
+    seeded.markers.add(str(annotation_id))
 
 
 SEEDERS: dict[str, Seeder] = {
@@ -325,6 +363,17 @@ GET_ROUTES = {
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
+    "listAnnotations": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"
+    ),
+    "getAnnotation": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/slides/{a.ids['slide']}/annotations/{a.ids['annotation']}",
+    ),
+    "listAnnotationHistory": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/slides/{a.ids['slide']}/annotations/{a.ids['annotation']}/history",
+    ),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),

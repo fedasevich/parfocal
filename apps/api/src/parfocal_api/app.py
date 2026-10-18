@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from parfocal_api import (
+    annotations,
     audit_trail,
     auth,
     availability,
@@ -109,6 +110,7 @@ def create_app(
     app.include_router(opinion_forms.template_router)
     app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
+    app.include_router(annotations.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)

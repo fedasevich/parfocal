@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from case_support import seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, with_database
-from sqlalchemy import func, insert
+from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
@@ -23,6 +23,7 @@ from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
 from parfocal_api.tables import (
     Role,
+    annotations,
     api_tokens,
     invitations,
     memberships,
@@ -30,6 +31,7 @@ from parfocal_api.tables import (
     project_classes,
     project_members,
     service_accounts,
+    slide_counters,
     tenants,
     users,
 )
@@ -85,6 +87,14 @@ class Workspace:
     outside_project: uuid.UUID
     project_class: uuid.UUID
     job: uuid.UUID
+    slide: uuid.UUID
+    annotation: uuid.UUID
+    doomed_annotation: uuid.UUID
+    deleted_annotation: uuid.UUID
+
+    @property
+    def annotations(self) -> str:
+        return f"/api/slides/{self.slide}/annotations"
 
 
 @dataclass(frozen=True)
@@ -94,6 +104,16 @@ class Call:
     body: dict[str, Any] | None = None
 
 
+SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
+NEEDS_A_TASK = frozenset(
+    {
+        "createAnnotation",
+        "createAnnotations",
+        "changeAnnotation",
+        "deleteAnnotation",
+        "restoreAnnotation",
+    }
+)
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
@@ -142,6 +162,22 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"reason": "Matrix check of access"},
     ),
     "listCases": lambda _: Call("GET", "/api/cases"),
+    "listAnnotations": lambda w: Call("GET", w.annotations),
+    "getAnnotation": lambda w: Call("GET", f"{w.annotations}/{w.annotation}"),
+    "listAnnotationHistory": lambda w: Call("GET", f"{w.annotations}/{w.annotation}/history"),
+    "createAnnotation": lambda w: Call("POST", w.annotations, {"kind": "roi", "geometry": SQUARE}),
+    "createAnnotations": lambda w: Call(
+        "POST", f"{w.annotations}/bulk", {"annotations": [{"kind": "roi", "geometry": SQUARE}]}
+    ),
+    "changeAnnotation": lambda w: Call(
+        "PATCH", f"{w.annotations}/{w.annotation}", {"version": 1, "geometry": SQUARE}
+    ),
+    "deleteAnnotation": lambda w: Call(
+        "DELETE", f"{w.annotations}/{w.doomed_annotation}?version=1"
+    ),
+    "restoreAnnotation": lambda w: Call(
+        "POST", f"{w.annotations}/{w.deleted_annotation}/restore", {"version": 2}
+    ),
     "createCase": lambda w: Call(
         "POST",
         "/api/cases",
@@ -193,6 +229,10 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -283,6 +323,29 @@ async def add_person(
     return user_id
 
 
+async def seed_annotation(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    number: int,
+) -> uuid.UUID:
+    annotation_id = await connection.scalar(
+        insert(annotations)
+        .values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            slide_id=slide_id,
+            kind="roi",
+            number=number,
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+        )
+        .returning(annotations.c.id)
+    )
+    assert isinstance(annotation_id, uuid.UUID)
+    return annotation_id
+
+
 async def seed(database: str) -> Workspace:
     engine = create_async_engine(async_database_url(with_database(OWNER_URL, database)))
     slug = f"perm-{uuid.uuid4().hex[:10]}"
@@ -357,6 +420,22 @@ async def seed(database: str) -> Workspace:
             )
             assert isinstance(project_class, uuid.UUID)
             job = await enqueue(connection, INGEST, tenant_id, case.project_id)
+            annotation, doomed_annotation, deleted_annotation = [
+                await seed_annotation(
+                    connection, tenant_id, case.project_id, case.loose_slide_id, n
+                )
+                for n in (1, 2, 3)
+            ]
+            await connection.execute(
+                insert(slide_counters).values(
+                    tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
+                )
+            )
+            await connection.execute(
+                update(annotations)
+                .where(annotations.c.id == deleted_annotation)
+                .values(version=2, deleted_at=func.now())
+            )
             await connection.execute(
                 insert(project_members),
                 [
@@ -398,6 +477,10 @@ async def seed(database: str) -> Workspace:
             outside_project,
             project_class,
             job,
+            case.loose_slide_id,
+            annotation,
+            doomed_annotation,
+            deleted_annotation,
         )
     finally:
         await engine.dispose()
@@ -429,7 +512,11 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
     permission = guarded_operations()[operation]
     status = send(api, principal_for(workspace, role), GUARDED_CALLS[operation](workspace))
     grant = grant_for(role, permission)
-    if grant is Grant.NONE or (operation in WRITES and grant is Grant.VIEW_ONLY):
+    if (
+        (grant is Grant.ASSIGNED and operation in NEEDS_A_TASK)
+        or grant is Grant.NONE
+        or (operation in WRITES and grant is Grant.VIEW_ONLY)
+    ):
         assert status == 403
     else:
         assert 200 <= status < 300
