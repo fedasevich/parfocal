@@ -23,6 +23,7 @@ from parfocal_api import (
     opinions,
     project_jobs,
     projects,
+    result_formats,
     result_sets,
     review_states,
     review_tasks,
@@ -124,6 +125,7 @@ def create_app(
     app.include_router(result_sets.slide_router)
     app.include_router(result_sets.project_router)
     app.include_router(result_sets.router)
+    app.include_router(result_formats.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(reviewed_layer.router)

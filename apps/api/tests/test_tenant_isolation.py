@@ -495,6 +495,12 @@ GET_ROUTES = {
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
     "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),
+    "getResultsSchema": Route(
+        Exposure.PUBLIC, lambda _: "/api/result-formats/parfocal-json/schema"
+    ),
+    "getResultsTemplate": Route(
+        Exposure.PUBLIC, lambda _: "/api/result-formats/parfocal-json/template"
+    ),
     "listNotificationPreferences": Route(
         Exposure.PUBLIC, lambda _: "/api/me/notification-preferences"
     ),

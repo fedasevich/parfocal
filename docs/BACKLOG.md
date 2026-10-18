@@ -3005,8 +3005,8 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on PROJ-001, ANN-020.
 
 - [ ] RSET-002 · Parfocal JSON schema and validator
-  A documented schema with a template to download and a validator in the API and as a command line tool. The help drawer "What files work?" opens from the upload and from an import error.
-  Done when schema tests accept the template and reject each documented error with its line, and the help drawer has a component test.
+  A documented schema with a template to download and a validator in the API and as a command line tool.
+  Done when schema tests accept the template and reject each documented error with its line. The help drawer moved to RSET-010.
   Depends on RSET-000. Refs mock: formats, doc 38 answer 7.
 
 - [x] RSET-003 · Readers for GeoJSON, CSV and masks
@@ -3043,6 +3043,11 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Deleting a result set that a review task or a verdict uses needs `confirm=true`, and the response says how many tasks and verdicts it touches.
   Done when API tests refuse the delete without confirmation when a task uses the set, allow it with confirmation, and allow an unreviewed set without it.
   Depends on RSET-001, TASK-001. Split from RSET-001 by [ADR 0077](adr/0077-result-sets.md).
+
+- [ ] RSET-010 · Help drawer "What files work?"
+  The drawer opens from the upload and from an import error, lists the formats that import, links the Parfocal JSON template and schema, and explains the error codes of the validator.
+  Done when a component test opens it from both places and shows each format.
+  Depends on RSET-002. Split from RSET-002 so the schema and validator have no screen work. Refs mock: formats.
 
 ---
 

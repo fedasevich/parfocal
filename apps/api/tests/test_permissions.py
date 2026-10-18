@@ -54,6 +54,9 @@ OPEN_OPERATIONS = {
     "getCurrentTenant": "member",
     "listTaxonomyTemplates": "member",
     "getOpinionFormTemplate": "member",
+    "getResultsSchema": "member",
+    "getResultsTemplate": "member",
+    "validateResultsFile": "member",
     "listNotificationPreferences": "member",
     "setNotificationPreferences": "member",
     "createOrganisation": "platform",
@@ -344,6 +347,11 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
     "getOpinionFormTemplate": lambda _: Call("GET", "/api/opinion-form-template"),
+    "getResultsSchema": lambda _: Call("GET", "/api/result-formats/parfocal-json/schema"),
+    "getResultsTemplate": lambda _: Call("GET", "/api/result-formats/parfocal-json/template"),
+    "validateResultsFile": lambda _: Call(
+        "POST", "/api/result-formats/parfocal-json/validate", {"content": "{}"}
+    ),
     "listNotificationPreferences": lambda _: Call("GET", "/api/me/notification-preferences"),
     "setNotificationPreferences": lambda _: Call(
         "PUT",

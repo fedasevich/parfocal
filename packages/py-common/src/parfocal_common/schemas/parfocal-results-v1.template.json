@@ -1,0 +1,83 @@
+{
+  "format": "parfocal-results",
+  "version": 1,
+  "slide": {
+    "file_name": "S26-04812-A1.svs",
+    "width": 46000,
+    "height": 32914,
+    "mpp": 0.25
+  },
+  "model": {
+    "name": "HoVer-NeXt",
+    "version": "1.2",
+    "run_at": "2026-10-01T09:00:00Z"
+  },
+  "coordinates": {
+    "space": "pixel",
+    "level": 0,
+    "scale": 1
+  },
+  "classes": [
+    {
+      "name": "Tumor",
+      "color": "#f87171"
+    },
+    {
+      "name": "Lymphocyte",
+      "color": "#60a5fa"
+    }
+  ],
+  "objects": [
+    {
+      "kind": "region",
+      "source_id": "region-1",
+      "class": "Tumor",
+      "score": 0.94,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[1000, 1000], [3000, 1000], [3000, 2500], [1000, 2500], [1000, 1000]]]
+      }
+    },
+    {
+      "kind": "cell",
+      "source_id": "cell-1",
+      "parent": "region-1",
+      "class": "Tumor",
+      "score": 0.88,
+      "probabilities": {
+        "Tumor": 0.88,
+        "Lymphocyte": 0.12
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [1500, 1200]
+      }
+    },
+    {
+      "kind": "cell",
+      "source_id": "cell-2",
+      "class": "Lymphocyte",
+      "score": 0.71,
+      "probabilities": {
+        "Tumor": 0.29,
+        "Lymphocyte": 0.71
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[4000, 900], [4012, 900], [4012, 912], [4000, 912], [4000, 900]]]
+      },
+      "properties": {
+        "area_um2": 31.5
+      }
+    }
+  ],
+  "rasters": [
+    {
+      "kind": "heatmap",
+      "file": "tumor-heatmap.tif",
+      "class": "Tumor",
+      "level": 2,
+      "scale": 4
+    }
+  ]
+}

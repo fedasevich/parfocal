@@ -7,6 +7,7 @@ dependencies = [
     "asyncpg>=0.32,<0.33",
     "cryptography>=50,<51",
     "geoalchemy2>=0.20,<0.21",
+    "jsonschema>=4.25,<5",
     "pydantic>=2.13,<3",
     "pydantic-settings>=2.15,<3",
     "sqlalchemy[asyncio]>=2.1.4,<2.2",

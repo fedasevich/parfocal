@@ -590,6 +590,21 @@ export interface ClassMetrics {
   sensitivity: RateOut;
 }
 
+export type Code = (typeof Code)[keyof typeof Code];
+
+export const Code = {
+  "not-json": "not-json",
+  "wrong-format": "wrong-format",
+  "wrong-version": "wrong-version",
+  "missing-field": "missing-field",
+  "unknown-field": "unknown-field",
+  "wrong-type": "wrong-type",
+  "out-of-range": "out-of-range",
+  "bad-length": "bad-length",
+  "not-allowed": "not-allowed",
+  "bad-pattern": "bad-pattern",
+} as const;
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -1333,6 +1348,11 @@ export interface ResultSetDraft {
   classes?: ParfocalApiResultSetsName[];
 }
 
+export interface ResultsFile {
+  /** @maxLength 20000000 */
+  content: string;
+}
+
 export type ReviewEditGeometry = { [key: string]: unknown } | null;
 
 export interface ReviewEdit {
@@ -1439,6 +1459,13 @@ export interface ReviewerState {
 
 export interface RoleChange {
   role: Role;
+}
+
+export interface SchemaProblem {
+  line: number;
+  path: string;
+  code: Code;
+  message: string;
 }
 
 /**
@@ -1649,6 +1676,11 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export interface Validation {
+  valid: boolean;
+  problems: SchemaProblem[];
+}
+
 export interface Verdict {
   object: string;
   kind: AnnotationKind;
@@ -1708,6 +1740,10 @@ export type DeleteAnnotationParams = {
    */
   version: number;
 };
+
+export type GetResultsSchema200 = { [key: string]: unknown };
+
+export type GetResultsTemplate200 = { [key: string]: unknown };
 
 export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
@@ -9249,6 +9285,519 @@ export const useDeleteResultSet = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getDeleteResultSetMutationOptions(options), queryClient);
+};
+
+export type getResultsSchemaResponse200 = {
+  data: GetResultsSchema200;
+  status: 200;
+};
+
+export type getResultsSchemaResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getResultsSchemaResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getResultsSchemaResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getResultsSchemaResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getResultsSchemaResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getResultsSchemaResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getResultsSchemaResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getResultsSchemaResponseSuccess = getResultsSchemaResponse200 & {
+  headers: Headers;
+};
+export type getResultsSchemaResponseError = (
+  | getResultsSchemaResponse400
+  | getResultsSchemaResponse401
+  | getResultsSchemaResponse403
+  | getResultsSchemaResponse404
+  | getResultsSchemaResponse409
+  | getResultsSchemaResponse422
+  | getResultsSchemaResponse500
+) & {
+  headers: Headers;
+};
+
+export type getResultsSchemaResponse =
+  | getResultsSchemaResponseSuccess
+  | getResultsSchemaResponseError;
+
+export const getGetResultsSchemaUrl = () => {
+  return `/api/result-formats/parfocal-json/schema`;
+};
+
+/**
+ * @summary Get Results Schema
+ */
+export const getResultsSchema = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getResultsSchemaResponse> => {
+  return apiFetch<getResultsSchemaResponse>(getGetResultsSchemaUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResultsSchemaQueryKey = () => {
+  return [`/api/result-formats/parfocal-json/schema`] as const;
+};
+
+export const getGetResultsSchemaQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResultsSchema>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsSchema>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResultsSchemaQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResultsSchema>>> = ({ signal }) =>
+    getResultsSchema({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getResultsSchema>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetResultsSchemaQueryResult = NonNullable<Awaited<ReturnType<typeof getResultsSchema>>>;
+export type GetResultsSchemaQueryError = Problem;
+
+export function useGetResultsSchema<
+  TData = Awaited<ReturnType<typeof getResultsSchema>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsSchema>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultsSchema>>,
+          TError,
+          Awaited<ReturnType<typeof getResultsSchema>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultsSchema<
+  TData = Awaited<ReturnType<typeof getResultsSchema>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsSchema>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultsSchema>>,
+          TError,
+          Awaited<ReturnType<typeof getResultsSchema>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultsSchema<
+  TData = Awaited<ReturnType<typeof getResultsSchema>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsSchema>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Results Schema
+ */
+
+export function useGetResultsSchema<
+  TData = Awaited<ReturnType<typeof getResultsSchema>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsSchema>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetResultsSchemaQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getResultsTemplateResponse200 = {
+  data: GetResultsTemplate200;
+  status: 200;
+};
+
+export type getResultsTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getResultsTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getResultsTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getResultsTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getResultsTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getResultsTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getResultsTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getResultsTemplateResponseSuccess = getResultsTemplateResponse200 & {
+  headers: Headers;
+};
+export type getResultsTemplateResponseError = (
+  | getResultsTemplateResponse400
+  | getResultsTemplateResponse401
+  | getResultsTemplateResponse403
+  | getResultsTemplateResponse404
+  | getResultsTemplateResponse409
+  | getResultsTemplateResponse422
+  | getResultsTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type getResultsTemplateResponse =
+  | getResultsTemplateResponseSuccess
+  | getResultsTemplateResponseError;
+
+export const getGetResultsTemplateUrl = () => {
+  return `/api/result-formats/parfocal-json/template`;
+};
+
+/**
+ * @summary Get Results Template
+ */
+export const getResultsTemplate = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getResultsTemplateResponse> => {
+  return apiFetch<getResultsTemplateResponse>(getGetResultsTemplateUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResultsTemplateQueryKey = () => {
+  return [`/api/result-formats/parfocal-json/template`] as const;
+};
+
+export const getGetResultsTemplateQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResultsTemplate>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsTemplate>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResultsTemplateQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResultsTemplate>>> = ({ signal }) =>
+    getResultsTemplate({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getResultsTemplate>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetResultsTemplateQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getResultsTemplate>>
+>;
+export type GetResultsTemplateQueryError = Problem;
+
+export function useGetResultsTemplate<
+  TData = Awaited<ReturnType<typeof getResultsTemplate>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsTemplate>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultsTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getResultsTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultsTemplate<
+  TData = Awaited<ReturnType<typeof getResultsTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getResultsTemplate>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultsTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getResultsTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultsTemplate<
+  TData = Awaited<ReturnType<typeof getResultsTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsTemplate>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Results Template
+ */
+
+export function useGetResultsTemplate<
+  TData = Awaited<ReturnType<typeof getResultsTemplate>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultsTemplate>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetResultsTemplateQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type validateResultsFileResponse200 = {
+  data: Validation;
+  status: 200;
+};
+
+export type validateResultsFileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type validateResultsFileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type validateResultsFileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type validateResultsFileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type validateResultsFileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type validateResultsFileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type validateResultsFileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type validateResultsFileResponseSuccess = validateResultsFileResponse200 & {
+  headers: Headers;
+};
+export type validateResultsFileResponseError = (
+  | validateResultsFileResponse400
+  | validateResultsFileResponse401
+  | validateResultsFileResponse403
+  | validateResultsFileResponse404
+  | validateResultsFileResponse409
+  | validateResultsFileResponse422
+  | validateResultsFileResponse500
+) & {
+  headers: Headers;
+};
+
+export type validateResultsFileResponse =
+  | validateResultsFileResponseSuccess
+  | validateResultsFileResponseError;
+
+export const getValidateResultsFileUrl = () => {
+  return `/api/result-formats/parfocal-json/validate`;
+};
+
+/**
+ * @summary Validate Results File
+ */
+export const validateResultsFile = async (
+  resultsFile: ResultsFile,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<validateResultsFileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<validateResultsFileResponse>(getValidateResultsFileUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(resultsFile),
+  });
+};
+
+export const getValidateResultsFileMutationKey = () => ["validateResultsFile"] as const;
+
+export const getValidateResultsFileMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof validateResultsFile>>,
+    TError,
+    ValidateResultsFileMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof validateResultsFile>>,
+  TError,
+  ValidateResultsFileMutationVariables,
+  TContext
+> => {
+  const mutationKey = getValidateResultsFileMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof validateResultsFile>>,
+    ValidateResultsFileMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return validateResultsFile(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ValidateResultsFileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof validateResultsFile>>
+>;
+export type ValidateResultsFileMutationBody = ResultsFile;
+export type ValidateResultsFileMutationError = Problem;
+export type ValidateResultsFileMutationVariables = { data: ResultsFile };
+
+/**
+ * @summary Validate Results File
+ */
+export const useValidateResultsFile = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof validateResultsFile>>,
+      TError,
+      ValidateResultsFileMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof validateResultsFile>>,
+  TError,
+  ValidateResultsFileMutationVariables,
+  TContext
+> => {
+  return useMutation(getValidateResultsFileMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

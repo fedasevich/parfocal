@@ -51,5 +51,5 @@ No Modal, Neon, staging or production changes and no UI work until the owner say
 | [knowledge/](knowledge/README.md) | Durable lessons and gotchas by topic |
 | [reference/permissions.md](reference/permissions.md) | The role and permission matrix, generated from the API code |
 | [compliance/controls.md](compliance/controls.md) | Control matrix mapping GDPR articles, HIPAA Security Rule safeguards and ISO 27001:2022 Annex A controls to backlog tasks, with gaps |
-| [reference/parfocal-results-v1.schema.json](reference/parfocal-results-v1.schema.json) | Draft JSON Schema for Parfocal results files, published by RSET-002 |
+| [reference/parfocal-results-v1.md](reference/parfocal-results-v1.md) | The Parfocal results file: its fields, how to check a file and the validator's error codes, with the [schema](reference/parfocal-results-v1.schema.json) and a [template](reference/parfocal-results-v1.template.json) |
 | [reference/data-map.md](reference/data-map.md) | The data class of every database column, generated from the table models |
