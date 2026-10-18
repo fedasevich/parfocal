@@ -4,6 +4,7 @@ from enum import StrEnum
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     Column,
     DateTime,
@@ -838,6 +839,80 @@ opinion_forms = Table(
     UniqueConstraint("id", "project_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("version >= 1", name="version"),
+)
+
+
+class NotificationKind(StrEnum):
+    MENTION = "mention"
+    REPLY = "reply"
+    TASK_ASSIGNED = "task-assigned"
+    MODEL_RUN_FINISHED = "model-run-finished"
+    MODEL_RUN_PAUSED = "model-run-paused"
+    UPLOAD_DONE = "upload-done"
+    DISAGREEMENTS_READY = "disagreements-ready"
+    TASK_SIGNED_OFF = "task-signed-off"
+    EMERGENCY_ACCESS = "emergency-access"
+
+
+class EmailStatus(StrEnum):
+    NONE = "none"
+    PENDING = "pending"
+    SENT = "sent"
+    SKIPPED = "skipped"
+
+
+notifications = Table(
+    "notifications",
+    metadata,
+    *owned_ids(),
+    Column("user_id", Uuid[uuid.UUID](), nullable=False, info=PERSONAL),
+    Column("kind", String(30), nullable=False, info=OPERATIONAL),
+    Column("target_type", String(30), nullable=False, info=OPERATIONAL),
+    Column("target_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("payload", JSONB, nullable=False, server_default="{}", info=OPERATIONAL),
+    Column("in_app", Boolean, nullable=False, info=OPERATIONAL),
+    Column("realtime", Boolean, nullable=False, info=OPERATIONAL),
+    Column("email_status", String(10), nullable=False, info=OPERATIONAL),
+    Column("emailed_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("read_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+    one_of("kind", NotificationKind),
+    CheckConstraint("email_status IN ('none', 'pending', 'sent', 'skipped')", name="email"),
+    Index("ix_notifications_user_id_created_at", "user_id", "created_at"),
+    Index(
+        "ix_notifications_pending_email",
+        "tenant_id",
+        postgresql_where=text("email_status = 'pending'"),
+    ),
+)
+
+notification_preferences = Table(
+    "notification_preferences",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("kind", String(30), primary_key=True, info=OPERATIONAL),
+    Column("in_app", Boolean, nullable=False, info=OPERATIONAL),
+    Column("email", Boolean, nullable=False, info=OPERATIONAL),
+    Column("realtime", Boolean, nullable=False, info=OPERATIONAL),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+    one_of("kind", NotificationKind),
 )
 
 case_requests = Table(

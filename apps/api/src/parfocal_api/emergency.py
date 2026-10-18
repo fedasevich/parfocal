@@ -2,18 +2,25 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import func, insert
+from sqlalchemy import func, insert, select
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.notifications import deliver_after_commit, notify
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ConflictError, ForbiddenError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import row_of
-from parfocal_api.tables import PrivacyMode, emergency_grants
+from parfocal_api.tables import (
+    NotificationKind,
+    PrivacyMode,
+    ProjectRole,
+    emergency_grants,
+    project_members,
+)
 from parfocal_api.tenants import current_policy
 
 type Reason = Annotated[
@@ -54,6 +61,8 @@ async def request_emergency_access(
     request: EmergencyRequest,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
 ) -> EmergencyGrant:
     if not isinstance(principal, MemberPrincipal):
         raise ForbiddenError
@@ -84,4 +93,20 @@ async def request_emergency_access(
         tenant_id=principal.tenant_id,
         details={"reason": request.reason, "hours": hours, "role": principal.role},
     )
+    owners = await connection.scalars(
+        select(project_members.c.user_id).where(
+            project_members.c.project_id == project_id,
+            project_members.c.role == ProjectRole.OWNER,
+        )
+    )
+    await notify(
+        connection,
+        principal.tenant_id,
+        owners.all(),
+        NotificationKind.EMERGENCY_ACCESS,
+        AuditTarget.PROJECT,
+        project_id,
+        {"hours": hours},
+    )
+    background.add_task(deliver_after_commit, http.app, principal.tenant_id)
     return EmergencyGrant(project_id=project_id, expires_at=expires_at)

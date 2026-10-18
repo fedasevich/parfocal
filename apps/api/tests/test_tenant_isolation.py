@@ -22,6 +22,8 @@ from parfocal_api.tables import (
     emergency_grants,
     invitations,
     memberships,
+    notification_preferences,
+    notifications,
     organisations,
     platform_operators,
     project_classes,
@@ -65,6 +67,7 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "notification_preferences",
     "projects",
     "project_members",
     "opinion_forms",
@@ -156,6 +159,33 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
     )
 
 
+async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> None:
+    target = uuid.uuid4()
+    await connection.execute(
+        insert(notifications).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            kind="mention",
+            target_type="task",
+            target_id=target,
+            in_app=True,
+            realtime=True,
+            email_status="none",
+        )
+    )
+    await connection.execute(
+        insert(notification_preferences).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            kind="reply",
+            in_app=True,
+            email=False,
+            realtime=True,
+        )
+    )
+    seeded.markers.add(str(target))
+
+
 async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
@@ -214,6 +244,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
 
 
 SEEDERS: dict[str, Seeder] = {
+    "notifications": seed_notifications,
     "invitations": seed_invitations,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
@@ -245,6 +276,9 @@ GET_ROUTES = {
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
     "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),
+    "listNotificationPreferences": Route(
+        Exposure.PUBLIC, lambda _: "/api/me/notification-preferences"
+    ),
     "getOpinionForm": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
     ),

@@ -2664,12 +2664,14 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 30 NOTIF · Notifications
 
-- [ ] NOTIF-000 · Research check
+- [x] NOTIF-000 · Research check
   Done when STACK-036 is confirmed.
+  Confirmed in [ADR 0074](adr/0074-notifications-as-rows-with-an-email-outbox.md) on 2026-10-18.
 
 - [ ] NOTIF-001 · Notification service
   Events (mention, reply, review task assigned, model run finished or paused, upload done, disagreements ready, task signed off, emergency access to a clinical project for its owners) to in-app, email and realtime channels by preference.
   Done when tests cover routing by preference and tenant isolation.
+  Built as [ADR 0074](adr/0074-notifications-as-rows-with-an-email-outbox.md) says. Realtime delivery waits for STACK-024.
 
 - [ ] NOTIF-002 · The bell
   The bell in the top bar opens a panel over the current page with For me, Mentions and Jobs, each with its unread count, Unread only, Mark all read and See all. Opening an item marks it read and goes to the exact place. The bell is the only place for mentions, and the sidebar has no Mentions entry.

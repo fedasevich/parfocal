@@ -7,12 +7,11 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from parfocal_api.app import create_app
+from parfocal_api.app import ParfocalApi, create_app
 from parfocal_api.auth import authenticate
 from parfocal_api.principals import Principal
 from parfocal_api.problems import UnauthenticatedError
@@ -79,7 +78,8 @@ def api_settings(database: str) -> ApiSettings:
 
 
 class ApiAs:
-    def __init__(self, app: FastAPI, client: TestClient) -> None:
+    def __init__(self, app: ParfocalApi, client: TestClient) -> None:
+        self.app = app
         self.client = client
         self.principal: Principal | None = None
         app.dependency_overrides[authenticate] = self.current

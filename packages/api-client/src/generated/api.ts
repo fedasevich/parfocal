@@ -638,6 +638,20 @@ export interface MembershipDraft {
  */
 export type Name = string;
 
+export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
+
+export const NotificationKind = {
+  mention: "mention",
+  reply: "reply",
+  "task-assigned": "task-assigned",
+  "model-run-finished": "model-run-finished",
+  "model-run-paused": "model-run-paused",
+  "upload-done": "upload-done",
+  "disagreements-ready": "disagreements-ready",
+  "task-signed-off": "task-signed-off",
+  "emergency-access": "emergency-access",
+} as const;
+
 export interface OpinionForm {
   project_id: string;
   version: number;
@@ -667,6 +681,29 @@ export type Plan = (typeof Plan)[keyof typeof Plan];
 export const Plan = {
   pilot: "pilot",
 } as const;
+
+export interface Preference {
+  kind: NotificationKind;
+  in_app: boolean;
+  email: boolean;
+  realtime: boolean;
+  mandatory: boolean;
+}
+
+export interface PreferenceChange {
+  kind: NotificationKind;
+  in_app: boolean;
+  email: boolean;
+  realtime: boolean;
+}
+
+export interface PreferenceChanges {
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  preferences: PreferenceChange[];
+}
 
 export type PrivacyMode = (typeof PrivacyMode)[keyof typeof PrivacyMode];
 
@@ -4718,6 +4755,357 @@ export function useGetOpinionFormVersion<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listNotificationPreferencesResponse200 = {
+  data: Preference[];
+  status: 200;
+};
+
+export type listNotificationPreferencesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listNotificationPreferencesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listNotificationPreferencesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listNotificationPreferencesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listNotificationPreferencesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listNotificationPreferencesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listNotificationPreferencesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listNotificationPreferencesResponseSuccess = listNotificationPreferencesResponse200 & {
+  headers: Headers;
+};
+export type listNotificationPreferencesResponseError = (
+  | listNotificationPreferencesResponse400
+  | listNotificationPreferencesResponse401
+  | listNotificationPreferencesResponse403
+  | listNotificationPreferencesResponse404
+  | listNotificationPreferencesResponse409
+  | listNotificationPreferencesResponse422
+  | listNotificationPreferencesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listNotificationPreferencesResponse =
+  | listNotificationPreferencesResponseSuccess
+  | listNotificationPreferencesResponseError;
+
+export const getListNotificationPreferencesUrl = () => {
+  return `/api/me/notification-preferences`;
+};
+
+/**
+ * @summary List Notification Preferences
+ */
+export const listNotificationPreferences = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listNotificationPreferencesResponse> => {
+  return apiFetch<listNotificationPreferencesResponse>(getListNotificationPreferencesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListNotificationPreferencesQueryKey = () => {
+  return [`/api/me/notification-preferences`] as const;
+};
+
+export const getListNotificationPreferencesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listNotificationPreferences>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listNotificationPreferences>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListNotificationPreferencesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listNotificationPreferences>>> = ({
+    signal,
+  }) => listNotificationPreferences({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listNotificationPreferences>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListNotificationPreferencesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listNotificationPreferences>>
+>;
+export type ListNotificationPreferencesQueryError = Problem;
+
+export function useListNotificationPreferences<
+  TData = Awaited<ReturnType<typeof listNotificationPreferences>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listNotificationPreferences>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listNotificationPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof listNotificationPreferences>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListNotificationPreferences<
+  TData = Awaited<ReturnType<typeof listNotificationPreferences>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listNotificationPreferences>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listNotificationPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof listNotificationPreferences>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListNotificationPreferences<
+  TData = Awaited<ReturnType<typeof listNotificationPreferences>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listNotificationPreferences>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Notification Preferences
+ */
+
+export function useListNotificationPreferences<
+  TData = Awaited<ReturnType<typeof listNotificationPreferences>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listNotificationPreferences>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListNotificationPreferencesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setNotificationPreferencesResponse200 = {
+  data: Preference[];
+  status: 200;
+};
+
+export type setNotificationPreferencesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setNotificationPreferencesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setNotificationPreferencesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setNotificationPreferencesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setNotificationPreferencesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setNotificationPreferencesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setNotificationPreferencesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setNotificationPreferencesResponseSuccess = setNotificationPreferencesResponse200 & {
+  headers: Headers;
+};
+export type setNotificationPreferencesResponseError = (
+  | setNotificationPreferencesResponse400
+  | setNotificationPreferencesResponse401
+  | setNotificationPreferencesResponse403
+  | setNotificationPreferencesResponse404
+  | setNotificationPreferencesResponse409
+  | setNotificationPreferencesResponse422
+  | setNotificationPreferencesResponse500
+) & {
+  headers: Headers;
+};
+
+export type setNotificationPreferencesResponse =
+  | setNotificationPreferencesResponseSuccess
+  | setNotificationPreferencesResponseError;
+
+export const getSetNotificationPreferencesUrl = () => {
+  return `/api/me/notification-preferences`;
+};
+
+/**
+ * @summary Set Notification Preferences
+ */
+export const setNotificationPreferences = async (
+  preferenceChanges: PreferenceChanges,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setNotificationPreferencesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setNotificationPreferencesResponse>(getSetNotificationPreferencesUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(preferenceChanges),
+  });
+};
+
+export const getSetNotificationPreferencesMutationKey = () =>
+  ["setNotificationPreferences"] as const;
+
+export const getSetNotificationPreferencesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setNotificationPreferences>>,
+    TError,
+    SetNotificationPreferencesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setNotificationPreferences>>,
+  TError,
+  SetNotificationPreferencesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetNotificationPreferencesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setNotificationPreferences>>,
+    SetNotificationPreferencesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setNotificationPreferences(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetNotificationPreferencesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setNotificationPreferences>>
+>;
+export type SetNotificationPreferencesMutationBody = PreferenceChanges;
+export type SetNotificationPreferencesMutationError = Problem;
+export type SetNotificationPreferencesMutationVariables = { data: PreferenceChanges };
+
+/**
+ * @summary Set Notification Preferences
+ */
+export const useSetNotificationPreferences = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setNotificationPreferences>>,
+      TError,
+      SetNotificationPreferencesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setNotificationPreferences>>,
+  TError,
+  SetNotificationPreferencesMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetNotificationPreferencesMutationOptions(options), queryClient);
+};
 
 export type getOpinionFormTemplateResponse200 = {
   data: Question[];

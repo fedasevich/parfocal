@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 19 |
-| `personal` | 22 |
+| `personal` | 24 |
 | `secret` | 9 |
-| `operational` | 165 |
+| `operational` | 184 |
 | `public` | 0 |
 
 ## api_tokens
@@ -158,6 +158,37 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `availability_note` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## notification_preferences
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `in_app` | operational |
+| `email` | operational |
+| `realtime` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## notifications
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `target_type` | operational |
+| `target_id` | operational |
+| `payload` | operational |
+| `in_app` | operational |
+| `realtime` | operational |
+| `email_status` | operational |
+| `emailed_at` | operational |
+| `read_at` | operational |
+| `created_at` | operational |
 
 ## opinion_forms
 

@@ -2595,6 +2595,218 @@
         "x-permission-emergency": true
       }
     },
+    "/api/me/notification-preferences": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "List Notification Preferences",
+        "operationId": "listNotificationPreferences",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Preference"
+                  },
+                  "type": "array",
+                  "title": "Response Listnotificationpreferences"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Set Notification Preferences",
+        "operationId": "setNotificationPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenceChanges"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Preference"
+                  },
+                  "type": "array",
+                  "title": "Response Setnotificationpreferences"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/opinion-form-template": {
       "get": {
         "tags": [
@@ -8558,6 +8770,21 @@
         "maxLength": 200,
         "minLength": 1
       },
+      "NotificationKind": {
+        "type": "string",
+        "enum": [
+          "mention",
+          "reply",
+          "task-assigned",
+          "model-run-finished",
+          "model-run-paused",
+          "upload-done",
+          "disagreements-ready",
+          "task-signed-off",
+          "emergency-access"
+        ],
+        "title": "NotificationKind"
+      },
       "OpinionForm": {
         "properties": {
           "project_id": {
@@ -8708,6 +8935,83 @@
           "pilot"
         ],
         "title": "Plan"
+      },
+      "Preference": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/NotificationKind"
+          },
+          "in_app": {
+            "type": "boolean",
+            "title": "In App"
+          },
+          "email": {
+            "type": "boolean",
+            "title": "Email"
+          },
+          "realtime": {
+            "type": "boolean",
+            "title": "Realtime"
+          },
+          "mandatory": {
+            "type": "boolean",
+            "title": "Mandatory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "in_app",
+          "email",
+          "realtime",
+          "mandatory"
+        ],
+        "title": "Preference"
+      },
+      "PreferenceChange": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/NotificationKind"
+          },
+          "in_app": {
+            "type": "boolean",
+            "title": "In App"
+          },
+          "email": {
+            "type": "boolean",
+            "title": "Email"
+          },
+          "realtime": {
+            "type": "boolean",
+            "title": "Realtime"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "in_app",
+          "email",
+          "realtime"
+        ],
+        "title": "PreferenceChange"
+      },
+      "PreferenceChanges": {
+        "properties": {
+          "preferences": {
+            "items": {
+              "$ref": "#/components/schemas/PreferenceChange"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Preferences"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferences"
+        ],
+        "title": "PreferenceChanges"
       },
       "PrivacyMode": {
         "type": "string",
