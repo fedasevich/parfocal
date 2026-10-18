@@ -39,3 +39,7 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 ## Row-level security skips rows silently
 
 An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.
+
+## Cookie writes need the app origin
+
+`parfocal_api.origin_check.OriginCheck` refuses a POST, PUT, PATCH or DELETE that carries the session cookie and no bearer token unless `Origin` is the public origin, or `Sec-Fetch-Site` is `same-origin` when `Origin` is missing ([ADR 0087](../adr/0087-origin-check-on-cookie-writes.md)). A test client that holds a session cookie must send `Origin`, as `signed_in_browser` does with `http://localhost:5173`. Without it every write answers 403 `cross-origin-write`. Tests that override the principal through `ApiAs` send no cookie and are not affected.

@@ -163,5 +163,7 @@ def signed_in_browser(database: str) -> Generator[Browser]:
         http=httpx2.AsyncClient(transport=httpx2.MockTransport(idp.handle)),
     )
     app = create_app(settings, identity=identity)
-    with TestClient(app, base_url="https://testserver", follow_redirects=False) as client:
+    with TestClient(
+        app, base_url="https://testserver", follow_redirects=False, headers={"origin": ORIGIN}
+    ) as client:
         yield Browser(client, idp, with_database(OWNER_URL, database))

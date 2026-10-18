@@ -39,6 +39,7 @@ from parfocal_api import (
     verdicts,
 )
 from parfocal_api.oidc import OidcClient
+from parfocal_api.origin_check import OriginCheck
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
 from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
@@ -108,6 +109,7 @@ def create_app(
     )
     install_problem_handlers(app, app.clients.errors)
     configure_logging("api", resolved.app_env)
+    app.add_middleware(OriginCheck, origin=public_origin(resolved))
     app.add_middleware(RequestLogging)
 
     @app.get("/api/health", operation_id="getHealth")
