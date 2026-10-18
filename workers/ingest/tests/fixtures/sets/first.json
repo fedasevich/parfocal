@@ -1,0 +1,13 @@
+{
+  "mpp": 0.25,
+  "regions": [
+    { "number": 1, "class": "tumor", "wkt": "POLYGON((0 0,100 0,100 100,0 100,0 0))" },
+    { "number": 2, "class": "tumor", "wkt": "POLYGON((200 0,260 0,260 60,200 60,200 0))" },
+    { "number": 3, "class": "stroma", "wkt": "POLYGON((400 0,430 0,430 30,400 30,400 0))" }
+  ],
+  "cells": [
+    { "number": 1, "class": "lymphocyte", "wkt": "POINT(10 10)" },
+    { "number": 2, "class": "tumor", "wkt": "POINT(50 10)" },
+    { "number": 3, "class": "tumor", "wkt": "POLYGON((86 6,94 6,94 14,86 14,86 6))" }
+  ]
+}

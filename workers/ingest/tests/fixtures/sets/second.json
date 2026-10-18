@@ -1,0 +1,13 @@
+{
+  "mpp": 0.25,
+  "regions": [
+    { "class": "stroma", "wkt": "POLYGON((5 5,105 5,105 105,5 105,5 5))" },
+    { "class": "tumor", "wkt": "POLYGON((240 0,300 0,300 60,240 60,240 0))" },
+    { "class": "tumor", "wkt": "POLYGON((600 0,700 0,700 100,600 100,600 0))" }
+  ],
+  "cells": [
+    { "class": "tumor", "wkt": "POINT(12 12)" },
+    { "class": "tumor", "wkt": "POINT(50 30)" },
+    { "class": "tumor", "wkt": "POINT(88 10)" }
+  ]
+}
