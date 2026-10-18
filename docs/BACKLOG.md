@@ -2721,7 +2721,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm subjects and bodies contain no patient identifiers and link to the app.
   Refs [ADR 0039](adr/0039-email-through-resend-with-phi-rules.md), [ADR 0091](adr/0091-notification-catalogue-and-targets.md).
 
-- [ ] NOTIF-005 · Digest and quiet hours
+- [x] NOTIF-005 · Digest and quiet hours
   Done when tests cover batching and quiet hours.
   Refs [ADR 0092](adr/0092-email-digest-and-quiet-hours.md).
 
