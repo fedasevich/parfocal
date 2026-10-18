@@ -1011,6 +1011,47 @@ export interface ProjectDraft {
   taxonomy?: TaxonomyTemplate | null;
 }
 
+export type Why = (typeof Why)[keyof typeof Why];
+
+export const Why = {
+  "reviewers-differ": "reviewers-differ",
+  "against-the-ai": "against-the-ai",
+} as const;
+
+export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
+
+export const VerdictValue = {
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "unsure",
+} as const;
+
+export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
+
+export const VerdictReason = {
+  not_class: "not_class",
+  boundary_off: "boundary_off",
+  two_regions: "two_regions",
+  artefact: "artefact",
+  not_a_cell: "not_a_cell",
+  wrong_class: "wrong_class",
+} as const;
+
+export interface ReviewerVerdict {
+  user_id: string;
+  value: VerdictValue;
+  reason: VerdictReason | null;
+}
+
+export interface QueuedObject {
+  slide_id: string;
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+  why: Why;
+  verdicts: ReviewerVerdict[];
+}
+
 export type Region = (typeof Region)[keyof typeof Region];
 
 export const Region = {
@@ -1406,25 +1447,6 @@ export interface TenantDraft {
 export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
-
-export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
-
-export const VerdictValue = {
-  agree: "agree",
-  disagree: "disagree",
-  unsure: "unsure",
-} as const;
-
-export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
-
-export const VerdictReason = {
-  not_class: "not_class",
-  boundary_off: "boundary_off",
-  two_regions: "two_regions",
-  artefact: "artefact",
-  not_a_cell: "not_a_cell",
-  wrong_class: "wrong_class",
-} as const;
 
 export interface Verdict {
   object: string;
@@ -11664,6 +11686,191 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listDisagreementsResponse200 = {
+  data: QueuedObject[];
+  status: 200;
+};
+
+export type listDisagreementsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listDisagreementsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listDisagreementsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listDisagreementsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listDisagreementsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listDisagreementsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listDisagreementsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listDisagreementsResponseSuccess = listDisagreementsResponse200 & {
+  headers: Headers;
+};
+export type listDisagreementsResponseError = (
+  | listDisagreementsResponse400
+  | listDisagreementsResponse401
+  | listDisagreementsResponse403
+  | listDisagreementsResponse404
+  | listDisagreementsResponse409
+  | listDisagreementsResponse422
+  | listDisagreementsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listDisagreementsResponse =
+  | listDisagreementsResponseSuccess
+  | listDisagreementsResponseError;
+
+export const getListDisagreementsUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/disagreements`;
+};
+
+/**
+ * @summary List Disagreements
+ */
+export const listDisagreements = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listDisagreementsResponse> => {
+  return apiFetch<listDisagreementsResponse>(getListDisagreementsUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDisagreementsQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/disagreements`] as const;
+};
+
+export const getListDisagreementsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDisagreements>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDisagreementsQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDisagreements>>> = ({ signal }) =>
+    listDisagreements(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListDisagreementsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDisagreements>>
+>;
+export type ListDisagreementsQueryError = Problem;
+
+export function useListDisagreements<
+  TData = Awaited<ReturnType<typeof listDisagreements>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDisagreements>>,
+          TError,
+          Awaited<ReturnType<typeof listDisagreements>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDisagreements<
+  TData = Awaited<ReturnType<typeof listDisagreements>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDisagreements>>,
+          TError,
+          Awaited<ReturnType<typeof listDisagreements>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDisagreements<
+  TData = Awaited<ReturnType<typeof listDisagreements>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Disagreements
+ */
+
+export function useListDisagreements<
+  TData = Awaited<ReturnType<typeof listDisagreements>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisagreements>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListDisagreementsQueryOptions(taskId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

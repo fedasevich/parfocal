@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.disagreements import open_by_slide, queue_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -266,6 +267,7 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
             .order_by(review_task_slides.c.position)
         )
     ).all()
+    open_disagreements = open_by_slide(await queue_of(connection, task.id))
     by_slide: dict[uuid.UUID, list[Any]] = {}
     for row in await assignment_rows(connection, task.id):
         by_slide.setdefault(row.slide_id, []).append(row)
@@ -279,6 +281,7 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
                 row.user_id: ReviewerFacts(row.submitted_at is not None, bool(row.has_work))
                 for row in assigned
             },
+            open_disagreements=open_disagreements.get(slide.slide_id, 0),
             signed_off=task.signed_off_at is not None,
         )
         slides.append(
@@ -432,6 +435,7 @@ async def task_move(
         actor=await actor_for(connection, principal, task, None),
         signed_off=task.signed_off_at is not None,
         all_submitted=not unsubmitted,
+        open_disagreements=len(await queue_of(connection, task_id)),
     )
     action = AuditAction.TASK_SIGNED_OFF if move is Move.SIGN_OFF else AuditAction.TASK_REOPENED
     await apply(connection, principal, task, move, facts, action, {})

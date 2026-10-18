@@ -396,8 +396,10 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             task_id=task_id,
             slide_id=case.loose_slide_id,
             user_id=seeded.ids["user"],
+            submitted_at=func.now(),
         )
     )
+    seeded.markers.add(str(case.loose_slide_id))
     await connection.execute(
         insert(review_edits).values(
             tenant_id=seeded.tenant_id,
@@ -420,7 +422,8 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             user_id=seeded.ids["user"],
             kind="region",
             number=1,
-            value="agree",
+            value="disagree",
+            reason="not_class",
             note=verdict_note,
         )
     )
@@ -494,6 +497,9 @@ GET_ROUTES = {
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
+    ),
+    "listDisagreements": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements"
     ),
     "listVerdicts": Route(
         Exposure.TENANT,

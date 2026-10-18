@@ -7082,6 +7082,122 @@
         "x-permission-emergency": true
       }
     },
+    "/api/review-tasks/{task_id}/disagreements": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "List Disagreements",
+        "operationId": "listDisagreements",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QueuedObject"
+                  },
+                  "title": "Response Listdisagreements"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/projects/{project_id}/emergency-access": {
       "post": {
         "tags": [
@@ -13743,6 +13859,46 @@
           }
         }
       },
+      "QueuedObject": {
+        "properties": {
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "why": {
+            "$ref": "#/components/schemas/Why"
+          },
+          "verdicts": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewerVerdict"
+            },
+            "type": "array",
+            "title": "Verdicts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_id",
+          "object",
+          "kind",
+          "number",
+          "why",
+          "verdicts"
+        ],
+        "title": "QueuedObject"
+      },
       "Reason": {
         "type": "string",
         "maxLength": 500,
@@ -14526,6 +14682,35 @@
           "submitted_at"
         ],
         "title": "ReviewerState"
+      },
+      "ReviewerVerdict": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "value": {
+            "$ref": "#/components/schemas/VerdictValue"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "value",
+          "reason"
+        ],
+        "title": "ReviewerVerdict"
       },
       "Ring": {
         "items": {
@@ -16003,6 +16188,14 @@
           "version"
         ],
         "title": "VersionCheck"
+      },
+      "Why": {
+        "type": "string",
+        "enum": [
+          "reviewers-differ",
+          "against-the-ai"
+        ],
+        "title": "Why"
       },
       "Workspace": {
         "properties": {

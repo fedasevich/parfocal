@@ -12,6 +12,7 @@ from parfocal_api import (
     availability,
     case_creation,
     cases,
+    disagreements,
     emergency,
     invitations,
     notifications,
@@ -124,6 +125,7 @@ def create_app(
     app.include_router(reviewed_layer.router)
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
+    app.include_router(disagreements.router)
     app.include_router(case_creation.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)
