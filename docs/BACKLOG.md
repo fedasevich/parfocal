@@ -1960,7 +1960,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
 - [ ] COLLAB-002 · Threads API
-  Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist.
+  Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist. Mention and reply notifications resolve to their thread through `GET /api/me/notifications/{id}/target` ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)).
   Done when API tests cover anchors, permissions and audit.
   During blind review a reviewer sees only their own threads and the researcher's (TASK-004). Depends on OBJ-001, TASK-004.
 
@@ -2727,7 +2727,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] NOTIF-006 · Event catalogue with deep links
   Every notification has a kind from a documented catalogue and a target link to the exact place: a slide at an object, a thread, a task, a job, an evaluation or a failed delivery. Kinds include mention, reply, task assigned, task due soon, model run finished, run paused, upload done, disagreements ready, task signed off, result set added by a webhook and integration down.
   Done when a test checks every catalogue kind has a target and a template, and API tests resolve each target for its recipient.
-  Depends on NOTIF-001. Refs kit W52, kit Flow 18.
+  Depends on NOTIF-001. Refs kit W52, kit Flow 18, [ADR 0091](adr/0091-notification-catalogue-and-targets.md). Thread and delivery targets resolve in COLLAB-002 and REMOTE-003, which do not exist yet.
 
 - [ ] NOTIF-007 · Inbox API
   List notifications by kind and read state, mark one or many as read, and mute a case so its events stop for that person.
@@ -3359,7 +3359,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-000, INGEST-025, RSET-005. Refs mock: upload/webhook.
 
 - [ ] REMOTE-003 · Events out
-  Parfocal calls a pipeline back when a review is submitted, a task has disagreements, a task is signed off or a result set is added, signed, retried and logged.
+  Parfocal calls a pipeline back when a review is submitted, a task has disagreements, a task is signed off or a result set is added, signed, retried and logged. A failed delivery is an `integration-down` target that the notification resolver opens ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)).
   Done when tests deliver each event, retry after a failure and prove the signature.
   Depends on REMOTE-000. Refs mock: upload/events.
 

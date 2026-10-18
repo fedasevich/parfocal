@@ -1198,6 +1198,9 @@ export const NotificationKind = {
   "disagreements-ready": "disagreements-ready",
   "task-signed-off": "task-signed-off",
   "emergency-access": "emergency-access",
+  "task-due-soon": "task-due-soon",
+  "result-set-added": "result-set-added",
+  "integration-down": "integration-down",
 } as const;
 
 export type OpinionAnswers = { [key: string]: unknown };
@@ -1787,6 +1790,27 @@ export interface SlideState {
   slide_id: string;
   state: State;
   reviewers: ReviewerState[];
+}
+
+export type TargetKind = (typeof TargetKind)[keyof typeof TargetKind];
+
+export const TargetKind = {
+  slide: "slide",
+  thread: "thread",
+  task: "task",
+  evaluation: "evaluation",
+  job: "job",
+  delivery: "delivery",
+  project: "project",
+} as const;
+
+export interface Target {
+  kind: TargetKind;
+  project_id: string;
+  task_id?: string | null;
+  slide_id?: string | null;
+  object_id?: string | null;
+  job_id?: string | null;
 }
 
 /**
@@ -14365,6 +14389,207 @@ export function useGetSlideNeighbours<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSlideNeighboursQueryOptions(slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getNotificationTargetResponse200 = {
+  data: Target;
+  status: 200;
+};
+
+export type getNotificationTargetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getNotificationTargetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getNotificationTargetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getNotificationTargetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getNotificationTargetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getNotificationTargetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getNotificationTargetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getNotificationTargetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getNotificationTargetResponseSuccess = getNotificationTargetResponse200 & {
+  headers: Headers;
+};
+export type getNotificationTargetResponseError = (
+  | getNotificationTargetResponse400
+  | getNotificationTargetResponse401
+  | getNotificationTargetResponse403
+  | getNotificationTargetResponse404
+  | getNotificationTargetResponse409
+  | getNotificationTargetResponse422
+  | getNotificationTargetResponse429
+  | getNotificationTargetResponse500
+) & {
+  headers: Headers;
+};
+
+export type getNotificationTargetResponse =
+  | getNotificationTargetResponseSuccess
+  | getNotificationTargetResponseError;
+
+export const getGetNotificationTargetUrl = (notificationId: string) => {
+  return `/api/me/notifications/${notificationId}/target`;
+};
+
+/**
+ * @summary Get Notification Target
+ */
+export const getNotificationTarget = async (
+  notificationId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getNotificationTargetResponse> => {
+  return apiFetch<getNotificationTargetResponse>(getGetNotificationTargetUrl(notificationId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetNotificationTargetQueryKey = (notificationId: string) => {
+  return [`/api/me/notifications/${notificationId}/target`] as const;
+};
+
+export const getGetNotificationTargetQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNotificationTarget>>,
+  TError = Problem,
+>(
+  notificationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNotificationTargetQueryKey(notificationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationTarget>>> = ({ signal }) =>
+    getNotificationTarget(notificationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: notificationId !== null && notificationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetNotificationTargetQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNotificationTarget>>
+>;
+export type GetNotificationTargetQueryError = Problem;
+
+export function useGetNotificationTarget<
+  TData = Awaited<ReturnType<typeof getNotificationTarget>>,
+  TError = Problem,
+>(
+  notificationId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationTarget>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationTarget>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationTarget<
+  TData = Awaited<ReturnType<typeof getNotificationTarget>>,
+  TError = Problem,
+>(
+  notificationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationTarget>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationTarget>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationTarget<
+  TData = Awaited<ReturnType<typeof getNotificationTarget>>,
+  TError = Problem,
+>(
+  notificationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Notification Target
+ */
+
+export function useGetNotificationTarget<
+  TData = Awaited<ReturnType<typeof getNotificationTarget>>,
+  TError = Problem,
+>(
+  notificationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getNotificationTarget>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetNotificationTargetQueryOptions(notificationId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

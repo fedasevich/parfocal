@@ -859,6 +859,9 @@ class NotificationKind(StrEnum):
     DISAGREEMENTS_READY = "disagreements-ready"
     TASK_SIGNED_OFF = "task-signed-off"
     EMERGENCY_ACCESS = "emergency-access"
+    TASK_DUE_SOON = "task-due-soon"
+    RESULT_SET_ADDED = "result-set-added"
+    INTEGRATION_DOWN = "integration-down"
 
 
 class EmailStatus(StrEnum):

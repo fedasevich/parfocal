@@ -80,6 +80,7 @@ OPEN_OPERATIONS = {
     "listAnnouncements": "member",
     "getMyHome": "member",
     "exportMyPersonalData": "signed-in",
+    "getNotificationTarget": "own-notification",
     "erasePerson": "platform",
     "getMyAvailability": "member",
     "setMyAvailability": "member",

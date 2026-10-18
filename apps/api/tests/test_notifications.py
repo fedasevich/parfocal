@@ -127,7 +127,12 @@ def test_pending_emails_are_sent_once_with_a_link_and_no_details(database: str) 
     assert run(database, workspace.tenant_id, deliver) == 0
     (message,) = sender.sent
     assert message.template == "notification.task-assigned"
-    assert message.link == f"https://parfocal.test/go/task/{TARGET}"
+    [(sent_id,)] = owner(
+        database,
+        "SELECT id FROM notifications WHERE email_status = 'sent' "
+        f"AND tenant_id = '{workspace.tenant_id}'",
+    )
+    assert message.link == f"https://parfocal.test/go/{sent_id}"
     assert [row[4] for row in stored(database, workspace)] == ["skipped", "sent"]
 
 
@@ -170,4 +175,7 @@ def test_emergency_access_notifies_the_project_owners(api: ApiAs, database: str)
     )
     assert rows == [("ana", "emergency-access", "sent", '{"hours": 4}')]
     (message,) = sender.sent[before:]
-    assert message.link.endswith(f"/go/project/{project}")
+    [(sent_id,)] = owner(
+        database, f"SELECT id FROM notifications WHERE tenant_id = '{workspace.tenant_id}'"
+    )
+    assert message.link.endswith(f"/go/{sent_id}")

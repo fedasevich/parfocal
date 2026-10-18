@@ -299,6 +299,22 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             role="owner",
         )
     )
+    notification_id = await connection.scalar(
+        insert(notifications)
+        .values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            kind="emergency-access",
+            target_type="project",
+            target_id=case.project_id,
+            in_app=True,
+            realtime=True,
+            email_status="none",
+        )
+        .returning(notifications.c.id)
+    )
+    assert isinstance(notification_id, uuid.UUID)
+    seeded.ids["notification"] = notification_id
     await connection.execute(
         insert(case_requests).values(
             tenant_id=seeded.tenant_id,
@@ -522,6 +538,9 @@ GET_ROUTES = {
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
+    "getNotificationTarget": Route(
+        Exposure.TENANT, lambda a: f"/api/me/notifications/{a.ids['notification']}/target"
+    ),
     "getSlideNeighbours": Route(
         Exposure.TENANT,
         lambda a: (
