@@ -755,7 +755,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Refs REPORT-008.
 
 
-- [ ] SEC-024 · Audit log queries and signed export
+- [x] SEC-024 · Audit log queries and signed export
   Query the audit log by person, patient, case, kind of action and dates. Leads see their department, administrators everything, nobody can change it. An export is a signed file that lists every matching entry with emergency access and its reason marked, for a patient's access request or an inspection.
   Done when API tests cover each filter and the permission split, and a test verifies the export's signature and that it matches the hash chain from SEC-003.
   Depends on SEC-003, IAM-017. Refs kit W71, kit Flow 29. Built as [ADR 0073](adr/0073-audit-queries-and-signed-export.md) says: leads and departments are gone, so admins see the whole workspace.
