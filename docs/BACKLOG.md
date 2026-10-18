@@ -722,7 +722,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Container, dependency and IaC scanning with SLAs by severity.
   Done when the scanners gate CI and a weekly report is generated.
 
-- [ ] SEC-016 · Threat model
+- [x] SEC-016 · Threat model
   STRIDE threat model for upload, tile access, guest links, AI jobs and realtime.
   Done when `docs/security/threat-model.md` exists and each high risk links to a mitigation task.
   Refs [threat model](security/threat-model.md).
@@ -762,7 +762,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when API tests cover each filter and the permission split, and a test verifies the export's signature and that it matches the hash chain from SEC-003.
   Depends on SEC-003, IAM-017. Refs kit W71, kit Flow 29. Built as [ADR 0073](adr/0073-audit-queries-and-signed-export.md) says: leads and departments are gone, so admins see the whole workspace.
 
-- [ ] SEC-025 · Origin check on cookie writes
+- [x] SEC-025 · Origin check on cookie writes
   Requests with an unsafe method and the session cookie are refused unless their `Origin` header, or `Sec-Fetch-Site: same-origin` when it is absent, matches the app origin. SameSite=Strict does not stop a sibling subdomain of the same site ([threat model](security/threat-model.md) X1).
   Done when API tests refuse a write from another origin and from a same-site subdomain, accept one from the app origin, and leave service tokens and the login callback working.
 
