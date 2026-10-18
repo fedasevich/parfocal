@@ -1414,3 +1414,37 @@ verdicts = Table(
         name="reason_fits_kind",
     ),
 )
+
+
+class Decision(StrEnum):
+    KEEP_AI = "keep-ai"
+    GO_WITH_REVIEWERS = "go-with-reviewers"
+
+
+disagreement_decisions = Table(
+    "disagreement_decisions",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column("decision", String(20), nullable=False, info=OPERATIONAL),
+    Column("note", String(500), nullable=True, info=PHI),
+    Column(
+        "decided_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    one_of("decision", Decision),
+)

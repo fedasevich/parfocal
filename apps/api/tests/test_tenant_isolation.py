@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     audit_people,
     case_requests,
     class_mappings,
+    disagreement_decisions,
     emergency_grants,
     invitations,
     job_steps,
@@ -82,6 +83,7 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "disagreement_decisions",
     "verdicts",
     "review_edits",
     "review_tasks",
@@ -429,6 +431,17 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.add(verdict_note)
+    await connection.execute(
+        insert(disagreement_decisions).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            kind="region",
+            number=1,
+            decision="keep-ai",
+        )
+    )
     seeded.ids["task"] = task_id
     seeded.markers.update({str(task_id), task_name})
     seeded.markers.update({str(set_id), set_name})

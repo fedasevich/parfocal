@@ -601,6 +601,18 @@ export interface CreatedServiceAccount {
   token: IssuedToken;
 }
 
+export type Decision = (typeof Decision)[keyof typeof Decision];
+
+export const Decision = {
+  "keep-ai": "keep-ai",
+  "go-with-reviewers": "go-with-reviewers",
+} as const;
+
+export interface DecisionDraft {
+  decision: Decision;
+  note?: string | null;
+}
+
 /**
  * @minLength 1
  * @maxLength 200
@@ -1151,6 +1163,8 @@ export interface QueuedObject {
   number: number;
   why: Why;
   verdicts: ReviewerVerdict[];
+  decision?: Decision | null;
+  note?: string | null;
 }
 
 export type Region = (typeof Region)[keyof typeof Region];
@@ -12006,6 +12020,336 @@ export function useListDisagreements<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type decideDisagreementResponse200 = {
+  data: QueuedObject;
+  status: 200;
+};
+
+export type decideDisagreementResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type decideDisagreementResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type decideDisagreementResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type decideDisagreementResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type decideDisagreementResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type decideDisagreementResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type decideDisagreementResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type decideDisagreementResponseSuccess = decideDisagreementResponse200 & {
+  headers: Headers;
+};
+export type decideDisagreementResponseError = (
+  | decideDisagreementResponse400
+  | decideDisagreementResponse401
+  | decideDisagreementResponse403
+  | decideDisagreementResponse404
+  | decideDisagreementResponse409
+  | decideDisagreementResponse422
+  | decideDisagreementResponse500
+) & {
+  headers: Headers;
+};
+
+export type decideDisagreementResponse =
+  | decideDisagreementResponseSuccess
+  | decideDisagreementResponseError;
+
+export const getDecideDisagreementUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/disagreements/${slideId}/${objectId}`;
+};
+
+/**
+ * @summary Decide Disagreement
+ */
+export const decideDisagreement = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  decisionDraft: DecisionDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<decideDisagreementResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<decideDisagreementResponse>(getDecideDisagreementUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(decisionDraft),
+  });
+};
+
+export const getDecideDisagreementMutationKey = () => ["decideDisagreement"] as const;
+
+export const getDecideDisagreementMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof decideDisagreement>>,
+    TError,
+    DecideDisagreementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof decideDisagreement>>,
+  TError,
+  DecideDisagreementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDecideDisagreementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof decideDisagreement>>,
+    DecideDisagreementMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return decideDisagreement(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DecideDisagreementMutationResult = NonNullable<
+  Awaited<ReturnType<typeof decideDisagreement>>
+>;
+export type DecideDisagreementMutationBody = DecisionDraft;
+export type DecideDisagreementMutationError = Problem;
+export type DecideDisagreementMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: DecisionDraft;
+};
+
+/**
+ * @summary Decide Disagreement
+ */
+export const useDecideDisagreement = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof decideDisagreement>>,
+      TError,
+      DecideDisagreementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof decideDisagreement>>,
+  TError,
+  DecideDisagreementMutationVariables,
+  TContext
+> => {
+  return useMutation(getDecideDisagreementMutationOptions(options), queryClient);
+};
+
+export type clearDisagreementDecisionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearDisagreementDecisionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearDisagreementDecisionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearDisagreementDecisionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearDisagreementDecisionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearDisagreementDecisionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearDisagreementDecisionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearDisagreementDecisionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearDisagreementDecisionResponseSuccess = clearDisagreementDecisionResponse204 & {
+  headers: Headers;
+};
+export type clearDisagreementDecisionResponseError = (
+  | clearDisagreementDecisionResponse400
+  | clearDisagreementDecisionResponse401
+  | clearDisagreementDecisionResponse403
+  | clearDisagreementDecisionResponse404
+  | clearDisagreementDecisionResponse409
+  | clearDisagreementDecisionResponse422
+  | clearDisagreementDecisionResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearDisagreementDecisionResponse =
+  | clearDisagreementDecisionResponseSuccess
+  | clearDisagreementDecisionResponseError;
+
+export const getClearDisagreementDecisionUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+) => {
+  return `/api/review-tasks/${taskId}/disagreements/${slideId}/${objectId}`;
+};
+
+/**
+ * @summary Clear Disagreement Decision
+ */
+export const clearDisagreementDecision = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearDisagreementDecisionResponse> => {
+  return apiFetch<clearDisagreementDecisionResponse>(
+    getClearDisagreementDecisionUrl(taskId, slideId, objectId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getClearDisagreementDecisionMutationKey = () => ["clearDisagreementDecision"] as const;
+
+export const getClearDisagreementDecisionMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearDisagreementDecision>>,
+    TError,
+    ClearDisagreementDecisionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearDisagreementDecision>>,
+  TError,
+  ClearDisagreementDecisionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearDisagreementDecisionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearDisagreementDecision>>,
+    ClearDisagreementDecisionMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearDisagreementDecision(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearDisagreementDecisionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearDisagreementDecision>>
+>;
+
+export type ClearDisagreementDecisionMutationError = Problem;
+export type ClearDisagreementDecisionMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+};
+
+/**
+ * @summary Clear Disagreement Decision
+ */
+export const useClearDisagreementDecision = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearDisagreementDecision>>,
+      TError,
+      ClearDisagreementDecisionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearDisagreementDecision>>,
+  TError,
+  ClearDisagreementDecisionMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearDisagreementDecisionMutationOptions(options), queryClient);
+};
 
 export type listMyReviewTasksResponse200 = {
   data: MyTask[];

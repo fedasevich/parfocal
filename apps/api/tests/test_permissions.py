@@ -39,6 +39,7 @@ from parfocal_api.tables import (
     slide_counters,
     tenants,
     users,
+    verdicts,
 )
 from parfocal_common.db import async_database_url
 from parfocal_common.jobs import enqueue
@@ -102,6 +103,7 @@ class Workspace:
     submitted_task: uuid.UUID
     ready_task: uuid.UUID
     signed_task: uuid.UUID
+    queued_task: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -229,6 +231,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
         {"kind": "region", "geometry": SQUARE},
     ),
+    "decideDisagreement": lambda w: Call(
+        "PUT",
+        f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1",
+        {"decision": "keep-ai"},
+    ),
+    "clearDisagreementDecision": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1"
+    ),
     "importCases": lambda w: Call(
         "POST", f"/api/projects/{w.project}/case-imports", {"csv": "case\nMatrix", "dry_run": True}
     ),
@@ -304,6 +314,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -630,6 +641,29 @@ async def seed(database: str) -> Workspace:
                 )
                 for number in (2, 3, 4)
             ]
+            queued_task = await seed_task(
+                connection,
+                tenant_id,
+                case.project_id,
+                case.loose_slide_id,
+                result_set,
+                people[Role.RESEARCHER],
+                5,
+                signed=False,
+            )
+            await connection.execute(
+                insert(verdicts).values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    task_id=queued_task,
+                    slide_id=case.loose_slide_id,
+                    user_id=people[Role.RESEARCHER],
+                    kind="region",
+                    number=1,
+                    value="disagree",
+                    reason="not_class",
+                )
+            )
             await connection.execute(
                 insert(slide_counters).values(
                     tenant_id=tenant_id, slide_id=case.loose_slide_id, letter="R", last=3
@@ -694,6 +728,7 @@ async def seed(database: str) -> Workspace:
             submitted_task,
             ready_task,
             signed_task,
+            queued_task,
         )
     finally:
         await engine.dispose()

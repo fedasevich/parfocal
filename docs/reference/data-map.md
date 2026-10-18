@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 21 |
-| `personal` | 32 |
+| `phi` | 22 |
+| `personal` | 33 |
 | `secret` | 9 |
-| `operational` | 331 |
+| `operational` | 340 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -147,6 +147,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `project_id` | operational |
 | `source_name` | operational |
 | `class_id` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## disagreement_decisions
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `kind` | operational |
+| `number` | operational |
+| `decision` | operational |
+| `note` | phi |
+| `decided_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 

@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.disagreements import open_by_slide, queue_of
+from parfocal_api.disagreements import open_by_slide, open_count, queue_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -435,7 +435,7 @@ async def task_move(
         actor=await actor_for(connection, principal, task, None),
         signed_off=task.signed_off_at is not None,
         all_submitted=not unsubmitted,
-        open_disagreements=len(await queue_of(connection, task_id)),
+        open_disagreements=open_count(await queue_of(connection, task_id)),
     )
     action = AuditAction.TASK_SIGNED_OFF if move is Move.SIGN_OFF else AuditAction.TASK_REOPENED
     await apply(connection, principal, task, move, facts, action, {})
