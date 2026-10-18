@@ -1448,3 +1448,24 @@ disagreement_decisions = Table(
     CheckConstraint("number > 0", name="number"),
     one_of("decision", Decision),
 )
+
+opinions = Table(
+    "opinions",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("form_version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("answers", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=PHI),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "user_id"],
+        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+    ),
+    ForeignKeyConstraint(
+        ["project_id", "form_version"], ["opinion_forms.project_id", "opinion_forms.version"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+)

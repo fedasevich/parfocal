@@ -61,6 +61,7 @@ class AuditAction(StrEnum):
     REVIEW_VERDICT_CLEARED = "review.verdict-cleared"
     REVIEW_DECISION_SET = "review.decision-set"
     REVIEW_DECISION_CLEARED = "review.decision-cleared"
+    REVIEW_OPINION_SAVED = "review.opinion-saved"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"

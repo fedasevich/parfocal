@@ -24,6 +24,7 @@ from parfocal_api.tables import (
     ResultSource,
     ResultStatus,
     annotations,
+    opinions,
     projects,
     result_sets,
     review_assignments,
@@ -234,6 +235,7 @@ async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> li
                 annotations.c.task_id == task_id
             ),
             select(verdicts.c.slide_id, verdicts.c.user_id).where(verdicts.c.task_id == task_id),
+            select(opinions.c.slide_id, opinions.c.user_id).where(opinions.c.task_id == task_id),
         )
         .subquery()
     )

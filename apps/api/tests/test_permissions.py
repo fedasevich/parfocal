@@ -132,6 +132,7 @@ NEEDS_A_TASK = frozenset(
         "reopenSlideReview",
         "saveVerdict",
         "clearVerdict",
+        "saveOpinion",
     }
 )
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -230,6 +231,12 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST",
         f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
         {"kind": "region", "geometry": SQUARE},
+    ),
+    "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
+    "saveOpinion": lambda w: Call(
+        "PUT",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion",
+        {"answers": {"acceptable": 4}},
     ),
     "decideDisagreement": lambda w: Call(
         "PUT",

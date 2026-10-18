@@ -30,6 +30,7 @@ from parfocal_api.tables import (
     memberships,
     notification_preferences,
     notifications,
+    opinions,
     organisations,
     platform_operators,
     project_classes,
@@ -83,6 +84,7 @@ class Route:
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
+    "opinions",
     "disagreement_decisions",
     "verdicts",
     "review_edits",
@@ -432,6 +434,17 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.markers.add(verdict_note)
     await connection.execute(
+        insert(opinions).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+            form_version=1,
+            answers={"acceptable": 4},
+        )
+    )
+    await connection.execute(
         insert(disagreement_decisions).values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
@@ -515,6 +528,10 @@ GET_ROUTES = {
     "listMyReviewTasks": Route(Exposure.TENANT, lambda _: "/api/me/review-tasks"),
     "listTasksAssignedByMe": Route(Exposure.TENANT, lambda _: "/api/me/assigned-tasks"),
     "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
+    "getOpinion": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",
+    ),
     "listDisagreements": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements"
     ),

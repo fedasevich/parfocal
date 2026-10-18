@@ -973,6 +973,23 @@ export const NotificationKind = {
   "emergency-access": "emergency-access",
 } as const;
 
+export type OpinionAnswers = { [key: string]: unknown };
+
+export interface Opinion {
+  reviewer_id: string;
+  form_version: number;
+  questions: Question[];
+  answers: OpinionAnswers;
+  draft: boolean;
+  updated_at: string | null;
+}
+
+export type OpinionChangeAnswers = { [key: string]: unknown };
+
+export interface OpinionChange {
+  answers: OpinionChangeAnswers;
+}
+
 export interface OpinionForm {
   project_id: string;
   version: number;
@@ -1641,6 +1658,10 @@ export type GetReviewedLayerParams = {
 };
 
 export type ListVerdictsParams = {
+  reviewer_id?: string | null;
+};
+
+export type GetOpinionParams = {
   reviewer_id?: string | null;
 };
 
@@ -11828,6 +11849,366 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveOpinionResponse200 = {
+  data: Opinion;
+  status: 200;
+};
+
+export type saveOpinionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveOpinionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveOpinionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveOpinionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveOpinionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveOpinionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveOpinionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveOpinionResponseSuccess = saveOpinionResponse200 & {
+  headers: Headers;
+};
+export type saveOpinionResponseError = (
+  | saveOpinionResponse400
+  | saveOpinionResponse401
+  | saveOpinionResponse403
+  | saveOpinionResponse404
+  | saveOpinionResponse409
+  | saveOpinionResponse422
+  | saveOpinionResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveOpinionResponse = saveOpinionResponseSuccess | saveOpinionResponseError;
+
+export const getSaveOpinionUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/opinion`;
+};
+
+/**
+ * @summary Save Opinion
+ */
+export const saveOpinion = async (
+  taskId: string,
+  slideId: string,
+  opinionChange: OpinionChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveOpinionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveOpinionResponse>(getSaveOpinionUrl(taskId, slideId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(opinionChange),
+  });
+};
+
+export const getSaveOpinionMutationKey = () => ["saveOpinion"] as const;
+
+export const getSaveOpinionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveOpinion>>,
+    TError,
+    SaveOpinionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveOpinion>>,
+  TError,
+  SaveOpinionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveOpinionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveOpinion>>,
+    SaveOpinionMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return saveOpinion(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveOpinionMutationResult = NonNullable<Awaited<ReturnType<typeof saveOpinion>>>;
+export type SaveOpinionMutationBody = OpinionChange;
+export type SaveOpinionMutationError = Problem;
+export type SaveOpinionMutationVariables = { taskId: string; slideId: string; data: OpinionChange };
+
+/**
+ * @summary Save Opinion
+ */
+export const useSaveOpinion = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveOpinion>>,
+      TError,
+      SaveOpinionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveOpinion>>,
+  TError,
+  SaveOpinionMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveOpinionMutationOptions(options), queryClient);
+};
+
+export type getOpinionResponse200 = {
+  data: Opinion;
+  status: 200;
+};
+
+export type getOpinionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getOpinionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getOpinionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getOpinionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getOpinionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getOpinionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getOpinionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getOpinionResponseSuccess = getOpinionResponse200 & {
+  headers: Headers;
+};
+export type getOpinionResponseError = (
+  | getOpinionResponse400
+  | getOpinionResponse401
+  | getOpinionResponse403
+  | getOpinionResponse404
+  | getOpinionResponse409
+  | getOpinionResponse422
+  | getOpinionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getOpinionResponse = getOpinionResponseSuccess | getOpinionResponseError;
+
+export const getGetOpinionUrl = (taskId: string, slideId: string, params?: GetOpinionParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/opinion?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/opinion`;
+};
+
+/**
+ * @summary Get Opinion
+ */
+export const getOpinion = async (
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getOpinionResponse> => {
+  return apiFetch<getOpinionResponse>(getGetOpinionUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOpinionQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/opinion`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetOpinionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOpinion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOpinionQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOpinion>>> = ({ signal }) =>
+    getOpinion(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetOpinionQueryResult = NonNullable<Awaited<ReturnType<typeof getOpinion>>>;
+export type GetOpinionQueryError = Problem;
+
+export function useGetOpinion<TData = Awaited<ReturnType<typeof getOpinion>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params: undefined | GetOpinionParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinion>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinion<TData = Awaited<ReturnType<typeof getOpinion>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOpinion>>,
+          TError,
+          Awaited<ReturnType<typeof getOpinion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetOpinion<TData = Awaited<ReturnType<typeof getOpinion>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Opinion
+ */
+
+export function useGetOpinion<TData = Awaited<ReturnType<typeof getOpinion>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetOpinionParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOpinion>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetOpinionQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
