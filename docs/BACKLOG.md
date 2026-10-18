@@ -2717,7 +2717,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   A banner on any screen outside an open case when a STAT case is assigned, with an optional sound. While a slide is open nothing is shown (NOTIF-008).
   Done when E2E assigns a STAT case and the banner appears in another session, and does not appear in a session that has a case open until it leaves the case.
 
-- [ ] NOTIF-004 · Email templates without PHI
+- [x] NOTIF-004 · Email templates without PHI
   Done when tests confirm subjects and bodies contain no patient identifiers and link to the app.
   Refs [ADR 0039](adr/0039-email-through-resend-with-phi-rules.md), [ADR 0091](adr/0091-notification-catalogue-and-targets.md).
 
