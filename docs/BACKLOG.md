@@ -25,7 +25,7 @@ Task format:
 - When a decision changes a later task, edit that task and add an ADR rather than leaving the old text in place.
 - `poc/` means `/Users/yuriifedas/WebstormProjects/poc/` locally or `https://github.com/fedasevich/pathlogy-poc/blob/master/` on GitHub, and code references are links. `doc NN` means `poc/docs/NN-*.md`, listed with full links in [project/poc-reference.md](project/poc-reference.md). `kit:` names a UX kit page or wireframe (W1 to W73). W39 to W73 and Flows 9 to 30 came from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)), and the hi-fi mock has them as steps 23 to 35, from 23 Sign in and lock to 35 Empty and error states. `mock N` names step N of the converged mock tab, from 1 Home to 21 Shortcuts. Step 3 is Status board and step 4 Upload slides, so the case screens start at 5 Case at low power and 6 Area at 10x, and step 15 is Report and PDF ([ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)).
 - Tasks say what users must be able to do, the rules behind it and the tests that prove it. Layout, sizes, placement and wording follow the prototype at the time the task is built, so a later prototype change needs a backlog edit only when it changes behaviour or rules. `mock N` and `kit:` references point at the current design, not a fixed spec, and a test checks behaviour rather than a pixel layout unless the task says otherwise.
-- Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit) and doc 41 (what is clickable, tags, icons and type).
+- Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit), doc 41 (what is clickable, tags, icons and type) and doc 42 (round 5: upload by slide, the magnification chip, slide loading, verdict notes, passkeys and storage).
 - Epics with the milestone Idea and tasks whose title starts with `Idea:` are kept from the hospital direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). They are not planned. Don't start one unless the owner asks, and never make a planned task depend on one. A task that is needed again loses its `Idea:` prefix in a backlog edit with an ADR.
 - Tasks from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)) are backend first: models, rules, APIs, events and their tests. The screens for them are still changing in the prototype, so their UI tasks are added only when those screens settle, and no backend task here may depend on a layout.
 - Every feature epic starts with an `xxx-000` research check. It re-checks the current state of the art for that feature's libraries and patterns, confirms or revises the STACK decisions it relies on, and records the outcome as an ADR in `docs/adr/`.
@@ -648,6 +648,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, invitations keep working with the new roles, and an ADR supersedes ADR 0026. Hiding a project from a reviewer who is not in it is tested in PROJ-003.
   Depends on IAM-006, ADAPT-001. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
+- [ ] IAM-023 · Sign in and unlock with a passkey
+  Sign in and the lock screen offer "Sign in with a passkey" and "Unlock with a passkey" next to the other ways in. The button starts the BFF login with the identity provider's passwordless flow, the browser shows its own passkey window, and a passkey on a phone or security key works through the browser's QR option. Unlocking returns to the same view as IAM-021. Enrolment prompts, a passkey list in settings and an admin policy are not part of this task ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Done when E2E with a virtual WebAuthn authenticator signs in with a passkey and unlocks a locked slide to the same camera position, and a test shows a cancelled passkey window leaves the sign-in page usable.
+  Depends on IAM-001, IAM-002, IAM-021. Refs mock: signin/passkey, mock: signin/lockkey, doc 42.
+
 ---
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
@@ -803,7 +808,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 05 INGEST · Slide upload, validation and indexing
 
-Since [ADR 0053](adr/0053-ai-results-review-direction.md) an upload carries slides and their AI result files together through four steps, Files, Match, Check and Upload (mock: upload). Result files are read and checked by the RSET epic, and no model runs on arrival.
+Since [ADR 0053](adr/0053-ai-results-review-direction.md) an upload carries slides and their AI result files together through three steps, Files, Check and Upload (mock: upload, [ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)). Result files are read and checked by the RSET epic, and no model runs on arrival.
 
 Formats in scope, all read natively: Aperio SVS (JPEG and JPEG 2000), generic tiled TIFF, OME-TIFF (8 and 16 bit), Hamamatsu NDPI (including files above 4 GB), Ventana BIF, Leica SCN, Philips TIFF, Huron TIFF, ARGOS TIFF, OME-Zarr v0.4 and v0.5 (sharded). Out of scope for v1 (later epic): MRXS, iSyntax, CZI, VSI, DICOM WSI. Doc 08 has the per-format findings.
 
@@ -905,9 +910,9 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on CASES-006.
 
 - [ ] INGEST-021 · Upload wizard with slides and results
-  Opens from Upload in the top bar, the project page, Home's Start something and a drop anywhere on a project, with a drop overlay. Four steps, Files, Match, Check and Upload, in one full-width wizard whose steps can be clicked once reached. Files has two zones, slides and AI result files, each with drop and choose and an empty, dragging and listing state. Match pairs results with slides (RSET-004) and groups slides into cases from file names or keeps them loose (CASES-024). Check shows one zone per problem with its fix (INGEST-022, RSET-005), and only Start upload is a filled button. Upload shows one bar for everything and one per file (INGEST-024). Closing keeps the upload going in the jobs tray (JOBS-003). A side summary shows where the files go, the privacy mode and the counts so far.
-  Done when component tests cover each step and state, and E2E drops a folder of slides and results on a project, fixes a pairing, starts the upload, closes the window and finds the upload in the jobs tray.
-  Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
+  Opens from Upload in the top bar, the project page, Home's Start something and a drop anywhere on a project, with a drop overlay. Three steps, Files, Check and Upload, in one full-width wizard whose steps can be clicked once reached ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)). Files has one drop area for slides, result files or a whole folder, and when empty it explains the folder shape that works (a folder is a case, a result sits next to its slide with the same name or in a folder named like the slide). Dropped files are listed grouped by case and slide, with each result file under the slide it was paired with (RSET-004) and how it was paired, an "Add a result file" row per slide and a plain line for slides without results. Results that pair with no slide wait in "Not matched yet" with a slide picker and an Undo after placing. One line says how files were grouped and opens the pairing rule and the case choice (CASES-024). From a link or storage uses the same grouped list. Check shows one zone per problem with its fix (INGEST-022, RSET-005), including a result still not placed, and only Start upload is a filled button. Upload shows one bar for everything and one per file (INGEST-024). Closing keeps the upload going in the jobs tray (JOBS-003). A side summary shows where the files go, the privacy mode and the counts so far.
+  Done when component tests cover each step and state, the folder shape help and placing an unmatched result, and E2E drops a folder of slides and results on a project, places an unmatched result on its slide, starts the upload, closes the window and finds the upload in the jobs tray.
+  Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, doc 42, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] INGEST-022 · Per-file problems in the Check step
   One zone per problem, each with its fix: a slide that cannot be read, an MRXS without its data folder (add the folder), a duplicate already in the project (skip or keep both), and a result file with parse errors, a scale mismatch or new classes (RSET-005). Files with a problem wait and the rest upload. The step counts the open problems down to "Nothing needs you".
@@ -1136,6 +1141,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   A shared interaction signal that background inference respects. Pause while moving, resume 200 ms after rest.
   Done when the perf test keeps 60 fps while panning during a region pass (POC without pause: 28 to 32 fps).
   Refs doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
+
+- [ ] VIEW-041 · How a slide loads
+  The coarse level shows first, stretched under the view, and sharper tiles fade in over it without ever showing white or black. A quiet checker in chrome colours marks only places where no level has loaded, and outside the slide bounds the canvas is the plain background. Overlays draw at once over soft tiles and the checker. A hint by the magnification chip ("Loading sharper tiles · 12 left") appears after 1 s of waiting, and after 5 s it names the slow source and how long it answers, with a link to its status. Failed tiles keep the grey placeholder with Retry ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Done when golden tests show the coarse level under missing tiles, the checker only where no level loaded and the background past the edge, a test with a delayed tile server checks the hint at 1 s and the slow source at 5 s, and no frame shows an empty tile during a fling on the throttled fixture.
+  Depends on VIEW-002, VIEW-004, NAV-001. Refs mock: states/loading, mock: states/unloaded, mock: states/slow, doc 42.
 
 ### Alternate renderers (developer drawer only)
 
@@ -1616,8 +1626,8 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the minimap state machine and placement algorithm are written as an ADR from kit and mock specs.
 
 - [ ] NAV-001 · Magnification bar
-  Presets 1.25×, 2.5×, 5×, 10×, 20×, 40× with Alt+1 to Alt+6, nearest preset highlighted, option to label as zoom percent.
-  Done when tests cover preset jumps and highlighting at intermediate zooms.
+  Presets 1.25×, 2.5×, 5×, 10×, 20×, 40× with Alt+1 to Alt+6, nearest preset highlighted, option to label as zoom percent. Folded by default to a chip with the magnification and the scale bar, opening to the presets, readout and brightness on hover and focus, while Alt plus a number is held, for 2 s after a zoom and while the brightness popover is open. Brightness shows when folded only if it is not 100%. No animation under reduced motion. Overlays that keep clear of the bar use its current size ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Done when tests cover preset jumps, highlighting at intermediate zooms, each way the chip opens and folds back, and the blocked area in both states.
   Refs mock §2.6.
 
 - [ ] NAV-002 · Scale bar and readout
@@ -2145,9 +2155,9 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-001. Refs kit W42.
 
 - [ ] CASES-016 · Slides that match no case
-  A slide whose file name names no case stays loose in the project, and a result file that matches no slide waits in the upload's Match step until the user picks one. A loose slide can be filed into a case later.
+  A slide whose file name names no case stays loose in the project, and a result file that matches no slide waits in the upload's Not matched yet list until the user picks one. A loose slide can be filed into a case later.
   Done when API tests cover loose slides, filing one later and an upload whose other files are unaffected.
-  Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/match.
+  Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/files.
 
 - [ ] CASES-017 · Moving a slide between cases
   A slide moves with its history to another case in the same project. Its result sets, IDs, verdicts and threads move with it, and the researchers of tasks that hold it are notified. A move is refused while a task that holds the slide is signed off, until it is reopened (ADJ-004). A reason is required and both cases log the move.
@@ -2185,7 +2195,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
 - [ ] CASES-024 · Sorting dropped files into cases
   Given a set of dropped files (slides and AI result files), decide for each slide its case from the file name or keep it loose, leave out slides the project already has, and hand result files to pairing (RSET-004). Every decision can be changed before anything is applied. Applying is one transaction: cases are created, slides go to their cases, and result sets are created for the paired files.
   Done when API tests cover each decision, an override, a duplicate, a file with no case and a failure that leaves nothing half applied.
-  Depends on CASES-013, INGEST-011, PROJ-001. Refs mock: upload/match, doc 37 "AI results and import".
+  Depends on CASES-013, INGEST-011, PROJ-001. Refs mock: upload/files, doc 37 "AI results and import".
 
 - [ ] CASES-025 · Idea: Folder screens
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Folders by service are an idea. Projects group the work.
@@ -3057,9 +3067,9 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-001, RSET-000.
 
 - [ ] RSET-004 · Pairing results with slides
-  Results pair with slides by file name, an embedded slide ID or the folder, each with how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
+  Results pair with slides on drop by folder shape first (next to the slide or in a folder named like it), then file name, then an embedded slide ID, each with how it was paired and how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
   Done when unit tests cover each pairing rule and a tie, and API tests cover an override and an unpaired result.
-  Depends on RSET-001. Refs mock: upload/match.
+  Depends on RSET-001. Refs mock: upload/files.
 
 - [ ] RSET-005 · Import checks and fixes
   Schema and parse errors name the line or feature and offer a downloadable error report and "import the other N". A coordinate or scale mismatch guesses the level or microns per pixel and shows both overlays with the share on tissue. Unknown classes are mapped to project classes once and remembered (PROJ-004). Missing scores count as no score or as 1.0.
@@ -3231,6 +3241,16 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   One opinion per task, reviewer and slide on the form version the task pinned, saved as a draft by merging answers, checked against each question's kind, locked once the slide is submitted until it is reopened, and audited without the answers. The reviewer and project owners read it.
   Done when API tests cover every question kind, a merge, a refused answer, the pinned version, the lock after submit and the roles.
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
+
+- [ ] GUIDE-010 · Notes on verdicts
+  After any verdict, in guided review, the full viewer and the cell view, an "Add a note" link and the N key open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the verdict, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's verdict in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Done when component tests cover writing, editing and cancelling a note with each verdict, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
+  Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
+
+- [ ] GUIDE-011 · Optional and several reasons, reasons on Unsure
+  The verdict API takes zero or more reason codes on Disagree instead of exactly one, and Unsure takes the optional codes `need_deeper_level`, `need_ihc`, `border_unclear` and `out_of_focus`. Existing verdicts keep their single reason as a set of one. The evaluation report counts each code of a verdict once ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md), amending [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md)).
+  Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per verdict.
+  Depends on GUIDE-001, EVAL-001.
 
 
 ---
@@ -3431,7 +3451,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on SHELL-001, IAM-022. Refs mock: admin.
 
 - [ ] ADMIN-002 · Overview
-  Stat tiles and a short summary per section.
+  Stat tiles and a short summary per section. Storage shows the same split bar as ADMIN-006 in a compact size.
   Done when component tests render seeded data.
   Depends on ADMIN-001.
 
@@ -3451,8 +3471,8 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, JOBS-005, JOBS-006.
 
 - [ ] ADMIN-006 · Storage, sources, API and webhooks
-  Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003).
-  Done when component tests cover each list and E2E creates and revokes a token.
+  Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003). Space is one bar split by kind (copied slides, tile cache for remote slides, results and reviews, free) with a legend and sizes, slides read in place as a line under it, and a by-project list largest first. The colours differ in lightness and avoid the tumor red ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Done when an API test checks the space per kind and per project adds up to the total, component tests render the bar with seeded usage including an empty workspace and a nearly full one, and E2E creates and revokes a token.
   Depends on ADMIN-001, REMOTE-002, IAM-011.
 
 - [ ] ADMIN-007 · Audit log and security

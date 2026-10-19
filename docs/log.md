@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-19
+
+- Backlog brought in line with prototype round 5 (POC doc 42, [ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)). The upload has three steps, with results listed under their slides and Match folded into Files (INGEST-021, CASES-016, CASES-024, RSET-004). NAV-001 folds the magnification bar to a chip, ADMIN-002 and ADMIN-006 show space as a split bar per kind and per project. New tasks are VIEW-041 (how a slide loads), GUIDE-010 (notes on verdicts), GUIDE-011 (optional and several reasons, reasons on Unsure, amending ADR 0072 after GUIDE-001 was built with a required reason) and IAM-023 (sign in and unlock with a passkey).
+
 ## 2026-10-18
 
 - CASES-009 (search API) is not ticked. On the hosted CI runner its latency test on 100,000 cases gave a median of 102 ms and a p95 of 118 ms, over the 100 ms budget, while the same test passed locally. The test now runs only with `PARFOCAL_PERF=1`. TODO: make case search meet the budget on slower machines (ADR 0094 option 2) or settle where the budget is measured.

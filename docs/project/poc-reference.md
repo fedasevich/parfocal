@@ -58,6 +58,7 @@ In `BACKLOG.md`, a path such as `poc/src/slide/ventana.ts` means `/Users/yuriife
 | 39 | Mock feedback round 3 | [39-ui-feedback-round-3.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/39-ui-feedback-round-3.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/39-ui-feedback-round-3.md` |
 | 40 | UI and UX audit of the Parfocal mock | [40-ui-ux-audit.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/40-ui-ux-audit.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/40-ui-ux-audit.md` |
 | 41 | What is clickable, tags, icons and type | [41-clickable-pass.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/41-clickable-pass.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/41-clickable-pass.md` |
+| 42 | Round 5: upload by slide, magnification chip, slide loading, verdict notes, passkeys, storage | [42-ui-feedback-round-5.md](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/42-ui-feedback-round-5.md) | `/Users/yuriifedas/WebstormProjects/poc/docs/42-ui-feedback-round-5.md` |
 
 ## Other material
 

@@ -100,3 +100,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0092](0092-email-digest-and-quiet-hours.md) | Each person chooses immediate, hourly or daily email and quiet hours in their own time zone, and mandatory kinds are never held | Accepted | 2026-10-18 |
 | [0093](0093-evaluation-metrics-and-datasets.md) | Model evaluation uses PQ, AJI, mIoU, NoC, ECE and FROC on held-out sets kept outside the repository, each used within its licence | Accepted | 2026-10-18 |
 | [0094](0094-search-on-postgres.md) | Search runs in Postgres under row-level security, with labels matched by ILIKE and patients by whole-word blind tokens | Accepted | 2026-10-18 |
+| [0095](0095-ux-round-5-upload-by-slide-and-verdict-notes.md) | Upload has three steps with results under their slides, verdict reasons become optional and several, the magnification bar folds to a chip and slides load coarse first, plus passkey sign-in and the storage bar | Accepted | 2026-10-19 |
