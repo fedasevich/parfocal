@@ -19,7 +19,7 @@
       "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1.svs",
       "sha256": "00a3d54482cd707abf254fe69dccc8d06b8ff757a1663f1290c23418c480eb30",
       "bytes": 177552579,
-      "groups": ["formats"]
+      "groups": ["formats", "viewer"]
     },
     {
       "file": "CMU-1.tiff",

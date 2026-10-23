@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { join, normalize } from "node:path";
+import { extname, join, normalize } from "node:path";
 
 export interface Served {
   readonly origin: string;
@@ -13,6 +13,19 @@ export interface Served {
 
 export interface ServeOptions {
   readonly spaFallback?: boolean;
+  readonly headers?: Readonly<Record<string, string>>;
+}
+
+const contentTypes: Readonly<Record<string, string>> = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".wasm": "application/wasm",
+};
+
+function contentType(path: string): Record<string, string> {
+  const type = contentTypes[extname(path)];
+  return type ? { "content-type": type } : {};
 }
 
 const fallbackPage = "<!doctype html><html><body>app</body></html>";
@@ -31,21 +44,28 @@ function sendRange(
   response: ServerResponse,
   path: string,
   size: number,
+  headers: Readonly<Record<string, string>>,
 ): void {
   const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range ?? "");
   if (range === null) {
-    response.writeHead(200, { "content-length": size, "accept-ranges": "bytes" });
+    response.writeHead(200, {
+      ...headers,
+      ...contentType(path),
+      "content-length": size,
+      "accept-ranges": "bytes",
+    });
     createReadStream(path).pipe(response);
     return;
   }
   const start = Number(range[1]);
   const end = Math.min(range[2] ? Number(range[2]) : size - 1, size - 1);
   if (start >= size) {
-    response.writeHead(416, { "content-range": `bytes */${size}` });
+    response.writeHead(416, { ...headers, "content-range": `bytes */${size}` });
     response.end();
     return;
   }
   response.writeHead(206, {
+    ...headers,
     "content-length": end - start + 1,
     "content-range": `bytes ${start}-${end}/${size}`,
     "accept-ranges": "bytes",
@@ -74,7 +94,7 @@ export async function serve(
     void (async () => {
       const size = path === null ? null : await sizeOf(path);
       if (path !== null && size !== null) {
-        sendRange(request, response, path, size);
+        sendRange(request, response, path, size, options.headers ?? {});
       } else if (options.spaFallback) {
         response.writeHead(200, { "content-type": "text/html" });
         response.end(fallbackPage);

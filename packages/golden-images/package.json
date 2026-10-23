@@ -20,8 +20,11 @@
     "pngjs": "7.0.0"
   },
   "devDependencies": {
+    "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
+    "@parfocal/viewer-engine": "workspace:*",
     "@playwright/test": "1.64.0",
-    "@types/pngjs": "6.0.5"
+    "@types/pngjs": "6.0.5",
+    "vite": "8.3.3"
   }
 }

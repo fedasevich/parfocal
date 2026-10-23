@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 
-export const groups = ["small", "formats", "big", "huge", "camelyon"] as const;
+export const groups = ["small", "formats", "viewer", "big", "huge", "camelyon"] as const;
 export type Group = (typeof groups)[number];
 
 export type RemoteFixture = {

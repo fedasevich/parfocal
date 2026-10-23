@@ -4,20 +4,33 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./viv": "./src/viv/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --test \"test/**/*.test.ts\""
+    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:browser": "playwright test"
   },
   "imports": {
     "#*": "./src/*"
   },
   "devDependencies": {
     "@parfocal/test-fixtures": "workspace:*",
-    "@parfocal/typescript-config": "workspace:*"
+    "@parfocal/typescript-config": "workspace:*",
+    "@playwright/test": "1.64.0",
+    "vite": "8.3.3"
   },
   "dependencies": {
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/geo-layers": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
+    "@hms-dbmi/viv": "0.23.0",
+    "@luma.gl/constants": "9.4.2",
+    "@luma.gl/core": "9.4.2",
+    "@luma.gl/engine": "9.4.2",
+    "@luma.gl/shadertools": "9.4.2",
+    "@luma.gl/webgl": "9.4.2",
     "geotiff": "3.0.5",
     "zarrita": "0.7.5"
   }

@@ -33,7 +33,11 @@ The suite only needs a page that draws a view and a way to read the frame back.
 | Empty-frame guard | `assertFrameHasContent(frame)` rejects cleared, uniform and transparent frames before any comparison, which is the failure doc 23 found timing faster than a real frame |
 | Comparison | `checkGolden(frame, { name, format, goldenDirectory, outputDirectory })` |
 
-When the Viv route exists, its spec opens the route with a known slide and view, waits for the viewer's loaded signal and calls the same two functions. Each real slide format then gets its own scenes and goldens, and the tolerance comes from `FORMAT_CODECS` and `CODEC_TOLERANCES` in `src/tolerances.ts`.
+## The Viv route on real slides
+
+`render/viv-cmu1.spec.ts` starts a Vite server on `harness/viv`, a page that mounts the viewer engine with the Viv route from `@parfocal/viewer-engine/viv` and serves cached fixtures with range requests under `/fixtures/`. Each scene in `render/viv-scenes.ts` names a fixture, a format id and a view (fitted, a magnification at a slide point, or a raw camera). The page waits for the route's `whenIdle()`, and the spec captures the canvas with `captureScreenshot` and calls `checkGolden`. The same spec renders deliberately broken routes (red and blue swapped, YCbCr handed over as RGB, the 4x level read as 2x) and expects each to fail.
+
+The CMU-1.svs scenes need `pnpm fixtures viewer`. They skip when the slide is missing, unless `PARFOCAL_REQUIRE_FIXTURES` names the `viewer` group, as the `browser` CI job does. `GOLDEN_MEASURE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-measure.spec.ts` prints the measurement table of the [Viv route result](../../docs/results/2026-10-23-viv-route-goldens.md). Each further slide format gets its own scenes and goldens, and the tolerance comes from `FORMAT_CODECS` and `CODEC_TOLERANCES` in `src/tolerances.ts`.
 
 ## Tolerances
 
@@ -45,4 +49,4 @@ A pixel differs when any of R, G or B is further than `maxChannelDelta` from the
 | jpeg | 4 | 0.5% | 1.0 | SVS JPEG, NDPI, MRXS, SCN, BIF, Philips TIFF, generic JPEG TIFF, CAMELYON16 TIFF |
 | jpeg2000 | 6 | 1% | 1.5 | SVS JPEG 2000 |
 
-These are starting values chosen before a real decoder exists. The lossless row is wider than the measured SwiftShader noise, which was zero, so it absorbs a backend change of 1 level ([result](../../docs/results/2026-10-23-golden-image-tolerances.md)). TODO: tune the jpeg and jpeg2000 rows when the Viv route decodes real fixtures. A swapped R and B channel gives a mean error above 26 on every synthetic scene, so it fails all three rows.
+These are starting values chosen before a real decoder exists. The lossless row is wider than the measured SwiftShader noise, which was zero, so it absorbs a backend change of 1 level ([result](../../docs/results/2026-10-23-golden-image-tolerances.md)). The Viv route drew CMU-1.svs identically on every SwiftShader run, Metal stayed inside the jpeg row, and a swap or an unconverted YCbCr frame failed it by 4 to 94 times the mean error it allows, so the jpeg row stays as it is ([result](../../docs/results/2026-10-23-viv-route-goldens.md)). TODO: tune the jpeg2000 row when VIEW-011 (SVS JPEG 2000) decodes it. A swapped R and B channel gives a mean error above 26 on every synthetic scene, so it fails all three rows.

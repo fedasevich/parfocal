@@ -1,6 +1,6 @@
 {
   "extends": "@parfocal/typescript-config/node.json",
-  "include": ["test"],
+  "include": ["test", "browser", "playwright.config.ts"],
   "compilerOptions": {
     "lib": ["es2024", "dom", "dom.iterable"]
   }

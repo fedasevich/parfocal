@@ -17,6 +17,11 @@ export {
   slideToScreen,
 } from "./camera/camera.ts";
 export {
+  magnificationAtZoom,
+  micronsPerScreenPixelAtOneX,
+  zoomForMagnification,
+} from "./camera/magnification.ts";
+export {
   createViewerEngine,
   EngineDisposedError,
   SlideOpenSupersededError,

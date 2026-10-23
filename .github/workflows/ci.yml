@@ -142,8 +142,15 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: browser
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+      - run: pnpm fixtures small viewer
       - run: google-chrome --version
       - run: pnpm test:browser
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
 
   ci-ok:
     if: always()

@@ -17,7 +17,14 @@
     },
     "test:browser": {
       "dependsOn": ["topo"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "PARFOCAL_REQUIRE_FIXTURES",
+        "PARFOCAL_FIXTURES_DIR",
+        "XDG_CACHE_HOME",
+        "GOLDEN_UPDATE",
+        "GOLDEN_MEASURE"
+      ]
     }
   }
 }

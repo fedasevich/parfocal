@@ -17,11 +17,17 @@ import {
 const manifest = loadManifest();
 
 test("every group has fixtures and the default group stays small", () => {
-  for (const group of ["small", "formats", "big", "huge", "camelyon"]) {
+  for (const group of ["small", "formats", "viewer", "big", "huge", "camelyon"]) {
     assert.ok(selectFixtures(manifest, [group]).length > 0, group);
   }
   const small = selectFixtures(manifest, defaultGroups);
   assert.ok(small.reduce((sum, fixture) => sum + fixture.bytes, 0) < 10 * 1048576);
+});
+
+test("the viewer group holds CMU-1.svs for the browser goldens and stays under 256 MB", () => {
+  const viewer = selectFixtures(manifest, ["viewer"]);
+  assert.ok(viewer.some((fixture) => fixture.file === "CMU-1.svs"));
+  assert.ok(viewer.reduce((sum, fixture) => sum + fixture.bytes, 0) < 256 * 1048576);
 });
 
 test("all selects every remote fixture and unknown groups fail", () => {

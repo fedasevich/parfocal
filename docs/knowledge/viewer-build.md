@@ -66,3 +66,47 @@ A `MultiscaleImageLayer` over a source that only implemented `getTile` threw fro
 ## Engine methods must not need this
 
 React calls the `subscribe` and `getSnapshot` functions given to `useSyncExternalStore` unbound. The viewer engine returns closures rather than class methods, so `engine.subscribeCamera` can be passed as it is. Keep it that way when the engine grows. Source: VIEW-001, [ADR 0100](../adr/0100-viewer-hot-path-state-outside-react.md).
+
+## Viv addresses levels as exact powers of two
+
+`MultiscaleImageLayer` asks loader entry `i` for tile `z = -i` and places it as a `2^i` downsample, using the tile's own width and height for its bounds. Aperio stores 1x, 4x and 16x, so the route builds a virtual ladder (`virtualLadder` in `src/viv/viv-levels.ts`) where each `2^i` entry reads the finest real level not finer than it and box-averages by the residual factor. For CMU-1.svs that is nine entries, the last averaging the 16x level by 16. A short edge tile must keep its true size, or the edge stretches. Source: VIEW-002, [ADR 0102](../adr/0102-viv-route-feeds-a-virtual-rgb-ladder.md).
+
+## Tell Viv the planes are RGB, because the source already converted them
+
+The PixelSource returns RGB for YCbCr files (`readRGB`), so the route sets `meta.photometricInterpretation` to 2 on every level. Setting 6 as well would convert twice. Handing Viv unconverted Y, Cb and Cr as RGB misses the CMU-1.svs goldens by 6.5 to 94 levels of mean error. Source: VIEW-002, [result](../results/2026-10-23-viv-route-goldens.md).
+
+## Aborted Viv tiles must reject with Viv's sentinel string
+
+Viv catches `"__vivSignalAborted"` from `getTile` and `getRaster` and drops it silently. Any other rejection from the background `getRaster` becomes an unhandled rejection in the page. The sentinel is not exported by `@hms-dbmi/viv`, so `viv-levels.ts` holds the string, typed as `unknown` so that `only-throw-error` accepts throwing it. Source: VIEW-002.
+
+## Viv's prop types reject pickable and need dtype
+
+`new MultiscaleImageLayer<[]>({...})` type-checks only with `dtype` set and without `pickable`, although the layer accepts `pickable` at runtime and defaults it to `true`. The route spreads `{ pickable: false }` typed as `object`. Source: VIEW-002.
+
+## Wait for idle before capturing a Viv frame
+
+A golden capture needs the layer loaded, no tile read in flight and nothing left for deck to draw. `onViewportLoad` alone fires before the background `getRaster` of the coarsest level finishes. The route's `whenIdle()` checks `layer.isLoaded`, its own in-flight count and `deck.needsRedraw({ clearRedrawFlags: false })` on two calm frames in a row. With that, CMU-1.svs frames were byte-identical over five SwiftShader runs. Source: VIEW-002, [result](../results/2026-10-23-viv-route-goldens.md).
+
+## Turborepo strips environment variables from browser suites
+
+Turborepo runs tasks in strict environment mode, so `PARFOCAL_REQUIRE_FIXTURES`, `PARFOCAL_FIXTURES_DIR`, `XDG_CACHE_HOME`, `GOLDEN_UPDATE` and `GOLDEN_MEASURE` reach `test:browser` only because `turbo.json` lists them in `passThroughEnv`. Add any new variable a browser suite reads there, or it is silently unset under `pnpm test:browser`. Source: VIEW-002.
+
+## Measure the memory test after a warm-up cycle
+
+On SwiftShader with the CI slides the JavaScript heap grew 12.7% from the first slide open to the 20th switch with exactly one `Deck` alive throughout. Heap snapshots put 82% of that in V8 compiled code, built while each reader, codec and Viv path ran for the first time, and the heap was flat from the tenth visit on. The memory test therefore opens every slide once before it takes the baseline. Use `MEMORY_SNAPSHOTS=0,5,20` on the memory spec to write snapshots and diff them by node type when the heap grows again. Source: VIEW-030, [result](../results/2026-10-23-memory-teardown-swiftshader.md), [ADR 0103](../adr/0103-memory-settings-and-test-baseline.md).
+
+## A finalized deck can outlive dispose by one task
+
+Right after `disposeDeck` one `Deck` was sometimes still reachable through `Runtime.queryObjects`, while its device and canvas context were already gone, and it was collected by the next count. Count after dispose more than once, or poll, before calling it a leak. A leak keeps the device and canvas context too. Source: VIEW-030.
+
+## A deck disposed before its device exists leaks the device
+
+deck.gl creates its luma.gl device asynchronously. When `finalize()` runs first, `deck.device` is still null and the device that arrives later keeps its canvas context and observer alive. `disposeDeck` reads the pending device from `deck.animationLoop.props.device` and releases it when it resolves. Source: VIEW-030.
+
+## Viv's uint8 textures and r8unorm
+
+Viv 0.23's `XRLayer` uploads `Uint8` channels as `r8uint` with nearest filtering and as an `r32float` copy with linear filtering, and its shader applies contrast limits in 0 to 255. `installUint8TextureUpload(XRLayer)` uploads `r8unorm`, switches the sampler to `sampler2D` and multiplies the intensity by 255 in the `DECKGL_PROCESS_INTENSITY` hook, which drew within 1 level of Viv's frames. `XRLayer` used on its own needs a `selections` prop, or the colour palette extension counts zero channels and also draws black. Interleaved RGB goes through Viv's `BitmapLayer` as `rgba8unorm` and is not affected. Source: VIEW-030, [ADR 0103](../adr/0103-memory-settings-and-test-baseline.md).
+
+## Playwright empties test-results before a run
+
+Playwright clears its output folder, `test-results/` by default, at the start of every run. The memory spec writes its JSON reports and heap snapshots there, so copy them elsewhere before the next run if they are needed. Source: VIEW-030.
