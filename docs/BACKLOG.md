@@ -1080,7 +1080,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 16, doc 34 §1.
 
 - [ ] VIEW-022 · Keyboard navigation
-  Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets.
+  Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
 
 - [ ] VIEW-023 · Touch navigation
@@ -1161,13 +1161,29 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when unit tests throw past each edge and check the camera stops there, check the zoom range on slides of different sizes and viewports, and check a resize re-clamps.
   Depends on VIEW-020. Refs [`poc/src/camera/viewport.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/viewport.ts), [`poc/src/camera/camera-controller.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-controller.ts), doc 06 §17, [ADR 0104](adr/0104-camera-controller-motion.md).
 - [ ] VIEW-043 · Drags that always end
-  Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning.
+  Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning. Drags and pinches read `getCoalescedEvents()` where the browser has it, so a fast stroke keeps every sample for the release velocity.
   Done when browser tests release the button outside the viewer, over an overlay, after a lost capture and after a window blur, and the drag ends every time with no pan on the next mouse move.
   Depends on VIEW-020. Refs doc 06 §15, doc 16.
 - [ ] VIEW-044 · Prefetch where the view is heading
   Predict the next view from a fast, straight pan or a steady hover and request its tiles at low priority before they enter the view. Velocity is weighted over the last 160 ms with a 55 ms half-life, a path straighter than 0.7 is needed, the lead is 300 ms and at most 1.25 viewports. Prefetch jobs go through the decode pool behind visible tiles and are dropped by its queue rules, never by aborting a download. The developer drawer can turn it off and show the vector.
   Done when a test on a scripted straight pan shows the predicted tiles requested before they enter the view, a zig-zag pan prefetches nothing, and a result file records time to a sharp view at 100 ms RTT with and without prediction.
   Depends on VIEW-004, VIEW-020. Refs [`poc/src/camera/motion-predictor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/motion-predictor.ts), doc 34 §2.
+- [ ] VIEW-045 · Camera feel profiles
+  Every camera tunable lives in one typed profile that the controller reads live: coast decay and release speed, zoom ease, wheel and pinch rates, the per-event zoom cap, flight duration bounds, keyboard pan speed and the zoom anchor (cursor or view centre). Three presets ship. Smooth is the default with the POC's tuned values, Precise has no coasting and short eases, and Instant turns every motion into a cut. Reduced motion forces Instant. SET-006 (navigation and devices section) maps the settings onto a profile.
+  Done when unit tests replay the same scripted input under each preset and check the expected differences, and switching profile mid-motion neither jumps nor leaves a motion running.
+  Depends on VIEW-020. Refs [ADR 0104](adr/0104-camera-controller-motion.md), [`poc/src/camera/camera-physics.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-physics.ts).
+- [ ] VIEW-046 · Objective detents on wheel zoom
+  An optional setting, off by default. A continuous wheel or pinch zoom that crosses 5×, 10×, 20× or 40× holds there briefly, so a pathologist can land on an objective without the keyboard. The hold is released by continuing to zoom, and keyboard and preset zooms ignore it. TODO: the hold length and the zoom distance that releases it need a manual check with a mouse and a trackpad, recorded as a result file.
+  Done when unit tests replay mouse and trackpad traces through each detent and check the stop and the release, and a test confirms nothing changes when the setting is off.
+  Depends on VIEW-021, VIEW-045.
+- [ ] VIEW-047 · View history
+  Jumps (fly-to, presets, fit, minimap clicks, area and object navigation) record the view they left. Continuous pans and zooms count as one entry once the camera rests. Back and forward keys from the key registry move through the last 50 views with a fly-to, and the history is per slide and cleared on a slide switch.
+  Done when unit tests cover recording, coalescing a pan into one entry, back and forward, and the cap, and a browser test goes back after a minimap jump and lands on the old view.
+  Depends on VIEW-020, CMD-001.
+- [ ] VIEW-048 · Open fitted to the tissue
+  A slide opens fitted to the bounding box of its tissue mask with a small margin instead of the whole scan with its empty glass. `0` and the fit command use the same box. Without a mask the whole slide is fitted.
+  Done when unit tests fit a slide with and without a mask, and a golden test opens a CMU-1.svs fixture with a mask fitted to its tissue.
+  Depends on VIEW-020, INGEST-012.
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.
@@ -2616,7 +2632,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting and the locked cutoff cannot be edited by a pathologist.
 
 - [ ] SET-006 · Navigation and devices section
-  Main device, wheel mode, double-click behaviour, speed per device, invert zoom, calibrate device.
+  Main device, wheel mode, double-click behaviour, speed per device, invert zoom, calibrate device. Camera feel picks a VIEW-045 (camera feel profiles) preset, Smooth, Precise or Instant, with overrides for coasting, animated jumps, zoom anchor at the cursor or the view centre, and objective detents (VIEW-046). A small live preview shows the chosen feel.
   Done when tests cover each setting and per-device speed persistence.
 
 - [ ] SET-007 · Shortcuts section
