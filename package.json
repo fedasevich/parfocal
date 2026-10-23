@@ -9,6 +9,9 @@
   "scripts": {
     "prepare": "lefthook install",
     "test": "turbo run test",
+    "test:browser": "turbo run test:browser --concurrency=1",
+    "golden:update": "pnpm --filter @parfocal/golden-images golden:update",
+    "latency-proxy": "pnpm --filter @parfocal/latency-proxy start",
     "test:guards": "node --test \"scripts/*.test.ts\"",
     "board": "python3 scripts/board.py serve --open",
     "board:build": "python3 scripts/board.py build",

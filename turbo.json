@@ -14,6 +14,10 @@
     "test": {
       "dependsOn": ["topo"],
       "outputs": []
+    },
+    "test:browser": {
+      "dependsOn": ["topo"],
+      "cache": false
     }
   }
 }

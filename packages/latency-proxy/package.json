@@ -1,0 +1,23 @@
+{
+  "name": "@parfocal/latency-proxy",
+  "description": "HTTP proxy that adds a configurable round-trip time and bandwidth limit for perf tests",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:browser": "playwright test",
+    "measure": "node scripts/measure.ts",
+    "start": "node src/cli.ts"
+  },
+  "imports": {
+    "#*": "./src/*"
+  },
+  "devDependencies": {
+    "@parfocal/typescript-config": "workspace:*",
+    "@playwright/test": "1.64.0"
+  }
+}

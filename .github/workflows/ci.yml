@@ -135,9 +135,19 @@ jobs:
       - if: failure()
         run: docker compose logs
 
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browser
+      - run: google-chrome --version
+      - run: pnpm test:browser
+
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, db, formats, e2e]
+    needs: [lint, typecheck, test, db, formats, e2e, browser]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"

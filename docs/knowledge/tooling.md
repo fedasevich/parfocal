@@ -101,3 +101,23 @@ pydantic-settings fills required fields from the environment, but basedpyright r
 ## `pnpm check` also checks files you have not staged
 
 Biome and ruff in `pnpm check` read the working tree, so an untracked file of the next task can fail the check of the one being committed, as an unformatted JSON fixture did. Biome formats JSON too: run `pnpm exec biome format --write <file>` on new JSON fixtures, while `.geojson` files are not checked. Before trusting a red check, look at which file it names.
+
+## Chrome on a Mac can render WebGL on SwiftShader
+
+The golden suite launches Chrome with `--use-angle=swiftshader --enable-unsafe-swiftshader`, and on an Apple M4 WebGL2 then reports `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device ...))` instead of Metal. Goldens can therefore be written on the owner's Mac with the same backend hosted Linux uses. Without the flags, Metal differs from SwiftShader by up to 1 level on linear-filtered views. `assertSwiftShader(page)` in `@parfocal/golden-images` fails a run on any other backend. Source: [golden-image result](../results/2026-10-23-golden-image-tolerances.md).
+
+## Playwright test passes config launch options to every launch
+
+Inside a Playwright test, `chromium.launch()` picks up `use.launchOptions` from the config, so a second browser meant to use the hardware GPU still came up on SwiftShader. Pass `args: []` explicitly to get a plain browser. Source: TEST-005 measurement spec.
+
+## Browser suites skip the Turborepo cache
+
+`test:browser` sets `"cache": false` in `turbo.json`. The cache key does not include the installed Chrome version, so a cached pass would hide a Chrome update that changes the goldens or the timings. The root script also runs it with `--concurrency=1` so the latency measurements do not share the CPU with the golden suite.
+
+## Timer pacing drifts unless it keeps a schedule
+
+The latency proxy paces bandwidth in 16 KiB slices with `setTimeout`. Starting each slice from "now" let Node's timer lateness add up, and 1 MB at 20 MB/s took 70 ms instead of 50. The link now keeps its own schedule while any response is streaming and starts afresh when none is or after 5 ms of idle time, which measured 52.1 ms.
+
+## Timing tests check the fastest sample
+
+Under `pnpm test`, Turborepo runs the Python suites next to the Node ones, and the latency tests saw a median 64 ms added at a 50 ms RTT. Load only adds time, so the tests assert on the fastest of several samples: it must be at least the RTT and within `max(10 ms, 10%)` above it. Use the same rule for any CPU-side timing test that shares a runner. Source: [latency proxy result](../results/2026-10-23-latency-proxy.md).

@@ -1,0 +1,27 @@
+{
+  "name": "@parfocal/golden-images",
+  "description": "Golden-image rendering checks: frame capture, per-format tolerances and empty-frame guards",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./playwright": "./src/playwright.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:browser": "playwright test",
+    "golden:update": "GOLDEN_UPDATE=1 playwright test"
+  },
+  "imports": {
+    "#*": "./src/*"
+  },
+  "dependencies": {
+    "pngjs": "7.0.0"
+  },
+  "devDependencies": {
+    "@parfocal/typescript-config": "workspace:*",
+    "@playwright/test": "1.64.0",
+    "@types/pngjs": "6.0.5"
+  }
+}

@@ -18,6 +18,8 @@ The project memory lives in [docs/](docs/README.md). The plan is [docs/BACKLOG.m
 | `packages/api-client` | TypeScript | Client generated from the API's OpenAPI schema |
 | `packages/tokens` | TypeScript | Design tokens |
 | `packages/test-fixtures` | TypeScript | Slide fixtures and fetch scripts |
+| `packages/golden-images` | TypeScript | Golden-image rendering checks with per-format tolerances and empty-frame guards |
+| `packages/latency-proxy` | TypeScript | HTTP proxy with a configurable RTT and bandwidth for perf tests |
 | `packages/typescript-config` | TypeScript | Shared tsconfig presets for browser, web worker, Node and Cloudflare code |
 | `packages/py-common` | Python | Shared settings, logging, tenancy context and audit helpers |
 | `infra/tofu` | OpenTofu | Cloudflare and Zitadel resources ([runbook](docs/knowledge/infra.md)) |
@@ -41,6 +43,8 @@ pnpm check
 `pnpm db:up` starts Postgres with PostGIS and a PgBouncer in Docker, `pnpm db:migrate` applies the migrations and `pnpm test:db` runs the database tests ([knowledge/database.md](docs/knowledge/database.md)).
 
 `pnpm fixtures` fetches the small slide fixtures into `~/.cache/parfocal/fixtures` and checks their SHA-256. Name other groups to fetch more, and set `PARFOCAL_FIXTURES_LOCAL` in `.env` to link slides already on disk instead of downloading them ([packages/test-fixtures](packages/test-fixtures/README.md)).
+
+`pnpm test:browser` runs the suites that need Chrome: the golden-image tests on SwiftShader ([packages/golden-images](packages/golden-images/README.md)) and the perf suites at 0, 50, 100 and 200 ms RTT through the latency proxy ([packages/latency-proxy](packages/latency-proxy/README.md)). `pnpm golden:update` rewrites the golden images after an intended rendering change.
 
 Commit messages follow Conventional Commits with the backlog ID as the scope, and a lefthook `commit-msg` hook checks them with commitlint. `pnpm release` cuts a release from a clean `main`: it picks the next version from the commits, rewrites `CHANGELOG.md` with git-cliff, commits and tags. `git push --follow-tags origin main` then publishes the GitHub release ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)).
 
