@@ -66,6 +66,7 @@ Consolidate when a milestone closes, when the user asks, or when the log has gai
 | `docs/project/roadmap.md` | Milestones M0 to M6 and their status |
 | `docs/project/risks.md` | Risk register |
 | `docs/project/poc-reference.md` | Where the POC lives, with full links to every POC doc |
+| `docs/project/thesis.md` | The thesis chapters and where each section's material lives |
 | `docs/adr/` | Numbered architecture and product decision records |
 | `docs/results/` | Spike numbers, benchmarks, perf baselines, ML evaluations, user studies |
 | `docs/knowledge/` | Durable lessons, gotchas and how things work, by topic |

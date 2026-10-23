@@ -47,10 +47,11 @@ Task format:
 | Release bar | Research and pilot grade, production-quality code, no regulatory claims in v1. IVDR, FDA and CE marking are later epics |
 | Deployment | Cloud SaaS, multi-tenant. Region is a tenant attribute. No residency pinning during the pilot, and EU pinning is a trigger before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)) |
 | Product direction | AI results review: researchers import or run AI and evaluate it, doctors review, fix, comment and give an opinion. The viewer stays. The hospital sign-out workflow is kept as ideas ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
-| Roles | Researcher, reviewer and admin in a workspace. Owner, reviewer and viewer in a project. They replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) (IAM-022, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Roles | Researcher and reviewer in a workspace, with admin rights as a switch on a researcher that opens the admin page and adds no data access. Owner, reviewer and viewer in a project. They replace the six hospital roles of [ADR 0026](adr/0026-roles-and-permission-matrix.md) and the admin role of [ADR 0061](adr/0061-researcher-reviewer-and-admin-roles.md) (IAM-022, IAM-024, [ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md)) |
 | Data model | Project, then an optional case, then slide, then result sets. Loose slides sit directly in a project. Every import or model run is a result set with its model, version, date and source, and reviewer edits form a separate reviewed layer ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Privacy | Each project is de-identified (the default, no patient fields, names stripped on upload) or clinical (patient fields optional, names can be hidden, access logged) ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Object IDs | Short IDs per slide (T2, T2·C145, C3021, R4, Z1, M1), a full path for links and exports (`P07/S26-04812/A1/T2·C145`), carried across result sets by overlap ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Reports | The evaluation report is an ordered list of blocks from a fixed catalogue. Study templates (detection, segmentation, cell typing, reader study, sentinel node) preset a review task and its report, live in the admin page's library, and one task's report can be rearranged ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)) |
 | Review | Review tasks with slides, a result set, reviewers, a split, a scope, an opinion form, blinding and a due date. Verdicts are Agree, Disagree or Not sure per object, in guided review or the full viewer. Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Interaction | A control responds only when clicking it changes something in the flow. Auto-advancing and far-reaching actions show an Undo. The bell is the only place for mentions, replies, tasks and jobs (doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Pilot data | Public slide datasets and their AI results in de-identified projects. Clinical projects use seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
@@ -168,7 +169,7 @@ Task format:
 | 43 | TASK | Review tasks and the slide pipeline | M3 |
 | 44 | GUIDE | Verdicts, guided review and the opinion form | M3 |
 | 45 | ADJ | Disagreements, adjudication and sign-off | M5 |
-| 46 | EVAL | Evaluation report and exports | M5 |
+| 46 | EVAL | Evaluation report, study templates and exports | M5 |
 | 47 | JOBS | Model runs, the jobs tray and lab models | M4 |
 | 48 | REMOTE | Remote sources, webhooks and events | M5 |
 | 49 | ONB | Sign-up, setup and the sample project | M3 |
@@ -602,7 +603,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-012.
 
 - [ ] IAM-014 · Admin console for users and roles
-  Lab admin screen to list members, change roles, deactivate and resend invites.
+  Admin page screen to list members, change roles and admin rights, deactivate and resend invites.
   Done when component and E2E tests cover each action and each action is audited.
   The screen is ADMIN-003 in the admin page.
 
@@ -652,6 +653,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Sign in and the lock screen offer "Sign in with a passkey" and "Unlock with a passkey" next to the other ways in. The button starts the BFF login with the identity provider's passwordless flow, the browser shows its own passkey window, and a passkey on a phone or security key works through the browser's QR option. Unlocking returns to the same view as IAM-021. Enrolment prompts, a passkey list in settings and an admin policy are not part of this task ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
   Done when E2E with a virtual WebAuthn authenticator signs in with a passkey and unlocks a locked slide to the same camera position, and a test shows a cancelled passkey window leaves the sign-in page usable.
   Depends on IAM-001, IAM-002, IAM-021. Refs mock: signin/passkey, mock: signin/lockkey, doc 42.
+
+- [ ] IAM-024 · Admin as a right of a researcher
+  `Role` keeps `researcher` and `reviewer`, and `memberships` and `invitations` gain `admin_rights`, which only a researcher may hold. Admin rights grant `manage-people`, `workspace-settings`, `integrations`, `report-templates` editing and `audit-log`, and add no access to project data. Every admin membership and invitation becomes a researcher with admin rights. Removing the right from the last holder is refused, and giving or removing it is audited. The permission page is regenerated with the responsibilities of each role ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md)).
+  Done when the table-driven permission test covers a researcher with and without admin rights and a reviewer on every endpoint, a migration test turns an admin membership and an invitation into a researcher with admin rights, an API test refuses removing the last holder and refuses the right on a reviewer, and the audit entry is checked.
+  Depends on IAM-022. Refs doc 43, kit: Pipeline and roles.
 
 ---
 
@@ -936,8 +942,8 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-001, INGEST-003, INGEST-021. Refs mock 4 "From a link", kit W36, kit Flow 7, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
 - [ ] INGEST-026 · Saved import sources
-  Lab admins save a source once (name, type, address, credentials kept in the secret store), and users pick it when importing. Credentials never reach the browser. In v1 the types are HTTPS and object storage. DICOMweb, SFTP and scanner shares wait for their later epics.
-  Done when permission tests restrict editing to lab admins, a test confirms credentials never appear in API responses or logs, and E2E imports from a saved source.
+  Researchers with admin rights save a source once (name, type, address, credentials kept in the secret store), and users pick it when importing. Credentials never reach the browser. In v1 the types are HTTPS and object storage. DICOMweb, SFTP and scanner shares wait for their later epics.
+  Done when permission tests restrict editing to researchers with admin rights, a test confirms credentials never appear in API responses or logs, and E2E imports from a saved source.
   Depends on INGEST-025, SEC-013. Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
 ---
@@ -1424,7 +1430,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Depends on CASES-009, CMD-002. Refs mock 1 scene D, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
 - [ ] HOME-009 · Announcements
-  Admins post announcements, shown on Home with a coloured dot by kind (a new model, a slow server, a change).
+  Researchers with admin rights post announcements, shown on Home with a coloured dot by kind (a new model, a slow server, a change).
   Done when component tests cover create, list and expiry.
   Depends on HOME-011. The API moved to HOME-011 by [ADR 0085](adr/0085-home-aggregate-api.md).
 
@@ -2226,7 +2232,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
   Done when API tests cover registration and the licence rule from STACK-031 blocks a non-commercial model in a commercial tenant.
-  Each model is either a Parfocal model, always listed unless an admin hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
+  Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
 
 - [ ] AIP-003 · Tiers Best, Good, Fast
   Tier mapping per task and per site, set by the lab, with the exact model visible on hover.
@@ -2618,8 +2624,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover editing and locked fields.
 
 - [ ] SET-011 · Workspace settings console
-  Workspace values for lock times, tiers, the default privacy mode, default classes and templates, and announcements, in the admin page (ADMIN-001).
-  Done when permission tests restrict it to admins and changes are audited.
+  Workspace values for lock times, tiers, the default privacy mode, default classes, the default study template, and announcements, in the admin page (ADMIN-001).
+  Done when permission tests restrict it to researchers with admin rights and changes are audited.
 
 - [ ] SET-012 · Idea: Home and worklist choice
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. There is one home and no worklist views.
@@ -3007,8 +3013,8 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on IAM-004, ADAPT-004. Refs mock: project, kit: Information architecture.
 
 - [ ] PROJ-002 · Privacy modes
-  De-identified, the default, has no patient fields in any response or screen, strips names from file metadata on upload and hides label and macro images. Clinical allows patient fields, every one optional, with hidden names and logged access. Changing a project from de-identified to clinical is an admin action with a reason.
-  Done when API tests prove no patient field leaves a de-identified project, an upload fixture with a name in its SVS metadata arrives without it, clinical reads are audited, and the mode change needs an admin and a reason.
+  De-identified, the default, has no patient fields in any response or screen, strips names from file metadata on upload and hides label and macro images. Clinical allows patient fields, every one optional, with hidden names and logged access. Changing a project from de-identified to clinical needs a researcher with admin rights and a reason.
+  Done when API tests prove no patient field leaves a de-identified project, an upload fixture with a name in its SVS metadata arrives without it, clinical reads are audited, and the mode change needs a researcher with admin rights and a reason.
   Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
 
 - [x] PROJ-003 · Project roles
@@ -3037,7 +3043,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
 
 - [ ] PROJ-008 · Project settings
-  Privacy mode, review defaults (blind review, hide the AI for a first read), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles.
+  Privacy mode, review defaults (blind review, hide the AI for a first read), the default study template (EVAL-007), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles.
   Done when component and API tests cover each setting and its audit entry.
   Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006. Refs mock: project/settings.
 
@@ -3187,6 +3193,11 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when E2E submits, reopens and submits again, and the next slide opens.
   Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next.
 
+- [ ] TASK-009 · Study template in a new review task
+  The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
+  Done when component tests show each step filled from two different templates and a changed preset kept, and E2E creates a task from a template and finds its blocks in the report.
+  Depends on TASK-005, EVAL-007. Refs mock: task, doc 43.
+
 ---
 
 ## 44 GUIDE · Verdicts, guided review and the opinion form
@@ -3278,6 +3289,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 
 - [ ] ADJ-004 · Sign-off as a soft lock
   Before signing, a list says what is complete. Signing is allowed only when every assigned reviewer has submitted every slide and no queued object is undecided ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)). Signing confirms with single sign-on, makes Evaluation v1 with a checksum and notifies reviewers. The owner can still change things, every change is logged, and reopening is possible.
+  Signing also stores the report's block list (EVAL-008).
   Done when API tests cover signing, a change after sign-off with its log entry and reopening, and E2E signs off a task.
   Depends on ADJ-002, IAM-002. Refs mock: signoff, doc 40 R2.
 
@@ -3294,7 +3306,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 
 ---
 
-## 46 EVAL · Evaluation report and exports
+## 46 EVAL · Evaluation report, study templates and exports
 
 The research output of a review task ([ADR 0053](adr/0053-ai-results-review-direction.md)).
 
@@ -3308,12 +3320,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-000, ADJ-006.
 
 - [ ] EVAL-002 · Evaluation report page
-  A header with the Research output tag, the version and a flag for changes after sign-off, the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
+  The report shows as its pages, the same pages as the PDF (EVAL-008), under a header with the Research output tag, the version, the page count and a flag for changes after sign-off. A side panel picks the study template, opens the PDF preview (EVAL-010), starts Arrange (EVAL-009) and offers the downloads the template allows. The blocks of the sentinel node template are the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
   Done when component tests render a seeded report and axe passes.
   Depends on EVAL-001, EVAL-006. Refs mock: evaluation, doc 40 D8 and E1.
 
 - [ ] EVAL-003 · Exports
-  PDF, verdicts per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
+  PDF in the task's block order, verdicts per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
   Done when tests check every export's columns and counts and the PDF text.
   Depends on EVAL-002, RSET-008.
 
@@ -3331,6 +3343,26 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   An endpoint that gathers a task's verdicts, decisions, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
   Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
   Depends on EVAL-001. Split out so EVAL-002 (evaluation report page) has no backend work.
+
+- [ ] EVAL-007 · Study template model and API
+  A study template has a name, a kind of study, an ordered list of blocks from the catalogue with their settings, and task presets (objects to check, opinion form, blinding, first read, start mode, split). Templates are versioned per workspace, the five built-in ones (detection, segmentation, cell typing, reader study, sentinel node AI evaluation) are seeded, and a task pins a version. Researchers read and use templates, and only researchers with admin rights create, edit and retire them ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
+  Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
+  Depends on TASK-001, GUIDE-006, IAM-024.
+
+- [ ] EVAL-008 · Report from template blocks
+  The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.
+  Done when component tests and PDF text tests render every block kind on a seeded task, a test shows the PDF and the page list the same blocks in the same order, and a signed report keeps its layout after the template changes.
+  Depends on EVAL-007, EVAL-006, STACK-035.
+
+- [ ] EVAL-009 · Arrange one report
+  On the report page, Arrange turns the pages into the editor of ADMIN-008 with the Block and Page and format tabs: blocks are dragged onto the pages or clicked in, selected on the page with a toolbar to move, duplicate and remove, and set in the side panel. Changes belong to this task, never to the template, and Save as template sends the arrangement to the library for someone with admin rights to accept. After sign-off a layout change is logged like any change.
+  Done when component tests cover adding, moving, removing and setting a block, and E2E arranges a report, exports the PDF in the new order and saves it as a template.
+  Depends on EVAL-008, EVAL-002, ADJ-005. Refs mock: evaluation/arrange, doc 43.
+
+- [ ] EVAL-010 · PDF preview
+  Preview the PDF opens the file the export would download, rendered by the Typst worker as SVG pages, in a viewer with the file name, paper and page count, page thumbnails that jump to a page, the current page, zoom, Print, Download and Close. It opens from the report page, from the template list and editor with the sample project's numbers, and from the template step of a new review task ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
+  Done when component tests cover thumbnails, the page indicator while scrolling, zoom and closing, an API test returns the same pages as the PDF export for a seeded task, and E2E opens the preview from the report and from a template.
+  Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
 
 
 ---
@@ -3362,12 +3394,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
 
 - [ ] JOBS-005 · Connect a lab model
-  An admin points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
+  A researcher with admin rights points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
   Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
 
 - [ ] JOBS-006 · Show or hide Parfocal models
-  Parfocal's models are always listed unless an admin hides one. A hidden model leaves every model list and its result sets stay. Hiding shows an Undo.
+  Parfocal's models are always listed unless a researcher with admin rights hides one. A hidden model leaves every model list and its result sets stay. Hiding shows an Undo.
   Done when API tests cover hiding and E2E hides a model and finds it gone from Run a model.
   Depends on JOBS-001, DS-021. Refs mock: admin/models, doc 40 R1.
 
@@ -3423,8 +3455,9 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 - [ ] ONB-004 · First-run setup
   Five skippable steps whose choices carry through: role and specialties (the role sets the recommended first project and the checklist), the workspace (join, ask or create with a name, logo and default privacy), the first project (sample, create or wait), the input device and the theme (applied at once), and a checklist that ends in the chosen place.
-  Done when component tests cover each choice and its effect, and E2E finishes setup into each of the three first-project choices.
-  Depends on ONB-002, ONB-005. Refs mock: setup, doc 41.
+  The person who creates a workspace becomes a researcher with admin rights, whatever they picked as their role, and setup says so ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md)).
+  Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
+  Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
 
 - [ ] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.
@@ -3440,15 +3473,15 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 50 ADMIN · Admin page
 
-Admin is its own page with its own sidebar and the app's top bar, never a page inside a page (doc 39).
+Admin is its own page with its own sidebar and the app's top bar, never a page inside a page (doc 39). Researchers with admin rights open it, and nobody else sees it ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md)).
 
 - [ ] ADMIN-000 · Research check
-  Done when the admin sections and their permissions are listed in an ADR.
+  Done when the admin sections and their permissions are listed in an ADR. Who opens the page is settled by [ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md).
 
 - [ ] ADMIN-001 · Admin page shell
-  A sidebar with Back to Parfocal, the workspace and the sections (overview, people and roles, projects, AI models, storage and sources, API and webhooks, audit log, security), and flat content.
-  Done when component tests cover navigation and permission tests refuse non-admins.
-  Depends on SHELL-001, IAM-022. Refs mock: admin.
+  A sidebar with Back to Parfocal, the workspace and the sections (overview, people and roles, projects, AI models, report templates, storage and sources, API and webhooks, audit log, security), and flat content.
+  Done when component tests cover navigation and permission tests refuse reviewers and researchers without admin rights.
+  Depends on SHELL-001, IAM-024. Refs mock: admin.
 
 - [ ] ADMIN-002 · Overview
   Stat tiles and a short summary per section. Storage shows the same split bar as ADMIN-006 in a compact size.
@@ -3456,8 +3489,8 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001.
 
 - [ ] ADMIN-003 · People and roles
-  People with role dropdowns, projects, last active and status, with invite, resend and search (IAM-014).
-  Done when E2E changes a role and resends an invite, each audited.
+  People with a role dropdown (researcher or reviewer), an admin rights switch on researchers, projects, last active and status, with invite, resend and search (IAM-014). Above the list, a table states what each role and admin rights are responsible for, in the words of ADR 0096.
+  Done when E2E changes a role, gives and removes admin rights and resends an invite, each audited, and a component test shows the switch disabled for the last holder and absent on reviewers.
   Depends on ADMIN-001, IAM-014.
 
 - [ ] ADMIN-004 · Projects
@@ -3479,6 +3512,11 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   The audit log with filters and a signed export (SEC-024), and the security settings (single sign-on, session policy, MFA).
   Done when E2E filters and exports the log.
   Depends on ADMIN-001, SEC-024.
+
+- [ ] ADMIN-008 · Report templates
+  The workspace's study template library: the five built-in templates and the lab's own, each with its kind of study, its blocks as a strip, the tasks that use it and its version, with Preview, Duplicate or Edit, Use for new projects and Retire with an Undo. New template asks for a name, the kind of study, what to start from and the paper. The editor shows the report as its pages filled with the sample project's numbers. Blocks are dragged from the catalogue onto a page or clicked in after the selected block, a selected block has a toolbar to move, duplicate and remove it, and the side panel has three tabs. Block holds the title, showing the title, full or half width, a page break and the fields of that kind of block. Page and format holds the paper (A4 or US Letter), orientation, text size, workspace logo, title and subtitle with placeholders, running header, page numbers, draft watermark, signature block, language of labels, decimals, appendices and the downloads offered. Task presets hold the objects to check, opinion form, blinding, first read, start mode and split ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
+  Done when component tests cover adding a block by drag and by click, moving, duplicating, removing and setting each kind of block, and every format setting, with the mouse and the keyboard, E2E creates a template, previews its PDF, uses it in a review task and retires it, and an axe check passes on the editor.
+  Depends on ADMIN-001, EVAL-007. Refs mock: admin/templates, mock: admin/tpledit, doc 43.
 
 ---
 

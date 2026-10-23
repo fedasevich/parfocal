@@ -1,7 +1,7 @@
 # 0061. Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project
 
 - Date: 2026-10-17
-- Status: Accepted
+- Status: Superseded by 0096
 - Deciders: Yurii Fedas
 - Backlog: IAM-022 (researcher, reviewer and admin roles with project roles), supersedes [ADR 0026](0026-roles-and-permission-matrix.md) for IAM-006 (roles and permission matrix)
 

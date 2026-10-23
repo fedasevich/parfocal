@@ -66,7 +66,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0058](0058-typed-case-ids.md) | Case IDs are typed or come from file names, and accession templates and counters are removed | Accepted | 2026-10-17 |
 | [0059](0059-no-folders.md) | Folders are removed, and access is by role across the workspace until project roles land | Accepted | 2026-10-17 |
 | [0060](0060-no-sign-out-permissions-or-guest-scope.md) | The sign-out permissions, the outside consultant and the guest scope are removed | Accepted | 2026-10-17 |
-| [0061](0061-researcher-reviewer-and-admin-roles.md) | Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project | Accepted | 2026-10-17 |
+| [0061](0061-researcher-reviewer-and-admin-roles.md) | Workspace roles are researcher, reviewer and admin, with owner, reviewer and viewer per project | Superseded by 0096 | 2026-10-17 |
 | [0062](0062-project-model.md) | Projects hold optional cases, slides and result sets, need a membership to open, and own their patients | Accepted | 2026-10-17 |
 | [0063](0063-cases-and-slides-in-projects.md) | Cases and slides live in projects, a case is optional, and the hospital case columns are gone | Accepted | 2026-10-17 |
 | [0064](0064-project-api.md) | The project API: numbered per workspace, membership to read, owners to change, archive instead of delete | Accepted | 2026-10-17 |
@@ -101,3 +101,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0093](0093-evaluation-metrics-and-datasets.md) | Model evaluation uses PQ, AJI, mIoU, NoC, ECE and FROC on held-out sets kept outside the repository, each used within its licence | Accepted | 2026-10-18 |
 | [0094](0094-search-on-postgres.md) | Search runs in Postgres under row-level security, with labels matched by ILIKE and patients by whole-word blind tokens | Accepted | 2026-10-18 |
 | [0095](0095-ux-round-5-upload-by-slide-and-verdict-notes.md) | Upload has three steps with results under their slides, verdict reasons become optional and several, the magnification bar folds to a chip and slides load coarse first, plus passkey sign-in and the storage bar | Accepted | 2026-10-19 |
+| [0096](0096-researcher-and-reviewer-with-admin-rights.md) | Workspace roles are researcher and reviewer, admin is a right a researcher holds, and each role's responsibilities are written down | Accepted | 2026-10-20 |
+| [0097](0097-report-templates-built-from-blocks.md) | The evaluation report is built from blocks, and study templates preset a review task and its report | Accepted | 2026-10-20 |

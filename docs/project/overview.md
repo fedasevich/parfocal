@@ -8,7 +8,7 @@ Parfocal is a multi-tenant cloud platform where researchers evaluate AI results 
 
 ## Users
 
-Researchers upload slides and AI results, run models, create review tasks, resolve disagreements and sign off evaluations. Reviewers are doctors or pathologists who check AI objects, fix them, comment and fill in the opinion form. Admins manage people, models, sources and security. Projects add owner, reviewer and viewer roles (IAM-022). Doctors come first: every screen they touch must be simple on first use without hiding the full viewer.
+Researchers upload slides and AI results, run models, create review tasks, resolve disagreements and sign off evaluations. Reviewers are doctors or pathologists who check AI objects, fix them, comment and fill in the opinion form. Admin is not a separate person but a right a researcher holds, which opens the admin page for people, models, report templates, sources and security without adding access to project data ([ADR 0096](../adr/0096-researcher-and-reviewer-with-admin-rights.md)). Projects add owner, reviewer and viewer roles (IAM-022). The evaluation report is built from blocks, and study templates preset a review task and its report ([ADR 0097](../adr/0097-report-templates-built-from-blocks.md)). Doctors come first: every screen they touch must be simple on first use without hiding the full viewer.
 
 ## Scope of v1
 
