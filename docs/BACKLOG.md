@@ -1125,6 +1125,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
 
 - [ ] VIEW-031 · luma.gl debug-string cost patch
+  luma.gl 9.4.2 no longer builds the sampler debug string, so no patch is needed and the perf test stays as a regression check ([ADR 0098](adr/0098-viv-and-deck-gl-versions.md)).
   Done when a perf test shows no frame over 50 ms during wheel zoom on the Huron fixture.
   Refs doc 24.
 

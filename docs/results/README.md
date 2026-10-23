@@ -28,3 +28,7 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-18 | [TNBC and NuInsSeg load from their verified Zenodo archives](2026-10-18-dataset-loaders.md) | MLEVAL-001 | baseline |
 | 2026-10-18 | [The typing and calibration harness reproduces POC doc 29 for HoVer-NeXt](2026-10-18-typing-calibration-reproduction.md) | MLEVAL-004 | ML evaluation |
 | 2026-10-18 | [Postgres search over 100,000 cases answers in under 30 ms, and row-level security keeps it off the trigram index](2026-10-18-search-spike.md) | STACK-034 | spike |
+| 2026-10-23 | [Viv 0.23 on deck.gl 9.4 opens CMU-1.svs and keeps one Deck over 20 slide switches](2026-10-23-viv-version-spike.md) | STACK-015 | spike |
+| 2026-10-23 | [Camera state outside React: 60 fps pans of CMU-1.svs with 0 inspector renders, against 120 to 180 for a whole-camera reader](2026-10-23-hot-path-state-spike.md) | STACK-006 | spike |
+| 2026-10-23 | [SwiftShader golden frames are identical across runs, Metal is within 1 level, and a red-blue swap misses by 27 to 42 levels of mean error](2026-10-23-golden-image-tolerances.md) | TEST-005 | baseline |
+| 2026-10-23 | [The latency proxy adds the set RTT plus 1 to 2 ms at 0, 50, 100 and 200 ms and holds its bandwidth limit within 3 ms](2026-10-23-latency-proxy.md) | TILES-006 | baseline |
