@@ -21,3 +21,15 @@ tifffile writes a random UUID into the OME-XML, so regenerating the synthetic sl
 ## Patient names in tests come from one registry
 
 Every patient name a test or fixture uses must be in `SYNTHETIC_PATIENT_NAMES` in `apps/api/tests/synthetic_people.py`, which marks it as made up. `test_fixture_hygiene.py` scans the Python test folders and their JSON, CSV and GeoJSON fixtures for names given to `PatientIdentity`, in a `"patient": {"name": ...}` body or in the name column of a case import CSV, and fails on any name that is not registered. A new test patient is added to the registry in the same change, which is the moment to check the name is invented. The scanner cannot tell a real person from an invented one, so the registry is the review.
+
+## tifffile stores YCbCr input as it is given
+
+`make_synthetic.py` writes RGB arrays with `photometric="rgb"` and JPEG compression, and tifffile tags the result as YCbCr (photometric 6) with properly converted samples, which is why `synthetic-jpeg.tiff` is a YCbCr fixture. Passing `photometric="ycbcr"` instead stores the array as if it already were Y, Cb and Cr, so RGB input comes back with the wrong colours. `synthetic-big-endian.tiff` and `synthetic-sparse.tiff` were added for the browser reader workarounds, and the manifest test now accepts both byte orders and BigTIFF. Source: STACK-016.
+
+## Golden images come from a synthetic tile and SwiftShader
+
+The golden suite draws `syntheticHeTile()`, an H&E-like tile generated in code with red, green and blue ramps and a fine checkerboard, so no image is downloaded and no PHI is involved. The ramps make a swapped channel obvious in the diff. A golden is only written after the frame passes the empty-frame check, and `pnpm golden:update` is the only way to change one ([packages/golden-images](../../packages/golden-images/README.md)). Per-format goldens for real slides wait for the Viv route.
+
+## Perf pages need an inline favicon
+
+Chrome requests `/favicon.ico` after loading a page, and through the latency proxy that request lands in the request and byte counters at an unpredictable moment. The perf test page declares `<link rel="icon" href="data:,">` so the counters only see the requests a test makes.

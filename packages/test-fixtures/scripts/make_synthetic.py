@@ -14,6 +14,8 @@ LEVELS = 3
 TILE = 256
 MICRONS_PER_PIXEL = 0.5
 PIXELS_PER_CENTIMETRE = 1e4 / MICRONS_PER_PIXEL
+BIG_ENDIAN_TILE = 32
+ABSENT_TILES = (1, 6, 7)
 
 
 def base_image() -> np.ndarray:
@@ -88,6 +90,34 @@ def write_ome_tiff(path: Path, levels: list[np.ndarray]) -> None:
             )
 
 
+def write_big_endian_bigtiff(path: Path, levels: list[np.ndarray]) -> None:
+    with tifffile.TiffWriter(path, bigtiff=True, byteorder=">") as tiff:
+        for index, level in enumerate(levels):
+            scale = 2**index
+            tiff.write(
+                level,
+                photometric="rgb",
+                tile=(BIG_ENDIAN_TILE, BIG_ENDIAN_TILE),
+                compression="zlib",
+                subfiletype=1 if index else 0,
+                resolution=(PIXELS_PER_CENTIMETRE / scale, PIXELS_PER_CENTIMETRE / scale),
+                resolutionunit="CENTIMETER",
+            )
+
+
+def write_sparse_tiff(path: Path, levels: list[np.ndarray]) -> None:
+    write_generic_tiff(path, levels)
+    with tifffile.TiffFile(path, mode="r+b") as tiff:
+        tags = tiff.pages[0].tags
+        counts = list(tags["TileByteCounts"].value)
+        offsets = list(tags["TileOffsets"].value)
+        for index in ABSENT_TILES:
+            counts[index] = 0
+            offsets[index] = 0
+        tags["TileByteCounts"].overwrite(counts)
+        tags["TileOffsets"].overwrite(offsets)
+
+
 def update_manifest(files: list[Path]) -> None:
     manifest = json.loads(MANIFEST.read_text())
     manifest["synthetic"] = [
@@ -106,10 +136,15 @@ def main() -> None:
     levels = pyramid(base_image())
     generic = SYNTHETIC / "synthetic-jpeg.tiff"
     ome = SYNTHETIC / "synthetic-zlib.ome.tiff"
+    big_endian = SYNTHETIC / "synthetic-big-endian.tiff"
+    sparse = SYNTHETIC / "synthetic-sparse.tiff"
     write_generic_tiff(generic, levels)
     write_ome_tiff(ome, levels)
-    update_manifest([generic, ome])
-    for path in (generic, ome):
+    write_big_endian_bigtiff(big_endian, levels)
+    write_sparse_tiff(sparse, levels)
+    files = [generic, ome, big_endian, sparse]
+    update_manifest(files)
+    for path in files:
         print(f"{path.name}: {path.stat().st_size} bytes")
 
 

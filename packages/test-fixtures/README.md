@@ -42,8 +42,10 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 
 | File | Format |
 |---|---|
-| `synthetic-jpeg.tiff` | Generic tiled TIFF, JPEG tiles of 256 px, three levels from 1024 × 768, 0.5 µm per pixel |
+| `synthetic-jpeg.tiff` | Generic tiled TIFF, JPEG tiles of 256 px tagged YCbCr (photometric 6), three levels from 1024 × 768, 0.5 µm per pixel |
 | `synthetic-zlib.ome.tiff` | OME-TIFF with the same pyramid in SubIFDs and deflate tiles |
+| `synthetic-big-endian.tiff` | Big-endian BigTIFF with the same pyramid in 32 px deflate tiles, so the tile offset arrays lie outside the first directory read |
+| `synthetic-sparse.tiff` | `synthetic-jpeg.tiff` with level 0 tiles 1, 6 and 7 left out (offset and byte count 0), as Philips and Argos scanners do |
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 

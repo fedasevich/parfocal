@@ -55,10 +55,17 @@ test("committed synthetic slides match their checksums", async () => {
   }
 });
 
-test("synthetic slides are TIFF files", async () => {
+const tiffHeaders = [
+  [0x49, 0x49, 0x2a, 0x00],
+  [0x4d, 0x4d, 0x00, 0x2a],
+  [0x49, 0x49, 0x2b, 0x00],
+  [0x4d, 0x4d, 0x00, 0x2b],
+].map((bytes) => bytes.join(","));
+
+test("synthetic slides are TIFF or BigTIFF files in either byte order", async () => {
   for (const fixture of manifest.synthetic) {
     const header = (await readFile(join(syntheticDir, fixture.file))).subarray(0, 4);
-    assert.deepEqual([...header], [0x49, 0x49, 0x2a, 0x00], fixture.file);
+    assert.ok(tiffHeaders.includes([...header].join(",")), fixture.file);
   }
 });
 

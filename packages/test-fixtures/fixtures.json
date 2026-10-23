@@ -207,6 +207,16 @@
       "file": "synthetic-zlib.ome.tiff",
       "sha256": "c0692f322518704a57a34dbf218a3582b00fb5fe1c575d8e4f0cf8b0f6af6bcb",
       "bytes": 37003
+    },
+    {
+      "file": "synthetic-big-endian.tiff",
+      "sha256": "5429b07bb3774609c758453ab960bdfefda87530a0e287e10f5562c037e4f949",
+      "bytes": 78238
+    },
+    {
+      "file": "synthetic-sparse.tiff",
+      "sha256": "eeb71e5db55fc6306de1791ae047361a9757d769e6c8476741d86b4130567d20",
+      "bytes": 87497
     }
   ]
 }

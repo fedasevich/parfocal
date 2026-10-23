@@ -43,3 +43,16 @@ Goldens live in `workers/ingest/tests/golden/overviews` at 128 px. After a delib
 ## Uploads are checked by structure, not by an antivirus
 
 There is no malware scanner ([ADR 0081](../adr/0081-uploads-are-checked-by-structure.md)). Anything that is not a supported slide or archive is refused at identification, including the EICAR test file whatever its name. `parfocal_ingest.integrity.check_integrity` then refuses a TIFF-family file when any tile or strip of any page ends past the end of the file (a cut-off upload still has a valid header, so identification alone passes it), and a zip when any member fails its CRC. Sparse tiles with a byte count of 0 are allowed, because Philips files leave tiles out on purpose.
+
+## The browser reads through PixelSource, with workarounds for geotiff.js and zarrita
+
+`packages/viewer-engine/src/pixel-source` reads TIFF with geotiff.js 3.0.5 and OME-Zarr with zarrita 0.7.5 ([ADR 0099](../adr/0099-tiff-and-zarr-readers-in-the-browser.md)). The ADR lists every workaround with its fixture. The ones a later session is most likely to trip over:
+
+- geotiff's JPEG decoder returns raw Y, Cb and Cr. `readRasters` leaves them so, and `readRGB` converts them. Apply the transform exactly once: a decoder that already returns RGB, such as a native browser decode, must not be followed by `readRGB`.
+- In a big-endian file every tag array that geotiff defers (tile offsets and byte counts on any real slide) is read as little-endian, because `DeferredArray` hard-codes the byte order. A BigTIFF then fails with "exceeds MAX_SAFE_INTEGER". Setting `tiff.parser.eager = true` before reading any image avoids it.
+- geotiff never follows SubIFDs. An OME-TIFF pyramid stored there shows as one level unless the SubIFD offsets are parsed with `tiff.parser.parseFileDirectoryAt`.
+- Deferred tags throw from `getValue` and are not properties of `fileDirectory`. Load them with `loadValue` while opening, never from the tile path.
+- zarrita fills a missing chunk with `fill_value`. Only a store that reports the miss can tell an unwritten chunk from black. zarrita 0.7.5 no longer breaks behind an SPA fallback that answers metadata probes with HTML, which the POC hit.
+- The browser source reads pixel size from Aperio `MPP`, OME-XML and the resolution tags only. Philips-style XML (`Philips-4.tiff`, `tumor_009.tif`) gives `null` there, and the value comes from the slide index that ingest writes.
+
+Tests serve fixtures from a local HTTP server with range requests, so they exercise the same `fromUrl` and `FetchStore` paths as the browser. Source: STACK-016 and VIEW-003.
