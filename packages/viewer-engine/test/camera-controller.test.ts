@@ -18,7 +18,7 @@ function setup(start: Camera = { x: 10_000, y: 8000, zoom: -2 }, animates = true
   let camera = start;
   let frameRequests = 0;
   const host: CameraControllerHost = {
-    limits,
+    bounds: () => limits,
     now: () => clock.time,
     getCamera: () => camera,
     applyCamera: (next) => {

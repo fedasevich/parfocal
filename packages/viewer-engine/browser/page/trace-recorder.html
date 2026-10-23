@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>Input trace recorder</title>
+    <style>
+      :root { color-scheme: light dark; --bg: #f6f5f8; --fg: #1d1b22; --pad: #e4e0ea; --armed: #c8e6c9; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #18171c; --fg: #ece9f1; --pad: #2a2731; --armed: #23462a; } }
+      html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; overscroll-behavior: none; }
+      main { padding: 16px; display: grid; gap: 12px; max-width: 840px; }
+      fieldset { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border: 1px solid currentColor; border-radius: 6px; }
+      button[aria-pressed="true"] { outline: 2px solid currentColor; }
+      #pad { width: 800px; max-width: 100%; height: 600px; background: var(--pad); border-radius: 8px; touch-action: none; user-select: none; display: grid; place-items: center; }
+      #pad.armed { background: var(--armed); }
+      #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Input trace recorder</h1>
+      <p>Pick the device, pick a gesture, press Record, do the gesture over the pad once, then press Stop. Repeat for each gesture and save the file into <code>packages/viewer-engine/test/input/traces/</code>.</p>
+      <fieldset>
+        <legend>Device</legend>
+        <label><input type="radio" name="device" value="mouse" checked /> Mouse</label>
+        <label><input type="radio" name="device" value="trackpad" /> Trackpad or touchpad</label>
+        <label>Label <input id="label" size="40" placeholder="Logitech MX Master on macOS" /></label>
+      </fieldset>
+      <fieldset id="gestures"><legend>Gesture</legend></fieldset>
+      <fieldset>
+        <legend>Recording</legend>
+        <button id="record" type="button">Record</button>
+        <button id="stop" type="button" disabled>Stop</button>
+        <button id="save" type="button" disabled>Save JSON</button>
+        <span id="status">Idle</span>
+      </fieldset>
+      <div id="pad">Gesture pad</div>
+      <div id="log"></div>
+    </main>
+    <script type="module" src="./trace-recorder.ts"></script>
+  </body>
+</html>

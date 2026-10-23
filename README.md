@@ -13,7 +13,7 @@ The project memory lives in [docs/](docs/README.md). The plan is [docs/BACKLOG.m
 | `apps/api` | Python | FastAPI backend, deployed on Modal |
 | `workers/ingest` | Python | Slide validation, indexing and thumbnails |
 | `workers/ml` | Python | GPU inference and training jobs |
-| `packages/viewer-engine` | TypeScript | Framework-free viewer engine |
+| [`packages/viewer-engine`](packages/viewer-engine/README.md) | TypeScript | Framework-free viewer engine |
 | `packages/ui` | TypeScript | Shared React components |
 | `packages/api-client` | TypeScript | Client generated from the API's OpenAPI schema |
 | `packages/tokens` | TypeScript | Design tokens |
@@ -44,7 +44,7 @@ pnpm check
 
 `pnpm fixtures` fetches the small slide fixtures into `~/.cache/parfocal/fixtures` and checks their SHA-256. Name other groups to fetch more, and set `PARFOCAL_FIXTURES_LOCAL` in `.env` to link slides already on disk instead of downloading them ([packages/test-fixtures](packages/test-fixtures/README.md)).
 
-`pnpm test:browser` runs the suites that need Chrome: the golden-image tests on SwiftShader ([packages/golden-images](packages/golden-images/README.md)), the perf suites at 0, 50, 100 and 200 ms RTT through the latency proxy ([packages/latency-proxy](packages/latency-proxy/README.md)) and the viewer memory and teardown tests in `packages/viewer-engine/browser`, which need the `small` fixture group (`pnpm fixtures`). `pnpm golden:update` rewrites the golden images after an intended rendering change.
+`pnpm test:browser` runs the suites that need Chrome: the golden-image tests on SwiftShader ([packages/golden-images](packages/golden-images/README.md)), the perf suites at 0, 50, 100 and 200 ms RTT through the latency proxy ([packages/latency-proxy](packages/latency-proxy/README.md)) and the viewer memory, teardown and input tests in `packages/viewer-engine/browser`, which need the `small` fixture group (`pnpm fixtures`). `pnpm golden:update` rewrites the golden images after an intended rendering change.
 
 Commit messages follow Conventional Commits with the backlog ID as the scope, and a lefthook `commit-msg` hook checks them with commitlint. `pnpm release` cuts a release from a clean `main`: it picks the next version from the commits, rewrites `CHANGELOG.md` with git-cliff, commits and tags. `git push --follow-tags origin main` then publishes the GitHub release ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)).
 

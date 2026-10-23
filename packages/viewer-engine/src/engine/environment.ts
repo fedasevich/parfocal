@@ -23,3 +23,5 @@ export const systemClock: Clock = () => globalThis.performance.now();
 export const prefersReducedMotion = (): boolean =>
   typeof globalThis.matchMedia === "function" &&
   globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+export const screenPixelRatio = (): number => globalThis.devicePixelRatio || 1;

@@ -1,8 +1,9 @@
 import {
   areaCamera,
   type Camera,
+  type CameraBounds,
+  cameraBounds,
   clampCamera,
-  defaultZoomLimits,
   fitCamera,
   originCamera,
   type ScreenRect,
@@ -16,6 +17,7 @@ import {
   animationFrames,
   observeElementResize,
   prefersReducedMotion,
+  screenPixelRatio,
   systemClock,
 } from "./environment.ts";
 import type {
@@ -89,20 +91,21 @@ function describe(slide: EngineSlide): SlideInfo {
 export function createViewerEngine<Slide extends EngineSlide>(
   options: ViewerEngineOptions<Slide>,
 ): ViewerEngine {
-  const limits = options.zoomLimits ?? defaultZoomLimits;
   const frames = options.frames ?? animationFrames;
   const observeResize = options.observeResize ?? observeElementResize;
   const now = options.now ?? systemClock;
   const reducedMotion = options.reducedMotion ?? prefersReducedMotion;
+  const devicePixelRatio = options.devicePixelRatio ?? screenPixelRatio;
 
   let disposed = false;
   let mounted: Mounted<Slide> | null = null;
   let slide: Slide | null = null;
   let slideInfo: SlideInfo | null = null;
-  let camera: Camera = clampCamera(originCamera, limits);
+  let bounds: CameraBounds | null = null;
   let fitPending = false;
   let rect: ScreenRect | null = null;
   let frame: number | null = null;
+  let inFrame = false;
   let cameraDirty = false;
   let pendingOpen: AbortController | null = null;
 
@@ -110,6 +113,21 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const eventListeners: { [Name in keyof EngineEvents]: Set<(event: EngineEvents[Name]) => void> } =
     { pointer: new Set(), slide: new Set() };
   const overlays = new Map<string, OverlayLayer>();
+
+  const currentBounds = (): CameraBounds => {
+    if (bounds === null) {
+      const viewport = slide && mounted ? mounted.container.getBoundingClientRect() : null;
+      bounds = cameraBounds({
+        slide,
+        viewport,
+        devicePixelRatio: devicePixelRatio(),
+        cap: options.zoomLimits,
+      });
+    }
+    return bounds;
+  };
+
+  let camera: Camera = clampCamera(originCamera, currentBounds());
 
   const assertAlive = () => {
     if (disposed) throw new EngineDisposedError();
@@ -123,7 +141,14 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const runFrame = () => {
     frame = null;
     rect = null;
-    const moving = controller.step();
+    inFrame = true;
+    let moving = false;
+    try {
+      moving = controller.step();
+    } finally {
+      inFrame = false;
+      rect = null;
+    }
     if (cameraDirty) notifyCamera();
     if (moving) requestFrame();
   };
@@ -141,7 +166,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const measure = (container: EngineContainer): ScreenRect => {
     if (rect === null) {
       rect = container.getBoundingClientRect();
-      requestFrame();
+      if (!inFrame) requestFrame();
     }
     return rect;
   };
@@ -152,26 +177,32 @@ export function createViewerEngine<Slide extends EngineSlide>(
   };
 
   const applyCamera = (next: Camera) => {
-    const clamped = clampCamera(next, limits);
+    const clamped = clampCamera(next, currentBounds());
     if (sameCamera(clamped, camera)) return;
     camera = clamped;
     mounted?.route.setCamera(camera);
     if (mounted) {
       cameraDirty = true;
-      requestFrame();
+      if (!inFrame) requestFrame();
     } else {
       notifyCamera();
     }
   };
 
+  const reclamp = () => {
+    bounds = null;
+    applyCamera(camera);
+  };
+
   const controller = createCameraController({
-    limits,
+    bounds: currentBounds,
     now,
     getCamera: () => camera,
     applyCamera,
     viewport: () => (mounted ? measure(mounted.container) : null),
     requestFrame,
     animates: () => mounted !== null && !reducedMotion(),
+    ...(options.cameraProfile ? { profile: options.cameraProfile } : {}),
   });
 
   const anchorOf = (at: ClientPoint | undefined): ScreenOffset | undefined => {
@@ -189,7 +220,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     const viewport = mounted ? measure(mounted.container) : null;
     const target =
       viewport && viewport.width > 0 && viewport.height > 0
-        ? areaCamera(area, viewport, limits)
+        ? areaCamera(area, viewport, currentBounds())
         : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
     return controller.flyTo(target);
   };
@@ -213,7 +244,11 @@ export function createViewerEngine<Slide extends EngineSlide>(
 
   const fitIfPossible = () => {
     controller.cancel();
-    if (!slide) return;
+    bounds = null;
+    if (!slide) {
+      applyCamera(camera);
+      return;
+    }
     const viewport = mounted ? measure(mounted.container) : null;
     if (!viewport || viewport.width <= 0 || viewport.height <= 0) {
       fitPending = true;
@@ -221,7 +256,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       return;
     }
     fitPending = false;
-    applyCamera(fitCamera(slide, viewport, limits));
+    applyCamera(fitCamera(slide, viewport, currentBounds()));
   };
 
   const sortedOverlays = (): readonly OverlayLayer[] =>
@@ -267,19 +302,23 @@ export function createViewerEngine<Slide extends EngineSlide>(
       observeResize(container, () => {
         rect = null;
         if (fitPending) fitIfPossible();
+        else reclamp();
       }),
     );
     mounted = { container, route, detach };
+    bounds = null;
     route.setOverlays(sortedOverlays());
     route.showSlide(slide);
     route.setCamera(camera);
     if (fitPending) fitIfPossible();
+    else reclamp();
   };
 
   const unmount = () => {
     if (!mounted) return;
     const { route, detach } = mounted;
     mounted = null;
+    bounds = null;
     for (const remove of detach) remove();
     controller.settle();
     cancelFrame();
@@ -293,6 +332,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     slide = null;
     slideInfo = null;
     fitPending = false;
+    bounds = null;
     mounted?.route.showSlide(null);
     previous?.close();
   };
@@ -330,6 +370,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     pendingOpen = null;
     if (!slide) return;
     closeCurrentSlide();
+    reclamp();
     emit("slide", null);
   };
 
@@ -393,6 +434,12 @@ export function createViewerEngine<Slide extends EngineSlide>(
       fitIfPossible();
     },
     getMotion: () => controller.motion(),
+    getCameraBounds: () => currentBounds(),
+    getCameraProfile: () => controller.profile(),
+    setCameraProfile: (profile) => {
+      assertAlive();
+      controller.setProfile(profile);
+    },
     stopMotion: () => controller.cancel(),
     panBy: (dx, dy) => {
       assertAlive();
@@ -415,7 +462,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       fitPending = false;
       controller.startDrag(at.clientX, at.clientY);
     },
-    dragTo: (at) => controller.dragTo(at.clientX, at.clientY),
+    dragTo: (at, ageMs = 0) => controller.dragTo(at.clientX, at.clientY, now() - ageMs),
     endDrag: () => controller.endDrag(),
     flyTo: (target) => {
       assertAlive();

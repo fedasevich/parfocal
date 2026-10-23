@@ -29,6 +29,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           memory: fileURLToPath(new URL("./page/memory.html", import.meta.url)),
           settings: fileURLToPath(new URL("./page/settings.html", import.meta.url)),
           pan: fileURLToPath(new URL("./page/pan.html", import.meta.url)),
+          input: fileURLToPath(new URL("./page/input.html", import.meta.url)),
+          "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),
         },
       },
     },

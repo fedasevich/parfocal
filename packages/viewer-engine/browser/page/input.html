@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="data:," />
+    <title>Viewer input harness</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+      #viewer { position: absolute; left: 100px; top: 50px; width: 800px; height: 600px; background: #e8e4ee; }
+      #readout { position: absolute; left: 600px; top: 500px; width: 280px; height: 120px; background: rgb(0 0 0 / 0.4); pointer-events: none; }
+      #panel { position: absolute; left: 700px; top: 100px; width: 260px; height: 200px; background: #cfd8dc; }
+    </style>
+  </head>
+  <body>
+    <div id="viewer"></div>
+    <div id="readout"></div>
+    <div id="panel"></div>
+    <script type="module" src="./input-harness.ts"></script>
+  </body>
+</html>

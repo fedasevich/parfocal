@@ -13,9 +13,24 @@ export const shortestFlightMs = 400;
 export const longestFlightMs = 700;
 export const longestFlightLength = 4;
 
-export function flightDurationMs(length: number): number {
-  const share = Math.min(1, Math.max(0, length / longestFlightLength));
-  return shortestFlightMs + (longestFlightMs - shortestFlightMs) * share;
+export interface FlightTiming {
+  readonly shortestFlightMs: number;
+  readonly longestFlightMs: number;
+  readonly longestFlightLength: number;
+}
+
+export const smoothFlightTiming: FlightTiming = {
+  shortestFlightMs,
+  longestFlightMs,
+  longestFlightLength,
+};
+
+export function flightDurationMs(length: number, timing = smoothFlightTiming): number {
+  const longest = Math.max(0, timing.longestFlightMs);
+  const shortest = Math.min(longest, Math.max(0, timing.shortestFlightMs));
+  const reach = timing.longestFlightLength > 0 ? length / timing.longestFlightLength : 1;
+  const share = Math.min(1, Math.max(0, Number.isFinite(reach) ? reach : 1));
+  return shortest + (longest - shortest) * share;
 }
 
 export function easeInOutCubic(t: number): number {
@@ -25,7 +40,12 @@ export function easeInOutCubic(t: number): number {
 
 const samePlace = 1e-9;
 
-export function planFlight(from: Camera, to: Camera, viewportWidth: number): Flight {
+export function planFlight(
+  from: Camera,
+  to: Camera,
+  viewportWidth: number,
+  timing = smoothFlightTiming,
+): Flight {
   if (!(viewportWidth > 0)) {
     throw new RangeError("A flight needs a viewport with a positive width");
   }
@@ -51,8 +71,8 @@ export function planFlight(from: Camera, to: Camera, viewportWidth: number): Fli
   } else {
     const b0 = (w1 * w1 - w0 * w0 + rho2 * rho2 * distance * distance) / (2 * w0 * rho2 * distance);
     const b1 = (w1 * w1 - w0 * w0 - rho2 * rho2 * distance * distance) / (2 * w1 * rho2 * distance);
-    const r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0);
-    const r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
+    const r0 = -Math.asinh(b0);
+    const r1 = -Math.asinh(b1);
     length = (r1 - r0) / rho;
     const coshR0 = Math.cosh(r0);
     const sinhR0 = Math.sinh(r0);
@@ -69,5 +89,5 @@ export function planFlight(from: Camera, to: Camera, viewportWidth: number): Fli
     return { x: from.x + share * dx, y: from.y + share * dy, zoom: zoomAtWidth(width) };
   };
 
-  return { from, to, length, durationMs: flightDurationMs(length), at };
+  return { from, to, length, durationMs: flightDurationMs(length, timing), at };
 }

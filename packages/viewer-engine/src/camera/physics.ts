@@ -27,12 +27,21 @@ export function speed(velocity: ScreenVelocity): number {
   return Math.hypot(velocity.x, velocity.y);
 }
 
+export interface ThrowFeel {
+  readonly velocityWindowMs: number;
+  readonly releaseIdleMs: number;
+  readonly minimumThrowSpeed: number;
+}
+
+export const smoothThrow: ThrowFeel = { velocityWindowMs, releaseIdleMs, minimumThrowSpeed };
+
 export function keepRecentSamples(
   samples: readonly PointerSample[],
   now: number,
+  windowMs = velocityWindowMs,
 ): readonly PointerSample[] {
   let first = 0;
-  while (samples.length - first > 2 && now - (samples[first]?.time ?? now) > velocityWindowMs) {
+  while (samples.length - first > 2 && now - (samples[first]?.time ?? now) > windowMs) {
     first += 1;
   }
   return first === 0 ? samples : samples.slice(first);
@@ -41,20 +50,27 @@ export function keepRecentSamples(
 export function releaseVelocity(
   samples: readonly PointerSample[],
   releaseTime: number,
+  feel = smoothThrow,
 ): ScreenVelocity | null {
   const first = samples[0];
   const last = samples.at(-1);
   if (!first || !last || first === last) return null;
   const span = last.time - first.time;
-  if (span <= 0 || releaseTime - last.time > releaseIdleMs) return null;
+  if (span <= 0 || releaseTime - last.time > feel.releaseIdleMs) return null;
   const velocity = { x: (last.x - first.x) / span, y: (last.y - first.y) / span };
-  return speed(velocity) < minimumThrowSpeed ? null : velocity;
+  if (!Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return null;
+  return speed(velocity) < feel.minimumThrowSpeed ? null : velocity;
 }
 
-export function coastStep(velocity: ScreenVelocity, elapsedMs: number): CoastStep {
+export function coastStep(
+  velocity: ScreenVelocity,
+  elapsedMs: number,
+  decayMs = coastDecayMs,
+): CoastStep {
+  if (!(decayMs > 0)) return { dx: 0, dy: 0, velocity: { x: 0, y: 0 } };
   const elapsed = Math.max(0, elapsedMs);
-  const remaining = Math.exp(-elapsed / coastDecayMs);
-  const travelled = coastDecayMs * (1 - remaining);
+  const remaining = Math.exp(-elapsed / decayMs);
+  const travelled = decayMs * (1 - remaining);
   return {
     dx: velocity.x * travelled,
     dy: velocity.y * travelled,
@@ -62,12 +78,19 @@ export function coastStep(velocity: ScreenVelocity, elapsedMs: number): CoastSte
   };
 }
 
-export function coastDistance(velocity: ScreenVelocity): ScreenVelocity {
-  return { x: velocity.x * coastDecayMs, y: velocity.y * coastDecayMs };
+export function coastDistance(velocity: ScreenVelocity, decayMs = coastDecayMs): ScreenVelocity {
+  const reach = Math.max(0, decayMs);
+  return { x: velocity.x * reach, y: velocity.y * reach };
 }
 
-export function easeZoomStep(current: number, target: number, elapsedMs: number): number {
+export function easeZoomStep(
+  current: number,
+  target: number,
+  elapsedMs: number,
+  easeMs = zoomEaseMs,
+): number {
+  if (!(easeMs > 0)) return target;
   const elapsed = Math.max(0, elapsedMs);
-  const next = target + (current - target) * Math.exp(-elapsed / zoomEaseMs);
+  const next = target + (current - target) * Math.exp(-elapsed / easeMs);
   return Math.abs(next - target) < zoomSettleOctaves ? target : next;
 }

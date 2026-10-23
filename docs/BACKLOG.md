@@ -998,7 +998,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Mount and unmount on a container, open slide, set camera, subscribe to camera, events for pointer on slide coordinates, overlay layer registration, dispose.
   Done when unit tests cover the API contract and a mount, unmount and remount cycle leaves no listeners (memory test from VIEW-030).
 
-- [ ] VIEW-002 · Viv route on WebGL2 for RGB brightfield
+- [x] VIEW-002 · Viv route on WebGL2 for RGB brightfield
   `MultiscaleImageLayer` or equivalent driven by our PixelSource, with a controlled view state and our own camera controller.
   Done when golden-image tests of fitted, 10× and 40× views on CMU-1.svs match in CI with software rendering.
   Refs [`poc/src/viv/baseline.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/baseline.ts).
@@ -1007,7 +1007,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   One interface for every format. It provides `getTile`, `getRaster`, levels, tile size, microns per pixel, photometric mode, dtype and channel info. Selection by the ingest format id, reading the sidecar index.
   Done when unit tests run the interface conformance suite against every implementation.
 
-- [ ] VIEW-004 · Decode worker pool
+- [x] VIEW-004 · Decode worker pool
   Six workers by default (tunable), transferable buffers, priority by distance to viewport centre, cancellation of queued work only, never of completed downloads.
   Done when tests prove late completed chunks are still used. A pan test reproduces the POC fix, with no fetch storm (POC regression: 10,324 fetches and 7.7 GB against a correct 19 and 14 MB).
   Refs doc 06, [`poc/src/viv/plane-pool.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/plane-pool.ts).
@@ -1069,7 +1069,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Camera and interaction
 
-- [ ] VIEW-020 · Camera controller
+- [x] VIEW-020 · Camera controller
   Pan, zoom to cursor, inertia, zoom limits defined in one place, objective-based zoom presets, fly-to with duration by distance (400 to 700 ms), cancellation by any new input.
   Done when unit tests cover the camera physics and limits, and a test flies between two areas and checks the endpoint.
   Refs [`poc/src/camera/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/camera), kit motion spec.

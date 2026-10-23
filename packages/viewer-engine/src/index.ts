@@ -2,6 +2,8 @@ export const packageName = "@parfocal/viewer-engine";
 
 export type {
   Camera,
+  CameraBounds,
+  CameraBoundsInput,
   ScreenRect,
   SlideArea,
   SlideExtent,
@@ -11,14 +13,17 @@ export type {
 } from "./camera/camera.ts";
 export {
   areaCamera,
+  cameraBounds,
   clampCamera,
   clampZoom,
   defaultZoomLimits,
   fitCamera,
+  maxDevicePixelsPerSlidePixel,
   sameCamera,
   screenScale,
   screenToSlide,
   slideToScreen,
+  zoomOutShareOfFit,
 } from "./camera/camera.ts";
 export type {
   CameraController,
@@ -29,7 +34,7 @@ export type {
   ZoomOptions,
 } from "./camera/controller.ts";
 export { createCameraController } from "./camera/controller.ts";
-export type { Flight } from "./camera/flight.ts";
+export type { Flight, FlightTiming } from "./camera/flight.ts";
 export {
   easeInOutCubic,
   flightCurvature,
@@ -38,6 +43,7 @@ export {
   longestFlightMs,
   planFlight,
   shortestFlightMs,
+  smoothFlightTiming,
 } from "./camera/flight.ts";
 export type { ObjectivePreset } from "./camera/magnification.ts";
 export {
@@ -47,7 +53,7 @@ export {
   objectivePresets,
   zoomForMagnification,
 } from "./camera/magnification.ts";
-export type { CoastStep, PointerSample, ScreenVelocity } from "./camera/physics.ts";
+export type { CoastStep, PointerSample, ScreenVelocity, ThrowFeel } from "./camera/physics.ts";
 export {
   coastDecayMs,
   coastDistance,
@@ -58,10 +64,26 @@ export {
   minimumThrowSpeed,
   releaseIdleMs,
   releaseVelocity,
+  smoothThrow,
   velocityWindowMs,
   zoomEaseMs,
   zoomSettleOctaves,
 } from "./camera/physics.ts";
+export type {
+  CameraProfile,
+  CameraProfilePreset,
+  WheelInputKind,
+  ZoomAnchor,
+} from "./camera/profile.ts";
+export {
+  cameraProfiles,
+  coasts,
+  defaultCameraProfile,
+  easesZoom,
+  flies,
+  wheelZoomOctaves,
+  withoutMotion,
+} from "./camera/profile.ts";
 export {
   createDecodePool,
   type DecodePool,
@@ -107,4 +129,51 @@ export type {
   ViewerEngine,
   ViewerEngineOptions,
 } from "./engine/types.ts";
+export {
+  bindViewerInput,
+  defaultCursors,
+  type InputTarget,
+  type ViewerInputBinding,
+  type ViewerInputOptions,
+} from "./input/dom-input.ts";
+export {
+  type CursorState,
+  createGestureInterpreter,
+  type DoubleClickInput,
+  doubleClickOctaves,
+  type GestureHooks,
+  type GestureInterpreter,
+  type InputAction,
+  type InputModifiers,
+  type InputPoint,
+  middleButton,
+  type PointerInput,
+  type PointerInputKind,
+  type PointerSampleInput,
+  primaryButton,
+  type ViewerInput,
+  type WheelInput,
+} from "./input/gestures.ts";
+export {
+  classifyWheel,
+  freshWheelClassifier,
+  isMacMouseStep,
+  isPinchWheel,
+  macMouseWheelStep,
+  mouseEvidenceNeeded,
+  mouseNotchMinimum,
+  pinchDeltaMaximum,
+  trackpadDeltaMaximum,
+  type WheelClassifier,
+  type WheelDelta,
+  type WheelDevice,
+  type WheelIntent,
+  type WheelMode,
+  wheelEventOctaves,
+  wheelIntent,
+  wheelLinePixels,
+  wheelPagePixels,
+  wheelPan,
+  wheelPixels,
+} from "./input/wheel.ts";
 export * from "./pixel-source/index.ts";

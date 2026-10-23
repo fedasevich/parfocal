@@ -119,6 +119,22 @@ An eased zoom about the cursor computes the centre from the zoom on each frame. 
 
 Coasting and the eased zoom use the closed form of an exponential decay for each frame's elapsed time instead of a per-frame factor. Thirty frames at 60 Hz, sixty at 120 Hz and one step of 500 ms then give the same position, so unit tests drive the controller with a fake clock and any frame length. The engine takes the clock as the `now` option and runs the controller inside its own frame, before it notifies camera subscribers. Source: VIEW-020, [ADR 0104](../adr/0104-camera-controller-motion.md).
 
+## The van Wijk flight needs asinh, not the log form
+
+The zoom and pan path's `r` terms are usually written `log(sqrt(b² + 1) - b)`. For a flight that zooms far out with a short pan, `b` grows past 10^8, `sqrt(b² + 1)` rounds to `b`, and the log of zero turns the whole path into NaN. A flight from 16 screen pixels per slide pixel out to 1/512 with a pan of 10 slide pixels did that. The same value is `-asinh(b)`, which stays accurate at any size. Source: VIEW-042, [ADR 0106](../adr/0106-camera-bounds-and-feel-profiles.md).
+
+## End a coast at a computed time, not on a speed threshold
+
+A coast checked against its stop speed at frame times keeps moving until the first frame after the speed crosses it, so the end position depends on the frame rate. With a 130 ms decay and a 0.01 px/ms stop speed the difference reached 0.25 px between 30 Hz and 1 ms frames. The controller computes the time the speed reaches the threshold when the coast starts and integrates the last step exactly up to it. An eased zoom does not need this, because it snaps onto its target. Source: VIEW-042, [ADR 0106](../adr/0106-camera-bounds-and-feel-profiles.md).
+
+## Advance a running motion to the input's time before handling the input
+
+Between frames the camera holds the value of the last frame. A wheel step, pan or cancel that reads it acts on a state that depends on when that frame ran, so the same input script ends in different places at 30 and 120 Hz. Every controller input first steps the running motion to the clock's current time. Removing that step made the smoothness suite fail, for example with a 45 px jump between two frames where the reference moved the content 6 px. Source: VIEW-045, [ADR 0106](../adr/0106-camera-bounds-and-feel-profiles.md).
+
+## Test camera smoothness against a 1 ms run, following content points
+
+`test/camera-smoothness.test.ts` plays each input script at 30, 60 and 120 Hz and with jittery frame times, and once at 1 ms frames as the reference. A frame-to-frame jump is allowed only up to how far the same content travels on screen along the reference over that interval, widened by 1 ms on each side, plus 1% and 0.5 px. Two traps came up while writing it. Measuring how far the screen corners move understates a zoom in, because the content under a corner moves `k - 1` while the summed small steps give `ln k`. Ending the reference path at the first sample after a frame is not a bound either, when an input lands at almost the same time as the frame. Source: VIEW-045.
+
 ## Decode workers must share one byte cache
 
 geotiff reads 1 MiB blocks, and one block of CMU-1.svs holds many tiles. Six workers that each open the slide with their own geotiff source download a shared block up to six times. The decode workers instead fetch through a `MessagePort` to one range cache on the page (`src/decode/range-cache.ts`), and `createPixelSlideOpener` opens the page's own source through the same cache. A pan across CMU-1.svs then downloaded no byte twice. Source: VIEW-004, [ADR 0105](../adr/0105-decode-workers-behind-one-byte-cache.md), [result](../results/2026-10-23-decode-pool-pan-fetches.md).
@@ -134,3 +150,19 @@ Viv aborts a tile's signal as soon as it leaves the view. If that signal reaches
 ## Count aborted fetches at the latency proxy
 
 In the fetch storm test, 160 requests the client aborted during the proxy's RTT delay were counted by `@parfocal/latency-proxy`, and none of them reached the origin server's log. To count fetches in an abort scenario, read the proxy's `stats()`. Source: VIEW-004.
+
+## Coalesced pointer samples need their own times
+
+`getCoalescedEvents()` hands back every sample of a fast stroke, but fed to the camera controller at the time of the event that carried them they all share one timestamp and the release velocity comes out as if they were not there. The input binding passes each sample's age (`event.timeStamp - sample.timeStamp`), and `dragTo` turns that into a time on the engine's own clock. In the unit test a stroke delivered late as four coalesced samples threw more than 50 px further than the same stroke without them. Source: VIEW-043, [ADR 0107](../adr/0107-viewer-input-binding.md).
+
+## Replay input in Node against the real camera controller
+
+The gesture interpreter returns actions instead of touching the DOM, so `test/input/replay.ts` feeds a trace through it into `createCameraController` with a fake clock and steps a frame every 16.7 ms between events. Anchoring, the per-event zoom cap and the end of every gesture are then checked frame by frame without a browser. Add new trace files to `test/input/traces/` and they are replayed automatically. Source: VIEW-021, [ADR 0107](../adr/0107-viewer-input-binding.md).
+
+## A synthetic drag can throw
+
+Moves sent through `Input.dispatchMouseEvent` with a wait between them and released straight after the last one count as a throw, and the camera coasts past the pointer's travel. A browser test that checks a pan distance should wait for idle and assert at least the travel, or release after more than 60 ms of rest. Source: VIEW-021.
+
+## Playwright keeps every page focused
+
+Playwright emulates focus, so a headless page does not lose it when another page opens. The input spec ends a drag on blur by dispatching a `FocusEvent("blur")` on the window, which runs the same handler a real blur does. Source: VIEW-043.

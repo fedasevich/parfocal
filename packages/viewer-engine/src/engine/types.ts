@@ -1,5 +1,13 @@
-import type { Camera, ScreenRect, SlideArea, SlideExtent, ZoomLimits } from "../camera/camera.ts";
+import type {
+  Camera,
+  CameraBounds,
+  ScreenRect,
+  SlideArea,
+  SlideExtent,
+  ZoomLimits,
+} from "../camera/camera.ts";
 import type { CameraMotion, FlightEnd, ZoomOptions } from "../camera/controller.ts";
+import type { CameraProfile } from "../camera/profile.ts";
 
 export type Unsubscribe = () => void;
 
@@ -99,6 +107,8 @@ export interface ViewerEngineOptions<Slide extends EngineSlide = EngineSlide> {
   readonly frames?: FrameScheduler;
   readonly now?: Clock;
   readonly reducedMotion?: () => boolean;
+  readonly devicePixelRatio?: () => number;
+  readonly cameraProfile?: CameraProfile;
   readonly observeResize?: ResizeObserve;
 }
 
@@ -113,6 +123,9 @@ export interface ViewerEngine {
   readonly setCamera: (camera: Camera) => void;
   readonly fitToSlide: () => void;
   readonly getMotion: () => CameraMotion;
+  readonly getCameraBounds: () => CameraBounds;
+  readonly getCameraProfile: () => CameraProfile;
+  readonly setCameraProfile: (profile: CameraProfile) => void;
   readonly stopMotion: () => void;
   readonly panBy: (dx: number, dy: number) => void;
   readonly zoomTo: (zoom: number, at?: ClientPoint, options?: ZoomOptions) => void;
@@ -123,7 +136,7 @@ export interface ViewerEngine {
     options?: ZoomOptions,
   ) => boolean;
   readonly startDrag: (at: ClientPoint) => void;
-  readonly dragTo: (at: ClientPoint) => void;
+  readonly dragTo: (at: ClientPoint, ageMs?: number) => void;
   readonly endDrag: () => void;
   readonly flyTo: (target: Camera) => Promise<FlightEnd>;
   readonly flyToArea: (area: SlideArea) => Promise<FlightEnd>;
