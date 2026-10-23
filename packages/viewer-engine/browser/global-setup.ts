@@ -6,9 +6,9 @@ import { serve } from "../test/pixel-source/serve.ts";
 export const harnessOriginVariable = "VIEWER_HARNESS_ORIGIN";
 
 const pageRoot = fileURLToPath(new URL("./page", import.meta.url));
-const outDir = fileURLToPath(new URL("../test-results/harness", import.meta.url));
+export const outDir = fileURLToPath(new URL("../test-results/harness", import.meta.url));
 
-const crossOriginIsolated = {
+export const crossOriginIsolated = {
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-embedder-policy": "require-corp",
   "cross-origin-resource-policy": "same-origin",
@@ -28,6 +28,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
         input: {
           memory: fileURLToPath(new URL("./page/memory.html", import.meta.url)),
           settings: fileURLToPath(new URL("./page/settings.html", import.meta.url)),
+          pan: fileURLToPath(new URL("./page/pan.html", import.meta.url)),
         },
       },
     },

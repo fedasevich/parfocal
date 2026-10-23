@@ -4,9 +4,16 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { AddressInfo } from "node:net";
 import { extname, join, normalize } from "node:path";
 
+export interface ServedRequest {
+  readonly path: string;
+  readonly range: string | null;
+  bytes: number;
+}
+
 export interface Served {
   readonly origin: string;
   readonly requests: string[];
+  readonly log: ServedRequest[];
   url(path: string): string;
   close(): Promise<void>;
 }
@@ -45,6 +52,7 @@ function sendRange(
   path: string,
   size: number,
   headers: Readonly<Record<string, string>>,
+  entry: ServedRequest,
 ): void {
   const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range ?? "");
   if (range === null) {
@@ -54,6 +62,7 @@ function sendRange(
       "content-length": size,
       "accept-ranges": "bytes",
     });
+    entry.bytes = size;
     createReadStream(path).pipe(response);
     return;
   }
@@ -64,6 +73,7 @@ function sendRange(
     response.end();
     return;
   }
+  entry.bytes = end - start + 1;
   response.writeHead(206, {
     ...headers,
     "content-length": end - start + 1,
@@ -78,9 +88,12 @@ export async function serve(
   options: ServeOptions = {},
 ): Promise<Served> {
   const requests: string[] = [];
+  const log: ServedRequest[] = [];
   const server = createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname);
     requests.push(pathname);
+    const entry: ServedRequest = { path: pathname, range: request.headers.range ?? null, bytes: 0 };
+    log.push(entry);
     const mount = Object.keys(mounts).find(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     );
@@ -94,7 +107,7 @@ export async function serve(
     void (async () => {
       const size = path === null ? null : await sizeOf(path);
       if (path !== null && size !== null) {
-        sendRange(request, response, path, size, options.headers ?? {});
+        sendRange(request, response, path, size, options.headers ?? {}, entry);
       } else if (options.spaFallback) {
         response.writeHead(200, { "content-type": "text/html" });
         response.end(fallbackPage);
@@ -110,6 +123,7 @@ export async function serve(
   return {
     origin,
     requests,
+    log,
     url: (path) => `${origin}${path}`,
     close: () =>
       new Promise<void>((resolve, reject) => {

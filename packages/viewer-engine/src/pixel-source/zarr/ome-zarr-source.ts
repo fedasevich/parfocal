@@ -205,7 +205,13 @@ function planesOf(
 
 export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSource> {
   const url = absoluteUrl(request.url, request.baseUrl);
-  const store = slideStore(new zarr.FetchStore(url.href));
+  const fetcher = request.fetch;
+  const store = slideStore(
+    new zarr.FetchStore(
+      url.href,
+      fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) },
+    ),
+  );
   const root = await openRoot(store, request.index?.zarrVersion);
   const attributes = root.attrs as OmeAttributes;
   const multiscale = (attributes.ome?.multiscales ?? attributes.multiscales)?.[0];

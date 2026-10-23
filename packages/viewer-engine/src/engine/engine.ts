@@ -1,15 +1,25 @@
 import {
+  areaCamera,
   type Camera,
   clampCamera,
   defaultZoomLimits,
   fitCamera,
   originCamera,
   type ScreenRect,
+  type SlideArea,
   sameCamera,
   screenToSlide,
 } from "../camera/camera.ts";
-import { animationFrames, observeElementResize } from "./environment.ts";
+import { createCameraController, type ScreenOffset } from "../camera/controller.ts";
+import { zoomForMagnification } from "../camera/magnification.ts";
+import {
+  animationFrames,
+  observeElementResize,
+  prefersReducedMotion,
+  systemClock,
+} from "./environment.ts";
 import type {
+  ClientPoint,
   EngineContainer,
   EngineEvents,
   EngineSlide,
@@ -82,6 +92,8 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const limits = options.zoomLimits ?? defaultZoomLimits;
   const frames = options.frames ?? animationFrames;
   const observeResize = options.observeResize ?? observeElementResize;
+  const now = options.now ?? systemClock;
+  const reducedMotion = options.reducedMotion ?? prefersReducedMotion;
 
   let disposed = false;
   let mounted: Mounted<Slide> | null = null;
@@ -111,7 +123,9 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const runFrame = () => {
     frame = null;
     rect = null;
+    const moving = controller.step();
     if (cameraDirty) notifyCamera();
+    if (moving) requestFrame();
   };
 
   const requestFrame = () => {
@@ -150,7 +164,55 @@ export function createViewerEngine<Slide extends EngineSlide>(
     }
   };
 
+  const controller = createCameraController({
+    limits,
+    now,
+    getCamera: () => camera,
+    applyCamera,
+    viewport: () => (mounted ? measure(mounted.container) : null),
+    requestFrame,
+    animates: () => mounted !== null && !reducedMotion(),
+  });
+
+  const anchorOf = (at: ClientPoint | undefined): ScreenOffset | undefined => {
+    if (!at || !mounted) return undefined;
+    const viewport = measure(mounted.container);
+    return {
+      x: at.clientX - viewport.left - viewport.width / 2,
+      y: at.clientY - viewport.top - viewport.height / 2,
+    };
+  };
+
+  const flyToArea = (area: SlideArea) => {
+    assertAlive();
+    fitPending = false;
+    const viewport = mounted ? measure(mounted.container) : null;
+    const target =
+      viewport && viewport.width > 0 && viewport.height > 0
+        ? areaCamera(area, viewport, limits)
+        : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
+    return controller.flyTo(target);
+  };
+
+  const zoomToMagnification = (
+    magnification: number,
+    at?: ClientPoint,
+    zoomOptions?: { readonly animate?: boolean },
+  ): boolean => {
+    assertAlive();
+    const micronsPerPixel = slide?.micronsPerPixel ?? null;
+    if (micronsPerPixel === null || !(magnification > 0)) return false;
+    fitPending = false;
+    controller.zoomTo(
+      zoomForMagnification(micronsPerPixel, magnification),
+      anchorOf(at),
+      zoomOptions,
+    );
+    return true;
+  };
+
   const fitIfPossible = () => {
+    controller.cancel();
     if (!slide) return;
     const viewport = mounted ? measure(mounted.container) : null;
     if (!viewport || viewport.width <= 0 || viewport.height <= 0) {
@@ -167,6 +229,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
 
   const pointerListener =
     (kind: SlidePointerKind, container: EngineContainer) => (source: Event) => {
+      if (kind === "down" || kind === "wheel") controller.interrupt();
       if (eventListeners.pointer.size === 0) return;
       const input = source as PointerLike;
       const clientX = input.clientX ?? 0;
@@ -218,12 +281,14 @@ export function createViewerEngine<Slide extends EngineSlide>(
     const { route, detach } = mounted;
     mounted = null;
     for (const remove of detach) remove();
+    controller.settle();
     cancelFrame();
     if (cameraDirty) notifyCamera();
     route.destroy();
   };
 
   const closeCurrentSlide = () => {
+    controller.cancel();
     const previous = slide;
     slide = null;
     slideInfo = null;
@@ -235,16 +300,16 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const openSlide = async (ref: SlideRef): Promise<SlideInfo> => {
     assertAlive();
     pendingOpen?.abort();
-    const controller = new AbortController();
-    pendingOpen = controller;
+    const opening = new AbortController();
+    pendingOpen = opening;
     let opened: Slide;
     try {
-      opened = await options.openSlide(ref, controller.signal);
+      opened = await options.openSlide(ref, opening.signal);
     } catch (error) {
-      if (pendingOpen === controller) pendingOpen = null;
+      if (pendingOpen === opening) pendingOpen = null;
       throw error;
     }
-    if (disposed || pendingOpen !== controller) {
+    if (disposed || pendingOpen !== opening) {
       opened.close();
       if (disposed) throw new EngineDisposedError();
       throw new SlideOpenSupersededError(ref.id);
@@ -289,6 +354,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
 
   const dispose = () => {
     if (disposed) return;
+    controller.cancel();
     pendingOpen?.abort();
     pendingOpen = null;
     unmount();
@@ -319,12 +385,44 @@ export function createViewerEngine<Slide extends EngineSlide>(
     setCamera: (next) => {
       assertAlive();
       fitPending = false;
+      controller.cancel();
       applyCamera(next);
     },
     fitToSlide: () => {
       assertAlive();
       fitIfPossible();
     },
+    getMotion: () => controller.motion(),
+    stopMotion: () => controller.cancel(),
+    panBy: (dx, dy) => {
+      assertAlive();
+      fitPending = false;
+      controller.panBy(dx, dy);
+    },
+    zoomTo: (zoom, at, zoomOptions) => {
+      assertAlive();
+      fitPending = false;
+      controller.zoomTo(zoom, anchorOf(at), zoomOptions);
+    },
+    zoomBy: (octaves, at, zoomOptions) => {
+      assertAlive();
+      fitPending = false;
+      controller.zoomBy(octaves, anchorOf(at), zoomOptions);
+    },
+    zoomToMagnification,
+    startDrag: (at) => {
+      assertAlive();
+      fitPending = false;
+      controller.startDrag(at.clientX, at.clientY);
+    },
+    dragTo: (at) => controller.dragTo(at.clientX, at.clientY),
+    endDrag: () => controller.endDrag(),
+    flyTo: (target) => {
+      assertAlive();
+      fitPending = false;
+      return controller.flyTo(target);
+    },
+    flyToArea,
     subscribeCamera: (listener) => {
       assertAlive();
       cameraListeners.add(listener);

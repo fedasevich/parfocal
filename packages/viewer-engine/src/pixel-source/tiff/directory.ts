@@ -1,4 +1,7 @@
 import {
+  BaseClient,
+  BaseResponse,
+  fromCustomClient,
   fromUrl,
   type GeoTIFF,
   GeoTIFFImage,
@@ -18,9 +21,53 @@ export interface TiffPage {
   readonly image: GeoTIFFImage;
 }
 
-export async function openTiff(url: URL, signal?: AbortSignal): Promise<GeoTIFF> {
+class InjectedResponse extends BaseResponse {
+  readonly #response: Response;
+
+  constructor(response: Response) {
+    super();
+    this.#response = response;
+  }
+
+  override get status(): number {
+    return this.#response.status;
+  }
+
+  override getHeader(name: string): string | undefined {
+    return this.#response.headers.get(name) ?? undefined;
+  }
+
+  override getData(): Promise<ArrayBuffer> {
+    return this.#response.arrayBuffer();
+  }
+}
+
+class InjectedFetchClient extends BaseClient {
+  readonly #fetch: typeof globalThis.fetch;
+
+  constructor(url: string, fetcher: typeof globalThis.fetch) {
+    super(url);
+    this.#fetch = fetcher;
+  }
+
+  override async request(options: RequestInit = {}): Promise<BaseResponse> {
+    const init: RequestInit = {};
+    if (options.headers !== undefined) init.headers = options.headers;
+    if (options.signal) init.signal = options.signal;
+    return new InjectedResponse(await this.#fetch(this.url, init));
+  }
+}
+
+export async function openTiff(
+  url: URL,
+  signal?: AbortSignal,
+  fetcher?: typeof globalThis.fetch,
+): Promise<GeoTIFF> {
   const options: RemoteSourceOptions & { blockSize: number } = { blockSize: TIFF_BLOCK_SIZE };
-  const tiff = await fromUrl(url.href, options, signal);
+  const tiff =
+    fetcher === undefined
+      ? await fromUrl(url.href, options, signal)
+      : await fromCustomClient(new InjectedFetchClient(url.href, fetcher), {}, signal);
   if (!tiff.littleEndian) tiff.parser.eager = true;
   return tiff;
 }

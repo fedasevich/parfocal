@@ -101,6 +101,7 @@ Never invent data. Do not make up benchmark numbers, model scores, user quotes, 
 - Work one backlog task per change. Respect "Depends on" and the Definition of Done in `docs/BACKLOG.md`.
 - Every task ships with the tests its "Done when" line names. Untested work is not done.
 - Viv is the primary renderer and must work perfectly. Alternates sit behind the renderer interface and must pass the same golden-image tests.
+- Build the obvious. When a behaviour is plainly needed for the app to work well, such as the camera stopping at the slide edge, a drag that always ends or a zoom that eases instead of jumping, build it as part of the task instead of leaving a TODO or asking the owner. Check first how the POC solved it and reuse its tuned constants and lessons, but write the code fresh. Name what was added in the log entry. When it is bigger than the current task, add a backlog task for it in the same change so it is not lost. Ask the owner only about real product choices, such as what users see, wording, or a trade-off between two good options.
 - Read every POC-supported format natively. Convert only when an ADR-recorded trigger fires.
 - No PHI in logs, analytics, test fixtures committed to the repo, or docs.
 - Commit only when the user asks. Do not add attribution lines to commit messages or pull request descriptions.

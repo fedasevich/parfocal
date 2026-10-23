@@ -1075,7 +1075,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/camera/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/camera), kit motion spec.
 
 - [ ] VIEW-021 · Wheel, trackpad and pinch handling
-  Wheel zooms by default. Pinch is told apart from ctrl+wheel by delta shape. Each event is capped at half an octave. Middle-drag and Space+drag pan in any tool. Settings choose wheel mode.
+  Wheel zooms by default. Pinch is told apart from ctrl+wheel by delta shape. Each event is capped at half an octave. Middle-drag and Space+drag pan in any tool. Settings choose wheel mode, and the default `auto` mode tells a trackpad from a mouse wheel. Shift+wheel pans sideways in pan mode. Double-click zooms in 2× about the cursor and Alt+double-click zooms out 2×, unless the click lands on a shape the active tool edits.
   Done when unit tests replay recorded event traces from a mouse, a Mac trackpad and a Windows precision touchpad.
   Refs doc 16, doc 34 §1.
 
@@ -1135,7 +1135,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
 
 - [ ] VIEW-033 · Hidden tab and background scheduling
-  A watchdog keeps rendering correct after the tab returns, a loop generation counter restarts parked loops, and long work is sliced with `scheduler.yield` or MessageChannel.
+  A watchdog keeps rendering correct after the tab returns, a camera motion started or running while the tab is hidden settles on its target at once (animation frames are suspended, not throttled, in a hidden tab), a loop generation counter restarts parked loops, and long work is sliced with `scheduler.yield` or MessageChannel.
   Done when a test hides and shows the tab mid-load and the view is complete within 1 s of becoming visible.
   Refs docs 01, 06.
 
@@ -1156,6 +1156,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Alternate renderers (developer drawer only)
 
+- [ ] VIEW-042 · Camera bounds at the slide edges
+  The zoom range follows the slide: out to half the fitted size, in to 16 device pixels per level-0 pixel, both from the one place that holds the limits. The view centre stays on the slide, so the tissue can never be thrown off screen. A coast that hits an edge stops on that axis instead of grinding along it. A resize or a slide switch re-clamps the camera.
+  Done when unit tests throw past each edge and check the camera stops there, check the zoom range on slides of different sizes and viewports, and check a resize re-clamps.
+  Depends on VIEW-020. Refs [`poc/src/camera/viewport.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/viewport.ts), [`poc/src/camera/camera-controller.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-controller.ts), doc 06 §17, [ADR 0104](adr/0104-camera-controller-motion.md).
+- [ ] VIEW-043 · Drags that always end
+  Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning.
+  Done when browser tests release the button outside the viewer, over an overlay, after a lost capture and after a window blur, and the drag ends every time with no pan on the next mouse move.
+  Depends on VIEW-020. Refs doc 06 §15, doc 16.
+- [ ] VIEW-044 · Prefetch where the view is heading
+  Predict the next view from a fast, straight pan or a steady hover and request its tiles at low priority before they enter the view. Velocity is weighted over the last 160 ms with a 55 ms half-life, a path straighter than 0.7 is needed, the lead is 300 ms and at most 1.25 viewports. Prefetch jobs go through the decode pool behind visible tiles and are dropped by its queue rules, never by aborting a download. The developer drawer can turn it off and show the vector.
+  Done when a test on a scripted straight pan shows the predicted tiles requested before they enter the view, a zig-zag pan prefetches nothing, and a result file records time to a sharp view at 100 ms RTT with and without prediction.
+  Depends on VIEW-004, VIEW-020. Refs [`poc/src/camera/motion-predictor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/motion-predictor.ts), doc 34 §2.
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

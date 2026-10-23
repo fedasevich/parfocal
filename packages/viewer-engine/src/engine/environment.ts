@@ -1,4 +1,4 @@
-import type { FrameScheduler, ResizeObserve } from "./types.ts";
+import type { Clock, FrameScheduler, ResizeObserve } from "./types.ts";
 
 export const animationFrames: FrameScheduler = {
   request: (callback) => globalThis.requestAnimationFrame(() => callback()),
@@ -17,3 +17,9 @@ export const observeElementResize: ResizeObserve = (container, onResize) => {
   observer.observe(container);
   return () => observer.disconnect();
 };
+
+export const systemClock: Clock = () => globalThis.performance.now();
+
+export const prefersReducedMotion = (): boolean =>
+  typeof globalThis.matchMedia === "function" &&
+  globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;

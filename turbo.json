@@ -23,7 +23,9 @@
         "PARFOCAL_FIXTURES_DIR",
         "XDG_CACHE_HOME",
         "GOLDEN_UPDATE",
-        "GOLDEN_MEASURE"
+        "GOLDEN_MEASURE",
+        "PAN_RTT_MS",
+        "PAN_BANDWIDTH"
       ]
     }
   }

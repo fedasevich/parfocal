@@ -63,6 +63,32 @@ export class FakeFrames implements FrameScheduler {
   }
 }
 
+export class FakeClock {
+  time = 1000;
+
+  readonly now = (): number => this.time;
+
+  advance(ms: number): void {
+    this.time += ms;
+  }
+}
+
+export function runFrames(
+  frames: FakeFrames,
+  clock: FakeClock,
+  frameMs = 16,
+  limit = 1000,
+): number {
+  let count = 0;
+  while (frames.pending.size > 0) {
+    if (count >= limit) throw new Error(`Still animating after ${limit} frames`);
+    clock.advance(frameMs);
+    frames.flush();
+    count += 1;
+  }
+  return count;
+}
+
 export class FakeResize {
   readonly active = new Map<EngineContainer, () => void>();
 

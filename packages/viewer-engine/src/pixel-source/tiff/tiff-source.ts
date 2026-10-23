@@ -224,7 +224,11 @@ function paintAbsent(
 }
 
 export async function openTiffSource(request: OpenRequest): Promise<PixelSource> {
-  const tiff = await openTiff(absoluteUrl(request.url, request.baseUrl), request.signal);
+  const tiff = await openTiff(
+    absoluteUrl(request.url, request.baseUrl),
+    request.signal,
+    request.fetch,
+  );
   const levels = await chooseLevels(tiff, request);
   const base = levelAt(levels, 0);
   await assertDecodable(base.image);

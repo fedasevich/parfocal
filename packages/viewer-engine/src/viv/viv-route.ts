@@ -1,7 +1,16 @@
 import { Deck, type Layer, OrthographicView } from "@deck.gl/core";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { type Camera, originCamera } from "../camera/camera.ts";
+import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
+import { createRangeCache } from "../decode/range-cache.ts";
+import {
+  createWorkerRegionReader,
+  type DecodeStats,
+  type DecodeWorker,
+  type WorkerRegionReader,
+} from "../decode/worker-reader.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
+import { absoluteUrl } from "../pixel-source/url.ts";
 import { disposeDeck } from "./dispose-deck.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createVivLevels, type VivLevels } from "./viv-levels.ts";
@@ -18,18 +27,22 @@ export interface VivRouteOptions {
   readonly onError?: (error: Error) => void;
   readonly useDevicePixels?: boolean | number;
   readonly preserveDrawingBuffer?: boolean;
+  readonly decodeWorkers?: number;
+  readonly spawnDecodeWorker?: (index: number) => DecodeWorker;
 }
 
 export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly canvas: HTMLCanvasElement;
   readonly deck: Deck<OrthographicView>;
   readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
+  readonly decodeStats: () => DecodeStats | null;
 }
 
 interface Shown {
   readonly slide: PixelSlide;
   readonly levels: VivLevels;
   readonly layer: Layer;
+  readonly reader: WorkerRegionReader | null;
 }
 
 export function vivViewState(camera: Camera) {
@@ -83,6 +96,34 @@ export function createVivRoute(
     },
   });
 
+  const workerCount = options.decodeWorkers ?? defaultDecodeWorkers;
+
+  const readerFor = (slide: PixelSlide): WorkerRegionReader | null => {
+    const opened = slide.opened;
+    if (opened === null || workerCount < 1) return null;
+    const reader = createWorkerRegionReader({
+      request: {
+        formatId: opened.formatId,
+        url: absoluteUrl(opened.url, opened.baseUrl).href,
+        ...(opened.index === undefined ? {} : { index: opened.index }),
+      },
+      size: workerCount,
+      cache:
+        slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
+      ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
+    });
+    reader.ready.catch((error: unknown) => {
+      reportError(error instanceof Error ? error : new Error(String(error)));
+    });
+    reader.setFocus({ x: camera.x, y: camera.y });
+    return reader;
+  };
+
+  const release = () => {
+    shown?.reader?.dispose();
+    shown = null;
+  };
+
   const changed = () => {
     changes++;
     deck.redraw("parfocal route change");
@@ -90,13 +131,17 @@ export function createVivRoute(
 
   const showSlide = (slide: PixelSlide | null) => {
     if (slide === shown?.slide) return;
+    release();
     if (slide === null) {
-      shown = null;
       deck.setProps({ layers: [] });
       changed();
       return;
     }
-    const levels = createVivLevels(slide.source, { onTileError: reportError });
+    const reader = readerFor(slide);
+    const levels = createVivLevels(slide.source, {
+      onTileError: reportError,
+      ...(reader ? { read: reader.read } : {}),
+    });
     const layer = new MultiscaleImageLayer<[]>({
       id: `slide-${slide.id}`,
       loader: [...levels.levels],
@@ -106,13 +151,14 @@ export function createVivRoute(
       dtype: "Uint8",
       ...unpickable,
     }) as Layer;
-    shown = { slide, levels, layer };
+    shown = { slide, levels, layer, reader };
     deck.setProps({ layers: [layer] });
     changed();
   };
 
   const setCamera = (next: Camera) => {
     camera = next;
+    shown?.reader?.setFocus({ x: camera.x, y: camera.y });
     deck.setProps({ viewState: vivViewState(camera) });
     changed();
   };
@@ -121,7 +167,7 @@ export function createVivRoute(
     if (renderedChanges !== changes) return false;
     if (deck.needsRedraw({ clearRedrawFlags: false })) return false;
     if (shown === null) return true;
-    return shown.layer.isLoaded && shown.levels.pending() === 0;
+    return shown.layer.isLoaded && shown.levels.pending() === 0 && (shown.reader?.idle() ?? true);
   };
 
   const whenIdle = (signal?: AbortSignal) =>
@@ -150,6 +196,7 @@ export function createVivRoute(
     canvas,
     deck,
     whenIdle,
+    decodeStats: () => shown?.reader?.stats() ?? null,
     showSlide,
     setCamera,
     setOverlays: (next) => {
@@ -161,7 +208,7 @@ export function createVivRoute(
     destroy: () => {
       if (destroyed) return;
       destroyed = true;
-      shown = null;
+      release();
       disposeDeck(deck as unknown as Deck, canvas);
     },
   };

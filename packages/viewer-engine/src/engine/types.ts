@@ -1,4 +1,5 @@
-import type { Camera, ScreenRect, SlideExtent, ZoomLimits } from "../camera/camera.ts";
+import type { Camera, ScreenRect, SlideArea, SlideExtent, ZoomLimits } from "../camera/camera.ts";
+import type { CameraMotion, FlightEnd, ZoomOptions } from "../camera/controller.ts";
 
 export type Unsubscribe = () => void;
 
@@ -45,6 +46,13 @@ export interface FrameScheduler {
   cancel(handle: number): void;
 }
 
+export type Clock = () => number;
+
+export interface ClientPoint {
+  readonly clientX: number;
+  readonly clientY: number;
+}
+
 export type ResizeObserve = (container: EngineContainer, onResize: () => void) => Unsubscribe;
 
 export type SlidePointerKind = "down" | "move" | "up" | "cancel" | "leave" | "wheel";
@@ -89,6 +97,8 @@ export interface ViewerEngineOptions<Slide extends EngineSlide = EngineSlide> {
   readonly openSlide: SlideOpener<Slide>;
   readonly zoomLimits?: ZoomLimits;
   readonly frames?: FrameScheduler;
+  readonly now?: Clock;
+  readonly reducedMotion?: () => boolean;
   readonly observeResize?: ResizeObserve;
 }
 
@@ -102,6 +112,21 @@ export interface ViewerEngine {
   readonly getCamera: () => Camera;
   readonly setCamera: (camera: Camera) => void;
   readonly fitToSlide: () => void;
+  readonly getMotion: () => CameraMotion;
+  readonly stopMotion: () => void;
+  readonly panBy: (dx: number, dy: number) => void;
+  readonly zoomTo: (zoom: number, at?: ClientPoint, options?: ZoomOptions) => void;
+  readonly zoomBy: (octaves: number, at?: ClientPoint, options?: ZoomOptions) => void;
+  readonly zoomToMagnification: (
+    magnification: number,
+    at?: ClientPoint,
+    options?: ZoomOptions,
+  ) => boolean;
+  readonly startDrag: (at: ClientPoint) => void;
+  readonly dragTo: (at: ClientPoint) => void;
+  readonly endDrag: () => void;
+  readonly flyTo: (target: Camera) => Promise<FlightEnd>;
+  readonly flyToArea: (area: SlideArea) => Promise<FlightEnd>;
   readonly subscribeCamera: (listener: () => void) => Unsubscribe;
   readonly on: <Name extends keyof EngineEvents>(
     name: Name,

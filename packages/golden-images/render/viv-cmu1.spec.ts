@@ -76,6 +76,8 @@ for (const scene of VIV_SCENES) {
   test(`${scene.name} matches its golden image`, async ({ page }, testInfo) => {
     const { result, frame } = await renderVivFrame(page, scene);
     expect(result.errors).toEqual([]);
+    expect(result.decoded?.workers).toBe(6);
+    expect(result.decoded?.dispatched).toBeGreaterThan(0);
     const outcome = checkGolden(frame, {
       name: scene.name,
       format: scene.format,

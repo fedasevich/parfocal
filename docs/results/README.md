@@ -34,3 +34,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-23 | [The latency proxy adds the set RTT plus 1 to 2 ms at 0, 50, 100 and 200 ms and holds its bandwidth limit within 3 ms](2026-10-23-latency-proxy.md) | TILES-006 | baseline |
 | 2026-10-23 | [The Viv route draws CMU-1.svs identically on every SwiftShader run, and swapped, unconverted or misplaced pixels all fail its goldens](2026-10-23-viv-route-goldens.md) | VIEW-002 | baseline |
 | 2026-10-23 | [On SwiftShader, 20 slide switches keep one Deck and the heap 3.9% to 4.0% over baseline, and without canvasContext.destroy every deck stays alive](2026-10-23-memory-teardown-swiftshader.md) | VIEW-030 | baseline |
+| 2026-10-23 | [The decode pool pans CMU-1.svs with no byte downloaded twice, and keeping started work turns 160 fetches with no tile into 1 fetch](2026-10-23-decode-pool-pan-fetches.md) | VIEW-004 | benchmark |

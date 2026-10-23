@@ -153,12 +153,12 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
       return route;
     },
     openSlide: async (ref, signal) => {
-      const source = await registry.open({
-        formatId: request.formatId,
-        url: request.url,
-        signal,
-      });
-      opened = pixelSlide(ref.id, broken(source, request.breakage));
+      const openRequest = { formatId: request.formatId, url: request.url };
+      const source = await registry.open({ ...openRequest, signal });
+      opened =
+        request.breakage === "none"
+          ? pixelSlide(ref.id, source, openRequest)
+          : pixelSlide(ref.id, broken(source, request.breakage));
       return opened;
     },
   });
@@ -181,11 +181,16 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   if (mountedRoute === null || openedSlide === null) throw new Error("The route never mounted");
   await mountedRoute.whenIdle();
   const { ladder } = createVivLevels(openedSlide.source);
+  const decodeStats = mountedRoute.decodeStats();
   return {
     camera: current.getCamera(),
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
     ladder: ladder.map(({ downsample, backing }) => ({ downsample, backing })),
     errors: [...errors],
+    decoded:
+      decodeStats === null
+        ? null
+        : { workers: decodeStats.size, dispatched: decodeStats.dispatched },
   };
 };
 

@@ -28,6 +28,7 @@ export interface VivSceneResult {
   };
   readonly ladder: readonly { readonly downsample: number; readonly backing: number }[];
   readonly errors: readonly string[];
+  readonly decoded: { readonly workers: number; readonly dispatched: number } | null;
 }
 
 export interface VivHarness {

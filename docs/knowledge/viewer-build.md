@@ -110,3 +110,27 @@ Viv 0.23's `XRLayer` uploads `Uint8` channels as `r8uint` with nearest filtering
 ## Playwright empties test-results before a run
 
 Playwright clears its output folder, `test-results/` by default, at the start of every run. The memory spec writes its JSON reports and heap snapshots there, so copy them elsewhere before the next run if they are needed. Source: VIEW-030.
+
+## Clamp a camera target before deriving anything from it
+
+An eased zoom about the cursor computes the centre from the zoom on each frame. When the target zoom lies outside the limits, the clamp changes the zoom but not the centre that was derived for it, and the view slides sideways on every frame while the zoom chases a value it never reaches. The POC hit this. The camera controller clamps every target with `clampZoom` or `clampCamera` first and derives the anchor or flight path from the clamped value. Source: VIEW-020, [ADR 0104](../adr/0104-camera-controller-motion.md).
+
+## Integrate camera decays exactly so tests do not depend on the frame rate
+
+Coasting and the eased zoom use the closed form of an exponential decay for each frame's elapsed time instead of a per-frame factor. Thirty frames at 60 Hz, sixty at 120 Hz and one step of 500 ms then give the same position, so unit tests drive the controller with a fake clock and any frame length. The engine takes the clock as the `now` option and runs the controller inside its own frame, before it notifies camera subscribers. Source: VIEW-020, [ADR 0104](../adr/0104-camera-controller-motion.md).
+
+## Decode workers must share one byte cache
+
+geotiff reads 1 MiB blocks, and one block of CMU-1.svs holds many tiles. Six workers that each open the slide with their own geotiff source download a shared block up to six times. The decode workers instead fetch through a `MessagePort` to one range cache on the page (`src/decode/range-cache.ts`), and `createPixelSlideOpener` opens the page's own source through the same cache. A pan across CMU-1.svs then downloaded no byte twice. Source: VIEW-004, [ADR 0105](../adr/0105-decode-workers-behind-one-byte-cache.md), [result](../results/2026-10-23-decode-pool-pan-fetches.md).
+
+## Never abort a download the viewer started
+
+Viv aborts a tile's signal as soon as it leaves the view. If that signal reaches `fetch`, a source slower than a frame never delivers anything to a caller that re-asks every frame: 160 fetches and no finished tile in 40 frames. The decode pool drops only queued jobs, lets running ones finish and keeps their results for the next request, and the range cache never passes a signal to the network. Source: VIEW-004, [result](../results/2026-10-23-decode-pool-pan-fetches.md).
+
+## Run the decode worker in Node through a MessageChannel
+
+`startDecodeWorker` takes any object with `postMessage(message, transfer)` and `addEventListener("message")`, so a Node `MessageChannel` port can host it in the test process, with transfers and a nested `MessagePort` for the byte relay. The tests call `start()` on both ports. The unit tests compare every tile from the pool with the page's own reader this way. Source: VIEW-004.
+
+## Count aborted fetches at the latency proxy
+
+In the fetch storm test, 160 requests the client aborted during the proxy's RTT delay were counted by `@parfocal/latency-proxy`, and none of them reached the origin server's log. To count fetches in an abort scenario, read the proxy's `stats()`. Source: VIEW-004.

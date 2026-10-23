@@ -1,4 +1,11 @@
-import type { PixelArray, PixelLevel, PixelResult, PixelSource } from "../pixel-source/types.ts";
+import { DecodePoolDisposedError } from "../decode/decode-pool.ts";
+import type {
+  PixelArray,
+  PixelLevel,
+  PixelResult,
+  PixelSource,
+  PixelWindow,
+} from "../pixel-source/types.ts";
 
 export const vivSignalAborted: unknown = "__vivSignalAborted";
 
@@ -52,8 +59,28 @@ export interface VivLevels {
   readonly pending: () => number;
 }
 
+export interface VivRegion {
+  readonly backing: number;
+  readonly residual: number;
+  readonly window: PixelWindow;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface RegionCentre {
+  readonly x: number;
+  readonly y: number;
+}
+
+export type VivRegionReader = (
+  region: VivRegion,
+  centre: RegionCentre,
+  signal?: AbortSignal,
+) => Promise<VivTile>;
+
 export interface VivLevelOptions {
   readonly onTileError?: (error: Error) => void;
+  readonly read?: VivRegionReader;
 }
 
 export class UnsupportedVivSourceError extends Error {
@@ -141,19 +168,15 @@ function backgroundTile(width: number, height: number): VivTile {
   return { data: new Uint8Array(width * height * 3).fill(rgbBackground), width, height };
 }
 
-function toTile(
-  result: PixelResult,
-  virtual: VirtualLevel,
-  width: number,
-  height: number,
-): VivTile {
+function toTile(result: PixelResult, region: VivRegion): VivTile {
+  const { width, height } = region;
   if (result.absent) return backgroundTile(width, height);
   return {
     data: boxDownsampleToInterleaved(
       result.planes,
       result.width,
       result.height,
-      virtual.residual,
+      region.residual,
       width,
       height,
     ),
@@ -162,11 +185,31 @@ function toTile(
   };
 }
 
+export async function readVivRegion(
+  source: PixelSource,
+  region: VivRegion,
+  signal?: AbortSignal,
+): Promise<VivTile> {
+  const result = await source.getRaster({
+    level: region.backing,
+    window: region.window,
+    ...(signal ? { signal } : {}),
+  });
+  return toTile(result, region);
+}
+
+export function regionKey(region: VivRegion): string {
+  return `${region.backing}/${region.residual}/${region.window.join(",")}`;
+}
+
 export function createVivLevels(source: PixelSource, options: VivLevelOptions = {}): VivLevels {
   assertDrawable(source);
   const tileSize = vivTileSize(source);
   const ladder = virtualLadder(source.levels, tileSize);
   let inFlight = 0;
+
+  const read: VivRegionReader =
+    options.read ?? ((region, _centre, signal) => readVivRegion(source, region, signal));
 
   const readRegion = async (
     virtual: VirtualLevel,
@@ -177,24 +220,30 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
     if (backing === undefined) throw new RangeError(`Level ${virtual.backing} is missing`);
     const [x0, y0, x1, y1] = region;
     const { residual } = virtual;
-    const window = [
-      x0 * residual,
-      y0 * residual,
-      Math.min(x1 * residual, backing.width),
-      Math.min(y1 * residual, backing.height),
-    ] as const;
+    const request: VivRegion = {
+      backing: virtual.backing,
+      residual,
+      window: [
+        x0 * residual,
+        y0 * residual,
+        Math.min(x1 * residual, backing.width),
+        Math.min(y1 * residual, backing.height),
+      ],
+      width: x1 - x0,
+      height: y1 - y0,
+    };
+    const centre = {
+      x: ((x0 + x1) / 2) * virtual.downsample,
+      y: ((y0 + y1) / 2) * virtual.downsample,
+    };
     inFlight++;
     try {
       if (signal?.aborted) throw vivSignalAborted;
-      const result = await source.getRaster({
-        level: virtual.backing,
-        window,
-        ...(signal ? { signal } : {}),
-      });
+      const tile = await read(request, centre, signal);
       if (signal?.aborted) throw vivSignalAborted;
-      return toTile(result, virtual, x1 - x0, y1 - y0);
+      return tile;
     } catch (error) {
-      if (signal?.aborted) throw vivSignalAborted;
+      if (signal?.aborted || error instanceof DecodePoolDisposedError) throw vivSignalAborted;
       throw error;
     } finally {
       inFlight--;
