@@ -113,3 +113,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0105](0105-decode-workers-behind-one-byte-cache.md) | Six decode workers read the slide through one byte cache on the page and never drop work that has started | Proposed | 2026-10-23 |
 | [0106](0106-camera-bounds-and-feel-profiles.md) | Camera bounds come from one function that follows the slide, and one live camera profile holds every tunable, with Smooth, Precise and Instant presets and reduced motion switching off the profile's motion | Proposed | 2026-10-23 |
 | [0107](0107-viewer-input-binding.md) | Viewer input goes through a pure gesture interpreter, ends drags from the window and guesses the wheel device from its deltas | Proposed | 2026-10-23 |
+| [0110](0110-native-jpeg-decode-and-tissue-fit.md) | JPEG tiles decode natively only where a per-file probe agrees with the script decoder, and a slide opens fitted to its tissue box with a 5 percent margin | Proposed | 2026-10-25 |

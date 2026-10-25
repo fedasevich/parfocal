@@ -24,6 +24,7 @@ export interface SlideRef {
 export interface EngineSlide extends SlideExtent {
   readonly id: string;
   readonly micronsPerPixel: number | null;
+  readonly tissue?: SlideArea | null;
   close(): void;
 }
 

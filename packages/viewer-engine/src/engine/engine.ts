@@ -4,6 +4,7 @@ import {
   type CameraBounds,
   cameraBounds,
   clampCamera,
+  fitArea,
   fitCamera,
   originCamera,
   type ScreenRect,
@@ -252,11 +253,12 @@ export function createViewerEngine<Slide extends EngineSlide>(
     const viewport = mounted ? measure(mounted.container) : null;
     if (!viewport || viewport.width <= 0 || viewport.height <= 0) {
       fitPending = true;
-      applyCamera({ x: slide.width / 2, y: slide.height / 2, zoom: camera.zoom });
+      const area = fitArea(slide, slide.tissue);
+      applyCamera({ x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom });
       return;
     }
     fitPending = false;
-    applyCamera(fitCamera(slide, viewport, currentBounds()));
+    applyCamera(fitCamera(slide, viewport, currentBounds(), slide.tissue));
   };
 
   const sortedOverlays = (): readonly OverlayLayer[] =>

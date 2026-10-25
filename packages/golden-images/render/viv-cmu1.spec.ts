@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { zoomForMagnification } from "@parfocal/viewer-engine";
+import { cameraBounds, fitCamera, tissueArea, zoomForMagnification } from "@parfocal/viewer-engine";
 import { expect, test } from "@playwright/test";
 import type { ViteDevServer } from "vite";
 import {
@@ -21,8 +21,10 @@ import {
 } from "./viv-harness.ts";
 import {
   cmu1MicronsPerPixel,
+  cmu1TissueBox,
   cmu1TissueCentre,
   VIV_SCENES,
+  VIV_TISSUE_SCENE,
   type VivGoldenScene,
 } from "./viv-scenes.ts";
 
@@ -121,6 +123,35 @@ test("a route that hands Viv YCbCr samples as RGB fails every CMU-1.svs golden",
   }
 });
 
+test("every decode worker finds that CMU-1.svs decodes wrong natively and falls back, so the goldens hold", async ({
+  page,
+}, testInfo) => {
+  const scene = VIV_SCENES[0];
+  if (scene === undefined) throw new Error("No Viv scenes are defined");
+  const { result, frame } = await renderVivFrame(page, scene);
+  expect(result.errors).toEqual([]);
+  expect(result.jpeg).toHaveLength(6);
+  for (const report of result.jpeg) {
+    expect(report?.jpeg).toBe("script");
+    expect(report?.reason).toBe("disagreed");
+    expect(report?.meanAbsoluteError ?? 0).toBeGreaterThan(40);
+  }
+  expect(goldenVerdict(frame, scene, testInfo.outputDir)).toBe("matched");
+});
+
+test("a route that trusts the native decoder on CMU-1.svs fails every golden", async ({
+  page,
+}, testInfo) => {
+  for (const scene of VIV_SCENES) {
+    const { result, frame } = await renderVivFrame(page, scene, "native-unvalidated");
+    expect(
+      result.jpeg.every((report) => report?.reason === "unvalidated"),
+      scene.name,
+    ).toBe(true);
+    expect(goldenVerdict(frame, scene, testInfo.outputDir), scene.name).toBe("mismatched");
+  }
+});
+
 test("CMU-1.tiff, stored as YCbCr JPEG, draws the colours of the CMU-1.svs golden", async ({
   page,
 }) => {
@@ -139,6 +170,8 @@ test("CMU-1.tiff, stored as YCbCr JPEG, draws the colours of the CMU-1.svs golde
     },
   });
   expect(result.errors).toEqual([]);
+  expect(result.jpeg).toHaveLength(6);
+  for (const report of result.jpeg) expect(report?.jpeg).toBe("native");
   const golden = readPng(goldenPath(goldenDirectory, scene.name));
   const comparison = compareFrames(frame, golden, toleranceFor(scene.format));
   expect(comparison.channelHint).toBeNull();
@@ -150,4 +183,37 @@ test("a route that reads the 4x level as 2x fails the 10x golden", async ({ page
   if (scene === undefined) throw new Error("No 10x scene is defined");
   const { frame } = await renderVivFrame(page, scene, "wrong-level");
   expect(["mismatched", "empty"]).toContain(goldenVerdict(frame, scene, testInfo.outputDir));
+});
+
+test("CMU-1.svs opens fitted to the bounding box of its tissue mask, with a margin", async ({
+  page,
+}, testInfo) => {
+  const fitScene = VIV_SCENES[0];
+  if (fitScene === undefined) throw new Error("No Viv scenes are defined");
+  const whole = await renderVivFrame(page, fitScene);
+  const tissue = await renderVivFrame(page, VIV_TISSUE_SCENE);
+  expect(tissue.result.errors).toEqual([]);
+  const viewport = { width: 800, height: 600 };
+  const extent = tissue.result.slide;
+  const expected = fitCamera(
+    extent,
+    viewport,
+    cameraBounds({ slide: extent, viewport, devicePixelRatio: 1 }),
+    cmu1TissueBox,
+  );
+  expect(tissue.result.camera.x).toBeCloseTo(expected.x, 6);
+  expect(tissue.result.camera.y).toBeCloseTo(expected.y, 6);
+  expect(tissue.result.camera.zoom).toBeCloseTo(expected.zoom, 9);
+  expect(tissue.result.camera.zoom).toBeGreaterThan(whole.result.camera.zoom);
+  expect(tissueArea(cmu1TissueBox, extent)).not.toBeNull();
+  const outcome = checkGolden(tissue.frame, {
+    name: VIV_TISSUE_SCENE.name,
+    format: VIV_TISSUE_SCENE.format,
+    goldenDirectory,
+    outputDirectory: testInfo.outputDir,
+  });
+  if (outcome.status === "mismatched") throw new Error(outcome.message);
+  const wholeGolden = readPng(goldenPath(goldenDirectory, fitScene.name));
+  const apart = compareFrames(tissue.frame, wholeGolden, toleranceFor(fitScene.format));
+  expect(apart.pass).toBe(false);
 });

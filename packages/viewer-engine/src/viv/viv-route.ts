@@ -10,6 +10,7 @@ import {
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
+import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { disposeDeck } from "./dispose-deck.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
@@ -36,6 +37,7 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly deck: Deck<OrthographicView>;
   readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
   readonly decodeStats: () => DecodeStats | null;
+  readonly jpegReports: () => readonly (DecodeReport | null)[];
 }
 
 interface Shown {
@@ -106,6 +108,7 @@ export function createVivRoute(
         formatId: opened.formatId,
         url: absoluteUrl(opened.url, opened.baseUrl).href,
         ...(opened.index === undefined ? {} : { index: opened.index }),
+        ...(typeof opened.nativeJpeg === "string" ? { nativeJpeg: opened.nativeJpeg } : {}),
       },
       size: workerCount,
       cache:
@@ -197,6 +200,7 @@ export function createVivRoute(
     deck,
     whenIdle,
     decodeStats: () => shown?.reader?.stats() ?? null,
+    jpegReports: () => shown?.reader?.jpegReports() ?? [],
     showSlide,
     setCamera,
     setOverlays: (next) => {

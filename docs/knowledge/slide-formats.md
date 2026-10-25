@@ -56,3 +56,7 @@ There is no malware scanner ([ADR 0081](../adr/0081-uploads-are-checked-by-struc
 - The browser source reads pixel size from Aperio `MPP`, OME-XML and the resolution tags only. Philips-style XML (`Philips-4.tiff`, `tumor_009.tif`) gives `null` there, and the value comes from the slide index that ingest writes.
 
 Tests serve fixtures from a local HTTP server with range requests, so they exercise the same `fromUrl` and `FetchStore` paths as the browser. Source: STACK-016 and VIEW-003.
+
+## The browser's JPEG decoder is checked per file, and Aperio SVS fails the check
+
+`createImageBitmap` decodes TIFF JPEG tiles 7 to 15 times faster than geotiff, in the page and in a dedicated worker, but a tile is not always a complete JPEG. When the tables sit in `JPEGTables`, the splice (tables without their EOI, then the tile without its SOI) decodes without an error to a wrong picture on all three Aperio SVS fixtures (mean absolute error 49 to 60 of 255). The source decodes one tile both ways before its first read, and the decode workers do it at open. It keeps the native decoder only at an error of 3 or less. Philips, Argos, Leica SCN, generic TIFF and CAMELYON files pass at 1.1 to 2.3, and Huron-1-40x.tif fails at 5.44. The error depends on the tile, so the probe takes the tile with the most bytes. Tags do not tell the cases apart. Source: VIEW-005, [result](../results/2026-10-25-native-jpeg-validation.md), [ADR 0110](../adr/0110-native-jpeg-decode-and-tissue-fit.md).

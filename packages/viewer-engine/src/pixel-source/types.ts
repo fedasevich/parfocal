@@ -86,6 +86,34 @@ export interface RasterRequest {
   readonly signal?: AbortSignal;
 }
 
+export type JpegDecoderChoice = "native" | "script" | "none";
+
+export type JpegDecoderReason =
+  | "agreed"
+  | "unvalidated"
+  | "disagreed"
+  | "unavailable"
+  | "disabled"
+  | "not-jpeg"
+  | "no-probe-tile";
+
+export interface DecodeReport {
+  readonly jpeg: JpegDecoderChoice;
+  readonly reason: JpegDecoderReason;
+  readonly meanAbsoluteError: number | null;
+  readonly nativeReads: number;
+  readonly scriptReads: number;
+  readonly nativeFallbacks: number;
+}
+
+export interface NativeTilePixels {
+  readonly width: number;
+  readonly height: number;
+  readonly rgba: Uint8ClampedArray | Uint8Array;
+}
+
+export type NativeTileDecoder = (jpeg: Uint8Array<ArrayBuffer>) => Promise<NativeTilePixels>;
+
 export interface PixelSource {
   readonly formatId: SlideFormatId;
   readonly levels: readonly PixelLevel[];
@@ -96,6 +124,7 @@ export interface PixelSource {
   readonly channels: readonly ChannelInfo[];
   getTile(request: TileRequest): Promise<PixelResult>;
   getRaster(request: RasterRequest): Promise<PixelResult>;
+  decodeReport?(): Promise<DecodeReport>;
   close(): void;
 }
 
@@ -120,6 +149,7 @@ export interface OpenRequest {
   readonly index?: SlideIndex;
   readonly fetch?: typeof globalThis.fetch;
   readonly signal?: AbortSignal;
+  readonly nativeJpeg?: "off" | "unvalidated" | NativeTileDecoder;
 }
 
 export type PixelSourceOpener = (request: OpenRequest) => Promise<PixelSource>;

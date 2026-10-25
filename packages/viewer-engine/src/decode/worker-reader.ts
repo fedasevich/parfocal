@@ -1,3 +1,4 @@
+import type { DecodeReport } from "../pixel-source/types.ts";
 import type { VivRegion, VivRegionReader, VivTile } from "../viv/viv-levels.ts";
 import { regionKey } from "../viv/viv-levels.ts";
 import { type BytePort, serveBytes } from "./byte-relay.ts";
@@ -35,6 +36,7 @@ export interface DecodeStats extends DecodePoolStats {
 export interface WorkerRegionReader {
   readonly read: VivRegionReader;
   readonly ready: Promise<void>;
+  jpegReports(): readonly (DecodeReport | null)[];
   setFocus(point: PoolPoint | null): void;
   stats(): DecodeStats;
   idle(): boolean;
@@ -90,6 +92,7 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
       }),
   });
 
+  const reports: (DecodeReport | null)[] = [];
   const readies: Promise<void>[] = [];
   for (let index = 0; index < pool.size; index++) {
     const worker = spawn(index);
@@ -101,6 +104,7 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
         worker.addEventListener("message", (event) => {
           const reply = event.data;
           if (reply.type === "opened") {
+            reports[index] = reply.report;
             resolve();
             return;
           }
@@ -130,6 +134,7 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
   return {
     read: (region, centre, signal) => pool.request(regionKey(region), region, centre, signal),
     ready,
+    jpegReports: () => [...reports],
     setFocus: (point) => pool.setFocus(point),
     stats: () => ({ ...pool.stats(), network: cache.stats() }),
     idle: () => pool.idle(),

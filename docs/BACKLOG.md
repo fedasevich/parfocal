@@ -946,6 +946,11 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when permission tests restrict editing to researchers with admin rights, a test confirms credentials never appear in API responses or logs, and E2E imports from a saved source.
   Depends on INGEST-025, SEC-013. Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
 
+- [ ] INGEST-027 · Tissue box that ignores specks
+  The tissue mask gets a bounding box computed from its largest connected regions, so a few stray cells near the slide edge do not stretch it to the whole scan. The box is stored with the mask in level-0 pixels.
+  Done when tests on CMU-1.svs and CAMELYON16 slides give a box tighter than the all-cells box and still containing more than 98% of annotated tumour.
+  Depends on INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
+
 ---
 
 ## 06 TILES · Tile delivery
@@ -1020,7 +1025,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-006 · Shared decode cache across channels
   Viv requests R, G and B planes separately. One decode serves all three.
   Done when a test counts one decode per tile, not three.
-  Refs doc 06.
+  Refs doc 06, [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
 
 - [ ] VIEW-007 · Interpolation rule
   Nearest at the finest level, linear at coarser levels, half-texel inset to avoid bleeding across tiles.
@@ -1156,11 +1161,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Alternate renderers (developer drawer only)
 
-- [ ] VIEW-042 · Camera bounds at the slide edges
+- [x] VIEW-042 · Camera bounds at the slide edges
   The zoom range follows the slide: out to half the fitted size, in to 16 device pixels per level-0 pixel, both from the one place that holds the limits. The view centre stays on the slide, so the tissue can never be thrown off screen. A coast that hits an edge stops on that axis instead of grinding along it. A resize or a slide switch re-clamps the camera.
   Done when unit tests throw past each edge and check the camera stops there, check the zoom range on slides of different sizes and viewports, and check a resize re-clamps.
   Depends on VIEW-020. Refs [`poc/src/camera/viewport.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/viewport.ts), [`poc/src/camera/camera-controller.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-controller.ts), doc 06 §17, [ADR 0104](adr/0104-camera-controller-motion.md).
-- [ ] VIEW-043 · Drags that always end
+- [x] VIEW-043 · Drags that always end
   Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning. Drags and pinches read `getCoalescedEvents()` where the browser has it, so a fast stroke keeps every sample for the release velocity.
   Done when browser tests release the button outside the viewer, over an overlay, after a lost capture and after a window blur, and the drag ends every time with no pan on the next mouse move.
   Depends on VIEW-020. Refs doc 06 §15, doc 16.
@@ -1168,7 +1173,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Predict the next view from a fast, straight pan or a steady hover and request its tiles at low priority before they enter the view. Velocity is weighted over the last 160 ms with a 55 ms half-life, a path straighter than 0.7 is needed, the lead is 300 ms and at most 1.25 viewports. Prefetch jobs go through the decode pool behind visible tiles and are dropped by its queue rules, never by aborting a download. The developer drawer can turn it off and show the vector.
   Done when a test on a scripted straight pan shows the predicted tiles requested before they enter the view, a zig-zag pan prefetches nothing, and a result file records time to a sharp view at 100 ms RTT with and without prediction.
   Depends on VIEW-004, VIEW-020. Refs [`poc/src/camera/motion-predictor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/motion-predictor.ts), doc 34 §2.
-- [ ] VIEW-045 · Camera feel profiles
+- [x] VIEW-045 · Camera feel profiles
   Every camera tunable lives in one typed profile that the controller reads live: coast decay and release speed, zoom ease, wheel and pinch rates, the per-event zoom cap, flight duration bounds, keyboard pan speed and the zoom anchor (cursor or view centre). Three presets ship. Smooth is the default with the POC's tuned values, Precise has no coasting and short eases, and Instant turns every motion into a cut. Reduced motion forces Instant. SET-006 (navigation and devices section) maps the settings onto a profile.
   Done when unit tests replay the same scripted input under each preset and check the expected differences, and switching profile mid-motion neither jumps nor leaves a motion running.
   Depends on VIEW-020. Refs [ADR 0104](adr/0104-camera-controller-motion.md), [`poc/src/camera/camera-physics.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-physics.ts).
@@ -1183,7 +1188,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-048 · Open fitted to the tissue
   A slide opens fitted to the bounding box of its tissue mask with a small margin instead of the whole scan with its empty glass. `0` and the fit command use the same box. Without a mask the whole slide is fitted.
   Done when unit tests fit a slide with and without a mask, and a golden test opens a CMU-1.svs fixture with a mask fitted to its tissue.
-  Depends on VIEW-020, INGEST-012.
+  Depends on VIEW-020, INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
+- [ ] VIEW-049 · Deliver the tissue box to the viewer
+  The tissue box that VIEW-048 (open fitted to the tissue) reads reaches the viewer with the slide, from the slide index or the slide record, instead of being passed by hand. A slide without a stored mask opens fitted to the whole scan.
+  Done when a test opens a slide through the real opener and the camera is fitted to the stored box, and a slide with no box opens fitted to the whole scan.
+  Depends on VIEW-048, INGEST-007. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

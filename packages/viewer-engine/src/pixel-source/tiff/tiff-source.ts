@@ -2,6 +2,10 @@ import type { GeoTIFF, GeoTIFFImage } from "geotiff";
 import { checkTile, checkWindow, levelAt, recoverLadder, tileWindow } from "../geometry.ts";
 import {
   type ChannelInfo,
+  type DecodeReport,
+  type JpegDecoderChoice,
+  type JpegDecoderReason,
+  type NativeTileDecoder,
   type OpenRequest,
   type Photometric,
   type PixelArray,
@@ -23,6 +27,16 @@ import {
   openTiff,
   type TiffPage,
 } from "./directory.ts";
+import {
+  browserTileDecoder,
+  chooseProbeTile,
+  describeJpegTiles,
+  type JpegTileLayout,
+  meanAbsoluteError,
+  type NativeLevel,
+  nativeAgreementThreshold,
+  readWindowNatively,
+} from "./native-jpeg.ts";
 import { readMicronsPerPixel } from "./scale.ts";
 
 const photometricCodes = {
@@ -48,6 +62,13 @@ type Decode = "rgb-transform" | "samples";
 interface TiffLevel extends PixelLevel {
   readonly image: GeoTIFFImage;
   readonly byteCounts: ArrayLike<number> | null;
+  readonly jpeg: JpegTileLayout | null;
+}
+
+interface JpegDecision {
+  readonly jpeg: JpegDecoderChoice;
+  readonly reason: JpegDecoderReason;
+  readonly meanAbsoluteError: number | null;
 }
 
 interface Layout {
@@ -164,6 +185,7 @@ async function describe(
   return {
     image: page.image,
     byteCounts: await loadByteCounts(page.image),
+    jpeg: await describeJpegTiles(page.image),
     downsample,
     width,
     height,
@@ -238,6 +260,111 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
       ? request.index.micronsPerPixel
       : await readMicronsPerPixel(base.image);
   let closed = false;
+  const nativeDecoder =
+    request.nativeJpeg === "off"
+      ? null
+      : typeof request.nativeJpeg === "function"
+        ? request.nativeJpeg
+        : browserTileDecoder();
+  const nativeCapable = layout.photometric === "rgb" && layout.dtype === "uint8";
+  const nativeLevels = levels.map((level) => nativeCapable && level.jpeg !== null);
+  let nativeReads = 0;
+  let scriptReads = 0;
+  let nativeFallbacks = 0;
+
+  const scriptPlanes = async (
+    level: TiffLevel,
+    window: PixelWindow,
+    signal?: AbortSignal,
+  ): Promise<PixelArray[]> => {
+    const options = {
+      window: [...window],
+      interleave: false as const,
+      ...(signal ? { signal } : {}),
+    };
+    const decoded =
+      layout.decode === "rgb-transform"
+        ? await level.image.readRGB(options)
+        : await level.image.readRasters({ ...options, samples: [...layout.samples] });
+    return Array.from(decoded as ArrayLike<PixelArray>);
+  };
+
+  const nativeViewOf = (level: TiffLevel): NativeLevel | null =>
+    level.jpeg === null
+      ? null
+      : {
+          image: level.image,
+          tileWidth: level.tileWidth,
+          tileHeight: level.tileHeight,
+          layout: level.jpeg,
+          isAbsent: (index) => isAbsent(level, index),
+        };
+
+  const nativePlanes = (
+    decode: NativeTileDecoder,
+    level: TiffLevel,
+    window: PixelWindow,
+    signal?: AbortSignal,
+  ): Promise<PixelArray[]> => {
+    const view = nativeViewOf(level);
+    if (view === null) throw new Error("The level holds no JPEG tiles");
+    return readWindowNatively(view, decode, window, layout.background, signal);
+  };
+
+  const probeFile = async (): Promise<JpegDecision> => {
+    if (!nativeLevels.some(Boolean))
+      return { jpeg: "none", reason: "not-jpeg", meanAbsoluteError: null };
+    if (request.nativeJpeg === "off") {
+      return { jpeg: "script", reason: "disabled", meanAbsoluteError: null };
+    }
+    if (nativeDecoder === null) {
+      return { jpeg: "script", reason: "unavailable", meanAbsoluteError: null };
+    }
+    if (request.nativeJpeg === "unvalidated") {
+      return { jpeg: "native", reason: "unvalidated", meanAbsoluteError: null };
+    }
+    const probed = new Set<string>();
+    let worst = 0;
+    for (const [at, level] of levels.entries()) {
+      const key = level.jpeg?.tablesKey;
+      if (!nativeLevels[at] || key === undefined || probed.has(key)) continue;
+      const tile = chooseProbeTile(
+        level.width,
+        level.height,
+        level.tileWidth,
+        level.tileHeight,
+        level.image.getWidth(),
+        level.byteCounts,
+        (index) => isAbsent(level, index),
+      );
+      if (tile === null) continue;
+      probed.add(key);
+      try {
+        const [native, reference] = await Promise.all([
+          nativePlanes(nativeDecoder, level, tile.window),
+          scriptPlanes(level, tile.window),
+        ]);
+        worst = Math.max(worst, meanAbsoluteError(native, reference));
+      } catch {
+        return { jpeg: "script", reason: "unavailable", meanAbsoluteError: null };
+      }
+    }
+    const keys = new Set(
+      levels.flatMap((level, at) => (nativeLevels[at] && level.jpeg ? [level.jpeg.tablesKey] : [])),
+    );
+    if (probed.size < keys.size) {
+      return { jpeg: "script", reason: "no-probe-tile", meanAbsoluteError: null };
+    }
+    return worst <= nativeAgreementThreshold
+      ? { jpeg: "native", reason: "agreed", meanAbsoluteError: worst }
+      : { jpeg: "script", reason: "disagreed", meanAbsoluteError: worst };
+  };
+
+  let decision: Promise<JpegDecision> | null = null;
+  const decide = (): Promise<JpegDecision> => {
+    decision ??= probeFile();
+    return decision;
+  };
 
   const read = async (
     levelIndex: number,
@@ -251,16 +378,20 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     const height = window[3] - window[1];
     const tiles = storedTiles(level, window);
     if (tiles.every((index) => isAbsent(level, index))) return { absent: true, width, height };
-    const options = {
-      window: [...window],
-      interleave: false as const,
-      ...(signal ? { signal } : {}),
-    };
-    const decoded =
-      layout.decode === "rgb-transform"
-        ? await level.image.readRGB(options)
-        : await level.image.readRasters({ ...options, samples: [...layout.samples] });
-    const planes = Array.from(decoded as ArrayLike<PixelArray>);
+    let planes: PixelArray[] | null = null;
+    if (nativeLevels[levelIndex] && nativeDecoder !== null && (await decide()).jpeg === "native") {
+      try {
+        planes = await nativePlanes(nativeDecoder, level, window, signal);
+        nativeReads++;
+      } catch (error) {
+        if (closed || signal?.aborted) throw error;
+        nativeFallbacks++;
+      }
+    }
+    if (planes === null) {
+      planes = await scriptPlanes(level, window, signal);
+      scriptReads++;
+    }
     paintAbsent(level, window, planes, layout.background);
     return { absent: false, width, height, planes };
   };
@@ -280,6 +411,10 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     async getRaster(raster: RasterRequest) {
       const level = levelAt(levels, raster.level);
       return read(raster.level, checkWindow(level, raster.window), raster.signal);
+    },
+    async decodeReport(): Promise<DecodeReport> {
+      const decided = await decide();
+      return { ...decided, nativeReads, scriptReads, nativeFallbacks };
     },
     close() {
       closed = true;

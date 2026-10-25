@@ -1,4 +1,4 @@
-import type { SlideFormatId } from "@parfocal/viewer-engine";
+import type { DecodeReport, SlideArea, SlideFormatId } from "@parfocal/viewer-engine";
 
 export type VivView =
   | { readonly kind: "fit" }
@@ -10,13 +10,19 @@ export type VivView =
     }
   | { readonly kind: "camera"; readonly x: number; readonly y: number; readonly zoom: number };
 
-export type VivBreakage = "none" | "swap-red-blue" | "wrong-level" | "ycbcr-as-rgb";
+export type VivBreakage =
+  | "none"
+  | "swap-red-blue"
+  | "wrong-level"
+  | "ycbcr-as-rgb"
+  | "native-unvalidated";
 
 export interface VivSceneRequest {
   readonly url: string;
   readonly formatId: SlideFormatId;
   readonly view: VivView;
   readonly breakage: VivBreakage;
+  readonly tissue?: SlideArea;
 }
 
 export interface VivSceneResult {
@@ -29,6 +35,7 @@ export interface VivSceneResult {
   readonly ladder: readonly { readonly downsample: number; readonly backing: number }[];
   readonly errors: readonly string[];
   readonly decoded: { readonly workers: number; readonly dispatched: number } | null;
+  readonly jpeg: readonly (DecodeReport | null)[];
 }
 
 export interface VivHarness {

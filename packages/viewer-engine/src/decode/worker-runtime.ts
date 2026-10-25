@@ -28,10 +28,12 @@ export function startDecodeWorker(
     const message = event.data;
     if (message.type === "open") {
       opened = registry.open({ ...message.request, fetch: relayFetch(message.bytes) });
-      opened.then(
-        () => scope.postMessage({ type: "opened" }, []),
-        (error: unknown) => fail(null, error),
-      );
+      opened
+        .then((source) => (source.decodeReport ? source.decodeReport() : null))
+        .then(
+          (report) => scope.postMessage({ type: "opened", report }, []),
+          (error: unknown) => fail(null, error),
+        );
       return;
     }
     const { id, region } = message;

@@ -17,12 +17,15 @@ export {
   clampCamera,
   clampZoom,
   defaultZoomLimits,
+  fitArea,
   fitCamera,
   maxDevicePixelsPerSlidePixel,
   sameCamera,
   screenScale,
   screenToSlide,
   slideToScreen,
+  tissueArea,
+  tissueMarginShare,
   zoomOutShareOfFit,
 } from "./camera/camera.ts";
 export type {

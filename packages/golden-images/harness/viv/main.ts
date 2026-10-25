@@ -153,11 +153,17 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
       return route;
     },
     openSlide: async (ref, signal) => {
-      const openRequest = { formatId: request.formatId, url: request.url };
+      const openRequest = {
+        formatId: request.formatId,
+        url: request.url,
+        ...(request.breakage === "native-unvalidated"
+          ? { nativeJpeg: "unvalidated" as const }
+          : {}),
+      };
       const source = await registry.open({ ...openRequest, signal });
       opened =
-        request.breakage === "none"
-          ? pixelSlide(ref.id, source, openRequest)
+        request.breakage === "none" || request.breakage === "native-unvalidated"
+          ? pixelSlide(ref.id, source, openRequest, null, request.tissue ?? null)
           : pixelSlide(ref.id, broken(source, request.breakage));
       return opened;
     },
@@ -187,6 +193,7 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
     ladder: ladder.map(({ downsample, backing }) => ({ downsample, backing })),
     errors: [...errors],
+    jpeg: mountedRoute.jpegReports(),
     decoded:
       decodeStats === null
         ? null

@@ -1,4 +1,4 @@
-import type { SlideFormatId } from "@parfocal/viewer-engine";
+import type { SlideArea, SlideFormatId } from "@parfocal/viewer-engine";
 import type { VivView } from "../harness/viv/protocol.ts";
 import type { SlideFormat } from "../src/tolerances.ts";
 
@@ -8,11 +8,23 @@ export interface VivGoldenScene {
   readonly formatId: SlideFormatId;
   readonly format: SlideFormat;
   readonly view: VivView;
+  readonly tissue?: SlideArea;
 }
 
 export const cmu1TissueCentre = { x: 28_750, y: 10_700 };
 
 export const cmu1MicronsPerPixel = 0.499;
+
+export const cmu1TissueBox: SlideArea = { x: 1856, y: 256, width: 42_816, height: 31_104 };
+
+export const VIV_TISSUE_SCENE: VivGoldenScene = {
+  name: "viv-cmu-1-svs-tissue-fit",
+  fixture: "CMU-1.svs",
+  formatId: "aperio-svs",
+  format: "svs-jpeg",
+  view: { kind: "fit" },
+  tissue: cmu1TissueBox,
+};
 
 export const VIV_SCENES: readonly VivGoldenScene[] = [
   {

@@ -1,10 +1,11 @@
-import type { SlideFormatId, SlideIndex } from "../pixel-source/types.ts";
+import type { DecodeReport, SlideFormatId, SlideIndex } from "../pixel-source/types.ts";
 import type { VivRegion } from "../viv/viv-levels.ts";
 
 export interface WorkerOpenRequest {
   readonly formatId: SlideFormatId;
   readonly url: string;
   readonly index?: SlideIndex;
+  readonly nativeJpeg?: "off" | "unvalidated";
 }
 
 export type DecodeRequest =
@@ -12,7 +13,7 @@ export type DecodeRequest =
   | { readonly type: "read"; readonly id: number; readonly region: VivRegion };
 
 export type DecodeReply =
-  | { readonly type: "opened" }
+  | { readonly type: "opened"; readonly report: DecodeReport | null }
   | {
       readonly type: "tile";
       readonly id: number;

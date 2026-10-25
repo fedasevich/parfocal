@@ -145,6 +145,7 @@ export async function renderVivFrame(
     formatId: scene.formatId,
     view: scene.view,
     breakage,
+    ...(scene.tissue === undefined ? {} : { tissue: scene.tissue }),
   });
   const ms = performance.now() - started;
   const frame = await captureScreenshot(page.locator("#viewer canvas"));

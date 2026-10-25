@@ -30,6 +30,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           settings: fileURLToPath(new URL("./page/settings.html", import.meta.url)),
           pan: fileURLToPath(new URL("./page/pan.html", import.meta.url)),
           input: fileURLToPath(new URL("./page/input.html", import.meta.url)),
+          "decode-count": fileURLToPath(new URL("./page/decode-count.html", import.meta.url)),
+          "native-jpeg": fileURLToPath(new URL("./page/native-jpeg.html", import.meta.url)),
           "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),
         },
       },

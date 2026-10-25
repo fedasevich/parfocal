@@ -55,6 +55,8 @@ export const zoomOutShareOfFit = 0.5;
 
 export const maxDevicePixelsPerSlidePixel = 16;
 
+export const tissueMarginShare = 0.05;
+
 export const originCamera: Camera = { x: 0, y: 0, zoom: 0 };
 
 export function screenScale(camera: Camera): number {
@@ -134,8 +136,48 @@ export function slideToScreen(camera: Camera, rect: ScreenRect, point: SlidePoin
   };
 }
 
-export function fitCamera(slide: SlideExtent, viewport: Viewport, limits: CameraBounds): Camera {
-  return areaCamera({ x: 0, y: 0, width: slide.width, height: slide.height }, viewport, limits);
+function withinSlide(area: SlideArea, slide: SlideExtent): SlideArea | null {
+  const left = within(area.x, 0, slide.width);
+  const top = within(area.y, 0, slide.height);
+  const right = within(area.x + area.width, 0, slide.width);
+  const bottom = within(area.y + area.height, 0, slide.height);
+  return right > left && bottom > top
+    ? { x: left, y: top, width: right - left, height: bottom - top }
+    : null;
+}
+
+export function tissueArea(
+  box: SlideArea | null | undefined,
+  slide: SlideExtent,
+  marginShare: number = tissueMarginShare,
+): SlideArea | null {
+  if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) return null;
+  const inside = withinSlide(box, slide);
+  if (inside === null) return null;
+  const marginX = (inside.width * marginShare) / 2;
+  const marginY = (inside.height * marginShare) / 2;
+  return withinSlide(
+    {
+      x: inside.x - marginX,
+      y: inside.y - marginY,
+      width: inside.width + 2 * marginX,
+      height: inside.height + 2 * marginY,
+    },
+    slide,
+  );
+}
+
+export function fitArea(slide: SlideExtent, tissue?: SlideArea | null): SlideArea {
+  return tissueArea(tissue, slide) ?? { x: 0, y: 0, width: slide.width, height: slide.height };
+}
+
+export function fitCamera(
+  slide: SlideExtent,
+  viewport: Viewport,
+  limits: CameraBounds,
+  tissue?: SlideArea | null,
+): Camera {
+  return areaCamera(fitArea(slide, tissue), viewport, limits);
 }
 
 export function areaCamera(area: SlideArea, viewport: Viewport, limits: CameraBounds): Camera {

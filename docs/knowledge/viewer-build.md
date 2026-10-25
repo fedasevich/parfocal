@@ -166,3 +166,11 @@ Moves sent through `Input.dispatchMouseEvent` with a wait between them and relea
 ## Playwright keeps every page focused
 
 Playwright emulates focus, so a headless page does not lose it when another page opens. The input spec ends a drag on blur by dispatching a `FocusEvent("blur")` on the window, which runs the same handler a real blur does. Source: VIEW-043.
+
+## One interleaved array means one decode per Viv tile
+
+The Viv route sets one selection and an interleaved RGB array of shape y, x and 3, so Viv asks for each region once and never for separate R, G and B planes. A browser test counts the reads of CMU-1.svs behind a counting source (31 reads for 31 regions fitted, 25 for 25 at 10x, none twice). The POC's decode cache for three channels is not needed on this route. Source: VIEW-006, [ADR 0110](../adr/0110-native-jpeg-decode-and-tissue-fit.md).
+
+## A tissue box that fills the slide barely changes the fit
+
+The ingest mask of CMU-1.svs has a bounding box 5 to 7 percent smaller than the slide on each axis, because a few stray cells sit near the edges. With a 5 percent margin the fit zooms in 2.3 percent. A fit-to-tissue golden on a nearly full slide shows the rule working but not much else. Use a slide with real empty glass for a visible check. Source: VIEW-048.

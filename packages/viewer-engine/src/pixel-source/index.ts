@@ -5,11 +5,20 @@ export {
   type PixelSourceRegistry,
   tiffTileGridFormats,
 } from "./registry.ts";
+export {
+  browserTileDecoder,
+  nativeAgreementThreshold,
+} from "./tiff/native-jpeg.ts";
 export { openTiffSource } from "./tiff/tiff-source.ts";
 export {
   type AbsentRaster,
   type ChannelInfo,
+  type DecodeReport,
+  type JpegDecoderChoice,
+  type JpegDecoderReason,
   type MicronsPerPixel,
+  type NativeTileDecoder,
+  type NativeTilePixels,
   type OpenRequest,
   type Photometric,
   type PixelArray,
