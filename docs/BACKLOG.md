@@ -211,7 +211,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: Zustand, Jotai, Redux Toolkit, XState for the complex state machines. Default: Zustand for app UI state (panels, tools, workspace, selection), and XState only where a real state machine helps (smart minimap, review loop, one-click prompt flow).
   Done when the ADR defines which state lives where: server state in Query, UI state in Zustand, URL state in the router, and viewer hot state outside React (STACK-006).
 
-- [ ] STACK-006 · Viewer hot-path state outside React
+- [x] STACK-006 · Viewer hot-path state outside React
   Candidates: a plain observable store read with `useSyncExternalStore`, signals (Preact signals or TC39 signals polyfill), Zustand vanilla stores. Default: a framework-free viewer engine package that owns camera, tiles, overlays and workers, exposing a small subscribe API consumed through `useSyncExternalStore`. React must never re-render on camera frames.
   Done when a spike pans a Viv slide at 60 fps while a React inspector shows the zoom level, with zero React renders per frame, measured with the React profiler.
   Refs doc 24 (main-thread costs), doc 30 (code layout).
@@ -253,12 +253,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ### Viewer and rendering
 
-- [ ] STACK-015 · Viv and deck.gl versions and the WebGL2 versus WebGPU question
+- [x] STACK-015 · Viv and deck.gl versions and the WebGL2 versus WebGPU question
   Viv is primary and its layers are GLSL, so Viv runs on WebGL2. Decide the Viv and deck.gl versions, whether deck.gl 9.4 WebGPU runs as the alternate route, and how the luma.gl leak and debug-string fixes from doc 24 are applied (patch-package, upstream PR, or wrapper).
   Done when a spike opens CMU-1.svs in Viv on the chosen versions and passes the 20-slide-switch memory test (heap returns to baseline, one Deck alive).
   Refs docs 23, 24, [`poc/src/gl/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/gl), [`poc/src/viv/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/viv).
 
-- [ ] STACK-016 · TIFF and Zarr readers in the browser
+- [x] STACK-016 · TIFF and Zarr readers in the browser
   Candidates: geotiff.js, zarrita, a WASM build of libtiff or tifffile-like readers. Default: geotiff.js and zarrita as in the POC, wrapped behind our PixelSource interface, with the known geotiff bugs worked around (YCbCr, lazy directories, big-endian BigTIFF offsets).
   Done when the ADR lists every workaround with a test fixture for each.
   Refs docs 03, 06, 08, 32.
@@ -994,7 +994,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 The viewer lives in `packages/viewer-engine`, a framework-free package that owns renderers, camera, tile loading, decode workers and overlays. React talks to it through a small typed API (STACK-006).
 
-- [ ] VIEW-000 · Research check for the viewer stack
+- [x] VIEW-000 · Research check for the viewer stack
   Done when STACK-006, STACK-015, STACK-016 are confirmed and the ADR records the Viv and deck.gl versions in use.
 
 ### Engine foundation

@@ -5,6 +5,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 ## 2026-10-26
 
 - VIEW-001 (engine package API), VIEW-003 (PixelSource interface and registry), VIEW-005 (native JPEG decode with per-file validation), VIEW-006 (shared decode cache across channels), VIEW-026 (overlay layer system), VIEW-030 (memory and teardown correctness), VIEW-032 (idle means zero work), VIEW-033 (hidden tab and background scheduling) and VIEW-048 (open fitted to the tissue) ticked after green CI on `main` (runs 40189424786, 40190479158 and 40190872846). VIEW-030's polygon indices item was built with VIEW-026. VIEW-021 (wheel, trackpad and pinch handling) stays open until real device traces are recorded.
+- STACK-006 (viewer hot-path state outside React), STACK-015 (Viv and deck.gl versions) and STACK-016 (TIFF and Zarr readers in the browser) ticked after green CI on `main`, with their decision records [0100](adr/0100-viewer-hot-path-state-outside-react.md), [0098](adr/0098-viv-and-deck-gl-versions.md) and [0099](adr/0099-tiff-and-zarr-readers-in-the-browser.md) still Proposed. VIEW-000 (research check for the viewer stack) ticked with them, because all three are confirmed and ADR 0098 records the Viv and deck.gl versions in use.
 
 ## 2026-10-25
 
