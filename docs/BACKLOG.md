@@ -999,7 +999,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Engine foundation
 
-- [ ] VIEW-001 · Engine package API
+- [x] VIEW-001 · Engine package API
   Mount and unmount on a container, open slide, set camera, subscribe to camera, events for pointer on slide coordinates, overlay layer registration, dispose.
   Done when unit tests cover the API contract and a mount, unmount and remount cycle leaves no listeners (memory test from VIEW-030).
 
@@ -1008,7 +1008,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when golden-image tests of fitted, 10× and 40× views on CMU-1.svs match in CI with software rendering.
   Refs [`poc/src/viv/baseline.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/baseline.ts).
 
-- [ ] VIEW-003 · PixelSource interface and registry
+- [x] VIEW-003 · PixelSource interface and registry
   One interface for every format. It provides `getTile`, `getRaster`, levels, tile size, microns per pixel, photometric mode, dtype and channel info. Selection by the ingest format id, reading the sidecar index.
   Done when unit tests run the interface conformance suite against every implementation.
 
@@ -1017,12 +1017,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when tests prove late completed chunks are still used. A pan test reproduces the POC fix, with no fetch storm (POC regression: 10,324 fetches and 7.7 GB against a correct 19 and 14 MB).
   Refs doc 06, [`poc/src/viv/plane-pool.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/plane-pool.ts).
 
-- [ ] VIEW-005 · Native JPEG decode with per-file validation
+- [x] VIEW-005 · Native JPEG decode with per-file validation
   Use `createImageBitmap` for JPEG tiles. At open, decode one tile both natively and through the JS decoder and compare. Fall back per file when they differ (Aperio JPEGTables splicing case).
   Done when the SVS fixture that decodes wrong natively (mean absolute error 47.7) is detected and falls back, with a golden-image test.
   Refs doc 06, [`poc/src/viv/native-jpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/native-jpeg.ts).
 
-- [ ] VIEW-006 · Shared decode cache across channels
+- [x] VIEW-006 · Shared decode cache across channels
   Viv requests R, G and B planes separately. One decode serves all three.
   Done when a test counts one decode per tile, not three.
   Refs doc 06, [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
@@ -1103,7 +1103,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Overlays
 
-- [ ] VIEW-026 · Overlay layer system
+- [x] VIEW-026 · Overlay layer system
   Typed layers for human annotations, AI proposals, nuclei results, heatmaps, coverage, comment pins and measurements, drawn in a fixed z-order with per-layer visibility and opacity.
   Done when golden tests render each layer type over a slide.
   Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
@@ -1125,7 +1125,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Memory, idle and robustness
 
-- [ ] VIEW-030 · Memory and teardown correctness
+- [x] VIEW-030 · Memory and teardown correctness
   Destroy the canvas context on dispose, lose the WebGL context, remove every listener, keep one stable `selections` array per slide, upload uint8 as r8unorm, MSAA off, picking off, precomputed polygon indices (built in VIEW-026, [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md)).
   Done when a CI memory test opens 20 slides in sequence and the heap returns to within 10% of baseline with exactly one Deck alive.
   Refs doc 24.
@@ -1135,12 +1135,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a perf test shows no frame over 50 ms during wheel zoom on the Huron fixture.
   Refs doc 24.
 
-- [ ] VIEW-032 · Idle means zero work
+- [x] VIEW-032 · Idle means zero work
   No animation loop callbacks when the camera, tiles and overlays are idle.
   Done when a test counts zero rAF callbacks over 10 s of idle and main-thread time under 20 ms per 10 s. The page's own main-thread time is read from a Chrome trace without Chrome's periodic internal tasks (a 5 to 30 ms memory reclaim task runs once per 10 s in every renderer).
   Refs doc 24, [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
 
-- [ ] VIEW-033 · Hidden tab and background scheduling
+- [x] VIEW-033 · Hidden tab and background scheduling
   A watchdog keeps rendering correct after the tab returns, a camera motion started or running while the tab is hidden settles on its target at once (animation frames are suspended, not throttled, in a hidden tab), a loop generation counter restarts parked loops, and long work is sliced with `scheduler.yield` or MessageChannel.
   Done when a test hides and shows the tab mid-load and the view is complete within 1 s of becoming visible. Headless Chrome cannot be hidden, so the test emulates a hidden tab and a one-off check in headed Chrome is recorded as a result file.
   Refs docs 01, 06, [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
@@ -1186,7 +1186,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Jumps (fly-to, presets, fit, minimap clicks, area and object navigation) record the view they left. Continuous pans and zooms count as one entry once the camera rests. Back and forward keys from the key registry move through the last 50 views with a fly-to, and the history is per slide and cleared on a slide switch.
   Done when unit tests cover recording, coalescing a pan into one entry, back and forward, and the cap, and a browser test goes back after a minimap jump and lands on the old view.
   Depends on VIEW-020, CMD-001.
-- [ ] VIEW-048 · Open fitted to the tissue
+- [x] VIEW-048 · Open fitted to the tissue
   A slide opens fitted to the bounding box of its tissue mask with a small margin instead of the whole scan with its empty glass. `0` and the fit command use the same box. Without a mask the whole slide is fitted.
   Done when unit tests fit a slide with and without a mask, and a golden test opens a CMU-1.svs fixture with a mask fitted to its tissue.
   Depends on VIEW-020, INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).

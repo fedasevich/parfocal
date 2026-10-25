@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-10-26
+
+- VIEW-001 (engine package API), VIEW-003 (PixelSource interface and registry), VIEW-005 (native JPEG decode with per-file validation), VIEW-006 (shared decode cache across channels), VIEW-026 (overlay layer system), VIEW-030 (memory and teardown correctness), VIEW-032 (idle means zero work), VIEW-033 (hidden tab and background scheduling) and VIEW-048 (open fitted to the tissue) ticked after green CI on `main` (runs 40189424786, 40190479158 and 40190872846). VIEW-030's polygon indices item was built with VIEW-026. VIEW-021 (wheel, trackpad and pinch handling) stays open until real device traces are recorded.
+
 ## 2026-10-25
 
 - VIEW-042 (camera bounds at the slide edges), VIEW-043 (drags that always end) and VIEW-045 (camera feel profiles) ticked after green CI on `main` (runs 40023008100 and 40023008064). VIEW-021 (wheel, trackpad and pinch handling) stays open until real device traces are recorded.
