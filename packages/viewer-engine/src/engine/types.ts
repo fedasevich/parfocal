@@ -95,6 +95,7 @@ export interface EngineEvents {
 }
 
 export interface OverlayRegistration {
+  update(layer: OverlayLayer): void;
   invalidate(): void;
   unregister(): void;
 }

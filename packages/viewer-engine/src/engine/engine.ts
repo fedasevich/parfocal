@@ -383,6 +383,12 @@ export function createViewerEngine<Slide extends EngineSlide>(
     mounted?.route.setOverlays(sortedOverlays());
     let registered = true;
     return {
+      update: (next) => {
+        if (!registered || disposed) return;
+        if (next.id !== layer.id) throw new Error(`Overlay ${layer.id} cannot become ${next.id}`);
+        overlays.set(layer.id, next);
+        mounted?.route.setOverlays(sortedOverlays());
+      },
       invalidate: () => {
         if (registered) mounted?.route.invalidateOverlay(layer.id);
       },

@@ -7,12 +7,18 @@ The framework-free viewer engine: camera, input, renderer routes, slide readers 
 | Command | What it does |
 |---|---|
 | `pnpm --filter @parfocal/viewer-engine test` | Unit tests on `node --test`, with an injected clock and frame scheduler |
-| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings and input |
+| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input and overlay polygon indices |
 | `pnpm --filter @parfocal/viewer-engine traces:record` | Opens the input trace recorder in the default browser |
 
 ## Input
 
 `bindViewerInput(element, engine, options)` in `src/input/dom-input.ts` maps pointer, wheel and double-click events onto the engine's camera calls ([ADR 0107](../../docs/adr/0107-viewer-input-binding.md)). The rules live in the pure interpreter in `src/input/gestures.ts` and the wheel maths in `src/input/wheel.ts`, so they run in unit tests without a DOM. The options are the wheel mode and three hooks for the active tool: `primaryDragPans`, `panModifierHeld` (Space until the key registry exists) and `hitsEditableShape`.
+
+## Overlays
+
+Overlay layers are plain typed data in `src/overlay` ([ADR 0108](../../docs/adr/0108-overlay-layers-as-typed-data-over-deck-gl.md)). `overlayStack` in `src/overlay/z-order.ts` is the one z-order table, from `coverage` at the bottom to `comment-pins` on top, and the constructors (`createVectorOverlay`, `createRasterOverlay`, `createPinOverlay`) take each layer's `order` from its kind. Geometry is built once into batches (`polygonBatchFromRings`, `pathBatchFromLines`, `pointBatchFromPoints`, or the flat `createPolygonBatch`), and a polygon batch carries its triangle indices. `createOverlayController(engine)` sets, shows, hides, fades, invalidates and removes layers. The Viv route turns the descriptions into deck.gl layers through `createOverlayLayerBuilder` in `src/overlay/deck`, which is exported from `@parfocal/viewer-engine/viv` so that the main entry stays free of deck.gl.
+
+The overlay goldens are in `packages/golden-images` (`render/viv-overlays.spec.ts`, with `harness/viv/overlays.ts` as the page and `harness/viv/overlay-fixtures.ts` as the synthetic layers). Regenerate only them with `GOLDEN_UPDATE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-overlays.spec.ts`. `browser/overlay-indices.spec.ts` compares precomputed triangle indices with deck.gl's own triangulation and prints the timings of the [result](../../docs/results/2026-10-25-overlay-polygon-indices.md).
 
 ## Recording input traces
 

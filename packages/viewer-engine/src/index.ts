@@ -179,4 +179,71 @@ export {
   wheelPan,
   wheelPixels,
 } from "./input/wheel.ts";
+export {
+  createPathBatch,
+  createPointBatch,
+  createPolygonBatch,
+  type FlatBatch,
+  type LineInput,
+  type PointInput,
+  type PolygonInput,
+  pathBatchFromLines,
+  pointBatchFromPoints,
+  polygonBatchFromRings,
+  triangulatePolygons,
+} from "./overlay/batches.ts";
+export {
+  createOverlayController,
+  type OverlayController,
+  type OverlayHost,
+} from "./overlay/controller.ts";
+export {
+  createPinOverlay,
+  createRasterOverlay,
+  createVectorOverlay,
+  defaultOverlayState,
+  defaultRasterSmoothing,
+  defaultVectorStyles,
+  isOverlayDescription,
+  isPinOverlay,
+  isRasterOverlay,
+  type OverlayOptions,
+  type PinOverlayOptions,
+  type RasterOverlayOptions,
+  type VectorOverlayOptions,
+  withOverlayState,
+} from "./overlay/overlay.ts";
+export {
+  createPinAtlas,
+  type PinAtlas,
+  type PinIconBox,
+  type PinIconName,
+  pinColors,
+  pinIconSize,
+} from "./overlay/pin-icons.ts";
+export type {
+  OverlayDescription,
+  OverlayState,
+  PathBatch,
+  PinBatch,
+  PinKind,
+  PinOverlay,
+  PointBatch,
+  PolygonBatch,
+  RasterData,
+  RasterKind,
+  RasterOverlay,
+  Rgba,
+  ShapeData,
+  VectorKind,
+  VectorOverlay,
+  VectorStyle,
+} from "./overlay/types.ts";
+export {
+  isOverlayKind,
+  type OverlayKind,
+  overlayOrder,
+  overlayOrderStep,
+  overlayStack,
+} from "./overlay/z-order.ts";
 export * from "./pixel-source/index.ts";

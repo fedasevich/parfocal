@@ -10,6 +10,7 @@ import {
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
+import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { disposeDeck } from "./dispose-deck.ts";
@@ -75,6 +76,8 @@ export function createVivRoute(
   let camera = originCamera;
   let shown: Shown | null = null;
   let overlays: readonly OverlayLayer[] = [];
+  let overlayLayers: Layer[] = [];
+  const overlayBuilder = createOverlayLayerBuilder();
   let changes = 0;
   let renderedChanges = -1;
   let destroyed = false;
@@ -132,12 +135,17 @@ export function createVivRoute(
     deck.redraw("parfocal route change");
   };
 
+  const applyLayers = () => {
+    overlayLayers = overlayBuilder.build(overlays);
+    deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
+    changed();
+  };
+
   const showSlide = (slide: PixelSlide | null) => {
     if (slide === shown?.slide) return;
     release();
     if (slide === null) {
-      deck.setProps({ layers: [] });
-      changed();
+      applyLayers();
       return;
     }
     const reader = readerFor(slide);
@@ -155,8 +163,7 @@ export function createVivRoute(
       ...unpickable,
     }) as Layer;
     shown = { slide, levels, layer, reader };
-    deck.setProps({ layers: [layer] });
-    changed();
+    applyLayers();
   };
 
   const setCamera = (next: Camera) => {
@@ -170,7 +177,12 @@ export function createVivRoute(
     if (renderedChanges !== changes) return false;
     if (deck.needsRedraw({ clearRedrawFlags: false })) return false;
     if (shown === null) return true;
-    return shown.layer.isLoaded && shown.levels.pending() === 0 && (shown.reader?.idle() ?? true);
+    return (
+      shown.layer.isLoaded &&
+      overlayLayers.every((layer) => layer.isLoaded) &&
+      shown.levels.pending() === 0 &&
+      (shown.reader?.idle() ?? true)
+    );
   };
 
   const whenIdle = (signal?: AbortSignal) =>
@@ -205,9 +217,12 @@ export function createVivRoute(
     setCamera,
     setOverlays: (next) => {
       overlays = next;
+      applyLayers();
     },
     invalidateOverlay: (id) => {
-      if (overlays.some((overlay) => overlay.id === id)) changed();
+      if (!overlays.some((overlay) => overlay.id === id)) return;
+      overlayBuilder.invalidate(id);
+      applyLayers();
     },
     destroy: () => {
       if (destroyed) return;

@@ -1106,6 +1106,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-026 · Overlay layer system
   Typed layers for human annotations, AI proposals, nuclei results, heatmaps, coverage, comment pins and measurements, drawn in a fixed z-order with per-layer visibility and opacity.
   Done when golden tests render each layer type over a slide.
+  Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
 
 - [ ] VIEW-027 · Outline rendering with casings
   Class colour outline plus a thin near-black casing, proposals as near-black dashes on a white casing, brightness that never affects overlays.
@@ -1125,7 +1126,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 ### Memory, idle and robustness
 
 - [ ] VIEW-030 · Memory and teardown correctness
-  Destroy the canvas context on dispose, lose the WebGL context, remove every listener, keep one stable `selections` array per slide, upload uint8 as r8unorm, MSAA off, picking off, precomputed polygon indices.
+  Destroy the canvas context on dispose, lose the WebGL context, remove every listener, keep one stable `selections` array per slide, upload uint8 as r8unorm, MSAA off, picking off, precomputed polygon indices (built in VIEW-026, [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md)).
   Done when a CI memory test opens 20 slides in sequence and the heap returns to within 10% of baseline with exactly one Deck alive.
   Refs doc 24.
 
@@ -1193,6 +1194,14 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   The tissue box that VIEW-048 (open fitted to the tissue) reads reaches the viewer with the slide, from the slide index or the slide record, instead of being passed by hand. A slide without a stored mask opens fitted to the whole scan.
   Done when a test opens a slide through the real opener and the camera is fitted to the stored box, and a slide with no box opens fitted to the whole scan.
   Depends on VIEW-048, INGEST-007. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
+- [ ] VIEW-050 · Polygons with holes in overlay batches
+  Overlay polygon batches accept rings with holes. The triangulation, the outline loops and the precomputed indices all follow the holes.
+  Done when a golden test renders a polygon with a hole and an island inside the hole, and unit tests check the triangle count and that no triangle covers the hole.
+  Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
+- [ ] VIEW-051 · Triangulate large result sets off the main thread
+  A polygon batch of a large result set is triangulated in a worker or comes with its indices from the server, so a 1M polygon layer does not block the page for 273 ms.
+  Done when a test shows the longest main-thread task while a 1M polygon batch is prepared stays under 50 ms and the pixels match the main-thread batch.
+  Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md), [result](results/2026-10-25-overlay-polygon-indices.md).
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

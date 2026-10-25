@@ -32,6 +32,7 @@
     "@luma.gl/engine": "9.4.2",
     "@luma.gl/shadertools": "9.4.2",
     "@luma.gl/webgl": "9.4.2",
+    "@math.gl/polygon": "4.1.0",
     "geotiff": "3.0.5",
     "zarrita": "0.7.5"
   }

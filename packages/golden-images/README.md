@@ -39,6 +39,10 @@ The suite only needs a page that draws a view and a way to read the frame back.
 
 The CMU-1.svs scenes need `pnpm fixtures viewer`. They skip when the slide is missing, unless `PARFOCAL_REQUIRE_FIXTURES` names the `viewer` group, as the `browser` CI job does. `GOLDEN_MEASURE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-measure.spec.ts` prints the measurement table of the [Viv route result](../../docs/results/2026-10-23-viv-route-goldens.md). Each further slide format gets its own scenes and goldens, and the tolerance comes from `FORMAT_CODECS` and `CODEC_TOLERANCES` in `src/tolerances.ts`.
 
+## Overlay layers over CMU-1.svs
+
+`render/viv-overlays.spec.ts` uses a second page of the same Vite root, `harness/viv/overlays.html` with `overlays.ts`, a 400 x 300 viewer at the 10x tissue view. The synthetic layers are in `harness/viv/overlay-fixtures.ts`. There is one golden for each overlay kind (`viv-overlay-<kind>.png`) and one for all seven stacked (`viv-overlay-stack.png`), compared with a stricter tolerance than the slide's JPEG row because a pin is under 0.5% of a frame. The spec also checks that hiding every layer draws the bare slide byte for byte, that registration order and timing do not change the picture, that opacity fades between the two, and that removing a layer destroys its GPU resources. Regenerate only these goldens with `GOLDEN_UPDATE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-overlays.spec.ts`, never with `pnpm golden:update`, which rewrites the slide goldens too. [ADR 0108](../../docs/adr/0108-overlay-layers-as-typed-data-over-deck-gl.md) has the design.
+
 ## Tolerances
 
 A pixel differs when any of R, G or B is further than `maxChannelDelta` from the golden. A frame passes when no more than `maxDifferingFraction` of its pixels differ and the mean error of every channel stays under `maxMeanChannelError`.

@@ -174,3 +174,19 @@ The Viv route sets one selection and an interleaved RGB array of shape y, x and 
 ## A tissue box that fills the slide barely changes the fit
 
 The ingest mask of CMU-1.svs has a bounding box 5 to 7 percent smaller than the slide on each axis, because a few stray cells sit near the edges. With a 5 percent margin the fit zooms in 2.3 percent. A fit-to-tissue golden on a nearly full slide shows the rule working but not much else. Use a slide with real empty glass for a visible check. Source: VIEW-048.
+
+## Binary polygon loops need two extra vertices, and indices are absolute
+
+deck.gl's `PathLayer` with `_pathType: "loop"` and binary `getPath` expects each ring as its vertices plus the first two vertices again, and `startIndices` that count them. deck.gl sizes a loop at its vertex count plus two in `getGeometrySize`, so the buffer has to hold them. For `SolidPolygonLayer` with `_normalize: false`, `data.attributes.indices` holds triangle indices into the whole position buffer, not into each polygon, and per-vertex colour attributes need exactly one entry per stored vertex. An early comparison with `_normalize: true` and per-vertex colours drew about 3% of the pixels differently from the precomputed layer, most likely because normalizing adds a closing vertex to each ring and the colour attribute keeps the original count (not confirmed in deck.gl's code). To compare against deck.gl's own triangulation, drop `indices` and keep `_normalize: false`. Source: VIEW-026, [result](../results/2026-10-25-overlay-polygon-indices.md), [ADR 0108](../adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
+
+## Triangle indices cut a 1M polygon layer update from 261 ms to 39 ms
+
+Running earcut once when a polygon batch is built and passing the indices to `SolidPolygonLayer` took the layer's `updateState` for 1M octagons from 261 ms to 39 ms in Chrome on SwiftShader, with identical pixels. The batch itself takes 273 ms, so it pays off from the second update and should not run on the main thread for large result sets. Source: VIEW-026, [result](../results/2026-10-25-overlay-polygon-indices.md).
+
+## Hide with visible false, remove by leaving the list
+
+A deck.gl layer with `visible: false` keeps its models and GPU buffers and costs nothing to show again. A layer that leaves the `layers` array has `finalizeState` called, which destroys its models and attribute buffers. The overlay golden spec checks both through `layerManager.getLayers()`, reading `destroyed` on buffers and `_destroyed` on luma.gl models, which have no `destroyed` getter. Source: VIEW-026.
+
+## ImageData is enough for a BitmapLayer image and an IconLayer atlas
+
+Both layers take an `ImageData` for `image` and `iconAtlas` and load it without an asynchronous fetch, but their textures are still created on the first frame, so a golden capture must wait for `layer.isLoaded` of every overlay layer as well as the slide. The Viv route's `whenIdle` does. Draw the icon atlas in code, from a signed distance function, instead of with a canvas, so that no font or anti-aliasing difference between machines reaches a golden. For a `BitmapLayer` in the engine's y-down view the bounds are `[left, bottom, right, top]` with bottom as the larger y, and a raster test needs an asymmetric image to notice a flip. Source: VIEW-026.

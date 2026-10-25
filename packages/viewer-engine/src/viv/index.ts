@@ -8,6 +8,11 @@ export {
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
 export {
+  createOverlayLayerBuilder,
+  type OverlayLayerBuilder,
+  pinSizePx,
+} from "../overlay/deck/overlay-layers.ts";
+export {
   createPixelSlideOpener,
   type OpenRequestResolver,
   type PixelSlide,

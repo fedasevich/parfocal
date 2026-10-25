@@ -116,6 +116,6 @@ Test time on this machine: the memory spec about 21 s for the wrapper run and 28
 - [ADR 0103](../adr/0103-memory-settings-and-test-baseline.md) records where the memory settings live, how the r8unorm upload is applied and why the memory test takes its baseline after a warm-up cycle. Status Proposed.
 - VIEW-002 (Viv route on WebGL2 for RGB brightfield) replaces the harness route and should import `disposeDeck`, `deckDeviceProps`, `unpickableLayerProps`, `stableSelections` and, for multichannel slides, `installUint8TextureUpload`.
 - TODO: confirm on the first hosted CI run that the `browser` job passes with the `small` fixture group, and add its numbers as a new result file.
-- TODO: precomputed polygon indices belong to the overlay layers, which do not exist yet. VIEW-030 cannot be ticked until they are done or moved to the overlay task by the owner.
+- Precomputed polygon indices were built with the overlay layers in VIEW-026 (overlay layer system), see [ADR 0108](../adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
 - TODO: the same test on CMU-1.svs, which only the `formats` group has. `viv-levels.ts` is written to serve its 4× levels by reading the finer level and taking every second pixel, which is untested.
 - TODO: measure GPU texture memory for the r8unorm upload on a real GPU with luma.gl's memory counter, as doc 24 did.

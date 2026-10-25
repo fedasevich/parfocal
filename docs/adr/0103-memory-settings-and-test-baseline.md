@@ -48,4 +48,4 @@ Option 2 for the location, option 1 for the upload and option 2 for the baseline
 - The `browser` CI job now fetches the `small` fixture group, which shares its cache key with the `test` job.
 - A Viv upgrade must pass the r8unorm comparison in `browser/settings.spec.ts`, because the patch reads Viv's shader hook text.
 - TODO: offer the `r8unorm` upload and the dispose fix to Viv and deck.gl upstream (owner to decide).
-- Precomputed polygon indices are not covered, because the overlay layers do not exist yet. TODO: move that item to the overlay task or keep VIEW-030 open until it is done.
+- Precomputed polygon indices were built with the overlay layers in VIEW-026 (overlay layer system), see [ADR 0108](0108-overlay-layers-as-typed-data-over-deck-gl.md).
