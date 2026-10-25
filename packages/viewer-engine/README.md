@@ -7,8 +7,14 @@ The framework-free viewer engine: camera, input, renderer routes, slide readers 
 | Command | What it does |
 |---|---|
 | `pnpm --filter @parfocal/viewer-engine test` | Unit tests on `node --test`, with an injected clock and frame scheduler |
-| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input and overlay polygon indices |
+| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input, overlay polygon indices, and idle and hidden tab behaviour |
 | `pnpm --filter @parfocal/viewer-engine traces:record` | Opens the input trace recorder in the default browser |
+
+## Idle and hidden tabs
+
+The engine asks for an animation frame only while a camera motion runs or a change waits to be delivered. Its requests go through `createGuardedFrames` in `src/engine/guarded-frames.ts`, which races each animation frame against a 500 ms watchdog, runs frames as `MessageChannel` tasks while the tab is hidden, and restarts every pending request under a new generation when the tab's visibility changes. Motion that is running when the tab hides lands on its target, and motion started while hidden does not animate ([ADR 0109](../../docs/adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md)).
+
+The Viv route gives deck.gl's animation loop a frame provider (`src/viv/deck-sleep.ts`) that parks the loop after 3 frames with nothing left to do. Any code that changes what the route draws must go through the route's `changed()`, which wakes the loop. `createVivRoute({ sleepWhenIdle: false })` keeps the old always-running loop for comparison. `yieldToMain` and `createTimeSlice` in `src/engine/scheduling.ts` slice long main-thread work with `scheduler.yield` or a `MessageChannel`.
 
 ## Input
 

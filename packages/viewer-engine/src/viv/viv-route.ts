@@ -9,10 +9,20 @@ import {
   type DecodeWorker,
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
+import { animationFrames, systemClock } from "../engine/environment.ts";
+import { createGuardedFrames } from "../engine/guarded-frames.ts";
+import {
+  defaultWatchdogMs,
+  documentVisibility,
+  messageTasks,
+  systemTimers,
+} from "../engine/scheduling.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
 import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
+import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
+import { createDeckSleep, type DeckSleep } from "./deck-sleep.ts";
 import { disposeDeck } from "./dispose-deck.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createVivLevels, type VivLevels } from "./viv-levels.ts";
@@ -25,20 +35,32 @@ const idleFramesRequired = 2;
 
 const unpickable: object = { pickable: false };
 
+interface FrameLoopHandle {
+  setProps(props: { animationFrameProvider: DeckSleep["provider"] }): unknown;
+}
+
+function installFrameProvider(deck: Deck, sleep: DeckSleep): void {
+  const loop = (deck as unknown as { animationLoop?: FrameLoopHandle | null }).animationLoop;
+  loop?.setProps({ animationFrameProvider: sleep.provider });
+}
+
 export interface VivRouteOptions {
   readonly onError?: (error: Error) => void;
   readonly useDevicePixels?: boolean | number;
   readonly preserveDrawingBuffer?: boolean;
   readonly decodeWorkers?: number;
   readonly spawnDecodeWorker?: (index: number) => DecodeWorker;
+  readonly sleepWhenIdle?: boolean;
 }
 
 export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly canvas: HTMLCanvasElement;
   readonly deck: Deck<OrthographicView>;
   readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
+  readonly isSettled: () => boolean;
   readonly decodeStats: () => DecodeStats | null;
   readonly jpegReports: () => readonly (DecodeReport | null)[];
+  readonly sleep: DeckSleep | null;
 }
 
 interface Shown {
@@ -132,7 +154,8 @@ export function createVivRoute(
 
   const changed = () => {
     changes++;
-    deck.redraw("parfocal route change");
+    if (!documentVisibility.hidden()) deck.redraw("parfocal route change");
+    sleep?.wake("change");
   };
 
   const applyLayers = () => {
@@ -151,6 +174,7 @@ export function createVivRoute(
     const reader = readerFor(slide);
     const levels = createVivLevels(slide.source, {
       onTileError: reportError,
+      onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.read } : {}),
     });
     const layer = new MultiscaleImageLayer<[]>({
@@ -185,6 +209,25 @@ export function createVivRoute(
     );
   };
 
+  const sleep: DeckSleep | null =
+    options.sleepWhenIdle === false
+      ? null
+      : createDeckSleep({
+          frames: createGuardedFrames({
+            frames: animationFrames,
+            visibility: documentVisibility,
+            tasks: messageTasks,
+            timers: systemTimers,
+            watchdogMs: defaultWatchdogMs,
+          }),
+          visibility: documentVisibility,
+          settled: () => settled(),
+          now: systemClock,
+        });
+  if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
+  const stopObservingCanvas = observeCanvasSize(canvas, () => sleep?.wake("resize"));
+  const stopObservingPixelRatio = observePixelRatio(() => sleep?.wake("resize"));
+
   const whenIdle = (signal?: AbortSignal) =>
     new Promise<void>((resolve, reject) => {
       let calm = 0;
@@ -197,7 +240,9 @@ export function createVivRoute(
           reject(new Error("Waiting for the Viv route was aborted", { cause: signal.reason }));
           return;
         }
-        calm = settled() ? calm + 1 : 0;
+        const isSettled = settled();
+        if (!isSettled) sleep?.wake("poll");
+        calm = isSettled ? calm + 1 : 0;
         if (calm >= idleFramesRequired) {
           resolve();
           return;
@@ -211,8 +256,10 @@ export function createVivRoute(
     canvas,
     deck,
     whenIdle,
+    isSettled: settled,
     decodeStats: () => shown?.reader?.stats() ?? null,
     jpegReports: () => shown?.reader?.jpegReports() ?? [],
+    sleep,
     showSlide,
     setCamera,
     setOverlays: (next) => {
@@ -228,7 +275,10 @@ export function createVivRoute(
       if (destroyed) return;
       destroyed = true;
       release();
+      stopObservingCanvas();
+      stopObservingPixelRatio();
       disposeDeck(deck as unknown as Deck, canvas);
+      sleep?.destroy();
     },
   };
 }

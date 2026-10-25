@@ -21,6 +21,8 @@ import {
   screenPixelRatio,
   systemClock,
 } from "./environment.ts";
+import { createGuardedFrames } from "./guarded-frames.ts";
+import { defaultWatchdogMs, documentVisibility, messageTasks, systemTimers } from "./scheduling.ts";
 import type {
   ClientPoint,
   EngineContainer,
@@ -97,6 +99,14 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const now = options.now ?? systemClock;
   const reducedMotion = options.reducedMotion ?? prefersReducedMotion;
   const devicePixelRatio = options.devicePixelRatio ?? screenPixelRatio;
+  const visibility = options.scheduling?.visibility ?? documentVisibility;
+  const guarded = createGuardedFrames({
+    frames,
+    visibility,
+    tasks: options.scheduling?.tasks ?? messageTasks,
+    timers: options.scheduling?.timers ?? (options.frames ? null : systemTimers),
+    watchdogMs: options.scheduling?.watchdogMs ?? defaultWatchdogMs,
+  });
 
   let disposed = false;
   let mounted: Mounted<Slide> | null = null;
@@ -139,12 +149,17 @@ export function createViewerEngine<Slide extends EngineSlide>(
     for (const listener of [...cameraListeners]) listener();
   };
 
+  const settleAnimation = () => {
+    if (controller.motion() !== "dragging") controller.settle();
+  };
+
   const runFrame = () => {
     frame = null;
     rect = null;
     inFrame = true;
     let moving = false;
     try {
+      if (visibility.hidden()) settleAnimation();
       moving = controller.step();
     } finally {
       inFrame = false;
@@ -155,11 +170,11 @@ export function createViewerEngine<Slide extends EngineSlide>(
   };
 
   const requestFrame = () => {
-    if (frame === null) frame = frames.request(runFrame);
+    if (frame === null) frame = guarded.request(runFrame);
   };
 
   const cancelFrame = () => {
-    if (frame !== null) frames.cancel(frame);
+    if (frame !== null) guarded.cancel(frame);
     frame = null;
     rect = null;
   };
@@ -202,9 +217,17 @@ export function createViewerEngine<Slide extends EngineSlide>(
     applyCamera,
     viewport: () => (mounted ? measure(mounted.container) : null),
     requestFrame,
-    animates: () => mounted !== null && !reducedMotion(),
+    animates: () => mounted !== null && !reducedMotion() && !visibility.hidden(),
     ...(options.cameraProfile ? { profile: options.cameraProfile } : {}),
   });
+
+  const visibilityChanged = () => {
+    if (visibility.hidden()) {
+      settleAnimation();
+      if (cameraDirty) notifyCamera();
+    }
+    guarded.restart();
+  };
 
   const anchorOf = (at: ClientPoint | undefined): ScreenOffset | undefined => {
     if (!at || !mounted) return undefined;
@@ -300,6 +323,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       container.addEventListener(type, listener);
       detach.push(() => container.removeEventListener(type, listener));
     }
+    detach.push(visibility.subscribe(visibilityChanged));
     detach.push(
       observeResize(container, () => {
         rect = null;

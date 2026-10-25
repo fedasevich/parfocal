@@ -81,6 +81,7 @@ export type VivRegionReader = (
 export interface VivLevelOptions {
   readonly onTileError?: (error: Error) => void;
   readonly read?: VivRegionReader;
+  readonly onReadSettled?: () => void;
 }
 
 export class UnsupportedVivSourceError extends Error {
@@ -247,6 +248,7 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
       throw error;
     } finally {
       inFlight--;
+      options.onReadSettled?.();
     }
   };
 

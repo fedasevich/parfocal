@@ -37,3 +37,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-23 | [The decode pool pans CMU-1.svs with no byte downloaded twice, and keeping started work turns 160 fetches with no tile into 1 fetch](2026-10-23-decode-pool-pan-fetches.md) | VIEW-004 | benchmark |
 | 2026-10-25 | [Native JPEG decode agrees with the script decoder on most fixtures but not on any Aperio SVS, and is 7 to 15 times faster where it agrees](2026-10-25-native-jpeg-validation.md) | VIEW-005, VIEW-006 | benchmark |
 | 2026-10-25 | [Precomputed triangle indices cut a 1M polygon layer update from 261 ms to 39 ms with identical pixels](2026-10-25-overlay-polygon-indices.md) | VIEW-026 | benchmark |
+| 2026-10-25 | [A loaded, untouched viewer runs 0 animation frames in 10 s (606 with the sleep off), and a view hidden mid-load completes 65 to 136 ms after the tab returns](2026-10-25-idle-and-hidden-tab.md) | VIEW-032, VIEW-033 | baseline |

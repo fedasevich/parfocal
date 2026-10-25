@@ -13,6 +13,16 @@ export {
   pinSizePx,
 } from "../overlay/deck/overlay-layers.ts";
 export {
+  createDeckSleep,
+  type DeckFrameCallback,
+  type DeckFrameProvider,
+  type DeckSleep,
+  type DeckSleepOptions,
+  type DeckSleepStats,
+  defaultQuietFrames,
+  type WakeSource,
+} from "./deck-sleep.ts";
+export {
   createPixelSlideOpener,
   type OpenRequestResolver,
   type PixelSlide,

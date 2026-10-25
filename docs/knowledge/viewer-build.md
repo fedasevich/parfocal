@@ -190,3 +190,31 @@ A deck.gl layer with `visible: false` keeps its models and GPU buffers and costs
 ## ImageData is enough for a BitmapLayer image and an IconLayer atlas
 
 Both layers take an `ImageData` for `image` and `iconAtlas` and load it without an asynchronous fetch, but their textures are still created on the first frame, so a golden capture must wait for `layer.isLoaded` of every overlay layer as well as the slide. The Viv route's `whenIdle` does. Draw the icon atlas in code, from a signed distance function, instead of with a canvas, so that no font or anti-aliasing difference between machines reaches a golden. For a `BitmapLayer` in the engine's y-down view the bounds are `[left, bottom, right, top]` with bottom as the larger y, and a raster test needs an asymmetric image to notice a flip. Source: VIEW-026.
+
+## Headless Chrome cannot be hidden, so a hidden tab test emulates it
+
+With Playwright 1.64 and Chrome 155, `bringToFront` on a second page, a minimized window (`Browser.setWindowBounds`), `Page.setWebLifecycleState` frozen then active, and launching without Playwright's three backgrounding flags all left `visibilityState` at `visible` with rAF at 60 Hz. The protocol Playwright ships has no visibility command. `browser/page/frame-probe.ts` overrides `document.visibilityState`, dispatches `visibilitychange`, withholds animation frames (held until shown, or dropped as in a worker) and floors timers at 1 s while hidden. Install it before the app code, and say in any result that the hidden tab was emulated. Source: VIEW-033, [ADR 0109](../adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
+
+## luma.gl 9.4 lets a Deck's animation loop take its frames from a provider
+
+`Deck` builds its `AnimationLoop` in the constructor and requests the first frame only after the device exists, so `deck.animationLoop.setProps({ animationFrameProvider })` right after `new Deck()` replaces every frame request without touching private methods. The prop is experimental. `src/viv/deck-sleep.ts` parks the loop's callback after 3 frames with nothing to do and hands it back to a real frame on a wake. `cancelAnimationFrame` must drop a parked callback, or the stopped loop keeps its `Deck` reachable. Source: VIEW-032.
+
+## A sleeping Deck loop needs a wake from every source of change
+
+Nothing redraws a parked loop, so every route to new pixels must wake it: camera and slide changes, every finished tile read (a tile that resolves while the loop sleeps only sets deck flags), a canvas resize in device pixels, and a device pixel ratio change through a `matchMedia` resolution query. `whenIdle` also wakes it, which would hide a missed wake, so the route counts a poll that finds work left as a rescue and the tests assert zero. Under CDP, `Emulation.setDeviceMetricsOverride` with only a new `deviceScaleFactor` fires no resize observer and no media query event. Change the size too. Source: VIEW-032.
+
+## Chrome's own 10 s task makes raw TaskDuration unfit for an idle budget
+
+An idle page with a loaded slide showed 5 to 31 ms of `TaskDuration` in 10 s with no script, layout or frame. A `toplevel` trace shows one task from `base/allocator/partition_alloc_support.cc` per window, Chrome's periodic memory reclaimer, whose cost grows with the heap (a blank page: 0.2 to 2.3 ms). Start a trace with `browser.startTracing(undefined, { categories: ["toplevel"] })`, sum the `ThreadControllerImpl::RunTask` events on `CrRendererMain` and split them by `args.src_file`. Wait 2 s after the last frame before the window, or the final compositor work lands in it. Source: VIEW-032, [result](../results/2026-10-25-idle-and-hidden-tab.md).
+
+## deck.gl issues tile requests from setTimeout(0)
+
+loaders.gl's `RequestScheduler`, which deck.gl's `TileLayer` uses, starts requests from `setTimeout(..., 0)`. In a hidden tab those timers wait up to 1 s, so a load hidden before its first read restarts slowly (609 to 738 ms to finish after the tab returned). Reads that have started finish normally, and the route runs one frame as a task per finished read to request the next ones. Source: VIEW-033.
+
+## Right after a camera change the view looks settled
+
+`route.isSettled()` is true straight after `setCamera`, because the synchronous redraw clears the flags and `TileLayer` has not selected the new tiles yet. A test that must wait for new tiles should wait for `isSettled()` and the loop being asleep, which needs 3 quiet frames, or use `whenIdle`, which needs 2. Source: VIEW-033.
+
+## A rejected tile counts as loaded in deck.gl 9.4
+
+`Tile2DHeader` sets `_isLoaded` before it calls `onError`, so one failing tile does not keep a sleeping loop awake. Source: VIEW-032.

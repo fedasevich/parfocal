@@ -245,6 +245,7 @@ export function createCameraController(host: CameraControllerHost): CameraContro
     if (current.kind === "zooming") {
       host.applyCamera(zoomAbout(current.target, current.anchor, current.point));
     }
+    if (current.kind === "coasting") stepCoast(current, current.until);
     stop("arrived");
   };
 

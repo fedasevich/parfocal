@@ -33,6 +33,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           "decode-count": fileURLToPath(new URL("./page/decode-count.html", import.meta.url)),
           "native-jpeg": fileURLToPath(new URL("./page/native-jpeg.html", import.meta.url)),
           "overlay-indices": fileURLToPath(new URL("./page/overlay-indices.html", import.meta.url)),
+          lifecycle: fileURLToPath(new URL("./page/lifecycle.html", import.meta.url)),
           "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),
         },
       },

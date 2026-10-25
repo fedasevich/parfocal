@@ -1137,13 +1137,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-032 · Idle means zero work
   No animation loop callbacks when the camera, tiles and overlays are idle.
-  Done when a test counts zero rAF callbacks over 10 s of idle and main-thread time under 20 ms per 10 s.
-  Refs doc 24.
+  Done when a test counts zero rAF callbacks over 10 s of idle and main-thread time under 20 ms per 10 s. The page's own main-thread time is read from a Chrome trace without Chrome's periodic internal tasks (a 5 to 30 ms memory reclaim task runs once per 10 s in every renderer).
+  Refs doc 24, [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
 
 - [ ] VIEW-033 · Hidden tab and background scheduling
   A watchdog keeps rendering correct after the tab returns, a camera motion started or running while the tab is hidden settles on its target at once (animation frames are suspended, not throttled, in a hidden tab), a loop generation counter restarts parked loops, and long work is sliced with `scheduler.yield` or MessageChannel.
-  Done when a test hides and shows the tab mid-load and the view is complete within 1 s of becoming visible.
-  Refs docs 01, 06.
+  Done when a test hides and shows the tab mid-load and the view is complete within 1 s of becoming visible. Headless Chrome cannot be hidden, so the test emulates a hidden tab and a one-off check in headed Chrome is recorded as a result file.
+  Refs docs 01, 06, [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
 
 - [ ] VIEW-034 · GPU error handling
   Error scopes and uncaptured error listeners on WebGPU routes, context loss recovery on WebGL, user-facing message on unrecoverable loss.
@@ -1202,6 +1202,10 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   A polygon batch of a large result set is triangulated in a worker or comes with its indices from the server, so a 1M polygon layer does not block the page for 273 ms.
   Done when a test shows the longest main-thread task while a 1M polygon batch is prepared stays under 50 ms and the pixels match the main-thread batch.
   Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md), [result](results/2026-10-25-overlay-polygon-indices.md).
+- [ ] VIEW-052 · Hidden tab check in headed Chrome
+  Run the hidden-tab loading test by hand in headed Chrome on the owner's Mac, with a real tab switch, and record how long the view takes to complete after the tab returns.
+  Done when a result file records the run with the Chrome version, the slide, the RTT and the times, next to the emulated numbers.
+  Depends on VIEW-033. Refs [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md), [result](results/2026-10-25-idle-and-hidden-tab.md).
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

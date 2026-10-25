@@ -8,6 +8,7 @@ import type {
 } from "../camera/camera.ts";
 import type { CameraMotion, FlightEnd, ZoomOptions } from "../camera/controller.ts";
 import type { CameraProfile } from "../camera/profile.ts";
+import type { SchedulingOptions } from "./scheduling.ts";
 
 export type Unsubscribe = () => void;
 
@@ -107,6 +108,7 @@ export interface ViewerEngineOptions<Slide extends EngineSlide = EngineSlide> {
   readonly openSlide: SlideOpener<Slide>;
   readonly zoomLimits?: ZoomLimits;
   readonly frames?: FrameScheduler;
+  readonly scheduling?: SchedulingOptions;
   readonly now?: Clock;
   readonly reducedMotion?: () => boolean;
   readonly devicePixelRatio?: () => number;

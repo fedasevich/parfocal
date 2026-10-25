@@ -110,6 +110,26 @@ export {
   EngineDisposedError,
   SlideOpenSupersededError,
 } from "./engine/engine.ts";
+export {
+  createGuardedFrames,
+  type GuardedFrameStats,
+  type GuardedFrames,
+  type GuardedFramesOptions,
+} from "./engine/guarded-frames.ts";
+export {
+  type Cancel,
+  createTimeSlice,
+  defaultWatchdogMs,
+  documentVisibility,
+  messageTasks,
+  type SchedulingOptions,
+  systemTimers,
+  type TabVisibility,
+  type TaskScheduler,
+  type TimerScheduler,
+  type TimeSlice,
+  yieldToMain,
+} from "./engine/scheduling.ts";
 export type {
   ClientPoint,
   Clock,
