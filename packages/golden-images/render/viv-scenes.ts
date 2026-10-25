@@ -15,7 +15,7 @@ export const cmu1TissueCentre = { x: 28_750, y: 10_700 };
 
 export const cmu1MicronsPerPixel = 0.499;
 
-export const cmu1TissueBox: SlideArea = { x: 1856, y: 256, width: 42_816, height: 31_104 };
+export const cmu1TissueBox: SlideArea = { x: 10_000, y: 2_000, width: 32_000, height: 22_000 };
 
 export const VIV_TISSUE_SCENE: VivGoldenScene = {
   name: "viv-cmu-1-svs-tissue-fit",

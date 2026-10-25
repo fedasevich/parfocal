@@ -22,24 +22,24 @@ function near(actual: number, expected: number, tolerance = 1e-9): void {
 }
 
 describe("the tissue box with its margin", () => {
-  it("adds 5 percent of each side, half on each edge", () => {
+  it("adds 5 percent of each side on every edge", () => {
     assert.equal(tissueMarginShare, 0.05);
     assert.deepEqual(tissueArea(box, slide), {
-      x: 9_500,
-      y: 5_625,
-      width: 21_000,
-      height: 15_750,
+      x: 9_000,
+      y: 5_250,
+      width: 22_000,
+      height: 16_500,
     });
   });
 
   it("stops the margin at the slide edge", () => {
     const edge = tissueArea({ x: 0, y: 29_000, width: 40_000, height: 1_000 }, slide);
-    assert.deepEqual(edge, { x: 0, y: 28_975, width: 40_000, height: 1_025 });
+    assert.deepEqual(edge, { x: 0, y: 28_950, width: 40_000, height: 1_050 });
   });
 
   it("keeps only the part of the box that lies on the slide", () => {
     const partly = tissueArea({ x: -2_000, y: 0, width: 4_000, height: 30_000 }, slide);
-    assert.deepEqual(partly, { x: 0, y: 0, width: 2_050, height: 30_000 });
+    assert.deepEqual(partly, { x: 0, y: 0, width: 2_100, height: 30_000 });
   });
 
   it("ignores a missing, empty, non-finite or off-slide box", () => {
@@ -62,14 +62,14 @@ describe("fitting a slide to its tissue", () => {
     const camera = fitCamera(slide, viewport, limits, box);
     near(camera.x, 20_000);
     near(camera.y, 13_500);
-    near(camera.zoom, Math.log2(800 / 21_000));
+    near(camera.zoom, Math.log2(800 / 22_000));
   });
 
   it("zooms in on the tissue compared with the whole slide", () => {
     const whole = fitCamera(slide, viewport, limits);
     const tissue = fitCamera(slide, viewport, limits, box);
     near(whole.zoom, Math.log2(800 / 40_000));
-    near(tissue.zoom - whole.zoom, Math.log2(40_000 / 21_000));
+    near(tissue.zoom - whole.zoom, Math.log2(40_000 / 22_000));
   });
 
   it("fits the whole slide without a mask", () => {

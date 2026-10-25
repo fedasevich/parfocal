@@ -35,7 +35,7 @@ Option 4 for decoding.
 
 Option 6 for the fit.
 
-- `EngineSlide` has an optional `tissue` box in level-0 pixels. `fitCamera` and the engine's fit on open use it through `tissueArea`, which clips the box to the slide and adds a margin of 5 percent of each side, half on each edge, again clipped to the slide. Without a box, or with an unusable one, the whole slide is fitted.
+- `EngineSlide` has an optional `tissue` box in level-0 pixels. `fitCamera` and the engine's fit on open use it through `tissueArea`, which clips the box to the slide and adds a margin of 5 percent of the box side on every edge, again clipped to the slide. The fit is only a camera view, so no pixel is removed from the slide, and zooming out reaches the whole slide. Without a box, or with an unusable one, the whole slide is fitted.
 - The engine's fit on open and `fitToSlide` are one function, so `0` and the fit command use the same box once the key registry exists. The zoom-out limit stays at half of the whole-slide fit ([ADR 0106](0106-camera-bounds-and-feel-profiles.md)).
 - `pixelSlide` and `createPixelSlideOpener` pass the box through from the caller.
 
@@ -45,7 +45,8 @@ Nothing is built for VIEW-006. Viv asks for one selection of one interleaved arr
 
 - Aperio SVS files stay on the script decoder, and the fast path applies to Philips, Argos, Leica SCN, generic TIFF and CAMELYON files. Huron-1-40x.tif also falls back, at an error of 5.44.
 - Opening a slide in a worker costs one more tile fetch and two decodes per distinct table set, which the shared byte cache keeps to about one block.
-- The CMU-1.svs tissue box for the golden test comes from the ingest worker's mask (515 by 719 cells of 64 pixels, box 1856, 256 to 44672, 31360). It is only 5 to 7 percent smaller than the slide on each axis, because CMU-1.svs is nearly all tissue and a few stray cells reach the edges. With the margin the fit raises the zoom by 2.3 percent and moves the centre 264 level-0 pixels to the right, so the golden proves the rule but shows little. A box that ignores specks is a job for the ingest mask.
-- Open questions for the owner are the margin (5 percent of each side in total, which clips to the slide edge) and whether the fit should ignore specks.
+- The ingest worker's mask of CMU-1.svs gives the box 1856, 256 to 44672, 31360 (515 by 719 cells of 64 pixels). It is only 5 to 7 percent smaller than the slide on each axis, because CMU-1.svs is nearly all tissue and a few stray cells reach the edges. With a margin on every edge the fit clips back to the whole slide, which is the safe outcome. The golden therefore uses a smaller fixed box, 10000, 2000 with a size of 32000 by 22000, that tests the fit rule and not the mask. A box that ignores specks is a job for the ingest mask.
+- The owner chose to favour showing too much over showing too little, so the margin is on every edge and a box that does not shrink the view simply fits the whole slide. The owner also asked that nothing be cut from slides, which holds because the fit moves only the camera.
+- The agreement threshold stays at 3 of 255. The fixtures that agree measured 1.08 to 2.25, which is the rounding of different JPEG decoders, and the next fixture measured 5.44. Native decode is used only where it matches the script decoder within that rounding, so no slide is shown with different pixels than the reference decode, and any doubt falls back to the script decoder.
 - A mask delivery path and the box it yields wait for the upload and storage work. Until then the caller passes the box.
 - Backlog tasks touched: VIEW-005, VIEW-006 and VIEW-048 as above. VIEW-006's Done-when line is met by a test, not by a cache.

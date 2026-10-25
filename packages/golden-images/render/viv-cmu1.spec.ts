@@ -185,7 +185,7 @@ test("a route that reads the 4x level as 2x fails the 10x golden", async ({ page
   expect(["mismatched", "empty"]).toContain(goldenVerdict(frame, scene, testInfo.outputDir));
 });
 
-test("CMU-1.svs opens fitted to the bounding box of its tissue mask, with a margin", async ({
+test("CMU-1.svs opens fitted to a tissue box with a margin on every edge", async ({
   page,
 }, testInfo) => {
   const fitScene = VIV_SCENES[0];

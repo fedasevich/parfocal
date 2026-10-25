@@ -154,8 +154,8 @@ export function tissueArea(
   if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) return null;
   const inside = withinSlide(box, slide);
   if (inside === null) return null;
-  const marginX = (inside.width * marginShare) / 2;
-  const marginY = (inside.height * marginShare) / 2;
+  const marginX = inside.width * marginShare;
+  const marginY = inside.height * marginShare;
   return withinSlide(
     {
       x: inside.x - marginX,
