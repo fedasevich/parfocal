@@ -1,4 +1,4 @@
-import type { GeoTIFF, GeoTIFFImage } from "geotiff";
+import type { GeoTIFFImage } from "geotiff";
 import { checkTile, checkWindow, levelAt, recoverLadder, tileWindow } from "../geometry.ts";
 import {
   type ChannelInfo,
@@ -24,6 +24,7 @@ import {
   largestPyramid,
   listPages,
   loadByteCounts,
+  loadTag,
   openTiff,
   type TiffPage,
 } from "./directory.ts";
@@ -37,6 +38,7 @@ import {
   nativeAgreementThreshold,
   readWindowNatively,
 } from "./native-jpeg.ts";
+import { parseOmeChannels } from "./ome-channels.ts";
 import { readMicronsPerPixel } from "./scale.ts";
 
 const photometricCodes = {
@@ -60,7 +62,9 @@ const convertedToRgb = new Set<number>([
 type Decode = "rgb-transform" | "samples";
 
 interface TiffLevel extends PixelLevel {
+  readonly page: TiffPage;
   readonly image: GeoTIFFImage;
+  readonly siblings: readonly GeoTIFFImage[];
   readonly byteCounts: ArrayLike<number> | null;
   readonly jpeg: JpegTileLayout | null;
 }
@@ -142,8 +146,10 @@ function layoutOf(image: GeoTIFFImage): Layout {
   throw new Error(`Unsupported photometric interpretation ${photometric} with ${dtype} samples`);
 }
 
-async function chooseLevels(tiff: GeoTIFF, request: OpenRequest): Promise<TiffLevel[]> {
-  const pages = await listPages(tiff);
+async function chooseLevels(
+  pages: readonly TiffPage[],
+  request: OpenRequest,
+): Promise<TiffLevel[]> {
   const indexed = request.index?.levels;
   if (indexed !== undefined && indexed.length > 0) {
     return Promise.all(
@@ -183,7 +189,9 @@ async function describe(
   height: number,
 ): Promise<TiffLevel> {
   return {
+    page,
     image: page.image,
+    siblings: [],
     byteCounts: await loadByteCounts(page.image),
     jpeg: await describeJpegTiles(page.image),
     downsample,
@@ -245,16 +253,68 @@ function paintAbsent(
   }
 }
 
+function withChannelPages(
+  levels: readonly TiffLevel[],
+  pages: readonly TiffPage[],
+  channelCount: number,
+): TiffLevel[] | null {
+  const withSiblings: TiffLevel[] = [];
+  for (const level of levels) {
+    const siblings: GeoTIFFImage[] = [];
+    for (let channel = 1; channel < channelCount; channel++) {
+      const sibling = pages.find(
+        (page) =>
+          page.ifd === level.page.ifd + channel &&
+          page.subIfd === level.page.subIfd &&
+          page.image.getWidth() === level.image.getWidth() &&
+          page.image.getHeight() === level.image.getHeight() &&
+          page.image.getSamplesPerPixel() === 1,
+      );
+      if (sibling === undefined) return null;
+      siblings.push(sibling.image);
+    }
+    withSiblings.push({ ...level, siblings });
+  }
+  return withSiblings;
+}
+
+async function omeChannelLevels(
+  levels: TiffLevel[],
+  pages: readonly TiffPage[],
+): Promise<{ levels: TiffLevel[]; channels: readonly ChannelInfo[] } | null> {
+  const [first] = levels;
+  if (first === undefined || first.image.getSamplesPerPixel() !== 1) return null;
+  const description = await loadTag(first.image, "ImageDescription");
+  const channels = typeof description === "string" ? parseOmeChannels(description) : null;
+  if (channels === null) return null;
+  const withSiblings = withChannelPages(levels, pages, channels.length);
+  return withSiblings === null ? null : { levels: withSiblings, channels };
+}
+
 export async function openTiffSource(request: OpenRequest): Promise<PixelSource> {
   const tiff = await openTiff(
     absoluteUrl(request.url, request.baseUrl),
     request.signal,
     request.fetch,
   );
-  const levels = await chooseLevels(tiff, request);
+  const pages = await listPages(tiff);
+  const plainLevels = await chooseLevels(pages, request);
+  const multichannel = await omeChannelLevels(plainLevels, pages);
+  const levels = multichannel?.levels ?? plainLevels;
   const base = levelAt(levels, 0);
   await assertDecodable(base.image);
-  const layout = layoutOf(base.image);
+  const singleLayout = layoutOf(base.image);
+  const layout: Layout =
+    multichannel === null
+      ? singleLayout
+      : {
+          decode: "samples",
+          samples: [0],
+          photometric: "channels",
+          dtype: singleLayout.dtype,
+          channels: multichannel.channels,
+          background: 0,
+        };
   const micronsPerPixel =
     request.index?.micronsPerPixel !== undefined
       ? request.index.micronsPerPixel
@@ -282,6 +342,14 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
       interleave: false as const,
       ...(signal ? { signal } : {}),
     };
+    if (level.siblings.length > 0) {
+      const perChannel = await Promise.all(
+        [level.image, ...level.siblings].map((image) =>
+          image.readRasters({ ...options, samples: [0] }),
+        ),
+      );
+      return perChannel.flatMap((planes) => Array.from(planes as ArrayLike<PixelArray>));
+    }
     const decoded =
       layout.decode === "rgb-transform"
         ? await level.image.readRGB(options)

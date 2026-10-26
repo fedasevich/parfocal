@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fixturesDir, loadManifest } from "@parfocal/test-fixtures";
+import { fixturesDir, loadManifest, syntheticDir } from "@parfocal/test-fixtures";
 import type { Page } from "@playwright/test";
 import { createServer, type Plugin, type ViteDevServer } from "vite";
 import {
@@ -70,6 +70,7 @@ function sendFixture(request: IncomingMessage, response: ServerResponse, path: s
 
 function fixtureServer(): Plugin {
   const known = new Set(loadManifest().remote.map((fixture) => fixture.file));
+  const synthetic = new Set(loadManifest().synthetic.map((fixture) => fixture.file));
   return {
     name: "parfocal-fixtures",
     configureServer(server) {
@@ -80,8 +81,8 @@ function fixtureServer(): Plugin {
           return;
         }
         const file = basename(pathname.slice(fixturePrefix.length));
-        const path = join(fixturesDir(), file);
-        if (!known.has(file) || !existsSync(path)) {
+        const path = join(synthetic.has(file) ? syntheticDir : fixturesDir(), file);
+        if (!(known.has(file) || synthetic.has(file)) || !existsSync(path)) {
           response.writeHead(404);
           response.end();
           return;

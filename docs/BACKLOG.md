@@ -1041,10 +1041,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-011 · SVS JPEG 2000 through OpenJPEG WASM
   Lazy-loaded codec, damaged tile detection with a grey placeholder, no main-thread fallback.
   Done when J2K fixtures pass, a corrupted tile renders grey, and the codec is not downloaded for non-J2K slides.
-  Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 24.
+  Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 24, [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
 
 - [ ] VIEW-012 · OME-TIFF 8-bit and 16-bit
-  Done when the 8-bit and 16-bit multichannel fixtures pass, with 16-bit going through Viv's channel contrast path.
+  Done when the 8-bit and 16-bit multichannel fixtures pass, with 16-bit going through Viv's channel contrast path. Mounting the channel levels in the route belongs to VIEW-018 (multichannel fluorescence display).
+  Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
 
 - [ ] VIEW-013 · NDPI including above 4 GB
   Tiles cut from the restart-marker index, 64-bit offsets rebuilt, YCbCr handled.
@@ -1069,8 +1070,8 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-018 · Multichannel fluorescence display
   Channel visibility, colour, contrast limits per channel, up to Viv's channel limit, contrast change in one frame.
-  Done when the 16-bit fixture shows contrast changes within one frame (POC: 16 ms) in a perf test.
-  Refs doc 32.
+  Done when the 16-bit fixture shows contrast changes within one frame (POC: 16 ms) in a perf test. This includes mounting `createVivChannelLevels` in `createVivRoute` and channel-aware region reads in the decode workers.
+  Refs doc 32, [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
 
 ### Camera and interaction
 
@@ -1212,6 +1213,14 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Try the double tap to 40x and the two-finger double tap on a real tablet and a touchscreen laptop, and tune `touchTuning` (tap slop 10 px, tap length 300 ms, double-tap window 350 ms and 40 px) from what feels right.
   Done when a result file records the devices, the values tried and the values kept.
   Depends on VIEW-023. Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
+- [ ] VIEW-054 · JPEG 2000 slide in the viewer fixture group
+  The real JPEG 2000 goldens and the CMU-1.tiff golden run in browser CI, which needs `CMU-1-JP2K-33005.svs` (132,565,343 bytes) and `CMU-1.tiff` (204,117,846 bytes) in the `viewer` fixture group and its CI cache.
+  Done when the `browser` CI job fetches them under the cache key and the goldens run instead of skipping.
+  Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
+- [ ] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
+  On JP2K-33003-1.svs and JP2K-33003-2.svs one tile at each of levels 1 and 2 differs from OpenSlide by up to 47 while level 0 is within 0.5. Find out whether the cause is the reference, the level table or the decoder.
+  Done when a result file names the cause and a test pins it.
+  Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

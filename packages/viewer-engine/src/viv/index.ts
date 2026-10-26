@@ -54,6 +54,22 @@ export {
   pixelSlide,
 } from "./pixel-slide.ts";
 export {
+  boxDownsamplePlane,
+  type ChannelDisplay,
+  createVivChannelLevels,
+  maxSampleValue,
+  type VivChannelArray,
+  type VivChannelDtype,
+  type VivChannelLayerProps,
+  type VivChannelLevel,
+  type VivChannelLevelOptions,
+  type VivChannelLevels,
+  type VivChannelSelection,
+  type VivChannelTile,
+  vivChannelDtype,
+  vivChannelLayerProps,
+} from "./viv-channel-levels.ts";
+export {
   boxDownsampleToInterleaved,
   createVivLevels,
   readVivRegion,

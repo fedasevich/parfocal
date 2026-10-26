@@ -97,6 +97,31 @@ pixelSourceConformance(
   synthetic,
 );
 pixelSourceConformance(
+  "geotiff, Aperio JPEG 2000 33005 TIFF",
+  viaRegistry("generic-tiff", "/synthetic/synthetic-jp2k-33005.tiff"),
+  synthetic,
+);
+pixelSourceConformance(
+  "geotiff, Aperio JPEG 2000 33003 TIFF",
+  viaRegistry("generic-tiff", "/synthetic/synthetic-jp2k-33003.tiff"),
+  synthetic,
+);
+pixelSourceConformance(
+  "geotiff, JPEG 2000 TIFF with two damaged tiles",
+  viaRegistry("generic-tiff", "/synthetic/synthetic-jp2k-damaged.tiff"),
+  synthetic,
+);
+pixelSourceConformance(
+  "geotiff, OME-TIFF with three 8-bit channels as separate planes",
+  viaRegistry("ome-tiff", "/synthetic/synthetic-channels-uint8.ome.tiff"),
+  { levels: 3, photometric: "channels", dtype: "uint8", micronsPerPixel: 0.5 },
+);
+pixelSourceConformance(
+  "geotiff, OME-TIFF with three 16-bit channels as separate planes",
+  viaRegistry("ome-tiff", "/synthetic/synthetic-channels-uint16.ome.tiff"),
+  { levels: 3, photometric: "channels", dtype: "uint16", micronsPerPixel: 0.5 },
+);
+pixelSourceConformance(
   "geotiff, levels and scale from a slide index",
   () =>
     openTiffSource({
@@ -126,6 +151,36 @@ const cachedSlides: readonly (readonly [string, SlideFormatId, Expected])[] = [
       levels: 3,
       micronsPerPixel: 0.499,
       levelSizes: ["1 46000x32914", "4 11500x8228", "16 2875x2057"],
+    },
+  ],
+  [
+    "CMU-1-JP2K-33005.svs",
+    "aperio-svs",
+    {
+      ...rgb8,
+      levels: 3,
+      micronsPerPixel: 0.499,
+      levelSizes: ["1 46000x32893", "4 11500x8223", "16 2875x2055"],
+    },
+  ],
+  [
+    "JP2K-33003-1.svs",
+    "aperio-svs",
+    {
+      ...rgb8,
+      levels: 3,
+      micronsPerPixel: 0.2498,
+      levelSizes: ["1 15374x17497", "4 3843x4374", "8 1921x2187"],
+    },
+  ],
+  [
+    "JP2K-33003-2.svs",
+    "aperio-svs",
+    {
+      ...rgb8,
+      levels: 3,
+      micronsPerPixel: 0.2498,
+      levelSizes: ["1 32671x47076", "4 8167x11769", "16 2041x2942"],
     },
   ],
   [

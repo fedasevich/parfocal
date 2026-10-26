@@ -217,6 +217,31 @@
       "file": "synthetic-sparse.tiff",
       "sha256": "eeb71e5db55fc6306de1791ae047361a9757d769e6c8476741d86b4130567d20",
       "bytes": 87497
+    },
+    {
+      "file": "synthetic-jp2k-33005.tiff",
+      "sha256": "11c69cdb21583316191f51f599b363e3a5ecfd85ab0d93e798e490f84ef01729",
+      "bytes": 87936
+    },
+    {
+      "file": "synthetic-jp2k-33003.tiff",
+      "sha256": "a00a0adf8807b7e737db2598217a3bdf86a466d36fce7eb862727ca2c815743b",
+      "bytes": 87936
+    },
+    {
+      "file": "synthetic-jp2k-damaged.tiff",
+      "sha256": "74a4523fd849c263c8b650deed1173c2146358dfb92b0c0fcf7e9131915dc323",
+      "bytes": 87936
+    },
+    {
+      "file": "synthetic-channels-uint8.ome.tiff",
+      "sha256": "d9c7499292a982354d3c380f3de2e3c6beb0a2d9276e8e2fdb1b65ef296218d6",
+      "bytes": 24508
+    },
+    {
+      "file": "synthetic-channels-uint16.ome.tiff",
+      "sha256": "af0a04c9579582f45f43ccdd343ea171532bee672b54bf2c0869f4ffcdafd23f",
+      "bytes": 53949
     }
   ]
 }

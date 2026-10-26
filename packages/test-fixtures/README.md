@@ -48,6 +48,11 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-zlib.ome.tiff` | OME-TIFF with the same pyramid in SubIFDs and deflate tiles |
 | `synthetic-big-endian.tiff` | Big-endian BigTIFF with the same pyramid in 32 px deflate tiles, so the tile offset arrays lie outside the first directory read |
 | `synthetic-sparse.tiff` | `synthetic-jpeg.tiff` with level 0 tiles 1, 6 and 7 left out (offset and byte count 0), as Philips and Argos scanners do |
+| `synthetic-jp2k-33005.tiff` | The same pyramid as JPEG 2000 tiles of Aperio compression 33005, with the multiple component transform on |
+| `synthetic-jp2k-33003.tiff` | The same as 33005 under compression number 33003, so it checks routing and not the YCbCr layout |
+| `synthetic-jp2k-damaged.tiff` | `synthetic-jp2k-33005.tiff` with tile 1 stripped of its codestream marker and the body of tile 6 overwritten |
+| `synthetic-channels-uint8.ome.tiff` | OME-TIFF with three 8-bit channels (DAPI, FITC, TRITC) as separate zlib pages, two SubIFD levels each |
+| `synthetic-channels-uint16.ome.tiff` | The same with 16-bit samples |
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 
@@ -55,4 +60,4 @@ The image has a grid every 128 px, an L-shaped mark in the top left and a block 
 uv run --no-project --python 3.14 --with tifffile --with numpy --with imagecodecs packages/test-fixtures/scripts/make_synthetic.py
 ```
 
-which also rewrites the `synthetic` checksums in `fixtures.json`. The OME-XML holds a random UUID, so every run changes the checksums.
+and the codec and channel files with the same command on `make_synthetic_codecs.py`, which needs the same packages. Either script also rewrites the `synthetic` checksums in `fixtures.json`. The OME-XML holds a random UUID, so every run changes the checksums.

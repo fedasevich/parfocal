@@ -8,7 +8,6 @@ import {
   type PixelResult,
   type Raster,
   recoverLadder,
-  UnsupportedCodecError,
 } from "../../src/index.ts";
 import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
@@ -250,14 +249,18 @@ describe("reader workaround: level scale comes from the padding rule, not the st
   });
 });
 
-describe("geotiff gap: JPEG 2000 tiles are refused at open, not on the first tile", () => {
-  it("names the compression of an Aperio JPEG 2000 slide (JP2K-33003-1.svs, cached)", async (t) => {
+describe("geotiff gap closed: JPEG 2000 tiles are decoded by the registered OpenJPEG decoder", () => {
+  it("opens an Aperio JPEG 2000 slide and reads a tile of RGB samples (JP2K-33003-1.svs, cached)", async (t) => {
     if (cachedFixture("JP2K-33003-1.svs") === null)
       return t.skip("JP2K-33003-1.svs is not cached, run: pnpm fixtures formats");
-    await assert.rejects(
-      openTiffSource({ formatId: "aperio-svs", url: served.url("/cache/JP2K-33003-1.svs") }),
-      (error: unknown) => error instanceof UnsupportedCodecError && error.compression === 33003,
-    );
+    const source = await openTiffSource({
+      formatId: "aperio-svs",
+      url: served.url("/cache/JP2K-33003-1.svs"),
+    });
+    const tile = present(await source.getTile({ level: 0, x: 40, y: 12 }));
+    assert.equal(tile.planes.length, 3);
+    assert.equal(tile.planes[0]?.length, 256 * 256);
+    source.close();
   });
 });
 

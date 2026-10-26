@@ -19,6 +19,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     root: pageRoot,
     base: "./",
     logLevel: "warn",
+    worker: { format: "es" },
     build: {
       outDir,
       emptyOutDir: true,
@@ -33,6 +34,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           interaction: fileURLToPath(new URL("./page/interaction.html", import.meta.url)),
           "decode-count": fileURLToPath(new URL("./page/decode-count.html", import.meta.url)),
           "native-jpeg": fileURLToPath(new URL("./page/native-jpeg.html", import.meta.url)),
+          jpeg2000: fileURLToPath(new URL("./page/jpeg2000.html", import.meta.url)),
+          channels: fileURLToPath(new URL("./page/channels.html", import.meta.url)),
           "overlay-indices": fileURLToPath(new URL("./page/overlay-indices.html", import.meta.url)),
           lifecycle: fileURLToPath(new URL("./page/lifecycle.html", import.meta.url)),
           "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),

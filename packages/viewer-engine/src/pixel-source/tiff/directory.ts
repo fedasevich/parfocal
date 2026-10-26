@@ -10,6 +10,7 @@ import {
   type RemoteSourceOptions,
 } from "geotiff";
 import { UnsupportedCodecError } from "../types.ts";
+import { jpeg2000Compressions, registerJpeg2000Decoders } from "./jpeg2000/register.ts";
 
 export const TIFF_BLOCK_SIZE = 1024 * 1024;
 
@@ -63,6 +64,7 @@ export async function openTiff(
   signal?: AbortSignal,
   fetcher?: typeof globalThis.fetch,
 ): Promise<GeoTIFF> {
+  registerJpeg2000Decoders();
   const options: RemoteSourceOptions & { blockSize: number } = { blockSize: TIFF_BLOCK_SIZE };
   const tiff =
     fetcher === undefined
@@ -148,6 +150,7 @@ export async function loadByteCounts(image: GeoTIFFImage): Promise<ArrayLike<num
 
 export async function assertDecodable(image: GeoTIFFImage): Promise<void> {
   const compression = Number(image.fileDirectory.getValue("Compression") ?? 1);
+  if (jpeg2000Compressions.has(compression)) return;
   try {
     await getDecoder(compression, {
       tileWidth: image.getTileWidth(),

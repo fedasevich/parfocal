@@ -7,8 +7,12 @@ The framework-free viewer engine: camera, input, renderer routes, slide readers 
 | Command | What it does |
 |---|---|
 | `pnpm --filter @parfocal/viewer-engine test` | Unit tests on `node --test`, with an injected clock and frame scheduler |
-| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input, touch navigation, the interaction pause, overlay polygon indices, and idle and hidden tab behaviour |
+| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input, touch navigation, the interaction pause, overlay polygon indices, idle and hidden tab behaviour, JPEG 2000 downloads and damaged tiles, and OME channel contrast |
 | `pnpm --filter @parfocal/viewer-engine traces:record` | Opens the input trace recorder in the default browser |
+
+## JPEG 2000 and channel stacks
+
+Aperio JPEG 2000 tiles (compression 33003 and 33005) decode through OpenJPEG WebAssembly in `src/pixel-source/tiff/jpeg2000`. geotiff imports the decoder on the first tile, the decoder imports the codec on its first decode, and both stay out of every other slide. The decoder throws `MainThreadCodecError` on a page and turns a damaged tile into a flat grey of 160 ([ADR 0111](../../docs/adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md)). An OME-TIFF with one page per channel is read as a `channels` source by `src/pixel-source/tiff/ome-channels.ts`. `createVivChannelLevels` and `vivChannelLayerProps` in `src/viv/viv-channel-levels.ts` turn such a source into Viv levels and layer props with per-channel contrast limits. They are not wired into `createVivRoute`, which draws RGB only.
 
 ## Idle and hidden tabs
 
