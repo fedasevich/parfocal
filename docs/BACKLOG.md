@@ -1089,12 +1089,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
 
-- [ ] VIEW-023 · Touch navigation
+- [x] VIEW-023 · Touch navigation
   One finger pans, pinch zooms, double tap to 40×, two-finger double tap for the whole slide.
   Done when Playwright touch emulation tests cover each gesture.
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
 
-- [ ] VIEW-024 · Coordinate systems and units
+- [x] VIEW-024 · Coordinate systems and units
   Level-0 pixels as the canonical space, microns through microns per pixel, screen mapping, and the "digital" label above the scan objective.
   Done when unit tests cover conversions on slides with different microns per pixel.
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
@@ -1153,7 +1153,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when tests force a context loss and the viewer recovers to the same view.
   Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
 
-- [ ] VIEW-035 · Model inference pause during camera motion
+- [x] VIEW-035 · Model inference pause during camera motion
   A shared interaction signal that background inference respects. Pause while moving, resume 200 ms after rest.
   Done when the perf test keeps 60 fps while panning during a region pass (POC without pause: 28 to 32 fps). It is measured against a stand-in busy job until the first browser inference task exists, and then repeated with the real region pass.
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md), doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
