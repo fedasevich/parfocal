@@ -49,3 +49,26 @@ export const VIV_SCENES: readonly VivGoldenScene[] = [
     view: { kind: "magnification", magnification: 40, ...cmu1TissueCentre },
   },
 ];
+
+export const cmu1TileSize = 256;
+
+export const cmu1TileCorner = {
+  x: Math.round(cmu1TissueCentre.x / cmu1TileSize) * cmu1TileSize,
+  y: Math.round(cmu1TissueCentre.y / cmu1TileSize) * cmu1TileSize,
+};
+
+export const VIV_80X_SCENE: VivGoldenScene = {
+  name: "viv-cmu-1-svs-80x",
+  fixture: "CMU-1.svs",
+  formatId: "aperio-svs",
+  format: "svs-jpeg",
+  view: { kind: "magnification", magnification: 80, ...cmu1TissueCentre },
+};
+
+export const VIV_TILE_CORNER_SCENE: VivGoldenScene = {
+  name: "viv-cmu-1-svs-tile-corner-4x",
+  fixture: "CMU-1.svs",
+  formatId: "aperio-svs",
+  format: "svs-jpeg",
+  view: { kind: "camera", ...cmu1TileCorner, zoom: 2 },
+};

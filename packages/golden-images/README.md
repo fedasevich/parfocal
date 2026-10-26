@@ -43,6 +43,14 @@ The CMU-1.svs scenes need `pnpm fixtures viewer`. They skip when the slide is mi
 
 `render/viv-overlays.spec.ts` uses a second page of the same Vite root, `harness/viv/overlays.html` with `overlays.ts`, a 400 x 300 viewer at the 10x tissue view. The synthetic layers are in `harness/viv/overlay-fixtures.ts`. There is one golden for each overlay kind (`viv-overlay-<kind>.png`) and one for all seven stacked (`viv-overlay-stack.png`), compared with a stricter tolerance than the slide's JPEG row because a pin is under 0.5% of a frame. The spec also checks that hiding every layer draws the bare slide byte for byte, that registration order and timing do not change the picture, that opacity fades between the two, and that removing a layer destroys its GPU resources. Regenerate only these goldens with `GOLDEN_UPDATE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-overlays.spec.ts`, never with `pnpm golden:update`, which rewrites the slide goldens too. [ADR 0108](../../docs/adr/0108-overlay-layers-as-typed-data-over-deck-gl.md) has the design.
 
+## Digital zoom and GPU loss
+
+`render/viv-interpolation.spec.ts` tests the finest level sampling rule of [ADR 0112](../../docs/adr/0112-finest-level-sampling-and-webgl-context-recovery.md). Its page is `harness/viv/synthetic.html`, a procedural 2048 x 1536 slide (`harness/viv/synthetic-source.ts`) with hash noise at the finest level and black and white tiles at the coarser ones. The spec computes the expected colour of every screen pixel from the camera, so a blend, a seam or a one texel shift at a tile border fails, and checks that coarser levels draw only pure black and white. On CMU-1.svs it adds the goldens `viv-cmu-1-svs-80x` and `viv-cmu-1-svs-tile-corner-4x` and checks that every 4 x 4 block of the corner scene is one colour. A route with `interpolation: "linear"` (the breakage `linear-everywhere`) must fail all of them. The CMU-1.svs tests need `pnpm fixtures viewer`.
+
+Regenerate only the three digital zoom goldens, never with `pnpm golden:update`, with `GOLDEN_UPDATE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-cmu1.spec.ts -g "viv-cmu-1-svs-40x matches"` and `GOLDEN_UPDATE=1 pnpm --filter @parfocal/golden-images exec playwright test render/viv-interpolation.spec.ts -g "matches its golden"`.
+
+`render/viv-gpu-loss.spec.ts` uses `harness/viv/gpu-loss.html` to lose and restore the WebGL context with `WEBGL_lose_context` and checks that the same frame, camera, slide and overlay come back with one live Deck, and that an impossible recovery ends in one `GpuUnrecoverableError`.
+
 ## Tolerances
 
 A pixel differs when any of R, G or B is further than `maxChannelDelta` from the golden. A frame passes when no more than `maxDifferingFraction` of its pixels differ and the mean error of every channel stays under `maxMeanChannelError`.

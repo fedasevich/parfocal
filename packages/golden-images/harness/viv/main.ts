@@ -143,6 +143,7 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   let route: VivRoute | null = null;
   let opened: PixelSlide | null = null;
   const factory = vivRendererFactory({
+    ...(request.breakage === "linear-everywhere" ? { interpolation: "linear" as const } : {}),
     onError: (error) => {
       errors.push(error.message);
     },
@@ -186,11 +187,12 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   const openedSlide = opened as PixelSlide | null;
   if (mountedRoute === null || openedSlide === null) throw new Error("The route never mounted");
   await mountedRoute.whenIdle();
-  const { ladder } = createVivLevels(openedSlide.source);
+  const { ladder, tileSize } = createVivLevels(openedSlide.source);
   const decodeStats = mountedRoute.decodeStats();
   return {
     camera: current.getCamera(),
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
+    tileSize,
     ladder: ladder.map(({ downsample, backing }) => ({ downsample, backing })),
     errors: [...errors],
     jpeg: mountedRoute.jpegReports(),

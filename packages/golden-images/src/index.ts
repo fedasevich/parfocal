@@ -1,3 +1,4 @@
+export { type BlockReport, blockReport } from "#blocks.ts";
 export {
   type Comparison,
   compareFrames,

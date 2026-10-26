@@ -1,5 +1,5 @@
 import { Deck, type Layer, OrthographicView } from "@deck.gl/core";
-import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { BitmapLayer, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { type Camera, originCamera } from "../camera/camera.ts";
 import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
 import { createRangeCache } from "../decode/range-cache.ts";
@@ -24,6 +24,18 @@ import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
 import { createDeckSleep, type DeckSleep } from "./deck-sleep.ts";
 import { disposeDeck } from "./dispose-deck.ts";
+import {
+  createGpuGuard,
+  type GpuGuardStats,
+  type GpuStatus,
+  type GpuUnrecoverableError,
+} from "./gpu-recovery.ts";
+import {
+  defaultInterpolationRule,
+  type InterpolationRule,
+  installTileInterpolation,
+  interpolationRuleProp,
+} from "./interpolation.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createVivLevels, type VivLevels } from "./viv-levels.ts";
 
@@ -51,6 +63,14 @@ export interface VivRouteOptions {
   readonly decodeWorkers?: number;
   readonly spawnDecodeWorker?: (index: number) => DecodeWorker;
   readonly sleepWhenIdle?: boolean;
+  readonly interpolation?: InterpolationRule;
+  readonly restoreTimeoutMs?: number;
+}
+
+export interface VivGpuState {
+  readonly status: () => GpuStatus;
+  readonly stats: () => GpuGuardStats;
+  readonly failure: () => GpuUnrecoverableError | null;
 }
 
 export interface VivRoute extends RendererRoute<PixelSlide> {
@@ -61,6 +81,7 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly decodeStats: () => DecodeStats | null;
   readonly jpegReports: () => readonly (DecodeReport | null)[];
   readonly sleep: DeckSleep | null;
+  readonly gpu: VivGpuState;
 }
 
 interface Shown {
@@ -86,13 +107,19 @@ export function createVivRoute(
   options: VivRouteOptions = {},
 ): VivRoute {
   const host = hostElement(container);
+  installTileInterpolation(BitmapLayer);
+  const interpolationRule = options.interpolation ?? defaultInterpolationRule;
   const reportError =
     options.onError ??
     ((error: Error) => {
       console.error(error);
     });
-  const canvas = document.createElement("canvas");
-  canvas.style.cssText = "display:block;width:100%;height:100%";
+  const createCanvas = () => {
+    const element = document.createElement("canvas");
+    element.style.cssText = "display:block;width:100%;height:100%";
+    return element;
+  };
+  let canvas = createCanvas();
   host.append(canvas);
 
   let camera = originCamera;
@@ -103,25 +130,39 @@ export function createVivRoute(
   let changes = 0;
   let renderedChanges = -1;
   let destroyed = false;
+  let failure: GpuUnrecoverableError | null = null;
 
-  const deck = new Deck<OrthographicView>({
-    canvas,
-    views: new OrthographicView({ id: vivViewId, controller: false }),
-    controller: false,
-    viewState: vivViewState(camera),
-    layers: [],
-    useDevicePixels: options.useDevicePixels ?? true,
-    deviceProps: {
-      type: "webgl",
-      webgl: { antialias: false, preserveDrawingBuffer: options.preserveDrawingBuffer ?? false },
-    },
-    onError: (error) => {
-      reportError(error);
-    },
-    onAfterRender: () => {
-      renderedChanges = changes;
-    },
-  });
+  const deviceIsLost = (candidate: Deck<OrthographicView>): boolean => {
+    const device = (candidate as unknown as { device?: { isLost?: boolean } | null }).device;
+    return device?.isLost === true;
+  };
+
+  const gpuUsable = () => !destroyed && failure === null && guard.status() === "ready";
+
+  const createDeck = (target: HTMLCanvasElement): Deck<OrthographicView> => {
+    const created: Deck<OrthographicView> = new Deck<OrthographicView>({
+      canvas: target,
+      views: new OrthographicView({ id: vivViewId, controller: false }),
+      controller: false,
+      viewState: vivViewState(camera),
+      layers: [],
+      useDevicePixels: options.useDevicePixels ?? true,
+      deviceProps: {
+        type: "webgl",
+        webgl: { antialias: false, preserveDrawingBuffer: options.preserveDrawingBuffer ?? false },
+      },
+      onError: (error) => {
+        if (!gpuUsable() || deviceIsLost(created)) return;
+        reportError(error);
+      },
+      onAfterRender: () => {
+        renderedChanges = changes;
+      },
+    });
+    return created;
+  };
+
+  let deck = createDeck(canvas);
 
   const workerCount = options.decodeWorkers ?? defaultDecodeWorkers;
 
@@ -154,18 +195,31 @@ export function createVivRoute(
 
   const changed = () => {
     changes++;
-    if (!documentVisibility.hidden()) deck.redraw("parfocal route change");
+    if (gpuUsable() && !documentVisibility.hidden()) deck.redraw("parfocal route change");
     sleep?.wake("change");
   };
 
   const applyLayers = () => {
+    if (failure !== null) return;
     overlayLayers = overlayBuilder.build(overlays);
-    deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
+    if (gpuUsable()) deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
     changed();
   };
 
+  const slideLayer = (slide: PixelSlide, levels: VivLevels): Layer =>
+    new MultiscaleImageLayer<[]>({
+      id: `slide-${slide.id}`,
+      loader: [...levels.levels],
+      selections: stableSelections,
+      contrastLimits: [],
+      channelsVisible: [true],
+      dtype: "Uint8",
+      ...unpickable,
+      ...{ [interpolationRuleProp]: interpolationRule },
+    }) as Layer;
+
   const showSlide = (slide: PixelSlide | null) => {
-    if (slide === shown?.slide) return;
+    if (failure !== null || slide === shown?.slide) return;
     release();
     if (slide === null) {
       applyLayers();
@@ -177,27 +231,20 @@ export function createVivRoute(
       onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.read } : {}),
     });
-    const layer = new MultiscaleImageLayer<[]>({
-      id: `slide-${slide.id}`,
-      loader: [...levels.levels],
-      selections: stableSelections,
-      contrastLimits: [],
-      channelsVisible: [true],
-      dtype: "Uint8",
-      ...unpickable,
-    }) as Layer;
-    shown = { slide, levels, layer, reader };
+    shown = { slide, levels, layer: slideLayer(slide, levels), reader };
     applyLayers();
   };
 
   const setCamera = (next: Camera) => {
     camera = next;
     shown?.reader?.setFocus({ x: camera.x, y: camera.y });
-    deck.setProps({ viewState: vivViewState(camera) });
+    if (gpuUsable()) deck.setProps({ viewState: vivViewState(camera) });
     changed();
   };
 
   const settled = (): boolean => {
+    if (failure !== null) return true;
+    if (!gpuUsable()) return false;
     if (renderedChanges !== changes) return false;
     if (deck.needsRedraw({ clearRedrawFlags: false })) return false;
     if (shown === null) return true;
@@ -225,8 +272,60 @@ export function createVivRoute(
           now: systemClock,
         });
   if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
-  const stopObservingCanvas = observeCanvasSize(canvas, () => sleep?.wake("resize"));
+  let stopObservingCanvas = observeCanvasSize(canvas, () => sleep?.wake("resize"));
   const stopObservingPixelRatio = observePixelRatio(() => sleep?.wake("resize"));
+
+  let deckDisposed = false;
+
+  const disposeCurrentDeck = () => {
+    if (deckDisposed) return;
+    deckDisposed = true;
+    stopObservingCanvas();
+    disposeDeck(deck as unknown as Deck, canvas);
+  };
+
+  const stopDeckLoop = () => {
+    const loop = (deck as unknown as { animationLoop?: { stop?: () => void } | null })
+      .animationLoop;
+    loop?.stop?.();
+  };
+
+  const rebuildAfterLoss = () => {
+    const previous = { deck, canvas };
+    stopObservingCanvas();
+    const next = createCanvas();
+    previous.canvas.after(next);
+    canvas = next;
+    guard.attach(next);
+    disposeDeck(previous.deck as unknown as Deck, previous.canvas);
+    deck = createDeck(next);
+    if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
+    stopObservingCanvas = observeCanvasSize(next, () => sleep?.wake("resize"));
+    if (shown) shown = { ...shown, layer: slideLayer(shown.slide, shown.levels) };
+    applyLayers();
+  };
+
+  const guard = createGpuGuard({
+    timers: systemTimers,
+    visibility: documentVisibility,
+    now: systemClock,
+    ...(options.restoreTimeoutMs === undefined
+      ? {}
+      : { restoreTimeoutMs: options.restoreTimeoutMs }),
+    onLost: () => {
+      stopDeckLoop();
+      sleep?.wake("change");
+    },
+    rebuild: rebuildAfterLoss,
+    onUnrecoverable: (error) => {
+      failure = error;
+      release();
+      disposeCurrentDeck();
+      sleep?.wake("change");
+      reportError(error);
+    },
+  });
+  guard.attach(canvas);
 
   const whenIdle = (signal?: AbortSignal) =>
     new Promise<void>((resolve, reject) => {
@@ -253,8 +352,13 @@ export function createVivRoute(
     });
 
   return {
-    canvas,
-    deck,
+    get canvas() {
+      return canvas;
+    },
+    get deck() {
+      return deck;
+    },
+    gpu: { status: guard.status, stats: guard.stats, failure: () => failure },
     whenIdle,
     isSettled: settled,
     decodeStats: () => shown?.reader?.stats() ?? null,
@@ -275,9 +379,9 @@ export function createVivRoute(
       if (destroyed) return;
       destroyed = true;
       release();
-      stopObservingCanvas();
+      guard.destroy();
       stopObservingPixelRatio();
-      disposeDeck(deck as unknown as Deck, canvas);
+      disposeCurrentDeck();
       sleep?.destroy();
     },
   };

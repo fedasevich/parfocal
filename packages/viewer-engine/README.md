@@ -16,6 +16,12 @@ The engine asks for an animation frame only while a camera motion runs or a chan
 
 The Viv route gives deck.gl's animation loop a frame provider (`src/viv/deck-sleep.ts`) that parks the loop after 3 frames with nothing left to do. Any code that changes what the route draws must go through the route's `changed()`, which wakes the loop. `createVivRoute({ sleepWhenIdle: false })` keeps the old always-running loop for comparison. `yieldToMain` and `createTimeSlice` in `src/engine/scheduling.ts` slice long main-thread work with `scheduler.yield` or a `MessageChannel`.
 
+## Finest level sampling and GPU loss
+
+The Viv route draws the finest level with nearest sampling when a texel is larger than a screen pixel and every coarser level linearly ([ADR 0112](../../docs/adr/0112-finest-level-sampling-and-webgl-context-recovery.md)). `installTileInterpolation` in `src/viv/interpolation.ts` patches Viv's `BitmapLayer` once, and `createVivRoute({ interpolation: "linear" })` switches the rule off, which is the negative control of the tests in `packages/golden-images`.
+
+`createGpuGuard` in `src/viv/gpu-recovery.ts` cancels `webglcontextlost` and waits for `webglcontextrestored`. The route then replaces its canvas and Deck from its own state, so `route.canvas` and `route.deck` are getters that must be read when used and never cached. `createVivRoute({ restoreTimeoutMs })` sets how long a restore may take while the tab is visible (5000 ms by default). When no restore comes, or more than 3 losses happen within 30 s, the route reports one `GpuUnrecoverableError` through `onError`, whose `userMessage` a UI can show, and releases the GPU. `route.gpu` exposes the status, the loss and recovery counts and the failure. `src/viv/webgpu-errors.ts` holds `watchWebGpuDevice` and `withErrorScopes` for the future WebGPU route, which no route calls yet.
+
 ## Input
 
 `bindViewerInput(element, engine, options)` in `src/input/dom-input.ts` maps pointer, wheel and double-click events onto the engine's camera calls ([ADR 0107](../../docs/adr/0107-viewer-input-binding.md)). The rules live in the pure interpreter in `src/input/gestures.ts` and the wheel maths in `src/input/wheel.ts`, so they run in unit tests without a DOM. The options are the wheel mode and three hooks for the active tool: `primaryDragPans`, `panModifierHeld` (Space until the key registry exists) and `hitsEditableShape`.

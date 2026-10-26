@@ -23,6 +23,31 @@ export {
   type WakeSource,
 } from "./deck-sleep.ts";
 export {
+  createGpuGuard,
+  defaultLossWindowMs,
+  defaultMaxLossesInWindow,
+  defaultRestoreTimeoutMs,
+  type GpuEventSource,
+  type GpuFailureReason,
+  type GpuGuard,
+  type GpuGuardOptions,
+  type GpuGuardStats,
+  type GpuStatus,
+  GpuUnrecoverableError,
+  gpuFailureMessage,
+  isGpuUnrecoverableError,
+} from "./gpu-recovery.ts";
+export {
+  defaultInterpolationRule,
+  finestTileSampler,
+  finestTileZoom,
+  type InterpolationRule,
+  installTileInterpolation,
+  interpolationRuleProp,
+  type TileSamplerProps,
+  usesNearestMagnification,
+} from "./interpolation.ts";
+export {
   createPixelSlideOpener,
   type OpenRequestResolver,
   type PixelSlide,
@@ -47,9 +72,24 @@ export {
 } from "./viv-levels.ts";
 export {
   createVivRoute,
+  type VivGpuState,
   type VivRoute,
   type VivRouteOptions,
   vivRendererFactory,
   vivViewId,
   vivViewState,
 } from "./viv-route.ts";
+export {
+  allErrorFilters,
+  type DeviceLostInfoLike,
+  type GpuErrorFilter,
+  type GpuErrorLike,
+  type ScopedResult,
+  type UncapturedErrorEventLike,
+  type WebGpuDeviceLike,
+  WebGpuError,
+  type WebGpuWatch,
+  type WebGpuWatchOptions,
+  watchWebGpuDevice,
+  withErrorScopes,
+} from "./webgpu-errors.ts";

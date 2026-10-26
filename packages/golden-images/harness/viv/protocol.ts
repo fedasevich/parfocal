@@ -15,7 +15,8 @@ export type VivBreakage =
   | "swap-red-blue"
   | "wrong-level"
   | "ycbcr-as-rgb"
-  | "native-unvalidated";
+  | "native-unvalidated"
+  | "linear-everywhere";
 
 export interface VivSceneRequest {
   readonly url: string;
@@ -32,6 +33,7 @@ export interface VivSceneResult {
     readonly height: number;
     readonly micronsPerPixel: number | null;
   };
+  readonly tileSize: number;
   readonly ladder: readonly { readonly downsample: number; readonly backing: number }[];
   readonly errors: readonly string[];
   readonly decoded: { readonly workers: number; readonly dispatched: number } | null;

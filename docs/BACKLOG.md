@@ -1030,7 +1030,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-007 · Interpolation rule
   Nearest at the finest level, linear at coarser levels, half-texel inset to avoid bleeding across tiles.
   Done when golden tests at 40× and above (digital zoom) show crisp pixels and no seams at tile borders.
-  Refs doc 06.
+  Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
 
 ### Format readers (each is a PixelSource)
 
@@ -1150,7 +1150,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-034 · GPU error handling
   Error scopes and uncaptured error listeners on WebGPU routes, context loss recovery on WebGL, user-facing message on unrecoverable loss.
   Done when tests force a context loss and the viewer recovers to the same view.
-  Refs doc 06.
+  Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
 
 - [ ] VIEW-035 · Model inference pause during camera motion
   A shared interaction signal that background inference respects. Pause while moving, resume 200 ms after rest.
@@ -1206,7 +1206,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md), [result](results/2026-10-25-overlay-polygon-indices.md).
 - [ ] VIEW-052 · Hidden tab check in headed Chrome
   Run the hidden-tab loading test by hand in headed Chrome on the owner's Mac, with a real tab switch, and record how long the view takes to complete after the tab returns.
-  Done when a result file records the run with the Chrome version, the slide, the RTT and the times, next to the emulated numbers.
+  Done when a result file records the run, including a real context loss and restore while the tab is hidden and a run on a hardware GPU, with the Chrome version, the slide, the RTT and the times, next to the emulated numbers.
   Depends on VIEW-033. Refs [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md), [result](results/2026-10-25-idle-and-hidden-tab.md).
 - [ ] VIEW-053 · Touch tap values on real hardware
   Try the double tap to 40x and the two-finger double tap on a real tablet and a touchscreen laptop, and tune `touchTuning` (tap slop 10 px, tap length 300 ms, double-tap window 350 ms and 40 px) from what feels right.
@@ -1219,7 +1219,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
-  Done when golden and perf tests pass, with uncaptured errors counted and zero.
+  Done when golden and perf tests pass, with uncaptured errors counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
 
 - [ ] VIEW-038 · Custom WebGPU engine route

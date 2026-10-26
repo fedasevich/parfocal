@@ -39,3 +39,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-25 | [Precomputed triangle indices cut a 1M polygon layer update from 261 ms to 39 ms with identical pixels](2026-10-25-overlay-polygon-indices.md) | VIEW-026 | benchmark |
 | 2026-10-25 | [A loaded, untouched viewer runs 0 animation frames in 10 s (606 with the sleep off), and a view hidden mid-load completes 65 to 136 ms after the tab returns](2026-10-25-idle-and-hidden-tab.md) | VIEW-032, VIEW-033 | baseline |
 | 2026-10-26 | [A background job that waits on the interaction signal keeps a 3000 ms pan at 60.0 fps, and the same job unpaused drops it to 24.9 to 25.1 fps (stand-in job, 40 ms slices)](2026-10-26-interaction-pause.md) | VIEW-035 | benchmark |
+| 2026-10-26 | [Finest level sampling and WebGL context recovery on the Viv route](2026-10-26-finest-level-sampling-and-context-recovery.md) | VIEW-007, VIEW-034 | baseline |

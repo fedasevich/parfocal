@@ -226,3 +226,15 @@ With `Input.dispatchTouchEvent`, `touchStart` lists the new points, `touchMove` 
 ## An idle engine holds zero timers only if the interaction signal arms none
 
 A signal that arms its rest timer on every pulse leaves a pending timer after every camera change, which breaks the idle budget of [ADR 0109](../adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md). `createInteractionSignal` derives `moving()` from the clock and arms a timer only while a listener is subscribed, so a signal nobody awaits costs nothing. Source: VIEW-035.
+
+## Viv's BitmapLayer ignores interpolation and always samples linearly
+
+Viv 0.23 draws interleaved RGB tiles through its own `BitmapLayer`, which builds the texture with `minFilter` and `magFilter` linear in `updateState`. The `interpolation` prop that `renderSubLayers` sets for `XRLayer` (nearest at the finest level) never reaches it, and deck.gl's `textureParameters` is ignored because the image is already a luma.gl texture. `installTileInterpolation` in `src/viv/interpolation.ts` wraps `BitmapLayer.prototype.updateState` and sets a shared sampler on the texture of tiles with `tileId.z === 0`, using nearest magnification and linear minification. A per-tile texture with `clamp-to-edge` already keeps a bilinear kernel inside its tile, so no half-texel inset is needed, which an atlas would need. Source: VIEW-007, [ADR 0112](../adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
+
+## Test crisp pixels against a hash oracle and bleed against opposite tile colours
+
+A slide whose finest level is per-pixel hash noise lets a test compute the expected colour of every screen pixel from the camera, so a blend or a one texel shift at a tile border fails at once. Coarser levels painted black and white by tile show any bleed as a grey pixel. On CMU-1.svs, a 4x view with the camera on a tile corner and every 4 x 4 block checked for one colour does the same job on a real slide. The 40x magnification is zoom 0.997 on CMU-1.svs, so its blocks are not all the same size and cannot be used for that check. Source: VIEW-007.
+
+## luma.gl never cancels a context loss, so nothing is restored by default
+
+luma.gl 9.4.2 listens for `webglcontextlost` without calling `preventDefault`, and deck.gl never rebuilds a device. The browser only restores a lost context when some listener cancels the event. `createGpuGuard` in `src/viv/gpu-recovery.ts` cancels it, waits for `webglcontextrestored`, and the route then replaces the canvas and the Deck from its own state (camera, slide, levels, decode reader and overlay descriptions). In tests, fetch the `WEBGL_lose_context` extension before calling `loseContext()`, because `getExtension` returns null once the context is lost, and call `restoreContext()` only after the loss event arrived. A Deck that was finalized but is still referenced by a live route is still counted by `Runtime.queryObjects`, so check for a released canvas after an unrecoverable failure and count Decks after `dispose`. Source: VIEW-034, [ADR 0112](../adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
