@@ -8,6 +8,7 @@ import type {
 } from "../camera/camera.ts";
 import type { CameraMotion, FlightEnd, ZoomOptions } from "../camera/controller.ts";
 import type { CameraProfile } from "../camera/profile.ts";
+import type { InteractionSignal } from "./interaction-signal.ts";
 import type { SchedulingOptions } from "./scheduling.ts";
 
 export type Unsubscribe = () => void;
@@ -114,9 +115,11 @@ export interface ViewerEngineOptions<Slide extends EngineSlide = EngineSlide> {
   readonly devicePixelRatio?: () => number;
   readonly cameraProfile?: CameraProfile;
   readonly observeResize?: ResizeObserve;
+  readonly interaction?: InteractionSignal;
 }
 
 export interface ViewerEngine {
+  readonly interaction: InteractionSignal;
   readonly status: () => EngineStatus;
   readonly mount: (container: EngineContainer) => void;
   readonly unmount: () => void;
@@ -126,6 +129,7 @@ export interface ViewerEngine {
   readonly getCamera: () => Camera;
   readonly setCamera: (camera: Camera) => void;
   readonly fitToSlide: () => void;
+  readonly flyToFit: () => Promise<FlightEnd>;
   readonly getMotion: () => CameraMotion;
   readonly getCameraBounds: () => CameraBounds;
   readonly getCameraProfile: () => CameraProfile;

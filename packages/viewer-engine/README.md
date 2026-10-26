@@ -7,7 +7,7 @@ The framework-free viewer engine: camera, input, renderer routes, slide readers 
 | Command | What it does |
 |---|---|
 | `pnpm --filter @parfocal/viewer-engine test` | Unit tests on `node --test`, with an injected clock and frame scheduler |
-| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input, overlay polygon indices, and idle and hidden tab behaviour |
+| `pnpm --filter @parfocal/viewer-engine test:browser` | Playwright suites in `browser/`: memory and teardown, pan fetches, deck settings, input, touch navigation, the interaction pause, overlay polygon indices, and idle and hidden tab behaviour |
 | `pnpm --filter @parfocal/viewer-engine traces:record` | Opens the input trace recorder in the default browser |
 
 ## Idle and hidden tabs
@@ -19,6 +19,16 @@ The Viv route gives deck.gl's animation loop a frame provider (`src/viv/deck-sle
 ## Input
 
 `bindViewerInput(element, engine, options)` in `src/input/dom-input.ts` maps pointer, wheel and double-click events onto the engine's camera calls ([ADR 0107](../../docs/adr/0107-viewer-input-binding.md)). The rules live in the pure interpreter in `src/input/gestures.ts` and the wheel maths in `src/input/wheel.ts`, so they run in unit tests without a DOM. The options are the wheel mode and three hooks for the active tool: `primaryDragPans`, `panModifierHeld` (Space until the key registry exists) and `hitsEditableShape`.
+
+Touch is read from the same pointer events. One finger drags with the camera profile's coast, two fingers pinch and pan about their midpoint, and lifting one finger of a pinch carries on as a drag from the finger that stays. A double tap zooms to 40x about the tap through `zoomToMagnification`, and a two-finger double tap flies to the tissue-aware whole-slide fit through `flyToFit`. The tap slop, the tap length, the double-tap window and distance and the 40x target live in `touchTuning` in `src/input/touch.ts`, and the interpreter takes a replacement through the `touchTuning` hook. Chrome also fires a `dblclick` after a touch double tap, so the binding ignores a `dblclick` within `syntheticDoubleClickGuardMs` of a touch ([ADR 0113](../../docs/adr/0113-interaction-signal-units-and-touch-gestures.md)).
+
+## Interaction signal
+
+`engine.interaction` is an `InteractionSignal` from `src/engine/interaction-signal.ts`. Every camera change and every held pointer gesture feeds it, so `moving()` is true while the camera moves or a finger is down and for 200 ms after. Background work such as a region pass calls `await engine.interaction.whenRested(abort)` before each slice, or subscribes with `subscribe`. The signal keeps no timer while nobody listens, so an idle engine still holds zero timers. Pass `interaction` in the engine options to share one signal. `browser/interaction.spec.ts` measures a pan with and without the pause against a stand-in busy job, because no inference engine exists in the browser yet ([result](../../docs/results/2026-10-26-interaction-pause.md)).
+
+## Units
+
+`src/camera/units.ts` converts between level-0 pixels (the canonical space), microns and the screen. Every function takes the microns per pixel as an argument and returns `null` when the slide has none, so an unknown spacing never gets a made-up scan objective, a digital label or a scale bar. `scanObjective` picks the nearest objective preset when it is within a factor of 1.25 of the native magnification and prefers a declared objective. `isDigital` is true only above the scan objective. `scaleBar` returns the longest round length that fits a width.
 
 ## Overlays
 

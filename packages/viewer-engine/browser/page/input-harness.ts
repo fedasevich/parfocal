@@ -5,6 +5,7 @@ import {
   createViewerEngine,
   type EngineSlide,
   type FrameScheduler,
+  fitCamera,
   type RendererRoute,
   type ScreenRect,
   type ViewerEngine,
@@ -44,6 +45,9 @@ export interface InputHarness {
   engineFrames(): number;
   releaseCapture(): boolean;
   hasCapture(): boolean;
+  fitReference(): Camera;
+  doubleClickEvents(): number;
+  touchPointerDowns(): number;
   blurWindow(): void;
   whenIdle(timeoutMs: number): Promise<void>;
 }
@@ -76,6 +80,8 @@ let engineFrameCount = 0;
 let recording: RecordedFrame[] | null = null;
 let activePointer: number | null = null;
 let spaceHeld = false;
+let doubleClickEvents = 0;
+let touchPointerDowns = 0;
 
 const countedFrames: FrameScheduler = {
   request: (callback) =>
@@ -110,7 +116,11 @@ globalThis.addEventListener("keyup", (event) => {
 globalThis.addEventListener("blur", () => {
   spaceHeld = false;
 });
+viewer().addEventListener("dblclick", () => {
+  doubleClickEvents += 1;
+});
 viewer().addEventListener("pointerdown", (event) => {
+  if (event.pointerType === "touch") touchPointerDowns += 1;
   activePointer = event.pointerId;
 });
 
@@ -194,6 +204,17 @@ window.inputHarness = {
     return true;
   },
   hasCapture: () => activePointer !== null && viewer().hasPointerCapture(activePointer),
+  fitReference: () => {
+    const box = viewer().getBoundingClientRect();
+    return fitCamera(
+      slide,
+      { width: box.width, height: box.height },
+      current().getCameraBounds(),
+      slide.tissue,
+    );
+  },
+  doubleClickEvents: () => doubleClickEvents,
+  touchPointerDowns: () => touchPointerDowns,
   blurWindow: () => {
     globalThis.dispatchEvent(new FocusEvent("blur"));
   },

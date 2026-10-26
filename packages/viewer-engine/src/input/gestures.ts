@@ -1,4 +1,5 @@
 import { type CameraProfile, defaultCameraProfile } from "../camera/profile.ts";
+import { createTapRecognizer, type TouchTuning, touchTuning } from "./touch.ts";
 import {
   classifyWheel,
   freshWheelClassifier,
@@ -32,6 +33,7 @@ export interface PointerInput extends InputPoint, InputModifiers {
   readonly pointerType: string;
   readonly button: number;
   readonly buttons: number;
+  readonly timeMs?: number;
   readonly samples?: readonly PointerSampleInput[];
 }
 
@@ -67,6 +69,8 @@ export type InputAction =
       readonly at: InputPoint;
       readonly animate: boolean;
     }
+  | { readonly kind: "magnify"; readonly magnification: number; readonly at: InputPoint }
+  | { readonly kind: "fitSlide" }
   | { readonly kind: "capture"; readonly pointerId: number }
   | { readonly kind: "release"; readonly pointerId: number }
   | { readonly kind: "cursor"; readonly cursor: CursorState }
@@ -77,6 +81,7 @@ export interface GestureHooks {
   readonly panModifierHeld?: () => boolean;
   readonly hitsEditableShape?: (at: InputPoint) => boolean;
   readonly cameraProfile?: () => CameraProfile;
+  readonly touchTuning?: TouchTuning;
 }
 
 export interface GestureInterpreter {
@@ -123,6 +128,8 @@ export function createGestureInterpreter(
   const panModifierHeld = hooks.panModifierHeld ?? (() => false);
   const hitsEditableShape = hooks.hitsEditableShape ?? (() => false);
   const cameraProfile = hooks.cameraProfile ?? (() => defaultCameraProfile);
+  const tuning = hooks.touchTuning ?? touchTuning;
+  const taps = createTapRecognizer(tuning);
 
   const pointers = new Map<number, InputPoint>();
   let gesture: Gesture = noGesture;
@@ -144,6 +151,7 @@ export function createGestureInterpreter(
   };
 
   const endEverything = (): InputAction[] => {
+    taps.reset();
     const active = gesture.kind !== "none";
     const tracked = [...pointers.keys()];
     pointers.clear();
@@ -156,6 +164,9 @@ export function createGestureInterpreter(
     ];
   };
 
+  const touchTime = (input: PointerInput): number | null =>
+    input.pointerType === "touch" && input.timeMs !== undefined ? input.timeMs : null;
+
   const down = (input: PointerInput): InputAction[] => {
     const mouse = input.pointerType === "mouse";
     if (mouse && input.button === middleButton) {
@@ -165,6 +176,10 @@ export function createGestureInterpreter(
     }
     if (mouse && input.button !== primaryButton) return [];
     if (pointers.size === 0 && !panModifierHeld() && !primaryDragPans(input)) return [];
+    const downMs = touchTime(input);
+    if (downMs !== null && !pointers.has(input.pointerId)) {
+      taps.down(input.pointerId, point(input), downMs);
+    }
     if (pointers.size >= 2 || pointers.has(input.pointerId)) return [];
     pointers.set(input.pointerId, point(input));
     if (pointers.size === 1) return beginDrag(input);
@@ -201,6 +216,7 @@ export function createGestureInterpreter(
     if (!pointers.has(input.pointerId)) return [];
     if (input.pointerType === "mouse" && input.buttons === 0) return endEverything();
     pointers.set(input.pointerId, point(input));
+    if (input.pointerType === "touch") taps.move(input.pointerId, point(input));
     if (gesture.kind === "pinch") return movePinch(gesture.pinch);
     if (gesture.kind !== "drag" || gesture.pointerId !== input.pointerId) return [];
     const samples = input.samples && input.samples.length > 0 ? input.samples : [];
@@ -216,7 +232,21 @@ export function createGestureInterpreter(
     return actions;
   };
 
+  const doubleTapActions = (input: PointerInput): InputAction[] => {
+    const upMs = touchTime(input);
+    if (upMs === null) return [];
+    const tap = taps.up(upMs, pointers.size);
+    if (tap === null) return [];
+    if (tap.kind === "fit") return [{ kind: "fitSlide" }];
+    return [{ kind: "magnify", magnification: tuning.doubleTapMagnification, at: tap.at }];
+  };
+
   const up = (input: PointerInput): InputAction[] => {
+    const actions = liftPointer(input);
+    return actions.length === 0 ? actions : [...actions, ...doubleTapActions(input)];
+  };
+
+  const liftPointer = (input: PointerInput): InputAction[] => {
     if (!pointers.delete(input.pointerId)) return [];
     const release: InputAction = { kind: "release", pointerId: input.pointerId };
     if (gesture.kind === "pinch") {

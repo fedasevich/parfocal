@@ -1,8 +1,11 @@
 import type { CameraProfile } from "../camera/profile.ts";
+import type { InteractionSignal } from "../engine/interaction-signal.ts";
+import type { Cancel } from "../engine/scheduling.ts";
 import type { ClientPoint } from "../engine/types.ts";
 import {
   type CursorState,
   createGestureInterpreter,
+  doubleClickOctaves,
   type GestureHooks,
   type InputAction,
   type InputModifiers,
@@ -12,6 +15,7 @@ import {
   type PointerSampleInput,
   type ViewerInput,
 } from "./gestures.ts";
+import { touchTuning } from "./touch.ts";
 import type { WheelDevice, WheelMode } from "./wheel.ts";
 
 export interface InputTarget {
@@ -25,13 +29,22 @@ export interface InputTarget {
     at?: ClientPoint,
     options?: { readonly animate?: boolean },
   ) => void;
+  readonly zoomToMagnification?: (
+    magnification: number,
+    at?: ClientPoint,
+    options?: { readonly animate?: boolean },
+  ) => boolean;
+  readonly flyToFit?: () => Promise<unknown>;
+  readonly fitToSlide?: () => void;
   readonly getCameraProfile?: () => CameraProfile;
+  readonly interaction?: InteractionSignal;
 }
 
 export interface ViewerInputOptions extends GestureHooks {
   readonly wheelMode?: WheelMode;
   readonly cursors?: Readonly<Record<CursorState, string>>;
   readonly onInput?: (input: ViewerInput, actions: readonly InputAction[]) => void;
+  readonly interaction?: InteractionSignal;
 }
 
 export interface ViewerInputBinding {
@@ -79,6 +92,7 @@ function pointerInput(kind: PointerInputKind, event: PointerEvent): PointerInput
     pointerType: event.pointerType,
     button: event.button,
     buttons: event.buttons,
+    timeMs: event.timeStamp,
     clientX: event.clientX,
     clientY: event.clientY,
     ...modifiers(event),
@@ -100,6 +114,10 @@ export function bindViewerInput(
   const root = element.ownerDocument.documentElement;
   let cursors = options.cursors ?? defaultCursors;
   let cursor: CursorState = "idle";
+  const interaction = options.interaction ?? target.interaction;
+  let releaseGesture: Cancel | null = null;
+  let lastTouchMs = Number.NEGATIVE_INFINITY;
+  const guardMs = (options.touchTuning ?? touchTuning).syntheticDoubleClickGuardMs;
 
   const savedStyle = {
     touchAction: element.style.touchAction,
@@ -133,6 +151,15 @@ export function bindViewerInput(
       case "zoom":
         target.zoomBy(action.octaves, action.at, { animate: action.animate });
         return;
+      case "magnify":
+        if (!target.zoomToMagnification?.(action.magnification, action.at, { animate: true })) {
+          target.zoomBy(doubleClickOctaves, action.at, { animate: true });
+        }
+        return;
+      case "fitSlide":
+        if (target.flyToFit) void target.flyToFit();
+        else target.fitToSlide?.();
+        return;
       case "capture":
         try {
           element.setPointerCapture(action.pointerId);
@@ -159,10 +186,31 @@ export function bindViewerInput(
     }
   };
 
+  const followGesture = (actions: readonly InputAction[]) => {
+    if (!interaction) return;
+    if (actions.some((action) => action.kind === "pan" || action.kind === "zoom")) {
+      interaction.pulse();
+    }
+    const gesturing = interpreter.gesture() !== "none";
+    if (gesturing && releaseGesture === null) releaseGesture = interaction.hold();
+    if (!gesturing && releaseGesture !== null) {
+      releaseGesture();
+      releaseGesture = null;
+    }
+  };
+
   const feed = (input: ViewerInput, event: Event | null) => {
+    if (input.kind === "dblclick" && event) {
+      const afterTouch = event.timeStamp - lastTouchMs < guardMs;
+      if (afterTouch) return;
+    }
+    if (input.kind === "down" || input.kind === "up") {
+      if (input.pointerType === "touch" && event) lastTouchMs = event.timeStamp;
+    }
     const actions = interpreter.handle(input);
     options.onInput?.(input, actions);
     for (const action of actions) apply(action, event);
+    followGesture(actions);
   };
 
   const removers: Array<() => void> = [];

@@ -218,3 +218,11 @@ loaders.gl's `RequestScheduler`, which deck.gl's `TileLayer` uses, starts reques
 ## A rejected tile counts as loaded in deck.gl 9.4
 
 `Tile2DHeader` sets `_isLoaded` before it calls `onError`, so one failing tile does not keep a sleeping loop awake. Source: VIEW-032.
+
+## CDP touchEnd lists the points that end, and Chrome fires dblclick for a touch double tap
+
+With `Input.dispatchTouchEvent`, `touchStart` lists the new points, `touchMove` the moved ones and `touchEnd` the points that lift, not the points that stay. Passing the remaining finger to `touchEnd` lifts that finger and leaves the other one down. An empty list lifts all of them. A context needs `hasTouch: true` for the events to arrive as pointer events with `pointerType` `touch`. A camera read straight after the last `touchMove` is one move behind, because the controller applies a drag on the next frame, so wait a frame first. Chrome also fires a `dblclick` after a touch double tap, which the input binding ignores within 500 ms of a touch or the tap would zoom twice. Source: VIEW-023, [ADR 0113](../adr/0113-interaction-signal-units-and-touch-gestures.md).
+
+## An idle engine holds zero timers only if the interaction signal arms none
+
+A signal that arms its rest timer on every pulse leaves a pending timer after every camera change, which breaks the idle budget of [ADR 0109](../adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md). `createInteractionSignal` derives `moving()` from the clock and arms a timer only while a listener is subscribed, so a signal nobody awaits costs nothing. Source: VIEW-035.

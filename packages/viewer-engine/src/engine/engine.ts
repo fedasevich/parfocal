@@ -12,7 +12,7 @@ import {
   sameCamera,
   screenToSlide,
 } from "../camera/camera.ts";
-import { createCameraController, type ScreenOffset } from "../camera/controller.ts";
+import { createCameraController, type FlightEnd, type ScreenOffset } from "../camera/controller.ts";
 import { zoomForMagnification } from "../camera/magnification.ts";
 import {
   animationFrames,
@@ -22,6 +22,7 @@ import {
   systemClock,
 } from "./environment.ts";
 import { createGuardedFrames } from "./guarded-frames.ts";
+import { createInteractionSignal } from "./interaction-signal.ts";
 import { defaultWatchdogMs, documentVisibility, messageTasks, systemTimers } from "./scheduling.ts";
 import type {
   ClientPoint,
@@ -107,6 +108,14 @@ export function createViewerEngine<Slide extends EngineSlide>(
     timers: options.scheduling?.timers ?? (options.frames ? null : systemTimers),
     watchdogMs: options.scheduling?.watchdogMs ?? defaultWatchdogMs,
   });
+
+  const ownsInteraction = options.interaction === undefined;
+  const interaction =
+    options.interaction ??
+    createInteractionSignal({
+      now,
+      timers: options.scheduling?.timers ?? (options.frames ? null : systemTimers),
+    });
 
   let disposed = false;
   let mounted: Mounted<Slide> | null = null;
@@ -196,6 +205,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     const clamped = clampCamera(next, currentBounds());
     if (sameCamera(clamped, camera)) return;
     camera = clamped;
+    interaction.pulse();
     mounted?.route.setCamera(camera);
     if (mounted) {
       cameraDirty = true;
@@ -247,6 +257,17 @@ export function createViewerEngine<Slide extends EngineSlide>(
         ? areaCamera(area, viewport, currentBounds())
         : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
     return controller.flyTo(target);
+  };
+
+  const flyToFit = (): Promise<FlightEnd> => {
+    assertAlive();
+    const viewport = slide && mounted ? measure(mounted.container) : null;
+    if (!slide || !viewport || viewport.width <= 0 || viewport.height <= 0) {
+      fitIfPossible();
+      return Promise.resolve("arrived");
+    }
+    fitPending = false;
+    return controller.flyTo(fitCamera(slide, viewport, currentBounds(), slide.tissue));
   };
 
   const zoomToMagnification = (
@@ -437,6 +458,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     slideInfo = null;
     last?.close();
     overlays.clear();
+    if (ownsInteraction) interaction.dispose();
     cameraListeners.clear();
     eventListeners.pointer.clear();
     eventListeners.slide.clear();
@@ -448,6 +470,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
   };
 
   return {
+    interaction,
     status,
     mount,
     unmount,
@@ -465,6 +488,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       assertAlive();
       fitIfPossible();
     },
+    flyToFit,
     getMotion: () => controller.motion(),
     getCameraBounds: () => currentBounds(),
     getCameraProfile: () => controller.profile(),

@@ -1091,10 +1091,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] VIEW-023 · Touch navigation
   One finger pans, pinch zooms, double tap to 40×, two-finger double tap for the whole slide.
   Done when Playwright touch emulation tests cover each gesture.
+  Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
 
 - [ ] VIEW-024 · Coordinate systems and units
   Level-0 pixels as the canonical space, microns through microns per pixel, screen mapping, and the "digital" label above the scan objective.
   Done when unit tests cover conversions on slides with different microns per pixel.
+  Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
 
 - [ ] VIEW-025 · Coverage tracking
   Record which tissue has been seen at 10× or more, per user and slide, persisted to the server in batches.
@@ -1152,8 +1154,8 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-035 · Model inference pause during camera motion
   A shared interaction signal that background inference respects. Pause while moving, resume 200 ms after rest.
-  Done when the perf test keeps 60 fps while panning during a region pass (POC without pause: 28 to 32 fps).
-  Refs doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
+  Done when the perf test keeps 60 fps while panning during a region pass (POC without pause: 28 to 32 fps). It is measured against a stand-in busy job until the first browser inference task exists, and then repeated with the real region pass.
+  Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md), doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
 
 - [ ] VIEW-041 · How a slide loads
   The coarse level shows first, stretched under the view, and sharper tiles fade in over it without ever showing white or black. A quiet checker in chrome colours marks only places where no level has loaded, and outside the slide bounds the canvas is the plain background. Overlays draw at once over soft tiles and the checker. A hint by the magnification chip ("Loading sharper tiles · 12 left") appears after 1 s of waiting, and after 5 s it names the slow source and how long it answers, with a link to its status. Failed tiles keep the grey placeholder with Retry ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
@@ -1206,6 +1208,10 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Run the hidden-tab loading test by hand in headed Chrome on the owner's Mac, with a real tab switch, and record how long the view takes to complete after the tab returns.
   Done when a result file records the run with the Chrome version, the slide, the RTT and the times, next to the emulated numbers.
   Depends on VIEW-033. Refs [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md), [result](results/2026-10-25-idle-and-hidden-tab.md).
+- [ ] VIEW-053 · Touch tap values on real hardware
+  Try the double tap to 40x and the two-finger double tap on a real tablet and a touchscreen laptop, and tune `touchTuning` (tap slop 10 px, tap length 300 ms, double-tap window 350 ms and 40 px) from what feels right.
+  Done when a result file records the devices, the values tried and the values kept.
+  Depends on VIEW-023. Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
 - [ ] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.

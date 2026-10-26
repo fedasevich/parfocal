@@ -87,6 +87,35 @@ export {
   wheelZoomOctaves,
   withoutMotion,
 } from "./camera/profile.ts";
+export type {
+  MagnificationReadout,
+  MicronsPerPixel,
+  ScaleBar,
+  ScaleBarInput,
+} from "./camera/units.ts";
+export {
+  devicePixelsPerSlidePixel,
+  digitalLabel,
+  digitalTolerance,
+  effectiveMagnification,
+  formatLength,
+  isDigital,
+  knownSpacing,
+  magnificationReadout,
+  micronsPerDevicePixel,
+  micronsPerScreenPixel,
+  micronsToScreen,
+  micronsToSlideLength,
+  micronsToSlidePoint,
+  niceScaleBarMicrons,
+  scaleBar,
+  scanObjective,
+  scanObjectiveRatioLimit,
+  screenToMicrons,
+  slideLengthToMicrons,
+  slidePointToMicrons,
+  viewWidthMicrons,
+} from "./camera/units.ts";
 export {
   createDecodePool,
   type DecodePool,
@@ -116,6 +145,13 @@ export {
   type GuardedFrames,
   type GuardedFramesOptions,
 } from "./engine/guarded-frames.ts";
+export {
+  createInteractionSignal,
+  defaultRestMs,
+  type InteractionSignal,
+  type InteractionSignalOptions,
+  type MovingListener,
+} from "./engine/interaction-signal.ts";
 export {
   type Cancel,
   createTimeSlice,
@@ -177,6 +213,13 @@ export {
   type ViewerInput,
   type WheelInput,
 } from "./input/gestures.ts";
+export {
+  createTapRecognizer,
+  type DoubleTap,
+  type TapRecognizer,
+  type TouchTuning,
+  touchTuning,
+} from "./input/touch.ts";
 export {
   classifyWheel,
   freshWheelClassifier,

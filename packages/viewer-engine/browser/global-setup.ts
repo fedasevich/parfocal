@@ -30,6 +30,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           settings: fileURLToPath(new URL("./page/settings.html", import.meta.url)),
           pan: fileURLToPath(new URL("./page/pan.html", import.meta.url)),
           input: fileURLToPath(new URL("./page/input.html", import.meta.url)),
+          interaction: fileURLToPath(new URL("./page/interaction.html", import.meta.url)),
           "decode-count": fileURLToPath(new URL("./page/decode-count.html", import.meta.url)),
           "native-jpeg": fileURLToPath(new URL("./page/native-jpeg.html", import.meta.url)),
           "overlay-indices": fileURLToPath(new URL("./page/overlay-indices.html", import.meta.url)),
