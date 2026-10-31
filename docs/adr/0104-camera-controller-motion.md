@@ -1,7 +1,7 @@
 # 0104. The camera controller runs inside the engine's frame and flies a smooth zoom and pan path
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-020. Touches VIEW-021, VIEW-035, NAV-001, DS-016 and every task that flies to an object, such as G and a number to fly to an area.
 

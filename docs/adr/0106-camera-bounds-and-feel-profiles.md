@@ -1,7 +1,7 @@
 # 0106. Camera bounds follow the slide, and one live profile holds every camera tunable
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-042, VIEW-045. Touches VIEW-021, VIEW-022, VIEW-033, VIEW-046, SET-006 and DS-016.
 

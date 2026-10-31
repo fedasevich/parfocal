@@ -1,7 +1,7 @@
 # 0109. An idle viewer asks for no animation frames, and a hidden tab keeps loading without drawing on a timer
 
 - Date: 2026-10-25
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-032 (idle means zero work), VIEW-033 (hidden tab and background scheduling)
 

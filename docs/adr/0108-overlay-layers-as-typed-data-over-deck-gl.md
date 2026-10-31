@@ -1,7 +1,7 @@
 # 0108. Overlay layers are typed data with one z-order table, drawn through deck.gl with precomputed polygon indices
 
 - Date: 2026-10-25
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-026 (overlay layer system). Closes the polygon indices item of VIEW-030 (memory and teardown correctness). Touches VIEW-027 (outline casings), VIEW-028 (overlay level of detail), VIEW-029 (cull grid), VIEW-037 (deck.gl 9.4 WebGPU route), VIZ-001 (result sets in the Layers tab) and OBJ-002 (object ID labels).
 

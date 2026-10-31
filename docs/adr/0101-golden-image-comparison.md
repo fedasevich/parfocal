@@ -1,7 +1,7 @@
 # 0101. Golden images compared per channel on SwiftShader frames
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: TEST-005 (golden-image rendering tests). Touches STACK-012 (frontend testing stack), TEST-008 (visual regression for UI) and every VIEW task whose "Done when" names a golden image.
 

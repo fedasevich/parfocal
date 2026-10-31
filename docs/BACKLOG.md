@@ -1031,6 +1031,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Nearest at the finest level, linear at coarser levels, half-texel inset to avoid bleeding across tiles.
   Done when golden tests at 40× and above (digital zoom) show crisp pixels and no seams at tile borders.
   Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
+  The owner kept nearest when magnifying and linear when shrinking on 2026-10-31 and asked to compare it with how the POC samples the finest level before ticking.
 
 ### Format readers (each is a PixelSource)
 
@@ -1042,6 +1043,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Lazy-loaded codec, damaged tile detection with a grey placeholder, no main-thread fallback.
   Done when J2K fixtures pass, a corrupted tile renders grey, and the codec is not downloaded for non-J2K slides.
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 24, [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
+  The owner kept the grey placeholder on 2026-10-31 and suggested a grey checkerboard instead of flat grey. TODO: decide at the screens stage, because VIEW-041 (how a slide loads) already uses a quiet checker for places where no level has loaded, so the two must not look alike.
 
 - [ ] VIEW-012 · OME-TIFF 8-bit and 16-bit
   Done when the 8-bit and 16-bit multichannel fixtures pass, with 16-bit going through Viv's channel contrast path. Mounting the channel levels in the route belongs to VIEW-018 (multichannel fluorescence display).
@@ -1113,6 +1115,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-027 · Outline rendering with casings
   Class colour outline plus a thin near-black casing, proposals as near-black dashes on a white casing, brightness that never affects overlays.
+  The owner kept the VIEW-026 (overlay layer system) placeholder styles on 2026-10-31: fill opacity 0.18 for human annotations, 0.12 for AI proposals, 0.3 for nuclei and 0 for measurements, 2 px lines and 1 px for nuclei, blue open pins and grey resolved pins. Before this task is ticked, compare them with the POC's overlay styles and with published conventions for pathology annotation display, and record where each final value comes from.
   Done when golden tests match the kit specimens and a contrast test over sampled H&E pixels shows under 10% of pixels below 3:1.
   Refs doc 35 colour method.
 
@@ -1217,6 +1220,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   The real JPEG 2000 goldens and the CMU-1.tiff golden run in browser CI, which needs `CMU-1-JP2K-33005.svs` (132,565,343 bytes) and `CMU-1.tiff` (204,117,846 bytes) in the `viewer` fixture group and its CI cache.
   Done when the `browser` CI job fetches them under the cache key and the goldens run instead of skipping.
   Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
+  The owner chose on 2026-10-31 to add both slides, about 510 MB for the whole group.
 - [ ] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
   On JP2K-33003-1.svs and JP2K-33003-2.svs one tile at each of levels 1 and 2 differs from OpenSlide by up to 47 while level 0 is within 0.5. Find out whether the cause is the reference, the level table or the decoder.
   Done when a result file names the cause and a test pins it.
@@ -2192,6 +2196,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
 - [ ] CASES-009 · Search API
   Projects, cases, slides, object IDs by any part of the full path (OBJ-004) and people, with scopes, and patients only in clinical projects, tenant-scoped, PHI-safe ranking.
   Done when tests meet the STACK-034 latency on seeded data.
+  The owner decided on 2026-10-31 that the 100 ms budget is measured on one fixed reference machine, not on hosted CI runners, and that small timing differences on shared machines are not failures.
   Refs [ADR 0094](adr/0094-search-on-postgres.md).
 
 - [ ] CASES-010 · Idea: Report output through the adapter

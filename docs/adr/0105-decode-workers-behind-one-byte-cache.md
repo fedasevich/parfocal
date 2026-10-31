@@ -1,7 +1,7 @@
 # 0105. Six decode workers read the slide through one byte cache on the page and never drop work that has started
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-004 (decode worker pool). Touches VIEW-002 (Viv route on WebGL2 for RGB brightfield), VIEW-005 (native JPEG decode), VIEW-006 (shared decode cache across channels), VIEW-041 (how a slide loads), VIEW-036 (renderer interface) and TILES-006 (latency proxy test harness).
 

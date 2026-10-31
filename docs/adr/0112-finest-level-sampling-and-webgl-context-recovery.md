@@ -1,7 +1,7 @@
 # 0112. The finest level magnifies with nearest sampling through a guarded Viv patch, and a lost WebGL context is rebuilt from the route's own state
 
 - Date: 2026-10-26
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-007 (interpolation rule) and VIEW-034 (GPU error handling). Touches VIEW-002 (Viv route on WebGL2 for RGB brightfield), VIEW-030 (memory and teardown correctness), VIEW-032 (idle means zero work), VIEW-033 (hidden tab and background scheduling), VIEW-036 (renderer interface and route switching) and VIEW-037 (deck.gl 9.4 WebGPU route).
 

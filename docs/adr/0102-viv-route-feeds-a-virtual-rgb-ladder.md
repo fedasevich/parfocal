@@ -1,7 +1,7 @@
 # 0102. The Viv route hands MultiscaleImageLayer a virtual power-of-two ladder of interleaved RGB tiles built from our PixelSource
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-002 (Viv route on WebGL2 for RGB brightfield). Touches VIEW-004, VIEW-005, VIEW-010, VIEW-030, VIEW-036 and TEST-005.
 

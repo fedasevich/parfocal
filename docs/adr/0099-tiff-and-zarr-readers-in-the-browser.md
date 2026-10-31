@@ -1,7 +1,7 @@
 # 0099. The browser reads TIFF with geotiff.js and OME-Zarr with zarrita, behind one PixelSource interface with a tested workaround for each known reader bug
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-016, VIEW-003. Touches VIEW-002, VIEW-004, VIEW-005, VIEW-010 to VIEW-017, INGEST-007, INGEST-008 and VIEW-000.
 

@@ -34,9 +34,15 @@ Resend's free plan allows 100 emails a day and sending pauses at the limit. Only
 
 Setting `region=` on a Modal function needs the Team plan ($250 a month) and adds a 1.5x multiplier for broad regions and 1.75x for narrow ones. On lower plans Modal chooses where containers run, so latency from the API to Neon must be measured, not assumed. Source: https://modal.com/docs/guide/region-selection and ADR 0003.
 
-## Local only until the owner fixes the cloud
+## The cloud is open again, at the lowest possible cost
 
-Since 2026-10-08 the owner has asked that nothing touch the cloud: no Modal deploys or runs, no Neon branches, no OpenTofu applies and no staging or production deploys. The owner is fixing the cloud side. Build and test against local services, write `TODO` for numbers that need the cloud, and ask before touching it again. On 2026-10-13 the owner allowed Zitadel Cloud again. Modal, Neon, OpenTofu applies and deploys are still off.
+From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cloud side. On 2026-10-31 the owner opened everything again: Modal, Neon and the Zitadel credentials for CI. This unblocks STACK-019 (the web framework, which needs Modal cold-start times), STACK-020 (database hosting, which needs the Neon region measurement) and IAM-001 (login provider setup from code). The owner pays for all of it and asked that it cost as little as possible.
+
+- Before anything that can cost money, check the current spend and the plan's limits on the provider's dashboard or CLI. That covers Modal runs, deploys and GPUs, Neon computes and branches, and any paid plan.
+- Pick the cheapest way that does the job. Use free tiers, scale to zero, the smallest GPU and the shortest run that gives a usable number.
+- Delete what you created for a spike or test when you are done, such as Modal apps, Neon branches and temporary buckets.
+- Never raise a spend limit, move to a paid plan, buy anything or leave something running without asking the owner first.
+- Write what a cloud run cost, or `TODO` if it is unknown, in the log entry or result file.
 
 ## Modal stops deploys at the workspace spend limit
 

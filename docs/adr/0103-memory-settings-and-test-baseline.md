@@ -1,7 +1,7 @@
 # 0103. Shared deck memory settings, a patched uint8 upload and a memory test baseline taken after one warm-up cycle
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-030 (memory and teardown correctness). Touches VIEW-001 (engine package API), VIEW-002 (Viv route on WebGL2 for RGB brightfield), VIEW-036 (renderer interface and route switching), VIEW-037 (deck.gl 9.4 WebGPU route) and STACK-015 (Viv and deck.gl versions).
 

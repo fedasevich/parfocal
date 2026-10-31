@@ -1,7 +1,7 @@
 # 0100. Viewer hot-path state lives in the engine and React reads it through useSyncExternalStore
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-006, VIEW-001. Touches STACK-005, VIEW-020, VIEW-030, VIEW-036 and VIEW-003.
 

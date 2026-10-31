@@ -1,7 +1,7 @@
 # 0107. Viewer input goes through a pure gesture interpreter, ends drags from the window and guesses the wheel device from its deltas
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-021 (wheel, trackpad and pinch handling), VIEW-043 (drags that always end). Touches VIEW-022 (keyboard navigation), VIEW-023 (touch navigation), VIEW-045 (camera feel profiles), CMD-001 (key registry), SET-006 (navigation and devices section) and the annotation tools.
 

@@ -1,7 +1,7 @@
 # 0111. JPEG 2000 decodes in the decode workers through OpenJPEG WebAssembly, and OME-TIFF channel pages become channels
 
 - Date: 2026-10-26
-- Status: Proposed
+- Status: Accepted
 - Deciders: owner
 - Backlog: VIEW-011 (SVS JPEG 2000 through OpenJPEG WASM), VIEW-010 (generic tiled TIFF and SVS JPEG), VIEW-012 (OME-TIFF 8-bit and 16-bit)
 

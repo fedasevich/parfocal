@@ -1,7 +1,7 @@
 # 0113. A shared interaction signal, one units module and touch taps read by the gesture interpreter
 
 - Date: 2026-10-26
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-024 (coordinate systems and units), VIEW-035 (model inference pause during camera motion), VIEW-023 (touch navigation). Touches NAV-001 (magnification bar), NAV-002 (scale bar and readout) and the inference tasks that will run region passes in the browser.
 

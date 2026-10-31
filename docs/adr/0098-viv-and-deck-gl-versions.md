@@ -1,7 +1,7 @@
 # 0098. Viv 0.23 on deck.gl 9.4 and luma.gl 9.4.2 over WebGL2, with deck.gl's WebGPU backend as the alternate route and a dispose wrapper for the canvas leak
 
 - Date: 2026-10-23
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-015. Touches VIEW-000, VIEW-002, VIEW-030, VIEW-031, VIEW-036, VIEW-037 and STACK-016
 

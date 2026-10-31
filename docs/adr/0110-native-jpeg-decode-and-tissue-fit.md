@@ -1,7 +1,7 @@
 # 0110. Native JPEG decode validated per file, and a slide opens fitted to its tissue
 
 - Date: 2026-10-25
-- Status: Proposed
+- Status: Accepted
 - Deciders: owner
 - Backlog: VIEW-005 (native JPEG decode with per-file validation), VIEW-006 (shared decode cache across channels), VIEW-048 (open fitted to the tissue)
 

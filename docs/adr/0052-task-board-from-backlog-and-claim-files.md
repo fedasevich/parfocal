@@ -1,7 +1,7 @@
 # 0052. A task board read from the backlog, with one claim file per task
 
 - Date: 2026-10-15
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: FOUND-020
 
