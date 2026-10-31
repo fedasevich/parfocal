@@ -380,6 +380,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-039 · Resumable upload protocol
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
   Done when a spike uploads a 4 GB NDPI over a throttled connection with a forced disconnect and resumes without restarting.
+  Proposed in [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md), measured in [the upload spike](results/2026-10-31-resumable-upload-spike.md) against MinIO with a 4 GiB synthetic file and the 1.99 GB `OS-1.ndpi`, because no 4 GB NDPI fixture exists. Waits for the owner to accept the ADR.
 
 - [x] STACK-040 · FHIR and HL7 libraries
   Candidates: fhir.resources (Pydantic), HAPI FHIR as an external server, python-hl7 for v2. Default: fhir.resources for parsing and building Patient, ServiceRequest, Specimen and DiagnosticReport, and no FHIR server in v1.
@@ -824,13 +825,14 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when STACK-026 and STACK-039 are confirmed or revised in an ADR.
 
 - [ ] INGEST-001 · Upload API with presigned multipart
-  Create upload, get part URLs, complete, abort. Uploads land in a tenant-scoped quarantine prefix.
-  Done when API tests cover the lifecycle, size limits, and that tenant B cannot complete tenant A's upload.
-  Depends on STACK-039.
+  Create upload, get part URLs, list parts, complete, abort. Uploads land in a tenant-scoped quarantine prefix. Per [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) the routes follow Uppy's Companion S3 contract, the browser only sends part `PUT` requests to R2, and the API does create, ListParts with pagination, complete and abort itself, because R2 cannot presign POSTs. The API chooses the key `t/{tenant}/quarantine/{upload}/{name}` and the part size (16 MiB, grown to stay within 10,000 parts), stores both with an upload record, signs one part URL at a time for 15 minutes, and refuses a completion unless the parts run from 1 without gaps and every part but the last has the stored size, since MinIO accepts uneven parts that R2 refuses. A lookup by name, size and last-modified time returns the caller's open upload so a reloaded page can resume. A job aborts uploads with no new part for 24 hours, and an R2 lifecycle rule aborts incomplete uploads under the quarantine prefix after 1 day.
+  Done when API tests cover the lifecycle, size limits, the equal part size check, ListParts beyond one page, the open upload lookup, the stale upload job, and that tenant B can neither sign, list, complete nor abort tenant A's upload, and INGEST-028 has confirmed the R2 behaviour the routes rely on.
+  Depends on STACK-039. Refs `packages/upload-spike`.
 
 - [ ] INGEST-002 · Upload UI with resume
   Drag and drop or file picker on a case, per-file progress, pause, resume after reload, retry on failure, multiple files. The window and its states are INGEST-021.
   Done when an E2E test interrupts a throttled 1 GB upload, reloads the page, and the upload resumes to completion.
+  Uses `@uppy/core` and `@uppy/aws-s3` in Companion mode against the INGEST-001 routes, and the throttle is the latency proxy's uplink limit ([ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md)). The spike in `packages/upload-spike` already does this headless.
 
 - [x] INGEST-003 · Ingest workflow skeleton
   Durable workflow per uploaded file: quarantine, scan, identify, validate, index, derive, publish. Each step idempotent, with status visible to the UI.
@@ -950,6 +952,11 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   The tissue mask gets a bounding box computed from its largest connected regions, so a few stray cells near the slide edge do not stretch it to the whole scan. The box is stored with the mask in level-0 pixels.
   Done when tests on CMU-1.svs and CAMELYON16 slides give a box tighter than the all-cells box and still containing more than 98% of annotated tumour.
   Depends on INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
+
+- [ ] INGEST-028 · Upload protocol check on the R2 dev bucket
+  The upload spike ran against MinIO, which differs from R2 in ways that matter. Repeat its protocol checks against the `parfocal-dev` bucket with a per-run prefix that is deleted afterwards: a presigned part `PUT` from the dev app origin with the CORS policy of [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired part URL answering 403 without CORS headers, ListParts over more than one page, the `AbortIncompleteMultipartUpload` lifecycle rule being accepted, and whether parts accept `x-amz-checksum-sha256`. The bucket CORS and lifecycle settings go through `infra/tofu`, and their `tofu apply` needs the owner's yes.
+  Done when `packages/upload-spike` runs against `parfocal-dev` at 1 GiB with every check passing or ADR 0116 revised, and a result file records the numbers and the R2 operation count.
+  Depends on STACK-039. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md).
 
 ---
 

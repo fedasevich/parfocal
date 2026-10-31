@@ -1,6 +1,6 @@
 # Upload spike
 
-The spike for STACK-039 (resumable upload protocol), decided in [ADR 0116](../../docs/adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md). It uploads one large file from headless Chromium with Uppy's AWS S3 plugin to MinIO in Docker, cuts the link mid-upload, closes the page later, and proves each time that the upload resumes from the parts already stored. The numbers are in the [result file](../../docs/results/2026-10-31-resumable-upload-spike.md).
+The spike for STACK-039 (resumable upload protocol), proposed in [ADR 0116](../../docs/adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) (resumable uploads with S3 multipart and Uppy). It uploads one large file from headless Chromium with Uppy's AWS S3 plugin to MinIO in Docker, cuts the link mid-upload, closes the page later, and proves each time that the upload resumes from the parts already stored. The numbers are in the [result file](../../docs/results/2026-10-31-resumable-upload-spike.md).
 
 ## What runs
 
