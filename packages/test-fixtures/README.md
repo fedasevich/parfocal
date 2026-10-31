@@ -14,7 +14,7 @@ pnpm fixtures all             # everything, about 25 GB
 
 | Group | Contents |
 |---|---|
-| `small` | `CMU-1-Small-Region.svs`, the MIRAX `CMU-1-Saved-1_16.zip` and the CAMELYON16 annotation XML for `tumor_009` and `test_001` |
+| `small` | `CMU-1-Small-Region.svs`, the MIRAX `CMU-1-Saved-1_16.zip` and the CAMELYON16 annotation XML for `tumor_009` and `test_001`. The `db` CI job fetches and caches it for the upload to ready test of INGEST-017 (publish step and slide status) |
 | `formats` | One OpenSlide test slide per format the POC read: Aperio SVS (JPEG and JPEG 2000), generic TIFF, NDPI, Leica SCN, Ventana BIF, DICOM, Huron, Argos, Philips TIFF and Zeiss CZI |
 | `viewer` | The slides the browser golden images open, today only `CMU-1.svs` (170 MB), which the `browser` CI job fetches and caches |
 | `big` | Whole scanned slides at native magnification, 0.3 to 3.9 GB each |

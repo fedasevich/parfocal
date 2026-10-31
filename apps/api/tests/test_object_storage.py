@@ -1,6 +1,8 @@
 import asyncio
+import hashlib
 import os
 import uuid
+from pathlib import Path
 
 import httpx2
 import pytest
@@ -102,3 +104,50 @@ def test_wrong_credentials_are_a_storage_error(storage: StorageLocation) -> None
     with pytest.raises(StorageError) as raised:
         asyncio.run(go())
     assert raised.value.status == 403
+
+
+@pytest.mark.db
+def test_an_object_is_copied_in_equal_parts_and_listed_by_prefix(storage: StorageLocation) -> None:
+    data = os.urandom(2 * TEST_PART_BYTES + 1234)
+    prefix = f"t/{uuid.uuid4()}/"
+    source = f"{prefix}quarantine/one/slide.svs"
+    target = f"{prefix}s/two/original.svs"
+
+    async def go() -> tuple[bytes, int | None, list[str], int | None]:
+        async with httpx2.AsyncClient(timeout=30) as http:
+            store = ObjectStore(storage, http)
+            await store.put_object(source, data, "image/tiff")
+            await store.copy_object(source, target, len(data), TEST_PART_BYTES)
+            copied = await store.get_object(target)
+            await store.delete_object(source)
+            await store.delete_object(source)
+            gone = await store.head_object(source)
+            listed = await store.list_keys(prefix)
+            size = await store.head_object(target)
+            await store.delete_object(target)
+            return copied, gone, listed, size
+
+    copied, gone, listed, size = asyncio.run(go())
+    assert copied == data
+    assert gone is None
+    assert listed == [target]
+    assert size == len(data)
+
+
+@pytest.mark.db
+def test_a_download_streams_to_disk_with_its_sha256(
+    storage: StorageLocation, tmp_path: Path
+) -> None:
+    data = os.urandom(3 * 1024 * 1024 + 7)
+    key = f"t/{uuid.uuid4()}/s/{uuid.uuid4()}/levels.json"
+
+    async def go() -> tuple[int, str]:
+        async with httpx2.AsyncClient(timeout=30) as http:
+            store = ObjectStore(storage, http)
+            await store.put_object(key, data, "application/json")
+            downloaded = await store.download(key, tmp_path / "copy")
+            await store.delete_object(key)
+            return downloaded.size, downloaded.sha256
+
+    assert asyncio.run(go()) == (len(data), hashlib.sha256(data).hexdigest())
+    assert (tmp_path / "copy").read_bytes() == data

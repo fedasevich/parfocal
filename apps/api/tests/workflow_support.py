@@ -1,10 +1,17 @@
 import asyncio
+import os
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
+from storage_support import TEST_STORAGE
+
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
+from parfocal_common.object_store import ObjectStore
+from parfocal_ingest.workflow import Resources, ingest_workflow
 
 TILES = 20
+DERIVED_PAUSE_SECONDS = 1.0
 
 
 async def scan(step: StepRun) -> Mapping[str, Any]:
@@ -42,3 +49,21 @@ FAILING = Workflow(
     steps=[Step("scan", scan), Step("identify", broken), Step("publish", publish)],
     lease_seconds=3,
 )
+
+
+class SlowStore(ObjectStore):
+    async def put_object(self, key: str, body: bytes, content_type: str) -> None:
+        if not key.endswith("levels.json"):
+            await asyncio.sleep(DERIVED_PAUSE_SECONDS)
+        await super().put_object(key, body, content_type)
+
+
+def slow_resources() -> Resources:
+    return Resources(
+        storage=TEST_STORAGE,
+        work_dir=Path(os.environ["PARFOCAL_TEST_INGEST_DIR"]),
+        store_class=SlowStore,
+    )
+
+
+SLOW_INGEST = ingest_workflow(slow_resources, lease_seconds=3)

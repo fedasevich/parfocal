@@ -18,7 +18,6 @@ from workspace_support import join_project, make_project, make_workspace, owner
 from parfocal_api.tables import Role
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.jobs import Workflow, enqueue, work
-from parfocal_ingest.workflow import INGEST, STEP_NAMES
 
 pytestmark = pytest.mark.db
 
@@ -137,21 +136,6 @@ def run_inline(database: str, workflows: list[Workflow]) -> int:
     return run(database, go)
 
 
-def test_the_ingest_skeleton_runs_every_step_and_shows_its_status(
-    api: ApiAs, database: str
-) -> None:
-    lead, project = setup(database)
-    job = queue(database, INGEST, lead.tenant_id, project)
-    assert run_inline(database, [INGEST]) >= 1
-    response = api(lead).get(f"/api/projects/{project}/jobs/{job}")
-    assert response.status_code == 200, response.text
-    body = response.json()
-    assert (body["status"], body["kind"]) == ("done", "ingest")
-    assert [(step["name"], step["status"], step["runs"]) for step in body["steps"]] == [
-        (name, "done", 1) for name in STEP_NAMES
-    ]
-
-
 def test_a_failed_step_stops_the_job_with_its_code(api: ApiAs, database: str) -> None:
     lead, project = setup(database)
     job = queue(database, FAILING, lead.tenant_id, project)
@@ -164,7 +148,7 @@ def test_a_failed_step_stops_the_job_with_its_code(api: ApiAs, database: str) ->
 def test_jobs_stay_in_their_workspace_and_project(api: ApiAs, database: str) -> None:
     lead, project = setup(database)
     other_lead, other_project = setup(database)
-    job = queue(database, INGEST, lead.tenant_id, project)
+    job = queue(database, SLOW, lead.tenant_id, project)
     assert api(other_lead).get(f"/api/projects/{project}/jobs/{job}").status_code in {403, 404}
     second_project = make_project(database, lead.tenant_id)
     join_project(database, second_project, lead, "owner")

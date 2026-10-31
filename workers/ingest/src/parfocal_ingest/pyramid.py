@@ -11,6 +11,7 @@ import tifffile
 from wsidicom import WsiDicom
 from wsidicom.errors import WsiDicomError
 
+from parfocal_common.ingest import Notice
 from parfocal_ingest.identify import Format, Identified, Refusal
 
 USABLE_MPP = 100.0
@@ -55,34 +56,6 @@ class Reader(StrEnum):
     OPENSLIDE = "openslide"
     TIFFSLIDE = "tiffslide"
     WSIDICOM = "wsidicom"
-
-
-class Notice(StrEnum):
-    MPP_ESTIMATED = "mpp-estimated"
-    MPP_MISSING = "mpp-missing"
-    OBJECTIVE_ESTIMATED = "objective-estimated"
-    OBJECTIVE_MISSING = "objective-missing"
-    LEVEL_SKIPPED = "level-skipped"
-    FIRST_PLANE_ONLY = "first-plane-only"
-
-
-NOTICES = {
-    Notice.MPP_ESTIMATED: (
-        "The file does not say how large a pixel is. Parfocal estimated it from the objective "
-        "power, so measurements are approximate."
-    ),
-    Notice.MPP_MISSING: (
-        "The file does not say how large a pixel is, so measurements in microns are not available."
-    ),
-    Notice.OBJECTIVE_ESTIMATED: (
-        "The file does not name the objective power. Parfocal estimated it from the pixel size."
-    ),
-    Notice.OBJECTIVE_MISSING: "The file does not name the objective power.",
-    Notice.LEVEL_SKIPPED: (
-        "A stored resolution level does not halve the one above it and is not used."
-    ),
-    Notice.FIRST_PLANE_ONLY: "The slide has several focal planes. Only the first is shown.",
-}
 
 
 @dataclass(frozen=True)

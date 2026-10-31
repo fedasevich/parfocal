@@ -80,8 +80,15 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: db
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-small-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+      - run: pnpm fixtures small
       - run: docker compose up -d --wait
       - run: uv run pytest -m db
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small
       - if: failure()
         run: docker compose logs
 

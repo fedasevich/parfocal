@@ -250,6 +250,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "signUploadPart": lambda w: Call("GET", w.open_upload.path("/1")),
     "listUploadParts": lambda w: Call("GET", w.open_upload.path()),
+    "getUploadStatus": lambda w: Call("GET", f"/api/uploads/{w.open_upload.id}/status"),
     "completeUpload": lambda w: Call(
         "POST",
         w.finished_upload.path("/complete"),

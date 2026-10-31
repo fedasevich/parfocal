@@ -775,10 +775,12 @@ name = "parfocal-ingest"
 version = "0.0.0"
 source = { editable = "workers/ingest" }
 dependencies = [
+    { name = "httpx2" },
     { name = "msgspec" },
     { name = "opencv-python-headless" },
     { name = "openslide-bin" },
     { name = "openslide-python" },
+    { name = "parfocal-api" },
     { name = "parfocal-common" },
     { name = "pillow" },
     { name = "scipy" },
@@ -789,10 +791,12 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx2", specifier = ">=2.13,<3" },
     { name = "msgspec", specifier = ">=0.21,<0.22" },
     { name = "opencv-python-headless", specifier = ">=5,<6" },
     { name = "openslide-bin", specifier = ">=4.0.1,<5" },
     { name = "openslide-python", specifier = ">=1.4.6,<2" },
+    { name = "parfocal-api", editable = "apps/api" },
     { name = "parfocal-common", editable = "packages/py-common" },
     { name = "pillow", specifier = ">=13,<14" },
     { name = "scipy", specifier = ">=1.16,<2" },

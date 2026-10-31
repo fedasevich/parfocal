@@ -22,4 +22,4 @@ parfocal-common = { workspace = true }
 [tool.basedpyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
-extraPaths = ["tests"]
+extraPaths = ["tests", "../../workers/ingest/tests"]

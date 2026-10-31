@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 26 |
 | `personal` | 44 |
 | `secret` | 9 |
-| `operational` | 443 |
+| `operational` | 459 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -675,6 +675,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `barcode` | phi |
 | `stain` | operational |
 | `level` | operational |
+| `upload_id` | operational |
+| `format` | operational |
+| `variant` | operational |
+| `reader` | operational |
+| `width` | operational |
+| `height` | operational |
+| `level_count` | operational |
+| `mpp_x` | operational |
+| `mpp_y` | operational |
+| `objective_power` | operational |
+| `notices` | operational |
+| `file_bytes` | operational |
+| `sha256` | operational |
+| `original_key` | operational |
+| `restricted_images` | operational |
+| `published_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |

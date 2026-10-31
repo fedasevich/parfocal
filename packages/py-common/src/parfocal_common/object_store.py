@@ -3,6 +3,7 @@ import hmac
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from urllib.parse import quote, urlsplit
 from xml.etree import ElementTree
 
@@ -14,6 +15,7 @@ UNSIGNED_PAYLOAD = "UNSIGNED-PAYLOAD"
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 MAX_PRESIGN_SECONDS = 7 * 24 * 3600
 LIST_PAGE_LIMIT = 1000
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,12 @@ class StoredPart:
     part_number: int
     size: int
     etag: str
+
+
+@dataclass(frozen=True)
+class Downloaded:
+    size: int
+    sha256: str
 
 
 @dataclass(frozen=True)
@@ -201,19 +209,21 @@ class ObjectStore:
         self.location = location
         self.http = http
 
-    async def send(
+    def signed_request(
         self,
         method: str,
         key: str,
-        query: Mapping[str, str] | None = None,
-        body: bytes = b"",
-    ) -> httpx2.Response:
+        query: Mapping[str, str] | None,
+        body: bytes,
+        extra: Mapping[str, str] | None = None,
+    ) -> tuple[str, dict[str, str]]:
         now = datetime.now(UTC)
         payload_hash = hashlib.sha256(body).hexdigest()
         headers = {
             "host": host_of(self.location.endpoint),
             "x-amz-content-sha256": payload_hash,
             "x-amz-date": now.strftime("%Y%m%dT%H%M%SZ"),
+            **{name.lower(): value for name, value in (extra or {}).items()},
         }
         path = object_path(self.location, key)
         signed = signature(self.location, method, path, query or {}, headers, payload_hash, now)
@@ -223,16 +233,22 @@ class ObjectStore:
         )
         url = f"{self.location.endpoint.rstrip('/')}{uri_encode(path, keep_slash=True)}"
         query_string = canonical_query(query or {})
-        response = await self.http.request(
-            method,
-            f"{url}?{query_string}" if query_string else url,
-            headers={
-                "x-amz-content-sha256": payload_hash,
-                "x-amz-date": headers["x-amz-date"],
-                "authorization": authorization,
-            },
-            content=body or None,
-        )
+        sent = {name: value for name, value in headers.items() if name != "host"}
+        return f"{url}?{query_string}" if query_string else url, {
+            **sent,
+            "authorization": authorization,
+        }
+
+    async def send(
+        self,
+        method: str,
+        key: str,
+        query: Mapping[str, str] | None = None,
+        body: bytes = b"",
+        extra: Mapping[str, str] | None = None,
+    ) -> httpx2.Response:
+        url, headers = self.signed_request(method, key, query, body, extra)
+        response = await self.http.request(method, url, headers=headers, content=body or None)
         if response.status_code >= 300:
             raise error_of(response.status_code, response.content)
         return response
@@ -307,3 +323,73 @@ class ObjectStore:
             expires_seconds,
             datetime.now(UTC),
         )
+
+    async def put_object(self, key: str, body: bytes, content_type: str) -> None:
+        await self.send("PUT", key, body=body, extra={"content-type": content_type})
+
+    async def head_object(self, key: str) -> int | None:
+        url, headers = self.signed_request("HEAD", key, None, b"")
+        response = await self.http.request("HEAD", url, headers=headers)
+        if response.status_code == 404:
+            return None
+        if response.status_code >= 300:
+            raise StorageError(response.status_code, "head-failed")
+        return int(response.headers.get("content-length", "0"))
+
+    async def delete_object(self, key: str) -> None:
+        await self.send("DELETE", key)
+
+    async def get_object(self, key: str) -> bytes:
+        return (await self.send("GET", key)).content
+
+    async def download(self, key: str, target: Path) -> Downloaded:
+        url, headers = self.signed_request("GET", key, None, b"")
+        digest = hashlib.sha256()
+        size = 0
+        async with self.http.stream("GET", url, headers=headers) as response:
+            if response.status_code >= 300:
+                raise error_of(response.status_code, await response.aread())
+            with target.open("wb") as handle:
+                async for chunk in response.aiter_bytes(DOWNLOAD_CHUNK_BYTES):
+                    handle.write(chunk)
+                    digest.update(chunk)
+                    size += len(chunk)
+        return Downloaded(size, digest.hexdigest())
+
+    async def copy_object(self, source: str, target: str, size: int, part_bytes: int) -> None:
+        if size <= 0:
+            raise ValueError("Only a file with bytes can be copied")
+        upload_id = await self.create_multipart_upload(target)
+        copy_source = uri_encode(f"/{self.location.bucket}/{source}", keep_slash=True)
+        parts: list[StoredPart] = []
+        try:
+            for index, start in enumerate(range(0, size, part_bytes), start=1):
+                end = min(start + part_bytes, size) - 1
+                response = await self.send(
+                    "PUT",
+                    target,
+                    {"partNumber": str(index), "uploadId": upload_id},
+                    extra={
+                        "x-amz-copy-source": copy_source,
+                        "x-amz-copy-source-range": f"bytes={start}-{end}",
+                    },
+                )
+                etag = child_text(parse(response.content), "ETag") or ""
+                parts.append(StoredPart(index, end - start + 1, unquote_etag(etag)))
+            await self.complete_multipart_upload(target, upload_id, parts)
+        except BaseException:
+            await self.abort_multipart_upload(target, upload_id)
+            raise
+
+    async def list_keys(self, prefix: str) -> list[str]:
+        keys: list[str] = []
+        token: str | None = None
+        while True:
+            query = {"list-type": "2", "prefix": prefix, "max-keys": str(LIST_PAGE_LIMIT)}
+            if token:
+                query["continuation-token"] = token
+            root = parse((await self.send("GET", "", query)).content)
+            keys.extend(child_text(item, "Key") or "" for item in children(root, "Contents"))
+            token = child_text(root, "NextContinuationToken")
+            if (child_text(root, "IsTruncated") or "false").lower() != "true" or not token:
+                return keys

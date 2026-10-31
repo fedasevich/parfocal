@@ -2,6 +2,7 @@ import re
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
+from enum import StrEnum
 from pathlib import PurePosixPath
 from typing import Annotated, Any, cast
 
@@ -18,8 +19,9 @@ from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.projects import visible
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.settings import ApiSettings
-from parfocal_api.tables import UploadStatus, cases, projects, uploads
-from parfocal_common.ingest import enqueue_ingest
+from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
+from parfocal_common.ingest import NOTICES, Failure, enqueue_ingest, failure_message
+from parfocal_common.jobs import JobStatus, StepStatus
 from parfocal_common.object_store import NoSuchUploadError, ObjectStore, StorageError, StoredPart
 from parfocal_common.part_plan import MAX_PARTS, part_size_for, parts_problem, plan_parts
 
@@ -95,6 +97,32 @@ class CompletedUpload(BaseModel):
 class AbortedUpload(BaseModel):
     upload_id: uuid.UUID = Field(serialization_alias="uploadId")
     status: UploadStatus
+
+
+class IngestStatus(StrEnum):
+    UPLOADING = "uploading"
+    PROCESSING = "processing"
+    READY = "ready"
+    FAILED = "failed"
+
+
+class IngestNotice(BaseModel):
+    code: str
+    message: str
+
+
+class UploadState(BaseModel):
+    upload_id: uuid.UUID
+    project_id: uuid.UUID
+    case_id: uuid.UUID | None
+    status: IngestStatus
+    upload_status: UploadStatus
+    job_id: uuid.UUID | None
+    step: str | None
+    slide_id: uuid.UUID | None
+    reason: str | None
+    message: str | None
+    notices: list[IngestNotice]
 
 
 class UploadTooLargeError(BadRequestError):
@@ -356,6 +384,89 @@ async def find_open_upload(
         case_id=row.case_id,
         size=row.size_bytes,
         created_at=row.created_at,
+    )
+
+
+def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:
+    return IngestStatus.FAILED, reason, failure_message(reason)
+
+
+def ingest_status(
+    upload_status: str, job: Any, slide: Any
+) -> tuple[IngestStatus, str | None, str | None]:
+    match UploadStatus(upload_status):
+        case UploadStatus.OPEN:
+            return IngestStatus.UPLOADING, None, None
+        case UploadStatus.ABORTED:
+            return failed(Failure.UPLOAD_ABORTED)
+        case UploadStatus.EXPIRED:
+            return failed(Failure.UPLOAD_EXPIRED)
+        case UploadStatus.COMPLETED:
+            pass
+    if slide is not None:
+        return IngestStatus.READY, None, None
+    if job is not None and job.status == JobStatus.FAILED:
+        return failed(job.error_code or "unknown")
+    return IngestStatus.PROCESSING, None, None
+
+
+def notices_of(codes: Sequence[str]) -> list[IngestNotice]:
+    known = {str(code): text for code, text in NOTICES.items()}
+    return [IngestNotice(code=code, message=known.get(code, code)) for code in codes]
+
+
+@router.get(
+    "/{upload_id}/status",
+    operation_id="getUploadStatus",
+    **require(Permission.UPLOAD_SLIDES),
+)
+async def get_upload_status(
+    upload_id: UploadId, principal: CurrentPrincipal, connection: TenantConnection
+) -> UploadState:
+    row = (
+        await connection.execute(
+            select(uploads).where(uploads.c.id == upload_id, created_by(principal))
+        )
+    ).one_or_none()
+    if row is None:
+        raise UploadNotFoundError
+    job = None
+    step = None
+    if row.job_id is not None:
+        job = (
+            await connection.execute(
+                select(jobs.c.status, jobs.c.error_code).where(jobs.c.id == row.job_id)
+            )
+        ).one_or_none()
+        step = await connection.scalar(
+            select(job_steps.c.name)
+            .where(
+                job_steps.c.job_id == row.job_id,
+                job_steps.c.status.in_([StepStatus.RUNNING, StepStatus.PENDING]),
+            )
+            .order_by(job_steps.c.ordinal)
+            .limit(1)
+        )
+    slide = (
+        await connection.execute(
+            select(slides.c.id, slides.c.notices).where(
+                slides.c.upload_id == row.id, slides.c.deleted_at.is_(None)
+            )
+        )
+    ).one_or_none()
+    status, reason, message = ingest_status(row.status, job, slide)
+    return UploadState(
+        upload_id=row.id,
+        project_id=row.project_id,
+        case_id=row.case_id,
+        status=status,
+        upload_status=UploadStatus(row.status),
+        job_id=row.job_id,
+        step=step if status is IngestStatus.PROCESSING else None,
+        slide_id=slide.id if slide is not None else None,
+        reason=reason,
+        message=message,
+        notices=notices_of(slide.notices) if slide is not None else [],
     )
 
 

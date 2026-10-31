@@ -37,3 +37,7 @@ Chrome requests `/favicon.ico` after loading a page, and through the latency pro
 ## The viewer group feeds the browser CI job
 
 `viewer` holds only the slides the browser golden images open, today `CMU-1.svs` (170 MB), which also stays in `formats`. The `browser` job caches it under `fixtures-viewer-<hash of fixtures.json>` and runs `pnpm test:browser` with `PARFOCAL_REQUIRE_FIXTURES=viewer`, so a missing slide fails instead of skipping. A manifest test keeps the group under 256 MB. Add a slide to the group only when CI must run its goldens. Source: VIEW-002.
+
+## The small group feeds the db CI job
+
+The `db` job caches `small` under `fixtures-small-<hash of fixtures.json>` and runs `uv run pytest -m db` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).

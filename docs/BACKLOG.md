@@ -711,6 +711,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
+  INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images`, and no route serves them yet ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)).
 
 - [ ] SEC-010 · PHI-safe telemetry
   Analytics, logs, traces and error reports carry no PHI. URLs use ids, never names.
@@ -904,6 +905,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] INGEST-017 · Publish step and slide status
   On success the slide becomes viewable in its project and case, paired result files are imported as result sets (RSET-001), and no model runs unless the user started one (JOBS-001).
   Done when an E2E test sees the slide go from uploading to processing to ready with live status.
+  Built as [ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md) (the slide row appears only when it is ready) says, with the polled `getUploadStatus` route as the live status until STACK-024 (realtime transport). Paired result files wait for RSET-004 (pairing results with slides), because the upload metadata cannot mark a result file yet.
 
 - [ ] INGEST-018 · Ingest failure UX
   Readable errors per failure class, retry for transient failures, support contact for permanent ones.
@@ -955,7 +957,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
 
 - [ ] INGEST-028 · Upload protocol check on the R2 dev bucket
-  The upload spike ran against MinIO, which differs from R2 in ways that matter. Repeat its protocol checks against the `parfocal-dev` bucket with a per-run prefix that is deleted afterwards: a presigned part `PUT` from the dev app origin with the CORS policy of [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired part URL answering 403 without CORS headers, ListParts over more than one page, the `AbortIncompleteMultipartUpload` lifecycle rule being accepted, and whether parts accept `x-amz-checksum-sha256`. The bucket CORS and lifecycle settings go through `infra/tofu`, and their `tofu apply` needs the owner's yes.
+  The upload spike ran against MinIO, which differs from R2 in ways that matter. Repeat its protocol checks against the `parfocal-dev` bucket with a per-run prefix that is deleted afterwards: a presigned part `PUT` from the dev app origin with the CORS policy of [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired part URL answering 403 without CORS headers, ListParts over more than one page, the `AbortIncompleteMultipartUpload` lifecycle rule being accepted, whether parts accept `x-amz-checksum-sha256`, and the `UploadPartCopy` with `x-amz-copy-source-range` that the ingest job of INGEST-017 (publish step and slide status) uses to move a file out of quarantine. The bucket CORS and lifecycle settings go through `infra/tofu`, and their `tofu apply` needs the owner's yes.
   Done when `packages/upload-spike` runs against `parfocal-dev` at 1 GiB with every check passing or ADR 0116 revised, and a result file records the numbers and the R2 operation count.
   Depends on STACK-039. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md).
 
@@ -3162,6 +3164,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
 - [ ] RSET-004 · Pairing results with slides
   Results pair with slides on drop by folder shape first (next to the slide or in a folder named like it), then file name, then an embedded slide ID, each with how it was paired and how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
   Done when unit tests cover each pairing rule and a tie, and API tests cover an override and an unpaired result.
+  Also lets an upload say it is a result file and which slide or slide upload it pairs with, and has the ingest job of INGEST-017 (publish step and slide status) import a paired file as a result set once its slide is ready. Today the upload metadata cannot mark a result file, so a result file sent through the upload API is refused as not a slide.
   Depends on RSET-001. Refs mock: upload/files.
 
 - [ ] RSET-005 · Import checks and fixes

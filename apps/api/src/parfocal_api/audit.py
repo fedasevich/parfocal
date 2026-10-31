@@ -62,6 +62,8 @@ class AuditAction(StrEnum):
     MODEL_RUN_CANCELLED = "model-run.cancelled"
     MODEL_RUN_RESUMED = "model-run.resumed"
     MODEL_RUN_RETRIED = "model-run.retried"
+    UPLOAD_REFUSED = "upload.refused"
+    SLIDE_PUBLISHED = "slide.published"
     TASK_CREATED = "task.created"
     TASK_CHANGED = "task.changed"
     TASK_REVIEW_SUBMITTED = "task.review-submitted"

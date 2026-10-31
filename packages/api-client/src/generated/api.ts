@@ -1329,6 +1329,20 @@ export interface InboxPage {
   next_cursor: string | null;
 }
 
+export interface IngestNotice {
+  code: string;
+  message: string;
+}
+
+export type IngestStatus = (typeof IngestStatus)[keyof typeof IngestStatus];
+
+export const IngestStatus = {
+  uploading: "uploading",
+  processing: "processing",
+  ready: "ready",
+  failed: "failed",
+} as const;
+
 /**
  * @pattern ^[A-Z]{1,3}$
  */
@@ -2857,6 +2871,20 @@ export interface UploadDraft {
   filename: FileName;
   type?: string | null;
   metadata: UploadMetadata;
+}
+
+export interface UploadState {
+  upload_id: string;
+  project_id: string;
+  case_id: string | null;
+  status: IngestStatus;
+  upload_status: UploadStatus;
+  job_id: string | null;
+  step: string | null;
+  slide_id: string | null;
+  reason: string | null;
+  message: string | null;
+  notices: IngestNotice[];
 }
 
 export interface UploadedPart {
@@ -12730,6 +12758,193 @@ export function useFindOpenUpload<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getFindOpenUploadQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getUploadStatusResponse200 = {
+  data: UploadState;
+  status: 200;
+};
+
+export type getUploadStatusResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getUploadStatusResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getUploadStatusResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getUploadStatusResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getUploadStatusResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getUploadStatusResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getUploadStatusResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getUploadStatusResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getUploadStatusResponseSuccess = getUploadStatusResponse200 & {
+  headers: Headers;
+};
+export type getUploadStatusResponseError = (
+  | getUploadStatusResponse400
+  | getUploadStatusResponse401
+  | getUploadStatusResponse403
+  | getUploadStatusResponse404
+  | getUploadStatusResponse409
+  | getUploadStatusResponse422
+  | getUploadStatusResponse429
+  | getUploadStatusResponse500
+) & {
+  headers: Headers;
+};
+
+export type getUploadStatusResponse = getUploadStatusResponseSuccess | getUploadStatusResponseError;
+
+export const getGetUploadStatusUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/status`;
+};
+
+/**
+ * @summary Get Upload Status
+ */
+export const getUploadStatus = async (
+  uploadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getUploadStatusResponse> => {
+  return apiFetch<getUploadStatusResponse>(getGetUploadStatusUrl(uploadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUploadStatusQueryKey = (uploadId: string) => {
+  return [`/api/uploads/${uploadId}/status`] as const;
+};
+
+export const getGetUploadStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUploadStatus>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUploadStatusQueryKey(uploadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUploadStatus>>> = ({ signal }) =>
+    getUploadStatus(uploadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: uploadId !== null && uploadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetUploadStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getUploadStatus>>>;
+export type GetUploadStatusQueryError = Problem;
+
+export function useGetUploadStatus<
+  TData = Awaited<ReturnType<typeof getUploadStatus>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUploadStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getUploadStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUploadStatus<
+  TData = Awaited<ReturnType<typeof getUploadStatus>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUploadStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getUploadStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUploadStatus<
+  TData = Awaited<ReturnType<typeof getUploadStatus>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Upload Status
+ */
+
+export function useGetUploadStatus<
+  TData = Awaited<ReturnType<typeof getUploadStatus>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUploadStatusQueryOptions(uploadId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

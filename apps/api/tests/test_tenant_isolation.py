@@ -657,6 +657,7 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/uploads/s3/multipart/{a.ids['upload']}?key={upload_key(a)}",
     ),
+    "getUploadStatus": Route(Exposure.TENANT, lambda a: f"/api/uploads/{a.ids['upload']}/status"),
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
     "getStudyTemplate": Route(

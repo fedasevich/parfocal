@@ -6,6 +6,8 @@ from typing import BinaryIO
 
 import tifffile
 
+from parfocal_common.ingest import REASONS, Refusal
+
 HEAD_BYTES = 4096
 TIFF_MAGIC = (b"II*\x00", b"MM\x00*")
 BIGTIFF_MAGIC = (b"II+\x00", b"MM\x00+")
@@ -26,55 +28,6 @@ class Format(StrEnum):
     MIRAX = "mirax"
     DICOM = "dicom"
 
-
-class Refusal(StrEnum):
-    EMPTY = "empty"
-    MULTI_FILE = "multi-file"
-    ZEISS_CZI = "zeiss-czi"
-    ZEISS_ZVI = "zeiss-zvi"
-    PHILIPS_ISYNTAX = "philips-isyntax"
-    PLAIN_IMAGE = "plain-image"
-    DAMAGED_TIFF = "damaged-tiff"
-    ARCHIVE_WITHOUT_SLIDE = "archive-without-slide"
-    MULTI_REGION = "multi-region"
-    TRUNCATED = "truncated"
-    DAMAGED_ARCHIVE = "damaged-archive"
-    NO_PYRAMID = "no-pyramid"
-    UNREADABLE = "unreadable"
-    UNKNOWN = "unknown"
-
-
-REASONS = {
-    Refusal.EMPTY: "The file is empty.",
-    Refusal.MULTI_FILE: (
-        "This slide is made of several files. Put the whole slide folder in one .zip and upload "
-        "that."
-    ),
-    Refusal.ZEISS_CZI: "Zeiss CZI files are not supported. Export the slide as OME-TIFF.",
-    Refusal.ZEISS_ZVI: "Zeiss ZVI files are not supported. Export the slide as OME-TIFF.",
-    Refusal.PHILIPS_ISYNTAX: (
-        "Philips iSyntax is a closed format. Export the slide from the Philips system as TIFF."
-    ),
-    Refusal.PLAIN_IMAGE: "This is an ordinary picture, not a whole slide image.",
-    Refusal.DAMAGED_TIFF: "The file looks like a TIFF but cannot be read. It may be damaged.",
-    Refusal.ARCHIVE_WITHOUT_SLIDE: "The .zip holds no slide that Parfocal can read.",
-    Refusal.MULTI_REGION: (
-        "This Leica file holds several separately scanned regions. Export each region as its own "
-        "slide."
-    ),
-    Refusal.NO_PYRAMID: "The file holds no image large enough to be a whole slide.",
-    Refusal.TRUNCATED: (
-        "The file is cut short, so parts of the slide are missing. Upload it again."
-    ),
-    Refusal.DAMAGED_ARCHIVE: (
-        "A file inside the .zip is damaged. Make the .zip again and upload it."
-    ),
-    Refusal.UNREADABLE: (
-        "Parfocal recognises this format but cannot read the pixels of this file. It may be "
-        "damaged or written by a scanner version that is not supported yet."
-    ),
-    Refusal.UNKNOWN: "Parfocal does not recognise this file as a whole slide image.",
-}
 
 MULTI_FILE_SUFFIXES = {".mrxs", ".vms", ".vmu", ".vsi", ".ets"}
 

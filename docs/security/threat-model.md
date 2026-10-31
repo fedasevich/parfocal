@@ -52,8 +52,8 @@ Slides arrive as presigned multipart uploads straight to R2, then the ingest wor
 | U3 | D | A decompression bomb, a huge pyramid level or a JSON file with millions of objects exhausts memory | Medium | Zip CRC and size checks (done), level dimension limits (done), a size limit per result file and streaming parsers | INGEST-005, INGEST-006 (done), RSET-005 (import checks and fixes) |
 | U4 | I | Patient names on the slide label or macro image, or in file metadata, reach a de-identified project | High | Label and macro handling, and de-identified projects that refuse identifying columns | SEC-009 (label and macro handling), SEC-008 (de-identified projects) |
 | U5 | S, I | Import from a link fetches an internal address (server-side request forgery), such as cloud metadata or the database | High | Refuse private, loopback and link-local addresses, also after redirects and DNS changes, and cap the size | INGEST-025 (import from a link) |
-| U6 | R | An uploader denies having uploaded a file | Low | Upload and publish audit entries | INGEST-001, INGEST-017 (publish step) |
-| U7 | T | A file is swapped in storage after its checks passed | Medium | Checks and reads use the stored checksum, and the quarantine prefix is not writable after completion | INGEST-001, INGEST-017 |
+| U6 | R | An uploader denies having uploaded a file | Low | Upload and publish audit entries: `upload.completed`, `upload.aborted` and `upload.expired` from the upload API, and `slide.published` and `upload.refused` from the ingest job | INGEST-001, INGEST-017 (publish step) |
+| U7 | T | A file is swapped in storage after its checks passed | Medium | Checks and reads use the stored checksum, and the quarantine prefix is not writable after completion. The ingest job keeps the SHA-256 of the file it checked in `slides.sha256`, copies that object out of quarantine under a key no client can sign, and deletes the quarantine copy. TODO: compare the published copy with `slides.sha256` before serving tiles | INGEST-001, INGEST-017 (publish step) |
 
 ## Tile access
 

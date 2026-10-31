@@ -2,7 +2,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal
 
+from pydantic import AnyHttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from parfocal_common.object_store import StorageLocation
 
 
 class AppEnv(StrEnum):
@@ -71,6 +74,23 @@ class ServiceSettings(BaseSettings):
             telemetry=self.telemetry_export or defaults.telemetry,
             analytics=self.analytics_backend or defaults.analytics,
             flags=self.flag_backend or defaults.flags,
+        )
+
+
+class StorageSettings(ServiceSettings):
+    storage_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:9000")
+    storage_region: str = "auto"
+    storage_bucket: str = "parfocal-local"
+    storage_access_key_id: str = "parfocal"
+    storage_secret_access_key: SecretStr = SecretStr("parfocal-local-secret")
+
+    def storage(self) -> StorageLocation:
+        return StorageLocation(
+            endpoint=str(self.storage_endpoint).rstrip("/"),
+            region=self.storage_region,
+            bucket=self.storage_bucket,
+            access_key_id=self.storage_access_key_id,
+            secret_access_key=self.storage_secret_access_key.get_secret_value(),
         )
 
 

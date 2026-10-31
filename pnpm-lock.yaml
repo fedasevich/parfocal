@@ -403,6 +403,9 @@ importers:
 
   workers/ingest:
     dependencies:
+      '@parfocal/api':
+        specifier: workspace:*
+        version: link:../../apps/api
       '@parfocal/py-common':
         specifier: workspace:*
         version: link:../../packages/py-common

@@ -32,4 +32,28 @@ Since AIP-008 (job model and API) the engine also knows `paused`, `cancelling` a
 
 ## Running a worker
 
-`python -m parfocal_ingest --database-url ... --workflow module:WORKFLOW` runs workers locally, and `--idle-exit` stops one after it has been idle. The ingest workflow is `parfocal_ingest.workflow:INGEST`, with placeholder steps for quarantine, scan, identify, validate, index, derive and publish that INGEST-004 to INGEST-017 fill in. Its lease is 60 s until real step durations are measured (TODO). The kind, the step names and the lease live in `parfocal_common.ingest`, so the API queues the job with `enqueue_ingest` without importing the worker, and a test checks that the worker's `INGEST` has the same kind and steps. A completed upload queues it with the input `{"upload_id": ...}` only, because the file name is PHI and job input is classed operational. The quarantine step reads the upload record for the key. Project members read a job's status at `GET /api/projects/{project_id}/jobs/{job_id}`.
+`python -m parfocal_ingest --database-url ... --workflow module:WORKFLOW` runs workers locally, and `--idle-exit` stops one after it has been idle. The ingest workflow is `parfocal_ingest.workflow:INGEST`, whose steps are real since INGEST-017 (publish step and slide status), described below. Its lease is 60 s until real step durations are measured (TODO). The kind, the step names and the lease live in `parfocal_common.ingest`, so the API queues the job with `enqueue_ingest` without importing the worker, and a test checks that the worker's `INGEST` has the same kind and steps. A completed upload queues it with the input `{"upload_id": ...}` only, because the file name is PHI and job input is classed operational. The quarantine step reads the upload record for the key. Project members read a job's status at `GET /api/projects/{project_id}/jobs/{job_id}`.
+
+## Blocking work runs in a thread, or the lease runs out
+
+The lease is renewed by a task on the same event loop as the step. A step that calls OpenSlide, tifffile or Pillow directly blocks that loop, and a thumbnail of a 7 GB slide can take longer than the 60 s lease, so another worker would claim the job while the first is still working. Every reader call in `parfocal_ingest.workflow` goes through `asyncio.to_thread`. Do the same in any later worker step that does CPU or disk work.
+
+## The ingest workflow end to end
+
+INGEST-017 (publish step and slide status) made the steps real, as [ADR 0122](../adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md) (the slide row appears only when it is ready) decided. Each step loads the upload by the ID in the job input and reads the results of earlier steps from `job_steps.result`.
+
+| Step | What it does | Result |
+|---|---|---|
+| quarantine | Checks that the quarantine object exists and has the announced size, downloads it to `{INGEST_WORK_DIR}/{job}/original{.ext}` and computes its SHA-256, and picks the slide ID | bytes, SHA-256, slide ID |
+| identify | `parfocal_ingest.identify` on the local file and its stored name | format and variant |
+| scan | `check_integrity`, which needs the format, so it now runs after identify | clean |
+| validate | Unpacks a zip once, then `read_pyramid` | reader, size, level count, pixel size, objective, notices |
+| index | Writes the level table as `levels.json` | level count |
+| derive | Three units, each marked after its files are written: thumbnail and overview, the tissue mask with `tissue.json`, then label and macro under the restricted prefix | which restricted images exist |
+| publish | Copies the original out of quarantine unless the copy is already there, inserts the slide with `slide.published` and the `upload-done` notification in one transaction, deletes the quarantine object and the work folder | slide ID |
+
+- A worker that resumes a job on another machine has no local file, so every reading step downloads it again when the work folder lacks it. Only the quarantine step hashes.
+- A step that raises `StepFailedError` records `upload.refused`, deletes the quarantine object and the work folder, and the job ends with the code. OpenSlide, tifffile, Pillow and wsidicom errors during a step become `unreadable`. Other exceptions still crash the worker and the job is claimed again when the lease runs out.
+- A job whose input has no upload ID fails as `upload-missing` instead of crashing every worker that claims it.
+- Settings come from `IngestSettings` (`INGEST_WORK_DIR`, default a `parfocal-ingest` folder in the system temp folder, `INGEST_COPY_PART_BYTES`, default 1 GiB, and the same `STORAGE_*` variables as the API through `StorageSettings` in `parfocal_common.settings`).
+- Tests build the workflow with `ingest_workflow(lambda: Resources(TEST_STORAGE, folder))`, and `workflow_support:SLOW_INGEST` adds a store that pauses one second before each derived file so a test can kill a worker inside the derive step. The engine claims any queued ingest job in the database, and other test files leave queued ingest jobs behind, so `park_other_ingest_jobs` in `test_slide_ingest.py` fails those first.
