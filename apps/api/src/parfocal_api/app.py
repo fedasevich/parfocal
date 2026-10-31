@@ -42,6 +42,7 @@ from parfocal_api import (
     search,
     service_accounts,
     sessions_api,
+    study_templates,
     taxonomy,
     tenants,
     users,
@@ -168,6 +169,7 @@ def create_app(
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)
     app.include_router(evaluation.router)
+    app.include_router(study_templates.router)
     app.include_router(my_work.router)
     app.include_router(case_creation.router)
     app.include_router(case_imports.router)

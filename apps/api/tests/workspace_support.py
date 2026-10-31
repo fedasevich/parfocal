@@ -7,6 +7,7 @@ from db_support import OWNER_URL, query, with_database
 
 from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, dumped
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.study_templates import built_in_rows
 from parfocal_api.tables import Role
 
 
@@ -41,7 +42,36 @@ def person(
     return MemberPrincipal(subject, tenant_id, user_id, role, admin_rights)
 
 
+def literal(value: object) -> str:
+    if value is None:
+        return "NULL"
+    if isinstance(value, int):
+        return str(value)
+    text = value if isinstance(value, str | uuid.UUID) else json.dumps(value)
+    return "'" + str(text).replace("'", "''") + "'"
+
+
+def insert_rows(database: str, table: str, rows: list[dict[str, object]]) -> None:
+    columns = list(rows[0])
+    values = ", ".join(
+        "(" + ", ".join(literal(row[column]) for column in columns) + ")" for row in rows
+    )
+    owner(database, f"INSERT INTO {table} ({', '.join(columns)}) VALUES {values}")
+
+
+def seed_study_templates(database: str, tenant_id: uuid.UUID) -> None:
+    templates, versions = built_in_rows(tenant_id)
+    insert_rows(database, "study_templates", templates)
+    insert_rows(database, "study_template_versions", versions)
+
+
 def make_tenant(database: str) -> uuid.UUID:
+    tenant_id = new_tenant(database)
+    seed_study_templates(database, tenant_id)
+    return tenant_id
+
+
+def new_tenant(database: str) -> uuid.UUID:
     slug = f"ws-{uuid.uuid4().hex[:10]}"
     return uuid.UUID(
         str(

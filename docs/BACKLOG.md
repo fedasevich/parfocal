@@ -3281,6 +3281,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 
 - [ ] TASK-009 · Study template in a new review task
   The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
+  The API only records the pinned version, so the stepper fills the steps from the presets itself, and a template with its own opinion form questions publishes them as the project's next form version first ([ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md), study templates as workspace rows that a task only pins).
   Done when component tests show each step filled from two different templates and a changed preset kept, and E2E creates a task from a template and finds its blocks in the report.
   Depends on TASK-005, EVAL-007. Refs mock: task, doc 43.
 
@@ -3450,7 +3451,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 - [ ] EVAL-007 · Study template model and API
   A study template has a name, a kind of study, an ordered list of blocks from the catalogue with their settings, and task presets (objects to check, opinion form, blinding, first read, start mode, split). Templates are versioned per workspace, the five built-in ones (detection, segmentation, cell typing, reader study, sentinel node AI evaluation) are seeded, and a task pins a version. Researchers read and use templates, and only researchers with admin rights create, edit and retire them ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
-  Depends on TASK-001, GUIDE-006, IAM-024.
+  Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
 
 - [ ] EVAL-008 · Report from template blocks
   The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.

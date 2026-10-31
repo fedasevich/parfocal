@@ -23,7 +23,9 @@ from parfocal_api.permissions import (
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
+from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
+    BuiltInTemplate,
     Role,
     annotations,
     announcements,
@@ -147,6 +149,8 @@ class Workspace:
     legal_hold: uuid.UUID
     patient: uuid.UUID
     doomed_patient: uuid.UUID
+    study_template: uuid.UUID
+    spare_template: uuid.UUID
 
     @property
     def annotations(self) -> str:
@@ -179,7 +183,36 @@ NEEDS_A_TASK = frozenset(
         "submitFirstRead",
     }
 )
+
+
+def template_body() -> dict[str, Any]:
+    return {
+        "name": f"Matrix {uuid.uuid4().hex[:8]}",
+        "study_kind": "regions",
+        "blocks": [{"kind": "text", "title": "Methods"}],
+        "presets": {"objects_to_check": {"kind": "all-regions"}},
+    }
+
+
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
+    "listStudyTemplates": lambda _: Call("GET", "/api/study-templates"),
+    "getStudyTemplate": lambda w: Call("GET", f"/api/study-templates/{w.study_template}"),
+    "listStudyTemplateVersions": lambda w: Call(
+        "GET", f"/api/study-templates/{w.study_template}/versions"
+    ),
+    "getStudyTemplateVersion": lambda w: Call(
+        "GET", f"/api/study-templates/{w.study_template}/versions/1"
+    ),
+    "createStudyTemplate": lambda _: Call("POST", "/api/study-templates", template_body()),
+    "editStudyTemplate": lambda w: Call(
+        "PUT", f"/api/study-templates/{w.study_template}", template_body()
+    ),
+    "retireStudyTemplate": lambda w: Call(
+        "POST", f"/api/study-templates/{w.spare_template}/retire"
+    ),
+    "restoreStudyTemplate": lambda w: Call(
+        "POST", f"/api/study-templates/{w.spare_template}/restore"
+    ),
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
@@ -401,6 +434,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -852,6 +887,7 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 .values(tenant_id=tenant_id, kind="change", text="Matrix announcement")
                 .returning(announcements.c.id)
             )
+            templates = await seed_built_ins(connection, tenant_id)
             legal_hold = await connection.scalar(
                 insert(legal_holds)
                 .values(tenant_id=tenant_id, project_id=spare_project, reason="Matrix hold")
@@ -927,6 +963,8 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             legal_hold,
             case.patient_id,
             doomed_patient,
+            templates[BuiltInTemplate.DETECTION],
+            templates[BuiltInTemplate.SEGMENTATION],
         )
     finally:
         await engine.dispose()

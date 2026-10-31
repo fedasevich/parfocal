@@ -14,7 +14,7 @@ from parfocal_api.blinding import FirstReadStartedError, task_started
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
-from parfocal_api.problems import BadRequestError, NotFoundError
+from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
 from parfocal_api.review_order import Results, store_order, stored_seeds
@@ -32,6 +32,8 @@ from parfocal_api.tables import (
     review_task_slides,
     review_tasks,
     slides,
+    study_template_versions,
+    study_templates,
 )
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
@@ -90,6 +92,8 @@ class TaskDraft(BaseModel):
     start_mode: StartMode = StartMode.GUIDED
     due_on: date | None = None
     reminder_days: Reminders = []
+    study_template_id: uuid.UUID | None = None
+    study_template_version: Annotated[int, Field(ge=1)] | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> TaskDraft:
@@ -101,6 +105,8 @@ class TaskDraft(BaseModel):
             raise ValueError("A reviewer appears twice")
         if (self.split is TaskSplit.CHOSEN) != bool(self.pairs):
             raise ValueError("Only a chosen split lists slide and reviewer pairs, and it must")
+        if self.study_template_version is not None and self.study_template_id is None:
+            raise ValueError("A template version needs its template")
         return self
 
 
@@ -140,6 +146,8 @@ class ReviewTask(BaseModel):
     start_mode: StartMode
     due_on: date | None
     reminder_days: list[int]
+    study_template_id: uuid.UUID | None
+    study_template_version: int | None
     created_by_user_id: uuid.UUID | None
     created_at: datetime
     slide_count: int
@@ -178,6 +186,16 @@ class BadPairsError(BadRequestError):
 class UnknownFormVersionError(BadRequestError):
     code = "unknown-opinion-form-version"
     title = "This project has no such opinion form version"
+
+
+class UnknownStudyTemplateError(BadRequestError):
+    code = "unknown-study-template"
+    title = "This workspace has no such study template version"
+
+
+class StudyTemplateRetiredError(ConflictError):
+    code = "study-template-retired"
+    title = "This study template is retired"
 
 
 project_router = APIRouter(prefix="/api/projects/{project_id}/review-tasks", tags=["review-tasks"])
@@ -262,6 +280,8 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         start_mode=StartMode(row.start_mode),
         due_on=row.due_on,
         reminder_days=list(row.reminder_days),
+        study_template_id=row.study_template_id,
+        study_template_version=row.study_template_version,
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
         slide_count=slide_count,
@@ -405,6 +425,35 @@ async def form_version(
     return int(version)
 
 
+async def pinned_template(
+    connection: AsyncConnection, template_id: uuid.UUID | None, wanted: int | None
+) -> int | None:
+    if template_id is None:
+        return None
+    template = (
+        await connection.execute(
+            select(study_templates.c.version, study_templates.c.retired_at).where(
+                study_templates.c.id == template_id
+            )
+        )
+    ).one_or_none()
+    if template is None:
+        raise UnknownStudyTemplateError
+    if template.retired_at is not None:
+        raise StudyTemplateRetiredError
+    if wanted is None:
+        return int(template.version)
+    found = await connection.scalar(
+        select(study_template_versions.c.version).where(
+            study_template_versions.c.template_id == template_id,
+            study_template_versions.c.version == wanted,
+        )
+    )
+    if found is None:
+        raise UnknownStudyTemplateError
+    return wanted
+
+
 async def audit(
     connection: AsyncConnection,
     principal: Principal,
@@ -476,6 +525,9 @@ async def create_review_task(
     slide_ids = [slide.id for slide in task_slides]
     pairs = assignments_for(draft, slide_ids)
     version = await form_version(connection, project_id, draft.opinion_form_version)
+    template_version = await pinned_template(
+        connection, draft.study_template_id, draft.study_template_version
+    )
     number = select(func.coalesce(func.max(review_tasks.c.number), 0) + 1).where(
         review_tasks.c.project_id == project_id
     )
@@ -499,6 +551,8 @@ async def create_review_task(
             start_mode=draft.start_mode,
             due_on=draft.due_on,
             reminder_days=sorted(set(draft.reminder_days), reverse=True),
+            study_template_id=draft.study_template_id,
+            study_template_version=template_version,
             created_by_user_id=(
                 principal.user_id if isinstance(principal, MemberPrincipal) else None
             ),
@@ -548,7 +602,15 @@ async def create_review_task(
             "slides": len(slide_ids),
             "reviewers": len(draft.reviewer_ids),
             "split": draft.split.value,
-        },
+        }
+        | (
+            {}
+            if draft.study_template_id is None
+            else {
+                "study_template_id": str(draft.study_template_id),
+                "study_template_version": template_version,
+            }
+        ),
     )
     return await detail_of(connection, principal, await task_row(connection, task_id), True)
 

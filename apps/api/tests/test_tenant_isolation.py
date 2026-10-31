@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
 from parfocal_api.tables import (
     Role,
     annotation_versions,
@@ -51,6 +52,8 @@ from parfocal_api.tables import (
     service_accounts,
     session_policies,
     slide_counters,
+    study_template_versions,
+    study_templates,
     tenants,
     users,
     verdicts,
@@ -537,6 +540,32 @@ async def seed_notification_mutes(connection: AsyncConnection, seeded: Seeded) -
     seeded.markers.add(str(subject_id))
 
 
+async def seed_study_templates(connection: AsyncConnection, seeded: Seeded) -> None:
+    await seed_built_ins(connection, seeded.tenant_id)
+    template_id = await connection.scalar(
+        insert(study_templates)
+        .values(tenant_id=seeded.tenant_id, version=1)
+        .returning(study_templates.c.id)
+    )
+    assert isinstance(template_id, uuid.UUID)
+    seeded.ids["study_template"] = template_id
+    seeded.markers.add(str(template_id))
+
+
+async def seed_study_template_versions(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Template {uuid.uuid4().hex[:12]}"
+    draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
+    await connection.execute(
+        insert(study_template_versions).values(
+            tenant_id=seeded.tenant_id,
+            template_id=seeded.ids["study_template"],
+            version=1,
+            **content(draft),
+        )
+    )
+    seeded.markers.add(name)
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -550,9 +579,21 @@ SEEDERS: dict[str, Seeder] = {
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
     "api_tokens": seed_api_tokens,
+    "study_templates": seed_study_templates,
+    "study_template_versions": seed_study_template_versions,
 }
 GET_ROUTES = {
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
+    "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
+    "getStudyTemplate": Route(
+        Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}"
+    ),
+    "listStudyTemplateVersions": Route(
+        Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}/versions"
+    ),
+    "getStudyTemplateVersion": Route(
+        Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}/versions/1"
+    ),
     "listOrganisations": Route(Exposure.PLATFORM, lambda _: "/api/platform/organisations"),
     "listTenants": Route(Exposure.PLATFORM, lambda _: "/api/platform/tenants"),
     "getTenant": Route(Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}"),

@@ -1266,6 +1266,81 @@ result_chunks = Table(
 )
 
 
+class StudyKind(StrEnum):
+    REGIONS_AND_CELLS = "regions-and-cells"
+    REGIONS = "regions"
+    OUTLINES = "outlines"
+    CELLS = "cells"
+    REVIEWERS_FIRST = "reviewers-first"
+    OTHER = "other"
+
+
+class BuiltInTemplate(StrEnum):
+    SENTINEL_NODE = "sentinel-node"
+    DETECTION = "detection"
+    SEGMENTATION = "segmentation"
+    CELL_TYPING = "cell-typing"
+    READER_STUDY = "reader-study"
+
+
+study_templates = Table(
+    "study_templates",
+    metadata,
+    *owned_ids(),
+    Column("built_in", String(20), nullable=True, info=OPERATIONAL),
+    Column("version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("retired_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "built_in"),
+    UniqueConstraint("id", "tenant_id"),
+    one_of("built_in", BuiltInTemplate),
+    CheckConstraint("version >= 1", name="version"),
+)
+
+study_template_versions = Table(
+    "study_template_versions",
+    metadata,
+    *owned_ids(),
+    Column("template_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("name", String(120), nullable=False, info=OPERATIONAL),
+    Column("study_kind", String(20), nullable=False, info=OPERATIONAL),
+    Column("blocks", JSONB, nullable=False, info=OPERATIONAL),
+    Column("format", JSONB, nullable=False, info=OPERATIONAL),
+    Column("presets", JSONB, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    UniqueConstraint("template_id", "version"),
+    UniqueConstraint("template_id", "version", "tenant_id"),
+    ForeignKeyConstraint(
+        ["template_id", "tenant_id"],
+        ["study_templates.id", "study_templates.tenant_id"],
+        name="fk_study_template_versions_study_templates",
+    ),
+    one_of("study_kind", StudyKind),
+    CheckConstraint("version >= 1", name="version"),
+)
+
+
 class TaskSplit(StrEnum):
     EVERYONE = "everyone"
     EVEN = "even"
@@ -1331,6 +1406,8 @@ review_tasks = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column("study_template_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("study_template_version", SmallInteger, nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -1338,6 +1415,18 @@ review_tasks = Table(
     ForeignKeyConstraint(
         ["project_id", "opinion_form_version"],
         ["opinion_forms.project_id", "opinion_forms.version"],
+    ),
+    ForeignKeyConstraint(
+        ["study_template_id", "study_template_version", "tenant_id"],
+        [
+            "study_template_versions.template_id",
+            "study_template_versions.version",
+            "study_template_versions.tenant_id",
+        ],
+        name="fk_review_tasks_study_template_versions",
+    ),
+    CheckConstraint(
+        "(study_template_id IS NULL) = (study_template_version IS NULL)", name="study_template"
     ),
     one_of("split", TaskSplit),
     one_of("scope", TaskScope),

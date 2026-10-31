@@ -126,6 +126,14 @@ export interface AdminRightsChange {
   admin_rights: boolean;
 }
 
+export type AgreementPart = (typeof AgreementPart)[keyof typeof AgreementPart];
+
+export const AgreementPart = {
+  regions: "regions",
+  cells: "cells",
+  form: "form",
+} as const;
+
 export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
 
 export const AnalysisTemplate = {
@@ -244,6 +252,14 @@ export interface ApiToken {
   created_at: string;
 }
 
+export type Appendix = (typeof Appendix)[keyof typeof Appendix];
+
+export const Appendix = {
+  objects: "objects",
+  decisions: "decisions",
+  methods: "methods",
+} as const;
+
 export interface ProjectRef {
   id: string;
   code: string;
@@ -357,6 +373,7 @@ export const AuditTarget = {
   project: "project",
   "result-set": "result-set",
   "review-task": "review-task",
+  "study-template": "study-template",
   "service-account": "service-account",
   invitation: "invitation",
   announcement: "announcement",
@@ -384,6 +401,12 @@ export interface AvailabilityChange {
   until?: string | null;
   note?: ParfocalApiAvailabilityNote | null;
 }
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type BlockClassName = string;
 
 export interface BlockDetail {
   id: string;
@@ -420,6 +443,22 @@ export interface BlockDraft {
    */
   levels?: number;
 }
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type BlockTitle = string;
+
+export type BuiltInTemplate = (typeof BuiltInTemplate)[keyof typeof BuiltInTemplate];
+
+export const BuiltInTemplate = {
+  "sentinel-node": "sentinel-node",
+  detection: "detection",
+  segmentation: "segmentation",
+  "cell-typing": "cell-typing",
+  "reader-study": "reader-study",
+} as const;
 
 export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
 
@@ -539,6 +578,13 @@ export interface CaseSummary {
   created_at: string;
 }
 
+export type ChartStyle = (typeof ChartStyle)[keyof typeof ChartStyle];
+
+export const ChartStyle = {
+  bars: "bars",
+  table: "table",
+} as const;
+
 export type ChoiceQuestionKind = (typeof ChoiceQuestionKind)[keyof typeof ChoiceQuestionKind];
 
 export const ChoiceQuestionKind = {
@@ -641,6 +687,74 @@ export const Code = {
   "bad-pattern": "bad-pattern",
 } as const;
 
+export type ComparisonWidth = (typeof ComparisonWidth)[keyof typeof ComparisonWidth];
+
+export const ComparisonWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ComparisonKind = (typeof ComparisonKind)[keyof typeof ComparisonKind];
+
+export const ComparisonKind = {
+  comparison: "comparison",
+} as const;
+
+export type Metric = (typeof Metric)[keyof typeof Metric];
+
+export const Metric = {
+  sensitivity: "sensitivity",
+  precision: "precision",
+  dice: "dice",
+  kappa: "kappa",
+  "cell-agreement": "cell-agreement",
+} as const;
+
+export interface Comparison {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ComparisonWidth;
+  page_break?: boolean;
+  kind: ComparisonKind;
+  task_id?: string | null;
+  /**
+   * @minItems 1
+   * @maxItems 5
+   */
+  metrics: Metric[];
+}
+
+export type ConfusionMatrixWidth = (typeof ConfusionMatrixWidth)[keyof typeof ConfusionMatrixWidth];
+
+export const ConfusionMatrixWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ConfusionMatrixKind = (typeof ConfusionMatrixKind)[keyof typeof ConfusionMatrixKind];
+
+export const ConfusionMatrixKind = {
+  "confusion-matrix": "confusion-matrix",
+} as const;
+
+export type ConfusionMatrixValues =
+  (typeof ConfusionMatrixValues)[keyof typeof ConfusionMatrixValues];
+
+export const ConfusionMatrixValues = {
+  count: "count",
+  share: "share",
+} as const;
+
+export interface ConfusionMatrix {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ConfusionMatrixWidth;
+  page_break?: boolean;
+  kind: ConfusionMatrixKind;
+  classes?: BlockClassName[] | null;
+  values?: ConfusionMatrixValues;
+}
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -682,11 +796,48 @@ export interface DecisionDraft {
   note?: string | null;
 }
 
+export type DisagreementReasonsWidth =
+  (typeof DisagreementReasonsWidth)[keyof typeof DisagreementReasonsWidth];
+
+export const DisagreementReasonsWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type DisagreementReasonsKind =
+  (typeof DisagreementReasonsKind)[keyof typeof DisagreementReasonsKind];
+
+export const DisagreementReasonsKind = {
+  "disagreement-reasons": "disagreement-reasons",
+} as const;
+
+export interface DisagreementReasons {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: DisagreementReasonsWidth;
+  page_break?: boolean;
+  kind: DisagreementReasonsKind;
+  top?: number | null;
+  style?: ChartStyle;
+}
+
 /**
  * @minLength 1
  * @maxLength 200
  */
 export type DisplayName = string;
+
+export type Download = (typeof Download)[keyof typeof Download];
+
+export const Download = {
+  pdf: "pdf",
+  docx: "docx",
+  html: "html",
+  decisions: "decisions",
+  objects: "objects",
+  geojson: "geojson",
+  json: "json",
+} as const;
 
 export interface EditDraft {
   class_id?: string | null;
@@ -890,6 +1041,33 @@ export interface FormVersion {
   project_id: string;
   version: number;
   created_at: string;
+}
+
+export type HeadlineNumbersWidth = (typeof HeadlineNumbersWidth)[keyof typeof HeadlineNumbersWidth];
+
+export const HeadlineNumbersWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type HeadlineNumbersKind = (typeof HeadlineNumbersKind)[keyof typeof HeadlineNumbersKind];
+
+export const HeadlineNumbersKind = {
+  "headline-numbers": "headline-numbers",
+} as const;
+
+export interface HeadlineNumbers {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: HeadlineNumbersWidth;
+  page_break?: boolean;
+  kind: HeadlineNumbersKind;
+  /**
+   * @minItems 1
+   * @maxItems 5
+   */
+  metrics: Metric[];
+  confidence_intervals?: boolean;
 }
 
 export interface Health {
@@ -1171,6 +1349,13 @@ export interface Job {
   steps: JobStep[];
 }
 
+export type Layer = (typeof Layer)[keyof typeof Layer];
+
+export const Layer = {
+  ai: "ai",
+  reviewed: "reviewed",
+} as const;
+
 export interface LayerSummary {
   regions: number | null;
   cells: number | null;
@@ -1329,15 +1514,48 @@ export interface Neighbours {
   at_end: boolean;
 }
 
-export type OpinionAnswers = { [key: string]: unknown };
+/**
+ * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
+ */
+export type ObjectId = string;
+
+export type OpinionAnswersProperty = { [key: string]: unknown };
 
 export interface Opinion {
   reviewer_id: string;
   form_version: number;
   questions: Question[];
-  answers: OpinionAnswers;
+  answers: OpinionAnswersProperty;
   draft: boolean;
   updated_at: string | null;
+}
+
+export type OpinionAnswersWidth = (typeof OpinionAnswersWidth)[keyof typeof OpinionAnswersWidth];
+
+export const OpinionAnswersWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type OpinionAnswersKind = (typeof OpinionAnswersKind)[keyof typeof OpinionAnswersKind];
+
+export const OpinionAnswersKind = {
+  "opinion-answers": "opinion-answers",
+} as const;
+
+/**
+ * @pattern ^[a-z][a-z0-9_]{0,39}$
+ */
+export type QuestionKey = string;
+
+export interface OpinionAnswers {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: OpinionAnswersWidth;
+  page_break?: boolean;
+  kind: OpinionAnswersKind;
+  questions?: QuestionKey[] | null;
+  style?: ChartStyle;
 }
 
 export type OpinionChangeAnswers = { [key: string]: unknown };
@@ -1464,6 +1682,29 @@ export interface PreferenceChanges {
    * @maxItems 20
    */
   preferences: PreferenceChange[];
+}
+
+export interface Scope {
+  kind: TaskScope;
+  count?: number | null;
+  score?: number | null;
+}
+
+export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
+
+export const TaskSplit = {
+  everyone: "everyone",
+  even: "even",
+  chosen: "chosen",
+} as const;
+
+export interface Presets {
+  objects_to_check: Scope;
+  opinion_form?: FormChange | null;
+  blinding?: boolean;
+  first_read?: boolean;
+  start_mode?: StartMode;
+  split?: TaskSplit;
 }
 
 export interface Problem {
@@ -1596,12 +1837,283 @@ export const Region = {
   us: "us",
 } as const;
 
+export type RegionColumn = (typeof RegionColumn)[keyof typeof RegionColumn];
+
+export const RegionColumn = {
+  sensitivity: "sensitivity",
+  precision: "precision",
+  dice: "dice",
+} as const;
+
+export type RegionMetricsWidth = (typeof RegionMetricsWidth)[keyof typeof RegionMetricsWidth];
+
+export const RegionMetricsWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type RegionMetricsKind = (typeof RegionMetricsKind)[keyof typeof RegionMetricsKind];
+
+export const RegionMetricsKind = {
+  "region-metrics": "region-metrics",
+} as const;
+
+/**
+ * @minimum 1
+ * @maximum 500
+ */
+export type Rows = number;
+
+export interface RegionMetrics {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: RegionMetricsWidth;
+  page_break?: boolean;
+  kind: RegionMetricsKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  columns: RegionColumn[];
+  sort_by?: RegionColumn;
+  rows?: Rows | null;
+}
+
 /**
  * @maxItems 3
  * @items.minimum 0
  * @items.maximum 60
  */
 export type Reminders = number[];
+
+export type ReviewerAgreementWidth =
+  (typeof ReviewerAgreementWidth)[keyof typeof ReviewerAgreementWidth];
+
+export const ReviewerAgreementWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ReviewerAgreementKind =
+  (typeof ReviewerAgreementKind)[keyof typeof ReviewerAgreementKind];
+
+export const ReviewerAgreementKind = {
+  "reviewer-agreement": "reviewer-agreement",
+} as const;
+
+export interface ReviewerAgreement {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ReviewerAgreementWidth;
+  page_break?: boolean;
+  kind: ReviewerAgreementKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  parts: AgreementPart[];
+}
+
+export type WorstObjectsWidth = (typeof WorstObjectsWidth)[keyof typeof WorstObjectsWidth];
+
+export const WorstObjectsWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type WorstObjectsKind = (typeof WorstObjectsKind)[keyof typeof WorstObjectsKind];
+
+export const WorstObjectsKind = {
+  "worst-objects": "worst-objects",
+} as const;
+
+export interface WorstObjects {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: WorstObjectsWidth;
+  page_break?: boolean;
+  kind: WorstObjectsKind;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  rows?: number;
+  thumbnails?: boolean;
+}
+
+export type SlideTableWidth = (typeof SlideTableWidth)[keyof typeof SlideTableWidth];
+
+export const SlideTableWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type SlideTableKind = (typeof SlideTableKind)[keyof typeof SlideTableKind];
+
+export const SlideTableKind = {
+  "slide-table": "slide-table",
+} as const;
+
+export type SlideColumn = (typeof SlideColumn)[keyof typeof SlideColumn];
+
+export const SlideColumn = {
+  objects: "objects",
+  disagreements: "disagreements",
+  time: "time",
+} as const;
+
+export interface SlideTable {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: SlideTableWidth;
+  page_break?: boolean;
+  kind: SlideTableKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  columns: SlideColumn[];
+  sort_by?: SlideColumn;
+}
+
+export type SlideFigureWidth = (typeof SlideFigureWidth)[keyof typeof SlideFigureWidth];
+
+export const SlideFigureWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type SlideFigureKind = (typeof SlideFigureKind)[keyof typeof SlideFigureKind];
+
+export const SlideFigureKind = {
+  "slide-figure": "slide-figure",
+} as const;
+
+export interface SlideFigure {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: SlideFigureWidth;
+  page_break?: boolean;
+  kind: SlideFigureKind;
+  slide_id?: string | null;
+  object_id?: ObjectId | null;
+  /**
+   * @minItems 1
+   * @maxItems 2
+   */
+  layers?: Layer[];
+  /** @maxLength 500 */
+  caption?: string;
+}
+
+export type TextBlockWidth = (typeof TextBlockWidth)[keyof typeof TextBlockWidth];
+
+export const TextBlockWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type TextBlockKind = (typeof TextBlockKind)[keyof typeof TextBlockKind];
+
+export const TextBlockKind = {
+  text: "text",
+} as const;
+
+export interface TextBlock {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: TextBlockWidth;
+  page_break?: boolean;
+  kind: TextBlockKind;
+  /** @maxLength 5000 */
+  body?: string;
+}
+
+export type ReportBlock =
+  | HeadlineNumbers
+  | RegionMetrics
+  | ConfusionMatrix
+  | ReviewerAgreement
+  | DisagreementReasons
+  | OpinionAnswers
+  | WorstObjects
+  | SlideTable
+  | SlideFigure
+  | TextBlock
+  | Comparison;
+
+/**
+ * @maxItems 40
+ */
+export type ReportBlocks = ReportBlock[];
+
+export type ReportFormatPaper = (typeof ReportFormatPaper)[keyof typeof ReportFormatPaper];
+
+export const ReportFormatPaper = {
+  a4: "a4",
+  letter: "letter",
+} as const;
+
+export type ReportFormatOrientation =
+  (typeof ReportFormatOrientation)[keyof typeof ReportFormatOrientation];
+
+export const ReportFormatOrientation = {
+  portrait: "portrait",
+  landscape: "landscape",
+} as const;
+
+export type ReportFormatTextSize = (typeof ReportFormatTextSize)[keyof typeof ReportFormatTextSize];
+
+export const ReportFormatTextSize = {
+  small: "small",
+  normal: "normal",
+  large: "large",
+} as const;
+
+export type ReportFormatPageNumbers =
+  (typeof ReportFormatPageNumbers)[keyof typeof ReportFormatPageNumbers];
+
+export const ReportFormatPageNumbers = {
+  none: "none",
+  page: "page",
+  "page-of": "page-of",
+} as const;
+
+export type ReportFormatLabelLanguage =
+  (typeof ReportFormatLabelLanguage)[keyof typeof ReportFormatLabelLanguage];
+
+export const ReportFormatLabelLanguage = {
+  en: "en",
+  cs: "cs",
+  de: "de",
+} as const;
+
+export interface ReportFormat {
+  paper?: ReportFormatPaper;
+  orientation?: ReportFormatOrientation;
+  text_size?: ReportFormatTextSize;
+  logo?: boolean;
+  title?: BlockTitle;
+  /** @maxLength 200 */
+  subtitle?: string;
+  running_header?: boolean;
+  page_numbers?: ReportFormatPageNumbers;
+  draft_watermark?: boolean;
+  signature?: boolean;
+  label_language?: ReportFormatLabelLanguage;
+  /**
+   * @minimum 0
+   * @maximum 4
+   */
+  decimals?: number;
+  /** @maxItems 3 */
+  appendices?: Appendix[];
+  /**
+   * @minItems 1
+   * @maxItems 7
+   */
+  downloads?: Download[];
+}
 
 export interface Resolved {
   source_name: string;
@@ -1712,20 +2224,6 @@ export interface ReviewOrder {
   objects: OrderedObject[];
 }
 
-export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
-
-export const TaskSplit = {
-  everyone: "everyone",
-  even: "even",
-  chosen: "chosen",
-} as const;
-
-export interface Scope {
-  kind: TaskScope;
-  count?: number | null;
-  score?: number | null;
-}
-
 export interface ReviewTask {
   id: string;
   project_id: string;
@@ -1740,6 +2238,8 @@ export interface ReviewTask {
   start_mode: StartMode;
   due_on: string | null;
   reminder_days: number[];
+  study_template_id: string | null;
+  study_template_version: number | null;
   created_by_user_id: string | null;
   created_at: string;
   slide_count: number;
@@ -1766,6 +2266,8 @@ export interface ReviewTaskDetail {
   start_mode: StartMode;
   due_on: string | null;
   reminder_days: number[];
+  study_template_id: string | null;
+  study_template_version: number | null;
   created_by_user_id: string | null;
   created_at: string;
   slide_count: number;
@@ -1959,6 +2461,67 @@ export interface SlideState {
   reviewers: ReviewerState[];
 }
 
+export type StudyKind = (typeof StudyKind)[keyof typeof StudyKind];
+
+export const StudyKind = {
+  "regions-and-cells": "regions-and-cells",
+  regions: "regions",
+  outlines: "outlines",
+  cells: "cells",
+  "reviewers-first": "reviewers-first",
+  other: "other",
+} as const;
+
+/**
+ * @minLength 2
+ * @maxLength 60
+ */
+export type TemplateName = string;
+
+export interface StudyTemplate {
+  name: TemplateName;
+  study_kind: StudyKind;
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+  presets: Presets;
+  id: string;
+  version: number;
+  built_in: BuiltInTemplate | null;
+  retired_at: string | null;
+  created_at: string;
+  version_created_at: string;
+}
+
+export interface StudyTemplateDraft {
+  name: TemplateName;
+  study_kind: StudyKind;
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+  presets: Presets;
+}
+
+export interface StudyTemplateSummary {
+  name: TemplateName;
+  study_kind: StudyKind;
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+  presets: Presets;
+  id: string;
+  version: number;
+  built_in: BuiltInTemplate | null;
+  retired_at: string | null;
+  created_at: string;
+  version_created_at: string;
+  task_count: number;
+}
+
+export interface StudyTemplateVersion {
+  template_id: string;
+  version: number;
+  name: string;
+  created_at: string;
+}
+
 export interface Target {
   kind: TargetKind;
   project_id: string;
@@ -2008,6 +2571,8 @@ export interface TaskDraft {
   start_mode?: StartMode;
   due_on?: string | null;
   reminder_days?: Reminders;
+  study_template_id?: string | null;
+  study_template_version?: number | null;
 }
 
 export interface TaskStates {
@@ -19384,6 +19949,1435 @@ export function useGetTaskEvaluation<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listStudyTemplatesResponse200 = {
+  data: StudyTemplateSummary[];
+  status: 200;
+};
+
+export type listStudyTemplatesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listStudyTemplatesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listStudyTemplatesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listStudyTemplatesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listStudyTemplatesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listStudyTemplatesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listStudyTemplatesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listStudyTemplatesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listStudyTemplatesResponseSuccess = listStudyTemplatesResponse200 & {
+  headers: Headers;
+};
+export type listStudyTemplatesResponseError = (
+  | listStudyTemplatesResponse400
+  | listStudyTemplatesResponse401
+  | listStudyTemplatesResponse403
+  | listStudyTemplatesResponse404
+  | listStudyTemplatesResponse409
+  | listStudyTemplatesResponse422
+  | listStudyTemplatesResponse429
+  | listStudyTemplatesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listStudyTemplatesResponse =
+  | listStudyTemplatesResponseSuccess
+  | listStudyTemplatesResponseError;
+
+export const getListStudyTemplatesUrl = () => {
+  return `/api/study-templates`;
+};
+
+/**
+ * @summary List Study Templates
+ */
+export const listStudyTemplates = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listStudyTemplatesResponse> => {
+  return apiFetch<listStudyTemplatesResponse>(getListStudyTemplatesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStudyTemplatesQueryKey = () => {
+  return [`/api/study-templates`] as const;
+};
+
+export const getListStudyTemplatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudyTemplates>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplates>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStudyTemplatesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudyTemplates>>> = ({ signal }) =>
+    listStudyTemplates({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStudyTemplates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStudyTemplatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStudyTemplates>>
+>;
+export type ListStudyTemplatesQueryError = Problem;
+
+export function useListStudyTemplates<
+  TData = Awaited<ReturnType<typeof listStudyTemplates>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplates>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplates<
+  TData = Awaited<ReturnType<typeof listStudyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplates<
+  TData = Awaited<ReturnType<typeof listStudyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplates>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Study Templates
+ */
+
+export function useListStudyTemplates<
+  TData = Awaited<ReturnType<typeof listStudyTemplates>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplates>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStudyTemplatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createStudyTemplateResponse201 = {
+  data: StudyTemplate;
+  status: 201;
+};
+
+export type createStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createStudyTemplateResponseSuccess = createStudyTemplateResponse201 & {
+  headers: Headers;
+};
+export type createStudyTemplateResponseError = (
+  | createStudyTemplateResponse400
+  | createStudyTemplateResponse401
+  | createStudyTemplateResponse403
+  | createStudyTemplateResponse404
+  | createStudyTemplateResponse409
+  | createStudyTemplateResponse422
+  | createStudyTemplateResponse429
+  | createStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type createStudyTemplateResponse =
+  | createStudyTemplateResponseSuccess
+  | createStudyTemplateResponseError;
+
+export const getCreateStudyTemplateUrl = () => {
+  return `/api/study-templates`;
+};
+
+/**
+ * @summary Create Study Template
+ */
+export const createStudyTemplate = async (
+  studyTemplateDraft: StudyTemplateDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createStudyTemplateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createStudyTemplateResponse>(getCreateStudyTemplateUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyTemplateDraft),
+  });
+};
+
+export const getCreateStudyTemplateMutationKey = () => ["createStudyTemplate"] as const;
+
+export const getCreateStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStudyTemplate>>,
+    TError,
+    CreateStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createStudyTemplate>>,
+  TError,
+  CreateStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createStudyTemplate>>,
+    CreateStudyTemplateMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createStudyTemplate(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createStudyTemplate>>
+>;
+export type CreateStudyTemplateMutationBody = StudyTemplateDraft;
+export type CreateStudyTemplateMutationError = Problem;
+export type CreateStudyTemplateMutationVariables = { data: StudyTemplateDraft };
+
+/**
+ * @summary Create Study Template
+ */
+export const useCreateStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createStudyTemplate>>,
+      TError,
+      CreateStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createStudyTemplate>>,
+  TError,
+  CreateStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type getStudyTemplateResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type getStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getStudyTemplateResponseSuccess = getStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type getStudyTemplateResponseError = (
+  | getStudyTemplateResponse400
+  | getStudyTemplateResponse401
+  | getStudyTemplateResponse403
+  | getStudyTemplateResponse404
+  | getStudyTemplateResponse409
+  | getStudyTemplateResponse422
+  | getStudyTemplateResponse429
+  | getStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type getStudyTemplateResponse =
+  | getStudyTemplateResponseSuccess
+  | getStudyTemplateResponseError;
+
+export const getGetStudyTemplateUrl = (templateId: string) => {
+  return `/api/study-templates/${templateId}`;
+};
+
+/**
+ * @summary Get Study Template
+ */
+export const getStudyTemplate = async (
+  templateId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getStudyTemplateResponse> => {
+  return apiFetch<getStudyTemplateResponse>(getGetStudyTemplateUrl(templateId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudyTemplateQueryKey = (templateId: string) => {
+  return [`/api/study-templates/${templateId}`] as const;
+};
+
+export const getGetStudyTemplateQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStudyTemplateQueryKey(templateId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStudyTemplate>>> = ({ signal }) =>
+    getStudyTemplate(templateId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: templateId !== null && templateId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetStudyTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof getStudyTemplate>>>;
+export type GetStudyTemplateQueryError = Problem;
+
+export function useGetStudyTemplate<
+  TData = Awaited<ReturnType<typeof getStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTemplate<
+  TData = Awaited<ReturnType<typeof getStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTemplate<
+  TData = Awaited<ReturnType<typeof getStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Study Template
+ */
+
+export function useGetStudyTemplate<
+  TData = Awaited<ReturnType<typeof getStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplate>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStudyTemplateQueryOptions(templateId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type editStudyTemplateResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type editStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type editStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type editStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type editStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type editStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type editStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type editStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type editStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type editStudyTemplateResponseSuccess = editStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type editStudyTemplateResponseError = (
+  | editStudyTemplateResponse400
+  | editStudyTemplateResponse401
+  | editStudyTemplateResponse403
+  | editStudyTemplateResponse404
+  | editStudyTemplateResponse409
+  | editStudyTemplateResponse422
+  | editStudyTemplateResponse429
+  | editStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type editStudyTemplateResponse =
+  | editStudyTemplateResponseSuccess
+  | editStudyTemplateResponseError;
+
+export const getEditStudyTemplateUrl = (templateId: string) => {
+  return `/api/study-templates/${templateId}`;
+};
+
+/**
+ * @summary Edit Study Template
+ */
+export const editStudyTemplate = async (
+  templateId: string,
+  studyTemplateDraft: StudyTemplateDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<editStudyTemplateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<editStudyTemplateResponse>(getEditStudyTemplateUrl(templateId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyTemplateDraft),
+  });
+};
+
+export const getEditStudyTemplateMutationKey = () => ["editStudyTemplate"] as const;
+
+export const getEditStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof editStudyTemplate>>,
+    TError,
+    EditStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof editStudyTemplate>>,
+  TError,
+  EditStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEditStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof editStudyTemplate>>,
+    EditStudyTemplateMutationVariables
+  > = (props) => {
+    const { templateId, data } = props ?? {};
+
+    return editStudyTemplate(templateId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EditStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof editStudyTemplate>>
+>;
+export type EditStudyTemplateMutationBody = StudyTemplateDraft;
+export type EditStudyTemplateMutationError = Problem;
+export type EditStudyTemplateMutationVariables = { templateId: string; data: StudyTemplateDraft };
+
+/**
+ * @summary Edit Study Template
+ */
+export const useEditStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof editStudyTemplate>>,
+      TError,
+      EditStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof editStudyTemplate>>,
+  TError,
+  EditStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getEditStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type listStudyTemplateVersionsResponse200 = {
+  data: StudyTemplateVersion[];
+  status: 200;
+};
+
+export type listStudyTemplateVersionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listStudyTemplateVersionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listStudyTemplateVersionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listStudyTemplateVersionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listStudyTemplateVersionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listStudyTemplateVersionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listStudyTemplateVersionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listStudyTemplateVersionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listStudyTemplateVersionsResponseSuccess = listStudyTemplateVersionsResponse200 & {
+  headers: Headers;
+};
+export type listStudyTemplateVersionsResponseError = (
+  | listStudyTemplateVersionsResponse400
+  | listStudyTemplateVersionsResponse401
+  | listStudyTemplateVersionsResponse403
+  | listStudyTemplateVersionsResponse404
+  | listStudyTemplateVersionsResponse409
+  | listStudyTemplateVersionsResponse422
+  | listStudyTemplateVersionsResponse429
+  | listStudyTemplateVersionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listStudyTemplateVersionsResponse =
+  | listStudyTemplateVersionsResponseSuccess
+  | listStudyTemplateVersionsResponseError;
+
+export const getListStudyTemplateVersionsUrl = (templateId: string) => {
+  return `/api/study-templates/${templateId}/versions`;
+};
+
+/**
+ * @summary List Study Template Versions
+ */
+export const listStudyTemplateVersions = async (
+  templateId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listStudyTemplateVersionsResponse> => {
+  return apiFetch<listStudyTemplateVersionsResponse>(getListStudyTemplateVersionsUrl(templateId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStudyTemplateVersionsQueryKey = (templateId: string) => {
+  return [`/api/study-templates/${templateId}/versions`] as const;
+};
+
+export const getListStudyTemplateVersionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStudyTemplateVersionsQueryKey(templateId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudyTemplateVersions>>> = ({
+    signal,
+  }) => listStudyTemplateVersions(templateId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: templateId !== null && templateId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListStudyTemplateVersionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStudyTemplateVersions>>
+>;
+export type ListStudyTemplateVersionsQueryError = Problem;
+
+export function useListStudyTemplateVersions<
+  TData = Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplateVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplateVersions<
+  TData = Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplateVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplateVersions<
+  TData = Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Study Template Versions
+ */
+
+export function useListStudyTemplateVersions<
+  TData = Awaited<ReturnType<typeof listStudyTemplateVersions>>,
+  TError = Problem,
+>(
+  templateId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStudyTemplateVersionsQueryOptions(templateId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getStudyTemplateVersionResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type getStudyTemplateVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getStudyTemplateVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getStudyTemplateVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getStudyTemplateVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getStudyTemplateVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getStudyTemplateVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getStudyTemplateVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getStudyTemplateVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getStudyTemplateVersionResponseSuccess = getStudyTemplateVersionResponse200 & {
+  headers: Headers;
+};
+export type getStudyTemplateVersionResponseError = (
+  | getStudyTemplateVersionResponse400
+  | getStudyTemplateVersionResponse401
+  | getStudyTemplateVersionResponse403
+  | getStudyTemplateVersionResponse404
+  | getStudyTemplateVersionResponse409
+  | getStudyTemplateVersionResponse422
+  | getStudyTemplateVersionResponse429
+  | getStudyTemplateVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getStudyTemplateVersionResponse =
+  | getStudyTemplateVersionResponseSuccess
+  | getStudyTemplateVersionResponseError;
+
+export const getGetStudyTemplateVersionUrl = (templateId: string, version: number) => {
+  return `/api/study-templates/${templateId}/versions/${version}`;
+};
+
+/**
+ * @summary Get Study Template Version
+ */
+export const getStudyTemplateVersion = async (
+  templateId: string,
+  version: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getStudyTemplateVersionResponse> => {
+  return apiFetch<getStudyTemplateVersionResponse>(
+    getGetStudyTemplateVersionUrl(templateId, version),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetStudyTemplateVersionQueryKey = (templateId: string, version: number) => {
+  return [`/api/study-templates/${templateId}/versions/${version}`] as const;
+};
+
+export const getGetStudyTemplateVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+  TError = Problem,
+>(
+  templateId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudyTemplateVersionQueryKey(templateId, version);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStudyTemplateVersion>>> = ({
+    signal,
+  }) => getStudyTemplateVersion(templateId, version, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      templateId !== null && templateId !== undefined && version !== null && version !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetStudyTemplateVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudyTemplateVersion>>
+>;
+export type GetStudyTemplateVersionQueryError = Problem;
+
+export function useGetStudyTemplateVersion<
+  TData = Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+  TError = Problem,
+>(
+  templateId: string,
+  version: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTemplateVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTemplateVersion<
+  TData = Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+  TError = Problem,
+>(
+  templateId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTemplateVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTemplateVersion<
+  TData = Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+  TError = Problem,
+>(
+  templateId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Study Template Version
+ */
+
+export function useGetStudyTemplateVersion<
+  TData = Awaited<ReturnType<typeof getStudyTemplateVersion>>,
+  TError = Problem,
+>(
+  templateId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStudyTemplateVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStudyTemplateVersionQueryOptions(templateId, version, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type retireStudyTemplateResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type retireStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type retireStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type retireStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type retireStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type retireStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type retireStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type retireStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type retireStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type retireStudyTemplateResponseSuccess = retireStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type retireStudyTemplateResponseError = (
+  | retireStudyTemplateResponse400
+  | retireStudyTemplateResponse401
+  | retireStudyTemplateResponse403
+  | retireStudyTemplateResponse404
+  | retireStudyTemplateResponse409
+  | retireStudyTemplateResponse422
+  | retireStudyTemplateResponse429
+  | retireStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type retireStudyTemplateResponse =
+  | retireStudyTemplateResponseSuccess
+  | retireStudyTemplateResponseError;
+
+export const getRetireStudyTemplateUrl = (templateId: string) => {
+  return `/api/study-templates/${templateId}/retire`;
+};
+
+/**
+ * @summary Retire Study Template
+ */
+export const retireStudyTemplate = async (
+  templateId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<retireStudyTemplateResponse> => {
+  return apiFetch<retireStudyTemplateResponse>(getRetireStudyTemplateUrl(templateId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRetireStudyTemplateMutationKey = () => ["retireStudyTemplate"] as const;
+
+export const getRetireStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retireStudyTemplate>>,
+    TError,
+    RetireStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retireStudyTemplate>>,
+  TError,
+  RetireStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRetireStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retireStudyTemplate>>,
+    RetireStudyTemplateMutationVariables
+  > = (props) => {
+    const { templateId } = props ?? {};
+
+    return retireStudyTemplate(templateId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetireStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retireStudyTemplate>>
+>;
+
+export type RetireStudyTemplateMutationError = Problem;
+export type RetireStudyTemplateMutationVariables = { templateId: string };
+
+/**
+ * @summary Retire Study Template
+ */
+export const useRetireStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retireStudyTemplate>>,
+      TError,
+      RetireStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retireStudyTemplate>>,
+  TError,
+  RetireStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getRetireStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type restoreStudyTemplateResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type restoreStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type restoreStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type restoreStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type restoreStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type restoreStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type restoreStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type restoreStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type restoreStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type restoreStudyTemplateResponseSuccess = restoreStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type restoreStudyTemplateResponseError = (
+  | restoreStudyTemplateResponse400
+  | restoreStudyTemplateResponse401
+  | restoreStudyTemplateResponse403
+  | restoreStudyTemplateResponse404
+  | restoreStudyTemplateResponse409
+  | restoreStudyTemplateResponse422
+  | restoreStudyTemplateResponse429
+  | restoreStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type restoreStudyTemplateResponse =
+  | restoreStudyTemplateResponseSuccess
+  | restoreStudyTemplateResponseError;
+
+export const getRestoreStudyTemplateUrl = (templateId: string) => {
+  return `/api/study-templates/${templateId}/restore`;
+};
+
+/**
+ * @summary Restore Study Template
+ */
+export const restoreStudyTemplate = async (
+  templateId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<restoreStudyTemplateResponse> => {
+  return apiFetch<restoreStudyTemplateResponse>(getRestoreStudyTemplateUrl(templateId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRestoreStudyTemplateMutationKey = () => ["restoreStudyTemplate"] as const;
+
+export const getRestoreStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreStudyTemplate>>,
+    TError,
+    RestoreStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreStudyTemplate>>,
+  TError,
+  RestoreStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreStudyTemplate>>,
+    RestoreStudyTemplateMutationVariables
+  > = (props) => {
+    const { templateId } = props ?? {};
+
+    return restoreStudyTemplate(templateId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof restoreStudyTemplate>>
+>;
+
+export type RestoreStudyTemplateMutationError = Problem;
+export type RestoreStudyTemplateMutationVariables = { templateId: string };
+
+/**
+ * @summary Restore Study Template
+ */
+export const useRestoreStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreStudyTemplate>>,
+      TError,
+      RestoreStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreStudyTemplate>>,
+  TError,
+  RestoreStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreStudyTemplateMutationOptions(options), queryClient);
+};
 
 export type listMyReviewTasksResponse200 = {
   data: MyTask[];

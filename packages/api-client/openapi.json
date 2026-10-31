@@ -12592,6 +12592,995 @@
         "x-permission-emergency": true
       }
     },
+    "/api/study-templates": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "List Study Templates",
+        "operationId": "listStudyTemplates",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudyTemplateSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Liststudytemplates"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "report-templates"
+      },
+      "post": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Create Study Template",
+        "operationId": "createStudyTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudyTemplateDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "report-templates",
+        "x-permission-write": true
+      }
+    },
+    "/api/study-templates/{template_id}": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Get Study Template",
+        "operationId": "getStudyTemplate",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates"
+      },
+      "put": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Edit Study Template",
+        "operationId": "editStudyTemplate",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudyTemplateDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates",
+        "x-permission-write": true
+      }
+    },
+    "/api/study-templates/{template_id}/versions": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "List Study Template Versions",
+        "operationId": "listStudyTemplateVersions",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudyTemplateVersion"
+                  },
+                  "title": "Response Liststudytemplateversions"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates"
+      }
+    },
+    "/api/study-templates/{template_id}/versions/{version}": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Get Study Template Version",
+        "operationId": "getStudyTemplateVersion",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates"
+      }
+    },
+    "/api/study-templates/{template_id}/retire": {
+      "post": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Retire Study Template",
+        "operationId": "retireStudyTemplate",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates",
+        "x-permission-write": true
+      }
+    },
+    "/api/study-templates/{template_id}/restore": {
+      "post": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "Restore Study Template",
+        "operationId": "restoreStudyTemplate",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "report-templates",
+        "x-permission-write": true
+      }
+    },
     "/api/me/review-tasks": {
       "get": {
         "tags": [
@@ -17752,6 +18741,14 @@
         ],
         "title": "AdminRightsChange"
       },
+      "AgreementPart": {
+        "type": "string",
+        "enum": [
+          "regions",
+          "cells",
+          "form"
+        ]
+      },
       "AnalysisTemplate": {
         "type": "string",
         "enum": [
@@ -18202,6 +19199,14 @@
         ],
         "title": "ApiToken"
       },
+      "Appendix": {
+        "type": "string",
+        "enum": [
+          "objects",
+          "decisions",
+          "methods"
+        ]
+      },
       "AssignedTask": {
         "properties": {
           "id": {
@@ -18446,6 +19451,7 @@
           "project",
           "result-set",
           "review-task",
+          "study-template",
           "service-account",
           "invitation",
           "announcement",
@@ -18497,6 +19503,11 @@
           "status"
         ],
         "title": "AvailabilityChange"
+      },
+      "BlockClassName": {
+        "type": "string",
+        "maxLength": 80,
+        "minLength": 1
       },
       "BlockDetail": {
         "properties": {
@@ -18584,6 +19595,22 @@
           "number"
         ],
         "title": "BlockDraft"
+      },
+      "BlockTitle": {
+        "type": "string",
+        "maxLength": 120,
+        "minLength": 1
+      },
+      "BuiltInTemplate": {
+        "type": "string",
+        "enum": [
+          "sentinel-node",
+          "detection",
+          "segmentation",
+          "cell-typing",
+          "reader-study"
+        ],
+        "title": "BuiltInTemplate"
       },
       "CaseDetail": {
         "properties": {
@@ -18770,6 +19797,13 @@
         ],
         "title": "ChainHead"
       },
+      "ChartStyle": {
+        "type": "string",
+        "enum": [
+          "bars",
+          "table"
+        ]
+      },
       "ChoiceQuestion": {
         "properties": {
           "key": {
@@ -18937,6 +19971,129 @@
         ],
         "title": "Code"
       },
+      "Comparison": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "comparison",
+            "title": "Kind"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Metrics"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "metrics"
+        ],
+        "title": "Comparison"
+      },
+      "ConfusionMatrix": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "confusion-matrix",
+            "title": "Kind"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/BlockClassName"
+                },
+                "type": "array",
+                "maxItems": 32,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
+          },
+          "values": {
+            "type": "string",
+            "enum": [
+              "count",
+              "share"
+            ],
+            "title": "Values",
+            "default": "count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "ConfusionMatrix"
+      },
       "Coordinate": {
         "type": "number",
         "maximum": 10000000.0,
@@ -18990,10 +20147,77 @@
         ],
         "title": "DecisionDraft"
       },
+      "DisagreementReasons": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "disagreement-reasons",
+            "title": "Kind"
+          },
+          "top": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top"
+          },
+          "style": {
+            "$ref": "#/components/schemas/ChartStyle",
+            "default": "bars"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "DisagreementReasons"
+      },
       "DisplayName": {
         "type": "string",
         "maxLength": 200,
         "minLength": 1
+      },
+      "Download": {
+        "type": "string",
+        "enum": [
+          "pdf",
+          "docx",
+          "html",
+          "decisions",
+          "objects",
+          "geojson",
+          "json"
+        ]
       },
       "EditDraft": {
         "properties": {
@@ -19564,6 +20788,59 @@
             "Polygon": "#/components/schemas/PolygonGeometry"
           }
         }
+      },
+      "HeadlineNumbers": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "headline-numbers",
+            "title": "Kind"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Metrics"
+          },
+          "confidence_intervals": {
+            "type": "boolean",
+            "title": "Confidence Intervals",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "metrics"
+        ],
+        "title": "HeadlineNumbers"
       },
       "Health": {
         "properties": {
@@ -20260,6 +21537,13 @@
         ],
         "title": "Laterality"
       },
+      "Layer": {
+        "type": "string",
+        "enum": [
+          "ai",
+          "reviewed"
+        ]
+      },
       "LayerSummary": {
         "properties": {
           "regions": {
@@ -20754,6 +22038,16 @@
         ],
         "title": "MembershipDraft"
       },
+      "Metric": {
+        "type": "string",
+        "enum": [
+          "sensitivity",
+          "precision",
+          "dice",
+          "kappa",
+          "cell-agreement"
+        ]
+      },
       "MultiPolygonGeometry": {
         "properties": {
           "type": {
@@ -21044,6 +22338,10 @@
         ],
         "title": "NotificationKind"
       },
+      "ObjectId": {
+        "type": "string",
+        "pattern": "^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"
+      },
       "Opinion": {
         "properties": {
           "reviewer_id": {
@@ -21094,6 +22392,64 @@
           "updated_at"
         ],
         "title": "Opinion"
+      },
+      "OpinionAnswers": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "opinion-answers",
+            "title": "Kind"
+          },
+          "questions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QuestionKey"
+                },
+                "type": "array",
+                "maxItems": 12,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Questions"
+          },
+          "style": {
+            "$ref": "#/components/schemas/ChartStyle",
+            "default": "bars"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "OpinionAnswers"
       },
       "OpinionChange": {
         "properties": {
@@ -21684,6 +23040,47 @@
         ],
         "title": "PreferenceChanges"
       },
+      "Presets": {
+        "properties": {
+          "objects_to_check": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "opinion_form": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blinding": {
+            "type": "boolean",
+            "title": "Blinding",
+            "default": true
+          },
+          "first_read": {
+            "type": "boolean",
+            "title": "First Read",
+            "default": false
+          },
+          "start_mode": {
+            "$ref": "#/components/schemas/StartMode",
+            "default": "guided"
+          },
+          "split": {
+            "$ref": "#/components/schemas/TaskSplit",
+            "default": "everyone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "objects_to_check"
+        ],
+        "title": "Presets"
+      },
       "PrivacyMode": {
         "type": "string",
         "enum": [
@@ -22054,6 +23451,10 @@
           }
         }
       },
+      "QuestionKey": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,39}$"
+      },
       "QueuedObject": {
         "properties": {
           "slide_id": {
@@ -22158,6 +23559,76 @@
         ],
         "title": "Region"
       },
+      "RegionColumn": {
+        "type": "string",
+        "enum": [
+          "sensitivity",
+          "precision",
+          "dice"
+        ]
+      },
+      "RegionMetrics": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "region-metrics",
+            "title": "Kind"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/RegionColumn"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Columns"
+          },
+          "sort_by": {
+            "$ref": "#/components/schemas/RegionColumn",
+            "default": "dice"
+          },
+          "rows": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rows"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "columns"
+        ],
+        "title": "RegionMetrics"
+      },
       "Reminders": {
         "items": {
           "type": "integer",
@@ -22166,6 +23637,185 @@
         },
         "type": "array",
         "maxItems": 3
+      },
+      "ReportBlock": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/HeadlineNumbers"
+          },
+          {
+            "$ref": "#/components/schemas/RegionMetrics"
+          },
+          {
+            "$ref": "#/components/schemas/ConfusionMatrix"
+          },
+          {
+            "$ref": "#/components/schemas/ReviewerAgreement"
+          },
+          {
+            "$ref": "#/components/schemas/DisagreementReasons"
+          },
+          {
+            "$ref": "#/components/schemas/OpinionAnswers"
+          },
+          {
+            "$ref": "#/components/schemas/WorstObjects"
+          },
+          {
+            "$ref": "#/components/schemas/SlideTable"
+          },
+          {
+            "$ref": "#/components/schemas/SlideFigure"
+          },
+          {
+            "$ref": "#/components/schemas/TextBlock"
+          },
+          {
+            "$ref": "#/components/schemas/Comparison"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "comparison": "#/components/schemas/Comparison",
+            "confusion-matrix": "#/components/schemas/ConfusionMatrix",
+            "disagreement-reasons": "#/components/schemas/DisagreementReasons",
+            "headline-numbers": "#/components/schemas/HeadlineNumbers",
+            "opinion-answers": "#/components/schemas/OpinionAnswers",
+            "region-metrics": "#/components/schemas/RegionMetrics",
+            "reviewer-agreement": "#/components/schemas/ReviewerAgreement",
+            "slide-figure": "#/components/schemas/SlideFigure",
+            "slide-table": "#/components/schemas/SlideTable",
+            "text": "#/components/schemas/TextBlock",
+            "worst-objects": "#/components/schemas/WorstObjects"
+          }
+        }
+      },
+      "ReportBlocks": {
+        "items": {
+          "$ref": "#/components/schemas/ReportBlock"
+        },
+        "type": "array",
+        "maxItems": 40
+      },
+      "ReportFormat": {
+        "properties": {
+          "paper": {
+            "type": "string",
+            "enum": [
+              "a4",
+              "letter"
+            ],
+            "title": "Paper",
+            "default": "a4"
+          },
+          "orientation": {
+            "type": "string",
+            "enum": [
+              "portrait",
+              "landscape"
+            ],
+            "title": "Orientation",
+            "default": "portrait"
+          },
+          "text_size": {
+            "type": "string",
+            "enum": [
+              "small",
+              "normal",
+              "large"
+            ],
+            "title": "Text Size",
+            "default": "normal"
+          },
+          "logo": {
+            "type": "boolean",
+            "title": "Logo",
+            "default": true
+          },
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle",
+            "default": "Evaluation report"
+          },
+          "subtitle": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Subtitle",
+            "default": "{task} · {model} {version}"
+          },
+          "running_header": {
+            "type": "boolean",
+            "title": "Running Header",
+            "default": true
+          },
+          "page_numbers": {
+            "type": "string",
+            "enum": [
+              "none",
+              "page",
+              "page-of"
+            ],
+            "title": "Page Numbers",
+            "default": "page-of"
+          },
+          "draft_watermark": {
+            "type": "boolean",
+            "title": "Draft Watermark",
+            "default": true
+          },
+          "signature": {
+            "type": "boolean",
+            "title": "Signature",
+            "default": true
+          },
+          "label_language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "cs",
+              "de"
+            ],
+            "title": "Label Language",
+            "default": "en"
+          },
+          "decimals": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Decimals",
+            "default": 2
+          },
+          "appendices": {
+            "items": {
+              "$ref": "#/components/schemas/Appendix"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Appendices",
+            "default": [
+              "objects"
+            ]
+          },
+          "downloads": {
+            "items": {
+              "$ref": "#/components/schemas/Download"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 1,
+            "title": "Downloads",
+            "default": [
+              "pdf",
+              "docx",
+              "decisions",
+              "objects",
+              "geojson"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReportFormat"
       },
       "Resolved": {
         "properties": {
@@ -22871,6 +24521,29 @@
             "type": "array",
             "title": "Reminder Days"
           },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "study_template_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Version"
+          },
           "created_by_user_id": {
             "anyOf": [
               {
@@ -22912,6 +24585,8 @@
           "start_mode",
           "due_on",
           "reminder_days",
+          "study_template_id",
+          "study_template_version",
           "created_by_user_id",
           "created_at",
           "slide_count",
@@ -22983,6 +24658,29 @@
             "type": "array",
             "title": "Reminder Days"
           },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "study_template_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Version"
+          },
           "created_by_user_id": {
             "anyOf": [
               {
@@ -23031,6 +24729,8 @@
           "start_mode",
           "due_on",
           "reminder_days",
+          "study_template_id",
+          "study_template_version",
           "created_by_user_id",
           "created_at",
           "slide_count",
@@ -23090,6 +24790,54 @@
           "summary"
         ],
         "title": "ReviewedLayer"
+      },
+      "ReviewerAgreement": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "reviewer-agreement",
+            "title": "Kind"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/AgreementPart"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Parts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "parts"
+        ],
+        "title": "ReviewerAgreement"
       },
       "ReviewerProgress": {
         "properties": {
@@ -23235,6 +24983,11 @@
           "message"
         ],
         "title": "RowProblem"
+      },
+      "Rows": {
+        "type": "integer",
+        "maximum": 500.0,
+        "minimum": 1.0
       },
       "ScaleQuestion": {
         "properties": {
@@ -23816,6 +25569,14 @@
         ],
         "title": "SigningKey"
       },
+      "SlideColumn": {
+        "type": "string",
+        "enum": [
+          "objects",
+          "disagreements",
+          "time"
+        ]
+      },
       "SlideDetail": {
         "properties": {
           "id": {
@@ -23876,6 +25637,85 @@
           "level"
         ],
         "title": "SlideDetail"
+      },
+      "SlideFigure": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "slide-figure",
+            "title": "Kind"
+          },
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          },
+          "object_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ObjectId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Layers",
+            "default": [
+              "ai",
+              "reviewed"
+            ]
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Caption",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "SlideFigure"
       },
       "SlidePage": {
         "properties": {
@@ -24084,6 +25924,58 @@
           "reviewers"
         ],
         "title": "SlideState"
+      },
+      "SlideTable": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "slide-table",
+            "title": "Kind"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/SlideColumn"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Columns"
+          },
+          "sort_by": {
+            "$ref": "#/components/schemas/SlideColumn",
+            "default": "disagreements"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind",
+          "columns"
+        ],
+        "title": "SlideTable"
       },
       "Slug": {
         "type": "string",
@@ -24328,6 +26220,301 @@
           "reviewed"
         ],
         "title": "StripSlide"
+      },
+      "StudyKind": {
+        "type": "string",
+        "enum": [
+          "regions-and-cells",
+          "regions",
+          "outlines",
+          "cells",
+          "reviewers-first",
+          "other"
+        ],
+        "title": "StudyKind"
+      },
+      "StudyTemplate": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TemplateName"
+          },
+          "study_kind": {
+            "$ref": "#/components/schemas/StudyKind"
+          },
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": {
+              "paper": "a4",
+              "orientation": "portrait",
+              "text_size": "normal",
+              "logo": true,
+              "title": "Evaluation report",
+              "subtitle": "{task} · {model} {version}",
+              "running_header": true,
+              "page_numbers": "page-of",
+              "draft_watermark": true,
+              "signature": true,
+              "label_language": "en",
+              "decimals": 2,
+              "appendices": [
+                "objects"
+              ],
+              "downloads": [
+                "pdf",
+                "docx",
+                "decisions",
+                "objects",
+                "geojson"
+              ]
+            }
+          },
+          "presets": {
+            "$ref": "#/components/schemas/Presets"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "built_in": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuiltInTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "version_created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Version Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "study_kind",
+          "blocks",
+          "presets",
+          "id",
+          "version",
+          "built_in",
+          "retired_at",
+          "created_at",
+          "version_created_at"
+        ],
+        "title": "StudyTemplate"
+      },
+      "StudyTemplateDraft": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TemplateName"
+          },
+          "study_kind": {
+            "$ref": "#/components/schemas/StudyKind"
+          },
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": {
+              "paper": "a4",
+              "orientation": "portrait",
+              "text_size": "normal",
+              "logo": true,
+              "title": "Evaluation report",
+              "subtitle": "{task} · {model} {version}",
+              "running_header": true,
+              "page_numbers": "page-of",
+              "draft_watermark": true,
+              "signature": true,
+              "label_language": "en",
+              "decimals": 2,
+              "appendices": [
+                "objects"
+              ],
+              "downloads": [
+                "pdf",
+                "docx",
+                "decisions",
+                "objects",
+                "geojson"
+              ]
+            }
+          },
+          "presets": {
+            "$ref": "#/components/schemas/Presets"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "study_kind",
+          "blocks",
+          "presets"
+        ],
+        "title": "StudyTemplateDraft"
+      },
+      "StudyTemplateSummary": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TemplateName"
+          },
+          "study_kind": {
+            "$ref": "#/components/schemas/StudyKind"
+          },
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": {
+              "paper": "a4",
+              "orientation": "portrait",
+              "text_size": "normal",
+              "logo": true,
+              "title": "Evaluation report",
+              "subtitle": "{task} · {model} {version}",
+              "running_header": true,
+              "page_numbers": "page-of",
+              "draft_watermark": true,
+              "signature": true,
+              "label_language": "en",
+              "decimals": 2,
+              "appendices": [
+                "objects"
+              ],
+              "downloads": [
+                "pdf",
+                "docx",
+                "decisions",
+                "objects",
+                "geojson"
+              ]
+            }
+          },
+          "presets": {
+            "$ref": "#/components/schemas/Presets"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "built_in": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuiltInTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "version_created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Version Created At"
+          },
+          "task_count": {
+            "type": "integer",
+            "title": "Task Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "study_kind",
+          "blocks",
+          "presets",
+          "id",
+          "version",
+          "built_in",
+          "retired_at",
+          "created_at",
+          "version_created_at",
+          "task_count"
+        ],
+        "title": "StudyTemplateSummary"
+      },
+      "StudyTemplateVersion": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "version",
+          "name",
+          "created_at"
+        ],
+        "title": "StudyTemplateVersion"
       },
       "Target": {
         "properties": {
@@ -24600,6 +26787,30 @@
           "reminder_days": {
             "$ref": "#/components/schemas/Reminders",
             "default": []
+          },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "study_template_version": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Version"
           }
         },
         "type": "object",
@@ -24779,6 +26990,11 @@
         ],
         "title": "TemplateClass"
       },
+      "TemplateName": {
+        "type": "string",
+        "maxLength": 60,
+        "minLength": 2
+      },
       "Tenant": {
         "properties": {
           "id": {
@@ -24905,6 +27121,50 @@
         "type": "string",
         "maxLength": 200,
         "minLength": 1
+      },
+      "TextBlock": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "text",
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Body",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "TextBlock"
       },
       "TextQuestion": {
         "properties": {
@@ -25287,6 +27547,56 @@
           "audit"
         ],
         "title": "WorkspaceData"
+      },
+      "WorstObjects": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "worst-objects",
+            "title": "Kind"
+          },
+          "rows": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Rows",
+            "default": 10
+          },
+          "thumbnails": {
+            "type": "boolean",
+            "title": "Thumbnails",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "WorstObjects"
       },
       "YesNoQuestion": {
         "properties": {

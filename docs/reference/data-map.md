@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 24 |
-| `personal` | 40 |
+| `personal` | 42 |
 | `secret` | 9 |
-| `operational` | 390 |
+| `operational` | 409 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -586,6 +586,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `archived_at` | operational |
 | `signed_off_at` | operational |
 | `signed_off_by_user_id` | personal |
+| `study_template_id` | operational |
+| `study_template_version` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -671,6 +673,35 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## study_template_versions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `template_id` | operational |
+| `version` | operational |
+| `name` | operational |
+| `study_kind` | operational |
+| `blocks` | operational |
+| `format` | operational |
+| `presets` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+
+## study_templates
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `built_in` | operational |
+| `version` | operational |
+| `retired_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## tenant_keys
 

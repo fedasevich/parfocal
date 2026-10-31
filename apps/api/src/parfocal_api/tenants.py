@@ -13,6 +13,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
+from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     DEFAULT_EMERGENCY_HOURS,
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -169,6 +170,7 @@ async def create_tenant(
         raise NotFoundError("Organisation not found")
     statement = insert(tenants).values(**draft.model_dump()).returning(*tenants.c)
     created = tenant_of(await insert_unique(connection, statement))
+    await seed_built_ins(connection, created.id)
     await record(
         connection,
         actor_of(principal),
