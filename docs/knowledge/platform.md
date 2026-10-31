@@ -47,3 +47,5 @@ From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cl
 ## Modal stops deploys at the workspace spend limit
 
 On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its spend limit" before building anything. Deploys and runs in every environment stop until the owner raises the limit or the billing period resets, so CI deploys to Modal would fail the same way. Source: STACK-019 log entry.
+
+Checked in the Modal dashboard on 2026-10-31: the workspace is on the Starter plan with $30 of included compute credits a month, the usage limit is $30 and the spend limit is $0. So workloads stop once the free credits are used up and nothing is ever charged to the card for compute. Volume storage is not covered by the limit and keeps billing, so delete every Modal volume you create. Do not change either limit without asking the owner.
