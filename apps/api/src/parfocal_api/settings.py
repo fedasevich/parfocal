@@ -1,6 +1,25 @@
-from pydantic import AnyHttpUrl, HttpUrl, PositiveInt, PostgresDsn, SecretStr
+from typing import Annotated
 
+from pydantic import AfterValidator, AnyHttpUrl, Field, HttpUrl, PositiveInt, PostgresDsn, SecretStr
+
+from parfocal_common.object_store import LIST_PAGE_LIMIT, MAX_PRESIGN_SECONDS, StorageLocation
+from parfocal_common.part_plan import (
+    DEFAULT_PART_BYTES,
+    MAX_PART_BYTES,
+    MAX_PARTS,
+    MIB,
+    MIN_PART_BYTES,
+)
 from parfocal_common.settings import ServiceSettings
+
+GIB = 1024 * MIB
+DEFAULT_UPLOAD_MAX_BYTES = 20 * GIB
+
+
+def whole_mib(value: int) -> int:
+    if value % MIB:
+        raise ValueError("A part size is a whole MiB")
+    return value
 
 
 class ApiSettings(ServiceSettings):
@@ -14,3 +33,25 @@ class ApiSettings(ServiceSettings):
     rate_limit_person_per_minute: PositiveInt = 600
     rate_limit_tenant_per_minute: PositiveInt = 3000
     result_store_dir: str = ".results"
+    storage_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:9000")
+    storage_region: str = "auto"
+    storage_bucket: str = "parfocal-local"
+    storage_access_key_id: str = "parfocal"
+    storage_secret_access_key: SecretStr = SecretStr("parfocal-local-secret")
+    upload_max_bytes: Annotated[int, Field(ge=1, le=MAX_PARTS * MAX_PART_BYTES)] = (
+        DEFAULT_UPLOAD_MAX_BYTES
+    )
+    upload_part_bytes: Annotated[
+        int, Field(ge=MIN_PART_BYTES, le=MAX_PART_BYTES), AfterValidator(whole_mib)
+    ] = DEFAULT_PART_BYTES
+    upload_part_url_seconds: Annotated[int, Field(ge=1, le=MAX_PRESIGN_SECONDS)] = 15 * 60
+    upload_list_page_size: Annotated[int, Field(ge=1, le=LIST_PAGE_LIMIT)] = LIST_PAGE_LIMIT
+
+    def storage(self) -> StorageLocation:
+        return StorageLocation(
+            endpoint=str(self.storage_endpoint).rstrip("/"),
+            region=self.storage_region,
+            bucket=self.storage_bucket,
+            access_key_id=self.storage_access_key_id,
+            secret_access_key=self.storage_secret_access_key.get_secret_value(),
+        )

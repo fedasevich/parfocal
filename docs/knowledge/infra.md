@@ -8,6 +8,7 @@ How `infra/tofu` works and the traps found while setting it up. It implements th
 |---|---|
 | Zone settings on `parfocal.eu` (HTTPS only, TLS 1.2 minimum, TLS 1.3, strict SSL) | `cloudflare.tf` |
 | R2 buckets `parfocal-dev`, `parfocal-staging`, `parfocal-prod` with `prevent_destroy` | `cloudflare.tf` |
+| Per bucket, the upload CORS rule (the environment's app origin, `PUT`, `Content-Type`, `ETag` exposed, 3600 s) and a lifecycle rule that aborts incomplete multipart uploads under `t/` after 1 day. Written by INGEST-001 (upload API with presigned multipart) and not applied yet, which INGEST-028 (upload protocol check on the R2 dev bucket) does with the owner's yes | `cloudflare.tf` |
 | Zitadel project `Parfocal` and one confidential OIDC app per environment (`parfocal-api-dev`, `-staging`, `-prod`) | `zitadel.tf` |
 
 Not managed yet: DNS records, the Neon project (created through the Vercel Marketplace), Modal environments and the `parfocal-tfstate` bucket itself. TODO: decide in OPS-001 whether Neon moves under OpenTofu.

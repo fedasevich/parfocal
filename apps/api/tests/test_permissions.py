@@ -1,15 +1,17 @@
 import asyncio
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+import httpx2
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from storage_support import TEST_PART_BYTES, TEST_STORAGE
 
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.openapi import openapi_schema
@@ -44,11 +46,13 @@ from parfocal_api.tables import (
     service_accounts,
     slide_counters,
     tenants,
+    uploads,
     users,
     verdicts,
 )
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.jobs import enqueue
+from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
@@ -115,6 +119,20 @@ SEATS = (RESEARCHER, ADMIN, REVIEWER)
 
 
 @dataclass(frozen=True)
+class SeededUpload:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    key: str = "t/placeholder"
+    etag: str = "0"
+
+    def path(self, suffix: str = "") -> str:
+        return f"/api/uploads/s3/multipart/{self.id}{suffix}?key={self.key}"
+
+
+UPLOAD_NAME = "Matrix slide.svs"
+UPLOAD_BYTES = b"0123456789"
+
+
+@dataclass(frozen=True)
 class Workspace:
     tenant_id: uuid.UUID
     users: dict[Seat, uuid.UUID]
@@ -151,6 +169,9 @@ class Workspace:
     doomed_patient: uuid.UUID
     study_template: uuid.UUID
     spare_template: uuid.UUID
+    open_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
+    finished_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
+    doomed_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
 
     @property
     def annotations(self) -> str:
@@ -213,6 +234,23 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "restoreStudyTemplate": lambda w: Call(
         "POST", f"/api/study-templates/{w.spare_template}/restore"
     ),
+    "createUpload": lambda w: Call(
+        "POST",
+        "/api/uploads/s3/multipart",
+        {"filename": UPLOAD_NAME, "metadata": {"project_id": str(w.project), "size": 10}},
+    ),
+    "findOpenUpload": lambda w: Call(
+        "GET",
+        f"/api/uploads/open?project_id={w.project}&name={UPLOAD_NAME}&size=10&last_modified=1",
+    ),
+    "signUploadPart": lambda w: Call("GET", w.open_upload.path("/1")),
+    "listUploadParts": lambda w: Call("GET", w.open_upload.path()),
+    "completeUpload": lambda w: Call(
+        "POST",
+        w.finished_upload.path("/complete"),
+        {"parts": [{"PartNumber": 1, "ETag": w.finished_upload.etag}]},
+    ),
+    "abortUpload": lambda w: Call("DELETE", w.doomed_upload.path()),
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
@@ -919,6 +957,19 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                     for user, role in ((people[REVIEWER], "viewer"), (colleague, "viewer"))
                 ],
             )
+            async with httpx2.AsyncClient(timeout=30) as http:
+                store = ObjectStore(TEST_STORAGE, http)
+                uploads_made = [
+                    await seed_upload(
+                        connection,
+                        store,
+                        tenant_id,
+                        case.project_id,
+                        people[lead],
+                        with_part=with_part,
+                    )
+                    for with_part in (False, True, False)
+                ]
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)
@@ -965,13 +1016,51 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             doomed_patient,
             templates[BuiltInTemplate.DETECTION],
             templates[BuiltInTemplate.SEGMENTATION],
+            *uploads_made,
         )
     finally:
         await engine.dispose()
 
 
+async def seed_upload(
+    connection: AsyncConnection,
+    store: ObjectStore,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    user_id: uuid.UUID,
+    *,
+    with_part: bool,
+) -> SeededUpload:
+    upload_id = uuid.uuid4()
+    key = f"t/{tenant_id}/quarantine/{upload_id}/Matrix_slide.svs"
+    storage_upload_id = await store.create_multipart_upload(key)
+    etag = "0"
+    if with_part:
+        stored = await store.http.put(
+            store.presign_part(key, storage_upload_id, 1, 60), content=UPLOAD_BYTES
+        )
+        etag = stored.headers["etag"].strip('"')
+    await connection.execute(
+        insert(uploads).values(
+            id=upload_id,
+            tenant_id=tenant_id,
+            project_id=project_id,
+            created_by_user_id=user_id,
+            file_name=UPLOAD_NAME,
+            size_bytes=len(UPLOAD_BYTES),
+            last_modified_ms=1,
+            object_key=key,
+            storage_upload_id=storage_upload_id,
+            part_bytes=TEST_PART_BYTES,
+            part_count=1,
+        )
+    )
+    return SeededUpload(upload_id, key, etag)
+
+
 @pytest.fixture(scope="module")
-def workspaces(database: str) -> dict[Seat, Workspace]:
+def workspaces(database: str, storage: StorageLocation) -> dict[Seat, Workspace]:
+    assert storage.bucket
     return {
         seat: asyncio.run(seed(database, seat if seat.role is Role.RESEARCHER else RESEARCHER))
         for seat in SEATS
@@ -1080,6 +1169,7 @@ def tenant_fingerprint(database: str, tenant_id: uuid.UUID) -> dict[str, str]:
 
 
 @pytest.mark.db
+@pytest.mark.usefixtures("storage")
 def test_no_call_from_another_workspace_changes_this_one(api: ApiAs, database: str) -> None:
     mine = asyncio.run(seed(database))
     theirs = asyncio.run(seed(database))

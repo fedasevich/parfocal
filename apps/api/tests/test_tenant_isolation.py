@@ -4,11 +4,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
+import httpx2
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import func, insert, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from storage_support import TEST_PART_BYTES, TEST_STORAGE
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
@@ -55,10 +57,12 @@ from parfocal_api.tables import (
     study_template_versions,
     study_templates,
     tenants,
+    uploads,
     users,
     verdicts,
 )
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.object_store import ObjectStore, StorageLocation
 
 pytestmark = pytest.mark.db
 
@@ -566,6 +570,43 @@ async def seed_study_template_versions(connection: AsyncConnection, seeded: Seed
     seeded.markers.add(name)
 
 
+def upload_key(seeded: Seeded) -> str:
+    return f"t/{seeded.tenant_id}/quarantine/{seeded.ids['upload']}/isolation.svs"
+
+
+def upload_name(seeded: Seeded) -> str:
+    return f"Isolation {seeded.tenant_id}.svs"
+
+
+def upload_content(seeded: Seeded) -> bytes:
+    return f"part of {seeded.tenant_id}".encode()
+
+
+async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
+    seeded.ids["upload"] = uuid.uuid4()
+    key = upload_key(seeded)
+    content = upload_content(seeded)
+    async with httpx2.AsyncClient(timeout=30) as http:
+        store = ObjectStore(TEST_STORAGE, http)
+        storage_upload_id = await store.create_multipart_upload(key)
+        stored = await http.put(store.presign_part(key, storage_upload_id, 1, 60), content=content)
+    await connection.execute(
+        insert(uploads).values(
+            id=seeded.ids["upload"],
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            created_by_user_id=seeded.ids["user"],
+            file_name=upload_name(seeded),
+            size_bytes=len(content),
+            object_key=key,
+            storage_upload_id=storage_upload_id,
+            part_bytes=TEST_PART_BYTES,
+            part_count=1,
+        )
+    )
+    seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -581,8 +622,24 @@ SEEDERS: dict[str, Seeder] = {
     "api_tokens": seed_api_tokens,
     "study_templates": seed_study_templates,
     "study_template_versions": seed_study_template_versions,
+    "uploads": seed_uploads,
 }
 GET_ROUTES = {
+    "findOpenUpload": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/uploads/open?project_id={a.ids['project']}&name={upload_name(a)}"
+            f"&size={len(upload_content(a))}"
+        ),
+    ),
+    "signUploadPart": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/uploads/s3/multipart/{a.ids['upload']}/1?key={upload_key(a)}",
+    ),
+    "listUploadParts": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/uploads/s3/multipart/{a.ids['upload']}?key={upload_key(a)}",
+    ),
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
     "getStudyTemplate": Route(
@@ -811,7 +868,8 @@ async def seed_both(database: str) -> tuple[Seeded, Seeded]:
 
 
 @pytest.fixture(scope="module")
-def seeded(database: str) -> tuple[Seeded, Seeded]:
+def seeded(database: str, storage: StorageLocation) -> tuple[Seeded, Seeded]:
+    assert storage.bucket
     return asyncio.run(seed_both(database))
 
 

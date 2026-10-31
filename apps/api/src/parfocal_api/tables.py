@@ -1723,3 +1723,86 @@ legal_holds = Table(
     *timestamps(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
 )
+
+
+class UploadStatus(StrEnum):
+    OPEN = "open"
+    COMPLETED = "completed"
+    ABORTED = "aborted"
+    EXPIRED = "expired"
+
+
+MIN_UPLOAD_PART_BYTES = 5 * 1024 * 1024
+MAX_UPLOAD_PARTS = 10_000
+
+uploads = Table(
+    "uploads",
+    metadata,
+    Column("id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "created_by_service_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("service_accounts.id"),
+        nullable=True,
+        info=OPERATIONAL,
+    ),
+    Column("file_name", String(255), nullable=False, info=PHI),
+    Column("size_bytes", BigInteger, nullable=False, info=OPERATIONAL),
+    Column("last_modified_ms", BigInteger, nullable=True, info=OPERATIONAL),
+    Column("object_key", String(512), nullable=False, unique=True, info=PHI),
+    Column("storage_upload_id", String(1024), nullable=False, info=OPERATIONAL),
+    Column("part_bytes", BigInteger, nullable=False, info=OPERATIONAL),
+    Column("part_count", Integer, nullable=False, info=OPERATIONAL),
+    Column("status", String(10), nullable=False, server_default="open", info=OPERATIONAL),
+    Column("etag", String(80), nullable=True, info=OPERATIONAL),
+    Column("job_id", Uuid[uuid.UUID](), ForeignKey("jobs.id"), nullable=True, info=OPERATIONAL),
+    Column(
+        "last_activity_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("closed_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
+    one_of("status", UploadStatus),
+    CheckConstraint("size_bytes > 0", name="size_bytes"),
+    CheckConstraint(f"part_bytes >= {MIN_UPLOAD_PART_BYTES}", name="part_bytes"),
+    CheckConstraint(f"part_count BETWEEN 1 AND {MAX_UPLOAD_PARTS}", name="part_count"),
+    CheckConstraint("(status = 'open') = (closed_at IS NULL)", name="closed"),
+    CheckConstraint(
+        "(created_by_user_id IS NULL) <> (created_by_service_id IS NULL)", name="created_by"
+    ),
+    CheckConstraint("(status = 'completed') = (job_id IS NOT NULL)", name="completed_job"),
+    Index(
+        "ix_uploads_open_by_file",
+        "project_id",
+        "file_name",
+        "size_bytes",
+        postgresql_where=text("status = 'open'"),
+    ),
+    Index(
+        "ix_uploads_open_by_activity",
+        "last_activity_at",
+        postgresql_where=text("status = 'open'"),
+    ),
+)

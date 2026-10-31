@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 24 |
-| `personal` | 42 |
+| `phi` | 26 |
+| `personal` | 43 |
 | `secret` | 9 |
-| `operational` | 409 |
+| `operational` | 426 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -727,6 +727,31 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `plan` | operational |
 | `status` | operational |
 | `suspended_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## uploads
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `case_id` | operational |
+| `created_by_user_id` | personal |
+| `created_by_service_id` | operational |
+| `file_name` | phi |
+| `size_bytes` | operational |
+| `last_modified_ms` | operational |
+| `object_key` | phi |
+| `storage_upload_id` | operational |
+| `part_bytes` | operational |
+| `part_count` | operational |
+| `status` | operational |
+| `etag` | operational |
+| `job_id` | operational |
+| `last_activity_at` | operational |
+| `closed_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

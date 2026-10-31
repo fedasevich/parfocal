@@ -10,6 +10,7 @@ from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+from storage_support import TEST_MAX_BYTES, TEST_PAGE_SIZE, TEST_PART_BYTES, TEST_STORAGE
 
 from parfocal_api.app import ParfocalApi, create_app
 from parfocal_api.auth import authenticate
@@ -73,6 +74,14 @@ def api_settings(database: str) -> ApiSettings:
             "zitadel_issuer": "https://issuer.invalid",
             "zitadel_client_id": "test",
             "zitadel_client_secret": "test",
+            "storage_endpoint": TEST_STORAGE.endpoint,
+            "storage_region": TEST_STORAGE.region,
+            "storage_bucket": TEST_STORAGE.bucket,
+            "storage_access_key_id": TEST_STORAGE.access_key_id,
+            "storage_secret_access_key": TEST_STORAGE.secret_access_key,
+            "upload_max_bytes": TEST_MAX_BYTES,
+            "upload_part_bytes": TEST_PART_BYTES,
+            "upload_list_page_size": TEST_PAGE_SIZE,
         }
     )
 

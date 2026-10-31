@@ -1,12 +1,12 @@
 # Local development
 
-How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is reached from a laptop, as decided in [ADR 0004](../adr/0004-cloud-dev-resources.md) and [ADR 0005](../adr/0005-external-sends-only-in-production.md). Only `APP_ENV=prod` talks to Resend, Sentry, Grafana Cloud and PostHog. Each has an override setting for the rare case of testing it elsewhere. FOUND-009 builds this. Postgres is the only local service. Everything else runs inside the dev servers or is a free cloud resource.
+How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is reached from a laptop, as decided in [ADR 0004](../adr/0004-cloud-dev-resources.md) and [ADR 0005](../adr/0005-external-sends-only-in-production.md). Only `APP_ENV=prod` talks to Resend, Sentry, Grafana Cloud and PostHog. Each has an override setting for the rare case of testing it elsewhere. FOUND-009 builds this. Postgres and MinIO are the only local services. Everything else runs inside the dev servers or is a free cloud resource.
 
 | Service | Production | Development | Automated tests |
 |---|---|---|---|
 | Web app | Cloudflare Pages | Vite dev server | Vitest and Playwright |
 | Router, tile gateway, realtime | Workers and Durable Objects | The Cloudflare Vite plugin runs the Worker and Durable Objects locally under `vite dev`, so the app is one origin like production | Miniflare through the Workers Vitest pool |
-| Slide storage | R2 production bucket | R2 `parfocal-dev` bucket, through a remote binding from the Worker and the S3 API from Python | Miniflare's in-memory R2 for Worker unit tests. Python integration tests use `parfocal-dev` with a per-run prefix that is deleted afterwards |
+| Slide storage | R2 production bucket | MinIO from `compose.yaml` for the Python API (`STORAGE_*` settings default to it). The Worker's remote binding to the R2 `parfocal-dev` bucket is still planned | Miniflare's in-memory R2 for Worker unit tests. Python tests run against the compose MinIO ([ADR 0121](../adr/0121-s3-client-signed-by-hand-on-httpx2.md), S3 client signed by hand), and INGEST-028 (upload protocol check on the R2 dev bucket) checks the real R2 behaviour on `parfocal-dev` |
 | Database | Neon | Docker Compose with `imresamu/postgis:17-3.6.1-alpine3.22` and PgBouncer in transaction mode (`pnpm db:up`) | The same compose stack, in CI as well |
 | Python API | FastAPI on Modal | `uv run uvicorn` | pytest with the FastAPI test client |
 | Jobs | Modal `spawn` and cron | In-process runner behind the same interface | In-process runner with a fake clock |

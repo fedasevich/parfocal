@@ -1,9 +1,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from parfocal_common.ingest import KIND, LEASE_SECONDS, STEP_NAMES
 from parfocal_common.jobs import Step, StepRun, Workflow
 
-STEP_NAMES = ("quarantine", "scan", "identify", "validate", "index", "derive", "publish")
+__all__ = ["INGEST", "STEP_NAMES"]
 
 
 def placeholder(name: str) -> Step:
@@ -13,4 +14,6 @@ def placeholder(name: str) -> Step:
     return Step(name, run)
 
 
-INGEST = Workflow(kind="ingest", steps=[placeholder(name) for name in STEP_NAMES], lease_seconds=60)
+INGEST = Workflow(
+    kind=KIND, steps=[placeholder(name) for name in STEP_NAMES], lease_seconds=LEASE_SECONDS
+)

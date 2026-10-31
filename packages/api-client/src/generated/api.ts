@@ -22,6 +22,20 @@ import type {
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
+export type UploadStatus = (typeof UploadStatus)[keyof typeof UploadStatus];
+
+export const UploadStatus = {
+  open: "open",
+  completed: "completed",
+  aborted: "aborted",
+  expired: "expired",
+} as const;
+
+export interface AbortedUpload {
+  uploadId: string;
+  status: UploadStatus;
+}
+
 /**
  * @minLength 1
  * @maxLength 100
@@ -372,6 +386,7 @@ export const AuditTarget = {
   case: "case",
   project: "project",
   "result-set": "result-set",
+  upload: "upload",
   "review-task": "review-task",
   "study-template": "study-template",
   "service-account": "service-account",
@@ -621,6 +636,19 @@ export interface ChoiceQuestion {
   options: Option[];
 }
 
+export interface ClaimedPart {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  PartNumber: number;
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  ETag: string;
+}
+
 /**
  * @minLength 1
  * @maxLength 60
@@ -724,6 +752,19 @@ export interface Comparison {
   metrics: Metric[];
 }
 
+export interface CompletedUpload {
+  location: string;
+  key: string;
+  uploadId: string;
+  job_id: string;
+  etag: string | null;
+}
+
+export interface Completion {
+  /** @maxItems 10000 */
+  parts: ClaimedPart[];
+}
+
 export type ConfusionMatrixWidth = (typeof ConfusionMatrixWidth)[keyof typeof ConfusionMatrixWidth];
 
 export const ConfusionMatrixWidth = {
@@ -782,6 +823,13 @@ export interface IssuedToken {
 export interface CreatedServiceAccount {
   account: ServiceAccount;
   token: IssuedToken;
+}
+
+export interface CreatedUpload {
+  key: string;
+  uploadId: string;
+  part_size: number;
+  part_count: number;
 }
 
 export type Decision = (typeof Decision)[keyof typeof Decision];
@@ -957,6 +1005,12 @@ export interface FieldError {
   message: string;
   code: string;
 }
+
+/**
+ * @minLength 1
+ * @maxLength 255
+ */
+export type FileName = string;
 
 export type FirstReadAnswers = { [key: string]: unknown };
 
@@ -1518,6 +1572,17 @@ export interface Neighbours {
  * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
  */
 export type ObjectId = string;
+
+export interface OpenUpload {
+  key: string;
+  uploadId: string;
+  part_size: number;
+  part_count: number;
+  project_id: string;
+  case_id: string | null;
+  size: number;
+  created_at: string;
+}
 
 export type OpinionAnswersProperty = { [key: string]: unknown };
 
@@ -2418,6 +2483,11 @@ export interface SetRef {
   status: ResultStatus;
 }
 
+export interface SignedPart {
+  url: string;
+  expires: number;
+}
+
 export interface SigningKey {
   tenant_id: string;
   key_id: string;
@@ -2624,6 +2694,26 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export interface UploadMetadata {
+  project_id: string;
+  case_id?: string | null;
+  /** @minimum 1 */
+  size: number;
+  last_modified?: number | null;
+}
+
+export interface UploadDraft {
+  filename: FileName;
+  type?: string | null;
+  metadata: UploadMetadata;
+}
+
+export interface UploadedPart {
+  PartNumber: number;
+  Size: number;
+  ETag: string;
+}
+
 export interface Validation {
   valid: boolean;
   problems: SchemaProblem[];
@@ -2692,6 +2782,52 @@ export type DeleteAnnotationParams = {
 export type GetResultsSchema200 = { [key: string]: unknown };
 
 export type GetResultsTemplate200 = { [key: string]: unknown };
+
+export type FindOpenUploadParams = {
+  project_id: string;
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * @minimum 1
+   */
+  size: number;
+  last_modified?: number | null;
+};
+
+export type SignUploadPartParams = {
+  /**
+   * @minLength 1
+   * @maxLength 512
+   */
+  key: string;
+};
+
+export type ListUploadPartsParams = {
+  /**
+   * @minLength 1
+   * @maxLength 512
+   */
+  key: string;
+};
+
+export type AbortUploadParams = {
+  /**
+   * @minLength 1
+   * @maxLength 512
+   */
+  key: string;
+};
+
+export type CompleteUploadParams = {
+  /**
+   * @minLength 1
+   * @maxLength 512
+   */
+  key: string;
+};
 
 export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
@@ -11085,6 +11221,1136 @@ export const useValidateResultsFile = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getValidateResultsFileMutationOptions(options), queryClient);
+};
+
+export type createUploadResponse201 = {
+  data: CreatedUpload;
+  status: 201;
+};
+
+export type createUploadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createUploadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createUploadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createUploadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createUploadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createUploadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createUploadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createUploadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createUploadResponseSuccess = createUploadResponse201 & {
+  headers: Headers;
+};
+export type createUploadResponseError = (
+  | createUploadResponse400
+  | createUploadResponse401
+  | createUploadResponse403
+  | createUploadResponse404
+  | createUploadResponse409
+  | createUploadResponse422
+  | createUploadResponse429
+  | createUploadResponse500
+) & {
+  headers: Headers;
+};
+
+export type createUploadResponse = createUploadResponseSuccess | createUploadResponseError;
+
+export const getCreateUploadUrl = () => {
+  return `/api/uploads/s3/multipart`;
+};
+
+/**
+ * @summary Create Upload
+ */
+export const createUpload = async (
+  uploadDraft: UploadDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createUploadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createUploadResponse>(getCreateUploadUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(uploadDraft),
+  });
+};
+
+export const getCreateUploadMutationKey = () => ["createUpload"] as const;
+
+export const getCreateUploadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createUpload>>,
+    TError,
+    CreateUploadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createUpload>>,
+  TError,
+  CreateUploadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateUploadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createUpload>>,
+    CreateUploadMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createUpload(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof createUpload>>>;
+export type CreateUploadMutationBody = UploadDraft;
+export type CreateUploadMutationError = Problem;
+export type CreateUploadMutationVariables = { data: UploadDraft };
+
+/**
+ * @summary Create Upload
+ */
+export const useCreateUpload = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createUpload>>,
+      TError,
+      CreateUploadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createUpload>>,
+  TError,
+  CreateUploadMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateUploadMutationOptions(options), queryClient);
+};
+
+export type findOpenUploadResponse200 = {
+  data: OpenUpload;
+  status: 200;
+};
+
+export type findOpenUploadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type findOpenUploadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type findOpenUploadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type findOpenUploadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type findOpenUploadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type findOpenUploadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type findOpenUploadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type findOpenUploadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type findOpenUploadResponseSuccess = findOpenUploadResponse200 & {
+  headers: Headers;
+};
+export type findOpenUploadResponseError = (
+  | findOpenUploadResponse400
+  | findOpenUploadResponse401
+  | findOpenUploadResponse403
+  | findOpenUploadResponse404
+  | findOpenUploadResponse409
+  | findOpenUploadResponse422
+  | findOpenUploadResponse429
+  | findOpenUploadResponse500
+) & {
+  headers: Headers;
+};
+
+export type findOpenUploadResponse = findOpenUploadResponseSuccess | findOpenUploadResponseError;
+
+export const getFindOpenUploadUrl = (params: FindOpenUploadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/open?${stringifiedParams}`
+    : `/api/uploads/open`;
+};
+
+/**
+ * @summary Find Open Upload
+ */
+export const findOpenUpload = async (
+  params: FindOpenUploadParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<findOpenUploadResponse> => {
+  return apiFetch<findOpenUploadResponse>(getFindOpenUploadUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getFindOpenUploadQueryKey = (params?: FindOpenUploadParams) => {
+  return [`/api/uploads/open`, ...(params ? [params] : [])] as const;
+};
+
+export const getFindOpenUploadQueryOptions = <
+  TData = Awaited<ReturnType<typeof findOpenUpload>>,
+  TError = Problem,
+>(
+  params: FindOpenUploadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findOpenUpload>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getFindOpenUploadQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof findOpenUpload>>> = ({ signal }) =>
+    findOpenUpload(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof findOpenUpload>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FindOpenUploadQueryResult = NonNullable<Awaited<ReturnType<typeof findOpenUpload>>>;
+export type FindOpenUploadQueryError = Problem;
+
+export function useFindOpenUpload<
+  TData = Awaited<ReturnType<typeof findOpenUpload>>,
+  TError = Problem,
+>(
+  params: FindOpenUploadParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof findOpenUpload>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findOpenUpload>>,
+          TError,
+          Awaited<ReturnType<typeof findOpenUpload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindOpenUpload<
+  TData = Awaited<ReturnType<typeof findOpenUpload>>,
+  TError = Problem,
+>(
+  params: FindOpenUploadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findOpenUpload>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findOpenUpload>>,
+          TError,
+          Awaited<ReturnType<typeof findOpenUpload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindOpenUpload<
+  TData = Awaited<ReturnType<typeof findOpenUpload>>,
+  TError = Problem,
+>(
+  params: FindOpenUploadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findOpenUpload>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Find Open Upload
+ */
+
+export function useFindOpenUpload<
+  TData = Awaited<ReturnType<typeof findOpenUpload>>,
+  TError = Problem,
+>(
+  params: FindOpenUploadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findOpenUpload>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFindOpenUploadQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type signUploadPartResponse200 = {
+  data: SignedPart;
+  status: 200;
+};
+
+export type signUploadPartResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type signUploadPartResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type signUploadPartResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type signUploadPartResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type signUploadPartResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type signUploadPartResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type signUploadPartResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type signUploadPartResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type signUploadPartResponseSuccess = signUploadPartResponse200 & {
+  headers: Headers;
+};
+export type signUploadPartResponseError = (
+  | signUploadPartResponse400
+  | signUploadPartResponse401
+  | signUploadPartResponse403
+  | signUploadPartResponse404
+  | signUploadPartResponse409
+  | signUploadPartResponse422
+  | signUploadPartResponse429
+  | signUploadPartResponse500
+) & {
+  headers: Headers;
+};
+
+export type signUploadPartResponse = signUploadPartResponseSuccess | signUploadPartResponseError;
+
+export const getSignUploadPartUrl = (
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/s3/multipart/${uploadId}/${partNumber}?${stringifiedParams}`
+    : `/api/uploads/s3/multipart/${uploadId}/${partNumber}`;
+};
+
+/**
+ * @summary Sign Upload Part
+ */
+export const signUploadPart = async (
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<signUploadPartResponse> => {
+  return apiFetch<signUploadPartResponse>(getSignUploadPartUrl(uploadId, partNumber, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSignUploadPartQueryKey = (
+  uploadId: string,
+  partNumber: number,
+  params?: SignUploadPartParams,
+) => {
+  return [
+    `/api/uploads/s3/multipart/${uploadId}/${partNumber}`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getSignUploadPartQueryOptions = <
+  TData = Awaited<ReturnType<typeof signUploadPart>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSignUploadPartQueryKey(uploadId, partNumber, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof signUploadPart>>> = ({ signal }) =>
+    signUploadPart(uploadId, partNumber, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      uploadId !== null &&
+      uploadId !== undefined &&
+      partNumber !== null &&
+      partNumber !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type SignUploadPartQueryResult = NonNullable<Awaited<ReturnType<typeof signUploadPart>>>;
+export type SignUploadPartQueryError = Problem;
+
+export function useSignUploadPart<
+  TData = Awaited<ReturnType<typeof signUploadPart>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof signUploadPart>>,
+          TError,
+          Awaited<ReturnType<typeof signUploadPart>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSignUploadPart<
+  TData = Awaited<ReturnType<typeof signUploadPart>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof signUploadPart>>,
+          TError,
+          Awaited<ReturnType<typeof signUploadPart>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSignUploadPart<
+  TData = Awaited<ReturnType<typeof signUploadPart>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Sign Upload Part
+ */
+
+export function useSignUploadPart<
+  TData = Awaited<ReturnType<typeof signUploadPart>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  partNumber: number,
+  params: SignUploadPartParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof signUploadPart>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSignUploadPartQueryOptions(uploadId, partNumber, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listUploadPartsResponse200 = {
+  data: UploadedPart[];
+  status: 200;
+};
+
+export type listUploadPartsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listUploadPartsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listUploadPartsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listUploadPartsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listUploadPartsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listUploadPartsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listUploadPartsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listUploadPartsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listUploadPartsResponseSuccess = listUploadPartsResponse200 & {
+  headers: Headers;
+};
+export type listUploadPartsResponseError = (
+  | listUploadPartsResponse400
+  | listUploadPartsResponse401
+  | listUploadPartsResponse403
+  | listUploadPartsResponse404
+  | listUploadPartsResponse409
+  | listUploadPartsResponse422
+  | listUploadPartsResponse429
+  | listUploadPartsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listUploadPartsResponse = listUploadPartsResponseSuccess | listUploadPartsResponseError;
+
+export const getListUploadPartsUrl = (uploadId: string, params: ListUploadPartsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/s3/multipart/${uploadId}?${stringifiedParams}`
+    : `/api/uploads/s3/multipart/${uploadId}`;
+};
+
+/**
+ * @summary List Upload Parts
+ */
+export const listUploadParts = async (
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listUploadPartsResponse> => {
+  return apiFetch<listUploadPartsResponse>(getListUploadPartsUrl(uploadId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListUploadPartsQueryKey = (uploadId: string, params?: ListUploadPartsParams) => {
+  return [`/api/uploads/s3/multipart/${uploadId}`, ...(params ? [params] : [])] as const;
+};
+
+export const getListUploadPartsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listUploadParts>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListUploadPartsQueryKey(uploadId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listUploadParts>>> = ({ signal }) =>
+    listUploadParts(uploadId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: uploadId !== null && uploadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListUploadPartsQueryResult = NonNullable<Awaited<ReturnType<typeof listUploadParts>>>;
+export type ListUploadPartsQueryError = Problem;
+
+export function useListUploadParts<
+  TData = Awaited<ReturnType<typeof listUploadParts>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUploadParts>>,
+          TError,
+          Awaited<ReturnType<typeof listUploadParts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListUploadParts<
+  TData = Awaited<ReturnType<typeof listUploadParts>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUploadParts>>,
+          TError,
+          Awaited<ReturnType<typeof listUploadParts>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListUploadParts<
+  TData = Awaited<ReturnType<typeof listUploadParts>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Upload Parts
+ */
+
+export function useListUploadParts<
+  TData = Awaited<ReturnType<typeof listUploadParts>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  params: ListUploadPartsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listUploadParts>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListUploadPartsQueryOptions(uploadId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type abortUploadResponse200 = {
+  data: AbortedUpload;
+  status: 200;
+};
+
+export type abortUploadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type abortUploadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type abortUploadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type abortUploadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type abortUploadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type abortUploadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type abortUploadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type abortUploadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type abortUploadResponseSuccess = abortUploadResponse200 & {
+  headers: Headers;
+};
+export type abortUploadResponseError = (
+  | abortUploadResponse400
+  | abortUploadResponse401
+  | abortUploadResponse403
+  | abortUploadResponse404
+  | abortUploadResponse409
+  | abortUploadResponse422
+  | abortUploadResponse429
+  | abortUploadResponse500
+) & {
+  headers: Headers;
+};
+
+export type abortUploadResponse = abortUploadResponseSuccess | abortUploadResponseError;
+
+export const getAbortUploadUrl = (uploadId: string, params: AbortUploadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/s3/multipart/${uploadId}?${stringifiedParams}`
+    : `/api/uploads/s3/multipart/${uploadId}`;
+};
+
+/**
+ * @summary Abort Upload
+ */
+export const abortUpload = async (
+  uploadId: string,
+  params: AbortUploadParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<abortUploadResponse> => {
+  return apiFetch<abortUploadResponse>(getAbortUploadUrl(uploadId, params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAbortUploadMutationKey = () => ["abortUpload"] as const;
+
+export const getAbortUploadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof abortUpload>>,
+    TError,
+    AbortUploadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof abortUpload>>,
+  TError,
+  AbortUploadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAbortUploadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof abortUpload>>,
+    AbortUploadMutationVariables
+  > = (props) => {
+    const { uploadId, params } = props ?? {};
+
+    return abortUpload(uploadId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AbortUploadMutationResult = NonNullable<Awaited<ReturnType<typeof abortUpload>>>;
+
+export type AbortUploadMutationError = Problem;
+export type AbortUploadMutationVariables = { uploadId: string; params: AbortUploadParams };
+
+/**
+ * @summary Abort Upload
+ */
+export const useAbortUpload = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof abortUpload>>,
+      TError,
+      AbortUploadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof abortUpload>>,
+  TError,
+  AbortUploadMutationVariables,
+  TContext
+> => {
+  return useMutation(getAbortUploadMutationOptions(options), queryClient);
+};
+
+export type completeUploadResponse200 = {
+  data: CompletedUpload;
+  status: 200;
+};
+
+export type completeUploadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type completeUploadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type completeUploadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type completeUploadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type completeUploadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type completeUploadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type completeUploadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type completeUploadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type completeUploadResponseSuccess = completeUploadResponse200 & {
+  headers: Headers;
+};
+export type completeUploadResponseError = (
+  | completeUploadResponse400
+  | completeUploadResponse401
+  | completeUploadResponse403
+  | completeUploadResponse404
+  | completeUploadResponse409
+  | completeUploadResponse422
+  | completeUploadResponse429
+  | completeUploadResponse500
+) & {
+  headers: Headers;
+};
+
+export type completeUploadResponse = completeUploadResponseSuccess | completeUploadResponseError;
+
+export const getCompleteUploadUrl = (uploadId: string, params: CompleteUploadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/s3/multipart/${uploadId}/complete?${stringifiedParams}`
+    : `/api/uploads/s3/multipart/${uploadId}/complete`;
+};
+
+/**
+ * @summary Complete Upload
+ */
+export const completeUpload = async (
+  uploadId: string,
+  completion: Completion,
+  params: CompleteUploadParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<completeUploadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<completeUploadResponse>(getCompleteUploadUrl(uploadId, params), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(completion),
+  });
+};
+
+export const getCompleteUploadMutationKey = () => ["completeUpload"] as const;
+
+export const getCompleteUploadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completeUpload>>,
+    TError,
+    CompleteUploadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof completeUpload>>,
+  TError,
+  CompleteUploadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCompleteUploadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof completeUpload>>,
+    CompleteUploadMutationVariables
+  > = (props) => {
+    const { uploadId, data, params } = props ?? {};
+
+    return completeUpload(uploadId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof completeUpload>>>;
+export type CompleteUploadMutationBody = Completion;
+export type CompleteUploadMutationError = Problem;
+export type CompleteUploadMutationVariables = {
+  uploadId: string;
+  data: Completion;
+  params: CompleteUploadParams;
+};
+
+/**
+ * @summary Complete Upload
+ */
+export const useCompleteUpload = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof completeUpload>>,
+      TError,
+      CompleteUploadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof completeUpload>>,
+  TError,
+  CompleteUploadMutationVariables,
+  TContext
+> => {
+  return useMutation(getCompleteUploadMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {
