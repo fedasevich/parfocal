@@ -25,7 +25,11 @@ test("sequential tile requests each pay one RTT", async ({ page, network, rttMs 
   const description = `rtt ${rttMs} ms: median ${median.toFixed(2)} ms, min ${sorted[0]?.toFixed(2)} ms, max ${sorted.at(-1)?.toFixed(2)} ms over ${REQUESTS} requests of ${TILE_BYTES} bytes`;
   testInfo.annotations.push({ type: "perf", description });
   console.log(description);
-  expect(network.proxy.stats()).toEqual({ requests: REQUESTS, bytes: REQUESTS * TILE_BYTES });
+  expect(network.proxy.stats()).toEqual({
+    requests: REQUESTS,
+    bytes: REQUESTS * TILE_BYTES,
+    uploadedBytes: 0,
+  });
   const fastest = sorted[0] ?? 0;
   expect(fastest).toBeGreaterThanOrEqual(rttMs - 1);
   expect(fastest).toBeLessThanOrEqual(rttMs + latencyToleranceMs(rttMs));
