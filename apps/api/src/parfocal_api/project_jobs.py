@@ -6,10 +6,12 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.model_runs import require_run_reading
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.projects import visible
 from parfocal_common.jobs import JobStatus, StepStatus, job_steps, job_units, jobs
+from parfocal_common.model_runs import KIND as MODEL_RUN
 
 
 class JobStep(BaseModel):
@@ -17,6 +19,7 @@ class JobStep(BaseModel):
     status: StepStatus
     runs: int
     units_done: int
+    units_total: int | None
     started_at: datetime | None
     finished_at: datetime | None
 
@@ -54,6 +57,8 @@ async def get_project_job(
     ).one_or_none()
     if row is None:
         raise NotFoundError("Job not found")
+    if row.kind == MODEL_RUN:
+        await require_run_reading(connection, principal, project_id, job_id)
     units = (
         select(func.count())
         .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)
@@ -78,6 +83,7 @@ async def get_project_job(
                 status=StepStatus(step.status),
                 runs=step.runs,
                 units_done=step.units_done,
+                units_total=step.units_total,
                 started_at=step.started_at,
                 finished_at=step.finished_at,
             )

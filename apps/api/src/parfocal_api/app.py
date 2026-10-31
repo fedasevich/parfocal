@@ -22,6 +22,7 @@ from parfocal_api import (
     home,
     inbox,
     invitations,
+    model_runs,
     my_work,
     neighbours,
     notification_targets,
@@ -143,6 +144,7 @@ def create_app(
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)
+    app.include_router(model_runs.router)
     app.include_router(notifications.router)
     app.include_router(opinion_forms.template_router)
     app.include_router(taxonomy.templates_router)

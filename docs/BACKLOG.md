@@ -2340,6 +2340,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AIP-008 · Job model and API
   Jobs per slide and task with scope (view, selection, slide), parameters (detector, typer, test-time augmentation, ordering), state, progress per stage, cancel, resume, retry.
   Done when API tests cover the lifecycle and permissions.
+  Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).
 
 - [ ] AIP-009 · Resumable whole-slide jobs
   Tissue-masked core tiles with context halo, centroid ownership, tumour-first ordering, chunk per tile, resume by skipping tiles already written.

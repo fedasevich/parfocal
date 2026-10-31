@@ -387,6 +387,7 @@ export const AuditTarget = {
   project: "project",
   "result-set": "result-set",
   upload: "upload",
+  "model-run": "model-run",
   "review-task": "review-task",
   "study-template": "study-template",
   "service-account": "service-account",
@@ -1370,6 +1371,9 @@ export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 export const JobStatus = {
   queued: "queued",
   running: "running",
+  paused: "paused",
+  cancelling: "cancelling",
+  cancelled: "cancelled",
   done: "done",
   failed: "failed",
 } as const;
@@ -1388,6 +1392,7 @@ export interface JobStep {
   status: StepStatus;
   runs: number;
   units_done: number;
+  units_total: number | null;
   started_at: string | null;
   finished_at: string | null;
 }
@@ -1402,6 +1407,14 @@ export interface Job {
   finished_at: string | null;
   steps: JobStep[];
 }
+
+export type JobControl = (typeof JobControl)[keyof typeof JobControl];
+
+export const JobControl = {
+  cancel: "cancel",
+  resume: "resume",
+  retry: "retry",
+} as const;
 
 export type Layer = (typeof Layer)[keyof typeof Layer];
 
@@ -1537,6 +1550,144 @@ export interface MembershipDraft {
   role: Role;
   admin_rights?: boolean;
   user_id: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ * @pattern ^[A-Za-z0-9][A-Za-z0-9._/-]*$
+ */
+export type ModelName = string;
+
+/**
+ * @minLength 1
+ * @maxLength 40
+ * @pattern ^[A-Za-z0-9][A-Za-z0-9._+-]*$
+ */
+export type ModelVersion = string;
+
+export interface ModelReference {
+  name: ModelName;
+  version: ModelVersion;
+}
+
+export type SlideScopeKind = (typeof SlideScopeKind)[keyof typeof SlideScopeKind];
+
+export const SlideScopeKind = {
+  slide: "slide",
+} as const;
+
+export interface SlideScope {
+  kind: SlideScopeKind;
+}
+
+export type ViewScopeKind = (typeof ViewScopeKind)[keyof typeof ViewScopeKind];
+
+export const ViewScopeKind = {
+  view: "view",
+} as const;
+
+/**
+ * @minimum 0
+ * @maximum 10000000
+ */
+export type PixelOffset = number;
+
+/**
+ * @minimum 1
+ * @maximum 10000000
+ */
+export type PixelLength = number;
+
+export interface ViewScope {
+  kind: ViewScopeKind;
+  x: PixelOffset;
+  y: PixelOffset;
+  width: PixelLength;
+  height: PixelLength;
+}
+
+export type SelectionScopeKind = (typeof SelectionScopeKind)[keyof typeof SelectionScopeKind];
+
+export const SelectionScopeKind = {
+  selection: "selection",
+} as const;
+
+export type SelectionGeometry = PolygonGeometry | MultiPolygonGeometry;
+
+/**
+ * @minLength 1
+ * @maxLength 40
+ */
+export type ObjectReference = string;
+
+export interface SelectionScope {
+  kind: SelectionScopeKind;
+  geometry?: SelectionGeometry | null;
+  objects?: ObjectReference[] | null;
+}
+
+export type RunScope = SlideScope | ViewScope | SelectionScope;
+
+export type TestTimeViews = (typeof TestTimeViews)[keyof typeof TestTimeViews];
+
+export const TestTimeViews = {
+  NUMBER_1: 1,
+  NUMBER_8: 8,
+} as const;
+
+export type Ordering = (typeof Ordering)[keyof typeof Ordering];
+
+export const Ordering = {
+  raster: "raster",
+  "tumor-first": "tumor-first",
+} as const;
+
+export interface RunParameters {
+  detector: ModelReference;
+  typer?: ModelReference | null;
+  test_time_views?: TestTimeViews;
+  ordering?: Ordering;
+}
+
+export interface RunStage {
+  name: string;
+  status: StepStatus;
+  runs: number;
+  units_done: number;
+  units_total: number | null;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface ModelRun {
+  id: string;
+  batch_id: string;
+  project_id: string;
+  slide_id: string;
+  task_id: string | null;
+  status: JobStatus;
+  error_code: string | null;
+  pause_reason: string | null;
+  scope: RunScope;
+  parameters: RunParameters;
+  started_by_user_id: string | null;
+  attempts: number;
+  created_at: string;
+  finished_at: string | null;
+  stages: RunStage[];
+  actions: JobControl[];
+}
+
+export interface ModelRunDraft {
+  /**
+   * @minItems 1
+   * @maxItems 200
+   */
+  slide_ids: string[];
+  task_id?: string | null;
+  scope: RunScope;
+  parameters: RunParameters;
 }
 
 export type MuteSubject = (typeof MuteSubject)[keyof typeof MuteSubject];
@@ -2761,6 +2912,18 @@ export type ResolveClassNamesParams = {
    * @maxItems 200
    */
   name: string[];
+};
+
+export type ListModelRunsParams = {
+  status?: JobStatus[] | null;
+  slide_id?: string | null;
+  batch_id?: string | null;
+  task_id?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
 };
 
 export type ListCasesParams = {
@@ -7051,6 +7214,998 @@ export function useGetProjectJob<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type startModelRunsResponse201 = {
+  data: ModelRun[];
+  status: 201;
+};
+
+export type startModelRunsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startModelRunsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startModelRunsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startModelRunsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startModelRunsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startModelRunsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startModelRunsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startModelRunsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startModelRunsResponseSuccess = startModelRunsResponse201 & {
+  headers: Headers;
+};
+export type startModelRunsResponseError = (
+  | startModelRunsResponse400
+  | startModelRunsResponse401
+  | startModelRunsResponse403
+  | startModelRunsResponse404
+  | startModelRunsResponse409
+  | startModelRunsResponse422
+  | startModelRunsResponse429
+  | startModelRunsResponse500
+) & {
+  headers: Headers;
+};
+
+export type startModelRunsResponse = startModelRunsResponseSuccess | startModelRunsResponseError;
+
+export const getStartModelRunsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/model-runs`;
+};
+
+/**
+ * @summary Start Model Runs
+ */
+export const startModelRuns = async (
+  projectId: string,
+  modelRunDraft: ModelRunDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startModelRunsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<startModelRunsResponse>(getStartModelRunsUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(modelRunDraft),
+  });
+};
+
+export const getStartModelRunsMutationKey = () => ["startModelRuns"] as const;
+
+export const getStartModelRunsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startModelRuns>>,
+    TError,
+    StartModelRunsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startModelRuns>>,
+  TError,
+  StartModelRunsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartModelRunsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startModelRuns>>,
+    StartModelRunsMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return startModelRuns(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartModelRunsMutationResult = NonNullable<Awaited<ReturnType<typeof startModelRuns>>>;
+export type StartModelRunsMutationBody = ModelRunDraft;
+export type StartModelRunsMutationError = Problem;
+export type StartModelRunsMutationVariables = { projectId: string; data: ModelRunDraft };
+
+/**
+ * @summary Start Model Runs
+ */
+export const useStartModelRuns = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startModelRuns>>,
+      TError,
+      StartModelRunsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startModelRuns>>,
+  TError,
+  StartModelRunsMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartModelRunsMutationOptions(options), queryClient);
+};
+
+export type listModelRunsResponse200 = {
+  data: ModelRun[];
+  status: 200;
+};
+
+export type listModelRunsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listModelRunsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listModelRunsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listModelRunsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listModelRunsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listModelRunsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listModelRunsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listModelRunsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listModelRunsResponseSuccess = listModelRunsResponse200 & {
+  headers: Headers;
+};
+export type listModelRunsResponseError = (
+  | listModelRunsResponse400
+  | listModelRunsResponse401
+  | listModelRunsResponse403
+  | listModelRunsResponse404
+  | listModelRunsResponse409
+  | listModelRunsResponse422
+  | listModelRunsResponse429
+  | listModelRunsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listModelRunsResponse = listModelRunsResponseSuccess | listModelRunsResponseError;
+
+export const getListModelRunsUrl = (projectId: string, params?: ListModelRunsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["status"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/model-runs?${stringifiedParams}`
+    : `/api/projects/${projectId}/model-runs`;
+};
+
+/**
+ * @summary List Model Runs
+ */
+export const listModelRuns = async (
+  projectId: string,
+  params?: ListModelRunsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listModelRunsResponse> => {
+  return apiFetch<listModelRunsResponse>(getListModelRunsUrl(projectId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListModelRunsQueryKey = (projectId: string, params?: ListModelRunsParams) => {
+  return [`/api/projects/${projectId}/model-runs`, ...(params ? [params] : [])] as const;
+};
+
+export const getListModelRunsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listModelRuns>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params?: ListModelRunsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListModelRunsQueryKey(projectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listModelRuns>>> = ({ signal }) =>
+    listModelRuns(projectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListModelRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listModelRuns>>>;
+export type ListModelRunsQueryError = Problem;
+
+export function useListModelRuns<
+  TData = Awaited<ReturnType<typeof listModelRuns>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: undefined | ListModelRunsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelRuns>>,
+          TError,
+          Awaited<ReturnType<typeof listModelRuns>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelRuns<
+  TData = Awaited<ReturnType<typeof listModelRuns>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params?: ListModelRunsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelRuns>>,
+          TError,
+          Awaited<ReturnType<typeof listModelRuns>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelRuns<
+  TData = Awaited<ReturnType<typeof listModelRuns>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params?: ListModelRunsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Model Runs
+ */
+
+export function useListModelRuns<
+  TData = Awaited<ReturnType<typeof listModelRuns>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params?: ListModelRunsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRuns>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListModelRunsQueryOptions(projectId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getModelRunResponse200 = {
+  data: ModelRun;
+  status: 200;
+};
+
+export type getModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getModelRunResponseSuccess = getModelRunResponse200 & {
+  headers: Headers;
+};
+export type getModelRunResponseError = (
+  | getModelRunResponse400
+  | getModelRunResponse401
+  | getModelRunResponse403
+  | getModelRunResponse404
+  | getModelRunResponse409
+  | getModelRunResponse422
+  | getModelRunResponse429
+  | getModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type getModelRunResponse = getModelRunResponseSuccess | getModelRunResponseError;
+
+export const getGetModelRunUrl = (projectId: string, runId: string) => {
+  return `/api/projects/${projectId}/model-runs/${runId}`;
+};
+
+/**
+ * @summary Get Model Run
+ */
+export const getModelRun = async (
+  projectId: string,
+  runId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getModelRunResponse> => {
+  return apiFetch<getModelRunResponse>(getGetModelRunUrl(projectId, runId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetModelRunQueryKey = (projectId: string, runId: string) => {
+  return [`/api/projects/${projectId}/model-runs/${runId}`] as const;
+};
+
+export const getGetModelRunQueryOptions = <
+  TData = Awaited<ReturnType<typeof getModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetModelRunQueryKey(projectId, runId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getModelRun>>> = ({ signal }) =>
+    getModelRun(projectId, runId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined && runId !== null && runId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetModelRunQueryResult = NonNullable<Awaited<ReturnType<typeof getModelRun>>>;
+export type GetModelRunQueryError = Problem;
+
+export function useGetModelRun<TData = Awaited<ReturnType<typeof getModelRun>>, TError = Problem>(
+  projectId: string,
+  runId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRun>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRun>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRun<TData = Awaited<ReturnType<typeof getModelRun>>, TError = Problem>(
+  projectId: string,
+  runId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRun>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRun>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRun<TData = Awaited<ReturnType<typeof getModelRun>>, TError = Problem>(
+  projectId: string,
+  runId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Model Run
+ */
+
+export function useGetModelRun<TData = Awaited<ReturnType<typeof getModelRun>>, TError = Problem>(
+  projectId: string,
+  runId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetModelRunQueryOptions(projectId, runId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type cancelModelRunResponse200 = {
+  data: ModelRun;
+  status: 200;
+};
+
+export type cancelModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type cancelModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type cancelModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type cancelModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type cancelModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type cancelModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type cancelModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type cancelModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type cancelModelRunResponseSuccess = cancelModelRunResponse200 & {
+  headers: Headers;
+};
+export type cancelModelRunResponseError = (
+  | cancelModelRunResponse400
+  | cancelModelRunResponse401
+  | cancelModelRunResponse403
+  | cancelModelRunResponse404
+  | cancelModelRunResponse409
+  | cancelModelRunResponse422
+  | cancelModelRunResponse429
+  | cancelModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type cancelModelRunResponse = cancelModelRunResponseSuccess | cancelModelRunResponseError;
+
+export const getCancelModelRunUrl = (projectId: string, runId: string) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/cancel`;
+};
+
+/**
+ * @summary Cancel Model Run
+ */
+export const cancelModelRun = async (
+  projectId: string,
+  runId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<cancelModelRunResponse> => {
+  return apiFetch<cancelModelRunResponse>(getCancelModelRunUrl(projectId, runId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCancelModelRunMutationKey = () => ["cancelModelRun"] as const;
+
+export const getCancelModelRunMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelModelRun>>,
+    TError,
+    CancelModelRunMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelModelRun>>,
+  TError,
+  CancelModelRunMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCancelModelRunMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelModelRun>>,
+    CancelModelRunMutationVariables
+  > = (props) => {
+    const { projectId, runId } = props ?? {};
+
+    return cancelModelRun(projectId, runId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelModelRunMutationResult = NonNullable<Awaited<ReturnType<typeof cancelModelRun>>>;
+
+export type CancelModelRunMutationError = Problem;
+export type CancelModelRunMutationVariables = { projectId: string; runId: string };
+
+/**
+ * @summary Cancel Model Run
+ */
+export const useCancelModelRun = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelModelRun>>,
+      TError,
+      CancelModelRunMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelModelRun>>,
+  TError,
+  CancelModelRunMutationVariables,
+  TContext
+> => {
+  return useMutation(getCancelModelRunMutationOptions(options), queryClient);
+};
+
+export type resumeModelRunResponse200 = {
+  data: ModelRun;
+  status: 200;
+};
+
+export type resumeModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resumeModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resumeModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resumeModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resumeModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resumeModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resumeModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resumeModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resumeModelRunResponseSuccess = resumeModelRunResponse200 & {
+  headers: Headers;
+};
+export type resumeModelRunResponseError = (
+  | resumeModelRunResponse400
+  | resumeModelRunResponse401
+  | resumeModelRunResponse403
+  | resumeModelRunResponse404
+  | resumeModelRunResponse409
+  | resumeModelRunResponse422
+  | resumeModelRunResponse429
+  | resumeModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type resumeModelRunResponse = resumeModelRunResponseSuccess | resumeModelRunResponseError;
+
+export const getResumeModelRunUrl = (projectId: string, runId: string) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/resume`;
+};
+
+/**
+ * @summary Resume Model Run
+ */
+export const resumeModelRun = async (
+  projectId: string,
+  runId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resumeModelRunResponse> => {
+  return apiFetch<resumeModelRunResponse>(getResumeModelRunUrl(projectId, runId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getResumeModelRunMutationKey = () => ["resumeModelRun"] as const;
+
+export const getResumeModelRunMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resumeModelRun>>,
+    TError,
+    ResumeModelRunMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resumeModelRun>>,
+  TError,
+  ResumeModelRunMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResumeModelRunMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resumeModelRun>>,
+    ResumeModelRunMutationVariables
+  > = (props) => {
+    const { projectId, runId } = props ?? {};
+
+    return resumeModelRun(projectId, runId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResumeModelRunMutationResult = NonNullable<Awaited<ReturnType<typeof resumeModelRun>>>;
+
+export type ResumeModelRunMutationError = Problem;
+export type ResumeModelRunMutationVariables = { projectId: string; runId: string };
+
+/**
+ * @summary Resume Model Run
+ */
+export const useResumeModelRun = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resumeModelRun>>,
+      TError,
+      ResumeModelRunMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resumeModelRun>>,
+  TError,
+  ResumeModelRunMutationVariables,
+  TContext
+> => {
+  return useMutation(getResumeModelRunMutationOptions(options), queryClient);
+};
+
+export type retryModelRunResponse200 = {
+  data: ModelRun;
+  status: 200;
+};
+
+export type retryModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type retryModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type retryModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type retryModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type retryModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type retryModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type retryModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type retryModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type retryModelRunResponseSuccess = retryModelRunResponse200 & {
+  headers: Headers;
+};
+export type retryModelRunResponseError = (
+  | retryModelRunResponse400
+  | retryModelRunResponse401
+  | retryModelRunResponse403
+  | retryModelRunResponse404
+  | retryModelRunResponse409
+  | retryModelRunResponse422
+  | retryModelRunResponse429
+  | retryModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type retryModelRunResponse = retryModelRunResponseSuccess | retryModelRunResponseError;
+
+export const getRetryModelRunUrl = (projectId: string, runId: string) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/retry`;
+};
+
+/**
+ * @summary Retry Model Run
+ */
+export const retryModelRun = async (
+  projectId: string,
+  runId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<retryModelRunResponse> => {
+  return apiFetch<retryModelRunResponse>(getRetryModelRunUrl(projectId, runId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRetryModelRunMutationKey = () => ["retryModelRun"] as const;
+
+export const getRetryModelRunMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retryModelRun>>,
+    TError,
+    RetryModelRunMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retryModelRun>>,
+  TError,
+  RetryModelRunMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRetryModelRunMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retryModelRun>>,
+    RetryModelRunMutationVariables
+  > = (props) => {
+    const { projectId, runId } = props ?? {};
+
+    return retryModelRun(projectId, runId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetryModelRunMutationResult = NonNullable<Awaited<ReturnType<typeof retryModelRun>>>;
+
+export type RetryModelRunMutationError = Problem;
+export type RetryModelRunMutationVariables = { projectId: string; runId: string };
+
+/**
+ * @summary Retry Model Run
+ */
+export const useRetryModelRun = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retryModelRun>>,
+      TError,
+      RetryModelRunMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retryModelRun>>,
+  TError,
+  RetryModelRunMutationVariables,
+  TContext
+> => {
+  return useMutation(getRetryModelRunMutationOptions(options), queryClient);
+};
 
 export type listNotificationPreferencesResponse200 = {
   data: Preference[];

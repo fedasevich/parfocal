@@ -6,7 +6,14 @@ from typing import Any
 import pytest
 from db_support import ApiAs
 from fastapi.testclient import TestClient
-from workspace_support import join_project, make_project, make_workspace, owner, person
+from workspace_support import (
+    join_project,
+    make_project,
+    make_slide,
+    make_workspace,
+    owner,
+    person,
+)
 
 from parfocal_api.permissions import Grant, Permission, grant_for, in_project
 from parfocal_api.principals import MemberPrincipal
@@ -23,6 +30,7 @@ class Setup:
     colleague: MemberPrincipal
     project: uuid.UUID
     case: str
+    slide: uuid.UUID
 
 
 def make_setup(
@@ -49,6 +57,7 @@ def make_setup(
         people["colleague"],
         project,
         case.json()["id"],
+        make_slide(database, workspace.tenant_id, project, f"Slide {uuid.uuid4().hex[:6]}"),
     )
 
 
@@ -102,6 +111,14 @@ def owner_creates(setup: Setup, role: ProjectRole | None) -> int:
 def owner_removes(setup: Setup, role: ProjectRole | None) -> int:
     status = owner_changes(setup, role)
     return 204 if status == 200 else status
+
+
+def runs_models(setup: Setup, role: ProjectRole | None) -> int:
+    if grant_for(setup.subject.role, Permission.RUN_MODELS) is Grant.NONE:
+        return 403
+    if role is None:
+        return hidden(setup)
+    return 201 if effective(setup, role, Permission.RUN_MODELS) is Grant.ALL else 403
 
 
 @dataclass(frozen=True)
@@ -176,6 +193,20 @@ OPERATIONS: dict[str, Operation] = {
         member_reads,
     ),
     "listCases": Operation(listed_cases, lists),
+    "startModelRuns": Operation(
+        lambda c, s: c.post(
+            f"/api/projects/{s.project}/model-runs",
+            json={
+                "slide_ids": [str(s.slide)],
+                "scope": {"kind": "slide"},
+                "parameters": {"detector": {"name": "roles-detector", "version": "1"}},
+            },
+        ),
+        runs_models,
+    ),
+    "listModelRuns": Operation(
+        lambda c, s: c.get(f"/api/projects/{s.project}/model-runs"), member_reads
+    ),
 }
 
 ROLES: list[tuple[Role, ProjectRole | None]] = [

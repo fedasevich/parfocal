@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 26 |
-| `personal` | 43 |
+| `personal` | 44 |
 | `secret` | 9 |
-| `operational` | 426 |
+| `operational` | 443 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -217,6 +217,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `name` | operational |
 | `status` | operational |
 | `runs` | operational |
+| `units_total` | operational |
 | `result` | operational |
 | `started_at` | operational |
 | `finished_at` | operational |
@@ -246,6 +247,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `claims` | operational |
 | `lease_until` | operational |
 | `error_code` | operational |
+| `pause_reason` | operational |
 | `created_at` | operational |
 | `finished_at` | operational |
 
@@ -277,6 +279,27 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `availability_note` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## model_runs
+
+| Column | Class |
+|---|---|
+| `job_id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `slide_id` | operational |
+| `task_id` | operational |
+| `batch_id` | operational |
+| `scope_kind` | operational |
+| `scope` | operational |
+| `detector` | operational |
+| `detector_version` | operational |
+| `typer` | operational |
+| `typer_version` | operational |
+| `test_time_views` | operational |
+| `ordering` | operational |
+| `started_by_user_id` | personal |
+| `created_at` | operational |
 
 ## notification_mutes
 

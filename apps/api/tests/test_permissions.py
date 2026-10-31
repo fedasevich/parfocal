@@ -33,6 +33,7 @@ from parfocal_api.tables import (
     announcements,
     api_tokens,
     invitations,
+    jobs,
     legal_holds,
     memberships,
     organisations,
@@ -52,6 +53,7 @@ from parfocal_api.tables import (
 )
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.jobs import enqueue
+from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_ingest.workflow import INGEST
 
@@ -169,6 +171,9 @@ class Workspace:
     doomed_patient: uuid.UUID
     study_template: uuid.UUID
     spare_template: uuid.UUID
+    queued_run: uuid.UUID
+    paused_run: uuid.UUID
+    failed_run: uuid.UUID
     open_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     finished_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     doomed_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
@@ -255,6 +260,26 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
     "getProjectJob": lambda w: Call("GET", f"/api/projects/{w.project}/jobs/{w.job}"),
+    "startModelRuns": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/model-runs",
+        {
+            "slide_ids": [str(w.slide)],
+            "scope": {"kind": "slide"},
+            "parameters": {"detector": {"name": "matrix-detector", "version": "1"}},
+        },
+    ),
+    "listModelRuns": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs"),
+    "getModelRun": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}"),
+    "cancelModelRun": lambda w: Call(
+        "POST", f"/api/projects/{w.project}/model-runs/{w.queued_run}/cancel"
+    ),
+    "resumeModelRun": lambda w: Call(
+        "POST", f"/api/projects/{w.project}/model-runs/{w.paused_run}/resume"
+    ),
+    "retryModelRun": lambda w: Call(
+        "POST", f"/api/projects/{w.project}/model-runs/{w.failed_run}/retry"
+    ),
     "listOpinionFormVersions": lambda w: Call(
         "GET", f"/api/projects/{w.project}/opinion-form/versions"
     ),
@@ -472,6 +497,9 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -957,6 +985,9 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                     for user, role in ((people[REVIEWER], "viewer"), (colleague, "viewer"))
                 ],
             )
+            queued_run, paused_run, failed_run = await seed_runs(
+                connection, tenant_id, case.project_id, case.loose_slide_id
+            )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)
                 uploads_made = [
@@ -1016,10 +1047,32 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             doomed_patient,
             templates[BuiltInTemplate.DETECTION],
             templates[BuiltInTemplate.SEGMENTATION],
+            queued_run,
+            paused_run,
+            failed_run,
             *uploads_made,
         )
     finally:
         await engine.dispose()
+
+
+async def seed_runs(
+    connection: AsyncConnection, tenant_id: uuid.UUID, project_id: uuid.UUID, slide_id: uuid.UUID
+) -> list[uuid.UUID]:
+    settings = RunSettings(RunScopeKind.SLIDE, None, "matrix-detector", "1")
+    runs = [
+        await enqueue_model_run(
+            connection, tenant_id, project_id, slide_id, settings, batch_id=uuid.uuid4()
+        )
+        for _ in range(3)
+    ]
+    await connection.execute(
+        update(jobs).where(jobs.c.id == runs[1]).values(status="paused", pause_reason="matrix")
+    )
+    await connection.execute(
+        update(jobs).where(jobs.c.id == runs[2]).values(status="failed", error_code="matrix")
+    )
+    return runs
 
 
 async def seed_upload(

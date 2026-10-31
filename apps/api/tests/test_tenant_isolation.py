@@ -62,6 +62,7 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 
 pytestmark = pytest.mark.db
@@ -607,6 +608,21 @@ async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
 
 
+async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
+    detector = f"detector-{uuid.uuid4().hex[:10]}"
+    job_id = await enqueue_model_run(
+        connection,
+        seeded.tenant_id,
+        seeded.ids["project"],
+        seeded.ids["slide"],
+        RunSettings(RunScopeKind.SLIDE, None, detector, "1"),
+        batch_id=uuid.uuid4(),
+        started_by=seeded.ids["user"],
+    )
+    seeded.ids["model_run"] = job_id
+    seeded.markers.update({str(job_id), detector})
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -623,6 +639,7 @@ SEEDERS: dict[str, Seeder] = {
     "study_templates": seed_study_templates,
     "study_template_versions": seed_study_template_versions,
     "uploads": seed_uploads,
+    "model_runs": seed_model_runs,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -733,6 +750,13 @@ GET_ROUTES = {
     ),
     "getProjectJob": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/jobs/{a.ids['job']}"
+    ),
+    "listModelRuns": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/model-runs"
+    ),
+    "getModelRun": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}",
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),

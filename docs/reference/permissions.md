@@ -34,6 +34,7 @@ Inside a project the narrower of the workspace grant and the project grant appli
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
+| Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
 | Give verdicts, fix results, comment | `review` | Yes | In their tasks |  |
 
 ## Matrix
@@ -47,6 +48,7 @@ An empty cell means no. A researcher with admin rights gets the researcher's col
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
+| Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
 | Give verdicts, fix results, comment | `review` | Yes | In their tasks |  |
 | Set their own status | `set-own-status` | Yes | Yes |  |
 | See the workspace's people and their status | `see-people` | Yes | View only |  |

@@ -69,6 +69,7 @@ class Permission(StrEnum):
     CREATE_CASES = "create-cases"
     UPLOAD_SLIDES = "upload-slides"
     MOVE_SLIDES = "move-slides"
+    RUN_MODELS = "run-models"
     REVIEW = "review"
     SET_OWN_STATUS = "set-own-status"
     SEE_PEOPLE = "see-people"
@@ -86,6 +87,7 @@ PERMISSION_NAMES = {
     Permission.CREATE_CASES: "Create projects and cases, edit their details",
     Permission.UPLOAD_SLIDES: "Upload slides and AI results, fix unmatched files",
     Permission.MOVE_SLIDES: "Move a slide between cases",
+    Permission.RUN_MODELS: "Run AI models on slides, cancel, resume and retry the runs",
     Permission.REVIEW: "Give verdicts, fix results, comment",
     Permission.SET_OWN_STATUS: "Set their own status",
     Permission.SEE_PEOPLE: "See the workspace's people and their status",
@@ -105,6 +107,7 @@ ROWS = {
     Permission.CREATE_CASES: "yn",
     Permission.UPLOAD_SLIDES: "yn",
     Permission.MOVE_SLIDES: "yn",
+    Permission.RUN_MODELS: "yn",
     Permission.REVIEW: "yo",
     Permission.SET_OWN_STATUS: "yy",
     Permission.SEE_PEOPLE: "yr",
@@ -133,6 +136,7 @@ PROJECT_ROWS = {
     Permission.CREATE_CASES: "ynn",
     Permission.UPLOAD_SLIDES: "ynn",
     Permission.MOVE_SLIDES: "ynn",
+    Permission.RUN_MODELS: "ynn",
     Permission.REVIEW: "yon",
 }
 
