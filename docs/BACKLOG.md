@@ -3163,7 +3163,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when parser tests read a fixture of each kind into the same object form, including a QuPath export and a CSV with renamed columns. The readers and the object form are in [ADR 0070](adr/0070-result-file-parsers.md), and the fixture must be a real QuPath 0.7 export.
   Depends on RSET-001, RSET-000.
 
-- [ ] RSET-004 · Pairing results with slides
+- [x] RSET-004 · Pairing results with slides
   Results pair with slides on drop by folder shape first (next to the slide or in a folder named like it), then file name, then an embedded slide ID, each with how it was paired and how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
   Done when unit tests cover each pairing rule and a tie, and API tests cover an override and an unpaired result.
   Also lets an upload say it is a result file and which slide or slide upload it pairs with, and has the ingest job of INGEST-017 (publish step and slide status) import a paired file as a result set once its slide is ready. Today the upload metadata cannot mark a result file, so a result file sent through the upload API is refused as not a slide.

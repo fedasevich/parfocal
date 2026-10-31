@@ -20,7 +20,7 @@ To take every recommendation at once, write "all recommended" here:
 | INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Ticked, decisions 9a to 9d |
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
 | SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
-| RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Built, waits for a green CI run on `main`, decisions 11a (accept ADR 0125), 11b (who places a waiting result), 11c (cells in imported files), 11d (what counts as likely) and 11e (masks and heatmaps in the upload) |
+| RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
