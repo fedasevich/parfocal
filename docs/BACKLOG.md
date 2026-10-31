@@ -902,7 +902,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when the MxIF fixture opens correctly.
   Refs doc 32.
 
-- [ ] INGEST-017 · Publish step and slide status
+- [x] INGEST-017 · Publish step and slide status
   On success the slide becomes viewable in its project and case, paired result files are imported as result sets (RSET-001), and no model runs unless the user started one (JOBS-001).
   Done when an E2E test sees the slide go from uploading to processing to ready with live status.
   Built as [ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md) (the slide row appears only when it is ready) says, with the polled `getUploadStatus` route as the live status until STACK-024 (realtime transport). Paired result files wait for RSET-004 (pairing results with slides), because the upload metadata cannot mark a result file yet.
@@ -2339,7 +2339,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Interactive requests (embeddings, region passes) run in their own Modal function, pre-warmed when a slow device activates the tool, so they never queue behind job tiles ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a load test meets STACK-027's target while a whole-slide job runs.
 
-- [ ] AIP-008 · Job model and API
+- [x] AIP-008 · Job model and API
   Jobs per slide and task with scope (view, selection, slide), parameters (detector, typer, test-time augmentation, ordering), state, progress per stage, cancel, resume, retry.
   Done when API tests cover the lifecycle and permissions.
   Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).

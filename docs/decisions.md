@@ -17,8 +17,8 @@ To take every recommendation at once, write "all recommended" here:
 | NOTIF-007 (inbox API) | Inbox list, read state, mutes that keep muted items | Ticked, decisions 3a and 3b |
 | EVAL-007 (study template model and API) | Versioned study templates from report blocks, five built-ins | Ticked, decisions 4a to 4d |
 | INGEST-001 (upload API with presigned multipart) | Upload routes for ADR 0116, tested against MinIO | Built, the tick waits for decision 6a, decisions 5a to 5d |
-| INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Built, waits for a green CI run on `main`, decisions 9a to 9d |
-| AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Built, merging, decisions 8a to 8d |
+| INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Ticked, decisions 9a to 9d |
+| AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
