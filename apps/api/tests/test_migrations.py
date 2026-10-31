@@ -102,6 +102,68 @@ def test_admin_memberships_and_invitations_become_researchers_with_admin_rights(
         assert roles == [("admin",), ("reviewer",)]
 
 
+CONTEXT_SEED = (
+    "INSERT INTO organisations (slug, name) VALUES ('lab', 'Lab')",
+    "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
+    "SELECT id, 'lab', 'Lab', 'research', 'eu', 'pilot' FROM organisations",
+    "INSERT INTO users (subject, display_name, initials, avatar_colour) "
+    "VALUES ('ana', 'ana', 'AN', 1)",
+    "INSERT INTO memberships (tenant_id, user_id, role) "
+    "SELECT tenants.id, users.id, 'researcher' FROM tenants, users",
+    "INSERT INTO projects (tenant_id, number, name, privacy_mode) "
+    "SELECT id, 1, 'Nodes', 'de-identified' FROM tenants",
+    "INSERT INTO cases (tenant_id, project_id, label, source) "
+    "SELECT tenant_id, id, 'S26-1', 'manual' FROM projects",
+    "INSERT INTO slides (tenant_id, project_id, case_id, label) "
+    "SELECT tenant_id, project_id, id, 'A1' FROM cases",
+    "INSERT INTO jobs (tenant_id, project_id, kind) "
+    "SELECT tenant_id, id, 'model-run' FROM projects",
+)
+
+
+def seed_notification(url: str, kind: str, target_type: str, target: str, payload: str) -> None:
+    query(
+        url,
+        "INSERT INTO notifications (tenant_id, user_id, kind, target_type, target_id, payload, "
+        f"in_app, realtime, email_status) SELECT tenant_id, user_id, '{kind}', '{target_type}', "
+        f"({target}), '{payload}'::jsonb, true, true, 'none' FROM memberships",
+    )
+
+
+def test_existing_notifications_get_their_project_task_and_case(empty_database: str) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0041-1")
+    for statement in CONTEXT_SEED:
+        query(empty_database, statement)
+    task = "11111111-2222-3333-4444-555555555555"
+    seed_notification(
+        empty_database,
+        "result-set-added",
+        "slide",
+        "SELECT id FROM slides",
+        f'{{"task_id": "{task}", "object_id": "T1"}}',
+    )
+    seed_notification(empty_database, "model-run-paused", "job", "SELECT id FROM jobs", "{}")
+    seed_notification(
+        empty_database, "emergency-access", "project", "SELECT id FROM projects", "{}"
+    )
+    seed_notification(empty_database, "mention", "thread", "SELECT gen_random_uuid()", "{}")
+
+    command.upgrade(config, "0041")
+    rows = query(
+        empty_database,
+        "SELECT n.kind, n.project_id = p.id, n.task_id::text, n.case_id = c.id "
+        "FROM notifications n, projects p, cases c ORDER BY n.kind",
+    )
+    assert rows == [
+        ("emergency-access", True, None, None),
+        ("mention", None, None, None),
+        ("model-run-paused", True, None, None),
+        ("result-set-added", True, task, True),
+    ]
+    command.downgrade(config, "0041-1")
+
+
 def test_every_tenant_table_is_isolated_at_head(empty_database: str) -> None:
     command.upgrade(alembic_config(empty_database), "head")
     assert query(empty_database, TENANT_TABLES_WITHOUT_ISOLATION) == []

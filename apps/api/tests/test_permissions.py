@@ -63,6 +63,12 @@ OPEN_OPERATIONS = {
     "validateResultsFile": "member",
     "listNotificationPreferences": "member",
     "setNotificationPreferences": "member",
+    "listNotifications": "member",
+    "getNotificationCounts": "member",
+    "markNotificationsRead": "member",
+    "listNotificationMutes": "member",
+    "muteNotifications": "own-notification",
+    "unmuteNotifications": "member",
     "createOrganisation": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
@@ -423,6 +429,15 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT",
         "/api/me/notification-preferences",
         {"preferences": [{"kind": "reply", "in_app": True, "email": False, "realtime": True}]},
+    ),
+    "listNotifications": lambda _: Call("GET", "/api/me/notifications?read=false"),
+    "getNotificationCounts": lambda _: Call("GET", "/api/me/notifications/counts"),
+    "markNotificationsRead": lambda _: Call(
+        "POST", "/api/me/notifications/read", {"ids": [str(uuid.uuid4())]}
+    ),
+    "listNotificationMutes": lambda _: Call("GET", "/api/me/notification-mutes"),
+    "unmuteNotifications": lambda w: Call(
+        "DELETE", f"/api/me/notification-mutes/project/{w.project}"
     ),
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),

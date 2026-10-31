@@ -915,6 +915,9 @@ notifications = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
+    Column("project_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"],
         ["memberships.tenant_id", "memberships.user_id"],
@@ -928,6 +931,41 @@ notifications = Table(
         "tenant_id",
         postgresql_where=text("email_status = 'pending'"),
     ),
+    Index(
+        "ix_notifications_user_id_unread",
+        "user_id",
+        "kind",
+        postgresql_where=text("read_at IS NULL"),
+    ),
+)
+
+
+class MuteSubject(StrEnum):
+    PROJECT = "project"
+    TASK = "task"
+    CASE = "case"
+
+
+notification_mutes = Table(
+    "notification_mutes",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("subject", String(10), primary_key=True, info=OPERATIONAL),
+    Column("subject_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+    one_of("subject", MuteSubject),
 )
 
 notification_preferences = Table(

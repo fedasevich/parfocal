@@ -2054,7 +2054,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
 - [ ] COLLAB-002 · Threads API
-  Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist. Mention and reply notifications resolve to their thread through `GET /api/me/notifications/{id}/target` ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)).
+  Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist. Mention and reply notifications resolve to their thread through `GET /api/me/notifications/{id}/target` ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)). `notifications.context_of` gives thread notifications their project, task and case, so a mute catches replies ([ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md), inbox mutes).
   Done when API tests cover anchors, permissions and audit.
   During blind review a reviewer sees only their own threads and the researcher's (TASK-004). Depends on OBJ-001, TASK-004.
 
@@ -2836,9 +2836,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on NOTIF-001. Refs kit W52, kit Flow 18, [ADR 0091](adr/0091-notification-catalogue-and-targets.md). Thread and delivery targets resolve in COLLAB-002 and REMOTE-003, which do not exist yet.
 
 - [ ] NOTIF-007 · Inbox API
-  List notifications by kind and read state, mark one or many as read, and mute a case so its events stop for that person.
+  List notifications by kind and read state, mark one or many as read, and mute a project, a review task or a case so its events stop for that person, in the inbox and in email. Mentions and emergency access still get through.
   Done when API tests cover filters, bulk read, muting and tenant isolation.
-  Depends on NOTIF-006. Refs kit W53.
+  Depends on NOTIF-006. Refs kit W53, [ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md) (inbox mutes), which widened the case mute to projects and tasks since [ADR 0053](adr/0053-ai-results-review-direction.md) made cases optional.
 
 - [ ] NOTIF-008 · Hold notifications while reading
   While a person has a slide open, notifications are stored but nothing interrupts them: no toast, banner or sound, mentions included. When they leave the slide, what arrived is released in order. The client reports when a slide is opened and closed, and a stale report expires after the lab idle time.

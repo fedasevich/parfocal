@@ -19,6 +19,7 @@ from parfocal_api import (
     emergency,
     evaluation,
     home,
+    inbox,
     invitations,
     my_work,
     neighbours,
@@ -156,6 +157,7 @@ def create_app(
     app.include_router(personal_data.project_router)
     app.include_router(personal_data.platform_router)
     app.include_router(neighbours.router)
+    app.include_router(inbox.router)
     app.include_router(notification_targets.router)
     app.include_router(notifications.schedule_router)
     app.include_router(search.router)

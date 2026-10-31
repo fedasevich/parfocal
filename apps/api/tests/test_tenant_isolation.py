@@ -30,6 +30,7 @@ from parfocal_api.tables import (
     jobs,
     legal_holds,
     memberships,
+    notification_mutes,
     notification_preferences,
     notifications,
     opinions,
@@ -519,8 +520,22 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(str(annotation_id))
 
 
+async def seed_notification_mutes(connection: AsyncConnection, seeded: Seeded) -> None:
+    subject_id = uuid.uuid4()
+    await connection.execute(
+        insert(notification_mutes).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            subject="task",
+            subject_id=subject_id,
+        )
+    )
+    seeded.markers.add(str(subject_id))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
+    "notification_mutes": seed_notification_mutes,
     "invitations": seed_invitations,
     "announcements": seed_announcements,
     "retention_policies": seed_retention_policies,
@@ -557,6 +572,9 @@ GET_ROUTES = {
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
+    "listNotifications": Route(Exposure.TENANT, lambda _: "/api/me/notifications"),
+    "getNotificationCounts": Route(Exposure.PUBLIC, lambda _: "/api/me/notifications/counts"),
+    "listNotificationMutes": Route(Exposure.TENANT, lambda _: "/api/me/notification-mutes"),
     "getNotificationTarget": Route(
         Exposure.TENANT, lambda a: f"/api/me/notifications/{a.ids['notification']}/target"
     ),

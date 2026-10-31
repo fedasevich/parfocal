@@ -1,26 +1,33 @@
 import uuid
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
 from typing import Annotated, Any, Self
 from zoneinfo import ZoneInfo, available_timezones
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import insert, literal_column, select, update
+from sqlalchemy import insert, literal_column, select, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection, UserConnection
 from parfocal_api.email_templates import DIGEST_TEMPLATE, render
-from parfocal_api.notification_catalogue import DEFAULTS, Channels
+from parfocal_api.notification_catalogue import DEFAULTS, Channels, TargetKind
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ForbiddenError
 from parfocal_api.tables import (
     EmailDigest,
     EmailStatus,
+    MuteSubject,
     NotificationKind,
+    jobs,
+    notification_mutes,
     notification_preferences,
     notifications,
+    projects,
+    review_tasks,
+    slides,
     tenants,
     users,
 )
@@ -30,6 +37,22 @@ from parfocal_common.db import CURRENT_TENANT, DatabaseScope, scoped_transaction
 
 DIGEST_WINDOWS = {EmailDigest.HOURLY: timedelta(hours=1), EmailDigest.DAILY: timedelta(days=1)}
 MANDATORY = frozenset({NotificationKind.EMERGENCY_ACCESS})
+GETS_THROUGH_MUTES = MANDATORY | {NotificationKind.MENTION}
+
+
+@dataclass(frozen=True)
+class Context:
+    project_id: uuid.UUID | None = None
+    task_id: uuid.UUID | None = None
+    case_id: uuid.UUID | None = None
+
+    def subjects(self) -> list[tuple[MuteSubject, uuid.UUID]]:
+        pairs = [
+            (MuteSubject.PROJECT, self.project_id),
+            (MuteSubject.TASK, self.task_id),
+            (MuteSubject.CASE, self.case_id),
+        ]
+        return [(subject, value) for subject, value in pairs if value is not None]
 
 
 class Preference(BaseModel):
@@ -86,6 +109,66 @@ async def channels_for(
     }
 
 
+def uuid_or_none(value: Any) -> uuid.UUID | None:
+    try:
+        return uuid.UUID(str(value)) if value else None
+    except ValueError:
+        return None
+
+
+async def context_of(
+    connection: AsyncConnection,
+    target_type: str,
+    target_id: uuid.UUID,
+    payload: Mapping[str, Any],
+) -> Context:
+    match target_type:
+        case TargetKind.TASK | TargetKind.EVALUATION:
+            project_id = await connection.scalar(
+                select(review_tasks.c.project_id).where(review_tasks.c.id == target_id)
+            )
+            return Context(project_id, target_id) if project_id else Context()
+        case TargetKind.SLIDE:
+            row = (
+                await connection.execute(
+                    select(slides.c.project_id, slides.c.case_id).where(slides.c.id == target_id)
+                )
+            ).one_or_none()
+            if row is None:
+                return Context()
+            return Context(row.project_id, uuid_or_none(payload.get("task_id")), row.case_id)
+        case TargetKind.JOB:
+            return Context(
+                await connection.scalar(select(jobs.c.project_id).where(jobs.c.id == target_id))
+            )
+        case TargetKind.PROJECT:
+            return Context(
+                await connection.scalar(select(projects.c.id).where(projects.c.id == target_id))
+            )
+        case _:
+            return Context()
+
+
+async def muted(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    people: list[uuid.UUID],
+    kind: NotificationKind,
+    context: Context,
+) -> set[uuid.UUID]:
+    subjects = context.subjects()
+    if kind in GETS_THROUGH_MUTES or not subjects or not people:
+        return set()
+    found = await connection.scalars(
+        select(notification_mutes.c.user_id).where(
+            notification_mutes.c.tenant_id == tenant_id,
+            notification_mutes.c.user_id.in_(people),
+            tuple_(notification_mutes.c.subject, notification_mutes.c.subject_id).in_(subjects),
+        )
+    )
+    return set(found)
+
+
 async def notify(
     connection: AsyncConnection,
     tenant_id: uuid.UUID,
@@ -95,7 +178,11 @@ async def notify(
     target_id: uuid.UUID,
     payload: Mapping[str, Any] | None = None,
 ) -> int:
-    routed = await channels_for(connection, recipients, kind)
+    details = dict(payload or {})
+    context = await context_of(connection, target_type, target_id, details)
+    people = list(dict.fromkeys(recipients))
+    silenced = await muted(connection, tenant_id, people, kind, context)
+    routed = await channels_for(connection, [p for p in people if p not in silenced], kind)
     rows = [
         {
             "tenant_id": tenant_id,
@@ -103,10 +190,13 @@ async def notify(
             "kind": kind,
             "target_type": target_type,
             "target_id": target_id,
-            "payload": dict(payload or {}),
+            "payload": details,
             "in_app": channels.in_app,
             "realtime": channels.realtime,
             "email_status": EmailStatus.PENDING if channels.email else EmailStatus.NONE,
+            "project_id": context.project_id,
+            "task_id": context.task_id,
+            "case_id": context.case_id,
         }
         for person, channels in routed.items()
         if channels.in_app or channels.email or channels.realtime
