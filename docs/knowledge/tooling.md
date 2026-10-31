@@ -121,3 +121,7 @@ The latency proxy paces bandwidth in 16 KiB slices with `setTimeout`. Starting e
 ## Timing tests check the fastest sample
 
 Under `pnpm test`, Turborepo runs the Python suites next to the Node ones, and the latency tests saw a median 64 ms added at a 50 ms RTT. Load only adds time, so the tests assert on the fastest of several samples: it must be at least the RTT and within `max(10 ms, 10%)` above it. Use the same rule for any CPU-side timing test that shares a runner. Source: [latency proxy result](../results/2026-10-23-latency-proxy.md).
+
+## Parallel sessions share one working tree
+
+Several agent sessions often edit the same checkout at once. Staging a file by name stages every edit in it, including another session's unfinished work. On 2026-10-31 a commit for OPS-009 (cost controls) carried another session's backlog tasks and ADR index row to `origin` without that session's ADR file, and two sessions picked the same ADR number. Before every commit, read `git diff --cached` and make sure each hunk is yours. If a file holds someone else's edits, change only your lines in a fresh copy of the file from `HEAD`, or wait for the other session to commit first. Check `ls docs/adr` and `git status` for an untracked ADR right before choosing a number.
