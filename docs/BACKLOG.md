@@ -380,7 +380,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [ ] STACK-039 · Resumable upload protocol
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
   Done when a spike uploads a 4 GB NDPI over a throttled connection with a forced disconnect and resumes without restarting.
-  Proposed in [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md), measured in [the upload spike](results/2026-10-31-resumable-upload-spike.md) against MinIO with a 4 GiB synthetic file and the 1.99 GB `OS-1.ndpi`, because no 4 GB NDPI fixture exists. Waits for the owner to accept the ADR.
+  Proposed in [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md), measured in [the upload spike](results/2026-10-31-resumable-upload-spike.md) against MinIO with a 4 GiB synthetic file and the 1.99 GB `OS-1.ndpi`, because no 4 GB NDPI fixture exists. The owner accepted the ADR on 2026-10-31.
 
 - [x] STACK-040 · FHIR and HL7 libraries
   Candidates: fhir.resources (Pydantic), HAPI FHIR as an external server, python-hl7 for v2. Default: fhir.resources for parsing and building Patient, ServiceRequest, Specimen and DiagnosticReport, and no FHIR server in v1.
@@ -655,7 +655,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when E2E with a virtual WebAuthn authenticator signs in with a passkey and unlocks a locked slide to the same camera position, and a test shows a cancelled passkey window leaves the sign-in page usable.
   Depends on IAM-001, IAM-002, IAM-021. Refs mock: signin/passkey, mock: signin/lockkey, doc 42.
 
-- [ ] IAM-024 · Admin as a right of a researcher
+- [x] IAM-024 · Admin as a right of a researcher
   `Role` keeps `researcher` and `reviewer`, and `memberships` and `invitations` gain `admin_rights`, which only a researcher may hold. Admin rights grant `manage-people`, `workspace-settings`, `integrations`, `report-templates` editing and `audit-log`, and add no access to project data. Every admin membership and invitation becomes a researcher with admin rights. Removing the right from the last holder is refused, and giving or removing it is audited. The permission page is regenerated with the responsibilities of each role ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md)).
   Done when the table-driven permission test covers a researcher with and without admin rights and a reviewer on every endpoint, a migration test turns an admin membership and an invitation into a researcher with admin rights, an API test refuses removing the last holder and refuses the right on a reviewer, and the audit entry is checked.
   Depends on IAM-022. Refs doc 43, kit: Pipeline and roles.

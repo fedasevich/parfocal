@@ -1,7 +1,7 @@
 # 0116. Resumable uploads with S3 multipart, Uppy and part URLs signed by the API
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-039 (resumable upload protocol). Edits INGEST-001 (upload API with presigned multipart), INGEST-002 (upload UI with resume) and adds INGEST-028 (upload protocol check on the R2 dev bucket). Feeds INGEST-000 (research check for upload and server readers)
 
