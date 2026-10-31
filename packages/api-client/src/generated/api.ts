@@ -1057,6 +1057,8 @@ export interface InboxCounts {
   total: number;
   unread: number;
   kinds: KindCount[];
+  muted: number;
+  muted_unread: number;
 }
 
 export type InboxItemPayload = { [key: string]: unknown };
@@ -1083,6 +1085,7 @@ export interface InboxItem {
   project_id: string | null;
   task_id: string | null;
   case_id: string | null;
+  muted: boolean;
   read: boolean;
   read_at: string | null;
   created_at: string;
@@ -2164,6 +2167,7 @@ export type GetSlideNeighboursParams = {
 export type ListNotificationsParams = {
   kind?: NotificationKind[] | null;
   read?: boolean | null;
+  muted?: boolean;
   cursor?: string | null;
   /**
    * @minimum 1

@@ -220,62 +220,140 @@ def mute(api: ApiAs, who: MemberPrincipal, subject: str, subject_id: object) -> 
     return api(who).put(f"{MUTES}/{subject}/{subject_id}")
 
 
-def test_a_muted_task_project_or_case_stops_its_events_for_that_person_only(
+def rows_for(database: str, who: MemberPrincipal, kind: str) -> list[tuple[object, ...]]:
+    return owner(
+        database,
+        "SELECT muted, in_app, realtime, email_status FROM notifications "
+        f"WHERE user_id = '{who.user_id}' AND kind = '{kind}' ORDER BY created_at",
+    )
+
+
+KEPT_SILENT = (True, True, False, "none")
+DELIVERED = (False, True, True, "pending")
+
+
+def with_email(database: str, *people: MemberPrincipal) -> None:
+    for who in people:
+        owner(
+            database,
+            f"UPDATE users SET email = 'p-{uuid.uuid4().hex[:8]}@example.test' "
+            f"WHERE id = '{who.user_id}'",
+        )
+
+
+def test_a_muted_event_is_kept_in_the_inbox_without_a_push_or_an_email(
     api: ApiAs, database: str
 ) -> None:
     s = study(database)
     people = s.people
+    first, second, lead = people["first"], people["second"], people["owner"]
+    with_email(database, first, second, lead)
     created = task(api, s, name="Round 1", reviewer_ids=[s.user("first"), s.user("second")])
     task_id = uuid.UUID(created["id"])
-    assert mute(api, people["first"], "task", task_id).status_code == 200
-    reviewers = [people["first"], people["second"]]
-    send(database, s.tenant_id, reviewers, NotificationKind.TASK_DUE_SOON, "task", task_id)
-    assert kinds_for(database, people["first"]) == []
-    assert kinds_for(database, people["second"]) == ["task-due-soon"]
-    send(database, s.tenant_id, reviewers, NotificationKind.MENTION, "task", task_id)
-    assert kinds_for(database, people["first"]) == ["mention"]
+    assert mute(api, first, "task", task_id).status_code == 200
+    send(database, s.tenant_id, [first, second], NotificationKind.TASK_SIGNED_OFF, "task", task_id)
+    assert rows_for(database, first, "task-signed-off") == [KEPT_SILENT]
+    assert rows_for(database, second, "task-signed-off") == [DELIVERED]
+    for kind in (
+        NotificationKind.TASK_ASSIGNED,
+        NotificationKind.TASK_DUE_SOON,
+        NotificationKind.MENTION,
+    ):
+        send(database, s.tenant_id, [first], kind, "task", task_id)
+        assert rows_for(database, first, kind) == [DELIVERED], kind
 
-    case_slide, loose_slide = s.slides[2], s.slides[0]
-    assert mute(api, people["first"], "case", s.case).status_code == 200
-    for slide in (case_slide, loose_slide):
+    assert mute(api, first, "case", s.case).status_code == 200
+    for slide in (s.slides[2], s.slides[0]):
         send(
             database,
             s.tenant_id,
-            [people["owner"], people["first"]],
+            [lead, first],
             NotificationKind.RESULT_SET_ADDED,
             "slide",
             slide,
             {"object_id": "T1"},
         )
-    first_rows = owner(
+    in_case = owner(
         database,
-        "SELECT target_id FROM notifications "
-        f"WHERE user_id = '{people['first'].user_id}' AND kind = 'result-set-added'",
+        "SELECT target_id, muted, realtime FROM notifications "
+        f"WHERE user_id = '{first.user_id}' AND kind = 'result-set-added' ORDER BY muted",
     )
-    assert first_rows == [(loose_slide,)]
-    assert kinds_for(database, people["owner"]).count("result-set-added") == 2
+    assert in_case == [(s.slides[0], False, True), (s.slides[2], True, False)]
+    assert [row[0] for row in rows_for(database, lead, "result-set-added")] == [False, False]
 
     job = job_in(database, s)
-    assert mute(api, people["owner"], "project", s.project).status_code == 200
-    send(database, s.tenant_id, [people["owner"]], NotificationKind.MODEL_RUN_PAUSED, "job", job)
+    assert mute(api, lead, "project", s.project).status_code == 200
+    send(database, s.tenant_id, [lead], NotificationKind.MODEL_RUN_PAUSED, "job", job)
+    send(database, s.tenant_id, [lead], NotificationKind.TASK_ASSIGNED, "task", task_id)
     send(
         database,
         s.tenant_id,
-        [people["owner"]],
+        [lead],
         NotificationKind.EMERGENCY_ACCESS,
         "project",
         s.project,
         {"hours": 4},
     )
-    owner_kinds = kinds_for(database, people["owner"])
-    assert "model-run-paused" not in owner_kinds
-    assert "emergency-access" in owner_kinds
+    assert rows_for(database, lead, "model-run-paused") == [KEPT_SILENT]
+    assert rows_for(database, lead, "task-assigned") == [DELIVERED]
+    assert rows_for(database, lead, "emergency-access") == [DELIVERED]
 
-    listed = api(people["owner"]).delete(f"{MUTES}/project/{s.project}")
-    assert listed.status_code == 200
-    assert listed.json() == []
-    send(database, s.tenant_id, [people["owner"]], NotificationKind.MODEL_RUN_PAUSED, "job", job)
-    assert "model-run-paused" in kinds_for(database, people["owner"])
+    sender = MemoryEmailSender()
+
+    async def deliver(connection: AsyncConnection) -> int:
+        return await deliver_pending_emails(connection, sender, "https://parfocal.test")
+
+    run(database, s.tenant_id, deliver)
+    templates = [message.template for message in sender.sent]
+    assert "notification.model-run-paused" not in templates
+    assert "notification.task-signed-off" in templates
+
+    assert api(lead).delete(f"{MUTES}/project/{s.project}").json() == []
+    assert rows_for(database, lead, "model-run-paused") == [KEPT_SILENT]
+    kept = api(lead).get(INBOX, params={"muted": "true"}).json()["notifications"]
+    assert [(item["kind"], item["muted"]) for item in kept] == [("model-run-paused", True)]
+    send(database, s.tenant_id, [lead], NotificationKind.MODEL_RUN_PAUSED, "job", job)
+    assert rows_for(database, lead, "model-run-paused") == [KEPT_SILENT, DELIVERED]
+    sender.sent.clear()
+    run(database, s.tenant_id, deliver)
+    assert [message.template for message in sender.sent] == ["notification.model-run-paused"]
+
+
+def test_muted_rows_stay_out_of_the_main_list_and_the_badge(api: ApiAs, database: str) -> None:
+    s = study(database)
+    first = s.people["first"]
+    created = task(api, s, name="Round 1", reviewer_ids=[s.user("first")])
+    task_id = uuid.UUID(created["id"])
+    assert mute(api, first, "task", task_id).status_code == 200
+    for kind in (NotificationKind.TASK_SIGNED_OFF, NotificationKind.TASK_SIGNED_OFF):
+        send(database, s.tenant_id, [first], kind, "task", task_id)
+    send(database, s.tenant_id, [first], NotificationKind.TASK_ASSIGNED, "task", task_id)
+    main = api(first).get(INBOX).json()["notifications"]
+    assert [(item["kind"], item["muted"]) for item in main] == [("task-assigned", False)]
+    silent = api(first).get(INBOX, params={"muted": "true", "read": "false"}).json()
+    assert [(item["kind"], item["muted"]) for item in silent["notifications"]] == [
+        ("task-signed-off", True),
+        ("task-signed-off", True),
+    ]
+    counts = api(first).get(COUNTS).json()
+    assert (counts["total"], counts["unread"], counts["muted"], counts["muted_unread"]) == (
+        1,
+        1,
+        2,
+        2,
+    )
+    by_kind = {row["kind"]: (row["total"], row["unread"]) for row in counts["kinds"]}
+    assert by_kind["task-signed-off"] == (0, 0)
+    assert by_kind["task-assigned"] == (1, 1)
+    one = silent["notifications"][0]["id"]
+    assert api(first).post(READ, json={"ids": [one]}).json() == {"marked": 1, "unread": 1}
+    assert api(first).post(READ, json={"all": True}).json() == {"marked": 2, "unread": 0}
+    after = api(first).get(COUNTS).json()
+    assert (after["unread"], after["muted"], after["muted_unread"]) == (0, 2, 0)
+    assert api(first).get(INBOX, params={"muted": "true", "read": "false"}).json() == {
+        "notifications": [],
+        "next_cursor": None,
+    }
 
 
 def test_the_inbox_carries_the_project_task_and_case_of_each_notification(
@@ -309,16 +387,13 @@ def test_the_inbox_carries_the_project_task_and_case_of_each_notification(
     assert slide_item["target_id"] == str(s.slides[2])
 
 
-def test_muting_skips_pending_emails_for_that_subject_and_keeps_mentions(
+def test_muting_skips_pending_emails_for_that_subject_and_lets_work_through(
     api: ApiAs, database: str
 ) -> None:
     s = study(database)
     first = s.people["first"]
-    owner(
-        database,
-        f"UPDATE users SET email = 'first-{uuid.uuid4().hex[:6]}@example.test', "
-        f"email_digest = 'hourly' WHERE id = '{first.user_id}'",
-    )
+    with_email(database, first)
+    owner(database, f"UPDATE users SET email_digest = 'hourly' WHERE id = '{first.user_id}'")
     created = task(api, s, name="Round 1", reviewer_ids=[s.user("first")])
     task_id = uuid.UUID(created["id"])
     other_project = make_project(database, s.tenant_id, "de-identified")
@@ -327,7 +402,11 @@ def test_muting_skips_pending_emails_for_that_subject_and_keeps_mentions(
         "INSERT INTO project_members (tenant_id, project_id, user_id, role) "
         f"VALUES ('{s.tenant_id}', '{other_project}', '{first.user_id}', 'viewer')",
     )
-    for kind in (NotificationKind.TASK_DUE_SOON, NotificationKind.MENTION):
+    for kind in (
+        NotificationKind.TASK_SIGNED_OFF,
+        NotificationKind.TASK_DUE_SOON,
+        NotificationKind.MENTION,
+    ):
         send(database, s.tenant_id, [first], kind, "task", task_id)
     send(
         database, s.tenant_id, [first], NotificationKind.EMERGENCY_ACCESS, "project", other_project
@@ -335,16 +414,17 @@ def test_muting_skips_pending_emails_for_that_subject_and_keeps_mentions(
     assert mute(api, first, "task", task_id).status_code == 200
     statuses = owner(
         database,
-        "SELECT kind, email_status FROM notifications "
+        "SELECT kind, email_status, muted FROM notifications "
         f"WHERE user_id = '{first.user_id}' ORDER BY kind",
     )
     assert statuses == [
-        ("emergency-access", "pending"),
-        ("mention", "pending"),
-        ("task-due-soon", "skipped"),
+        ("emergency-access", "pending", False),
+        ("mention", "pending", False),
+        ("task-due-soon", "pending", False),
+        ("task-signed-off", "skipped", False),
     ]
-    send(database, s.tenant_id, [first], NotificationKind.TASK_DUE_SOON, "task", task_id)
-    assert kinds_for(database, first).count("task-due-soon") == 1
+    send(database, s.tenant_id, [first], NotificationKind.TASK_SIGNED_OFF, "task", task_id)
+    assert rows_for(database, first, "task-signed-off")[1] == KEPT_SILENT
     sender = MemoryEmailSender()
 
     async def deliver(connection: AsyncConnection) -> int:
@@ -355,9 +435,9 @@ def test_muting_skips_pending_emails_for_that_subject_and_keeps_mentions(
     pending = owner(
         database,
         "SELECT kind FROM notifications "
-        f"WHERE user_id = '{first.user_id}' AND email_status = 'pending'",
+        f"WHERE user_id = '{first.user_id}' AND email_status = 'pending' ORDER BY kind",
     )
-    assert pending == [("mention",)]
+    assert pending == [("mention",), ("task-due-soon",)]
 
 
 def test_only_what_a_person_can_read_can_be_muted(api: ApiAs, database: str) -> None:
@@ -415,7 +495,7 @@ def test_the_inbox_and_mutes_stay_in_their_workspace(api: ApiAs, database: str) 
     assert mute(api, ana, "project", project).status_code == 200
     assert api(elsewhere).get(INBOX).json() == {"notifications": [], "next_cursor": None}
     counts = api(elsewhere).get(COUNTS).json()
-    assert (counts["total"], counts["unread"]) == (0, 0)
+    assert (counts["total"], counts["unread"], counts["muted"]) == (0, 0, 0)
     assert api(elsewhere).get(MUTES).json() == []
     assert api(elsewhere).post(READ, json={"all": True}).json() == {"marked": 0, "unread": 0}
     ids = [item["id"] for item in api(ana).get(INBOX).json()["notifications"]]

@@ -1,5 +1,6 @@
 import json
 import uuid
+from dataclasses import MISSING, fields
 from typing import Any
 
 import pytest
@@ -8,7 +9,8 @@ from test_my_work import task
 from test_review_tasks import Study, study
 from workspace_support import owner
 
-from parfocal_api.notification_catalogue import CATALOGUE, TargetKind
+from parfocal_api.notification_catalogue import BREAKS_MUTES, CATALOGUE, Entry, TargetKind
+from parfocal_api.notifications import MANDATORY
 from parfocal_api.tables import NotificationKind
 
 
@@ -19,6 +21,23 @@ def test_every_kind_has_a_target_and_a_template_without_details() -> None:
         assert entry.line.endswith(".")
         assert "{" not in entry.subject + entry.line
     assert {entry.target for entry in CATALOGUE.values()} == set(TargetKind)
+
+
+def test_every_kind_declares_whether_it_breaks_through_a_mute() -> None:
+    declared = next(item for item in fields(Entry) if item.name == "breaks_mute")
+    assert (declared.default, declared.default_factory, declared.kw_only) == (
+        MISSING,
+        MISSING,
+        True,
+    )
+    assert all(isinstance(entry.breaks_mute, bool) for entry in CATALOGUE.values())
+    assert MANDATORY <= BREAKS_MUTES
+    assert {
+        NotificationKind.MENTION,
+        NotificationKind.TASK_ASSIGNED,
+        NotificationKind.TASK_DUE_SOON,
+        NotificationKind.EMERGENCY_ACCESS,
+    } == BREAKS_MUTES
 
 
 def notification(

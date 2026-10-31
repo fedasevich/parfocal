@@ -9187,6 +9187,16 @@
             }
           },
           {
+            "name": "muted",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Muted"
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -19769,13 +19779,23 @@
             },
             "type": "array",
             "title": "Kinds"
+          },
+          "muted": {
+            "type": "integer",
+            "title": "Muted"
+          },
+          "muted_unread": {
+            "type": "integer",
+            "title": "Muted Unread"
           }
         },
         "type": "object",
         "required": [
           "total",
           "unread",
-          "kinds"
+          "kinds",
+          "muted",
+          "muted_unread"
         ],
         "title": "InboxCounts"
       },
@@ -19842,6 +19862,10 @@
             ],
             "title": "Case Id"
           },
+          "muted": {
+            "type": "boolean",
+            "title": "Muted"
+          },
           "read": {
             "type": "boolean",
             "title": "Read"
@@ -19875,6 +19899,7 @@
           "project_id",
           "task_id",
           "case_id",
+          "muted",
           "read",
           "read_at",
           "created_at"

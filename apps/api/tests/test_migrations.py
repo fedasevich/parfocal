@@ -164,6 +164,26 @@ def test_existing_notifications_get_their_project_task_and_case(empty_database: 
     command.downgrade(config, "0041-1")
 
 
+def test_existing_notifications_are_not_muted(empty_database: str) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0043-1")
+    for statement in CONTEXT_SEED:
+        query(empty_database, statement)
+    seed_notification(empty_database, "model-run-paused", "job", "SELECT id FROM jobs", "{}")
+
+    command.upgrade(config, "0043")
+    assert query(empty_database, "SELECT kind, muted FROM notifications") == [
+        ("model-run-paused", False)
+    ]
+    command.downgrade(config, "0043-1")
+    columns = query(
+        empty_database,
+        "SELECT column_name FROM information_schema.columns "
+        "WHERE table_name = 'notifications' AND column_name = 'muted'",
+    )
+    assert columns == []
+
+
 def test_every_tenant_table_is_isolated_at_head(empty_database: str) -> None:
     command.upgrade(alembic_config(empty_database), "head")
     assert query(empty_database, TENANT_TABLES_WITHOUT_ISOLATION) == []

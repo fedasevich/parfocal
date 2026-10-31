@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.my_work import MAX_PAGE, PAGE, decode_cursor, encode_cursor
-from parfocal_api.notification_catalogue import CATALOGUE, TargetKind
-from parfocal_api.notifications import GETS_THROUGH_MUTES, link_to, member_of
+from parfocal_api.notification_catalogue import BREAKS_MUTES, CATALOGUE, TargetKind
+from parfocal_api.notifications import link_to, member_of
 from parfocal_api.permissions import Grant, Permission
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ForbiddenError, NotFoundError
@@ -41,6 +41,7 @@ class InboxItem(BaseModel):
     project_id: uuid.UUID | None
     task_id: uuid.UUID | None
     case_id: uuid.UUID | None
+    muted: bool
     read: bool
     read_at: datetime | None
     created_at: datetime
@@ -61,6 +62,8 @@ class InboxCounts(BaseModel):
     total: int
     unread: int
     kinds: list[KindCount]
+    muted: int
+    muted_unread: int
 
 
 class MarkRead(BaseModel):
@@ -113,6 +116,7 @@ def item_of(row: Any) -> InboxItem:
         project_id=row.project_id,
         task_id=row.task_id,
         case_id=row.case_id,
+        muted=row.muted,
         read=row.read_at is not None,
         read_at=row.read_at,
         created_at=row.created_at,
@@ -125,13 +129,14 @@ async def list_notifications(
     connection: TenantConnection,
     kind: Annotated[list[NotificationKind] | None, Query(max_length=20)] = None,
     read: bool | None = None,
+    muted: bool = False,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
 ) -> InboxPage:
     me = member_of(principal)
     statement = (
         select(notifications)
-        .where(mine(me))
+        .where(mine(me), notifications.c.muted.is_(muted))
         .order_by(notifications.c.created_at.desc(), notifications.c.id.desc())
         .limit(limit + 1)
     )
@@ -155,18 +160,20 @@ async def list_notifications(
 
 
 async def counts_of(connection: AsyncConnection, me: MemberPrincipal) -> InboxCounts:
-    found = {
-        row.kind: row
-        for row in await connection.execute(
+    rows = (
+        await connection.execute(
             select(
                 notifications.c.kind,
+                notifications.c.muted,
                 func.count().label("total"),
                 func.count().filter(notifications.c.read_at.is_(None)).label("unread"),
             )
             .where(mine(me))
-            .group_by(notifications.c.kind)
+            .group_by(notifications.c.kind, notifications.c.muted)
         )
-    }
+    ).all()
+    found = {row.kind: row for row in rows if not row.muted}
+    silenced = [row for row in rows if row.muted]
     kinds = [
         KindCount(
             kind=kind,
@@ -179,6 +186,8 @@ async def counts_of(connection: AsyncConnection, me: MemberPrincipal) -> InboxCo
         total=sum(item.total for item in kinds),
         unread=sum(item.unread for item in kinds),
         kinds=kinds,
+        muted=sum(row.total for row in silenced),
+        muted_unread=sum(row.unread for row in silenced),
     )
 
 
@@ -289,7 +298,7 @@ async def mute_notifications(
         .where(
             notifications.c.user_id == me.user_id,
             notifications.c.email_status == EmailStatus.PENDING,
-            notifications.c.kind.not_in(GETS_THROUGH_MUTES),
+            notifications.c.kind.not_in(BREAKS_MUTES),
             CONTEXT_COLUMNS[subject] == subject_id,
         )
         .values(email_status=EmailStatus.SKIPPED)

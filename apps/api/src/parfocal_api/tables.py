@@ -918,6 +918,7 @@ notifications = Table(
     Column("project_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("task_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("case_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("muted", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"],
         ["memberships.tenant_id", "memberships.user_id"],

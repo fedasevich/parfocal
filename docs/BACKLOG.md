@@ -2836,7 +2836,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on NOTIF-001. Refs kit W52, kit Flow 18, [ADR 0091](adr/0091-notification-catalogue-and-targets.md). Thread and delivery targets resolve in COLLAB-002 and REMOTE-003, which do not exist yet.
 
 - [ ] NOTIF-007 · Inbox API
-  List notifications by kind and read state, mark one or many as read, and mute a project, a review task or a case so its events stop for that person, in the inbox and in email. Mentions and emergency access still get through.
+  List notifications by kind and read state, mark one or many as read, and mute a project, a review task or a case so its events stop pushing and emailing that person. Muted events stay in the inbox under a filter and out of the bell's count. Mentions, emergency access and kinds that hand the person work (task assigned, task due soon) still get through as normal notifications.
   Done when API tests cover filters, bulk read, muting and tenant isolation.
   Depends on NOTIF-006. Refs kit W53, [ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md) (inbox mutes), which widened the case mute to projects and tasks since [ADR 0053](adr/0053-ai-results-review-direction.md) made cases optional.
 

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection, UserConnection
 from parfocal_api.email_templates import DIGEST_TEMPLATE, render
-from parfocal_api.notification_catalogue import DEFAULTS, Channels, TargetKind
+from parfocal_api.notification_catalogue import BREAKS_MUTES, DEFAULTS, Channels, TargetKind
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ForbiddenError
 from parfocal_api.tables import (
@@ -37,7 +37,6 @@ from parfocal_common.db import CURRENT_TENANT, DatabaseScope, scoped_transaction
 
 DIGEST_WINDOWS = {EmailDigest.HOURLY: timedelta(hours=1), EmailDigest.DAILY: timedelta(days=1)}
 MANDATORY = frozenset({NotificationKind.EMERGENCY_ACCESS})
-GETS_THROUGH_MUTES = MANDATORY | {NotificationKind.MENTION}
 
 
 @dataclass(frozen=True)
@@ -157,7 +156,7 @@ async def muted(
     context: Context,
 ) -> set[uuid.UUID]:
     subjects = context.subjects()
-    if kind in GETS_THROUGH_MUTES or not subjects or not people:
+    if kind in BREAKS_MUTES or not subjects or not people:
         return set()
     found = await connection.scalars(
         select(notification_mutes.c.user_id).where(
@@ -182,7 +181,7 @@ async def notify(
     context = await context_of(connection, target_type, target_id, details)
     people = list(dict.fromkeys(recipients))
     silenced = await muted(connection, tenant_id, people, kind, context)
-    routed = await channels_for(connection, [p for p in people if p not in silenced], kind)
+    routed = await channels_for(connection, people, kind)
     rows = [
         {
             "tenant_id": tenant_id,
@@ -192,8 +191,11 @@ async def notify(
             "target_id": target_id,
             "payload": details,
             "in_app": channels.in_app,
-            "realtime": channels.realtime,
-            "email_status": EmailStatus.PENDING if channels.email else EmailStatus.NONE,
+            "realtime": channels.realtime and person not in silenced,
+            "email_status": EmailStatus.PENDING
+            if channels.email and person not in silenced
+            else EmailStatus.NONE,
+            "muted": person in silenced,
             "project_id": context.project_id,
             "task_id": context.task_id,
             "case_id": context.case_id,
