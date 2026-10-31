@@ -19,7 +19,8 @@ The project memory lives in [docs/](docs/README.md). The plan is [docs/BACKLOG.m
 | `packages/tokens` | TypeScript | Design tokens |
 | `packages/test-fixtures` | TypeScript | Slide fixtures and fetch scripts |
 | `packages/golden-images` | TypeScript | Golden-image rendering checks with per-format tolerances and empty-frame guards |
-| `packages/latency-proxy` | TypeScript | HTTP proxy with a configurable RTT and bandwidth for perf tests |
+| `packages/latency-proxy` | TypeScript | HTTP proxy with a configurable RTT, download and upload bandwidth for perf tests |
+| `packages/upload-spike` | TypeScript | STACK-039 spike that uploads a large file with Uppy to MinIO over a throttled link that is cut mid-upload |
 | `packages/typescript-config` | TypeScript | Shared tsconfig presets for browser, web worker, Node and Cloudflare code |
 | `packages/py-common` | Python | Shared settings, logging, tenancy context and audit helpers |
 | `infra/tofu` | OpenTofu | Cloudflare and Zitadel resources ([runbook](docs/knowledge/infra.md)) |

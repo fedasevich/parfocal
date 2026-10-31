@@ -87,6 +87,46 @@ test("concurrent responses share one link", async () => {
   assertNear(fastest, transferMs(bytes * 2, bandwidthBytesPerSecond), "two parallel transfers");
 });
 
+async function timedUpload(url: string, bytes: number): Promise<{ ms: number; received: number }> {
+  const started = performance.now();
+  const response = await fetch(url, { method: "PUT", body: new Uint8Array(bytes) });
+  const { received } = (await response.json()) as { received: number };
+  return { ms: performance.now() - started, received };
+}
+
+test("the uplink limit stretches an upload to its size divided by the rate", async () => {
+  const bytes = 400_000;
+  const uplinkBytesPerSecond = 1_000_000;
+  proxy.setConditions({ rttMs: 0, bandwidthBytesPerSecond: null, uplinkBytesPerSecond });
+  proxy.resetStats();
+  const fastest = await fastestOf(3, async () => {
+    const result = await timedUpload(`${proxy.url}/sink`, bytes);
+    assert.equal(result.received, bytes);
+    return result.ms;
+  });
+  assertNear(fastest, transferMs(bytes, uplinkBytesPerSecond), "one upload");
+  assert.equal(proxy.stats().uploadedBytes, bytes * 3);
+  proxy.setConditions({ uplinkBytesPerSecond: null });
+});
+
+test("concurrent uploads share one uplink and leave the downlink free", async () => {
+  const bytes = 200_000;
+  const uplinkBytesPerSecond = 1_000_000;
+  proxy.setConditions({ rttMs: 0, bandwidthBytesPerSecond: null, uplinkBytesPerSecond });
+  const fastest = await fastestOf(3, async () => {
+    const started = performance.now();
+    await Promise.all([
+      timedUpload(`${proxy.url}/sink`, bytes),
+      timedUpload(`${proxy.url}/sink`, bytes),
+    ]);
+    return performance.now() - started;
+  });
+  assertNear(fastest, transferMs(bytes * 2, uplinkBytesPerSecond), "two parallel uploads");
+  const download = await fastestOf(3, async () => (await timed(`${proxy.url}/bytes/400000`)).ms);
+  assert.ok(download < 50, `a download under an uplink limit took ${download.toFixed(1)} ms`);
+  proxy.setConditions({ uplinkBytesPerSecond: null });
+});
+
 test("RTT and bandwidth add up", async () => {
   proxy.setConditions({ rttMs: 100, bandwidthBytesPerSecond: 2_000_000 });
   const fastest = await fastestOf(3, async () => (await timed(`${proxy.url}/bytes/200000`)).ms);
@@ -97,14 +137,25 @@ test("the control endpoint changes conditions and resets counters", async () => 
   proxy.setConditions({ rttMs: 0, bandwidthBytesPerSecond: null });
   proxy.resetStats();
   assert.equal(await (await fetch(`${proxy.url}/hello`)).text(), "hello");
-  assert.deepEqual(proxy.stats(), { requests: 1, bytes: 5 });
+  assert.deepEqual(proxy.stats(), { requests: 1, bytes: 5, uploadedBytes: 0 });
   const state: unknown = await (
-    await fetch(`${proxy.url}${CONTROL_PATH}?rtt=50&bandwidth=1000000`)
+    await fetch(`${proxy.url}${CONTROL_PATH}?rtt=50&bandwidth=1000000&uplink=500000`)
   ).json();
-  assert.deepEqual(state, { rttMs: 50, bandwidthBytesPerSecond: 1_000_000, requests: 1, bytes: 5 });
-  await fetch(`${proxy.url}${CONTROL_PATH}?reset&bandwidth=unlimited`);
-  assert.deepEqual(proxy.stats(), { requests: 0, bytes: 0 });
-  assert.deepEqual(proxy.conditions(), { rttMs: 50, bandwidthBytesPerSecond: null });
+  assert.deepEqual(state, {
+    rttMs: 50,
+    bandwidthBytesPerSecond: 1_000_000,
+    uplinkBytesPerSecond: 500_000,
+    requests: 1,
+    bytes: 5,
+    uploadedBytes: 0,
+  });
+  await fetch(`${proxy.url}${CONTROL_PATH}?reset&bandwidth=unlimited&uplink=unlimited`);
+  assert.deepEqual(proxy.stats(), { requests: 0, bytes: 0, uploadedBytes: 0 });
+  assert.deepEqual(proxy.conditions(), {
+    rttMs: 50,
+    bandwidthBytesPerSecond: null,
+    uplinkBytesPerSecond: null,
+  });
   assert.equal((await fetch(`${proxy.url}${CONTROL_PATH}?rtt=-1`)).status, 400);
 });
 
@@ -119,8 +170,10 @@ test("status codes and headers pass through", async () => {
 });
 
 test("invalid conditions are rejected", () => {
-  assert.throws(() => validateConditions({ rttMs: -5, bandwidthBytesPerSecond: null }), RangeError);
-  assert.throws(() => validateConditions({ rttMs: 0, bandwidthBytesPerSecond: 0 }), RangeError);
+  const open = { rttMs: 0, bandwidthBytesPerSecond: null, uplinkBytesPerSecond: null };
+  assert.throws(() => validateConditions({ ...open, rttMs: -5 }), RangeError);
+  assert.throws(() => validateConditions({ ...open, bandwidthBytesPerSecond: 0 }), RangeError);
+  assert.throws(() => validateConditions({ ...open, uplinkBytesPerSecond: -1 }), RangeError);
   assert.throws(() => proxy.setConditions({ rttMs: Number.NaN }), RangeError);
 });
 

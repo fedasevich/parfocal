@@ -12,6 +12,7 @@ export interface OriginServer {
 }
 
 const BYTES_PATH = /^\/bytes\/(\d+)$/;
+const SINK_PATH = "/sink";
 const MAX_BYTES = 64 * 1024 * 1024;
 
 export async function startOriginServer(
@@ -19,6 +20,20 @@ export async function startOriginServer(
 ): Promise<OriginServer> {
   const server = createServer((request, response) => {
     const path = new URL(request.url ?? "/", "http://origin").pathname;
+    if (path === SINK_PATH) {
+      let received = 0;
+      request.on("data", (chunk: Buffer) => {
+        received += chunk.length;
+      });
+      request.on("end", () => {
+        response.writeHead(200, {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        });
+        response.end(JSON.stringify({ received }));
+      });
+      return;
+    }
     const route = routes[path];
     if (route) {
       response.writeHead(200, { "content-type": route.contentType, "cache-control": "no-store" });
