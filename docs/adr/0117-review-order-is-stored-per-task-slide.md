@@ -36,7 +36,7 @@ Option 4, storing one packed array per task slide. `review_order` (migration `00
 - When. `createReviewTask` draws one seed, uses it for the random cells sample and the order, and stores every slide's order in the same transaction. A scope change through `changeReviewTask` rebuilds the order with the stored seed, because the stored order is the old scope's. Nothing else rebuilds it.
 - Reading the order. `GET /api/review-tasks/{task}/slides/{slide}/order` (`getReviewOrder`) returns the total and a page of at most 1,000 objects from an offset, sliced in Postgres, to whoever may read the task slide, as the verdict list does.
 
-Computing the order inside task creation is accepted for now, because local and pilot slides are small and a [result file](../results/2026-10-31-review-order-large-slide.md) puts a 1.6 million cell slide at about a second on a laptop. GUIDE-013 (review order as a background job) moves it onto the ADR 0044 job engine for real slides.
+Computing the order inside task creation is accepted for now, because local and pilot slides are small and a [result file](../results/2026-10-31-review-order-large-slide.md) puts a 1.6 million cell slide at 0.4 to 0.8 seconds for a random 200 cells and 1.3 to 2.7 seconds for a cells below a score scope on a laptop, without file or database time. GUIDE-013 (review order as a background job) moves it onto the ADR 0044 job engine for real slides.
 
 ## Consequences
 
