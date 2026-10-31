@@ -36,16 +36,30 @@ Setting `region=` on a Modal function needs the Team plan ($250 a month) and add
 
 ## The cloud is open again, at the lowest possible cost
 
-From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cloud side. On 2026-10-31 the owner opened everything again: Modal, Neon and the Zitadel credentials for CI. This unblocks STACK-019 (the web framework, which needs Modal cold-start times), STACK-020 (database hosting, which needs the Neon region measurement) and IAM-001 (login provider setup from code). The owner pays for all of it and asked that it cost as little as possible.
+From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cloud side. On 2026-10-31 the owner opened Modal, Neon and the Zitadel credentials for CI again. This unblocks STACK-019 (the web framework, which needs Modal cold-start times), STACK-020 (database hosting, which needs the Neon region measurement) and IAM-001 (login provider setup from code). The owner pays for all of it and asked that it cost as little as possible and that agents be extra careful. The rules are in `AGENTS.md` under "Real infrastructure and production" and in [ADR 0114](../adr/0114-production-access-and-spend-caps.md).
 
-- Before anything that can cost money, check the current spend and the plan's limits on the provider's dashboard or CLI. That covers Modal runs, deploys and GPUs, Neon computes and branches, and any paid plan.
-- Pick the cheapest way that does the job. Use free tiers, scale to zero, the smallest GPU and the shortest run that gives a usable number.
-- Delete what you created for a spike or test when you are done, such as Modal apps, Neon branches and temporary buckets.
-- Never raise a spend limit, move to a paid plan, buy anything or leave something running without asking the owner first.
-- Write what a cloud run cost, or `TODO` if it is unknown, in the log entry or result file.
+## Spend caps and alerts on every service
+
+Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the work itself. An alert only sends an email and spending goes on.
+
+| Service | Plan | Card on file | What protects the owner | Spend this cycle |
+|---|---|---|---|---|
+| Modal | Starter, $30 of compute included a month | Yes | Hard cap. Usage limit $30 and spend limit $0, so workloads stop when the free credits are used. Volume storage is not capped, so never keep a volume | $0.00 |
+| Cloudflare R2 | R2 Paid, pay as you go past the free tier (10 GB storage, 1 million writes and 10 million reads a month) | Yes | Alert only. Cloudflare has no hard cap. The account budget alert "Default budget alert (auto-created)" emails at $1, lowered from $10 on 2026-10-31 | $0.00, all inside the free tier |
+| Cloudflare Workers | Workers Free | Yes | Hard cap by plan. Requests past the daily free limit fail instead of billing | $0.00 |
+| Cloudflare zone `parfocal.eu` | Free | Yes | Capped by plan | $0.00 |
+| Neon | Free (`free_v3`), billed through the Vercel Marketplace | No | Hard cap by plan: 1 GB storage and 100 CU-hours per project a month, then the compute stops | $0.00 |
+| Vercel team "fedasevich's projects" | Hobby | No | Capped by plan, and no card means nothing can be charged | $0.00 |
+| Zitadel Cloud | Free, team still named "pathocal" | Not checked | Capped by plan at 100 daily active users | $0.00 |
+| GitHub `fedasevich` | GitHub Pro through education benefits, $0 a month | Not checked | Budgets of $0 that block usage for Actions, Packages, Codespaces and Git LFS, a $5 budget for AI credits, and included usage alerts on. The public repository's Actions minutes are free | $13.66 used, all covered by included usage |
+| Domain `parfocal.eu` at Endora | Yearly renewal | Not checked | A known yearly cost, nothing to alert. TODO: write down the renewal date and price | |
+
+Sentry, PostHog, Resend and Grafana have no accounts yet. Set a cap or an alert at the lowest amount on the day each is created and add a row here.
+
+How to check spend quickly: Modal at `modal.com/settings/fedasevich/usage`, Cloudflare at Manage account, Billing, Billable usage, Neon through the Vercel MCP tool `list_integration_configurations` (its `billingData`), Vercel at the team's Settings, Billing, and GitHub at Settings, Billing and licensing.
 
 ## Modal stops deploys at the workspace spend limit
 
 On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its spend limit" before building anything. Deploys and runs in every environment stop until the owner raises the limit or the billing period resets, so CI deploys to Modal would fail the same way. Source: STACK-019 log entry.
 
-Checked in the Modal dashboard on 2026-10-31: the workspace is on the Starter plan with $30 of included compute credits a month, the usage limit is $30 and the spend limit is $0. So workloads stop once the free credits are used up and nothing is ever charged to the card for compute. Volume storage is not covered by the limit and keeps billing, so delete every Modal volume you create. Do not change either limit without asking the owner.
+Since 2026-10-31 the spend limit is $0 on purpose, so compute stops when the $30 of free credits is used. See the table above.

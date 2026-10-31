@@ -2937,6 +2937,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] OPS-009 · Storage lifecycle and cost controls
   Tiering for old slides, GPU scale to zero, budgets and alerts per environment.
   Done when cost dashboards exist and lifecycle rules are tested on staging.
+  Account-level caps and alerts were set on 2026-10-31 under [ADR 0114](adr/0114-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
 
 - [ ] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
@@ -3030,6 +3031,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] TEST-018 · Self-hosted Mac GPU runner (dropped)
   Dropped by [ADR 0011](adr/0011-hosted-ci-only.md). No self-hosted runners are used.
+
+- [ ] TEST-019 · Application performance on main paths
+  The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a verdict to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
+  Done when the scripts run locally against the full stack, a result file records the numbers with the machine, browser, data and method, and CI runs the CPU-side paths against their budgets.
+  Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
 
 ---
 
@@ -3287,7 +3293,8 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 - [ ] GUIDE-002 · Guided review
   One object at a time with a plain question ("Is T2 tumor?"), what the AI said in a 16 px line, and Agree, Disagree and Not sure as large buttons with K, X and U. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review.
   Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
-  Depends on GUIDE-001, VIEW-020. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
+  Objects come in the task's review order (GUIDE-012).
+  Depends on GUIDE-001, VIEW-020, GUIDE-012. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
 
 - [ ] GUIDE-003 · Disagree reasons and optional fixes
   Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
@@ -3333,6 +3340,11 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   The verdict API takes zero or more reason codes on Disagree instead of exactly one, and Unsure takes the optional codes `need_deeper_level`, `need_ihc`, `border_unclear` and `out_of_focus`. Existing verdicts keep their single reason as a set of one. The evaluation report counts each code of a verdict once ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md), amending [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md)).
   Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per verdict.
   Depends on GUIDE-001, EVAL-001.
+
+- [ ] GUIDE-012 · Least sure first order
+  The thesis assignment promises a review that starts with the outputs the model is least sure of ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Each reviewer's objects in a task come in ascending order of the model's certainty: the calibrated probability of the AI class where the result set has one, else its score. Ties break by object ID. Objects without a score come after the scored ones in the task's fixed random order (TASK-003), so imported outputs without scores are still reviewed in an order every reviewer shares. Regions are few and all of them are checked, so the order matters most for cells. The order is computed once per task and stored, so a later recalibration does not reshuffle a running review.
+  Done when unit tests cover the order on a fixture with known scores, ties, a set without scores and a mixed set, and API tests show two reviewers getting the same order and a recalibration leaving a running task unchanged.
+  Depends on TASK-003, GUIDE-001. Refs doc 33 (showing type confidence to a doctor), doc 28 (calibrated type confidence).
 
 
 ---

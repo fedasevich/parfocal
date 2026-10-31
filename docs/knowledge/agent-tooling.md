@@ -16,6 +16,20 @@ Which MCP servers and CLIs let an agent inspect and change each service in [ADR 
 
 Checked on 2026-10-06. Sources: https://blog.cloudflare.com/thirteen-new-mcp-servers-from-cloudflare, https://neon.com/docs/ai/neon-mcp-server, https://docs.sentry.io/product/sentry-mcp/, https://resend.com/changelog/mcp, https://grafana.com/docs/grafana-cloud/ai-tools/mcp-servers/oss-mcp/.
 
+## How an agent reaches each service
+
+Checked on 2026-10-31. Follow the production rules in `AGENTS.md` before any write.
+
+| Service | How | State on 2026-10-31 |
+|---|---|---|
+| Modal | `uvx modal ...`, which reads the token in `~/.modal.toml`. No install needed | Works. `uvx modal app list` showed no apps and `uvx modal volume list` no volumes |
+| Vercel and Neon billing | The Vercel MCP server (`mcp__vercel__*`) | Works. Team `team_XVYHWaKthAXAuyUtbNBrD73r` |
+| Neon database | `npx neonctl ...` after the owner runs `npx neonctl auth` once, or the Neon MCP server after its OAuth sign-in | Not signed in yet |
+| Cloudflare | `npx wrangler ...` after the owner runs `npx wrangler login` once, or the Cloudflare MCP servers after their OAuth sign-in. `CLOUDFLARE_API_TOKEN` in `.env` is the narrow `parfocal-tofu` token for R2 and DNS only | Not signed in yet |
+| Zitadel | OpenTofu in `infra/tofu` with the `parfocal-tofu` service user key | Works as before |
+| GitHub | `gh`. Reading billing needs the `user` scope, which the owner adds with `gh auth refresh -h github.com -s user` | Billing not readable from the CLI yet |
+| Billing pages | The owner's Chrome through Claude in Chrome, where the owner is signed in to Modal, Vercel, Cloudflare, Zitadel and GitHub | Works while the owner's sessions last |
+
 ## Provisioned resources
 
 No secrets here. Secrets live in `.env` locally and in GitHub environments for CI.
