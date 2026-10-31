@@ -19,7 +19,7 @@ To take every recommendation at once, write "all recommended" here:
 | INGEST-001 (upload API with presigned multipart) | Upload routes for ADR 0116, tested against MinIO | Built, the tick waits for decision 6a, decisions 5a to 5d |
 | INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Ticked, decisions 9a to 9d |
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
-| SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Built, waits for a green CI run on `main`, decisions 10a (accept ADR 0124), 10b (reviewers and labels), 10c (a switch per project), 10d (labels in a de-identified project at ingest) and 10e (the label pages inside the original file) |
+| SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 

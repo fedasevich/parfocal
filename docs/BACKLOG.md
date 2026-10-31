@@ -709,7 +709,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
   The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and decision 10d (labels in a de-identified project at ingest) in [decisions.md](decisions.md) asks whether this task stops that.
 
-- [ ] SEC-009 · Slide label and macro image handling
+- [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
   INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images` ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)). Guests no longer exist and research access means a de-identified project. `getRestrictedImage` serves them only in clinical projects to project owners and viewers and to emergency access, audits every read, and they are deleted with the slide by the retention purge and on patient erasure ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), proposed).
