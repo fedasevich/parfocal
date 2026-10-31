@@ -83,6 +83,14 @@ Write an ADR whenever a choice between alternatives affects other code, other pe
 - When an ADR changes what a backlog task must do, edit that task in the same change and link the ADR from it.
 - Add the record to the table in `docs/adr/README.md`.
 
+## The owner's decisions file
+
+Every open question for the owner goes into one file, `tmp/decisions.md`, which git ignores. Create it when the first open question appears, keep it current as tasks land, and never leave a question only in chat. This covers `Proposed` ADRs, product questions an agent could not settle, and every production or billing action that needs the owner's yes.
+
+- Start with a line where the owner can write "all recommended" to take every recommendation, then a table of what landed and the state of each task.
+- Give each decision a heading with a number and a letter, such as `1a`, and a short plain title that names the ADR or task with words. Under it put one or two sentences of context, then lettered options A, B, C and Other, with the recommended one in bold and the reason in a few words, then a blank `Your choice:` line. Add a second blank line when the owner must write something, such as wording or a number. Mark an item that has no sensible default as needing the owner's answer.
+- When the owner has filled in choices, apply each one in the repository (accept or revise the ADR, edit the backlog, run the approved action), log it, then delete the answered items from the file. Delete the file once nothing is open. Keep only unanswered items, so the file never grows stale.
+
 ## Results
 
 Write a result file whenever something is measured, such as a spike, a benchmark, a perf or memory baseline, a model evaluation, a load test or a user study.
