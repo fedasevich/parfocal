@@ -2836,7 +2836,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a test checks every catalogue kind has a target and a template, and API tests resolve each target for its recipient.
   Depends on NOTIF-001. Refs kit W52, kit Flow 18, [ADR 0091](adr/0091-notification-catalogue-and-targets.md). Thread and delivery targets resolve in COLLAB-002 and REMOTE-003, which do not exist yet.
 
-- [ ] NOTIF-007 · Inbox API
+- [x] NOTIF-007 · Inbox API
   List notifications by kind and read state, mark one or many as read, and mute a project, a review task or a case so its events stop pushing and emailing that person. Muted events stay in the inbox under a filter and out of the bell's count. Mentions, emergency access and kinds that hand the person work (task assigned, task due soon) still get through as normal notifications.
   Done when API tests cover filters, bulk read, muting and tenant isolation.
   Depends on NOTIF-006. Refs kit W53, [ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md) (inbox mutes), which widened the case mute to projects and tasks since [ADR 0053](adr/0053-ai-results-review-direction.md) made cases optional.
@@ -3254,7 +3254,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when unit tests prove the sample is deterministic and shared, and progress counts match on a fixture.
   Depends on TASK-001, OBJ-001.
 
-- [ ] TASK-004 · Blinding and first read
+- [x] TASK-004 · Blinding and first read
   Reviewers see others' verdicts and comments only after they submit. A project can hide the AI for a first read and reveal it afterwards. The researcher sees everything.
   Done when permission tests cover each role before and after submit, and API tests show the AI hidden before a first read, shown after it, and the first read kept unchanged.
   Depends on TASK-002, GUIDE-001. The first read is a stored step that is never changed, and the AI is hidden from a project reviewer on that slide until it is recorded ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
@@ -3449,7 +3449,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
   Depends on EVAL-001. Split out so EVAL-002 (evaluation report page) has no backend work.
 
-- [ ] EVAL-007 · Study template model and API
+- [x] EVAL-007 · Study template model and API
   A study template has a name, a kind of study, an ordered list of blocks from the catalogue with their settings, and task presets (objects to check, opinion form, blinding, first read, start mode, split). Templates are versioned per workspace, the five built-in ones (detection, segmentation, cell typing, reader study, sentinel node AI evaluation) are seeded, and a task pins a version. Researchers read and use templates, and only researchers with admin rights create, edit and retire them ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
   Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
