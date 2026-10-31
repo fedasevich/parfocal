@@ -17,7 +17,7 @@ To take every recommendation at once, write "all recommended" here:
 | NOTIF-007 (inbox API) | Inbox list, read state, mutes that keep muted items | Ticked, decisions 3a and 3b |
 | EVAL-007 (study template model and API) | Versioned study templates from report blocks, five built-ins | Ticked, decisions 4a to 4d |
 | INGEST-001 (upload API with presigned multipart) | Upload routes for ADR 0116, tested against MinIO | Built, the tick waits for decision 6a, decisions 5a to 5d |
-| INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready | Agent running |
+| INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Built, waits for a green CI run on `main`, decisions 9a to 9d |
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Built, merging, decisions 8a to 8d |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
@@ -254,9 +254,53 @@ Your choice:
 
 Number:
 
+## 9. Publishing uploaded slides, ADR 0122 (the slide row appears only when it is ready)
+
+The ingest job now reads the uploaded file from storage, checks it, writes its previews and level table, and only then creates the slide in its project and case. Until then the upload carries the status, which `GET /api/uploads/{upload_id}/status` answers as uploading, processing, ready or failed.
+
+### 9a. Accept ADR 0122
+
+- A. Accept as written. **Recommended**, because no slide list had to change and a refused file never becomes a slide
+- B. Create the slide row when the upload starts, with a status that every slide list filters on
+- C. Other
+
+Your choice:
+
+### 9b. A second file with a name the case already has
+
+- A. Keep both, and give the new slide the label "Name (2)", "(3)" and so on, as built. **Recommended** until INGEST-022 (per-file problems in the Check step) lets the person skip a duplicate before uploading
+- B. Refuse the upload at its start with a "slide already exists" problem
+- C. Fill the existing slide when it has no file yet, as a slide made by a case import has, and number the label otherwise
+- D. Other
+
+Your choice:
+
+### 9c. Telling the uploader that a file was refused
+
+The `upload-done` notification says "Your upload has been checked and is ready", so a refused file sends nothing today and only the status route shows the reason.
+
+- A. Add a notification kind "upload refused" with its own line, in-app only, as part of INGEST-018 (ingest failure UX). **Recommended**, because a person who closed the page would otherwise never learn of it
+- B. Reuse `upload-done` for both outcomes with a neutral line such as "Parfocal has finished checking your upload."
+- C. Keep it on the status route only
+- D. Other
+
+Your choice:
+
+Wording, if you pick A or B:
+
+### 9d. Pairing result files with slides in an upload
+
+The upload metadata cannot say that a file is an AI result for a slide, so a GeoJSON or CSV sent through the upload API is refused as not a slide.
+
+- A. Leave it to RSET-004 (pairing results with slides), whose backlog entry now says to add the marker and the import. **Recommended**, because the pairing rules belong there
+- B. Add a `result_for` field to the upload metadata now, naming the slide, and import the file in the same job
+- C. Other
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
-- The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads) and `0046` (model runs), and INGEST-017 (publish step) takes `0047`.
+- The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads) and `0046` (model runs), and `0047` (slide ingest) from INGEST-017 (publish step and slide status).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.
