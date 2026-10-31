@@ -407,6 +407,8 @@ def ingest_status(
         return IngestStatus.READY, None, None
     if job is not None and job.status == JobStatus.FAILED:
         return failed(job.error_code or "unknown")
+    if job is not None and job.status in {JobStatus.CANCELLING, JobStatus.CANCELLED}:
+        return failed(Failure.CHECK_STOPPED)
     return IngestStatus.PROCESSING, None, None
 
 

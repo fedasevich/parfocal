@@ -549,12 +549,13 @@ async def work(
     worker: str,
     idle_exit_seconds: float | None = None,
     poll_seconds: float = 1.0,
+    tenant_id: uuid.UUID | None = None,
 ) -> int:
     kinds = {workflow.kind: workflow for workflow in workflows}
     finished = 0
     idle = 0.0
     while idle_exit_seconds is None or idle < idle_exit_seconds:
-        claimed = await claim(engine, worker, kinds)
+        claimed = await claim(engine, worker, kinds, tenant_id)
         if claimed is None:
             await asyncio.sleep(poll_seconds)
             idle += poll_seconds

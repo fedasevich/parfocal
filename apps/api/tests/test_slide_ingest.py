@@ -95,21 +95,20 @@ def status_of(api: ApiAs, who: MemberPrincipal, upload: dict[str, Any]) -> dict[
     return response.json()
 
 
-def park_other_ingest_jobs(database: str, tenant_id: uuid.UUID) -> None:
-    owner(
-        database,
-        "UPDATE jobs SET status = 'failed', error_code = 'parked-by-test', lease_until = NULL "
-        f"WHERE kind = 'ingest' AND status IN ('queued', 'running') AND tenant_id <> '{tenant_id}'",
-    )
-
-
-def run_worker(database: str, work_dir: Path) -> int:
+def run_worker(database: str, tenant_id: uuid.UUID, work_dir: Path) -> int:
     workflow = ingest_workflow(lambda: Resources(TEST_STORAGE, work_dir))
 
     async def go() -> int:
         engine = create_engine(with_database(APP_URL, database))
         try:
-            return await work(engine, [workflow], "inline", idle_exit_seconds=0.3, poll_seconds=0.1)
+            return await work(
+                engine,
+                [workflow],
+                "inline",
+                idle_exit_seconds=0.3,
+                poll_seconds=0.1,
+                tenant_id=tenant_id,
+            )
         finally:
             await engine.dispose()
 
@@ -157,9 +156,8 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     send_file(api, lab.lead, upload, data)
     seen.append(status_of(api, lab.lead, upload))
     assert (seen[-1]["status"], seen[-1]["step"]) == ("processing", "quarantine")
-    park_other_ingest_jobs(database, lab.tenant_id)
 
-    worker = threading.Thread(target=run_worker, args=(database, tmp_path / "work"))
+    worker = threading.Thread(target=run_worker, args=(database, lab.tenant_id, tmp_path / "work"))
     worker.start()
     while worker.is_alive():
         seen.append(status_of(api, lab.lead, upload))
@@ -245,8 +243,7 @@ def test_a_file_that_is_not_a_usable_slide_fails_with_its_reason(
         data = whole[: len(whole) * 2 // 3]
     upload = start_upload(api, lab.lead, lab.project, name, len(data))
     send_file(api, lab.lead, upload, data)
-    park_other_ingest_jobs(database, lab.tenant_id)
-    run_worker(database, tmp_path / "work")
+    run_worker(database, lab.tenant_id, tmp_path / "work")
 
     state = status_of(api, lab.lead, upload)
     assert (state["status"], state["reason"], state["slide_id"]) == ("failed", reason, None)
@@ -262,7 +259,9 @@ def test_a_file_that_is_not_a_usable_slide_fails_with_its_reason(
     assert list((tmp_path / "work").iterdir()) == []
 
 
-def start_worker(database: str, name: str, work_dir: Path) -> subprocess.Popen[bytes]:
+def start_worker(
+    database: str, tenant_id: uuid.UUID, name: str, work_dir: Path
+) -> subprocess.Popen[bytes]:
     env = {
         **os.environ,
         "PYTHONPATH": os.pathsep.join([str(TESTS), os.environ.get("PYTHONPATH", "")]),
@@ -284,6 +283,8 @@ def start_worker(database: str, name: str, work_dir: Path) -> subprocess.Popen[b
             "3",
             "--poll",
             "0.2",
+            "--workspace",
+            str(tenant_id),
         ],
         env=env,
         stdout=subprocess.DEVNULL,
@@ -315,15 +316,14 @@ def test_a_worker_killed_while_deriving_is_resumed_without_duplicate_outputs(
     upload = start_upload(api, lab.lead, lab.project, "synthetic-jpeg.tiff", len(data))
     send_file(api, lab.lead, upload, data)
     job = status_of(api, lab.lead, upload)["job_id"]
-    park_other_ingest_jobs(database, lab.tenant_id)
-    first = start_worker(database, "worker-a", tmp_path / "a")
+    first = start_worker(database, lab.tenant_id, "worker-a", tmp_path / "a")
     try:
         wait_for(lambda: len(derive_units(database, job)) >= 1, 60)
     finally:
         first.send_signal(signal.SIGKILL)
         first.wait()
     assert status_of(api, lab.lead, upload)["status"] == "processing"
-    second = start_worker(database, "worker-b", tmp_path / "b")
+    second = start_worker(database, lab.tenant_id, "worker-b", tmp_path / "b")
     try:
         wait_for(lambda: status_of(api, lab.lead, upload)["status"] == "ready", 60)
         wait_for(
@@ -362,8 +362,7 @@ def test_a_second_slide_with_the_same_name_gets_its_own_label(
     make_slide(database, lab.tenant_id, lab.project, "Biopsy")
     upload = start_upload(api, lab.lead, lab.project, "Biopsy.tiff", len(data))
     send_file(api, lab.lead, upload, data)
-    park_other_ingest_jobs(database, lab.tenant_id)
-    run_worker(database, tmp_path / "work")
+    run_worker(database, lab.tenant_id, tmp_path / "work")
     state = status_of(api, lab.lead, upload)
     assert state["status"] == "ready"
     assert single(database, f"SELECT label FROM slides WHERE id = '{state['slide_id']}'") == (
@@ -392,3 +391,17 @@ def test_only_the_uploader_reads_the_status(api: ApiAs, database: str, lab: Lab)
     other = make_workspace(database, {"stranger": Role.RESEARCHER}).people["stranger"]
     assert api(other).get(path).status_code == 404
     assert api(lab.lead).get(f"/api/uploads/{uuid.uuid4()}/status").status_code == 404
+
+
+def test_a_stopped_check_reads_as_failed(api: ApiAs, database: str, lab: Lab) -> None:
+    data = fixture_path("synthetic-jpeg.tiff").read_bytes()
+    upload = start_upload(api, lab.lead, lab.project, "stopped.tiff", len(data))
+    send_file(api, lab.lead, upload, data)
+    job = status_of(api, lab.lead, upload)["job_id"]
+    owner(database, f"UPDATE jobs SET status = 'cancelled', finished_at = now() WHERE id = '{job}'")
+    state = status_of(api, lab.lead, upload)
+    assert (state["status"], state["reason"], state["slide_id"]) == (
+        "failed",
+        "check-stopped",
+        None,
+    )

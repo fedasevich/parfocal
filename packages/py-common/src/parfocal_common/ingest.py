@@ -109,6 +109,7 @@ class Failure(StrEnum):
     SIZE_MISMATCH = "size-mismatch"
     UPLOAD_ABORTED = "upload-aborted"
     UPLOAD_EXPIRED = "upload-expired"
+    CHECK_STOPPED = "check-stopped"
 
 
 FAILURES: Mapping[str, str] = {
@@ -122,6 +123,7 @@ FAILURES: Mapping[str, str] = {
     Failure.UPLOAD_EXPIRED: (
         "The upload stopped for more than a day and was cancelled. Start it again."
     ),
+    Failure.CHECK_STOPPED: "Checking this file was stopped before it finished. Upload it again.",
 }
 GENERIC_FAILURE = "Parfocal could not take this file in."
 

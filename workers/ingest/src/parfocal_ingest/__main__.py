@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import socket
+import uuid
 
 from parfocal_common.db import create_engine
 from parfocal_common.jobs import load_workflow, work
@@ -15,6 +16,7 @@ def parse() -> argparse.Namespace:
     parser.add_argument("--worker", default=f"{socket.gethostname()}:{os.getpid()}")
     parser.add_argument("--idle-exit", type=float, default=None)
     parser.add_argument("--poll", type=float, default=1.0)
+    parser.add_argument("--workspace", type=uuid.UUID, default=None)
     return parser.parse_args()
 
 
@@ -26,7 +28,14 @@ async def main() -> None:
         load_workflow(path) for path in arguments.workflow or ["parfocal_ingest.workflow:INGEST"]
     ]
     try:
-        await work(engine, workflows, arguments.worker, arguments.idle_exit, arguments.poll)
+        await work(
+            engine,
+            workflows,
+            arguments.worker,
+            arguments.idle_exit,
+            arguments.poll,
+            arguments.workspace,
+        )
     finally:
         await engine.dispose()
 
