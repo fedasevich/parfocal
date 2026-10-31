@@ -12,11 +12,11 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import NotFoundError
-from parfocal_api.reviewed_layer import user_of
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import (
     MIN_AUDIT_DAYS,

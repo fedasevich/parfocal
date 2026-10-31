@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 23 |
+| `phi` | 24 |
 | `personal` | 40 |
 | `secret` | 9 |
-| `operational` | 388 |
+| `operational` | 389 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -517,6 +517,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `user_id` | personal |
 | `submitted_at` | operational |
 | `assigned_at` | operational |
+| `first_read_at` | operational |
+| `first_read` | phi |
 
 ## review_edits
 

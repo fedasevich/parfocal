@@ -10,6 +10,7 @@ from sqlalchemy import ColumnElement, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import FirstReadStartedError, task_started
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -615,6 +616,9 @@ async def change_review_task(
             if value is None and field != "due_on":
                 raise BadRequestError(f"{field} cannot be empty")
             values[field] = value
+    switching = values.get("ai_hidden_first_read", row.ai_hidden_first_read)
+    if switching != row.ai_hidden_first_read and await task_started(connection, task_id):
+        raise FirstReadStartedError
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
     rescoped = change.scope is not None and (

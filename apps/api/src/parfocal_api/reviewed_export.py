@@ -7,13 +7,19 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.blinding import (
+    OtherReviewerError,
+    require_ai_shown,
+    require_seeing_reviewer,
+    user_of,
+)
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import ai_objects, class_names, first_of_each_match, region_classes
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import code_of
-from parfocal_api.reviewed_layer import OtherReviewerError, task_slide, user_of
+from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.tables import (
     annotations,
     cases,
@@ -339,8 +345,10 @@ async def export_reviewed_layer(
         reviewer = reviewer_id or user_of(principal)
         if reviewer is None:
             raise BadRequestError("Name the reviewer")
-        if reviewer != user_of(principal) and not whole:
-            raise OtherReviewerError
+        await require_seeing_reviewer(
+            connection, principal, row.project_id, task_id, slide_id, reviewer
+        )
+        await require_ai_shown(connection, principal, row.project_id, slide_id)
         items = await layer_items(connection, row, reviewer, names)
         model = f"{set_name} reviewed"
     if format is ExportFormat.GEOJSON:

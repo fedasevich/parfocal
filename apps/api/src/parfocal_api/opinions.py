@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.opinion_questions import (
     QUESTIONS,
@@ -21,8 +22,7 @@ from parfocal_api.opinion_questions import (
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError
-from parfocal_api.project_access import project_grant, reads_whole
-from parfocal_api.reviewed_layer import OtherReviewerError, assigned_slide, task_slide, user_of
+from parfocal_api.reviewed_layer import assigned_slide, task_slide
 from parfocal_api.tables import opinion_forms, opinions, review_assignments, review_tasks
 
 MAX_ANSWERS = 12
@@ -194,8 +194,7 @@ async def get_opinion(
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")
-    if reviewer != user_of(principal) and not reads_whole(
-        await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
-    ):
-        raise OtherReviewerError
+    await require_seeing_reviewer(
+        connection, principal, row.project_id, task_id, slide_id, reviewer
+    )
     return await opinion_of(connection, task_id, slide_id, reviewer)

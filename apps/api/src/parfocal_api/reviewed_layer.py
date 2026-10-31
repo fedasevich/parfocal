@@ -24,11 +24,17 @@ from parfocal_api.annotations import (
     checked,
 )
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import (
+    ai_hidden_on,
+    require_judging_allowed,
+    require_seeing_reviewer,
+    user_of,
+)
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import MemberPrincipal, Principal
+from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import project_grant, reads_whole, require_slide_reading
+from parfocal_api.project_access import require_slide_reading
 from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     AnnotationKind,
@@ -79,8 +85,8 @@ class ReviewEdit(BaseModel):
 
 
 class LayerSummary(BaseModel):
-    regions: int
-    cells: int
+    regions: int | None
+    cells: int | None
     retyped: int
     reshaped: int
     deleted: int
@@ -115,11 +121,6 @@ class UnknownObjectError(NotFoundError):
 class TaskSignedOffError(ConflictError):
     code = "task-signed-off"
     title = "The task is signed off. An owner can reopen it"
-
-
-class OtherReviewerError(ForbiddenError):
-    code = "other-reviewer"
-    title = "Only a project owner reads another reviewer's layer"
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}/slides/{slide_id}", tags=["review-tasks"])
@@ -160,10 +161,6 @@ async def task_slide(
         "Task slide not found",
     )
     return row
-
-
-def user_of(principal: Principal) -> uuid.UUID | None:
-    return principal.user_id if isinstance(principal, MemberPrincipal) else None
 
 
 async def assigned_slide(
@@ -278,6 +275,7 @@ async def save_review_edit(
     connection: TenantConnection,
 ) -> ReviewEdit:
     row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     await check_exists(connection, row, found)
     kind = KINDS[found.letter]
@@ -356,6 +354,7 @@ async def clear_review_edit(
     connection: TenantConnection,
 ) -> Response:
     row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     cleared = await connection.execute(
         delete(review_edits).where(
@@ -414,10 +413,9 @@ async def get_reviewed_layer(
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")
-    if reviewer != user_of(principal) and not reads_whole(
-        await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
-    ):
-        raise OtherReviewerError
+    await require_seeing_reviewer(
+        connection, principal, row.project_id, task_id, slide_id, reviewer
+    )
     edits = [
         edit_of(edit)
         for edit in await connection.execute(
@@ -448,6 +446,7 @@ async def get_reviewed_layer(
         )
     ).one()
     live = [edit for edit in edits if not edit.deleted]
+    hidden = await ai_hidden_on(connection, principal, row.project_id, slide_id)
     return ReviewedLayer(
         task_id=task_id,
         slide_id=slide_id,
@@ -456,8 +455,8 @@ async def get_reviewed_layer(
         edits=edits,
         added=added,
         summary=LayerSummary(
-            regions=counts.region_count,
-            cells=counts.cell_count,
+            regions=None if hidden else counts.region_count,
+            cells=None if hidden else counts.cell_count,
             retyped=sum(edit.class_id is not None for edit in live),
             reshaped=sum(edit.geometry is not None for edit in live),
             deleted=sum(edit.deleted for edit in edits),

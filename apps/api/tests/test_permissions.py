@@ -141,6 +141,8 @@ class Workspace:
     ready_task: uuid.UUID
     signed_task: uuid.UUID
     queued_task: uuid.UUID
+    hidden_task: uuid.UUID
+    first_read_task: uuid.UUID
     announcement: uuid.UUID
     legal_hold: uuid.UUID
     patient: uuid.UUID
@@ -174,6 +176,7 @@ NEEDS_A_TASK = frozenset(
         "saveVerdict",
         "clearVerdict",
         "saveOpinion",
+        "submitFirstRead",
     }
 )
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -297,6 +300,13 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
+    "submitFirstRead": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.hidden_task}/slides/{w.slide}/first-read"
+    ),
+    "getFirstRead": lambda w: Call(
+        "GET",
+        f"/api/review-tasks/{w.first_read_task}/slides/{w.slide}/first-read?reviewer_id={w.lead}",
+    ),
     "saveOpinion": lambda w: Call(
         "PUT",
         f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion",
@@ -391,6 +401,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -579,6 +591,9 @@ async def seed_task(
     number: int,
     *,
     signed: bool,
+    hidden: bool = False,
+    submitted: bool = True,
+    first_read: bool = False,
 ) -> uuid.UUID:
     task_id = await connection.scalar(
         insert(review_tasks)
@@ -591,6 +606,7 @@ async def seed_task(
             scope="all-regions",
             opinion_form_version=1,
             start_mode="guided",
+            ai_hidden_first_read=hidden,
             signed_off_at=func.now() if signed else None,
         )
         .returning(review_tasks.c.id)
@@ -612,7 +628,9 @@ async def seed_task(
             task_id=task_id,
             slide_id=slide_id,
             user_id=user_id,
-            submitted_at=func.now(),
+            submitted_at=func.now() if submitted else None,
+            first_read_at=func.now() if first_read else None,
+            first_read={"form_version": 1, "answers": {}, "added": []} if first_read else None,
         )
     )
     return task_id
@@ -795,6 +813,22 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 5,
                 signed=False,
             )
+            hidden_task, first_read_task = [
+                await seed_task(
+                    connection,
+                    tenant_id,
+                    case.project_id,
+                    case.loose_slide_id,
+                    result_set,
+                    people[lead],
+                    number,
+                    signed=False,
+                    hidden=True,
+                    submitted=False,
+                    first_read=number == 7,
+                )
+                for number in (6, 7)
+            ]
             await connection.execute(
                 insert(verdicts).values(
                     tenant_id=tenant_id,
@@ -887,6 +921,8 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             ready_task,
             signed_task,
             queued_task,
+            hidden_task,
+            first_read_task,
             announcement,
             legal_hold,
             case.patient_id,

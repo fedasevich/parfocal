@@ -8,11 +8,11 @@ from sqlalchemy import func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import BadRequestError, NotFoundError
-from parfocal_api.reviewed_layer import user_of
 from parfocal_api.tables import AnnouncementKind, announcements
 
 CURRENT_LIMIT = 20

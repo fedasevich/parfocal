@@ -24,6 +24,11 @@ MOVES = [
     (Move.SUBMIT, MoveFacts(ASSIGNED, signed_off=False), None),
     (Move.SUBMIT, MoveFacts(ASSIGNED, signed_off=False, submitted=True), Refused.ALREADY_SUBMITTED),
     (Move.SUBMIT, MoveFacts(ASSIGNED, signed_off=True), Refused.TASK_SIGNED_OFF),
+    (
+        Move.SUBMIT,
+        MoveFacts(ASSIGNED, signed_off=False, first_read_open=True),
+        Refused.FIRST_READ_NEEDED,
+    ),
     (Move.SUBMIT, MoveFacts(OWNER, signed_off=False), Refused.NOT_ASSIGNED),
     (Move.SUBMIT, MoveFacts(OTHER, signed_off=False), Refused.NOT_ASSIGNED),
     (Move.REOPEN_REVIEW, MoveFacts(ASSIGNED, signed_off=False, submitted=True), None),

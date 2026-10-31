@@ -55,6 +55,7 @@ class AuditAction(StrEnum):
     TASK_CHANGED = "task.changed"
     TASK_REVIEW_SUBMITTED = "task.review-submitted"
     TASK_REVIEW_REOPENED = "task.review-reopened"
+    TASK_FIRST_READ_SUBMITTED = "task.first-read-submitted"
     TASK_SIGNED_OFF = "task.signed-off"
     TASK_REOPENED = "task.reopened"
     REVIEW_OBJECT_EDITED = "review.object-edited"

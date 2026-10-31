@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.types import Integer, String, Uuid
 
+from parfocal_api.blinding import sees_reviewer
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Grant, Permission, require
@@ -414,6 +415,17 @@ async def one_annotation(
     return annotation_of(row)
 
 
+async def visible_annotation(
+    connection: AsyncConnection, principal: Principal, slide: Any, annotation_id: uuid.UUID
+) -> Annotation:
+    found = await one_annotation(connection, slide.id, annotation_id)
+    if found.task_id is not None and not await sees_reviewer(
+        connection, principal, slide.project_id, found.task_id, slide.id, found.created_by_user_id
+    ):
+        raise NotFoundError("Annotation not found")
+    return found
+
+
 @router.get("", operation_id="listAnnotations", **require(Permission.SEE_SLIDES, emergency=True))
 async def list_annotations(
     slide_id: uuid.UUID,
@@ -481,8 +493,8 @@ async def get_annotation(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> Annotation:
-    await slide_row(connection, principal, slide_id)
-    return await one_annotation(connection, slide_id, annotation_id)
+    slide = await slide_row(connection, principal, slide_id)
+    return await visible_annotation(connection, principal, slide, annotation_id)
 
 
 async def bump(
@@ -618,8 +630,8 @@ async def list_annotation_history(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> list[AnnotationVersion]:
-    await slide_row(connection, principal, slide_id)
-    await one_annotation(connection, slide_id, annotation_id)
+    slide = await slide_row(connection, principal, slide_id)
+    await visible_annotation(connection, principal, slide, annotation_id)
     rows = await connection.execute(
         select(
             annotation_versions.c.version,

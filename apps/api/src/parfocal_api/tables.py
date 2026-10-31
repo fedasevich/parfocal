@@ -1386,12 +1386,15 @@ review_assignments = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
+    Column("first_read_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("first_read", JSONB(none_as_null=True), nullable=True, info=PHI),
     ForeignKeyConstraint(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
+    CheckConstraint("(first_read_at IS NULL) = (first_read IS NULL)", name="first_read_pair"),
 )
 
 review_order = Table(

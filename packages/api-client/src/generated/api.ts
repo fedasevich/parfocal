@@ -807,6 +807,16 @@ export interface FieldError {
   code: string;
 }
 
+export type FirstReadAnswers = { [key: string]: unknown };
+
+export interface FirstRead {
+  reviewer_id: string;
+  recorded_at: string;
+  form_version: number;
+  answers: FirstReadAnswers;
+  added: Annotation[];
+}
+
 export type ScaleQuestionKind = (typeof ScaleQuestionKind)[keyof typeof ScaleQuestionKind];
 
 export const ScaleQuestionKind = {
@@ -1159,8 +1169,8 @@ export interface Job {
 }
 
 export interface LayerSummary {
-  regions: number;
-  cells: number;
+  regions: number | null;
+  cells: number | null;
   retyped: number;
   reshaped: number;
   deleted: number;
@@ -2176,6 +2186,10 @@ export type ListVerdictsParams = {
 };
 
 export type GetOpinionParams = {
+  reviewer_id?: string | null;
+};
+
+export type GetFirstReadParams = {
   reviewer_id?: string | null;
 };
 
@@ -18279,6 +18293,362 @@ export function useGetOpinion<TData = Awaited<ReturnType<typeof getOpinion>>, TE
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetOpinionQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type submitFirstReadResponse200 = {
+  data: FirstRead;
+  status: 200;
+};
+
+export type submitFirstReadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type submitFirstReadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type submitFirstReadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type submitFirstReadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type submitFirstReadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type submitFirstReadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type submitFirstReadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type submitFirstReadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type submitFirstReadResponseSuccess = submitFirstReadResponse200 & {
+  headers: Headers;
+};
+export type submitFirstReadResponseError = (
+  | submitFirstReadResponse400
+  | submitFirstReadResponse401
+  | submitFirstReadResponse403
+  | submitFirstReadResponse404
+  | submitFirstReadResponse409
+  | submitFirstReadResponse422
+  | submitFirstReadResponse429
+  | submitFirstReadResponse500
+) & {
+  headers: Headers;
+};
+
+export type submitFirstReadResponse = submitFirstReadResponseSuccess | submitFirstReadResponseError;
+
+export const getSubmitFirstReadUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/first-read`;
+};
+
+/**
+ * @summary Submit First Read
+ */
+export const submitFirstRead = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<submitFirstReadResponse> => {
+  return apiFetch<submitFirstReadResponse>(getSubmitFirstReadUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSubmitFirstReadMutationKey = () => ["submitFirstRead"] as const;
+
+export const getSubmitFirstReadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitFirstRead>>,
+    TError,
+    SubmitFirstReadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitFirstRead>>,
+  TError,
+  SubmitFirstReadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSubmitFirstReadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitFirstRead>>,
+    SubmitFirstReadMutationVariables
+  > = (props) => {
+    const { taskId, slideId } = props ?? {};
+
+    return submitFirstRead(taskId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitFirstReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitFirstRead>>
+>;
+
+export type SubmitFirstReadMutationError = Problem;
+export type SubmitFirstReadMutationVariables = { taskId: string; slideId: string };
+
+/**
+ * @summary Submit First Read
+ */
+export const useSubmitFirstRead = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof submitFirstRead>>,
+      TError,
+      SubmitFirstReadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof submitFirstRead>>,
+  TError,
+  SubmitFirstReadMutationVariables,
+  TContext
+> => {
+  return useMutation(getSubmitFirstReadMutationOptions(options), queryClient);
+};
+
+export type getFirstReadResponse200 = {
+  data: FirstRead;
+  status: 200;
+};
+
+export type getFirstReadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getFirstReadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getFirstReadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getFirstReadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getFirstReadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getFirstReadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getFirstReadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getFirstReadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getFirstReadResponseSuccess = getFirstReadResponse200 & {
+  headers: Headers;
+};
+export type getFirstReadResponseError = (
+  | getFirstReadResponse400
+  | getFirstReadResponse401
+  | getFirstReadResponse403
+  | getFirstReadResponse404
+  | getFirstReadResponse409
+  | getFirstReadResponse422
+  | getFirstReadResponse429
+  | getFirstReadResponse500
+) & {
+  headers: Headers;
+};
+
+export type getFirstReadResponse = getFirstReadResponseSuccess | getFirstReadResponseError;
+
+export const getGetFirstReadUrl = (
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/first-read?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/first-read`;
+};
+
+/**
+ * @summary Get First Read
+ */
+export const getFirstRead = async (
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getFirstReadResponse> => {
+  return apiFetch<getFirstReadResponse>(getGetFirstReadUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFirstReadQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/first-read`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetFirstReadQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFirstRead>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetFirstReadQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getFirstRead>>> = ({ signal }) =>
+    getFirstRead(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetFirstReadQueryResult = NonNullable<Awaited<ReturnType<typeof getFirstRead>>>;
+export type GetFirstReadQueryError = Problem;
+
+export function useGetFirstRead<TData = Awaited<ReturnType<typeof getFirstRead>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params: undefined | GetFirstReadParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFirstRead>>,
+          TError,
+          Awaited<ReturnType<typeof getFirstRead>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetFirstRead<TData = Awaited<ReturnType<typeof getFirstRead>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFirstRead>>,
+          TError,
+          Awaited<ReturnType<typeof getFirstRead>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetFirstRead<TData = Awaited<ReturnType<typeof getFirstRead>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get First Read
+ */
+
+export function useGetFirstRead<TData = Awaited<ReturnType<typeof getFirstRead>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: GetFirstReadParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFirstRead>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetFirstReadQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

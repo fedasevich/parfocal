@@ -11,6 +11,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import first_read_open
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import open_by_slide, open_count, queue_of
 from parfocal_api.permissions import Permission, require
@@ -69,6 +70,7 @@ class Refused(StrEnum):
     OWNERS_ONLY = "project-owners-only"
     TASK_SIGNED_OFF = "task-signed-off"
     ALREADY_SUBMITTED = "already-submitted"
+    FIRST_READ_NEEDED = "first-read-needed"
     NOT_SUBMITTED = "not-submitted"
     SLIDES_UNSUBMITTED = "slides-unsubmitted"
     DISAGREEMENTS_OPEN = "disagreements-open"
@@ -81,6 +83,10 @@ REFUSALS: Mapping[Refused, tuple[type[ProblemError], str]] = {
     Refused.OWNERS_ONLY: (ForbiddenError, "Only an owner of this project does that"),
     Refused.TASK_SIGNED_OFF: (ConflictError, "The task is signed off. An owner can reopen it"),
     Refused.ALREADY_SUBMITTED: (ConflictError, "This slide is already submitted"),
+    Refused.FIRST_READ_NEEDED: (
+        ConflictError,
+        "Record your first read without the AI before you submit this slide",
+    ),
     Refused.NOT_SUBMITTED: (ConflictError, "This slide is not submitted"),
     Refused.SLIDES_UNSUBMITTED: (ConflictError, "Some reviewers have not submitted every slide"),
     Refused.DISAGREEMENTS_OPEN: (ConflictError, "Some disagreements are not decided yet"),
@@ -110,6 +116,7 @@ class MoveFacts:
     actor: Actor
     signed_off: bool
     submitted: bool = False
+    first_read_open: bool = False
     all_submitted: bool = False
     open_disagreements: int = 0
 
@@ -161,6 +168,8 @@ def check_move(move: Move, facts: MoveFacts) -> Refused | None:
                 return Refused.TASK_SIGNED_OFF
             if move is Move.SUBMIT and facts.submitted:
                 return Refused.ALREADY_SUBMITTED
+            if move is Move.SUBMIT and facts.first_read_open:
+                return Refused.FIRST_READ_NEEDED
             if move is Move.REOPEN_REVIEW and not facts.submitted:
                 return Refused.NOT_SUBMITTED
             return None
@@ -364,6 +373,7 @@ async def review_move(
         actor=await actor_for(connection, principal, task, slide_id),
         signed_off=task.signed_off_at is not None,
         submitted=submitted_at is not None,
+        first_read_open=await first_read_open(connection, principal, task_id, slide_id),
     )
     action = (
         AuditAction.TASK_REVIEW_SUBMITTED

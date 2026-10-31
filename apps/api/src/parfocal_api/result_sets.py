@@ -10,6 +10,7 @@ from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import ai_hidden, ai_hidden_on, require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
@@ -400,7 +401,9 @@ async def create_result_set(
 async def list_slide_result_sets(
     slide_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[ResultSet]:
-    await slide_row(connection, principal, slide_id)
+    slide = await slide_row(connection, principal, slide_id)
+    if await ai_hidden_on(connection, principal, slide.project_id, slide_id):
+        return []
     rows = await connection.execute(
         select(result_sets)
         .where(result_sets.c.slide_id == slide_id, result_sets.c.deleted_at.is_(None))
@@ -422,6 +425,7 @@ async def list_project_result_sets(
             result_sets.c.project_id == project_id,
             result_sets.c.deleted_at.is_(None),
             readable_slide(principal, result_sets.c.project_id, result_sets.c.slide_id),
+            ~ai_hidden(principal, result_sets.c.project_id, result_sets.c.slide_id),
         )
         .order_by(result_sets.c.created_at)
     )
@@ -436,7 +440,9 @@ async def list_project_result_sets(
 async def get_result_set(
     result_set_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> ResultSetDetail:
-    return await detail_of(connection, await set_row(connection, principal, result_set_id))
+    row = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, row.project_id, row.slide_id)
+    return await detail_of(connection, row)
 
 
 @router.delete(

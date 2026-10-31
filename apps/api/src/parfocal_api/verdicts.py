@@ -10,19 +10,17 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blinding import require_judging_allowed, require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError
-from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.reviewed_layer import (
     KINDS,
-    OtherReviewerError,
     ai_object,
     assigned_slide,
     check_exists,
     task_slide,
-    user_of,
 )
 from parfocal_api.tables import (
     AnnotationKind,
@@ -204,6 +202,7 @@ async def save_verdict(
     connection: TenantConnection,
 ) -> Verdict:
     row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
     if draft.reason is not None and draft.reason not in REASONS[kind]:
@@ -287,6 +286,7 @@ async def clear_verdict(
     connection: TenantConnection,
 ) -> Response:
     row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
     me = user_of(principal)
@@ -322,10 +322,9 @@ async def list_verdicts(
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")
-    if reviewer != user_of(principal) and not reads_whole(
-        await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
-    ):
-        raise OtherReviewerError
+    await require_seeing_reviewer(
+        connection, principal, row.project_id, task_id, slide_id, reviewer
+    )
     rows = await connection.execute(
         select(verdicts)
         .where(

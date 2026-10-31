@@ -416,6 +416,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.ids["result_set"] = set_id
     task_name = f"Task {uuid.uuid4().hex[:8]}"
+    first_read = f"First read {uuid.uuid4().hex[:8]}"
     task_id = await connection.scalar(
         insert(review_tasks)
         .values(
@@ -449,8 +450,11 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             slide_id=case.loose_slide_id,
             user_id=seeded.ids["user"],
             submitted_at=func.now(),
+            first_read_at=func.now(),
+            first_read={"form_version": 1, "answers": {"comment": first_read}, "added": []},
         )
     )
+    seeded.markers.add(first_read)
     seeded.markers.add(str(case.loose_slide_id))
     await connection.execute(
         insert(review_order).values(
@@ -646,6 +650,10 @@ GET_ROUTES = {
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",
+    ),
+    "getFirstRead": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/first-read",
     ),
     "listDisagreements": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements"
