@@ -181,6 +181,10 @@ class Network {
     this.s3 = null;
   }
 
+  storageRequests(): number {
+    return this.s3?.stats().requests ?? 0;
+  }
+
   uploaded(): number {
     return this.s3?.stats().uploadedBytes ?? 0;
   }
@@ -222,6 +226,7 @@ interface PhaseReport {
   readonly startedMs: number;
   readonly endedMs: number;
   readonly proxyBytes: number;
+  readonly storageRequests: number;
   readonly partsListedAtStart: number;
   readonly bytesListedAtStart: number;
   readonly partsSigned: readonly number[];
@@ -248,6 +253,7 @@ async function uploadWithInterruptions(
   const beginPhase = async (name: string, begin: () => Promise<void>) => {
     const eventIndex = api.events.length;
     const proxyAtStart = network.uploaded();
+    const requestsAtStart = network.storageRequests();
     const startedMs = performance.now();
     const listedBefore = listedParts;
     await begin();
@@ -268,6 +274,7 @@ async function uploadWithInterruptions(
         startedMs: startedMs - started,
         endedMs: endedMs - started,
         proxyBytes: network.uploaded() - proxyAtStart,
+        storageRequests: network.storageRequests() - requestsAtStart,
         partsListedAtStart: list ? list.parts : 0,
         bytesListedAtStart: list ? list.bytes : 0,
         partsSigned: signed,
