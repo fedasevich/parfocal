@@ -47,7 +47,6 @@ No UI work until the owner says so. The cloud is open again since 2026-10-31, an
 | [project/roadmap.md](project/roadmap.md) | Milestones M0 to M6 and their status |
 | [project/risks.md](project/risks.md) | Risk register |
 | [project/poc-reference.md](project/poc-reference.md) | Where the POC lives, with full links to every POC doc |
-| [project/thesis.md](project/thesis.md) | The master's thesis chapters agreed with the supervisor, and where the material for each section lives |
 | [adr/](adr/README.md) | Decision records |
 | [results/](results/README.md) | Measurements, benchmarks, evaluations and studies |
 | [knowledge/](knowledge/README.md) | Durable lessons and gotchas by topic |
