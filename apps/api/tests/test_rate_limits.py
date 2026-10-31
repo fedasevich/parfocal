@@ -22,7 +22,7 @@ def away_from_the_minute_edge() -> None:
 
 
 def service_token(api: ApiAs, database: str) -> tuple[str, str]:
-    w = make_workspace(database, {"admin": Role.ADMIN})
+    w = make_workspace(database, {"admin": Role.RESEARCHER}, admins={"admin"})
     tokens: list[str] = []
     for name in ("Pipeline A", "Pipeline B"):
         created = api(w.people["admin"]).post(

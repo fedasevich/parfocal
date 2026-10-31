@@ -35,11 +35,12 @@ def history(api: ApiAs, database: str) -> History:
     people = make_workspace(
         database,
         {
-            "admin": Role.ADMIN,
+            "admin": Role.RESEARCHER,
             "owner": Role.RESEARCHER,
             "outsider": Role.RESEARCHER,
             "reviewer": Role.REVIEWER,
         },
+        admins={"admin"},
     ).people
     started = datetime.now(UTC) - timedelta(seconds=1)
     owner = api(people["owner"])

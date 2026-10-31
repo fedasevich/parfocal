@@ -22,7 +22,7 @@ def test_every_factory_builds_what_a_route_test_needs(
 ) -> None:
     assert owner(database, "SELECT current_database()") == [(database,)]
     w = make_workspace(database, {"lead": Role.RESEARCHER, "doctor": Role.REVIEWER})
-    admin = person(database, w.tenant_id, "admin", Role.ADMIN)
+    admin = person(database, w.tenant_id, "admin", Role.RESEARCHER, admin_rights=True)
     project = make_project(database, w.tenant_id, "de-identified")
     join_project(database, project, w.people["lead"], "owner")
     case = make_case(database, w.tenant_id, project, "S26-HARNESS")

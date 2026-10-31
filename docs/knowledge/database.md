@@ -26,6 +26,10 @@ Every column passes `info=` with its data class from `parfocal_common.data_class
 
 The ADAPT tasks edited migrations `0005` to `0019` in place, because no shared database ever ran them and the hospital code was throwaway ([ADR 0054](../adr/0054-hospital-code-inventory-and-revert-order.md)). That is over: from `0020` on every schema change is a new migration, so local databases upgrade without a reset. A local database made before 2026-10-17 must be recreated once with `docker compose down -v`, `pnpm db:up` and `pnpm db:migrate`. Removed numbers (`0010`, `0013`, `0014`, `0016` and `0017`) are not reused.
 
+## Data migrations set a scope before they touch rows
+
+Every table forces row-level security, so even the owner only sees rows that a policy allows unless the role bypasses it. The local `parfocal` owner is a superuser and bypasses it, which means a migration that updates rows without a scope passes every local test and could change nothing on a host where the owner is not a superuser. Migration `0039` (admin rights) therefore runs `set_config('app.platform', 'on', true)` before it rewrites `memberships` and `invitations`, which the `platform_write` policies allow. The setting is local to the migration's transaction because `env.py` uses one transaction per migration. Do the same in any later migration that reads or writes rows of a tenant table.
+
 ## Pinning a parent's mode with a composite key
 
 A child row that is only allowed under a parent in one mode carries the mode itself, fixed by a check, and points at a unique key on the parent's id and mode. `patients` and `emergency_grants` carry `privacy_mode` fixed to `clinical` with a key to (`projects.id`, `projects.privacy_mode`). The database then refuses the child under a de-identified project, and refuses to switch a project that has such children, because the key has no `ON UPDATE` action. A check constraint cannot see the parent, so this is the only way to enforce it without a trigger ([ADR 0062](../adr/0062-project-model.md)).

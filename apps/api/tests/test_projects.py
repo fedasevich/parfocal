@@ -15,12 +15,12 @@ PEOPLE = {
     "owner": Role.RESEARCHER,
     "colleague": Role.RESEARCHER,
     "reviewer": Role.REVIEWER,
-    "admin": Role.ADMIN,
+    "admin": Role.RESEARCHER,
 }
 
 
 def team(database: str) -> Workspace:
-    return make_workspace(database, PEOPLE)
+    return make_workspace(database, PEOPLE, admins={"admin"})
 
 
 def create(api: ApiAs, who: MemberPrincipal, **body: Any) -> Any:
@@ -81,10 +81,9 @@ def test_people_see_only_the_projects_they_are_in(api: ApiAs, database: str) -> 
     people = team(database).people
     project = made(api, people["owner"])
     path = f"{PROJECTS}/{project['id']}"
-    for label in ("colleague", "reviewer"):
+    for label in ("colleague", "reviewer", "admin"):
         assert api(people[label]).get(PROJECTS).json() == []
         assert api(people[label]).get(path).status_code == 404
-    assert api(people["admin"]).get(path).status_code == 404
     assert (
         add(api, people["owner"], project["id"], people["reviewer"], "reviewer").status_code == 200
     )
@@ -204,10 +203,12 @@ def test_owners_manage_members_within_the_rules(api: ApiAs, database: str) -> No
     assert changes[-1][1] == f'{{"from":"reviewer","project_id":"{project}"}}'
 
 
-def test_reviewers_and_admins_do_not_create_projects(api: ApiAs, database: str) -> None:
+def test_reviewers_do_not_create_projects_and_admin_rights_change_nothing(
+    api: ApiAs, database: str
+) -> None:
     people = team(database).people
-    for label in ("reviewer", "admin"):
-        assert create(api, people[label]).status_code == 403
+    assert create(api, people["reviewer"]).status_code == 403
+    assert create(api, people["admin"]).status_code == 201
 
 
 @pytest.mark.parametrize(

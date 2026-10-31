@@ -1,5 +1,6 @@
 import json
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from db_support import OWNER_URL, query, with_database
@@ -19,7 +20,9 @@ def owner(database: str, statement: str) -> list[tuple[object, ...]]:
     return query(with_database(OWNER_URL, database), statement)
 
 
-def person(database: str, tenant_id: uuid.UUID, label: str, role: Role) -> MemberPrincipal:
+def person(
+    database: str, tenant_id: uuid.UUID, label: str, role: Role, *, admin_rights: bool = False
+) -> MemberPrincipal:
     subject = f"ws-{label}-{uuid.uuid4().hex[:8]}"
     user_id = uuid.UUID(
         str(
@@ -32,10 +35,10 @@ def person(database: str, tenant_id: uuid.UUID, label: str, role: Role) -> Membe
     )
     owner(
         database,
-        "INSERT INTO memberships (tenant_id, user_id, role) "
-        f"VALUES ('{tenant_id}', '{user_id}', '{role}')",
+        "INSERT INTO memberships (tenant_id, user_id, role, admin_rights) "
+        f"VALUES ('{tenant_id}', '{user_id}', '{role}', {admin_rights})",
     )
-    return MemberPrincipal(subject, tenant_id, user_id, role)
+    return MemberPrincipal(subject, tenant_id, user_id, role, admin_rights)
 
 
 def make_tenant(database: str) -> uuid.UUID:
@@ -54,11 +57,16 @@ def make_tenant(database: str) -> uuid.UUID:
     )
 
 
-def make_workspace(database: str, roles: dict[str, Role]) -> Workspace:
+def make_workspace(
+    database: str, roles: dict[str, Role], *, admins: Collection[str] = ()
+) -> Workspace:
     tenant_id = make_tenant(database)
     return Workspace(
         tenant_id,
-        {label: person(database, tenant_id, label, role) for label, role in roles.items()},
+        {
+            label: person(database, tenant_id, label, role, admin_rights=label in admins)
+            for label, role in roles.items()
+        },
     )
 
 

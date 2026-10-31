@@ -1,3 +1,4 @@
+import json
 import uuid
 from dataclasses import dataclass
 from typing import Any, cast
@@ -48,9 +49,11 @@ def make_workspace(api: ApiAs, browser: Browser) -> Workspace:
     )[0][0]
     api(OPERATOR).post(
         f"/api/platform/tenants/{tenant_id}/members",
-        json={"user_id": str(user_id), "role": "admin"},
+        json={"user_id": str(user_id), "role": "researcher", "admin_rights": True},
     )
-    admin = MemberPrincipal(subject, uuid.UUID(tenant_id), uuid.UUID(str(user_id)), Role.ADMIN)
+    admin = MemberPrincipal(
+        subject, uuid.UUID(tenant_id), uuid.UUID(str(user_id)), Role.RESEARCHER, True
+    )
     return Workspace(tenant_id, admin)
 
 
@@ -181,11 +184,17 @@ def test_an_operator_invites_the_first_administrator(api: ApiAs, browser: Browse
     email = fresh_email()
     response = api(OPERATOR).post(
         f"/api/platform/tenants/{workspace.tenant_id}/invitations",
-        json={"email": email, "role": "admin"},
+        json={"email": email, "role": "researcher", "admin_rights": True},
     )
     assert response.status_code == 201
+    assert (response.json()["role"], response.json()["admin_rights"]) == ("researcher", True)
     token = outbox(api).sent[-1].link.rsplit("/", 1)[1]
-    assert accept(invitee(browser, email), token).json()["role"] == "admin"
+    joined = accept(invitee(browser, email), token).json()
+    assert (joined["role"], joined["admin_rights"]) == ("researcher", True)
+    session = browser.client.get("/api/tenant/audit-events")
+    assert session.status_code == 200
+    added = [event for event in session.json() if event["action"] == "member.added"][-1]
+    assert json.loads(added["details"])["admin_rights"] is True
     unknown = api(OPERATOR).post(
         f"/api/platform/tenants/{uuid.uuid4()}/invitations",
         json={"email": email, "role": "researcher"},
@@ -216,10 +225,12 @@ def test_unknown_tokens_and_anonymous_callers_are_refused(browser: Browser) -> N
         {"email": "not-an-address", "role": "researcher"},
         {"email": "person@example.test", "role": "outside-consultant"},
         {"email": "person@example.test", "role": "secretary"},
+        {"email": "person@example.test", "role": "admin"},
+        {"email": "person@example.test", "role": "reviewer", "admin_rights": True},
     ],
 )
 def test_invalid_invitations_are_refused(
-    api: ApiAs, browser: Browser, draft: dict[str, str]
+    api: ApiAs, browser: Browser, draft: dict[str, object]
 ) -> None:
     workspace = make_workspace(api, browser)
     assert api(workspace.admin).post(INVITATIONS, json=draft).status_code == 422

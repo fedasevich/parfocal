@@ -187,6 +187,7 @@ class Resolved:
     active_tenant_id: uuid.UUID | None
     operator: bool
     role: Role | None
+    admin_rights: bool = False
 
 
 async def resolve(
@@ -196,14 +197,20 @@ async def resolve(
     operator = bool(
         await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
     )
-    role = None
+    membership = None
     if user_id is not None and active_tenant_id is not None:
-        role = await connection.scalar(
-            select(memberships.c.role).where(
-                memberships.c.user_id == user_id, memberships.c.tenant_id == active_tenant_id
+        membership = (
+            await connection.execute(
+                select(memberships.c.role, memberships.c.admin_rights).where(
+                    memberships.c.user_id == user_id, memberships.c.tenant_id == active_tenant_id
+                )
             )
-        )
-    return Resolved(subject, user_id, active_tenant_id, operator, Role(role) if role else None)
+        ).one_or_none()
+    if membership is None:
+        return Resolved(subject, user_id, active_tenant_id, operator, None)
+    return Resolved(
+        subject, user_id, active_tenant_id, operator, Role(membership.role), membership.admin_rights
+    )
 
 
 def principal_of(resolved: Resolved) -> Principal:
@@ -213,7 +220,11 @@ def principal_of(resolved: Resolved) -> Principal:
         raise UnauthenticatedError
     if resolved.role is not None and resolved.active_tenant_id is not None:
         return MemberPrincipal(
-            resolved.subject, resolved.active_tenant_id, resolved.user_id, resolved.role
+            resolved.subject,
+            resolved.active_tenant_id,
+            resolved.user_id,
+            resolved.role,
+            resolved.admin_rights,
         )
     return SignedInUser(resolved.subject, resolved.user_id)
 

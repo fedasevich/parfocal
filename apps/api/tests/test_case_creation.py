@@ -20,7 +20,7 @@ PEOPLE = {
     "researcher": Role.RESEARCHER,
     "colleague": Role.RESEARCHER,
     "reviewer": Role.REVIEWER,
-    "admin": Role.ADMIN,
+    "admin": Role.RESEARCHER,
 }
 
 
@@ -40,7 +40,7 @@ class Lab:
 
 
 def make_lab(database: str) -> Lab:
-    workspace = make_workspace(database, PEOPLE)
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
     lab = Lab(
         workspace,
         make_project(database, workspace.tenant_id, "clinical"),
@@ -235,7 +235,9 @@ def test_invalid_drafts_are_refused(api: ApiAs, database: str, changes: dict[str
     assert create(api, lab.people["researcher"], draft(lab, **changes)).status_code == 422
 
 
-def test_reviewers_and_admins_do_not_create_cases(api: ApiAs, database: str) -> None:
+def test_reviewers_do_not_create_cases_and_admin_rights_open_no_project(
+    api: ApiAs, database: str
+) -> None:
     lab = make_lab(database)
-    for label in ("reviewer", "admin"):
-        assert create(api, lab.people[label], draft(lab)).status_code == 403
+    assert create(api, lab.people["reviewer"], draft(lab)).status_code == 403
+    assert create(api, lab.people["admin"], draft(lab)).status_code == 404

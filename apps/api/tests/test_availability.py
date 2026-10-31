@@ -17,7 +17,9 @@ def later(**delta: float) -> str:
 
 def team(database: str) -> Workspace:
     return make_workspace(
-        database, {"researcher": Role.RESEARCHER, "reviewer": Role.REVIEWER, "admin": Role.ADMIN}
+        database,
+        {"researcher": Role.RESEARCHER, "reviewer": Role.REVIEWER, "admin": Role.RESEARCHER},
+        admins={"admin"},
     )
 
 

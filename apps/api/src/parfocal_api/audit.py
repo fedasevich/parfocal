@@ -31,6 +31,8 @@ class AuditAction(StrEnum):
     TENANT_REACTIVATED = "tenant.reactivated"
     MEMBER_ADDED = "member.added"
     MEMBER_ROLE_CHANGED = "member.role-changed"
+    MEMBER_ADMIN_RIGHTS_GIVEN = "member.admin-rights-given"
+    MEMBER_ADMIN_RIGHTS_REMOVED = "member.admin-rights-removed"
     USER_SIGNED_IN = "user.signed-in"
     USER_SIGNED_OUT = "user.signed-out"
     SESSIONS_ENDED = "user.sessions-ended"

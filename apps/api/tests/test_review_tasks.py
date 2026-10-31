@@ -58,8 +58,9 @@ def study(database: str) -> Study:
             "third": Role.REVIEWER,
             "viewer": Role.RESEARCHER,
             "outsider": Role.RESEARCHER,
-            "admin": Role.ADMIN,
+            "admin": Role.RESEARCHER,
         },
+        admins={"admin"},
     )
     people, tenant = workspace.people, workspace.tenant_id
     project = make_project(database, tenant, "de-identified")

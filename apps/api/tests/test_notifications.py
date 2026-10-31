@@ -35,7 +35,9 @@ def run[T](database: str, tenant: uuid.UUID, work: Callable[[AsyncConnection], A
 
 def team(database: str) -> Workspace:
     workspace = make_workspace(
-        database, {"ana": Role.RESEARCHER, "ben": Role.REVIEWER, "admin": Role.ADMIN}
+        database,
+        {"ana": Role.RESEARCHER, "ben": Role.REVIEWER, "admin": Role.RESEARCHER},
+        admins={"admin"},
     )
     for label in ("ana", "ben"):
         owner(

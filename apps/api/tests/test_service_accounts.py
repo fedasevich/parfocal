@@ -47,9 +47,11 @@ def make_workspace(api: ApiAs, browser: Browser) -> Workspace:
     )[0][0]
     api(OPERATOR).post(
         f"/api/platform/tenants/{tenant_id}/members",
-        json={"user_id": str(user_id), "role": "admin"},
+        json={"user_id": str(user_id), "role": "researcher", "admin_rights": True},
     )
-    admin = MemberPrincipal(subject, uuid.UUID(tenant_id), uuid.UUID(str(user_id)), Role.ADMIN)
+    admin = MemberPrincipal(
+        subject, uuid.UUID(tenant_id), uuid.UUID(str(user_id)), Role.RESEARCHER, True
+    )
     return Workspace(tenant_id, admin)
 
 

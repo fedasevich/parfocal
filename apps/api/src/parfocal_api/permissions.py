@@ -11,8 +11,33 @@ from parfocal_api.tables import ProjectRole, Role
 ROLE_NAMES = {
     Role.RESEARCHER: "Researcher",
     Role.REVIEWER: "Reviewer",
-    Role.ADMIN: "Admin",
 }
+
+ROLE_DUTIES = {
+    Role.RESEARCHER: (
+        "Runs studies. Creates projects and owns them, uploads slides and AI result files, "
+        "runs models, sets a project's classes, opinion form and study template, creates "
+        "review tasks and invites reviewers, resolves disagreements, signs off and exports "
+        "the evaluation report. Reviews when a task names them. Opens a clinical project "
+        "without a project role only through emergency access"
+    ),
+    Role.REVIEWER: (
+        "Reviews the slides of their tasks. Gives verdicts with reasons and notes, fixes "
+        "outlines and types, adds missed objects, fills the opinion form and submits each "
+        "slide. Decides queued objects when a researcher makes them adjudicator. Never "
+        "uploads, runs models, creates projects or tasks, signs off or holds admin rights"
+    ),
+}
+
+ADMIN_RIGHTS_NAME = "Added by admin rights"
+
+ADMIN_RIGHTS_DUTIES = (
+    "A holder sets up the workspace: invites people and sets their role and admin rights, "
+    "changes workspace and session settings, connects storage, sources, API tokens and "
+    "webhooks, keeps the report template library, and reads and exports the audit log. "
+    "Admin rights add no access to project data, and a workspace always keeps at least one "
+    "holder"
+)
 
 PROJECT_ROLE_NAMES = {
     ProjectRole.OWNER: "Owner, manages the project, its people and its tasks",
@@ -50,6 +75,7 @@ class Permission(StrEnum):
     MANAGE_PEOPLE = "manage-people"
     WORKSPACE_SETTINGS = "workspace-settings"
     INTEGRATIONS = "integrations"
+    REPORT_TEMPLATES = "report-templates"
     AUDIT_LOG = "audit-log"
     DEVELOPER_MODE = "developer-mode"
 
@@ -63,30 +89,42 @@ PERMISSION_NAMES = {
     Permission.REVIEW: "Give verdicts, fix results, comment",
     Permission.SET_OWN_STATUS: "Set their own status",
     Permission.SEE_PEOPLE: "See the workspace's people and their status",
-    Permission.MANAGE_PEOPLE: "Invite people, change roles",
+    Permission.MANAGE_PEOPLE: "Invite people, change roles and admin rights",
     Permission.WORKSPACE_SETTINGS: "Workspace settings and session security",
     Permission.INTEGRATIONS: "Storage, sources, API and webhooks",
+    Permission.REPORT_TEMPLATES: "Use report templates, edit the library",
     Permission.AUDIT_LOG: "Audit log",
     Permission.DEVELOPER_MODE: "Developer mode and API tokens",
 }
 
-COLUMNS = (Role.RESEARCHER, Role.REVIEWER, Role.ADMIN)
+COLUMNS = (Role.RESEARCHER, Role.REVIEWER)
 
 ROWS = {
-    Permission.SEE_SLIDES: "yon",
-    Permission.EMERGENCY_ACCESS: "bnb",
-    Permission.CREATE_CASES: "ynn",
-    Permission.UPLOAD_SLIDES: "ynn",
-    Permission.MOVE_SLIDES: "ynn",
-    Permission.REVIEW: "yon",
-    Permission.SET_OWN_STATUS: "yyy",
-    Permission.SEE_PEOPLE: "yry",
-    Permission.MANAGE_PEOPLE: "nny",
-    Permission.WORKSPACE_SETTINGS: "rny",
-    Permission.INTEGRATIONS: "rny",
-    Permission.AUDIT_LOG: "nny",
-    Permission.DEVELOPER_MODE: "yny",
+    Permission.SEE_SLIDES: "yo",
+    Permission.EMERGENCY_ACCESS: "bn",
+    Permission.CREATE_CASES: "yn",
+    Permission.UPLOAD_SLIDES: "yn",
+    Permission.MOVE_SLIDES: "yn",
+    Permission.REVIEW: "yo",
+    Permission.SET_OWN_STATUS: "yy",
+    Permission.SEE_PEOPLE: "yr",
+    Permission.MANAGE_PEOPLE: "nn",
+    Permission.WORKSPACE_SETTINGS: "rn",
+    Permission.INTEGRATIONS: "rn",
+    Permission.REPORT_TEMPLATES: "rn",
+    Permission.AUDIT_LOG: "nn",
+    Permission.DEVELOPER_MODE: "yn",
 }
+
+ADMIN_RIGHTS = frozenset(
+    {
+        Permission.MANAGE_PEOPLE,
+        Permission.WORKSPACE_SETTINGS,
+        Permission.INTEGRATIONS,
+        Permission.REPORT_TEMPLATES,
+        Permission.AUDIT_LOG,
+    }
+)
 
 PROJECT_COLUMNS = (ProjectRole.OWNER, ProjectRole.REVIEWER, ProjectRole.VIEWER)
 
@@ -111,13 +149,15 @@ MATRIX: dict[Permission, dict[Role, Grant]] = {
 }
 
 
-def grant_for(role: Role, permission: Permission) -> Grant:
+def grant_for(role: Role, permission: Permission, *, admin_rights: bool = False) -> Grant:
+    if admin_rights and role is Role.RESEARCHER and permission in ADMIN_RIGHTS:
+        return Grant.ALL
     return MATRIX[permission][role]
 
 
-def role_of(principal: object) -> Role:
+def member_of(principal: object) -> MemberPrincipal:
     if isinstance(principal, MemberPrincipal):
-        return principal.role
+        return principal
     raise ForbiddenError
 
 
@@ -131,7 +171,8 @@ class ServiceScope(StrEnum):
 def grant_of(principal: object, permission: Permission) -> Grant:
     if isinstance(principal, ServicePrincipal):
         return Grant.ALL if permission.value in principal.scopes else Grant.NONE
-    return grant_for(role_of(principal), permission)
+    member = member_of(principal)
+    return grant_for(member.role, permission, admin_rights=member.admin_rights)
 
 
 def narrower(first: Grant, second: Grant) -> Grant:

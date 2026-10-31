@@ -57,10 +57,16 @@ class Plan(StrEnum):
 class Role(StrEnum):
     RESEARCHER = "researcher"
     REVIEWER = "reviewer"
-    ADMIN = "admin"
 
 
-MEMBER_ROLE_CHECK = "role IN ('researcher', 'reviewer', 'admin')"
+MEMBER_ROLE_CHECK = "role IN ('researcher', 'reviewer')"
+ADMIN_RIGHTS_CHECK = "NOT admin_rights OR role = 'researcher'"
+
+
+def admin_rights_column() -> Column[bool]:
+    return Column(
+        "admin_rights", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL
+    )
 
 
 class ProjectRole(StrEnum):
@@ -299,6 +305,7 @@ memberships = Table(
         info=PERSONAL,
     ),
     Column("role", String(30), nullable=False, info=OPERATIONAL),
+    admin_rights_column(),
     Column(
         "availability",
         String(10),
@@ -311,6 +318,7 @@ memberships = Table(
     *timestamps(),
     UniqueConstraint("tenant_id", "user_id"),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+    CheckConstraint(ADMIN_RIGHTS_CHECK, name="admin_rights"),
     CheckConstraint(AVAILABILITY_CHECK, name="availability"),
 )
 
@@ -456,6 +464,7 @@ invitations = Table(
     ),
     Column("email", String(320), nullable=False, info=PERSONAL),
     Column("role", String(30), nullable=False, info=OPERATIONAL),
+    admin_rights_column(),
     Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     Column("accepted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
@@ -468,6 +477,7 @@ invitations = Table(
         info=OPERATIONAL,
     ),
     CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+    CheckConstraint(ADMIN_RIGHTS_CHECK, name="admin_rights"),
 )
 
 session_policies = Table(

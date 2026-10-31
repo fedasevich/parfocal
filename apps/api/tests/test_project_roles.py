@@ -224,7 +224,7 @@ def test_a_reviewer_never_sees_another_projects_slides(api: ApiAs, database: str
 
 def test_an_owner_cannot_become_a_workspace_reviewer(api: ApiAs, database: str) -> None:
     setup = make_setup(api, database, Role.RESEARCHER, ProjectRole.OWNER)
-    admin = person(database, setup.tenant_id, "admin", Role.ADMIN)
+    admin = person(database, setup.tenant_id, "admin", Role.RESEARCHER, admin_rights=True)
     path = f"/api/tenant/members/{setup.subject.user_id}/role"
     refused = api(admin).put(path, json={"role": "reviewer"})
     assert (refused.status_code, refused.json()["code"]) == (409, "owns-projects")

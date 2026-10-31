@@ -31,6 +31,7 @@ from parfocal_api.tables import (
 )
 from parfocal_api.users import (
     AlreadyAMemberError,
+    RoleDraft,
     Workspace,
     own_workspaces,
     signed_in,
@@ -49,9 +50,8 @@ type Email = Annotated[
 ]
 
 
-class InvitationDraft(BaseModel):
+class InvitationDraft(RoleDraft):
     email: Email
-    role: Role
 
 
 class Invitation(BaseModel):
@@ -59,6 +59,7 @@ class Invitation(BaseModel):
     tenant_id: uuid.UUID
     email: str
     role: Role
+    admin_rights: bool
     expires_at: datetime
     created_at: datetime
     expired: bool
@@ -149,6 +150,7 @@ async def invite(
                 tenant_id=tenant_id,
                 email=draft.email,
                 role=draft.role,
+                admin_rights=draft.admin_rights,
                 token_hash=digest(token),
                 expires_at=func.now() + INVITATION_LIFETIME,
             )
@@ -162,7 +164,7 @@ async def invite(
         AuditTarget.INVITATION,
         row.id,
         tenant_id=tenant_id,
-        details={"role": draft.role},
+        details=draft.model_dump(include={"role", "admin_rights"}),
     )
     link = f"{auth_state(request).public_origin}/invitations/{token}"
     workspace = await connection.scalar(select(tenants.c.name).where(tenants.c.id == tenant_id))
@@ -310,7 +312,10 @@ async def accept_invitation(
                 raise AlreadyAMemberError
             await connection.execute(
                 insert(memberships).values(
-                    tenant_id=tenant_id, user_id=person.user_id, role=invitation.role
+                    tenant_id=tenant_id,
+                    user_id=person.user_id,
+                    role=invitation.role,
+                    admin_rights=invitation.admin_rights,
                 )
             )
             await connection.execute(
@@ -341,7 +346,11 @@ async def accept_invitation(
                 AuditTarget.PERSON,
                 person=person.subject,
                 tenant_id=tenant_id,
-                details={"role": invitation.role, "invitation_id": str(invitation.id)},
+                details={
+                    "role": invitation.role,
+                    "admin_rights": invitation.admin_rights,
+                    "invitation_id": str(invitation.id),
+                },
             )
             return next(
                 workspace

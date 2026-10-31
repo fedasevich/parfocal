@@ -56,8 +56,9 @@ def lab(database: str) -> Lab:
             "viewer": Role.RESEARCHER,
             "reviewer": Role.REVIEWER,
             "outsider": Role.RESEARCHER,
-            "admin": Role.ADMIN,
+            "admin": Role.RESEARCHER,
         },
+        admins={"admin"},
     )
     people = workspace.people
     project = make_project(database, workspace.tenant_id, "de-identified")
@@ -220,11 +221,11 @@ def test_only_owners_and_upload_accounts_add_sets(api: ApiAs, database: str) -> 
     refused = viewer.post(lb.sets, json=DRAFT)
     assert (refused.status_code, refused.json()["code"]) == (403, "uploading-not-allowed")
     assert viewer.delete(f"/api/result-sets/{set_id}").status_code == 403
-    for label in ("reviewer", "outsider"):
+    for label in ("reviewer", "outsider", "admin"):
         client = api(lb.people[label])
         assert client.get(lb.sets).status_code == 404
         assert client.get(f"/api/result-sets/{set_id}").status_code == 404
-    assert api(lb.people["admin"]).post(lb.sets, json=DRAFT).status_code == 403
+    assert api(lb.people["admin"]).post(lb.sets, json=DRAFT).status_code == 404
     service = ServicePrincipal(
         uuid.uuid4(), lb.tenant_id, frozenset({"upload-slides", "see-slides"})
     )

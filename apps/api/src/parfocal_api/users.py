@@ -1,9 +1,9 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Self
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field, StringConstraints
-from sqlalchemy import exists, insert, literal_column, select, update
+from pydantic import BaseModel, Field, StringConstraints, model_validator
+from sqlalchemy import exists, insert, literal_column, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -56,11 +56,13 @@ class Profile(BaseModel):
 
 class Member(Profile):
     role: Role
+    admin_rights: bool
 
 
 class Workspace(BaseModel):
     tenant_id: uuid.UUID
     role: Role
+    admin_rights: bool
     slug: str
     name: str
     kind: TenantKind
@@ -85,13 +87,27 @@ class WorkspaceChoice(BaseModel):
     tenant_id: uuid.UUID
 
 
-class MembershipDraft(BaseModel):
-    user_id: uuid.UUID
+class RoleDraft(BaseModel):
     role: Role
+    admin_rights: bool = False
+
+    @model_validator(mode="after")
+    def only_researchers_hold_admin_rights(self) -> Self:
+        if self.admin_rights and self.role is not Role.RESEARCHER:
+            raise ValueError("Only a researcher can hold admin rights")
+        return self
+
+
+class MembershipDraft(RoleDraft):
+    user_id: uuid.UUID
 
 
 class RoleChange(BaseModel):
     role: Role
+
+
+class AdminRightsChange(BaseModel):
+    admin_rights: bool
 
 
 class Membership(BaseModel):
@@ -99,6 +115,7 @@ class Membership(BaseModel):
     tenant_id: uuid.UUID
     user_id: uuid.UUID
     role: Role
+    admin_rights: bool
 
 
 class NotAMemberError(ForbiddenError):
@@ -114,6 +131,21 @@ class OwnRoleError(ConflictError):
 class OwnsProjectsError(ConflictError):
     code = "owns-projects"
     title = "This person owns projects. Hand them to another owner before making them a reviewer"
+
+
+class HoldsAdminRightsError(ConflictError):
+    code = "holds-admin-rights"
+    title = "This person holds admin rights. Remove them before making them a reviewer"
+
+
+class AdminRightsNeedResearcherError(ConflictError):
+    code = "admin-rights-need-researcher"
+    title = "Only a researcher can hold admin rights. Make this person a researcher first"
+
+
+class LastAdminError(ConflictError):
+    code = "last-admin"
+    title = "Someone must keep admin rights. Give them to another researcher first"
 
 
 class AlreadyAMemberError(ConflictError):
@@ -159,6 +191,7 @@ async def own_workspaces(connection: AsyncConnection, user_id: uuid.UUID) -> lis
         select(
             tenants.c.id.label("tenant_id"),
             memberships.c.role,
+            memberships.c.admin_rights,
             tenants.c.slug,
             tenants.c.name,
             tenants.c.kind,
@@ -248,7 +281,7 @@ async def switch_workspace(
     return chosen
 
 
-MEMBER_COLUMNS = (*PROFILE_COLUMNS, memberships.c.role)
+MEMBER_COLUMNS = (*PROFILE_COLUMNS, memberships.c.role, memberships.c.admin_rights)
 
 
 def member_of(row: object) -> Member:
@@ -285,7 +318,7 @@ async def change_member_role(
     )
     member = (
         await connection.execute(
-            select(memberships.c.role, users.c.subject)
+            select(memberships.c.role, memberships.c.admin_rights, users.c.subject)
             .join(users, users.c.id == memberships.c.user_id)
             .where(*in_this_tenant)
             .with_for_update(of=memberships)
@@ -293,6 +326,8 @@ async def change_member_role(
     ).one_or_none()
     if member is None:
         raise NotFoundError("Member not found")
+    if change.role is Role.REVIEWER and member.admin_rights:
+        raise HoldsAdminRightsError
     if change.role is Role.REVIEWER and await owns_projects(connection, user_id):
         raise OwnsProjectsError
     if member.role != change.role:
@@ -308,6 +343,10 @@ async def change_member_role(
             tenant_id=database_scope(principal).tenant_id,
             details={"from": member.role, "to": change.role},
         )
+    return await tenant_member(connection, user_id)
+
+
+async def tenant_member(connection: AsyncConnection, user_id: uuid.UUID) -> Member:
     row = (
         await connection.execute(
             select(*MEMBER_COLUMNS)
@@ -319,6 +358,61 @@ async def change_member_role(
         )
     ).one()
     return member_of(row)
+
+
+@tenant_router.put(
+    "/members/{user_id}/admin-rights",
+    operation_id="setMemberAdminRights",
+    **require(Permission.MANAGE_PEOPLE, write=True),
+)
+async def set_member_admin_rights(
+    user_id: uuid.UUID,
+    change: AdminRightsChange,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Member:
+    in_this_tenant = memberships.c.tenant_id == literal_column(CURRENT_TENANT)
+    locked = (
+        await connection.execute(
+            select(
+                memberships.c.user_id,
+                memberships.c.role,
+                memberships.c.admin_rights,
+                users.c.subject,
+            )
+            .join(users, users.c.id == memberships.c.user_id)
+            .where(
+                in_this_tenant, or_(memberships.c.admin_rights, memberships.c.user_id == user_id)
+            )
+            .order_by(memberships.c.id)
+            .with_for_update(of=memberships)
+        )
+    ).all()
+    member = next((row for row in locked if row.user_id == user_id), None)
+    if member is None:
+        raise NotFoundError("Member not found")
+    if member.admin_rights == change.admin_rights:
+        return await tenant_member(connection, user_id)
+    if change.admin_rights and member.role != Role.RESEARCHER:
+        raise AdminRightsNeedResearcherError
+    if not change.admin_rights and sum(row.admin_rights for row in locked) == 1:
+        raise LastAdminError
+    await connection.execute(
+        update(memberships)
+        .where(in_this_tenant, memberships.c.user_id == user_id)
+        .values(admin_rights=change.admin_rights)
+    )
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.MEMBER_ADMIN_RIGHTS_GIVEN
+        if change.admin_rights
+        else AuditAction.MEMBER_ADMIN_RIGHTS_REMOVED,
+        AuditTarget.PERSON,
+        person=member.subject,
+        tenant_id=database_scope(principal).tenant_id,
+    )
+    return await tenant_member(connection, user_id)
 
 
 @platform_router.post("/tenants/{tenant_id}/members", operation_id="addMember", status_code=201)
@@ -337,12 +431,18 @@ async def add_member(
         row = (
             await connection.execute(
                 insert(memberships)
-                .values(tenant_id=tenant_id, user_id=draft.user_id, role=draft.role)
+                .values(
+                    tenant_id=tenant_id,
+                    user_id=draft.user_id,
+                    role=draft.role,
+                    admin_rights=draft.admin_rights,
+                )
                 .returning(
                     memberships.c.id,
                     memberships.c.tenant_id,
                     memberships.c.user_id,
                     memberships.c.role,
+                    memberships.c.admin_rights,
                 )
             )
         ).one()
@@ -355,7 +455,7 @@ async def add_member(
         AuditTarget.PERSON,
         person=subject,
         tenant_id=tenant_id,
-        details={"role": draft.role},
+        details=draft.model_dump(include={"role", "admin_rights"}),
     )
     return Membership.model_validate(row, from_attributes=True)
 

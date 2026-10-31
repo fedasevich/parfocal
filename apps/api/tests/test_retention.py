@@ -20,7 +20,9 @@ SQUARE = "SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))"
 
 
 def team(database: str) -> Workspace:
-    return make_workspace(database, {"admin": Role.ADMIN, "researcher": Role.RESEARCHER})
+    return make_workspace(
+        database, {"admin": Role.RESEARCHER, "researcher": Role.RESEARCHER}, admins={"admin"}
+    )
 
 
 def one(database: str, statement: str) -> uuid.UUID:

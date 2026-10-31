@@ -17,6 +17,7 @@ class MemberPrincipal:
     tenant_id: uuid.UUID
     user_id: uuid.UUID
     role: Role
+    admin_rights: bool = False
 
 
 @dataclass(frozen=True)

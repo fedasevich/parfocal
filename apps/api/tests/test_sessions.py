@@ -169,8 +169,13 @@ def test_an_admin_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
     user_id = uuid.UUID(
         str(browser.sql(f"SELECT id FROM users WHERE subject = '{browser.idp.subject}'")[0][0])
     )
-    browser.sql(f"UPDATE memberships SET role = 'admin' WHERE user_id = '{user_id}'")
-    admin = MemberPrincipal(browser.idp.subject, uuid.UUID(tenant_id), user_id, Role.ADMIN)
+    browser.sql(
+        "UPDATE memberships SET role = 'researcher', admin_rights = true "
+        f"WHERE user_id = '{user_id}'"
+    )
+    admin = MemberPrincipal(
+        browser.idp.subject, uuid.UUID(tenant_id), user_id, Role.RESEARCHER, True
+    )
     assert api(admin).get("/api/tenant/session-policy").json() == {
         "tenant_id": tenant_id,
         "idle_lock_minutes": 15,

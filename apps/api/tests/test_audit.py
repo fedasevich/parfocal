@@ -73,18 +73,21 @@ def subject_of(database: str, user_id: str) -> str:
     return str(owner_sql(database, f"SELECT subject FROM users WHERE id = '{user_id}'")[0][0])
 
 
-def add_member(api: ApiAs, tenant_id: str, user_id: str, role: str) -> None:
+def add_member(
+    api: ApiAs, tenant_id: str, user_id: str, role: str, *, admin_rights: bool = False
+) -> None:
     response = api(OPERATOR).post(
-        f"/api/platform/tenants/{tenant_id}/members", json={"user_id": user_id, "role": role}
+        f"/api/platform/tenants/{tenant_id}/members",
+        json={"user_id": user_id, "role": role, "admin_rights": admin_rights},
     )
     assert response.status_code == 201
 
 
 def admin_of(api: ApiAs, database: str, tenant_id: str) -> MemberPrincipal:
     admin = make_user(database, "admin")
-    add_member(api, tenant_id, admin, "admin")
+    add_member(api, tenant_id, admin, "researcher", admin_rights=True)
     subject = subject_of(database, admin)
-    return MemberPrincipal(subject, uuid.UUID(tenant_id), uuid.UUID(admin), Role.ADMIN)
+    return MemberPrincipal(subject, uuid.UUID(tenant_id), uuid.UUID(admin), Role.RESEARCHER, True)
 
 
 def trail(api: ApiAs, admin: MemberPrincipal, **filters: str) -> list[AuditEvent]:

@@ -34,8 +34,9 @@ def make_lab(api: ApiAs, database: str) -> Lab:
             "owner": Role.RESEARCHER,
             "outsider": Role.RESEARCHER,
             "reviewer": Role.REVIEWER,
-            "admin": Role.ADMIN,
+            "admin": Role.RESEARCHER,
         },
+        admins={"admin"},
     )
     tenant = workspace.tenant_id
     clinical, other = make_project(database, tenant), make_project(database, tenant)
@@ -83,10 +84,10 @@ def test_a_reason_opens_one_clinical_project_for_a_while(
     assert refused.status_code in {403, 404}
 
 
-def test_an_administrator_lists_nothing_without_a_grant(api: ApiAs, database: str) -> None:
+def test_admin_rights_list_no_cases_without_a_grant(api: ApiAs, database: str) -> None:
     lab = make_lab(api, database)
     listed = api(lab.who("admin")).get("/api/cases")
-    assert (listed.status_code, listed.json()["code"]) == (403, "emergency-access-needed")
+    assert (listed.status_code, listed.json()) == (200, [])
 
 
 def test_the_audit_entry_carries_the_reason(api: ApiAs, database: str) -> None:
@@ -97,7 +98,7 @@ def test_the_audit_entry_carries_the_reason(api: ApiAs, database: str) -> None:
         "SELECT details FROM audit_events "
         f"WHERE target_id = '{lab.clinical}' AND action = 'project.emergency-access'",
     )
-    assert details == [(f'{{"hours":4,"reason":"{REASON}","role":"admin"}}',)]
+    assert details == [(f'{{"hours":4,"reason":"{REASON}","role":"researcher"}}',)]
 
 
 def test_a_grant_expires(api: ApiAs, database: str) -> None:

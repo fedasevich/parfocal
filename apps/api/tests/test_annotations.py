@@ -54,8 +54,9 @@ def studio(database: str) -> Studio:
             "viewer": Role.RESEARCHER,
             "reviewer": Role.REVIEWER,
             "outsider": Role.RESEARCHER,
-            "admin": Role.ADMIN,
+            "admin": Role.RESEARCHER,
         },
+        admins={"admin"},
     )
     people = workspace.people
     project = make_project(database, workspace.tenant_id, "de-identified")
@@ -214,15 +215,13 @@ def test_only_project_owners_draw_and_only_readers_see(api: ApiAs, database: str
     assert viewer.get(f"{one}/history").status_code == 200
     refused = viewer.post(s.path, json={"kind": "roi", "geometry": square(0, 0)})
     assert (refused.status_code, refused.json()["code"]) == (403, "annotating-not-allowed")
-    for label in ("reviewer", "outsider"):
+    for label in ("reviewer", "outsider", "admin"):
         client = api(s.people[label])
         assert client.get(s.path).status_code == 404
         assert client.get(one).status_code == 404
         assert (
             client.post(s.path, json={"kind": "roi", "geometry": square(0, 0)}).status_code == 404
         )
-    admin = api(s.people["admin"])
-    assert admin.post(s.path, json={"kind": "roi", "geometry": square(0, 0)}).status_code == 403
     archived = api(s.people["owner"]).post(f"/api/projects/{s.project}/archive")
     assert archived.status_code == 200, archived.text
     late = api(s.people["owner"]).patch(one, json={"version": 1, "geometry": square(1, 1)})

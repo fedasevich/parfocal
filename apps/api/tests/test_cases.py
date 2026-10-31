@@ -275,7 +275,8 @@ def test_other_workspaces_admins_and_deleted_cases_get_nothing(api: ApiAs, datab
     viewer = reader(database, mine, case)
     assert api(viewer).get(path).status_code == 200
     assert api(member(theirs)).get(path).status_code == 404
-    assert api(member(mine, Role.ADMIN)).get(path).status_code == 403
+    admin = MemberPrincipal("case-admin", mine, uuid.uuid4(), Role.RESEARCHER, admin_rights=True)
+    assert api(admin).get(path).status_code == 403
     query(
         with_database(OWNER_URL, database),
         f"UPDATE cases SET deleted_at = now() WHERE id = '{case.case_id}'",

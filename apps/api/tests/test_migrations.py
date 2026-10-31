@@ -54,6 +54,54 @@ def test_migrations_upgrade_downgrade_and_upgrade_again(empty_database: str) -> 
     assert installed(empty_database) == everything
 
 
+def seed_admins(url: str) -> None:
+    query(url, "INSERT INTO organisations (slug, name) VALUES ('lab', 'Lab')")
+    query(
+        url,
+        "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
+        "SELECT id, 'lab', 'Lab', 'research', 'eu', 'pilot' FROM organisations",
+    )
+    for subject in ("admin", "reviewer"):
+        query(
+            url,
+            "INSERT INTO users (subject, display_name, initials, avatar_colour) "
+            f"VALUES ('{subject}', '{subject}', 'AD', 1)",
+        )
+        query(
+            url,
+            "INSERT INTO memberships (tenant_id, user_id, role) "
+            f"SELECT tenants.id, users.id, '{subject}' FROM tenants, users "
+            f"WHERE users.subject = '{subject}'",
+        )
+        query(
+            url,
+            "INSERT INTO invitations (tenant_id, email, role, token_hash, expires_at) "
+            f"SELECT id, '{subject}@example.test', '{subject}', '{subject}'::bytea, now() "
+            "FROM tenants",
+        )
+
+
+def seats(url: str, table: str) -> list[tuple[object, ...]]:
+    return query(url, f"SELECT role, admin_rights FROM {table} ORDER BY role")
+
+
+def test_admin_memberships_and_invitations_become_researchers_with_admin_rights(
+    empty_database: str,
+) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0038")
+    seed_admins(empty_database)
+
+    command.upgrade(config, "0039")
+    for table in ("memberships", "invitations"):
+        assert seats(empty_database, table) == [("researcher", True), ("reviewer", False)]
+
+    command.downgrade(config, "0038")
+    for table in ("memberships", "invitations"):
+        roles = query(empty_database, f"SELECT role FROM {table} ORDER BY role")
+        assert roles == [("admin",), ("reviewer",)]
+
+
 def test_every_tenant_table_is_isolated_at_head(empty_database: str) -> None:
     command.upgrade(alembic_config(empty_database), "head")
     assert query(empty_database, TENANT_TABLES_WITHOUT_ISOLATION) == []

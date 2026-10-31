@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.permissions import (
+    ADMIN_RIGHTS,
     COLUMNS,
     MATRIX,
     Grant,
@@ -91,10 +92,27 @@ OPEN_OPERATIONS = {
 
 
 @dataclass(frozen=True)
+class Seat:
+    role: Role
+    admin_rights: bool = False
+
+    def __str__(self) -> str:
+        return f"{self.role}-with-admin-rights" if self.admin_rights else str(self.role)
+
+
+RESEARCHER = Seat(Role.RESEARCHER)
+ADMIN = Seat(Role.RESEARCHER, admin_rights=True)
+REVIEWER = Seat(Role.REVIEWER)
+SEATS = (RESEARCHER, ADMIN, REVIEWER)
+
+
+@dataclass(frozen=True)
 class Workspace:
     tenant_id: uuid.UUID
-    users: dict[Role, uuid.UUID]
+    users: dict[Seat, uuid.UUID]
     colleague: uuid.UUID
+    deputy: uuid.UUID
+    lead: uuid.UUID
     slug: str
     account: uuid.UUID
     token: uuid.UUID
@@ -232,7 +250,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "name": "Matrix task",
             "slide_ids": [str(w.slide)],
             "result_sets": [{"slide_id": str(w.slide), "result_set_id": str(w.result_set)}],
-            "reviewer_ids": [str(w.users.get(Role.RESEARCHER, w.colleague))],
+            "reviewer_ids": [str(w.lead)],
             "split": "everyone",
             "scope": {"kind": "all-regions"},
         },
@@ -351,10 +369,15 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
     ),
+    "setMemberAdminRights": lambda w: Call(
+        "PUT", f"/api/tenant/members/{w.deputy}/admin-rights", {"admin_rights": True}
+    ),
 }
 PLACEHOLDER = Workspace(
     uuid.uuid4(),
     {},
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     "",
     uuid.uuid4(),
@@ -431,16 +454,43 @@ def writes() -> set[str]:
 
 
 def test_the_matrix_covers_every_permission_for_every_role() -> None:
-    assert set(COLUMNS) == set(Role)
+    assert set(COLUMNS) == set(Role) == {Role.RESEARCHER, Role.REVIEWER}
     assert set(MATRIX) == set(Permission)
     for grants in MATRIX.values():
         assert set(grants) == set(Role)
-
-
-def test_administrators_reach_patients_only_through_emergency_access() -> None:
-    assert grant_for(Role.ADMIN, Permission.SEE_SLIDES) is Grant.NONE
-    assert grant_for(Role.ADMIN, Permission.EMERGENCY_ACCESS) is Grant.EMERGENCY
     assert set(Grant) == {Grant.ALL, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.EMERGENCY, Grant.NONE}
+
+
+def test_admin_rights_add_only_the_setup_permissions() -> None:
+    assert {
+        Permission.MANAGE_PEOPLE,
+        Permission.WORKSPACE_SETTINGS,
+        Permission.INTEGRATIONS,
+        Permission.REPORT_TEMPLATES,
+        Permission.AUDIT_LOG,
+    } == ADMIN_RIGHTS
+    for permission in Permission:
+        plain = grant_for(Role.RESEARCHER, permission)
+        held = grant_for(Role.RESEARCHER, permission, admin_rights=True)
+        assert held is (Grant.ALL if permission in ADMIN_RIGHTS else plain)
+        assert grant_for(Role.REVIEWER, permission, admin_rights=True) is grant_for(
+            Role.REVIEWER, permission
+        )
+
+
+def test_admin_rights_add_no_access_to_project_data() -> None:
+    for permission in (
+        Permission.SEE_SLIDES,
+        Permission.EMERGENCY_ACCESS,
+        Permission.CREATE_CASES,
+        Permission.UPLOAD_SLIDES,
+        Permission.MOVE_SLIDES,
+        Permission.REVIEW,
+    ):
+        assert permission not in ADMIN_RIGHTS
+    assert grant_for(Role.RESEARCHER, Permission.EMERGENCY_ACCESS, admin_rights=True) is (
+        Grant.EMERGENCY
+    )
 
 
 def test_the_permission_page_is_current() -> None:
@@ -459,7 +509,12 @@ def test_every_operation_declares_a_permission_or_why_it_is_open() -> None:
 
 
 async def add_person(
-    connection: AsyncConnection, tenant_id: uuid.UUID, subject: str, role: Role
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    subject: str,
+    role: Role,
+    *,
+    admin_rights: bool = False,
 ) -> uuid.UUID:
     user_id = await connection.scalar(
         insert(users)
@@ -468,7 +523,9 @@ async def add_person(
     )
     assert isinstance(user_id, uuid.UUID)
     await connection.execute(
-        insert(memberships).values(tenant_id=tenant_id, user_id=user_id, role=role)
+        insert(memberships).values(
+            tenant_id=tenant_id, user_id=user_id, role=role, admin_rights=admin_rights
+        )
     )
     return user_id
 
@@ -545,7 +602,7 @@ async def seed_task(
     return task_id
 
 
-async def seed(database: str) -> Workspace:
+async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
     engine = create_async_engine(async_database_url(with_database(OWNER_URL, database)))
     slug = f"perm-{uuid.uuid4().hex[:10]}"
     try:
@@ -567,10 +624,17 @@ async def seed(database: str) -> Workspace:
             )
             assert isinstance(tenant_id, uuid.UUID)
             people = {
-                role: await add_person(connection, tenant_id, f"{slug}-{role}", role)
-                for role in COLUMNS
+                seat: await add_person(
+                    connection,
+                    tenant_id,
+                    f"{slug}-{seat}",
+                    seat.role,
+                    admin_rights=seat.admin_rights,
+                )
+                for seat in SEATS
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.REVIEWER)
+            deputy = await add_person(connection, tenant_id, f"{slug}-deputy", Role.RESEARCHER)
             account, spare_account = [
                 await connection.scalar(
                     insert(service_accounts)
@@ -601,7 +665,7 @@ async def seed(database: str) -> Workspace:
                     )
                     .returning(invitations.c.id)
                 )
-                for index in range(len(COLUMNS))
+                for index in range(len(SEATS))
             ]
             case = await seed_case(connection, tenant_id)
             doomed_patient = await add_patient(
@@ -688,7 +752,7 @@ async def seed(database: str) -> Workspace:
                     tenant_id=tenant_id,
                     task_id=task,
                     slide_id=case.loose_slide_id,
-                    user_id=people[Role.RESEARCHER],
+                    user_id=people[lead],
                 )
             )
             assert isinstance(result_set, uuid.UUID)
@@ -699,7 +763,7 @@ async def seed(database: str) -> Workspace:
                     case.project_id,
                     case.loose_slide_id,
                     result_set,
-                    people[Role.RESEARCHER],
+                    people[lead],
                     number,
                     signed=number == 4,
                 )
@@ -711,7 +775,7 @@ async def seed(database: str) -> Workspace:
                 case.project_id,
                 case.loose_slide_id,
                 result_set,
-                people[Role.RESEARCHER],
+                people[lead],
                 5,
                 signed=False,
             )
@@ -721,7 +785,7 @@ async def seed(database: str) -> Workspace:
                     project_id=case.project_id,
                     task_id=queued_task,
                     slide_id=case.loose_slide_id,
-                    user_id=people[Role.RESEARCHER],
+                    user_id=people[lead],
                     kind="region",
                     number=1,
                     value="disagree",
@@ -754,7 +818,7 @@ async def seed(database: str) -> Workspace:
                     {
                         "tenant_id": tenant_id,
                         "project_id": project,
-                        "user_id": people[Role.RESEARCHER],
+                        "user_id": people[lead],
                         "role": "owner",
                     }
                     for project in (case.project_id, spare_project)
@@ -766,7 +830,7 @@ async def seed(database: str) -> Workspace:
                         "user_id": user,
                         "role": role,
                     }
-                    for user, role in ((people[Role.REVIEWER], "viewer"), (colleague, "viewer"))
+                    for user, role in ((people[REVIEWER], "viewer"), (colleague, "viewer"))
                 ],
             )
         assert isinstance(tenant_id, uuid.UUID)
@@ -783,6 +847,8 @@ async def seed(database: str) -> Workspace:
             tenant_id,
             people,
             colleague,
+            deputy,
+            people[lead],
             slug,
             account,
             token,
@@ -815,13 +881,23 @@ async def seed(database: str) -> Workspace:
 
 
 @pytest.fixture(scope="module")
-def workspace(database: str) -> Workspace:
-    return asyncio.run(seed(database))
+def workspaces(database: str) -> dict[Seat, Workspace]:
+    return {
+        seat: asyncio.run(seed(database, seat if seat.role is Role.RESEARCHER else RESEARCHER))
+        for seat in SEATS
+    }
 
 
-def principal_for(workspace: Workspace, role: Role) -> Principal:
-    subject = f"{workspace.slug}-{role}"
-    return MemberPrincipal(subject, workspace.tenant_id, workspace.users[role], role)
+@pytest.fixture(scope="module")
+def workspace(workspaces: dict[Seat, Workspace]) -> Workspace:
+    return workspaces[RESEARCHER]
+
+
+def principal_for(workspace: Workspace, seat: Seat) -> Principal:
+    subject = f"{workspace.slug}-{seat}"
+    return MemberPrincipal(
+        subject, workspace.tenant_id, workspace.users[seat], seat.role, seat.admin_rights
+    )
 
 
 def send(api: ApiAs, principal: Principal, call: Call) -> int:
@@ -829,17 +905,18 @@ def send(api: ApiAs, principal: Principal, call: Call) -> int:
     return response.status_code
 
 
-GUARDED_CASES = [(operation, role) for operation in sorted(GUARDED_CALLS) for role in COLUMNS]
+GUARDED_CASES = [(operation, seat) for operation in sorted(GUARDED_CALLS) for seat in SEATS]
 
 
 @pytest.mark.db
-@pytest.mark.parametrize(("operation", "role"), GUARDED_CASES)
+@pytest.mark.parametrize(("operation", "seat"), GUARDED_CASES, ids=str)
 def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
-    api: ApiAs, workspace: Workspace, operation: str, role: Role
+    api: ApiAs, workspaces: dict[Seat, Workspace], operation: str, seat: Seat
 ) -> None:
     permission = guarded_operations()[operation]
-    status = send(api, principal_for(workspace, role), GUARDED_CALLS[operation](workspace))
-    grant = grant_for(role, permission)
+    workspace = workspaces[seat]
+    status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))
+    grant = grant_for(seat.role, permission, admin_rights=seat.admin_rights)
     if (
         (grant is Grant.ASSIGNED and operation in NEEDS_A_TASK)
         or grant is Grant.NONE
@@ -852,19 +929,21 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
 
 @pytest.mark.db
 @pytest.mark.parametrize(
-    ("operation", "role"), [(name, role) for name in sorted(MEMBER_CALLS) for role in COLUMNS]
+    ("operation", "seat"),
+    [(name, seat) for name in sorted(MEMBER_CALLS) for seat in SEATS],
+    ids=str,
 )
 def test_every_member_endpoint_is_open_to_every_member_role(
-    api: ApiAs, workspace: Workspace, operation: str, role: Role
+    api: ApiAs, workspace: Workspace, operation: str, seat: Seat
 ) -> None:
-    assert send(api, principal_for(workspace, role), MEMBER_CALLS[operation](workspace)) == 200
+    assert send(api, principal_for(workspace, seat), MEMBER_CALLS[operation](workspace)) == 200
 
 
 @pytest.mark.db
 def test_nobody_changes_their_own_role(api: ApiAs, workspace: Workspace) -> None:
-    admin = principal_for(workspace, Role.ADMIN)
+    admin = principal_for(workspace, ADMIN)
     response = api(admin).put(
-        f"/api/tenant/members/{workspace.users[Role.ADMIN]}/role", json={"role": "reviewer"}
+        f"/api/tenant/members/{workspace.users[ADMIN]}/role", json={"role": "reviewer"}
     )
     assert (response.status_code, response.json()["code"]) == (409, "own-role")
 
@@ -873,7 +952,7 @@ def test_nobody_changes_their_own_role(api: ApiAs, workspace: Workspace) -> None
 def test_a_role_change_takes_effect_and_rejects_unknown_roles(
     api: ApiAs, workspace: Workspace
 ) -> None:
-    admin = principal_for(workspace, Role.ADMIN)
+    admin = principal_for(workspace, ADMIN)
     path = f"/api/tenant/members/{workspace.colleague}/role"
     changed = api(admin).put(path, json={"role": "researcher"})
     assert (changed.status_code, changed.json()["role"]) == (200, "researcher")
@@ -916,10 +995,10 @@ def test_no_call_from_another_workspace_changes_this_one(api: ApiAs, database: s
     theirs = asyncio.run(seed(database))
     before = tenant_fingerprint(database, mine.tenant_id)
     for operation in sorted(WORKSPACE_CALLS):
-        for role in COLUMNS:
+        for seat in SEATS:
             call = WORKSPACE_CALLS[operation](replace(mine, invitations=list(mine.invitations)))
-            status = send(api, principal_for(theirs, role), call)
-            assert status < 500, (operation, role, status)
+            status = send(api, principal_for(theirs, seat), call)
+            assert status < 500, (operation, seat, status)
     changed = {
         name
         for name, value in tenant_fingerprint(database, mine.tenant_id).items()

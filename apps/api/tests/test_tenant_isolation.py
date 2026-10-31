@@ -65,8 +65,10 @@ class Seeded:
     ids: dict[str, uuid.UUID] = field(default_factory=dict[str, uuid.UUID])
     markers: set[str] = field(default_factory=set[str])
 
-    def member(self, role: Role = Role.RESEARCHER) -> MemberPrincipal:
-        return MemberPrincipal(self.subject, self.tenant_id, self.ids["user"], role)
+    def member(self, admin_rights: bool = False) -> MemberPrincipal:
+        return MemberPrincipal(
+            self.subject, self.tenant_id, self.ids["user"], Role.RESEARCHER, admin_rights
+        )
 
 
 type Seeder = Callable[[AsyncConnection, Seeded], Awaitable[None]]
@@ -82,7 +84,7 @@ class Exposure(Enum):
 class Route:
     exposure: Exposure
     path: Callable[[Seeded], str]
-    role: Role = Role.RESEARCHER
+    admin_rights: bool = False
 
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
@@ -526,15 +528,19 @@ GET_ROUTES = {
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
-    "listAuditEvents": Route(Exposure.TENANT, lambda _: "/api/tenant/audit-events", Role.ADMIN),
+    "listAuditEvents": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/audit-events", admin_rights=True
+    ),
     "exportAuditEvents": Route(
-        Exposure.TENANT, lambda _: "/api/tenant/audit-events/export", Role.ADMIN
+        Exposure.TENANT, lambda _: "/api/tenant/audit-events/export", admin_rights=True
     ),
     "listAuditSigningKeys": Route(
-        Exposure.TENANT, lambda _: "/api/tenant/audit-events/signing-keys", Role.ADMIN
+        Exposure.TENANT, lambda _: "/api/tenant/audit-events/signing-keys", admin_rights=True
     ),
     "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
-    "listInvitations": Route(Exposure.TENANT, lambda _: "/api/tenant/invitations", Role.ADMIN),
+    "listInvitations": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/invitations", admin_rights=True
+    ),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
@@ -549,8 +555,12 @@ GET_ROUTES = {
             "&skip_submitted=false"
         ),
     ),
-    "getRetentionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/retention", Role.ADMIN),
-    "listLegalHolds": Route(Exposure.TENANT, lambda _: "/api/tenant/legal-holds", Role.ADMIN),
+    "getRetentionPolicy": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/retention", admin_rights=True
+    ),
+    "listLegalHolds": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/legal-holds", admin_rights=True
+    ),
     "exportMyPersonalData": Route(Exposure.TENANT, lambda _: "/api/me/personal-data"),
     "exportPatientData": Route(
         Exposure.TENANT,
@@ -747,7 +757,7 @@ def test_tenant_routes_show_a_member_their_own_data(
 ) -> None:
     a, _ = seeded
     route = GET_ROUTES[operation]
-    response = api(a.member(route.role)).get(route.path(a))
+    response = api(a.member(route.admin_rights)).get(route.path(a))
     assert response.status_code == 200, response.text
     assert any(marker in response.text for marker in a.markers)
 
@@ -758,7 +768,7 @@ def test_tenant_routes_show_another_tenant_nothing(
 ) -> None:
     a, b = seeded
     route = GET_ROUTES[operation]
-    response = api(b.member(route.role)).get(route.path(a))
+    response = api(b.member(route.admin_rights)).get(route.path(a))
     assert response.status_code in {200, 404}, response.text
     assert [marker for marker in a.markers if marker in response.text] == []
 
