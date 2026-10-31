@@ -2056,7 +2056,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] COLLAB-002 · Threads API
   Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist. Mention and reply notifications resolve to their thread through `GET /api/me/notifications/{id}/target` ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)). `notifications.context_of` gives thread notifications their project, task and case, so a mute catches replies ([ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md), inbox mutes).
   Done when API tests cover anchors, permissions and audit.
-  During blind review a reviewer sees only their own threads and the researcher's (TASK-004). Depends on OBJ-001, TASK-004.
+  During blind review a reviewer sees only their own threads and the researcher's (TASK-004), through `parfocal_api.blinding.sees_reviewer` ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Depends on OBJ-001, TASK-004.
 
 - [ ] COLLAB-003 · Comment tool and pins
   C places a pin and opens the composer, Enter posts, Shift+Enter adds a line. Pins show initials, store an offset relative to their target, follow and hide with their shape, and are draggable with undo.
@@ -3255,8 +3255,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 
 - [ ] TASK-004 · Blinding and first read
   Reviewers see others' verdicts and comments only after they submit. A project can hide the AI for a first read and reveal it afterwards. The researcher sees everything.
-  Done when permission tests cover each role before and after submit, and E2E reveals the AI after a first read.
-  Depends on TASK-002, GUIDE-001.
+  Done when permission tests cover each role before and after submit, and API tests show the AI hidden before a first read, shown after it, and the first read kept unchanged.
+  Depends on TASK-002, GUIDE-001. The first read is a stored step that is never changed, and the AI is hidden from a project reviewer on that slide until it is recorded ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
+  Split on 2026-10-31: the E2E that reveals the AI after a first read moved to TASK-010, because it needs the review screens.
 
 - [ ] TASK-005 · New review task stepper
   A medium one-column stepper with Slides, Reviewers, What to check, How and when, and Send. Reviewers are picked in the token field (DS-020). The estimate follows every choice. Send shows a summary with a Change link per row and the email the reviewers receive.
@@ -3271,17 +3272,22 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 - [ ] TASK-007 · Nudge, reassign and change a task
   The researcher nudges reviewers who are behind, reassigns slides, adds a reviewer and changes the due date, each audited and notified.
   Done when API tests cover each action and E2E nudges from Assigned by me.
-  Depends on TASK-001, NOTIF-001.
+  Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 - [ ] TASK-008 · Submit a slide review
   Submitting shows what will be sent (verdicts by kind and the opinion), saves the review and opens the next slide. A submitted review can be reopened by its reviewer until sign-off.
   Done when E2E submits, reopens and submits again, and the next slide opens.
-  Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next.
+  Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 - [ ] TASK-009 · Study template in a new review task
   The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when component tests show each step filled from two different templates and a changed preset kept, and E2E creates a task from a template and finds its blocks in the report.
   Depends on TASK-005, EVAL-007. Refs mock: task, doc 43.
+
+- [ ] TASK-010 · Reveal the AI after a first read, end to end
+  In a task that hides the AI, a reviewer opens a task slide and sees no AI objects, answers the opinion form, adds an object they found, records the first read, sees the AI appear, gives verdicts and submits. Their first read stays as it was recorded.
+  Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the verdicts and the submit.
+  Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 ---
 
