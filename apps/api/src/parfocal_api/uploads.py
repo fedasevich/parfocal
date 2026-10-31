@@ -7,7 +7,7 @@ from pathlib import PurePosixPath
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Path, Query, Request
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from sqlalchemy import ColumnElement, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -17,13 +17,29 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.projects import visible
+from parfocal_api.result_imports import (
+    lock_slide_upload,
+    published_slide_of,
+    queue_if_ready,
+    slide_upload_of,
+)
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
 from parfocal_common.ingest import NOTICES, Failure, enqueue_ingest, failure_message
 from parfocal_common.jobs import JobStatus, StepStatus
 from parfocal_common.object_store import NoSuchUploadError, StorageError, StoredPart
+from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.part_plan import MAX_PARTS, part_size_for, parts_problem, plan_parts
+from parfocal_common.result_imports import (
+    IMPORT_NOTICES,
+    WAITING,
+    ResultFormat,
+    UploadKind,
+    Waiting,
+    can_sniff,
+    format_of,
+)
 
 SAFE_CHARACTERS = re.compile(r"[^A-Za-z0-9._-]")
 SAFE_NAME_LENGTH = 120
@@ -42,6 +58,33 @@ class UploadMetadata(BaseModel):
     case_id: uuid.UUID | None = None
     size: Annotated[int, Field(ge=1)]
     last_modified: Annotated[int, Field(ge=0)] | None = None
+    kind: UploadKind = UploadKind.SLIDE
+    result_format: ResultFormat | None = None
+    slide_id: uuid.UUID | None = None
+    slide_upload_id: uuid.UUID | None = None
+    pairing_rule: Rule | None = None
+    pairing_certainty: Certainty | None = None
+
+    @model_validator(mode="after")
+    def result_fields_only_on_results(self) -> UploadMetadata:
+        result_fields = (
+            self.result_format,
+            self.slide_id,
+            self.slide_upload_id,
+            self.pairing_rule,
+            self.pairing_certainty,
+        )
+        if self.kind is UploadKind.SLIDE and any(value is not None for value in result_fields):
+            raise ValueError("Only a result file names a format, a slide or a pairing")
+        if self.slide_id is not None and self.slide_upload_id is not None:
+            raise ValueError("A result pairs with a slide or with a slide upload, not both")
+        if (
+            self.slide_id is None
+            and self.slide_upload_id is None
+            and (self.pairing_rule is not None or self.pairing_certainty is not None)
+        ):
+            raise ValueError("A pairing needs the slide it pairs with")
+        return self
 
 
 class UploadDraft(BaseModel):
@@ -90,7 +133,7 @@ class CompletedUpload(BaseModel):
     location: str
     key: str
     upload_id: uuid.UUID = Field(serialization_alias="uploadId")
-    job_id: uuid.UUID
+    job_id: uuid.UUID | None
     etag: str | None
 
 
@@ -101,6 +144,7 @@ class AbortedUpload(BaseModel):
 
 class IngestStatus(StrEnum):
     UPLOADING = "uploading"
+    WAITING = "waiting"
     PROCESSING = "processing"
     READY = "ready"
     FAILED = "failed"
@@ -115,6 +159,7 @@ class UploadState(BaseModel):
     upload_id: uuid.UUID
     project_id: uuid.UUID
     case_id: uuid.UUID | None
+    kind: UploadKind
     status: IngestStatus
     upload_status: UploadStatus
     job_id: uuid.UUID | None
@@ -123,6 +168,11 @@ class UploadState(BaseModel):
     reason: str | None
     message: str | None
     notices: list[IngestNotice]
+    result_format: ResultFormat | None
+    slide_upload_id: uuid.UUID | None
+    pairing_rule: Rule | None
+    pairing_certainty: Certainty | None
+    result_set_id: uuid.UUID | None
 
 
 class UploadTooLargeError(BadRequestError):
@@ -163,6 +213,21 @@ class UploadGoneError(ConflictError):
 class UploadPartsInvalidError(ConflictError):
     code = "upload-parts-invalid"
     title = "The stored parts do not make up the whole file"
+
+
+class ResultFormatUnknownError(BadRequestError):
+    code = "result-format-unknown"
+    title = "Name the format of this result file: GeoJSON, Parfocal JSON or CSV"
+
+
+class PairedSlideNotFoundError(NotFoundError):
+    code = "slide-not-found"
+    title = "Slide not found in this project"
+
+
+class SlideUploadNotFoundError(NotFoundError):
+    code = "slide-upload-not-found"
+    title = "No slide upload of yours in this project has this id"
 
 
 def settings_of(request: Request) -> ApiSettings:
@@ -260,12 +325,17 @@ def completion_problem(
     return None
 
 
-def completed_of(row: Any) -> CompletedUpload:
+def completed_of(row: Any, job_id: uuid.UUID | None = None) -> CompletedUpload:
+    job = job_id or row.job_id
     return CompletedUpload(
-        location=f"/api/projects/{row.project_id}/jobs/{row.job_id}",
+        location=(
+            f"/api/projects/{row.project_id}/jobs/{job}"
+            if job is not None
+            else f"/api/uploads/{row.id}/status"
+        ),
         key=row.object_key,
         upload_id=row.id,
-        job_id=row.job_id,
+        job_id=job,
         etag=row.etag,
     )
 
@@ -287,6 +357,80 @@ async def audit(
             "part_count": row.part_count,
         },
     )
+
+
+async def paired_slide(
+    connection: AsyncConnection, project_id: uuid.UUID, slide_id: uuid.UUID
+) -> uuid.UUID:
+    found = await connection.scalar(
+        select(slides.c.id).where(
+            slides.c.id == slide_id,
+            slides.c.project_id == project_id,
+            slides.c.deleted_at.is_(None),
+        )
+    )
+    if found is None:
+        raise PairedSlideNotFoundError
+    return slide_id
+
+
+async def paired_slide_upload(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    slide_upload_id: uuid.UUID,
+) -> uuid.UUID | None:
+    found = await connection.scalar(
+        select(uploads.c.id).where(
+            uploads.c.id == slide_upload_id,
+            uploads.c.project_id == project_id,
+            uploads.c.kind == UploadKind.SLIDE,
+            uploads.c.status.in_([UploadStatus.OPEN, UploadStatus.COMPLETED]),
+            created_by(principal),
+        )
+    )
+    if found is None:
+        raise SlideUploadNotFoundError
+    return await published_slide_of(connection, slide_upload_id)
+
+
+async def target_values(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID | None,
+    slide_upload_id: uuid.UUID | None,
+) -> dict[str, uuid.UUID | None]:
+    if slide_id is not None:
+        return {"slide_id": await paired_slide(connection, project_id, slide_id)}
+    if slide_upload_id is not None:
+        published = await paired_slide_upload(connection, principal, project_id, slide_upload_id)
+        return {"slide_id": published, "slide_upload_id": slide_upload_id}
+    return {}
+
+
+async def result_values(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    meta: UploadMetadata,
+    filename: str,
+) -> dict[str, Any]:
+    if meta.kind is UploadKind.SLIDE:
+        return {}
+    chosen = meta.result_format or format_of(filename)
+    if chosen is None and not can_sniff(filename):
+        raise ResultFormatUnknownError
+    targets = await target_values(
+        connection, principal, project_id, meta.slide_id, meta.slide_upload_id
+    )
+    pairing: dict[str, Any] = {}
+    if targets:
+        pairing = {
+            "pairing_rule": meta.pairing_rule or Rule.PICKED,
+            "pairing_certainty": meta.pairing_certainty or Certainty.SURE,
+        }
+    return {"kind": UploadKind.RESULT, "result_format": chosen, **targets, **pairing}
 
 
 @router.post(
@@ -317,6 +461,7 @@ async def create_upload(
         )
         if found is None:
             raise CaseNotFoundError
+    paired = await result_values(connection, principal, project.id, meta, draft.filename)
     plan = plan_parts(meta.size, part_size_for(meta.size, settings.upload_part_bytes))
     upload_id = uuid.uuid4()
     key = object_key(project.tenant_id, upload_id, draft.filename)
@@ -334,6 +479,7 @@ async def create_upload(
             storage_upload_id=storage_upload_id,
             part_bytes=plan.part_bytes,
             part_count=plan.part_count,
+            **paired,
             **creator_values(principal),
         )
     )
@@ -386,9 +532,11 @@ def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:
     return IngestStatus.FAILED, reason, failure_message(reason)
 
 
-def ingest_status(
-    upload_status: str, job: Any, slide: Any
-) -> tuple[IngestStatus, str | None, str | None]:
+def waiting(reason: Waiting) -> tuple[IngestStatus, str | None, str | None]:
+    return IngestStatus.WAITING, reason, WAITING[reason]
+
+
+def closed_status(upload_status: str) -> tuple[IngestStatus, str | None, str | None] | None:
     match UploadStatus(upload_status):
         case UploadStatus.OPEN:
             return IngestStatus.UPLOADING, None, None
@@ -397,19 +545,165 @@ def ingest_status(
         case UploadStatus.EXPIRED:
             return failed(Failure.UPLOAD_EXPIRED)
         case UploadStatus.COMPLETED:
-            pass
-    if slide is not None:
-        return IngestStatus.READY, None, None
+            return None
+
+
+def job_status(job: Any) -> tuple[IngestStatus, str | None, str | None] | None:
     if job is not None and job.status == JobStatus.FAILED:
         return failed(job.error_code or "unknown")
     if job is not None and job.status in {JobStatus.CANCELLING, JobStatus.CANCELLED}:
         return failed(Failure.CHECK_STOPPED)
-    return IngestStatus.PROCESSING, None, None
+    return None
+
+
+def ingest_status(
+    upload_status: str, job: Any, slide: Any
+) -> tuple[IngestStatus, str | None, str | None]:
+    closed = closed_status(upload_status)
+    if closed is not None:
+        return closed
+    if slide is not None:
+        return IngestStatus.READY, None, None
+    return job_status(job) or (IngestStatus.PROCESSING, None, None)
+
+
+def slide_upload_refused(slide_upload: Any) -> bool:
+    if slide_upload is None:
+        return True
+    if slide_upload.status in {UploadStatus.ABORTED, UploadStatus.EXPIRED}:
+        return True
+    return slide_upload.job_status in {
+        JobStatus.FAILED,
+        JobStatus.CANCELLING,
+        JobStatus.CANCELLED,
+    }
+
+
+def result_status(
+    row: Any, job: Any, imported: bool, slide_upload: Any
+) -> tuple[IngestStatus, str | None, str | None]:
+    closed = closed_status(row.status)
+    if closed is not None:
+        return closed
+    if row.job_id is None:
+        if row.slide_id is None and row.slide_upload_id is None:
+            return waiting(Waiting.NEEDS_SLIDE)
+        if row.slide_id is None and slide_upload_refused(slide_upload):
+            return waiting(Waiting.SLIDE_REFUSED)
+        return waiting(Waiting.WAITING_FOR_SLIDE)
+    if imported:
+        return IngestStatus.READY, None, None
+    return job_status(job) or (IngestStatus.PROCESSING, None, None)
 
 
 def notices_of(codes: Sequence[str]) -> list[IngestNotice]:
-    known = {str(code): text for code, text in NOTICES.items()}
+    known = {str(code): text for code, text in {**NOTICES, **IMPORT_NOTICES}.items()}
     return [IngestNotice(code=code, message=known.get(code, code)) for code in codes]
+
+
+async def job_of(connection: AsyncConnection, job_id: uuid.UUID | None) -> tuple[Any, str | None]:
+    if job_id is None:
+        return None, None
+    job = (
+        await connection.execute(
+            select(jobs.c.status, jobs.c.error_code).where(jobs.c.id == job_id)
+        )
+    ).one_or_none()
+    step = await connection.scalar(
+        select(job_steps.c.name)
+        .where(
+            job_steps.c.job_id == job_id,
+            job_steps.c.status.in_([StepStatus.RUNNING, StepStatus.PENDING]),
+        )
+        .order_by(job_steps.c.ordinal)
+        .limit(1)
+    )
+    return job, step
+
+
+async def import_notices(connection: AsyncConnection, job_id: uuid.UUID | None) -> list[str]:
+    if job_id is None:
+        return []
+    found = await connection.scalar(
+        select(job_steps.c.result).where(
+            job_steps.c.job_id == job_id, job_steps.c.status == StepStatus.DONE
+        )
+    )
+    notices = cast("dict[str, Any]", found).get("notices") if isinstance(found, dict) else None
+    return (
+        [str(code) for code in cast("list[object]", notices)] if isinstance(notices, list) else []
+    )
+
+
+async def slide_upload_state(connection: AsyncConnection, slide_upload_id: uuid.UUID | None) -> Any:
+    if slide_upload_id is None:
+        return None
+    return (
+        await connection.execute(
+            select(uploads.c.status, jobs.c.status.label("job_status"))
+            .outerjoin(jobs, jobs.c.id == uploads.c.job_id)
+            .where(uploads.c.id == slide_upload_id)
+        )
+    ).one_or_none()
+
+
+def base_state(row: Any) -> dict[str, Any]:
+    return {
+        "upload_id": row.id,
+        "project_id": row.project_id,
+        "case_id": row.case_id,
+        "kind": UploadKind(row.kind),
+        "upload_status": UploadStatus(row.status),
+        "job_id": row.job_id,
+        "result_format": row.result_format,
+        "slide_upload_id": row.slide_upload_id,
+        "pairing_rule": row.pairing_rule,
+        "pairing_certainty": row.pairing_certainty,
+        "result_set_id": row.result_set_id,
+    }
+
+
+async def result_state(connection: AsyncConnection, row: Any) -> UploadState:
+    job, step = await job_of(connection, row.job_id)
+    imported = row.result_set_id is not None
+    slide_upload = await slide_upload_state(connection, row.slide_upload_id)
+    status, reason, message = result_status(row, job, imported, slide_upload)
+    return UploadState(
+        **base_state(row),
+        status=status,
+        step=step if status is IngestStatus.PROCESSING else None,
+        slide_id=row.slide_id,
+        reason=reason,
+        message=message,
+        notices=notices_of(await import_notices(connection, row.job_id)) if imported else [],
+    )
+
+
+async def slide_state(connection: AsyncConnection, row: Any) -> UploadState:
+    job, step = await job_of(connection, row.job_id)
+    slide = (
+        await connection.execute(
+            select(slides.c.id, slides.c.notices).where(
+                slides.c.upload_id == row.id, slides.c.deleted_at.is_(None)
+            )
+        )
+    ).one_or_none()
+    status, reason, message = ingest_status(row.status, job, slide)
+    return UploadState(
+        **base_state(row),
+        status=status,
+        step=step if status is IngestStatus.PROCESSING else None,
+        slide_id=slide.id if slide is not None else None,
+        reason=reason,
+        message=message,
+        notices=notices_of(slide.notices) if slide is not None else [],
+    )
+
+
+async def state_of(connection: AsyncConnection, row: Any) -> UploadState:
+    if row.kind == UploadKind.RESULT:
+        return await result_state(connection, row)
+    return await slide_state(connection, row)
 
 
 @router.get(
@@ -427,44 +721,7 @@ async def get_upload_status(
     ).one_or_none()
     if row is None:
         raise UploadNotFoundError
-    job = None
-    step = None
-    if row.job_id is not None:
-        job = (
-            await connection.execute(
-                select(jobs.c.status, jobs.c.error_code).where(jobs.c.id == row.job_id)
-            )
-        ).one_or_none()
-        step = await connection.scalar(
-            select(job_steps.c.name)
-            .where(
-                job_steps.c.job_id == row.job_id,
-                job_steps.c.status.in_([StepStatus.RUNNING, StepStatus.PENDING]),
-            )
-            .order_by(job_steps.c.ordinal)
-            .limit(1)
-        )
-    slide = (
-        await connection.execute(
-            select(slides.c.id, slides.c.notices).where(
-                slides.c.upload_id == row.id, slides.c.deleted_at.is_(None)
-            )
-        )
-    ).one_or_none()
-    status, reason, message = ingest_status(row.status, job, slide)
-    return UploadState(
-        upload_id=row.id,
-        project_id=row.project_id,
-        case_id=row.case_id,
-        status=status,
-        upload_status=UploadStatus(row.status),
-        job_id=row.job_id,
-        step=step if status is IngestStatus.PROCESSING else None,
-        slide_id=slide.id if slide is not None else None,
-        reason=reason,
-        message=message,
-        notices=notices_of(slide.notices) if slide is not None else [],
-    )
+    return await state_of(connection, row)
 
 
 @router.get(
@@ -528,6 +785,7 @@ async def complete_upload(
     settings: Settings,
     store: Store,
 ) -> CompletedUpload:
+    await lock_slide_upload(connection, await slide_upload_of(connection, upload_id))
     row = await upload_row(connection, principal, upload_id, key)
     if row.status == UploadStatus.COMPLETED:
         return completed_of(row)
@@ -536,7 +794,11 @@ async def complete_upload(
     problem = completion_problem(stored, completion.parts, row)
     if problem is not None:
         raise UploadPartsInvalidError(problem)
-    job_id = await enqueue_ingest(connection, row.tenant_id, row.project_id, row.id)
+    job_id = (
+        await enqueue_ingest(connection, row.tenant_id, row.project_id, row.id)
+        if row.kind == UploadKind.SLIDE
+        else None
+    )
     try:
         completed = await store.complete_multipart_upload(
             row.object_key, row.storage_upload_id, stored
@@ -560,8 +822,9 @@ async def complete_upload(
             .returning(uploads)
         )
     ).one()
+    queued = await queue_if_ready(connection, finished)
     await audit(connection, principal, AuditAction.UPLOAD_COMPLETED, finished)
-    return completed_of(finished)
+    return completed_of(finished, queued)
 
 
 @router.delete(

@@ -3167,6 +3167,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Results pair with slides on drop by folder shape first (next to the slide or in a folder named like it), then file name, then an embedded slide ID, each with how it was paired and how sure it is (sure, likely). The user can pick another slide in a row, and a result that matches no slide waits until one is picked.
   Done when unit tests cover each pairing rule and a tie, and API tests cover an override and an unpaired result.
   Also lets an upload say it is a result file and which slide or slide upload it pairs with, and has the ingest job of INGEST-017 (publish step and slide status) import a paired file as a result set once its slide is ready. Today the upload metadata cannot mark a result file, so a result file sent through the upload API is refused as not a slide.
+  Decided in [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job). The import writes regions and zones, and cells wait for RSET-011 (cells from imported files).
   Depends on RSET-001. Refs mock: upload/files.
 
 - [ ] RSET-005 · Import checks and fixes
@@ -3198,6 +3199,11 @@ Importing AI results made elsewhere is first class. A result set is one import o
   The drawer opens from the upload and from an import error, lists the formats that import, links the Parfocal JSON template and schema, and explains the error codes of the validator.
   Done when a component test opens it from both places and shows each format.
   Depends on RSET-002. Split from RSET-002 so the schema and validator have no screen work. Refs mock: formats.
+
+- [ ] RSET-011 · Cells from imported files
+  An imported GeoJSON, QuPath export, Parfocal JSON or CSV writes its cells into chunks with the chunk store of AIP-013, numbered per slide and inheriting the numbers of cells an older set shares (OBJ-002, IDs across result sets), with each cell's region from the regions it lies in. The API reads chunk files from object storage instead of the local `RESULT_STORE_DIR`, so review order and cell scopes see them. Sets imported before this task have no cells, and their kept source file can be imported again as a new set.
+  Done when an imported QuPath 0.7 export shows its cells in a ready set, a second import of it inherits every cell number, and a review task with a cell scope reads its chunks from MinIO.
+  Depends on RSET-004, AIP-013. Split from RSET-004 by [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job).
 
 ---
 

@@ -9,7 +9,7 @@ from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on, require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Grant, Permission, require
@@ -198,6 +198,63 @@ async def audit(
     )
 
 
+async def insert_result_set(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    slide: Any,
+    draft: ResultSetDraft,
+    source: ResultSource,
+    actor: Actor,
+    created_by_user_id: uuid.UUID | None,
+    job_id: uuid.UUID | None = None,
+    set_id: uuid.UUID | None = None,
+) -> uuid.UUID:
+    created = await connection.scalar(
+        insert(result_sets)
+        .values(
+            **({"id": set_id} if set_id is not None else {}),
+            tenant_id=tenant_id,
+            project_id=slide.project_id,
+            slide_id=slide.id,
+            name=draft.name,
+            model_version=draft.model_version or None,
+            source=source,
+            source_file=draft.source_file or None,
+            produced_at=draft.produced_at,
+            job_id=job_id,
+            created_by_user_id=created_by_user_id,
+        )
+        .returning(result_sets.c.id)
+    )
+    assert isinstance(created, uuid.UUID)
+    if draft.classes:
+        resolved = await resolve_names(connection, slide.project_id, draft.classes)
+        await connection.execute(
+            insert(result_set_classes),
+            [
+                {
+                    "tenant_id": tenant_id,
+                    "project_id": slide.project_id,
+                    "result_set_id": created,
+                    "position": position,
+                    "source_name": item.source_name,
+                    "class_id": item.class_id,
+                }
+                for position, item in enumerate(resolved)
+            ],
+        )
+    await record(
+        connection,
+        actor,
+        AuditAction.RESULT_SET_CREATED,
+        AuditTarget.RESULT_SET,
+        created,
+        tenant_id=tenant_id,
+        details={"slide_id": str(slide.id), "source": source.value, "classes": len(draft.classes)},
+    )
+    return created
+
+
 async def open_result_set(
     connection: AsyncConnection,
     principal: Principal,
@@ -208,50 +265,16 @@ async def open_result_set(
 ) -> uuid.UUID:
     tenant_id = database_scope(principal).tenant_id
     assert tenant_id is not None
-    set_id = await connection.scalar(
-        insert(result_sets)
-        .values(
-            tenant_id=tenant_id,
-            project_id=slide.project_id,
-            slide_id=slide.id,
-            name=draft.name,
-            model_version=draft.model_version or None,
-            source=source,
-            source_file=draft.source_file or None,
-            produced_at=draft.produced_at,
-            job_id=job_id,
-            created_by_user_id=(
-                principal.user_id if isinstance(principal, MemberPrincipal) else None
-            ),
-        )
-        .returning(result_sets.c.id)
-    )
-    assert isinstance(set_id, uuid.UUID)
-    if draft.classes:
-        resolved = await resolve_names(connection, slide.project_id, draft.classes)
-        await connection.execute(
-            insert(result_set_classes),
-            [
-                {
-                    "tenant_id": tenant_id,
-                    "project_id": slide.project_id,
-                    "result_set_id": set_id,
-                    "position": position,
-                    "source_name": item.source_name,
-                    "class_id": item.class_id,
-                }
-                for position, item in enumerate(resolved)
-            ],
-        )
-    await audit(
+    return await insert_result_set(
         connection,
-        principal,
-        AuditAction.RESULT_SET_CREATED,
         tenant_id,
-        set_id,
-        {"slide_id": str(slide.id), "source": source.value, "classes": len(draft.classes)},
+        slide,
+        draft,
+        source,
+        actor_of(principal),
+        principal.user_id if isinstance(principal, MemberPrincipal) else None,
+        job_id,
     )
-    return set_id
 
 
 @dataclass(frozen=True)

@@ -17,6 +17,10 @@ from parfocal_common.object_store import (
     StorageLocation,
     StoredPart,
 )
+from parfocal_common.result_imports import KIND as IMPORT_KIND
+from parfocal_common.result_imports import PLAN as IMPORT_PLAN
+from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
+from parfocal_ingest.result_import import RESULT_IMPORT
 from parfocal_ingest.workflow import INGEST
 
 
@@ -42,6 +46,13 @@ def test_the_api_queues_the_workflow_the_ingest_worker_runs() -> None:
     assert [step.name for step in INGEST.steps] == [step.name for step in PLAN.steps]
     assert [step.name for step in PLAN.steps] == list(STEP_NAMES)
     assert INGEST.lease_seconds == PLAN.lease_seconds
+
+
+def test_the_api_queues_the_result_import_the_ingest_worker_runs() -> None:
+    assert (RESULT_IMPORT.kind, IMPORT_PLAN.kind) == (IMPORT_KIND, IMPORT_KIND)
+    assert [step.name for step in RESULT_IMPORT.steps] == [step.name for step in IMPORT_PLAN.steps]
+    assert RESULT_IMPORT.lease_seconds == IMPORT_PLAN.lease_seconds
+    assert "parfocal_ingest.result_import:RESULT_IMPORT" in DEFAULT_WORKFLOWS
 
 
 @pytest.mark.db

@@ -20,6 +20,7 @@ To take every recommendation at once, write "all recommended" here:
 | INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Ticked, decisions 9a to 9d |
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
 | SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
+| RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Built, waits for a green CI run on `main`, decisions 11a (accept ADR 0125), 11b (who places a waiting result), 11c (cells in imported files), 11d (what counts as likely) and 11e (masks and heatmaps in the upload) |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
@@ -347,9 +348,57 @@ TILES-001 (signed access to slide bytes) will let the viewer read byte ranges of
 
 Your choice:
 
+## 11. Pairing result files with slides, ADR 0125 (result files pair in Python and import as their own job)
+
+A dropped result file now pairs with a slide by folder shape, then file name, then the slide ID inside the file, through `POST /api/uploads/pairings`. An upload can be a result file paired with a slide or with a slide upload of the same drop, and it is imported as a result set once that slide is ready. A result that matches no slide waits until its uploader picks one with `PUT /api/uploads/{upload_id}/slide`. This also builds decision 9d (pairing result files with slides in an upload) as its recommended option A.
+
+### 11a. Accept ADR 0125
+
+- A. Accept as written. **Recommended**, because the rules live in one place next to the readers and a waiting result never needs a paused job
+- B. Run the rules in the browser in a TypeScript package, with the API only listing the slides already in the case
+- C. Other
+
+Your choice:
+
+### 11b. Who may place a result that waits for a slide
+
+- A. Only the person who uploaded it, like every other upload route since INGEST-001 (upload API with presigned multipart), as built. **Recommended** until INGEST-021 (upload wizard with slides and results) shows waiting results to anyone but their uploader
+- B. Every owner of the project too, so a result is not stuck when its uploader leaves
+- C. Other
+
+Your choice:
+
+### 11c. Cells in imported result files
+
+Writing cells needs the chunk store of AIP-013 (result chunk store), which is not built. RSET-011 (cells from imported files) is the new task that adds them.
+
+- A. Import a file's regions and zones now, keep the file, say on the status that its cells were not imported, and refuse a file that holds only cells, as built. **Recommended**, because results with regions are useful today and the kept file can be imported again later
+- B. Keep every file with cells waiting until RSET-011 (cells from imported files) lands
+- C. Other
+
+Your choice:
+
+### 11d. Which pairings count as likely rather than sure
+
+- A. Sure for the same name next to the slide, a folder named like the slide, the same name anywhere and a Parfocal slide ID inside the file. Likely for a name that only starts with the slide's name, such as `tumor_031_prob` for `tumor_031`, and for a slide file name inside the file, as built. **Recommended**, because only the mock's "Similar name only" case carries a warning
+- B. Make the slide file name inside the file sure as well
+- C. Other
+
+Your choice:
+
+### 11e. Masks and heatmaps in the upload
+
+A PNG or TIFF mask needs its slide level and scale before it can be read, which RSET-005 (import checks and fixes) asks for.
+
+- A. Refuse a mask or heatmap as a result upload until RSET-005 (import checks and fixes), as built. **Recommended**, because the person learns it at once instead of after the upload
+- B. Accept it and keep it waiting until RSET-005 (import checks and fixes) can import it
+- C. Other
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
-- The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads) and `0046` (model runs), and `0047` (slide ingest) from INGEST-017 (publish step and slide status).
+- The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.

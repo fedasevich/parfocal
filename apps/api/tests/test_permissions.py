@@ -179,6 +179,7 @@ class Workspace:
     open_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     finished_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     doomed_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
+    result_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
 
     @property
     def annotations(self) -> str:
@@ -259,6 +260,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"parts": [{"PartNumber": 1, "ETag": w.finished_upload.etag}]},
     ),
     "abortUpload": lambda w: Call("DELETE", w.doomed_upload.path()),
+    "pairResultFiles": lambda w: Call(
+        "POST",
+        "/api/uploads/pairings",
+        {"project_id": str(w.project), "files": [{"path": "A1.svs"}, {"path": "A1.geojson"}]},
+    ),
+    "pairUploadWithSlide": lambda w: Call(
+        "PUT", f"/api/uploads/{w.result_upload.id}/slide", {"slide_id": str(w.slide)}
+    ),
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
@@ -1013,8 +1022,14 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                         case.project_id,
                         people[lead],
                         with_part=with_part,
+                        kind=kind,
                     )
-                    for with_part in (False, True, False)
+                    for with_part, kind in (
+                        (False, "slide"),
+                        (True, "slide"),
+                        (False, "slide"),
+                        (False, "result"),
+                    )
                 ]
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
@@ -1098,6 +1113,7 @@ async def seed_upload(
     user_id: uuid.UUID,
     *,
     with_part: bool,
+    kind: str,
 ) -> SeededUpload:
     upload_id = uuid.uuid4()
     key = f"t/{tenant_id}/quarantine/{upload_id}/Matrix_slide.svs"
@@ -1121,6 +1137,8 @@ async def seed_upload(
             storage_upload_id=storage_upload_id,
             part_bytes=TEST_PART_BYTES,
             part_count=1,
+            kind=kind,
+            result_format="geojson" if kind == "result" else None,
         )
     )
     return SeededUpload(upload_id, key, etag)

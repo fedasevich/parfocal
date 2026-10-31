@@ -602,6 +602,13 @@ export interface CaseSummary {
   created_at: string;
 }
 
+export type Certainty = (typeof Certainty)[keyof typeof Certainty];
+
+export const Certainty = {
+  sure: "sure",
+  likely: "likely",
+} as const;
+
 export type ChartStyle = (typeof ChartStyle)[keyof typeof ChartStyle];
 
 export const ChartStyle = {
@@ -765,7 +772,7 @@ export interface CompletedUpload {
   location: string;
   key: string;
   uploadId: string;
-  job_id: string;
+  job_id: string | null;
   etag: string | null;
 }
 
@@ -895,6 +902,26 @@ export const Download = {
   geojson: "geojson",
   json: "json",
 } as const;
+
+/**
+ * @minLength 1
+ * @maxLength 1024
+ */
+export type DroppedPath = string;
+
+export type FileKind = (typeof FileKind)[keyof typeof FileKind];
+
+export const FileKind = {
+  slide: "slide",
+  result: "result",
+  other: "other",
+} as const;
+
+export interface DroppedFile {
+  path: DroppedPath;
+  kind?: FileKind | null;
+  head?: string | null;
+}
 
 export interface EditDraft {
   class_id?: string | null;
@@ -1347,6 +1374,7 @@ export type IngestStatus = (typeof IngestStatus)[keyof typeof IngestStatus];
 
 export const IngestStatus = {
   uploading: "uploading",
+  waiting: "waiting",
   processing: "processing",
   ready: "ready",
   failed: "failed",
@@ -1839,9 +1867,66 @@ export interface OrganisationDraft {
   name: ParfocalApiTenantsName;
 }
 
+export type Outcome = (typeof Outcome)[keyof typeof Outcome];
+
+export const Outcome = {
+  paired: "paired",
+  tie: "tie",
+  unmatched: "unmatched",
+} as const;
+
 export interface Pair {
   slide_id: string;
   user_id: string;
+}
+
+export type PairBy = (typeof PairBy)[keyof typeof PairBy];
+
+export const PairBy = {
+  auto: "auto",
+  name: "name",
+  embedded: "embedded",
+} as const;
+
+export interface PairedSlide {
+  path: string | null;
+  slide_id: string | null;
+}
+
+export interface PairingRequest {
+  project_id: string;
+  case_id?: string | null;
+  by?: PairBy;
+  /**
+   * @minItems 1
+   * @maxItems 5000
+   */
+  files: DroppedFile[];
+}
+
+export type Rule = (typeof Rule)[keyof typeof Rule];
+
+export const Rule = {
+  "next-to-slide": "next-to-slide",
+  "folder-named-like-slide": "folder-named-like-slide",
+  "file-name": "file-name",
+  "embedded-id": "embedded-id",
+  picked: "picked",
+} as const;
+
+export interface ResultPairing {
+  path: string;
+  outcome: Outcome;
+  slide: PairedSlide | null;
+  rule: Rule | null;
+  certainty: Certainty | null;
+  candidates: PairedSlide[];
+}
+
+export interface Pairings {
+  slides: string[];
+  results: ResultPairing[];
+  others: string[];
 }
 
 export interface PatientCase {
@@ -2360,6 +2445,14 @@ export interface Resolved {
   class_id: string | null;
 }
 
+export type ResultFormat = (typeof ResultFormat)[keyof typeof ResultFormat];
+
+export const ResultFormat = {
+  geojson: "geojson",
+  "parfocal-json": "parfocal-json",
+  csv: "csv",
+} as const;
+
 export type ResultSource = (typeof ResultSource)[keyof typeof ResultSource];
 
 export const ResultSource = {
@@ -2671,6 +2764,11 @@ export interface SigningKey {
   current: boolean;
 }
 
+export interface SlideChoice {
+  slide_id?: string | null;
+  slide_upload_id?: string | null;
+}
+
 export interface SlideReview {
   task_id: string;
   task_code: string;
@@ -2869,12 +2967,25 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export type UploadKind = (typeof UploadKind)[keyof typeof UploadKind];
+
+export const UploadKind = {
+  slide: "slide",
+  result: "result",
+} as const;
+
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
   /** @minimum 1 */
   size: number;
   last_modified?: number | null;
+  kind?: UploadKind;
+  result_format?: ResultFormat | null;
+  slide_id?: string | null;
+  slide_upload_id?: string | null;
+  pairing_rule?: Rule | null;
+  pairing_certainty?: Certainty | null;
 }
 
 export interface UploadDraft {
@@ -2887,6 +2998,7 @@ export interface UploadState {
   upload_id: string;
   project_id: string;
   case_id: string | null;
+  kind: UploadKind;
   status: IngestStatus;
   upload_status: UploadStatus;
   job_id: string | null;
@@ -2895,6 +3007,11 @@ export interface UploadState {
   reason: string | null;
   message: string | null;
   notices: IngestNotice[];
+  result_format: ResultFormat | null;
+  slide_upload_id: string | null;
+  pairing_rule: Rule | null;
+  pairing_certainty: Certainty | null;
+  result_set_id: string | null;
 }
 
 export interface UploadedPart {
@@ -13731,6 +13848,344 @@ export const useCompleteUpload = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCompleteUploadMutationOptions(options), queryClient);
+};
+
+export type pairResultFilesResponse200 = {
+  data: Pairings;
+  status: 200;
+};
+
+export type pairResultFilesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type pairResultFilesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type pairResultFilesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type pairResultFilesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type pairResultFilesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type pairResultFilesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type pairResultFilesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type pairResultFilesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type pairResultFilesResponseSuccess = pairResultFilesResponse200 & {
+  headers: Headers;
+};
+export type pairResultFilesResponseError = (
+  | pairResultFilesResponse400
+  | pairResultFilesResponse401
+  | pairResultFilesResponse403
+  | pairResultFilesResponse404
+  | pairResultFilesResponse409
+  | pairResultFilesResponse422
+  | pairResultFilesResponse429
+  | pairResultFilesResponse500
+) & {
+  headers: Headers;
+};
+
+export type pairResultFilesResponse = pairResultFilesResponseSuccess | pairResultFilesResponseError;
+
+export const getPairResultFilesUrl = () => {
+  return `/api/uploads/pairings`;
+};
+
+/**
+ * @summary Pair Result Files
+ */
+export const pairResultFiles = async (
+  pairingRequest: PairingRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<pairResultFilesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<pairResultFilesResponse>(getPairResultFilesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(pairingRequest),
+  });
+};
+
+export const getPairResultFilesMutationKey = () => ["pairResultFiles"] as const;
+
+export const getPairResultFilesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pairResultFiles>>,
+    TError,
+    PairResultFilesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pairResultFiles>>,
+  TError,
+  PairResultFilesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPairResultFilesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pairResultFiles>>,
+    PairResultFilesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return pairResultFiles(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PairResultFilesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pairResultFiles>>
+>;
+export type PairResultFilesMutationBody = PairingRequest;
+export type PairResultFilesMutationError = Problem;
+export type PairResultFilesMutationVariables = { data: PairingRequest };
+
+/**
+ * @summary Pair Result Files
+ */
+export const usePairResultFiles = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pairResultFiles>>,
+      TError,
+      PairResultFilesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof pairResultFiles>>,
+  TError,
+  PairResultFilesMutationVariables,
+  TContext
+> => {
+  return useMutation(getPairResultFilesMutationOptions(options), queryClient);
+};
+
+export type pairUploadWithSlideResponse200 = {
+  data: UploadState;
+  status: 200;
+};
+
+export type pairUploadWithSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type pairUploadWithSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type pairUploadWithSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type pairUploadWithSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type pairUploadWithSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type pairUploadWithSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type pairUploadWithSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type pairUploadWithSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type pairUploadWithSlideResponseSuccess = pairUploadWithSlideResponse200 & {
+  headers: Headers;
+};
+export type pairUploadWithSlideResponseError = (
+  | pairUploadWithSlideResponse400
+  | pairUploadWithSlideResponse401
+  | pairUploadWithSlideResponse403
+  | pairUploadWithSlideResponse404
+  | pairUploadWithSlideResponse409
+  | pairUploadWithSlideResponse422
+  | pairUploadWithSlideResponse429
+  | pairUploadWithSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type pairUploadWithSlideResponse =
+  | pairUploadWithSlideResponseSuccess
+  | pairUploadWithSlideResponseError;
+
+export const getPairUploadWithSlideUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/slide`;
+};
+
+/**
+ * @summary Pair Upload With Slide
+ */
+export const pairUploadWithSlide = async (
+  uploadId: string,
+  slideChoice: SlideChoice,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<pairUploadWithSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<pairUploadWithSlideResponse>(getPairUploadWithSlideUrl(uploadId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideChoice),
+  });
+};
+
+export const getPairUploadWithSlideMutationKey = () => ["pairUploadWithSlide"] as const;
+
+export const getPairUploadWithSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pairUploadWithSlide>>,
+    TError,
+    PairUploadWithSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pairUploadWithSlide>>,
+  TError,
+  PairUploadWithSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPairUploadWithSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pairUploadWithSlide>>,
+    PairUploadWithSlideMutationVariables
+  > = (props) => {
+    const { uploadId, data } = props ?? {};
+
+    return pairUploadWithSlide(uploadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PairUploadWithSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pairUploadWithSlide>>
+>;
+export type PairUploadWithSlideMutationBody = SlideChoice;
+export type PairUploadWithSlideMutationError = Problem;
+export type PairUploadWithSlideMutationVariables = { uploadId: string; data: SlideChoice };
+
+/**
+ * @summary Pair Upload With Slide
+ */
+export const usePairUploadWithSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pairUploadWithSlide>>,
+      TError,
+      PairUploadWithSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof pairUploadWithSlide>>,
+  TError,
+  PairUploadWithSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getPairUploadWithSlideMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

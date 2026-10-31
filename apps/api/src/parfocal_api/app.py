@@ -34,6 +34,7 @@ from parfocal_api import (
     projects,
     restricted_images,
     result_formats,
+    result_pairing,
     result_sets,
     retention,
     review_order,
@@ -156,6 +157,7 @@ def create_app(
     app.include_router(result_sets.router)
     app.include_router(result_formats.router)
     app.include_router(uploads.router)
+    app.include_router(result_pairing.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(reviewed_layer.router)

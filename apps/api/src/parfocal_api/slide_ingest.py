@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, record
 from parfocal_api.notification_catalogue import TargetKind
 from parfocal_api.notifications import notify
+from parfocal_api.result_imports import queue_waiting_results
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import NotificationKind, slides, uploads
 
@@ -153,6 +154,7 @@ async def publish_slide(connection: AsyncConnection, upload: Any, facts: SlideFa
             upload.job_id,
             {"upload_id": str(upload.id), "slide_id": str(facts.slide_id)},
         )
+    await queue_waiting_results(connection, upload.id, facts.slide_id)
     return True
 
 

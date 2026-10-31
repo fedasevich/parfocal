@@ -63,6 +63,7 @@ class AuditAction(StrEnum):
     MODEL_RUN_RESUMED = "model-run.resumed"
     MODEL_RUN_RETRIED = "model-run.retried"
     UPLOAD_REFUSED = "upload.refused"
+    UPLOAD_PAIRED = "upload.paired"
     SLIDE_PUBLISHED = "slide.published"
     SLIDE_RESTRICTED_IMAGE_VIEWED = "slide.restricted-image-viewed"
     TASK_CREATED = "task.created"

@@ -8,6 +8,11 @@ from parfocal_common.db import create_engine
 from parfocal_common.jobs import load_workflow, work
 from parfocal_common.structured_logging import configure_logging
 
+DEFAULT_WORKFLOWS = (
+    "parfocal_ingest.workflow:INGEST",
+    "parfocal_ingest.result_import:RESULT_IMPORT",
+)
+
 
 def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="parfocal_ingest", description="Run ingest jobs")
@@ -24,9 +29,7 @@ async def main() -> None:
     arguments = parse()
     configure_logging("ingest", os.environ.get("APP_ENV", "dev"))
     engine = create_engine(arguments.database_url)
-    workflows = [
-        load_workflow(path) for path in arguments.workflow or ["parfocal_ingest.workflow:INGEST"]
-    ]
+    workflows = [load_workflow(path) for path in arguments.workflow or DEFAULT_WORKFLOWS]
     try:
         await work(
             engine,

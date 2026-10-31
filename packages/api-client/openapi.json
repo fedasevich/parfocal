@@ -7755,6 +7755,260 @@
         "x-permission-write": true
       }
     },
+    "/api/uploads/pairings": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Pair Result Files",
+        "operationId": "pairResultFiles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pairings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "upload-slides",
+        "x-permission-write": true
+      }
+    },
+    "/api/uploads/{upload_id}/slide": {
+      "put": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Pair Upload With Slide",
+        "operationId": "pairUploadWithSlide",
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlideChoice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadState"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/review-tasks": {
       "post": {
         "tags": [
@@ -21772,6 +22026,14 @@
         ],
         "title": "CaseSummary"
       },
+      "Certainty": {
+        "type": "string",
+        "enum": [
+          "sure",
+          "likely"
+        ],
+        "title": "Certainty"
+      },
       "ChainHead": {
         "properties": {
           "seq": {
@@ -22062,8 +22324,15 @@
             "title": "Uploadid"
           },
           "job_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Job Id"
           },
           "etag": {
@@ -22321,6 +22590,45 @@
           "geojson",
           "json"
         ]
+      },
+      "DroppedFile": {
+        "properties": {
+          "path": {
+            "$ref": "#/components/schemas/DroppedPath"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "head": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 65536
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "DroppedFile"
+      },
+      "DroppedPath": {
+        "type": "string",
+        "maxLength": 1024,
+        "minLength": 1
       },
       "EditDraft": {
         "properties": {
@@ -22789,6 +23097,15 @@
           "code"
         ],
         "title": "FieldError"
+      },
+      "FileKind": {
+        "type": "string",
+        "enum": [
+          "slide",
+          "result",
+          "other"
+        ],
+        "title": "FileKind"
       },
       "FileName": {
         "type": "string",
@@ -23346,6 +23663,7 @@
         "type": "string",
         "enum": [
           "uploading",
+          "waiting",
           "processing",
           "ready",
           "failed"
@@ -25070,6 +25388,15 @@
         ],
         "title": "OrganisationDraft"
       },
+      "Outcome": {
+        "type": "string",
+        "enum": [
+          "paired",
+          "tie",
+          "unmatched"
+        ],
+        "title": "Outcome"
+      },
       "Pair": {
         "properties": {
           "slide_id": {
@@ -25089,6 +25416,120 @@
           "user_id"
         ],
         "title": "Pair"
+      },
+      "PairBy": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "name",
+          "embedded"
+        ],
+        "title": "PairBy"
+      },
+      "PairedSlide": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "slide_id"
+        ],
+        "title": "PairedSlide"
+      },
+      "PairingRequest": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "by": {
+            "$ref": "#/components/schemas/PairBy",
+            "default": "auto"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/DroppedFile"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "files"
+        ],
+        "title": "PairingRequest"
+      },
+      "Pairings": {
+        "properties": {
+          "slides": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ResultPairing"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "others": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Others"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slides",
+          "results",
+          "others"
+        ],
+        "title": "Pairings"
       },
       "PatientCase": {
         "properties": {
@@ -26309,6 +26750,73 @@
         ],
         "title": "RestrictedImage"
       },
+      "ResultFormat": {
+        "type": "string",
+        "enum": [
+          "geojson",
+          "parfocal-json",
+          "csv"
+        ],
+        "title": "ResultFormat"
+      },
+      "ResultPairing": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "slide": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PairedSlide"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "certainty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Certainty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/PairedSlide"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "outcome",
+          "slide",
+          "rule",
+          "certainty",
+          "candidates"
+        ],
+        "title": "ResultPairing"
+      },
       "ResultSet": {
         "properties": {
           "id": {
@@ -27455,6 +27963,17 @@
         "maximum": 500.0,
         "minimum": 1.0
       },
+      "Rule": {
+        "type": "string",
+        "enum": [
+          "next-to-slide",
+          "folder-named-like-slide",
+          "file-name",
+          "embedded-id",
+          "picked"
+        ],
+        "title": "Rule"
+      },
       "RunParameters": {
         "properties": {
           "detector": {
@@ -28227,6 +28746,36 @@
           "current"
         ],
         "title": "SigningKey"
+      },
+      "SlideChoice": {
+        "properties": {
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          },
+          "slide_upload_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Upload Id"
+          }
+        },
+        "type": "object",
+        "title": "SlideChoice"
       },
       "SlideColumn": {
         "type": "string",
@@ -29941,6 +30490,14 @@
         ],
         "title": "UploadDraft"
       },
+      "UploadKind": {
+        "type": "string",
+        "enum": [
+          "slide",
+          "result"
+        ],
+        "title": "UploadKind"
+      },
       "UploadMetadata": {
         "properties": {
           "project_id": {
@@ -29976,6 +30533,64 @@
               }
             ],
             "title": "Last Modified"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/UploadKind",
+            "default": "slide"
+          },
+          "result_format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultFormat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          },
+          "slide_upload_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Upload Id"
+          },
+          "pairing_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pairing_certainty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Certainty"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -30008,6 +30623,9 @@
               }
             ],
             "title": "Case Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/UploadKind"
           },
           "status": {
             "$ref": "#/components/schemas/IngestStatus"
@@ -30078,6 +30696,60 @@
             },
             "type": "array",
             "title": "Notices"
+          },
+          "result_format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultFormat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slide_upload_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Upload Id"
+          },
+          "pairing_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pairing_certainty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Certainty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result_set_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Set Id"
           }
         },
         "type": "object",
@@ -30085,6 +30757,7 @@
           "upload_id",
           "project_id",
           "case_id",
+          "kind",
           "status",
           "upload_status",
           "job_id",
@@ -30092,7 +30765,12 @@
           "slide_id",
           "reason",
           "message",
-          "notices"
+          "notices",
+          "result_format",
+          "slide_upload_id",
+          "pairing_rule",
+          "pairing_certainty",
+          "result_set_id"
         ],
         "title": "UploadState"
       },

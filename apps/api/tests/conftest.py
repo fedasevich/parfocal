@@ -4,6 +4,7 @@ import pytest
 from db_support import ApiAs, api_as, migrated_database
 from idp_support import Browser, signed_in_browser
 from storage_support import TEST_STORAGE, ensure_bucket
+from upload_support import Lab, make_lab
 
 from parfocal_common.object_store import StorageLocation
 
@@ -30,3 +31,8 @@ def api(database: str) -> Iterator[ApiAs]:
 def browser(database: str) -> Iterator[Browser]:
     with signed_in_browser(database) as signed_in:
         yield signed_in
+
+
+@pytest.fixture
+def lab(database: str) -> Lab:
+    return make_lab(database)
