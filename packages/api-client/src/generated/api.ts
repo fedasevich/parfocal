@@ -1266,6 +1266,12 @@ export interface OpinionForm {
   created_at: string;
 }
 
+export interface OrderedObject {
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+}
+
 export interface Organisation {
   id: string;
   slug: string;
@@ -1609,6 +1615,14 @@ export interface ReviewEdit {
   geometry: ReviewEditGeometry;
   deleted: boolean;
   updated_at: string;
+}
+
+export interface ReviewOrder {
+  task_id: string;
+  slide_id: string;
+  total: number;
+  offset: number;
+  objects: OrderedObject[];
 }
 
 export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
@@ -2041,6 +2055,18 @@ export type GetResultsTemplate200 = { [key: string]: unknown };
 
 export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
+};
+
+export type GetReviewOrderParams = {
+  /**
+   * @minimum 0
+   */
+  offset?: number;
+  /**
+   * @minimum 1
+   * @maximum 1000
+   */
+  limit?: number;
 };
 
 export type ExportReviewedLayerParams = {
@@ -11828,6 +11854,228 @@ export function useGetReviewedLayer<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetReviewedLayerQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getReviewOrderResponse200 = {
+  data: ReviewOrder;
+  status: 200;
+};
+
+export type getReviewOrderResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getReviewOrderResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getReviewOrderResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getReviewOrderResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getReviewOrderResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getReviewOrderResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getReviewOrderResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getReviewOrderResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getReviewOrderResponseSuccess = getReviewOrderResponse200 & {
+  headers: Headers;
+};
+export type getReviewOrderResponseError = (
+  | getReviewOrderResponse400
+  | getReviewOrderResponse401
+  | getReviewOrderResponse403
+  | getReviewOrderResponse404
+  | getReviewOrderResponse409
+  | getReviewOrderResponse422
+  | getReviewOrderResponse429
+  | getReviewOrderResponse500
+) & {
+  headers: Headers;
+};
+
+export type getReviewOrderResponse = getReviewOrderResponseSuccess | getReviewOrderResponseError;
+
+export const getGetReviewOrderUrl = (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/order?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/order`;
+};
+
+/**
+ * @summary Get Review Order
+ */
+export const getReviewOrder = async (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getReviewOrderResponse> => {
+  return apiFetch<getReviewOrderResponse>(getGetReviewOrderUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetReviewOrderQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/order`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetReviewOrderQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReviewOrder>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReviewOrderQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewOrder>>> = ({ signal }) =>
+    getReviewOrder(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetReviewOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getReviewOrder>>>;
+export type GetReviewOrderQueryError = Problem;
+
+export function useGetReviewOrder<
+  TData = Awaited<ReturnType<typeof getReviewOrder>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params: undefined | GetReviewOrderParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewOrder>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewOrder<
+  TData = Awaited<ReturnType<typeof getReviewOrder>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewOrder>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewOrder<
+  TData = Awaited<ReturnType<typeof getReviewOrder>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Review Order
+ */
+
+export function useGetReviewOrder<
+  TData = Awaited<ReturnType<typeof getReviewOrder>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: GetReviewOrderParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReviewOrder>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReviewOrderQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

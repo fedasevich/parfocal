@@ -1356,6 +1356,31 @@ review_assignments = Table(
     ),
 )
 
+review_order = Table(
+    "review_order",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("seed", BigInteger, nullable=False, info=OPERATIONAL),
+    Column("count", Integer, nullable=False, info=OPERATIONAL),
+    Column("objects", LargeBinary, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("count >= 0", name="count"),
+    CheckConstraint("octet_length(objects) = 5 * count", name="packed"),
+)
+
 
 review_edits = Table(
     "review_edits",

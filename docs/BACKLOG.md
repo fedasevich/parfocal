@@ -2500,6 +2500,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Temperature scaling per typer and test-time augmentation setting, fitted on a separate split, stored in the registry, never vector scaling.
   Done when MLEVAL reports ECE under 0.05 for the active typer.
   Refs docs 28, 29.
+  The least sure first order applies the temperature before it rates objects, when a task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide).
 
 - [ ] AINUC-007 · Confidence bands
   Confident, likely, unsure, doubtful thresholds per typer from calibration data.
@@ -3352,6 +3353,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   The thesis assignment promises a review that starts with the outputs the model is least sure of ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Each reviewer's objects in a task come in ascending order of the model's certainty: the calibrated probability of the AI class where the result set has one, else its score. Ties break by object ID. Objects without a score come after the scored ones in the task's fixed random order (TASK-003), so imported outputs without scores are still reviewed in an order every reviewer shares. Regions are few and all of them are checked, so the order matters most for cells. The order is computed once per task and stored, so a later recalibration does not reshuffle a running review.
   Done when unit tests cover the order on a fixture with known scores, ties, a set without scores and a mixed set, and API tests show two reviewers getting the same order and a recalibration leaving a running task unchanged.
   Depends on TASK-003, GUIDE-001. Refs doc 33 (showing type confidence to a doctor), doc 28 (calibrated type confidence).
+  The order covers the regions and cells in the task's scope and is stored as one packed array per task slide in `review_order` when the task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). Cells are read from their chunk files through the result store. A cell's certainty is its chunk's probability for its AI class, and a chunk without probabilities gives unscored cells rather than falling back to the detection score, because the chunk format cannot mark a score as missing.
+
+- [ ] GUIDE-013 · Review order as a background job
+  Storing the least sure first order reads every chunk file of a cell scope inside the request that creates or rescopes a task ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). For real slides this moves onto the Postgres job engine ([ADR 0044](adr/0044-background-jobs-and-workflows.md), background jobs and workflows): the task is created at once, a job computes each slide's order, and the order route answers that the order is not ready until it is.
+  Done when API tests create a cell scope task, see the order reported as not ready, run the job and read the same order the inline path gives, and a test shows a failed job retried without a duplicate order.
+  Depends on GUIDE-012, INGEST-003.
 
 
 ---

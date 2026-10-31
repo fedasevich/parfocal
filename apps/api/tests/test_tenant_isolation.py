@@ -44,6 +44,7 @@ from parfocal_api.tables import (
     retention_policies,
     review_assignments,
     review_edits,
+    review_order,
     review_task_slides,
     review_tasks,
     service_accounts,
@@ -93,6 +94,7 @@ CASE_TABLES = {
     "disagreement_decisions",
     "verdicts",
     "review_edits",
+    "review_order",
     "review_tasks",
     "review_task_slides",
     "review_assignments",
@@ -450,6 +452,17 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.markers.add(str(case.loose_slide_id))
     await connection.execute(
+        insert(review_order).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            seed=1,
+            count=1,
+            objects=b"T\x01\x00\x00\x00",
+        )
+    )
+    await connection.execute(
         insert(review_edits).values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
@@ -622,6 +635,10 @@ GET_ROUTES = {
     "listVerdicts": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
+    ),
+    "getReviewOrder": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/order",
     ),
     "getReviewTaskStates": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/states"

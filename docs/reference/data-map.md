@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 23 |
 | `personal` | 39 |
 | `secret` | 9 |
-| `operational` | 373 |
+| `operational` | 381 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -521,6 +521,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `deleted` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## review_order
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `seed` | operational |
+| `count` | operational |
+| `objects` | operational |
+| `created_at` | operational |
 
 ## review_task_slides
 

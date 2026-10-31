@@ -16,6 +16,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
+from parfocal_api.review_order import Results, store_order, stored_seeds
 from parfocal_api.tables import (
     ProjectRole,
     ResultStatus,
@@ -31,6 +32,8 @@ from parfocal_api.tables import (
     review_tasks,
     slides,
 )
+from parfocal_common.scope import Scope as SamplingScope
+from parfocal_common.scope import ScopeKind
 
 MAX_SLIDES = 500
 MAX_REVIEWERS = 50
@@ -191,6 +194,21 @@ def code_of(number: int) -> str:
 
 def stored_score(score: float) -> int:
     return round(score * SCORE_STEPS)
+
+
+def sampling_scope(row: Any) -> SamplingScope:
+    return SamplingScope(
+        ScopeKind(row.scope), count=row.scope_count, seed=row.scope_seed, score=row.scope_score
+    )
+
+
+async def task_sets(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uuid.UUID, uuid.UUID]:
+    rows = await connection.execute(
+        select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id).where(
+            review_task_slides.c.task_id == task_id
+        )
+    )
+    return {row[0]: row[1] for row in rows}
 
 
 def scope_of(row: Any) -> Scope:
@@ -446,6 +464,7 @@ async def create_review_task(
     draft: TaskDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> ReviewTaskDetail:
     project = await owned(connection, principal, project_id)
     if project.archived_at is not None:
@@ -460,6 +479,7 @@ async def create_review_task(
         review_tasks.c.project_id == project_id
     )
     scope = draft.scope
+    seed = secrets.randbits(62)
     task_id = await connection.scalar(
         insert(review_tasks)
         .values(
@@ -470,7 +490,7 @@ async def create_review_task(
             split=draft.split,
             scope=scope.kind,
             scope_count=scope.count,
-            scope_seed=secrets.randbits(62) if scope.kind is TaskScope.RANDOM_CELLS else None,
+            scope_seed=seed if scope.kind is TaskScope.RANDOM_CELLS else None,
             scope_score=None if scope.score is None else stored_score(scope.score),
             opinion_form_version=version,
             blinded=draft.blinded,
@@ -505,6 +525,16 @@ async def create_review_task(
             {"tenant_id": project.tenant_id, "task_id": task_id, "slide_id": slide, "user_id": user}
             for slide, user in pairs
         ],
+    )
+    await store_order(
+        connection,
+        results,
+        project.tenant_id,
+        project_id,
+        task_id,
+        sampling_scope(await task_row(connection, task_id)),
+        {slide_id: picked[slide_id] for slide_id in slide_ids},
+        dict.fromkeys(slide_ids, seed),
     )
     await audit(
         connection,
@@ -572,6 +602,7 @@ async def change_review_task(
     change: TaskChange,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> ReviewTaskDetail:
     row = await task_row(connection, task_id)
     project = await owned(connection, principal, row.project_id)
@@ -601,6 +632,21 @@ async def change_review_task(
     await connection.execute(
         update(review_tasks).where(review_tasks.c.id == task_id).values(**values)
     )
+    if change.scope is not None:
+        changed = await task_row(connection, task_id)
+        sets = await task_sets(connection, task_id)
+        known = await stored_seeds(connection, task_id, list(sets))
+        fallback = changed.scope_seed or secrets.randbits(62)
+        await store_order(
+            connection,
+            results,
+            row.tenant_id,
+            row.project_id,
+            task_id,
+            sampling_scope(changed),
+            sets,
+            {slide_id: known.get(slide_id, fallback) for slide_id in sets},
+        )
     await audit(
         connection,
         principal,

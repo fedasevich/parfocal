@@ -1,0 +1,76 @@
+{
+  "slide_key": "slide-a1",
+  "seed": 4242,
+  "sets": {
+    "known-scores": {
+      "objects": [
+        { "id": "T1", "class": 0, "score": null, "probabilities": [200, 55] },
+        { "id": "T2", "class": 1, "score": null, "probabilities": [30, 225] },
+        { "id": "T3", "class": 0, "score": 90, "probabilities": null },
+        { "id": "C1", "class": 0, "score": 250, "probabilities": [12, 243] },
+        { "id": "C2", "class": 1, "score": 10, "probabilities": [100, 155] }
+      ],
+      "certainty": { "T1": 200, "T2": 225, "T3": 90, "C1": 12, "C2": 155 },
+      "scored": ["C1", "T3", "C2", "T1", "T2"],
+      "unscored": []
+    },
+    "ties": {
+      "objects": [
+        { "id": "C4", "class": null, "score": 128, "probabilities": null },
+        { "id": "T2", "class": 0, "score": null, "probabilities": [128, 127] },
+        { "id": "C2", "class": null, "score": 128, "probabilities": null },
+        { "id": "T1", "class": null, "score": 128, "probabilities": null },
+        { "id": "C9", "class": null, "score": 40, "probabilities": null }
+      ],
+      "certainty": { "C4": 128, "T2": 128, "C2": 128, "T1": 128, "C9": 40 },
+      "scored": ["C9", "C2", "C4", "T1", "T2"],
+      "unscored": []
+    },
+    "no-scores": {
+      "objects": [
+        { "id": "T1", "class": 0, "score": null, "probabilities": null },
+        { "id": "T2", "class": null, "score": null, "probabilities": null },
+        { "id": "C1", "class": null, "score": null, "probabilities": null },
+        { "id": "C2", "class": null, "score": null, "probabilities": null },
+        { "id": "C3", "class": null, "score": null, "probabilities": null },
+        { "id": "C4", "class": null, "score": null, "probabilities": null },
+        { "id": "C5", "class": null, "score": null, "probabilities": null },
+        { "id": "C6", "class": null, "score": null, "probabilities": null }
+      ],
+      "certainty": {
+        "T1": null,
+        "T2": null,
+        "C1": null,
+        "C2": null,
+        "C3": null,
+        "C4": null,
+        "C5": null,
+        "C6": null
+      },
+      "scored": [],
+      "unscored": ["T1", "T2", "C1", "C2", "C3", "C4", "C5", "C6"]
+    },
+    "mixed": {
+      "objects": [
+        { "id": "C1", "class": null, "score": 50, "probabilities": null },
+        { "id": "C2", "class": null, "score": null, "probabilities": null },
+        { "id": "C3", "class": null, "score": 20, "probabilities": null },
+        { "id": "C4", "class": null, "score": null, "probabilities": null },
+        { "id": "T1", "class": null, "score": null, "probabilities": [90, 165] },
+        { "id": "C5", "class": 2, "score": 70, "probabilities": [10, 20] },
+        { "id": "C6", "class": 0, "score": null, "probabilities": [] }
+      ],
+      "certainty": {
+        "C1": 50,
+        "C2": null,
+        "C3": 20,
+        "C4": null,
+        "T1": null,
+        "C5": 70,
+        "C6": null
+      },
+      "scored": ["C3", "C1", "C5"],
+      "unscored": ["C2", "C4", "C6", "T1"]
+    }
+  }
+}

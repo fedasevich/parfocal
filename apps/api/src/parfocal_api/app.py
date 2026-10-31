@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import httpx2
 from fastapi import FastAPI
@@ -31,6 +32,7 @@ from parfocal_api import (
     result_formats,
     result_sets,
     retention,
+    review_order,
     review_states,
     review_tasks,
     reviewed_export,
@@ -52,6 +54,7 @@ from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
+from parfocal_common.result_store import LocalResultStore, ResultStore
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
 
@@ -94,6 +97,7 @@ class ParfocalApi(FastAPI):
         )
         self.settings = settings
         self.clients = clients
+        self.results: ResultStore = LocalResultStore(Path(settings.result_store_dir))
         self.keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
         self.state.engine = create_engine(str(settings.database_url))
         self.state.auth = auth.AuthState(
@@ -143,6 +147,7 @@ def create_app(
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(reviewed_layer.router)
+    app.include_router(review_order.router)
     app.include_router(reviewed_export.router)
     app.include_router(announcements.router)
     app.include_router(home.router)
