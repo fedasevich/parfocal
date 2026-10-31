@@ -44,6 +44,7 @@ No UI work until the owner says so. The cloud is open again since 2026-10-31, an
 |---|---|
 | [BACKLOG.md](BACKLOG.md) | Every task with checkboxes, the Definition of Done and the decisions baseline |
 | [log.md](log.md) | Dated log of what was done |
+| [decisions.md](decisions.md) | Open questions for the owner, each with options, the recommended one and a blank line for the owner's choice |
 | [board/](board/README.md) | The live task board over the backlog, with one claim file per task being worked on (`pnpm board`) |
 | [project/overview.md](project/overview.md) | The product, users, scope, design sources and the POC's role |
 | [project/roadmap.md](project/roadmap.md) | Milestones M0 to M6 and their status |

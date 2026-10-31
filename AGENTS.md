@@ -61,6 +61,7 @@ Consolidate when a milestone closes, when the user asks, or when the log has gai
 | `docs/README.md` | Index of all docs, "Where we are now", "Next up", "In progress" |
 | `docs/BACKLOG.md` | Every task from empty repo to pilot, with checkboxes, the Definition of Done and the decisions baseline |
 | `docs/log.md` | Dated, append-only log of what was done |
+| `docs/decisions.md` | Open questions for the owner, with options and a blank choice line each |
 | `docs/board/` | The task board: one claim file per task being worked on, read by `scripts/board.py` |
 | `docs/project/overview.md` | The product, users, scope, design sources and the POC's role |
 | `docs/project/roadmap.md` | Milestones M0 to M6 and their status |
@@ -85,11 +86,11 @@ Write an ADR whenever a choice between alternatives affects other code, other pe
 
 ## The owner's decisions file
 
-Every open question for the owner goes into one file, `tmp/decisions.md`, which git ignores. Create it when the first open question appears, keep it current as tasks land, and never leave a question only in chat. This covers `Proposed` ADRs, product questions an agent could not settle, and every production or billing action that needs the owner's yes.
+Every open question for the owner goes into one file, [docs/decisions.md](docs/decisions.md). It is committed like the rest of `docs/`, so an agent in its own worktree adds its questions in the same change as its task and nothing is lost when the worktree is removed. Create it when the first open question appears, keep it current as tasks land, and never leave a question only in chat. When two branches both add items, keep both on merge and renumber so every heading stays unique. This covers `Proposed` ADRs, product questions an agent could not settle, and every production or billing action that needs the owner's yes.
 
 - Start with a line where the owner can write "all recommended" to take every recommendation, then a table of what landed and the state of each task.
 - Give each decision a heading with a number and a letter, such as `1a`, and a short plain title that names the ADR or task with words. Under it put one or two sentences of context, then lettered options A, B, C and Other, with the recommended one in bold and the reason in a few words, then a blank `Your choice:` line. Add a second blank line when the owner must write something, such as wording or a number. Mark an item that has no sensible default as needing the owner's answer.
-- When the owner has filled in choices, apply each one in the repository (accept or revise the ADR, edit the backlog, run the approved action), log it, then delete the answered items from the file. Delete the file once nothing is open. Keep only unanswered items, so the file never grows stale.
+- When the owner has filled in choices, apply each one in the repository (accept or revise the ADR, edit the backlog, run the approved action), log it, then delete the answered items from the file. When nothing is open, leave the file with only its heading and a line saying so. Keep only unanswered items, so the file never grows stale.
 
 ## Results
 
