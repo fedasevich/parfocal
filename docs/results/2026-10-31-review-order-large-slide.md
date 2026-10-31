@@ -21,7 +21,7 @@ How long does computing and packing a task slide's order take on a slide of 1.6 
 The timed part covers gunzip, decode, scope, certainty, ordering and packing. It leaves out reading files from disk, the database and the HTTP request. Run three times with:
 
 ```sh
-REVIEW_ORDER_CELLS=1600000 uv run pytest packages/py-common/tests/test_review_order_cells.py -q -s -k large
+REVIEW_ORDER_CELLS=1600000 uv run pytest packages/py-common/tests/test_review_order_cells.py -q -s -k large -p no:cacheprovider
 ```
 
 CI runs the same test at the default 200,000 cells, with a bound of 0.1 ms per cell for each path.
@@ -41,7 +41,7 @@ An earlier run on the uncommitted working tree, with the same code, gave 0.340 s
 ## Interpretation
 
 - The stored order is five bytes per object, so a random sample of 200 stays at 1 kB however big the slide is, and 162,500 cells below a score take 0.8 MB in one `bytea`.
-- Random 200 spends its time decoding every chunk and pooling 1.6 million numbers, which is why it takes almost half a second even though it keeps only 200 cells.
+- Random 200 presumably spends its time decoding every chunk and pooling 1.6 million numbers, which is why it takes almost half a second even though it keeps only 200 cells.
 - Cells below a score build one `Candidate` per cell, chunk by chunk, and take 1.3 to 2.7 seconds here. The first run was the slowest of the three, which is assumed to be a cold start and was not investigated.
 - Assumption: reading the files from disk or object storage and the PostGIS containment of the inside scopes add to this, and a Modal container is slower than an M4 laptop. A task over many large slides would multiply the time by the slide count, which is the case for GUIDE-013 (review order as a background job).
 

@@ -617,6 +617,11 @@ async def change_review_task(
             values[field] = value
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
+    rescoped = change.scope is not None and (
+        change.scope.kind,
+        change.scope.count,
+        None if change.scope.score is None else stored_score(change.scope.score),
+    ) != (TaskScope(row.scope), row.scope_count, row.scope_score)
     if change.scope is not None:
         scope = change.scope
         values |= {
@@ -632,7 +637,7 @@ async def change_review_task(
     await connection.execute(
         update(review_tasks).where(review_tasks.c.id == task_id).values(**values)
     )
-    if change.scope is not None:
+    if rescoped:
         changed = await task_row(connection, task_id)
         sets = await task_sets(connection, task_id)
         known = await stored_seeds(connection, task_id, list(sets))

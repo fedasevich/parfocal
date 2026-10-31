@@ -295,6 +295,11 @@ def test_a_recalibration_leaves_a_running_task_unchanged(
     o.store.put(chunk_key(o.sets[0], 0), chunk_bytes(TYPED, recalibrated))
     assert shared(api, o, o.task) == regions
     assert shared(api, o, task) == mixed
+    same = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{task}", json={"name": "Renamed", "scope": {"kind": "inside-rois"}}
+    )
+    assert same.status_code == 200, same.text
+    assert shared(api, o, task) == mixed
     assert shared(api, o, made(api, o))[:4] == ["T1", "T3", "T5", "T2"]
     later = shared(api, o, made(api, o, {"kind": "inside-rois"}))
     assert later[:4] == ["C2", "T3", "T5", "C1"]
