@@ -12,6 +12,7 @@ from sqlalchemy import (
     Table,
     delete,
     exists,
+    func,
     or_,
     select,
     update,
@@ -25,6 +26,7 @@ from parfocal_api.cases import keyring_of
 from parfocal_api.context import (
     CurrentPrincipal,
     PlatformConnection,
+    Store,
     TenantConnection,
     UserConnection,
     engine_of,
@@ -33,6 +35,7 @@ from parfocal_api.identifiers import load_keys, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
+from parfocal_api.restricted_images import delete_restricted_images, shown
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     ProjectRole,
@@ -52,6 +55,7 @@ from parfocal_api.tables import (
 from parfocal_api.users import own_workspaces, signed_in
 from parfocal_common.data_classes import SECRET
 from parfocal_common.db import DatabaseScope, metadata, scoped_transaction
+from parfocal_common.ingest import RestrictedImage
 
 FORMER_NAME = "Former member"
 FORMER_INITIALS = "FM"
@@ -98,6 +102,7 @@ class PatientSlide(BaseModel):
     stain: str | None
     result_sets: list[str]
     review_tasks: list[str]
+    restricted_images: list[RestrictedImage]
 
 
 class PatientData(BaseModel):
@@ -114,6 +119,7 @@ class PatientData(BaseModel):
 class ErasedPatient(BaseModel):
     patient_id: uuid.UUID
     cases_unlinked: int
+    restricted_images_deleted: int
 
 
 class ErasedPerson(BaseModel):
@@ -317,7 +323,13 @@ async def export_patient_data(
     case_ids = [case.id for case in own_cases]
     found: list[PatientSlide] = []
     for slide in await connection.execute(
-        select(slides.c.id, slides.c.case_id, slides.c.label, slides.c.stain)
+        select(
+            slides.c.id,
+            slides.c.case_id,
+            slides.c.label,
+            slides.c.stain,
+            slides.c.restricted_images,
+        )
         .where(slides.c.case_id.in_(case_ids))
         .order_by(slides.c.created_at, slides.c.id)
     ):
@@ -340,6 +352,7 @@ async def export_patient_data(
                 stain=slide.stain,
                 result_sets=list(names),
                 review_tasks=[task_code(number) for number in numbers],
+                restricted_images=shown(slide.restricted_images, visible=True),
             )
         )
     await record(
@@ -375,6 +388,7 @@ async def erase_patient(
     patient_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    store: Store,
 ) -> ErasedPatient:
     row = await owned_patient(connection, principal, project_id, patient_id)
     held = await connection.scalar(
@@ -387,6 +401,20 @@ async def erase_patient(
     )
     if held:
         raise HeldError
+    labelled = (
+        await connection.execute(
+            update(slides)
+            .where(
+                slides.c.case_id.in_(select(cases.c.id).where(cases.c.patient_id == patient_id)),
+                func.cardinality(slides.c.restricted_images) > 0,
+            )
+            .values(restricted_images=[])
+            .returning(slides.c.id)
+        )
+    ).scalars()
+    deleted = 0
+    for slide_id in labelled.all():
+        deleted += await delete_restricted_images(store, row.tenant_id, slide_id)
     unlinked = await connection.execute(
         update(cases).where(cases.c.patient_id == patient_id).values(patient_id=None)
     )
@@ -398,9 +426,13 @@ async def erase_patient(
         AuditTarget.PATIENT,
         patient_id,
         tenant_id=row.tenant_id,
-        details={"cases_unlinked": unlinked.rowcount},
+        details={"cases_unlinked": unlinked.rowcount, "restricted_images_deleted": deleted},
     )
-    return ErasedPatient(patient_id=patient_id, cases_unlinked=unlinked.rowcount)
+    return ErasedPatient(
+        patient_id=patient_id,
+        cases_unlinked=unlinked.rowcount,
+        restricted_images_deleted=deleted,
+    )
 
 
 @platform_router.post(

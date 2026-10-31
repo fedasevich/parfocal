@@ -10978,6 +10978,143 @@
         "x-permission": "see-slides"
       }
     },
+    "/api/slides/{slide_id}/restricted-images/{image}": {
+      "get": {
+        "tags": [
+          "slides"
+        ],
+        "summary": "Get Restricted Image",
+        "operationId": "getRestrictedImage",
+        "parameters": [
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "image",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RestrictedImage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The image, never cached",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-labels"
+      }
+    },
     "/api/me/notifications": {
       "get": {
         "tags": [
@@ -22333,12 +22470,17 @@
           "cases_unlinked": {
             "type": "integer",
             "title": "Cases Unlinked"
+          },
+          "restricted_images_deleted": {
+            "type": "integer",
+            "title": "Restricted Images Deleted"
           }
         },
         "type": "object",
         "required": [
           "patient_id",
-          "cases_unlinked"
+          "cases_unlinked",
+          "restricted_images_deleted"
         ],
         "title": "ErasedPatient"
       },
@@ -25150,6 +25292,13 @@
             },
             "type": "array",
             "title": "Review Tasks"
+          },
+          "restricted_images": {
+            "items": {
+              "$ref": "#/components/schemas/RestrictedImage"
+            },
+            "type": "array",
+            "title": "Restricted Images"
           }
         },
         "type": "object",
@@ -25159,7 +25308,8 @@
           "label",
           "stain",
           "result_sets",
-          "review_tasks"
+          "review_tasks",
+          "restricted_images"
         ],
         "title": "PatientSlide"
       },
@@ -26150,6 +26300,14 @@
           "class_id"
         ],
         "title": "Resolved"
+      },
+      "RestrictedImage": {
+        "type": "string",
+        "enum": [
+          "label",
+          "macro"
+        ],
+        "title": "RestrictedImage"
       },
       "ResultSet": {
         "properties": {
@@ -28126,6 +28284,13 @@
               }
             ],
             "title": "Level"
+          },
+          "restricted_images": {
+            "items": {
+              "$ref": "#/components/schemas/RestrictedImage"
+            },
+            "type": "array",
+            "title": "Restricted Images"
           }
         },
         "type": "object",
@@ -28135,7 +28300,8 @@
           "block_id",
           "barcode",
           "stain",
-          "level"
+          "level",
+          "restricted_images"
         ],
         "title": "SlideDetail"
       },

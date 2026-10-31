@@ -19,6 +19,7 @@ To take every recommendation at once, write "all recommended" here:
 | INGEST-001 (upload API with presigned multipart) | Upload routes for ADR 0116, tested against MinIO | Built, the tick waits for decision 6a, decisions 5a to 5d |
 | INGEST-017 (publish step and slide status) | Ingest wired to storage, slide status from uploading to ready through a polled status route | Ticked, decisions 9a to 9d |
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
+| SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Built, waits for a green CI run on `main`, decisions 10a (accept ADR 0124), 10b (reviewers and labels), 10c (a switch per project), 10d (labels in a de-identified project at ingest) and 10e (the label pages inside the original file) |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
@@ -199,7 +200,7 @@ Your choice:
 
 ## 7. Older items
 
-### 7a. Records accepted under standing approval on 2026-10-17 and 2026-10-18, starting with ADR 0053 (AI results review direction), as listed in item 8 of "Next up" in `docs/README.md`
+### 7a. Records accepted under standing approval on 2026-10-17 and 2026-10-18, starting with ADR 0053 (AI results review direction), as listed in item 10 of "Next up" in `docs/README.md`
 
 - A. I'll read them when I have time. **Recommended**
 - B. Send me a one-page summary of them first
@@ -294,6 +295,54 @@ The upload metadata cannot say that a file is an AI result for a slide, so a Geo
 
 - A. Leave it to RSET-004 (pairing results with slides), whose backlog entry now says to add the marker and the import. **Recommended**, because the pairing rules belong there
 - B. Add a `result_for` field to the upload metadata now, naming the slide, and import the file in the same job
+- C. Other
+
+Your choice:
+
+## 10. Label and macro images, ADR 0124 (labels and macros only for whole-project readers in clinical projects)
+
+A slide's label and macro can show a name or a barcode. `GET /api/slides/{slide}/restricted-images/label` (and `/macro`) now serves them only in clinical projects, to project owners and viewers and to a researcher with open emergency access, and records every read in the audit log. In a de-identified project nobody sees them. They are deleted when the retention purge removes the slide and when a patient is erased. The macro needs the same care as the label, because the NDPI, Leica, Ventana and Argos test slides show the label area in their macro.
+
+### 10a. Accept ADR 0124
+
+- A. Accept as written. **Recommended**, because these are the people who already see the patient's name in the case view
+- B. Project owners only
+- C. Other
+
+Your choice:
+
+### 10b. Reviewers and labels in a clinical project
+
+- A. A project reviewer never sees the label or macro, even on their own task slides. **Recommended**, because judging AI output does not need the patient's identity and it keeps names with fewer people
+- B. A reviewer sees them on the slides of their tasks
+- C. Other
+
+Your choice:
+
+### 10c. A switch per clinical project that hides labels from everyone
+
+- A. No switch now. Add it to PROJ-008 (project settings) if a lab asks. **Recommended**, because a lab that wants no labels can use a de-identified project
+- B. Add the switch now, off by default
+- C. Other
+
+Your choice:
+
+### 10d. Labels in a de-identified project at ingest
+
+Today ingest stores them in every project and the route never serves them in a de-identified one.
+
+- A. SEC-008 (de-identified projects) stops extracting them in a de-identified project, so they are never stored, and a later switch to clinical shows none. **Recommended**, because a de-identified project must never hold a direct identifier
+- B. Keep storing them and never serving them, so a switch to clinical shows them
+- C. Other
+
+Your choice:
+
+### 10e. The original slide file still holds the label and macro pages
+
+TILES-001 (signed access to slide bytes) will let the viewer read byte ranges of the original. On SVS, NDPI, SCN, BIF and similar files the label and macro are pages of that file, so a reviewer with a tile token could read the label from it.
+
+- A. Ingest records the byte ranges of the label and macro pages, and the edge refuses any range that overlaps them. **Recommended**, because the stored original stays the same bytes as the upload and its SHA-256
+- B. Ingest writes a second copy of the original without those pages and serves only that copy, which doubles the storage of every slide
 - C. Other
 
 Your choice:

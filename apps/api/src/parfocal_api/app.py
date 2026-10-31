@@ -32,6 +32,7 @@ from parfocal_api import (
     personal_data,
     project_jobs,
     projects,
+    restricted_images,
     result_formats,
     result_sets,
     retention,
@@ -167,6 +168,7 @@ def create_app(
     app.include_router(personal_data.project_router)
     app.include_router(personal_data.platform_router)
     app.include_router(neighbours.router)
+    app.include_router(restricted_images.router)
     app.include_router(inbox.router)
     app.include_router(notification_targets.router)
     app.include_router(notifications.schedule_router)

@@ -707,11 +707,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   A de-identified project never holds a direct identifier. Upload strips names and record numbers from file metadata and hides label and macro images. Copying slides from a clinical project into a de-identified one replaces case IDs with stable pseudonyms and removes label images.
   Done when tests prove no direct identifier, label image or macro image with a barcode reaches a de-identified project, through upload, link import, webhook and copy.
   Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
+  The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and decision 10d (labels in a de-identified project at ingest) in [decisions.md](decisions.md) asks whether this task stops that.
 
 - [ ] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
-  INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images`, and no route serves them yet ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)).
+  INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images` ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)). Guests no longer exist and research access means a de-identified project. `getRestrictedImage` serves them only in clinical projects to project owners and viewers and to emergency access, audits every read, and they are deleted with the slide by the retention purge and on patient erasure ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), proposed).
 
 - [ ] SEC-010 · PHI-safe telemetry
   Analytics, logs, traces and error reports carry no PHI. URLs use ids, never names.
@@ -971,6 +972,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] TILES-001 · Signed access to slide bytes
   Short-lived capability tokens minted by the API, scoped to tenant and slide, verified by the edge Worker without a database call ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and refreshed before expiry without interrupting the viewer.
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
+  The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, and decision 10e, how the original keeps its label pages out of reach, in [decisions.md](decisions.md)).
 
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.

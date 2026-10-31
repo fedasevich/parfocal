@@ -8,9 +8,9 @@ import httpx2
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
-from sqlalchemy import func, insert, select, text
+from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
-from storage_support import TEST_PART_BYTES, TEST_STORAGE
+from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
@@ -54,6 +54,7 @@ from parfocal_api.tables import (
     service_accounts,
     session_policies,
     slide_counters,
+    slides,
     study_template_versions,
     study_templates,
     tenants,
@@ -62,6 +63,7 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.ingest import RestrictedImage
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 
@@ -376,6 +378,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["slide"] = case.loose_slide_id
+    await connection.execute(
+        update(slides)
+        .where(slides.c.id == case.loose_slide_id)
+        .values(restricted_images=[RestrictedImage.LABEL.value])
+    )
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await put_restricted_images(
+            ObjectStore(TEST_STORAGE, http),
+            seeded.tenant_id,
+            case.loose_slide_id,
+            {RestrictedImage.LABEL: stand_in_images(str(seeded.tenant_id))[RestrictedImage.LABEL]},
+        )
     set_name = f"Model {uuid.uuid4().hex[:8]}"
     set_id = await connection.scalar(
         insert(result_sets)
@@ -760,6 +774,9 @@ GET_ROUTES = {
         lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}",
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
+    "getRestrictedImage": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
+    ),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"

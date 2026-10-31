@@ -5,16 +5,27 @@ from typing import Any
 
 import pytest
 from db_support import APP_URL, ApiAs, with_database
+from storage_support import (
+    TEST_STORAGE,
+    put_restricted_images,
+    stand_in_images,
+    stored_keys,
+    with_store,
+)
 from test_audit import trail
 from workspace_support import Workspace, make_project, make_workspace, owner
 
 from parfocal_api.audit import AuditEvent, chain_breaks, event_hash
-from parfocal_api.retention import RETENTION, schedule_retention
+from parfocal_api.retention import retention_workflow, schedule_retention
 from parfocal_api.tables import Role
 from parfocal_common.db import async_database_url, create_engine
+from parfocal_common.ingest import RestrictedImage, restricted_prefix, slide_prefix
 from parfocal_common.jobs import work
+from parfocal_common.object_store import ObjectStore
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
+
+RETENTION = retention_workflow(lambda: TEST_STORAGE)
 
 SQUARE = "SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))"
 
@@ -76,6 +87,22 @@ def result_set(
         f"'{deleted_days} days' WHERE id = '{found}'",
     )
     return found
+
+
+def give_files(w: Workspace, slide_id: uuid.UUID) -> None:
+    async def put(store: ObjectStore) -> None:
+        await store.put_object(
+            f"{slide_prefix(w.tenant_id, slide_id)}original.svs", b"slide", "image/tiff"
+        )
+        await put_restricted_images(store, w.tenant_id, slide_id, stand_in_images(str(slide_id)))
+
+    with_store(put)
+
+
+def files_of(w: Workspace, slide_id: uuid.UUID) -> list[str]:
+    return stored_keys(slide_prefix(w.tenant_id, slide_id)) + stored_keys(
+        restricted_prefix(w.tenant_id, slide_id)
+    )
 
 
 def exists(database: str, table: str, row: uuid.UUID) -> bool:
@@ -180,6 +207,8 @@ def test_the_scheduled_job_purges_expired_records_and_keeps_held_and_used_ones(
     )
     gone_slide = slide(database, w, project, 40)
     held_slide = slide(database, w, held_project, 40)
+    for stored in (gone_slide, held_slide):
+        give_files(w, stored)
     held_annotation = annotation(database, w, held_project, held_slide, 40)
     hold = api(w.people["admin"]).post(
         "/api/tenant/legal-holds", json={"project_id": str(held_project), "reason": "Court order"}
@@ -197,6 +226,8 @@ def test_the_scheduled_job_purges_expired_records_and_keeps_held_and_used_ones(
         database, f"SELECT count(*) FROM result_objects WHERE result_set_id = '{old_set}'"
     ) == [(0,)]
     assert not exists(database, "slides", gone_slide)
+    assert files_of(w, gone_slide) == []
+    assert len(files_of(w, held_slide)) == 1 + len(RestrictedImage)
     for kept, table in (
         (recent_annotation, "annotations"),
         (pinned_set, "result_sets"),
@@ -214,6 +245,12 @@ def test_the_scheduled_job_purges_expired_records_and_keeps_held_and_used_ones(
         ("result-set", str(old_set)),
         ("slide", str(gone_slide)),
     }
+    [slide_event] = [
+        event
+        for event in trail(api, w.people["admin"], action="retention.purged")
+        if event.target_type == "slide"
+    ]
+    assert slide_event.details == '{"files":3}'
     assert run_retention(database, w) == 0
 
 

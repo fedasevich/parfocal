@@ -14,7 +14,13 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
     throw networkError();
   }
   if (!response.ok) throw await toApiError(response);
-  const data: unknown = response.status === 204 ? undefined : await response.json();
+  const data: unknown = await bodyOf(response);
   const result: ApiResponse<unknown> = { data, status: response.status, headers: response.headers };
   return result as T;
+}
+
+function bodyOf(response: Response): Promise<unknown> {
+  if (response.status === 204) return Promise.resolve(undefined);
+  if (response.headers.get("content-type")?.startsWith("image/")) return response.blob();
+  return response.json();
 }

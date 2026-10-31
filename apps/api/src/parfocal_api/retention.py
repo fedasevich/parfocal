@@ -1,10 +1,12 @@
 import asyncio
 import uuid
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
+from functools import cache
 from typing import Annotated, Any
 
+import httpx2
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import exists, func, insert, select, text, update
@@ -17,6 +19,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import NotFoundError
+from parfocal_api.restricted_images import delete_slide_files
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import (
     MIN_AUDIT_DAYS,
@@ -29,14 +32,15 @@ from parfocal_api.tables import (
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.jobs import PLATFORM, Step, StepRun, Workflow, enqueue, work
-from parfocal_common.settings import load_settings
+from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.settings import StorageSettings, load_settings
 
 SYSTEM = Actor(ActorKind.SYSTEM)
+KIND = "retention"
 DAILY = timedelta(hours=20)
 TARGETS = {
     "annotation": AuditTarget.ANNOTATION,
     "result-set": AuditTarget.RESULT_SET,
-    "slide": AuditTarget.SLIDE,
 }
 
 HoldReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
@@ -204,14 +208,28 @@ async def release_legal_hold(
     return hold_of(released)
 
 
-async def purge(connection: AsyncConnection, tenant_id: uuid.UUID) -> dict[str, int]:
+async def purge(
+    connection: AsyncConnection, store: ObjectStore, tenant_id: uuid.UUID
+) -> dict[str, int]:
     rows = (
         await connection.execute(text("SELECT kind, id, detail FROM parfocal_retention_purge()"))
     ).all()
     counts: Counter[str] = Counter()
     for row in rows:
         counts[row.kind] += 1
-        if row.kind in TARGETS:
+        if row.kind == "slide":
+            files = await delete_slide_files(store, tenant_id, row.id)
+            counts["files"] += files
+            await record(
+                connection,
+                SYSTEM,
+                AuditAction.RETENTION_PURGED,
+                AuditTarget.SLIDE,
+                row.id,
+                tenant_id=tenant_id,
+                details={"files": files},
+            )
+        elif row.kind in TARGETS:
             await record(
                 connection,
                 SYSTEM,
@@ -234,12 +252,22 @@ async def purge(connection: AsyncConnection, tenant_id: uuid.UUID) -> dict[str, 
     return dict(counts)
 
 
-async def purge_step(step: StepRun) -> Mapping[str, Any]:
-    async with step.transaction() as connection:
-        return await purge(connection, step.tenant_id)
+def retention_workflow(storage: Callable[[], StorageLocation]) -> Workflow:
+    async def purge_step(step: StepRun) -> Mapping[str, Any]:
+        async with httpx2.AsyncClient(timeout=30) as http:
+            store = ObjectStore(storage(), http)
+            async with step.transaction() as connection:
+                return await purge(connection, store, step.tenant_id)
+
+    return Workflow(kind=KIND, steps=[Step("purge", purge_step)], lease_seconds=300)
 
 
-RETENTION = Workflow(kind="retention", steps=[Step("purge", purge_step)], lease_seconds=300)
+@cache
+def storage_from_environment() -> StorageLocation:
+    return load_settings(StorageSettings).storage()
+
+
+RETENTION = retention_workflow(storage_from_environment)
 
 
 async def schedule_retention(engine: AsyncEngine) -> list[uuid.UUID]:
@@ -268,7 +296,8 @@ async def run_once(settings: ApiSettings) -> int:
     engine = create_engine(str(settings.database_url))
     try:
         await schedule_retention(engine)
-        return await work(engine, [RETENTION], "retention", idle_exit_seconds=1, poll_seconds=0.5)
+        workflow = retention_workflow(settings.storage)
+        return await work(engine, [workflow], "retention", idle_exit_seconds=1, poll_seconds=0.5)
     finally:
         await engine.dispose()
 

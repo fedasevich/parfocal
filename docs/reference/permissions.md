@@ -31,6 +31,7 @@ Inside a project the narrower of the workspace grant and the project grant appli
 | Action | Key | owner | reviewer | viewer |
 |---|---|---|---|---|
 | See projects, cases and slides | `see-slides` | Yes | In their tasks | Yes |
+| See slide label and macro images, only in clinical projects | `see-labels` | Yes |  | Yes |
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
@@ -44,6 +45,7 @@ An empty cell means no. A researcher with admin rights gets the researcher's col
 | Action | Key | Researcher | Reviewer | Added by admin rights |
 |---|---|---|---|---|
 | See projects, cases and slides | `see-slides` | Yes | In their tasks |  |
+| See slide label and macro images, only in clinical projects | `see-labels` | Yes | View only |  |
 | Open a clinical project they are not in | `emergency-access` | Emergency, with reason |  |  |
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |

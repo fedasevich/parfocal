@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from db_support import ApiAs
 from fastapi.testclient import TestClient
+from storage_support import put_restricted_images, stand_in_images, with_store
 from workspace_support import (
     join_project,
     make_project,
@@ -18,8 +19,9 @@ from workspace_support import (
 from parfocal_api.permissions import Grant, Permission, grant_for, in_project
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import ProjectRole, Role
+from parfocal_common.ingest import RestrictedImage
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,10 @@ def make_setup(
         "/api/cases", json={"project_id": str(project), "label": f"S-{uuid.uuid4().hex[:6]}"}
     )
     assert case.status_code == 201, case.text
+    slide = make_slide(database, workspace.tenant_id, project, f"Slide {uuid.uuid4().hex[:6]}")
+    label = {RestrictedImage.LABEL: stand_in_images(str(slide))[RestrictedImage.LABEL]}
+    with_store(lambda store: put_restricted_images(store, workspace.tenant_id, slide, label))
+    owner(database, f"UPDATE slides SET restricted_images = '{{label}}' WHERE id = '{slide}'")
     return Setup(
         workspace.tenant_id,
         people["lead"],
@@ -57,7 +63,7 @@ def make_setup(
         people["colleague"],
         project,
         case.json()["id"],
-        make_slide(database, workspace.tenant_id, project, f"Slide {uuid.uuid4().hex[:6]}"),
+        slide,
     )
 
 
@@ -89,6 +95,17 @@ def reads(setup: Setup, role: ProjectRole | None) -> int:
     if lists(setup, role) == 200:
         return 200
     return 404 if role is not None else hidden(setup)
+
+
+def sees_labels(setup: Setup, role: ProjectRole | None) -> int:
+    status = reads(setup, role)
+    if status != 200:
+        return status
+    return (
+        200
+        if effective(setup, role, Permission.SEE_LABELS) in {Grant.ALL, Grant.VIEW_ONLY}
+        else 403
+    )
 
 
 def member_reads(setup: Setup, role: ProjectRole | None) -> int:
@@ -168,6 +185,9 @@ OPERATIONS: dict[str, Operation] = {
         owner_creates,
     ),
     "getCase": Operation(lambda c, s: c.get(f"/api/cases/{s.case}"), reads),
+    "getRestrictedImage": Operation(
+        lambda c, s: c.get(f"/api/slides/{s.slide}/restricted-images/label"), sees_labels
+    ),
     "getOpinionForm": Operation(
         lambda c, s: c.get(f"/api/projects/{s.project}/opinion-form"), member_reads
     ),

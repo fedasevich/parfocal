@@ -165,7 +165,11 @@ def test_a_project_owner_exports_and_erases_a_patient_and_the_case_stays(
     api(s.people["admin"]).post(f"/api/tenant/legal-holds/{hold.json()['id']}/release")
     erased = api(s.people["owner"]).delete(base)
     assert erased.status_code == 200, erased.text
-    assert erased.json() == {"patient_id": str(patient), "cases_unlinked": 1}
+    assert erased.json() == {
+        "patient_id": str(patient),
+        "cases_unlinked": 1,
+        "restricted_images_deleted": 0,
+    }
     assert owner(database, f"SELECT count(*) FROM patients WHERE id = '{patient}'") == [(0,)]
     assert owner(database, f"SELECT patient_id FROM cases WHERE id = '{case}'") == [(None,)]
     gone = api(s.people["owner"]).get(f"{base}/personal-data")

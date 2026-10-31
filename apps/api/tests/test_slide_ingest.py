@@ -199,7 +199,14 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     )
     case_view = api(lab.colleague).get(f"/api/cases/{case}")
     assert case_view.status_code == 200, case_view.text
-    assert str(slide_id) in case_view.text
+    [listed] = case_view.json()["slides"]
+    assert (listed["id"], listed["restricted_images"]) == (str(slide_id), ["label", "macro"])
+    label = api(lab.colleague).get(f"/api/slides/{slide_id}/restricted-images/label")
+    assert (label.status_code, label.headers["content-type"]) == (200, "image/png")
+    assert label.content.startswith(b"\x89PNG\r\n\x1a\n")
+    macro = api(lab.colleague).get(f"/api/slides/{slide_id}/restricted-images/macro")
+    assert (macro.status_code, macro.headers["content-type"]) == (200, "image/jpeg")
+    assert macro.content.startswith(b"\xff\xd8")
 
     public = slide_prefix(lab.tenant_id, slide_id)
     assert keys_under(public) == {*PUBLIC_FILES, "original.svs"}

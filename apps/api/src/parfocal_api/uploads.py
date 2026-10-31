@@ -12,7 +12,7 @@ from sqlalchemy import ColumnElement, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
-from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -22,7 +22,7 @@ from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
 from parfocal_common.ingest import NOTICES, Failure, enqueue_ingest, failure_message
 from parfocal_common.jobs import JobStatus, StepStatus
-from parfocal_common.object_store import NoSuchUploadError, ObjectStore, StorageError, StoredPart
+from parfocal_common.object_store import NoSuchUploadError, StorageError, StoredPart
 from parfocal_common.part_plan import MAX_PARTS, part_size_for, parts_problem, plan_parts
 
 SAFE_CHARACTERS = re.compile(r"[^A-Za-z0-9._-]")
@@ -169,12 +169,7 @@ def settings_of(request: Request) -> ApiSettings:
     return cast("ApiSettings", request.app.settings)
 
 
-def store_of(request: Request) -> ObjectStore:
-    return cast("ObjectStore", request.app.state.storage)
-
-
 type Settings = Annotated[ApiSettings, Depends(settings_of)]
-type Store = Annotated[ObjectStore, Depends(store_of)]
 
 router = APIRouter(prefix="/api/uploads", tags=["uploads"])
 

@@ -1,10 +1,12 @@
 import asyncio
 import os
-from collections.abc import Awaitable, Callable
+import uuid
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, datetime
 
 import httpx2
 
+from parfocal_common.ingest import RESTRICTED_FILES, RestrictedImage, restricted_key
 from parfocal_common.object_store import ObjectStore, StorageLocation, presign
 
 MIB = 1024 * 1024
@@ -41,3 +43,25 @@ def read_object(key: str) -> bytes:
     response = httpx2.get(url)
     response.raise_for_status()
     return response.content
+
+
+def stand_in_images(marker: str) -> dict[RestrictedImage, bytes]:
+    return {
+        RestrictedImage.LABEL: b"\x89PNG\r\n\x1a\n" + f"label of {marker}".encode(),
+        RestrictedImage.MACRO: b"\xff\xd8\xff" + f"macro of {marker}".encode(),
+    }
+
+
+async def put_restricted_images(
+    store: ObjectStore,
+    tenant_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    images: Mapping[RestrictedImage, bytes],
+) -> None:
+    for image, body in images.items():
+        key = restricted_key(tenant_id, slide_id, image)
+        await store.put_object(key, body, RESTRICTED_FILES[image][1])
+
+
+def stored_keys(prefix: str) -> list[str]:
+    return with_store(lambda store: store.list_keys(prefix))

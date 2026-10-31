@@ -22,6 +22,8 @@ from parfocal_api.tables import (
     review_tasks,
 )
 
+EMERGENCY_READS = frozenset({Permission.SEE_SLIDES, Permission.SEE_LABELS})
+
 READERS = tuple(
     role
     for role, grant in PROJECT_MATRIX[Permission.SEE_SLIDES].items()
@@ -86,7 +88,7 @@ async def project_grant(
     grant = in_project(workspace, permission, await role_in(connection, principal, project_id))
     if (
         grant is Grant.NONE
-        and permission is Permission.SEE_SLIDES
+        and permission in EMERGENCY_READS
         and may_ask_for_emergency_access(principal)
         and await emergency_open(connection, principal, project_id)
     ):

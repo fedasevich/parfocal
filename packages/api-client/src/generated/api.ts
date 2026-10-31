@@ -524,6 +524,13 @@ export interface SpecimenDetail {
   blocks: BlockDetail[];
 }
 
+export type RestrictedImage = (typeof RestrictedImage)[keyof typeof RestrictedImage];
+
+export const RestrictedImage = {
+  label: "label",
+  macro: "macro",
+} as const;
+
 export interface SlideDetail {
   id: string;
   label: string;
@@ -531,6 +538,7 @@ export interface SlideDetail {
   barcode: string | null;
   stain: string;
   level: number | null;
+  restricted_images: RestrictedImage[];
 }
 
 export interface CaseDetail {
@@ -947,6 +955,7 @@ export interface EndedSessions {
 export interface ErasedPatient {
   patient_id: string;
   cases_unlinked: number;
+  restricted_images_deleted: number;
 }
 
 export interface ErasedPerson {
@@ -1848,6 +1857,7 @@ export interface PatientSlide {
   stain: string | null;
   result_sets: string[];
   review_tasks: string[];
+  restricted_images: RestrictedImage[];
 }
 
 export interface PatientData {
@@ -18004,6 +18014,213 @@ export function useGetSlideNeighbours<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSlideNeighboursQueryOptions(slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getRestrictedImageResponse200ImagePng = {
+  data: Blob;
+  status: 200;
+};
+
+export type getRestrictedImageResponse200ImageJpeg = {
+  data: Blob;
+  status: 200;
+};
+
+export type getRestrictedImageResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRestrictedImageResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRestrictedImageResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRestrictedImageResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRestrictedImageResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRestrictedImageResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRestrictedImageResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRestrictedImageResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRestrictedImageResponseSuccess = (
+  | getRestrictedImageResponse200ImagePng
+  | getRestrictedImageResponse200ImageJpeg
+) & {
+  headers: Headers;
+};
+export type getRestrictedImageResponseError = (
+  | getRestrictedImageResponse400
+  | getRestrictedImageResponse401
+  | getRestrictedImageResponse403
+  | getRestrictedImageResponse404
+  | getRestrictedImageResponse409
+  | getRestrictedImageResponse422
+  | getRestrictedImageResponse429
+  | getRestrictedImageResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRestrictedImageResponse =
+  | getRestrictedImageResponseSuccess
+  | getRestrictedImageResponseError;
+
+export const getGetRestrictedImageUrl = (slideId: string, image: RestrictedImage) => {
+  return `/api/slides/${slideId}/restricted-images/${image}`;
+};
+
+/**
+ * @summary Get Restricted Image
+ */
+export const getRestrictedImage = async (
+  slideId: string,
+  image: RestrictedImage,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRestrictedImageResponse> => {
+  return apiFetch<getRestrictedImageResponse>(getGetRestrictedImageUrl(slideId, image), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRestrictedImageQueryKey = (slideId: string, image: RestrictedImage) => {
+  return [`/api/slides/${slideId}/restricted-images/${image}`] as const;
+};
+
+export const getGetRestrictedImageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestrictedImage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  image: RestrictedImage,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRestrictedImageQueryKey(slideId, image);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRestrictedImage>>> = ({ signal }) =>
+    getRestrictedImage(slideId, image, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined && image !== null && image !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRestrictedImageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestrictedImage>>
+>;
+export type GetRestrictedImageQueryError = Problem;
+
+export function useGetRestrictedImage<
+  TData = Awaited<ReturnType<typeof getRestrictedImage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  image: RestrictedImage,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRestrictedImage>>,
+          TError,
+          Awaited<ReturnType<typeof getRestrictedImage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRestrictedImage<
+  TData = Awaited<ReturnType<typeof getRestrictedImage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  image: RestrictedImage,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRestrictedImage>>,
+          TError,
+          Awaited<ReturnType<typeof getRestrictedImage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRestrictedImage<
+  TData = Awaited<ReturnType<typeof getRestrictedImage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  image: RestrictedImage,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Restricted Image
+ */
+
+export function useGetRestrictedImage<
+  TData = Awaited<ReturnType<typeof getRestrictedImage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  image: RestrictedImage,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRestrictedImage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRestrictedImageQueryOptions(slideId, image, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

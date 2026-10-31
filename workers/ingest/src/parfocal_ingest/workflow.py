@@ -23,9 +23,10 @@ from parfocal_common.ingest import (
     LEASE_SECONDS,
     STEP_NAMES,
     Failure,
+    RestrictedImage,
     original_key,
     original_suffix,
-    restricted_prefix,
+    restricted_key,
     slide_prefix,
 )
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
@@ -51,7 +52,6 @@ READER_ERRORS = (
 UNIT_PREVIEWS = 0
 UNIT_TISSUE = 1
 UNIT_RESTRICTED = 2
-RESTRICTED_NAMES = {"label": "label.png", "macro": "macro.jpg"}
 
 
 @dataclass(frozen=True)
@@ -245,8 +245,8 @@ async def derive(context: Context) -> Mapping[str, Any]:
     step = context.step
     results = await earlier_results(step)
     slide_id = slide_id_of(results)
-    public = slide_prefix(context.upload.tenant_id, slide_id)
-    restricted = restricted_prefix(context.upload.tenant_id, slide_id)
+    tenant_id = context.upload.tenant_id
+    public = slide_prefix(tenant_id, slide_id)
     done = await step.done_units()
     path, identified, found = await opened(context)
     assert identified.format is not None
@@ -267,14 +267,14 @@ async def derive(context: Context) -> Mapping[str, Any]:
             await step.mark_unit(connection, UNIT_TISSUE)
     if UNIT_RESTRICTED not in done:
         for image in await asyncio.to_thread(associated_images, path, found):
-            name = RESTRICTED_NAMES[image.kind.value]
-            await context.store.put_object(f"{restricted}{name}", image.data, image.media_type)
+            key = restricted_key(tenant_id, slide_id, RestrictedImage(image.kind.value))
+            await context.store.put_object(key, image.data, image.media_type)
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_RESTRICTED)
     present = [
-        kind
-        for kind, name in RESTRICTED_NAMES.items()
-        if await context.store.head_object(f"{restricted}{name}") is not None
+        image.value
+        for image in RestrictedImage
+        if await context.store.head_object(restricted_key(tenant_id, slide_id, image)) is not None
     ]
     return {"units": 3, "restricted": present}
 

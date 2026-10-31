@@ -11,7 +11,7 @@ from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
-from storage_support import TEST_PART_BYTES, TEST_STORAGE
+from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.openapi import openapi_schema
@@ -46,12 +46,14 @@ from parfocal_api.tables import (
     review_tasks,
     service_accounts,
     slide_counters,
+    slides,
     tenants,
     uploads,
     users,
     verdicts,
 )
 from parfocal_common.db import async_database_url, metadata
+from parfocal_common.ingest import RestrictedImage
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
@@ -318,6 +320,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/projects/{w.project}/members/{w.colleague}"
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
+    "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "requestEmergencyAccess": lambda w: Call(
         "POST",
         f"/api/projects/{w.outside_project}/emergency-access",
@@ -989,8 +992,19 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             queued_run, paused_run, failed_run = await seed_runs(
                 connection, tenant_id, case.project_id, case.loose_slide_id
             )
+            await connection.execute(
+                update(slides)
+                .where(slides.c.id == case.loose_slide_id)
+                .values(restricted_images=[RestrictedImage.LABEL.value])
+            )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)
+                await put_restricted_images(
+                    store,
+                    tenant_id,
+                    case.loose_slide_id,
+                    {RestrictedImage.LABEL: stand_in_images(slug)[RestrictedImage.LABEL]},
+                )
                 uploads_made = [
                     await seed_upload(
                         connection,

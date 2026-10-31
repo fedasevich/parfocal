@@ -145,6 +145,25 @@ def restricted_prefix(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> str:
     return f"t/{tenant_id}/restricted/{slide_id}/"
 
 
+class RestrictedImage(StrEnum):
+    LABEL = "label"
+    MACRO = "macro"
+
+
+RESTRICTED_FILES: Mapping[RestrictedImage, tuple[str, str]] = {
+    RestrictedImage.LABEL: ("label.png", "image/png"),
+    RestrictedImage.MACRO: ("macro.jpg", "image/jpeg"),
+}
+
+
+def restricted_key(tenant_id: uuid.UUID, slide_id: uuid.UUID, image: RestrictedImage) -> str:
+    return f"{restricted_prefix(tenant_id, slide_id)}{RESTRICTED_FILES[image][0]}"
+
+
+def slide_prefixes(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> tuple[str, str]:
+    return slide_prefix(tenant_id, slide_id), restricted_prefix(tenant_id, slide_id)
+
+
 def original_key(tenant_id: uuid.UUID, slide_id: uuid.UUID, name: str) -> str:
     return f"{slide_prefix(tenant_id, slide_id)}original{original_suffix(name)}"
 

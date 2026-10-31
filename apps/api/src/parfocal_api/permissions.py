@@ -65,6 +65,7 @@ GRANT_NAMES = {
 
 class Permission(StrEnum):
     SEE_SLIDES = "see-slides"
+    SEE_LABELS = "see-labels"
     EMERGENCY_ACCESS = "emergency-access"
     CREATE_CASES = "create-cases"
     UPLOAD_SLIDES = "upload-slides"
@@ -83,6 +84,7 @@ class Permission(StrEnum):
 
 PERMISSION_NAMES = {
     Permission.SEE_SLIDES: "See projects, cases and slides",
+    Permission.SEE_LABELS: "See slide label and macro images, only in clinical projects",
     Permission.EMERGENCY_ACCESS: "Open a clinical project they are not in",
     Permission.CREATE_CASES: "Create projects and cases, edit their details",
     Permission.UPLOAD_SLIDES: "Upload slides and AI results, fix unmatched files",
@@ -103,6 +105,7 @@ COLUMNS = (Role.RESEARCHER, Role.REVIEWER)
 
 ROWS = {
     Permission.SEE_SLIDES: "yo",
+    Permission.SEE_LABELS: "yr",
     Permission.EMERGENCY_ACCESS: "bn",
     Permission.CREATE_CASES: "yn",
     Permission.UPLOAD_SLIDES: "yn",
@@ -133,6 +136,7 @@ PROJECT_COLUMNS = (ProjectRole.OWNER, ProjectRole.REVIEWER, ProjectRole.VIEWER)
 
 PROJECT_ROWS = {
     Permission.SEE_SLIDES: "yoy",
+    Permission.SEE_LABELS: "yny",
     Permission.CREATE_CASES: "ynn",
     Permission.UPLOAD_SLIDES: "ynn",
     Permission.MOVE_SLIDES: "ynn",

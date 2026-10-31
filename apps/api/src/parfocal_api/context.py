@@ -17,7 +17,12 @@ from parfocal_api.principals import (
 from parfocal_api.problems import ForbiddenError, TenantSuspendedError
 from parfocal_api.tables import TenantStatus, tenants
 from parfocal_common.db import scoped_transaction
+from parfocal_common.object_store import ObjectStore
 from parfocal_common.structured_logging import bind
+
+
+def store_of(request: Request) -> ObjectStore:
+    return cast("ObjectStore", request.app.state.storage)
 
 
 def engine_of(request: Request) -> AsyncEngine:
@@ -66,3 +71,4 @@ TenantConnection = Annotated[AsyncConnection, Depends(tenant_connection, scope="
 PlatformConnection = Annotated[AsyncConnection, Depends(platform_connection, scope="function")]
 UserConnection = Annotated[AsyncConnection, Depends(user_connection, scope="function")]
 CurrentPrincipal = Annotated[Principal, Depends(authenticate)]
+Store = Annotated[ObjectStore, Depends(store_of)]

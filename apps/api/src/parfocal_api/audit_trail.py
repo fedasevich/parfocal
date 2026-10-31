@@ -25,7 +25,7 @@ from parfocal_api.audit import (
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
-from parfocal_api.tables import audit_events, audit_people, cases, patients, users
+from parfocal_api.tables import audit_events, audit_people, cases, patients, slides, users
 from parfocal_common.db import CURRENT_TENANT
 from parfocal_common.envelope import MasterKeyring
 
@@ -198,6 +198,13 @@ async def filtered(connection: AsyncConnection, filters: AuditFilters) -> Select
                 and_(
                     audit_events.c.target_type == AuditTarget.CASE,
                     audit_events.c.target_id.in_(their_cases),
+                ),
+                and_(
+                    audit_events.c.target_type == AuditTarget.SLIDE,
+                    audit_events.c.action == AuditAction.SLIDE_RESTRICTED_IMAGE_VIEWED,
+                    audit_events.c.target_id.in_(
+                        select(slides.c.id).where(slides.c.case_id.in_(their_cases))
+                    ),
                 ),
                 and_(
                     audit_events.c.target_type == AuditTarget.PROJECT,

@@ -21,6 +21,7 @@ from parfocal_api.project_access import (
     reads_whole,
     require_reading,
 )
+from parfocal_api.restricted_images import sees_restricted, shown
 from parfocal_api.tables import (
     CaseSource,
     Laterality,
@@ -34,6 +35,7 @@ from parfocal_api.tables import (
     specimens,
 )
 from parfocal_common.envelope import MasterKeyring
+from parfocal_common.ingest import RestrictedImage
 
 
 class PatientDetail(BaseModel):
@@ -72,6 +74,7 @@ class SlideDetail(BaseModel):
     barcode: str | None
     stain: str
     level: int | None
+    restricted_images: list[RestrictedImage]
 
 
 class CaseDetail(BaseModel):
@@ -189,6 +192,9 @@ async def case_detail(
                 "Case not found",
             )
     slide_rows = (await connection.execute(in_case.order_by(slides.c.created_at))).all()
+    visible = await sees_restricted(
+        connection, principal, row.project_id, PrivacyMode(row.privacy_mode)
+    )
     patient = None
     if row.patient_id is not None:
         tenant_id = database_scope(principal).tenant_id
@@ -210,6 +216,7 @@ async def case_detail(
                 barcode=slide.barcode,
                 stain=slide.stain,
                 level=slide.level,
+                restricted_images=shown(slide.restricted_images, visible),
             )
             for slide in slide_rows
         ],
