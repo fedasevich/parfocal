@@ -377,7 +377,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR lists which suites run on every pull request, nightly and before release.
   Decided in [ADR 0011](adr/0011-hosted-ci-only.md), which supersedes ADR 0010: GitHub Actions on hosted runners only, no self-hosted runners and no GPU-heavy suites.
 
-- [ ] STACK-039 · Resumable upload protocol
+- [x] STACK-039 · Resumable upload protocol
   Candidates: tus (tusd or tus-py), S3 multipart with presigned parts (Uppy), Google resumable uploads. Default: S3-style multipart with presigned parts via Uppy on the client against R2's S3 API ([ADR 0003](adr/0003-pilot-platform-architecture.md)), with bucket CORS allowing the app origin. This avoids routing multi-gigabyte slides through the API.
   Done when a spike uploads a 4 GB NDPI over a throttled connection with a forced disconnect and resumes without restarting.
   Proposed in [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md), measured in [the upload spike](results/2026-10-31-resumable-upload-spike.md) against MinIO with a 4 GiB synthetic file and the 1.99 GB `OS-1.ndpi`, because no 4 GB NDPI fixture exists. The owner accepted the ADR on 2026-10-31.
@@ -3349,7 +3349,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per verdict.
   Depends on GUIDE-001, EVAL-001.
 
-- [ ] GUIDE-012 · Least sure first order
+- [x] GUIDE-012 · Least sure first order
   The thesis assignment promises a review that starts with the outputs the model is least sure of ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Each reviewer's objects in a task come in ascending order of the model's certainty: the calibrated probability of the AI class where the result set has one, else its score. Ties break by object ID. Objects without a score come after the scored ones in the task's fixed random order (TASK-003), so imported outputs without scores are still reviewed in an order every reviewer shares. Regions are few and all of them are checked, so the order matters most for cells. The order is computed once per task and stored, so a later recalibration does not reshuffle a running review.
   Done when unit tests cover the order on a fixture with known scores, ties, a set without scores and a mixed set, and API tests show two reviewers getting the same order and a recalibration leaving a running task unchanged.
   Depends on TASK-003, GUIDE-001. Refs doc 33 (showing type confidence to a doctor), doc 28 (calibrated type confidence).
