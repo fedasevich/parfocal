@@ -25,7 +25,7 @@ Checked on 2026-10-31. Follow the production rules in `AGENTS.md` before any wri
 | Modal | `uvx modal ...`, which reads the token in `~/.modal.toml`. No install needed | Works. `uvx modal app list` showed no apps and `uvx modal volume list` no volumes |
 | Vercel and Neon billing | The Vercel MCP server (`mcp__vercel__*`) | Works. Team `team_XVYHWaKthAXAuyUtbNBrD73r` |
 | Neon database | `npx neonctl ...` after the owner runs `npx neonctl auth` once, or the Neon MCP server after its OAuth sign-in | Not signed in yet |
-| Cloudflare | `npx wrangler ...` after the owner runs `npx wrangler login` once, or the Cloudflare MCP servers after their OAuth sign-in. `CLOUDFLARE_API_TOKEN` in `.env` is the narrow `parfocal-tofu` token for R2 and DNS only | Not signed in yet |
+| Cloudflare | `npx wrangler ...` after the owner runs `npx wrangler login` once, or the Cloudflare MCP servers after their OAuth sign-in. `CLOUDFLARE_API_TOKEN` in `.env` is the narrow `parfocal-tofu` token for R2 and DNS only. Wrangler 4 loads `.env` from the current folder and then refuses OAuth, so run both `wrangler login` and later wrangler commands from outside the repo, for example `cd ~ && npx wrangler login` | Not signed in yet |
 | Zitadel | OpenTofu in `infra/tofu` with the `parfocal-tofu` service user key | Works as before |
 | GitHub | `gh`. Reading billing needs the `user` scope, which the owner adds with `gh auth refresh -h github.com -s user` | Billing not readable from the CLI yet |
 | Billing pages | The owner's Chrome through Claude in Chrome, where the owner is signed in to Modal, Vercel, Cloudflare, Zitadel and GitHub | Works while the owner's sessions last |
