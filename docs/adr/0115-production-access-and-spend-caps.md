@@ -1,4 +1,4 @@
-# 0114. Agents may touch real infrastructure, read-only by default, with every production write approved by the owner and every billing service capped or alerted
+# 0115. Agents may touch real infrastructure, read-only by default, with every production write approved by the owner and every billing service capped or alerted
 
 - Date: 2026-10-31
 - Status: Accepted

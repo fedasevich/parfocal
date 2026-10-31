@@ -36,7 +36,7 @@ Setting `region=` on a Modal function needs the Team plan ($250 a month) and add
 
 ## The cloud is open again, at the lowest possible cost
 
-From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cloud side. On 2026-10-31 the owner opened Modal, Neon and the Zitadel credentials for CI again. This unblocks STACK-019 (the web framework, which needs Modal cold-start times), STACK-020 (database hosting, which needs the Neon region measurement) and IAM-001 (login provider setup from code). The owner pays for all of it and asked that it cost as little as possible and that agents be extra careful. The rules are in `AGENTS.md` under "Real infrastructure and production" and in [ADR 0114](../adr/0114-production-access-and-spend-caps.md).
+From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cloud side. On 2026-10-31 the owner opened Modal, Neon and the Zitadel credentials for CI again. This unblocks STACK-019 (the web framework, which needs Modal cold-start times), STACK-020 (database hosting, which needs the Neon region measurement) and IAM-001 (login provider setup from code). The owner pays for all of it and asked that it cost as little as possible and that agents be extra careful. The rules are in `AGENTS.md` under "Real infrastructure and production" and in [ADR 0115](../adr/0115-production-access-and-spend-caps.md).
 
 ## Spend caps and alerts on every service
 

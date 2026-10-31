@@ -109,7 +109,7 @@ Never invent data. Do not make up benchmark numbers, model scores, user quotes, 
 
 ## Real infrastructure and production
 
-Be extra careful here. The owner pays for every service personally, and production will hold real data. A wrong command can lose data, leak it or run up a bill, and none of that can be undone by a revert. The policy is [ADR 0114](docs/adr/0114-production-access-and-spend-caps.md), and the services, their caps and how to reach them are in [knowledge/platform.md](docs/knowledge/platform.md) and [knowledge/agent-tooling.md](docs/knowledge/agent-tooling.md).
+Be extra careful here. The owner pays for every service personally, and production will hold real data. A wrong command can lose data, leak it or run up a bill, and none of that can be undone by a revert. The policy is [ADR 0115](docs/adr/0115-production-access-and-spend-caps.md), and the services, their caps and how to reach them are in [knowledge/platform.md](docs/knowledge/platform.md) and [knowledge/agent-tooling.md](docs/knowledge/agent-tooling.md).
 
 - Production means Modal environment `main`, the Neon main branch, the R2 buckets `parfocal-prod` and `parfocal-tfstate`, DNS and settings of the `parfocal.eu` zone, the Zitadel instance with its `parfocal-api-prod` app and organisation settings, any `tofu apply`, GitHub repository settings, secrets and rulesets, and every billing, plan or limit setting anywhere.
 - Reading production is allowed: lists, logs, usage pages and `tofu plan`.

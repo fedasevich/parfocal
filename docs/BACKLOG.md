@@ -2937,7 +2937,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] OPS-009 · Storage lifecycle and cost controls
   Tiering for old slides, GPU scale to zero, budgets and alerts per environment.
   Done when cost dashboards exist and lifecycle rules are tested on staging.
-  Account-level caps and alerts were set on 2026-10-31 under [ADR 0114](adr/0114-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
+  Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
 
 - [ ] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
