@@ -2370,6 +2370,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Typed-array chunks per job tile in object storage (offsets, level-0 vertices, class, scores, type probabilities, alternative types, flags), with a summary index.
   Done when unit tests round-trip chunks and the schema is versioned.
   Depends on STACK-021.
+  Decided in [ADR 0126](adr/0126-cell-chunks-in-object-storage-with-a-summary-index.md) (cell chunks in object storage with a summary index): `parfocal_common.chunk_store` writes gzip chunks and a summary file whose header indexes every chunk under `t/{tenant}/s/{slide}/results/{set}/`, alternative types are the optional `alt_class` field of version 1, and the API reads chunks from object storage.
 
 - [ ] AIP-014 · AI cost and usage metering
   GPU seconds per tenant, job and model.
@@ -2495,7 +2496,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AINUC-004 · Summary points API
   Per nucleus centroid, size, class, score, type probabilities and flags, without outlines.
   Done when a test fetches the summary for 1.6M nuclei under 25 MB.
-  Refs doc 31.
+  Refs doc 31, [ADR 0126](adr/0126-cell-chunks-in-object-storage-with-a-summary-index.md) (cell chunks in object storage with a summary index), whose summary file already holds these fields, with the bounding-box `diagonal` as the size.
 
 - [ ] AINUC-005 · Chunk paging in the client
   Keep the summary, LRU of full chunks under a vertex budget, fetch the view plus margin nearest first, page automatically above 200k nuclei, keep deletions and promotions stable across eviction.
@@ -3201,7 +3202,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-002. Split from RSET-002 so the schema and validator have no screen work. Refs mock: formats.
 
 - [ ] RSET-011 · Cells from imported files
-  An imported GeoJSON, QuPath export, Parfocal JSON or CSV writes its cells into chunks with the chunk store of AIP-013, numbered per slide and inheriting the numbers of cells an older set shares (OBJ-002, IDs across result sets), with each cell's region from the regions it lies in. The API reads chunk files from object storage instead of the local `RESULT_STORE_DIR`, so review order and cell scopes see them. Sets imported before this task have no cells, and their kept source file can be imported again as a new set.
+  An imported GeoJSON, QuPath export, Parfocal JSON or CSV writes its cells into chunks with the chunk store of AIP-013, numbered per slide and inheriting the numbers of cells an older set shares (OBJ-002, IDs across result sets), with each cell's region from the regions it lies in. It writes them with `build_cells` and `write_cells` and adds the rows with `ChunkRow.of`, and it adds each class's cell count from the chunk entries to the set's class counts, which `finish` counts only for regions and zones today. The API already reads chunk files from object storage since AIP-013 (result chunk store), so review order and cell scopes see them. Sets imported before this task have no cells, and their kept source file can be imported again as a new set.
   Done when an imported QuPath 0.7 export shows its cells in a ready set, a second import of it inherits every cell number, and a review task with a cell scope reads its chunks from MinIO.
   Depends on RSET-004, AIP-013. Split from RSET-004 by [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job).
 

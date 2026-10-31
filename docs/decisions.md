@@ -21,6 +21,7 @@ To take every recommendation at once, write "all recommended" here:
 | AIP-008 (job model and API) | Model run jobs with scope, progress, cancel, resume and retry | Ticked, decisions 8a to 8d |
 | SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
 | RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
+| AIP-013 (result chunk store) | Versioned cell chunks and a summary index written gzip to object storage under the result set's prefix, and the API reads chunks from there | Built, waits for a green CI run on `main`, decisions 12a (accept ADR 0126), 12b (probabilities in the summary file) and 12c (what an alternative type is) |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
@@ -392,6 +393,38 @@ A PNG or TIFF mask needs its slide level and scale before it can be read, which 
 
 - A. Refuse a mask or heatmap as a result upload until RSET-005 (import checks and fixes), as built. **Recommended**, because the person learns it at once instead of after the upload
 - B. Accept it and keep it waiting until RSET-005 (import checks and fixes) can import it
+- C. Other
+
+Your choice:
+
+## 12. Cell chunks in object storage, ADR 0126 (cell chunks in object storage with a summary index)
+
+`parfocal_common.chunk_store` writes a result set's cells as gzip chunks per 2048 pixel tile and one summary file under `t/{tenant}/s/{slide}/results/{set}/`, and the API now reads chunks from object storage for review order and cell scopes. The summary header lists every chunk with its tile, counts and class counts, so no migration was needed. Version 1 of the chunk schema grows only by optional fields, and a reader refuses a version it does not know.
+
+### 12a. Accept ADR 0126
+
+- A. Accept as written. **Recommended**, because the viewer gets the chunk index with the first file it fetches and the database keeps only what its queries use
+- B. Also store the number range and class counts per chunk as columns of `result_chunks` in a migration, so SQL can pick chunks by class
+- C. Other
+
+Your choice:
+
+### 12b. Type probabilities in the summary file
+
+The summary file is the whole-slide overview that AINUC-004 (summary points API) serves. With five classes, probabilities add 5 bytes to each 21-byte row, and that task's budget is 25 MB for 1.6 million cells, which nobody has measured yet.
+
+- A. Write `probs` into the summary whenever the chunks have them, as built. **Recommended**, because AINUC-004 lists them and confidence colours on the overview need them without fetching every chunk
+- B. Keep them only in the chunks, so the overview is smaller and the viewer fetches chunks for confidence
+- C. Other
+
+Your choice:
+
+### 12c. What an alternative type is
+
+The backlog asks for alternative types in each chunk. The POC stored one per cell, the class a second typer gave (POC doc 29, a better typer and second opinions).
+
+- A. One `alt_class` per cell, the class a second model gave, with none when there is no second model, as built. **Recommended**, because it keeps the second opinion even when an import has no probabilities
+- B. No stored field, and take the second most likely class from the probabilities
 - C. Other
 
 Your choice:

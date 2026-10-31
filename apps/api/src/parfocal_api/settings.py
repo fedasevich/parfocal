@@ -32,7 +32,6 @@ class ApiSettings(StorageSettings):
     zitadel_client_secret: SecretStr
     rate_limit_person_per_minute: PositiveInt = 600
     rate_limit_tenant_per_minute: PositiveInt = 3000
-    result_store_dir: str = ".results"
     upload_max_bytes: Annotated[int, Field(ge=1, le=MAX_PARTS * MAX_PART_BYTES)] = (
         DEFAULT_UPLOAD_MAX_BYTES
     )

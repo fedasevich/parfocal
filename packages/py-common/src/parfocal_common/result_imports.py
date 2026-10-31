@@ -108,8 +108,12 @@ def source_suffix(name: str) -> str:
     return suffix if suffix in SOURCE_SUFFIXES else ""
 
 
+def result_set_prefix(tenant_id: uuid.UUID, slide_id: uuid.UUID, set_id: uuid.UUID) -> str:
+    return f"t/{tenant_id}/s/{slide_id}/results/{set_id}/"
+
+
 def source_key(tenant_id: uuid.UUID, slide_id: uuid.UUID, set_id: uuid.UUID, name: str) -> str:
-    return f"t/{tenant_id}/s/{slide_id}/results/{set_id}/source{source_suffix(name)}"
+    return f"{result_set_prefix(tenant_id, slide_id, set_id)}source{source_suffix(name)}"
 
 
 class RunsInTheIngestWorkerError(RuntimeError):

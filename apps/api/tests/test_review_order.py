@@ -1,20 +1,21 @@
 import uuid
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import pytest
-from chunk_support import Cell, chunk_bytes
+from chunk_support import CellRow, chunk_bytes, delete_chunk, put_chunk
 from db_support import ApiAs
 from test_annotations import make_slide
 from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
-from parfocal_common.result_store import LocalResultStore
+from parfocal_common.cell_chunks import encode
+from parfocal_common.chunk_store import chunk_key
+from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.scope import sample
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
 type Region = tuple[int, int | None, int | None, str | None]
 
@@ -27,14 +28,14 @@ SCORED: list[Region] = [
     (6, None, None, None),
 ]
 UNSCORED: list[Region] = [(number, None, None, None) for number in (1, 2, 3, 4)]
-TYPED: list[Cell] = [
+TYPED: list[CellRow] = [
     (1, 0, 200, 100, 100),
     (2, 1, 20, 300, 100),
     (3, 0, 10, 500, 500),
     (4, 255, 30, 700, 700),
 ]
 TYPED_PROBS = [30, 225, 100, 155, 240, 15, 128, 127]
-IMPORTED: list[Cell] = [(5, 0, 5, 2100, 100), (6, 1, 250, 2300, 100)]
+IMPORTED: list[CellRow] = [(5, 0, 5, 2100, 100), (6, 1, 250, 2300, 100)]
 CELL_CERTAINTY = {"C1": 30, "C2": 155, "C3": 240, "C4": None, "C5": None, "C6": None}
 ROI = "POLYGON((25 -5,400 -5,400 400,25 400,25 -5))"
 ZONE = "POLYGON((450 450,800 450,800 800,450 800,450 450))"
@@ -46,27 +47,26 @@ class Ordered:
     project: uuid.UUID
     slides: list[uuid.UUID]
     sets: list[uuid.UUID]
-    store: LocalResultStore
+    tenant: uuid.UUID
     task: uuid.UUID
+
+    def key(self, chunk: int) -> str:
+        return chunk_key(result_set_prefix(self.tenant, self.slides[0], self.sets[0]), chunk)
 
 
 def sql(value: object) -> str:
     return "NULL" if value is None else f"'{value}'" if isinstance(value, str) else str(value)
 
 
-def chunk_key(set_id: uuid.UUID, chunk: int) -> str:
-    return f"cells/{set_id}/chunk-{chunk:05}.pfc"
-
-
 def add_chunk(
-    database: str, tenant: uuid.UUID, set_id: uuid.UUID, chunk: int, cells: list[Cell]
+    database: str, tenant: uuid.UUID, key: str, set_id: uuid.UUID, chunk: int, cells: list[CellRow]
 ) -> None:
     owner(
         database,
         "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
         f"cell_count, vertex_count, object_key) VALUES ('{tenant}', '{set_id}', {chunk}, "
         f"{chunk * 2048}, 0, 2048, 2048, {len(cells)}, {4 * len(cells)}, "
-        f"'{chunk_key(set_id, chunk)}')",
+        f"'{key}')",
     )
 
 
@@ -76,7 +76,7 @@ def result_set(
     project: uuid.UUID,
     slide: uuid.UUID,
     regions: list[Region],
-    store: LocalResultStore | None = None,
+    cells: bool = False,
 ) -> uuid.UUID:
     set_id = uuid.UUID(
         str(
@@ -101,11 +101,11 @@ def result_set(
         "INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry, score) "
         f"VALUES ('{tenant}', '{set_id}', 'zone', 1, ST_GeomFromText('{ZONE}', 0), 1)",
     )
-    if store is not None:
-        add_chunk(database, tenant, set_id, 0, TYPED)
-        add_chunk(database, tenant, set_id, 1, IMPORTED)
-        store.put(chunk_key(set_id, 0), chunk_bytes(TYPED, TYPED_PROBS))
-        store.put(chunk_key(set_id, 1), chunk_bytes(IMPORTED, None))
+    if cells:
+        prefix = result_set_prefix(tenant, slide, set_id)
+        for chunk, rows, probs in ((0, TYPED, TYPED_PROBS), (1, IMPORTED, None)):
+            add_chunk(database, tenant, chunk_key(prefix, chunk), set_id, chunk, rows)
+            put_chunk(chunk_key(prefix, chunk), chunk_bytes(rows, probs))
     owner(
         database,
         f"UPDATE result_sets SET status = 'ready', region_count = {len(regions)}, zone_count = 1 "
@@ -137,7 +137,7 @@ def made(api: ApiAs, o: Ordered, scope: dict[str, Any] | None = None) -> uuid.UU
     return uuid.UUID(task.json()["id"])
 
 
-def ordered(database: str, api: ApiAs, tmp_path: Path) -> Ordered:
+def ordered(database: str, api: ApiAs) -> Ordered:
     workspace = make_workspace(
         database,
         {
@@ -153,10 +153,8 @@ def ordered(database: str, api: ApiAs, tmp_path: Path) -> Ordered:
     for label in ("first", "second", "third"):
         join_project(database, project, people[label], "reviewer")
     slides = [make_slide(database, tenant, project) for _ in range(2)]
-    store = LocalResultStore(tmp_path)
-    api.app.results = store
     sets = [
-        result_set(database, tenant, project, slides[0], SCORED, store),
+        result_set(database, tenant, project, slides[0], SCORED, cells=True),
         result_set(database, tenant, project, slides[1], UNSCORED),
     ]
     owner(
@@ -164,8 +162,8 @@ def ordered(database: str, api: ApiAs, tmp_path: Path) -> Ordered:
         "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry) "
         f"VALUES ('{tenant}', '{project}', '{slides[0]}', 'roi', 1, ST_GeomFromText('{ROI}', 0))",
     )
-    draft = Ordered(people, project, slides, sets, store, uuid.uuid4())
-    return Ordered(people, project, slides, sets, store, made(api, draft))
+    draft = Ordered(people, project, slides, sets, tenant, uuid.uuid4())
+    return Ordered(people, project, slides, sets, tenant, made(api, draft))
 
 
 def order_of(
@@ -187,10 +185,8 @@ def shared(api: ApiAs, o: Ordered, task: uuid.UUID, slide: int = 0) -> list[str]
     return first
 
 
-def test_two_reviewers_get_the_same_least_sure_first_order(
-    api: ApiAs, database: str, tmp_path: Path
-) -> None:
-    o = ordered(database, api, tmp_path)
+def test_two_reviewers_get_the_same_least_sure_first_order(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     regions = shared(api, o, o.task)
     assert regions[:4] == ["T2", "T3", "T5", "T1"]
     assert sorted(regions[4:]) == ["T4", "T6"]
@@ -200,8 +196,8 @@ def test_two_reviewers_get_the_same_least_sure_first_order(
     assert body["objects"][0] == {"object": "T2", "kind": "region", "number": 2}
 
 
-def test_random_cells_order_only_the_sample(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
+def test_random_cells_order_only_the_sample(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     task = made(api, o, {"kind": "random-cells", "count": 3})
     seed = int(
         str(owner(database, f"SELECT scope_seed FROM review_tasks WHERE id = '{task}'")[0][0])
@@ -214,32 +210,28 @@ def test_random_cells_order_only_the_sample(api: ApiAs, database: str, tmp_path:
     assert objects(api, o, "first", task, slide=1) == []
 
 
-def test_cells_below_a_score_filter_on_the_detection_score(
-    api: ApiAs, database: str, tmp_path: Path
-) -> None:
-    o = ordered(database, api, tmp_path)
+def test_cells_below_a_score_filter_on_the_detection_score(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     task = made(api, o, {"kind": "cells-below-score", "score": 0.1})
     assert shared(api, o, task) == ["C2", "C3", "C5"]
 
 
-def test_inside_rois_mixes_regions_and_cells(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
+def test_inside_rois_mixes_regions_and_cells(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     task = made(api, o, {"kind": "inside-rois"})
     order = shared(api, o, task)
     assert order[:4] == ["C1", "C2", "T3", "T5"]
     assert sorted(order[4:]) == ["T4", "T6"]
 
 
-def test_unsure_zones_order_the_cells_inside_zones(
-    api: ApiAs, database: str, tmp_path: Path
-) -> None:
-    o = ordered(database, api, tmp_path)
+def test_unsure_zones_order_the_cells_inside_zones(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     task = made(api, o, {"kind": "unsure-zones"})
     assert shared(api, o, task) == ["C3", "C4"]
 
 
-def test_the_order_comes_in_pages(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
+def test_the_order_comes_in_pages(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     whole = objects(api, o, "first", o.task)
     page = order_of(api, o, "first", o.slides[0], o.task, offset=2, limit=3).json()
     assert (page["total"], page["offset"]) == (6, 2)
@@ -249,14 +241,14 @@ def test_the_order_comes_in_pages(api: ApiAs, database: str, tmp_path: Path) -> 
     assert order_of(api, o, "first", o.slides[0], o.task, limit=0).status_code == 422
 
 
-def test_someone_without_the_slide_gets_no_order(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
+def test_someone_without_the_slide_gets_no_order(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     assert order_of(api, o, "third", o.slides[0], o.task).status_code == 404
     assert order_of(api, o, "first", uuid.uuid4(), o.task).status_code == 404
 
 
-def test_a_scope_change_rebuilds_the_order(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
+def test_a_scope_change_rebuilds_the_order(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     changed = api(o.people["owner"]).patch(
         f"/api/review-tasks/{o.task}", json={"scope": {"kind": "unsure-zones"}}
     )
@@ -267,18 +259,29 @@ def test_a_scope_change_rebuilds_the_order(api: ApiAs, database: str, tmp_path: 
     assert shared(api, o, o.task) == ["C3", "C4"]
 
 
-def test_a_missing_cell_file_refuses_the_task(api: ApiAs, database: str, tmp_path: Path) -> None:
-    o = ordered(database, api, tmp_path)
-    (tmp_path / chunk_key(o.sets[0], 1)).unlink()
+def test_a_missing_cell_file_refuses_the_task(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    delete_chunk(o.key(1))
     refused = create_task(api, o, {"kind": "cells-below-score", "score": 0.1})
     assert (refused.status_code, refused.json()["code"]) == (409, "result-files-missing")
     assert create_task(api, o).status_code == 201
 
 
-def test_a_recalibration_leaves_a_running_task_unchanged(
-    api: ApiAs, database: str, tmp_path: Path
+@pytest.mark.parametrize(
+    "data",
+    [b"not a chunk", encode({"version": 2, "kind": "cells", "count": 0}, [])],
+)
+def test_an_unreadable_or_later_cell_file_refuses_the_task(
+    api: ApiAs, database: str, data: bytes
 ) -> None:
-    o = ordered(database, api, tmp_path)
+    o = ordered(database, api)
+    put_chunk(o.key(1), data)
+    refused = create_task(api, o, {"kind": "cells-below-score", "score": 0.1})
+    assert (refused.status_code, refused.json()["code"]) == (409, "result-files-unreadable")
+
+
+def test_a_recalibration_leaves_a_running_task_unchanged(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
     task = made(api, o, {"kind": "inside-rois"})
     regions, mixed = shared(api, o, o.task), shared(api, o, task)
     owner(
@@ -292,7 +295,7 @@ def test_a_recalibration_leaves_a_running_task_unchanged(
         f"WHERE result_set_id = '{o.sets[0]}' AND kind = 'region' AND number = 2",
     )
     recalibrated = [250, 5, 100, 155, 240, 15, 128, 127]
-    o.store.put(chunk_key(o.sets[0], 0), chunk_bytes(TYPED, recalibrated))
+    put_chunk(o.key(0), chunk_bytes(TYPED, recalibrated))
     assert shared(api, o, o.task) == regions
     assert shared(api, o, task) == mixed
     same = api(o.people["owner"]).patch(

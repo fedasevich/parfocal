@@ -30,6 +30,7 @@ from parfocal_api.tables import (
     slides,
 )
 from parfocal_api.taxonomy import resolve_names
+from parfocal_common.chunk_store import ChunkEntry
 
 MAX_CLASSES = 255
 
@@ -298,6 +299,19 @@ class ChunkRow:
     cell_count: int
     vertex_count: int
     object_key: str
+
+    @classmethod
+    def of(cls, entry: ChunkEntry) -> ChunkRow:
+        return cls(
+            entry.chunk,
+            entry.x,
+            entry.y,
+            entry.width,
+            entry.height,
+            entry.cell_count,
+            entry.vertex_count,
+            entry.object_key,
+        )
 
 
 async def importing(connection: AsyncConnection, set_id: uuid.UUID) -> Any:

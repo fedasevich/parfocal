@@ -1,6 +1,5 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import httpx2
 from fastapi import FastAPI
@@ -62,7 +61,7 @@ from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.object_store import ObjectStore
-from parfocal_common.result_store import LocalResultStore, ResultStore
+from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
 
@@ -107,8 +106,8 @@ class ParfocalApi(FastAPI):
         )
         self.settings = settings
         self.clients = clients
-        self.results: ResultStore = LocalResultStore(Path(settings.result_store_dir))
         self.state.storage = ObjectStore(settings.storage(), httpx2.AsyncClient(timeout=30))
+        self.results: ResultStore = ObjectResultStore(self.state.storage)
         self.keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
         self.state.engine = create_engine(str(settings.database_url))
         self.state.auth = auth.AuthState(

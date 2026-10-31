@@ -1,3 +1,4 @@
+import gzip
 from array import array
 from typing import Any
 
@@ -6,6 +7,7 @@ import pytest
 from parfocal_common.cell_chunks import (
     ChunkError,
     Field,
+    UnknownVersionError,
     decode,
     encode,
     field,
@@ -118,3 +120,35 @@ def test_a_field_must_hold_whole_values() -> None:
         field("number", "u4", b"\x01\x02\x03")
     with pytest.raises(ChunkError):
         field("number", "u8", b"")
+
+
+def test_a_gzipped_chunk_decodes_like_the_plain_one() -> None:
+    plain = decode(cells())
+    packed = decode(gzip.compress(cells()))
+    assert plain[0] == packed[0]
+    assert {name: list(values) for name, values in plain[1].items()} == {
+        name: list(values) for name, values in packed[1].items()
+    }
+    with pytest.raises(ChunkError, match="not valid gzip"):
+        decode(b"\x1f\x8b" + b"broken")
+
+
+def test_decode_refuses_a_version_it_does_not_know() -> None:
+    later = encode({"version": 2, "kind": "cells", "count": 0}, [])
+    with pytest.raises(UnknownVersionError, match="schema version 2"):
+        decode(later)
+    with pytest.raises(UnknownVersionError, match="schema version None"):
+        decode(encode({"kind": "cells", "count": 0}, []))
+
+
+def test_optional_fields_are_checked_when_present() -> None:
+    broken = cells(
+        extra=[
+            field("alt_class", "u1", array("B", [1])),
+            field("nucleus_offsets", "u4", array("I", [0, 3, 3])),
+        ]
+    )
+    assert checked(broken, from_run=False) == [
+        "alt_class has 1 values for 2 cells",
+        "nucleus_offsets and nucleus_points come together",
+    ]

@@ -1,15 +1,14 @@
-import gzip
 import random
 import struct
 from array import array
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 from parfocal_common.cell_chunks import decode
 from parfocal_common.object_ids import Letter
 from parfocal_common.scope import Candidate, ObjectKey, Scope, in_scope, sample
 
-GZIP_MAGIC = b"\x1f\x8b"
 UNCLASSIFIED = 255
 NO_CERTAINTY = -1
 PACKED = struct.Struct("<cI")
@@ -57,7 +56,10 @@ class CellChunk:
 
     @classmethod
     def read(cls, data: bytes) -> CellChunk:
-        header, arrays = decode(gzip.decompress(data) if data[:2] == GZIP_MAGIC else data)
+        return cls.of(*decode(data))
+
+    @classmethod
+    def of(cls, header: Mapping[str, Any], arrays: Mapping[str, memoryview]) -> CellChunk:
         return cls(
             numbers=arrays["number"],
             classes=arrays["class"],

@@ -1,6 +1,10 @@
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Protocol
+
+from parfocal_common.cell_chunks import GZIP_MAGIC
+from parfocal_common.object_store import ObjectStore, StorageError
+
+CHUNK_CONTENT_TYPE = "application/octet-stream"
+NOT_FOUND = 404
 
 
 class MissingObjectError(LookupError):
@@ -8,27 +12,27 @@ class MissingObjectError(LookupError):
 
 
 class ResultStore(Protocol):
-    def get(self, object_key: str) -> bytes: ...
+    async def get(self, object_key: str) -> bytes: ...
+
+    async def put(self, object_key: str, data: bytes) -> None: ...
 
 
-@dataclass(frozen=True)
-class LocalResultStore:
-    root: Path
+class ObjectResultStore:
+    def __init__(self, storage: ObjectStore) -> None:
+        self.storage = storage
 
-    def path_of(self, object_key: str) -> Path:
-        root = self.root.resolve()
-        path = (root / object_key).resolve()
-        if not path.is_relative_to(root) or path == root:
-            raise MissingObjectError(object_key)
-        return path
-
-    def get(self, object_key: str) -> bytes:
+    async def get(self, object_key: str) -> bytes:
         try:
-            return self.path_of(object_key).read_bytes()
-        except (FileNotFoundError, IsADirectoryError) as error:
-            raise MissingObjectError(object_key) from error
+            return await self.storage.get_object(object_key)
+        except StorageError as error:
+            if error.status == NOT_FOUND:
+                raise MissingObjectError(object_key) from error
+            raise
 
-    def put(self, object_key: str, data: bytes) -> None:
-        path = self.path_of(object_key)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+    async def put(self, object_key: str, data: bytes) -> None:
+        await self.storage.put_object(
+            object_key,
+            data,
+            CHUNK_CONTENT_TYPE,
+            content_encoding="gzip" if data[:2] == GZIP_MAGIC else None,
+        )

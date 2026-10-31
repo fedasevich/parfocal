@@ -324,8 +324,13 @@ class ObjectStore:
             datetime.now(UTC),
         )
 
-    async def put_object(self, key: str, body: bytes, content_type: str) -> None:
-        await self.send("PUT", key, body=body, extra={"content-type": content_type})
+    async def put_object(
+        self, key: str, body: bytes, content_type: str, *, content_encoding: str | None = None
+    ) -> None:
+        extra = {"content-type": content_type}
+        if content_encoding is not None:
+            extra["content-encoding"] = content_encoding
+        await self.send("PUT", key, body=body, extra=extra)
 
     async def head_object(self, key: str) -> int | None:
         url, headers = self.signed_request("HEAD", key, None, b"")

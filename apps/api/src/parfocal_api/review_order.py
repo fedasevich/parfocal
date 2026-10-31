@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any, cast
@@ -32,6 +31,8 @@ from parfocal_api.tables import (
     result_objects,
     review_order,
 )
+from parfocal_common.cell_chunks import ChunkError
+from parfocal_common.chunk_store import chunk_of
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import MissingObjectError, ResultStore
 from parfocal_common.review_order import (
@@ -68,6 +69,11 @@ class ReviewOrder(BaseModel):
 class ResultFilesMissingError(ConflictError):
     code = "result-files-missing"
     title = "A cell file of this result set is missing from storage"
+
+
+class ResultFilesUnreadableError(ConflictError):
+    code = "result-files-unreadable"
+    title = "A cell file of this result set cannot be read"
 
 
 def result_store(request: Request) -> ResultStore:
@@ -151,10 +157,13 @@ async def chunk_keys(
 
 async def read_chunk(store: ResultStore, object_key: str) -> CellChunk:
     try:
-        data = await asyncio.to_thread(store.get, object_key)
+        data = await store.get(object_key)
     except MissingObjectError as error:
         raise ResultFilesMissingError from error
-    return CellChunk.read(data)
+    try:
+        return CellChunk.of(*chunk_of(data))
+    except ChunkError as error:
+        raise ResultFilesUnreadableError from error
 
 
 async def inside_cells(
