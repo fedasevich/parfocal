@@ -27,6 +27,7 @@ import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 import { viewerDraftOperations } from "./viewer-handlers.ts";
+import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
 
 export {
   getDecideAdjudicationMockHandler,
@@ -103,6 +104,10 @@ export {
   getGetSlideAiProgressMockHandler,
   getGetSlideResultStatsMockHandler,
 } from "./viewer-handlers.ts";
+export {
+  getListAnnotationLayersMockHandler,
+  getListModelTiersMockHandler,
+} from "./viewer-tools-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
@@ -235,6 +240,7 @@ export const draftOperations: DraftOperation[] = [
   ...connectModelDraftOperations,
   ...viewerDraftOperations,
   ...adjudicationDraftOperations,
+  ...viewerToolsDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

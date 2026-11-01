@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import { fakeApiHandlers, scenario, setFakeViewerScene } from "../src/fake/index.ts";
-import { getSlideAiProgress, getSlideResultStats } from "../src/index.ts";
+import {
+  getSlideAiProgress,
+  getSlideResultStats,
+  listAnnotationLayers,
+  listModelTiers,
+} from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
@@ -73,4 +78,26 @@ test("the AI is still reading only in the running scene", async () => {
     data.steps.map((step) => step.state),
     ["done", "running", "queued"],
   );
+});
+
+test("the annotate workspace's layers on A1 add the two child layers up to their parent", async () => {
+  const { data } = await listAnnotationLayers(a1.id);
+  const parent = data.layers.find((layer) => layer.key === data.new_shapes_go_to);
+  assert.ok(parent);
+  const children = data.layers.filter((layer) => layer.parent === parent.key);
+  assert.equal(
+    children.reduce((sum, layer) => sum + layer.count, 0),
+    parent.count,
+  );
+  assert.deepEqual((await listAnnotationLayers(scenario.slideByIndex(2).id)).data.layers, []);
+});
+
+test("the outline job has one model for each of Best, Good and Fast", async () => {
+  const { data } = await listModelTiers();
+  const outline = data.tiers.filter((tier) => tier.job === "outline");
+  assert.deepEqual(
+    outline.map((tier) => tier.tier),
+    ["Best", "Good", "Fast"],
+  );
+  assert.equal(outline.find((tier) => tier.tier === "Fast")?.runs_on, "browser");
 });

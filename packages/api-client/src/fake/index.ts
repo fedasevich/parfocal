@@ -95,4 +95,5 @@ export {
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
 export { toSlideAiProgress, toSlideResultStats } from "./viewer-handlers.ts";
 export { type FakeViewerScene, fakeViewerScene, setFakeViewerScene } from "./viewer-scene.ts";
+export { toAnnotationLayers, toModelTiers } from "./viewer-tools-handlers.ts";
 export { searchScenario, tasksAssignedBy, toSlideRow } from "./work-handlers.ts";
