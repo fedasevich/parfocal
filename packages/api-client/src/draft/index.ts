@@ -205,6 +205,7 @@ export {
   threadCommentSchema,
   useListThreadComments,
 } from "./list-thread-comments.ts";
+export * from "./project.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";
 export {
   type CancelNudgeMutationError,
