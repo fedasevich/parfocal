@@ -3,6 +3,7 @@ import {
   scenario,
   setFakeConnectModelScene,
   setFakeJobsScene,
+  setFakeQueueScene,
   setFakeTeamScene,
   setFakeView,
   setFakeViewerScene,
@@ -15,6 +16,7 @@ import { mountFakeDataBadge } from "./badge.tsx";
 import type { FakeScope } from "./badge-state.ts";
 import { fakeConnectModelSceneFor } from "./connect-model-rules.ts";
 import { fakeJobsSceneFor } from "./jobs-scene-rules.ts";
+import { fakeQueueSceneFor } from "./queue-scene-rules.ts";
 import { fakeTeamSceneFor } from "./team-scene-rules.ts";
 import { fakeViewFor } from "./view-rules.ts";
 import { fakeViewerSceneFor } from "./viewer-scene-rules.ts";
@@ -27,7 +29,11 @@ function applyFakeState(pathname: string, search: Record<string, unknown>): bool
   const jobsChanged = setFakeJobsScene(fakeJobsSceneFor(pathname, search));
   const modelChanged = setFakeConnectModelScene(fakeConnectModelSceneFor(pathname, search));
   const viewerChanged = setFakeViewerScene(fakeViewerSceneFor(pathname, search));
-  return viewChanged || sceneChanged || jobsChanged || modelChanged || viewerChanged;
+  const queue = fakeQueueSceneFor(pathname, search);
+  const queueChanged = queue === null ? false : setFakeQueueScene(queue);
+  return (
+    viewChanged || sceneChanged || jobsChanged || modelChanged || viewerChanged || queueChanged
+  );
 }
 
 export async function startFakeApi(

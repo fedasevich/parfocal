@@ -51,5 +51,6 @@ test("the flow map and the index read the same list of built screens", () => {
   assert.ok(builtScreens.has("case"));
   assert.ok(builtScreens.has("layers"));
   assert.equal(isBuilt({ screen: "creport" } as Parameters<typeof isBuilt>[0]), true);
-  assert.equal(isBuilt({ screen: "disagree" } as Parameters<typeof isBuilt>[0]), false);
+  assert.equal(isBuilt({ screen: "disagree" } as Parameters<typeof isBuilt>[0]), true);
+  assert.equal(isBuilt({ screen: "case" } as Parameters<typeof isBuilt>[0]), false);
 });

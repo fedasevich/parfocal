@@ -2,7 +2,7 @@ import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-route
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { GlobalShell } from "../shell/global-shell.tsx";
 import { overlaySearch } from "../shell/overlays.ts";
-import { shellRouteIds } from "../shell/shell-routes.ts";
+import { inGlobalShell } from "../shell/shell-routes.ts";
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
@@ -12,7 +12,7 @@ export const Route = createRootRoute({
 
 function Root() {
   const inShell = useMatches({
-    select: (matches) => matches.some((match) => shellRouteIds.has(match.routeId)),
+    select: (matches) => matches.some(inGlobalShell),
   });
   return (
     <>

@@ -21,6 +21,13 @@ export function fakeViewFor(pathname: string, search: Record<string, unknown>): 
     if (tab === "assigned") return { viewer: "DH", firstWeek: false };
   }
   if (pathname === "/team") return { viewer: "DH", firstWeek: false };
+  if (/^\/tasks\/[^/]+\/disagreements\/?$/.test(pathname)) {
+    const adjudicating = search["scene"] === "adjudicate" || search["scene"] === "adjdone";
+    return { viewer: adjudicating ? "AK" : "DH", firstWeek: false };
+  }
+  if (/^\/tasks\/[^/]+\/(sign-off|evaluation)\/?$/.test(pathname)) {
+    return { viewer: "DH", firstWeek: false };
+  }
   if (
     pathname.endsWith("/report") &&
     (search["scene"] === "cosign" || search["scene"] === "sent")

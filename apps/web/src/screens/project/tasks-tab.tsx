@@ -105,7 +105,16 @@ function TaskRow({ project, task }: { project: Project; task: ReviewTask }) {
         <StatusTag tone={status.tone}>{status.label}</StatusTag>
       </td>
       <td className="w-px text-right whitespace-nowrap">
-        {status.label === "Signed off" ? null : (
+        {status.label === "Signed off" ? null : status.label === "Ready to sign off" ? (
+          <Button
+            size="sm"
+            variant="primary"
+            nativeButton={false}
+            render={<Link to="/tasks/$taskId/sign-off" params={{ taskId: task.id }} />}
+          >
+            Sign off
+          </Button>
+        ) : (
           <Button
             size="sm"
             title={behind ? `Nudge ${people.byId(behind.userId).name}` : "Nudge"}

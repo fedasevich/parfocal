@@ -199,6 +199,7 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
   return signOffSummarySchema.parse({
     task_id: taskId,
     version: 1,
+    reviewer_ids: current.reviewers.map(idOf),
     reviews: { slides: current.slides, submitted, total, opinion_forms: submitted, behind },
     queue: {
       total: live.length,
@@ -304,6 +305,7 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
     adjudicators: 1,
     version: 1,
     signed_at: queueState().signed ? signature.at : null,
+    signed_by_user_id: queueState().signed ? idOf(signature.by) : null,
     template: {
       id: template?.id ?? "sentinel-node",
       name: reportTemplate.name,

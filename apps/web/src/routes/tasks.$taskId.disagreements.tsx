@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { AdjudicatorView } from "../screens/disagreements/adjudicator-view.tsx";
+import { type QueueScene, QueueScreen } from "../screens/disagreements/queue-screen.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const disagreementsSearch = z.object({
@@ -13,13 +14,9 @@ export const Route = createFileRoute("/tasks/$taskId/disagreements")({
 });
 
 function Disagreements() {
-  const params = Route.useParams();
-  const search = Route.useSearch();
-  return (
-    <Placeholder
-      title="Disagreements"
-      builtBy="PROTO-008 (disagreements, sign-off and the evaluation report)"
-      route={{ params, search }}
-    />
-  );
+  const { taskId } = Route.useParams();
+  const { scene } = Route.useSearch();
+  if (scene === "adjudicate" || scene === "adjdone") return <AdjudicatorView taskId={taskId} />;
+  const queueScene: QueueScene = scene ?? "queue";
+  return <QueueScreen key={queueScene} taskId={taskId} scene={queueScene} />;
 }

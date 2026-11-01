@@ -16,7 +16,7 @@ import { FieldNote } from "../new-task/parts.tsx";
 import { type Dep, fmtMm, parseNumber, type ReportData } from "./model.ts";
 import { fieldId, KvList, linkButton } from "./parts.tsx";
 
-const closeOn = (onClose: () => void) => (open: boolean) => {
+export const closeOn = (onClose: () => void) => (open: boolean) => {
   if (!open) onClose();
 };
 
@@ -261,23 +261,13 @@ export function DepositModal({
 
 const signLabel = { sso: "Sign with Vltava SSO", typed: "Sign with password" };
 
-export function SignModal({
-  title,
-  subtitle,
-  rows,
-  email,
+export function useSignature({
   failed,
-  pending,
-  onClose,
+  email,
   onSign,
 }: {
-  title: string;
-  subtitle: string;
-  rows: { icon: "user" | "mail" | "file"; label: string; value: string }[];
-  email: string;
   failed: boolean;
-  pending: boolean;
-  onClose: () => void;
+  email: string;
   onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
 }) {
   const [state, setState] = useState<"idle" | "busy" | "fail">(failed ? "fail" : "idle");
@@ -297,67 +287,92 @@ export function SignModal({
       onSign(withPassword ? "password" : "sso", (ok) => setState(ok ? "idle" : "fail"));
     }, 800);
   };
-  const busy = state === "busy" || pending;
+  const busy = state === "busy";
+  const zone = busy ? null : withPassword ? (
+    <SmallModalZone title="Sign with your password">
+      <div className="grid gap-1.5">
+        <label htmlFor={fieldId("pass")} className="text-body-sm font-semibold">
+          Password for {email}
+        </label>
+        <Input
+          id={fieldId("pass")}
+          type="password"
+          autoFocus
+          aria-invalid={passwordError ? true : undefined}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+        <FieldNote error={passwordError} help="Your Vltava password" />
+      </div>
+    </SmallModalZone>
+  ) : state === "fail" ? (
+    <InlineError
+      actions={
+        <>
+          <button type="button" className={linkButton} onClick={run}>
+            Try again
+          </button>
+          <button
+            type="button"
+            className={linkButton}
+            onClick={() => {
+              setState("idle");
+              setPassword("");
+            }}
+          >
+            Use my password instead
+          </button>
+        </>
+      }
+    >
+      Vltava single sign-on did not answer. Nothing was signed.
+    </InlineError>
+  ) : null;
+  return {
+    busy,
+    run,
+    zone,
+    label: signLabel[withPassword ? "typed" : "sso"],
+    busyHint: withPassword ? "Checking your password…" : "Waiting for single sign-on…",
+  };
+}
+
+export function SignModal({
+  title,
+  subtitle,
+  rows,
+  email,
+  failed,
+  pending,
+  onClose,
+  onSign,
+}: {
+  title: string;
+  subtitle: string;
+  rows: { icon: "user" | "mail" | "file"; label: string; value: string }[];
+  email: string;
+  failed: boolean;
+  pending: boolean;
+  onClose: () => void;
+  onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
+}) {
+  const signature = useSignature({ failed, email, onSign });
+  const busy = signature.busy || pending;
   return (
     <SmallModal
       open
       onOpenChange={closeOn(onClose)}
       title={title}
       subtitle={subtitle}
-      hint={
-        busy
-          ? withPassword
-            ? "Checking your password…"
-            : "Waiting for single sign-on…"
-          : "Signing locks this version."
-      }
-      primaryLabel={signLabel[withPassword ? "typed" : "sso"]}
+      hint={busy ? signature.busyHint : "Signing locks this version."}
+      primaryLabel={signature.label}
       primaryBusy={busy}
-      onPrimary={run}
+      onPrimary={signature.run}
     >
       <SmallModalZone>
         <KvList rows={rows} />
       </SmallModalZone>
-      {busy ? null : withPassword ? (
-        <SmallModalZone title="Sign with your password">
-          <div className="grid gap-1.5">
-            <label htmlFor={fieldId("pass")} className="text-body-sm font-semibold">
-              Password for {email}
-            </label>
-            <Input
-              id={fieldId("pass")}
-              type="password"
-              autoFocus
-              aria-invalid={passwordError ? true : undefined}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <FieldNote error={passwordError} help="Your Vltava password" />
-          </div>
-        </SmallModalZone>
-      ) : state === "fail" ? (
-        <InlineError
-          actions={
-            <>
-              <button type="button" className={linkButton} onClick={run}>
-                Try again
-              </button>
-              <button
-                type="button"
-                className={linkButton}
-                onClick={() => {
-                  setState("idle");
-                  setPassword("");
-                }}
-              >
-                Use my password instead
-              </button>
-            </>
-          }
-        >
-          Vltava single sign-on did not answer. Nothing was signed.
-        </InlineError>
-      ) : null}
+      {busy ? null : signature.zone}
     </SmallModal>
   );
 }

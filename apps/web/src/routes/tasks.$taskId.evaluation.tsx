@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { EvaluationScreen } from "../screens/evaluation/evaluation-screen.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const evaluationSearch = z.object({
@@ -13,13 +13,18 @@ export const Route = createFileRoute("/tasks/$taskId/evaluation")({
 });
 
 function EvaluationReport() {
-  const params = Route.useParams();
-  const search = Route.useSearch();
+  const { taskId } = Route.useParams();
+  const { scene } = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="Evaluation report"
-      builtBy="PROTO-008 (disagreements, sign-off and the evaluation report)"
-      route={{ params, search }}
+    <EvaluationScreen
+      taskId={taskId}
+      scene={scene ?? "report"}
+      onScene={(next) =>
+        void navigate({
+          search: (previous) => ({ ...previous, scene: next === "report" ? undefined : next }),
+        })
+      }
     />
   );
 }

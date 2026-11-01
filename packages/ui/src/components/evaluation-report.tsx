@@ -13,7 +13,7 @@ function ReportSheet({ page, pages, footer, className, children, ...props }: Rep
       data-slot="report-sheet"
       aria-label={`Page ${page} of ${pages}`}
       className={cn(
-        "flex aspect-[210/297] w-155 shrink-0 flex-col gap-5 bg-white px-11 pt-9 pb-6 text-[10px] leading-[1.4] text-[#111] shadow-pop",
+        "flex min-h-[877px] w-155 shrink-0 flex-col gap-5 bg-white px-11 pt-9 pb-6 text-[10px] leading-[1.4] text-[#111] shadow-pop",
         className,
       )}
       {...props}
@@ -301,8 +301,8 @@ function ReportObjectsTable({ people, rows, className, ...props }: ReportObjects
           </th>
           <th scope="col">ID</th>
           <th scope="col">Object</th>
-          {people.map((name) => (
-            <th key={name} scope="col">
+          {people.map((name, index) => (
+            <th key={`person-${index}`} scope="col">
               {name}
             </th>
           ))}
@@ -324,7 +324,7 @@ function ReportObjectsTable({ people, rows, className, ...props }: ReportObjects
             <td>{row.what}</td>
             {row.answers.map((answer, index) => (
               <td
-                key={`${people[index] ?? index}`}
+                key={`answer-${index}`}
                 className="font-semibold"
                 style={{ color: answerColour[answer] }}
               >

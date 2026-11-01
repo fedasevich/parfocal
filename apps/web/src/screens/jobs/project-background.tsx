@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
-import { ProjectPage } from "../project/project-page.tsx";
+import { ProjectPage, type ProjectTab } from "../project/project-page.tsx";
 
 export function ProjectBackground({
   projectId,
+  tab = "slides",
   children,
 }: {
   projectId: string;
+  tab?: ProjectTab;
   children?: ReactNode;
 }) {
-  return <ProjectPage projectId={projectId} view={{ tab: "slides" }} overlay={children} />;
+  return <ProjectPage projectId={projectId} view={{ tab }} overlay={children} />;
 }

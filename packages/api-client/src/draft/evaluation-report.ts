@@ -29,6 +29,7 @@ const countByPerson = z.object({ user_id: z.string(), count: z.number().int() })
 export const signOffSummarySchema = z.object({
   task_id: z.string(),
   version: z.number().int(),
+  reviewer_ids: z.array(z.string()),
   reviews: z.object({
     slides: z.number().int(),
     submitted: z.number().int(),
@@ -170,6 +171,7 @@ export const evaluationReportSchema = z.object({
   adjudicators: z.number().int(),
   version: z.number().int(),
   signed_at: z.iso.datetime({ offset: true }).nullable(),
+  signed_by_user_id: z.string().nullable(),
   template: z.object({
     id: z.string(),
     name: z.string(),

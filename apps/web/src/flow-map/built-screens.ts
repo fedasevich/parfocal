@@ -20,12 +20,11 @@ export const builtScreens: ReadonlySet<PrototypeScreen> = new Set<PrototypeScree
   "connectmodel",
   "case",
   "layers",
+  "disagree",
+  "signoff",
+  "evaluation",
 ]);
 
-export const pendingTask: Partial<Record<PrototypeScreen, string>> = {
-  disagree: "PROTO-008 (disagreements, sign-off and the evaluation report)",
-  signoff: "PROTO-008 (disagreements, sign-off and the evaluation report)",
-  evaluation: "PROTO-008 (disagreements, sign-off and the evaluation report)",
-};
+export const pendingTask: Partial<Record<PrototypeScreen, string>> = {};
 
 export const isScreenBuilt = (screen: PrototypeScreen) => builtScreens.has(screen);

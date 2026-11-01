@@ -42,6 +42,9 @@ type TaskLook = { label: string; tone: "accent" | "neutral" | "ok" };
 
 export function taskStatus(states: TaskStates | undefined, progress: ReviewerProgress[]): TaskLook {
   if (states?.signed_off_at) return { label: "Signed off", tone: "ok" };
+  if (progress.length > 0 && progress.every((row) => row.done === row.total)) {
+    return { label: "Ready to sign off", tone: "ok" };
+  }
   if (progress.some((row) => row.done > 0)) return { label: "In review", tone: "accent" };
   return { label: "Assigned", tone: "neutral" };
 }
