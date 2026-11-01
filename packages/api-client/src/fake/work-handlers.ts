@@ -236,10 +236,11 @@ export const toTaskStates = (task: ScenarioReviewTask): TaskStates => {
         const position = seen.get(key) ?? 0;
         seen.set(key, position + 1);
         const submitted = position < (task.progress[key] ?? 0);
+        const reviewerState: State = signed ? "signed-off" : submitted ? "submitted" : "assigned";
         return [
           {
             user_id: people[key].id,
-            state: signed ? "signed-off" : submitted ? "submitted" : "assigned",
+            state: reviewerState,
             submitted_at: submitted ? `${task.sentOn}T12:00:00+02:00` : null,
           },
         ];
