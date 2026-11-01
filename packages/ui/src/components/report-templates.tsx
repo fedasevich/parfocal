@@ -7,9 +7,12 @@ import type * as React from "react";
 
 type ReportBlock = { id: string; name: string; shows: string; setting?: string };
 
-type BlockCatalogueProps = React.ComponentProps<"div"> & { blocks: ReportBlock[] };
+type BlockCatalogueProps = React.ComponentProps<"div"> & {
+  blocks: ReportBlock[];
+  onAdd?: (id: string) => void;
+};
 
-function BlockCatalogue({ blocks, className, ...props }: BlockCatalogueProps) {
+function BlockCatalogue({ blocks, onAdd, className, ...props }: BlockCatalogueProps) {
   return (
     <div data-slot="block-catalogue" className={cn("grid gap-1.5", className)} {...props}>
       {blocks.map((block) => (
@@ -17,6 +20,7 @@ function BlockCatalogue({ blocks, className, ...props }: BlockCatalogueProps) {
           key={block.id}
           type="button"
           draggable
+          onClick={() => onAdd?.(block.id)}
           className="grid cursor-grab grid-cols-[16px_minmax(0,1fr)] items-start gap-2.5 rounded-ctl border border-line bg-surf-field px-3 py-2 text-left text-body-sm text-fg hover:border-line-strong"
         >
           <Icon name="list" className="mt-0.5 text-fg-dim" />
@@ -36,6 +40,7 @@ type ReportPagePreviewProps = React.ComponentProps<"div"> & {
   selected?: string;
   page?: number;
   pages?: number;
+  onBlockSelect?: (id: string) => void;
 };
 
 function ReportPagePreview({
@@ -44,6 +49,7 @@ function ReportPagePreview({
   selected,
   page = 1,
   pages = 1,
+  onBlockSelect,
   className,
   ...props
 }: ReportPagePreviewProps) {
@@ -69,18 +75,21 @@ function ReportPagePreview({
         </div>
       </div>
       {blocks.map((block) => (
-        <div
+        <button
+          type="button"
           key={block.id}
           data-selected={selected === block.id || undefined}
+          aria-pressed={selected === block.id}
+          onClick={() => onBlockSelect?.(block.id)}
           className={cn(
-            "grid gap-1 rounded-[3px] border border-dashed border-transparent p-1.5",
+            "grid cursor-pointer gap-1 rounded-[3px] border border-dashed border-transparent bg-transparent p-1.5 text-left text-[#111]",
             selected === block.id && "border-[#1d5fd1] bg-[#1d5fd1]/5",
           )}
         >
           <b className="text-[12px]">{block.name}</b>
           <span className="text-[#555]">{block.shows}</span>
           <span className="h-10 rounded-[2px] bg-[repeating-linear-gradient(#f6f4ef_0_6px,#e2ded4_6px_7px)]" />
-        </div>
+        </button>
       ))}
     </div>
   );
