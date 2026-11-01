@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { fakeConnectModelSceneFor } from "../src/fake-api/connect-model-rules.ts";
 import {
   adminSections,
   connectModelScenes,
@@ -32,4 +33,13 @@ test("an admin scene picks the section it is shown in", () => {
   for (const scene of connectModelScenes) assert.equal(sectionOf(undefined, scene), "models");
   assert.equal(sectionOf("audit", undefined), "audit");
   assert.equal(sectionOf(undefined, undefined), "overview");
+});
+
+test("a Connect a model scene sets what the fake test answers", () => {
+  assert.equal(fakeConnectModelSceneFor("/admin", { scene: "addmodel" }), "untested");
+  assert.equal(fakeConnectModelSceneFor("/admin", { scene: "addtested" }), "passed");
+  assert.equal(fakeConnectModelSceneFor("/admin", { scene: "addfail" }), "failed");
+  assert.equal(fakeConnectModelSceneFor("/admin", { scene: "addmap" }), "passed");
+  assert.equal(fakeConnectModelSceneFor("/admin", { section: "models" }), null);
+  assert.equal(fakeConnectModelSceneFor("/team", { scene: "addfail" }), null);
 });

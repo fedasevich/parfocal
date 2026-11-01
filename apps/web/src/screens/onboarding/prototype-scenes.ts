@@ -35,6 +35,10 @@ const adminNotes = {
   security: "Sign-in, sessions and where data is kept",
   tplnew: "The New study template modal",
   tpledit: "The report template editor on CAMELYON rounds",
+  addmodel: "Connect your own model, the lab's server before the test",
+  addtested: "Connection tested, the answer follows the contract",
+  addfail: "Issue · the test answer is not Parfocal JSON, 38 cells have no geometry",
+  addmap: "Classes and access for the lab's model",
 } as const;
 
 export const onboardingPrototypeLinks = [
@@ -68,4 +72,10 @@ export const onboardingPrototypeLinks = [
     note: adminNotes[scene],
     link: linkOptions({ to: "/admin", search: { scene } }),
   })),
+  {
+    key: "admin-contract",
+    label: "Admin · contract",
+    note: "The model contract, what Parfocal sends and expects back",
+    link: linkOptions({ to: "/admin", search: { scene: "addmodel", modal: "contract" } }),
+  },
 ];

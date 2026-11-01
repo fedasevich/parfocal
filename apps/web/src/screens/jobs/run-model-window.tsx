@@ -197,6 +197,7 @@ function RunModelForm({
           footer={
             <Link
               to="/admin"
+              search={{ scene: "addmodel" }}
               className="flex items-center gap-2 p-2.5 text-accent no-underline hover:underline"
             >
               <Icon name="plus" />

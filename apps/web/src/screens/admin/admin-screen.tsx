@@ -6,9 +6,15 @@ import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo, useRouterLink } from "../../shell/router-link.tsx";
 import { useNotice } from "../onboarding/notice.tsx";
-import { type AdminScene, type AdminSection, isConnectModelScene } from "../onboarding/scenes.ts";
-import { okData, Placeholder } from "../placeholder.tsx";
+import {
+  type AdminModal,
+  type AdminScene,
+  type AdminSection,
+  isConnectModelScene,
+} from "../onboarding/scenes.ts";
+import { okData } from "../placeholder.tsx";
 import { AdminShell, adminHref, adminSectionList } from "./admin-shell.tsx";
+import { ConnectModelScreen } from "./connect-model.tsx";
 import { OverviewSection } from "./overview.tsx";
 import { PeopleSection } from "./people.tsx";
 import {
@@ -24,11 +30,11 @@ import { editorTitle, type TemplateDraft, TemplateEditor, TemplatesSection } fro
 type Props = {
   section: AdminSection;
   scene: AdminScene | undefined;
-  modal: "invite" | undefined;
+  modal: AdminModal | undefined;
   change: (next: {
     section?: AdminSection;
     scene?: AdminScene | undefined;
-    modal?: "invite" | undefined;
+    modal?: AdminModal | undefined;
   }) => void;
 };
 
@@ -46,12 +52,16 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
 
   if (isConnectModelScene(scene)) {
     return (
-      <AdminShell section="models">
-        <Placeholder
-          title="Connect your own model"
-          builtBy="PROTO-015 (Connect a model)"
-          route={{ section, scene }}
+      <AdminShell section="models" folded>
+        <ConnectModelScreen
+          scene={scene}
+          onScene={(next) => change({ section: "models", scene: next, modal: undefined })}
+          contract={modal === "contract"}
+          onContract={(open) => change({ modal: open ? "contract" : undefined })}
+          onDone={() => change({ section: "models", scene: undefined, modal: undefined })}
+          notify={notify}
         />
+        {notice}
       </AdminShell>
     );
   }

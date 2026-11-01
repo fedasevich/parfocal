@@ -1,12 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AdminScreen } from "../screens/admin/admin-screen.tsx";
-import { adminSections, onboardingScenes, sectionOf } from "../screens/onboarding/scenes.ts";
+import {
+  adminModals,
+  adminSections,
+  onboardingScenes,
+  sectionOf,
+} from "../screens/onboarding/scenes.ts";
 
 const adminSearch = z.object({
   section: z.enum(adminSections).optional(),
   scene: z.enum(onboardingScenes.admin).optional(),
-  modal: z.enum(["invite"]).optional(),
+  modal: z.enum(adminModals).optional(),
 });
 
 export const Route = createFileRoute("/admin")({

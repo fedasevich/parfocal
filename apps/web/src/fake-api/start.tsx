@@ -1,6 +1,7 @@
 import {
   fakeApiHandlers,
   scenario,
+  setFakeConnectModelScene,
   setFakeJobsScene,
   setFakeTeamScene,
   setFakeView,
@@ -11,6 +12,7 @@ import { fixClock } from "../clock.ts";
 import type { createAppRouter } from "../router.ts";
 import { mountFakeDataBadge } from "./badge.tsx";
 import type { FakeScope } from "./badge-state.ts";
+import { fakeConnectModelSceneFor } from "./connect-model-rules.ts";
 import { fakeJobsSceneFor } from "./jobs-scene-rules.ts";
 import { fakeTeamSceneFor } from "./team-scene-rules.ts";
 import { fakeViewFor } from "./view-rules.ts";
@@ -21,7 +23,8 @@ function applyFakeState(pathname: string, search: Record<string, unknown>): bool
   const viewChanged = setFakeView(fakeViewFor(pathname, search));
   const sceneChanged = setFakeTeamScene(fakeTeamSceneFor(pathname, search));
   const jobsChanged = setFakeJobsScene(fakeJobsSceneFor(pathname, search));
-  return viewChanged || sceneChanged || jobsChanged;
+  const modelChanged = setFakeConnectModelScene(fakeConnectModelSceneFor(pathname, search));
+  return viewChanged || sceneChanged || jobsChanged || modelChanged;
 }
 
 export async function startFakeApi(

@@ -54,6 +54,10 @@ export const adminSections = [
 
 export type AdminSection = (typeof adminSections)[number];
 
+export const adminModals = ["invite", "contract"] as const;
+
+export type AdminModal = (typeof adminModals)[number];
+
 export const connectModelScenes = ["addmodel", "addtested", "addfail", "addmap"] as const;
 
 export type ConnectModelScene = (typeof connectModelScenes)[number];

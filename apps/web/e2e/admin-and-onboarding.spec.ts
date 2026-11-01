@@ -74,7 +74,7 @@ const scenes: { path: string; heading: string; shows: string }[] = [
   { path: "/admin?scene=security", heading: "Security", shows: "Lock after inactivity" },
   { path: "/admin?scene=tplnew", heading: "", shows: "Opens in the editor." },
   { path: "/admin?scene=tpledit", heading: "CAMELYON rounds", shows: "Back to the library" },
-  { path: "/admin?scene=addmodel", heading: "Connect your own model", shows: "PROTO-015" },
+  { path: "/admin?scene=addmodel", heading: "Connect your own model", shows: "Test connection" },
 ];
 
 test("every sign-in, sign-up, invite, setup and admin scene opens on fake data", async ({
@@ -219,9 +219,9 @@ test("a new template opens in the editor and blocks are added by click", async (
   await expect(page).toHaveURL(/section=templates$/);
 });
 
-test("Connect your own model is left for PROTO-015", async ({ page }) => {
+test("Connect your own model opens the flow page from AI models", async ({ page }) => {
   await page.goto("/admin?section=models");
   await page.getByRole("button", { name: "Connect your own model" }).click();
   await expect(page).toHaveURL(/scene=addmodel/);
-  await expect(page.getByText("PROTO-015 (Connect a model)")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Where it runs" })).toBeVisible();
 });

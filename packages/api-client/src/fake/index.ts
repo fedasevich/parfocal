@@ -35,6 +35,12 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
 export * from "../generated/api.msw.ts";
 export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
+export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
+export {
+  type FakeConnectModelScene,
+  fakeConnectModelScene,
+  setFakeConnectModelScene,
+} from "./connect-model-scene.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export {
   type FakeJobsScene,
@@ -46,6 +52,7 @@ export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-ha
 export * as scenario from "./scenario.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";
 export * as scenarioClinical from "./scenario-clinical.ts";
+export * as scenarioConnectModel from "./scenario-connect-model.ts";
 export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
 export * as scenarioJobs from "./scenario-jobs.ts";
 export * as scenarioProject from "./scenario-project.ts";

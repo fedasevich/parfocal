@@ -5,6 +5,7 @@ import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
+import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
@@ -48,6 +49,10 @@ export {
   getSignOutClinicalReportMockHandler,
   getWithdrawCosignRequestMockHandler,
 } from "./clinical-handlers.ts";
+export {
+  getConnectLabModelMockHandler,
+  getGetLabModelConnectionMockHandler,
+} from "./connect-model-handlers.ts";
 export {
   getGetModelRunDefaultsMockHandler,
   getListMyJobsMockHandler,
@@ -211,6 +216,7 @@ export const draftOperations: DraftOperation[] = [
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
   ...settingsDraftOperations,
+  ...connectModelDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>
