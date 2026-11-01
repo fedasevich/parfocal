@@ -1,3 +1,3 @@
-status: in-progress
-by: PROTO-016-agent
+status: review
+by: proto-016b
 since: 2026-11-01
