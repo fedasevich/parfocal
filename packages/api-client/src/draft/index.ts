@@ -26,6 +26,21 @@ export {
   useGetMyChecklist,
 } from "./get-my-checklist.ts";
 export {
+  type GetMySettingsQueryError,
+  type GetMySettingsQueryResult,
+  getGetMySettingsQueryKey,
+  getGetMySettingsQueryOptions,
+  getGetMySettingsUrl,
+  getMySettings,
+  type getMySettingsResponse,
+  type MySettings,
+  mySettingsSchema,
+  NoticeChannel,
+  ShortcutPreset,
+  useGetMySettings,
+  WholeSlideKey,
+} from "./get-my-settings.ts";
+export {
   type GetProjectScopeOptionsQueryError,
   type GetProjectScopeOptionsQueryResult,
   getGetProjectScopeOptionsQueryKey,

@@ -11,6 +11,7 @@ export const shellRouteIds: ReadonlySet<string> = new Set([
   "/projects/$projectId/tasks/new",
   "/projects/$projectId/upload",
   "/team",
+  "/settings/$section",
 ]);
 
 export const foldedShellRouteIds: ReadonlySet<string> = new Set<string>([

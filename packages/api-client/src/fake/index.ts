@@ -7,6 +7,7 @@ import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
+import { settingsHandlers } from "./settings-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 
@@ -26,6 +27,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...taskHandlers(),
     ...jobHandlers(),
     ...adminHandlers(),
+    ...settingsHandlers(),
     ...getParfocalAPIMock(),
   ];
 }
@@ -48,8 +50,14 @@ export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario
 export * as scenarioJobs from "./scenario-jobs.ts";
 export * as scenarioProject from "./scenario-project.ts";
 export * as scenarioReview from "./scenario-review.ts";
+export * as scenarioSettings from "./scenario-settings.ts";
 export * as scenarioTask from "./scenario-task.ts";
 export * as scenarioTeam from "./scenario-team.ts";
+export {
+  resetSettingsActions,
+  toPreferences,
+  toSessions,
+} from "./settings-handlers.ts";
 export { teamReviewerStatus, toTeamWorkload } from "./team-handlers.ts";
 export {
   defaultFakeTeamScene,

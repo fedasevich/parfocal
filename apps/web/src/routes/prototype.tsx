@@ -7,6 +7,11 @@ import { onboardingPrototypeLinks } from "../screens/onboarding/prototype-scenes
 import { okData } from "../screens/placeholder.tsx";
 import { projectPrototypeLinks } from "../screens/project/prototype-scenes.ts";
 import { reviewPrototypeLinks } from "../screens/review/prototype-scenes.ts";
+import {
+  developerPrototypeScenes,
+  settingsPrototypeScenes,
+} from "../screens/settings/prototype-scenes.ts";
+import { sectionOfScene } from "../screens/settings/sections.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
 
 export const Route = createFileRoute("/prototype")({
@@ -165,11 +170,24 @@ function PrototypeIndex() {
             <Link {...link}>{label}</Link>
           </Entry>
         ))}
-        <Entry note="Deep link to a settings section">
-          <Link to="/settings/$section" params={{ section: "profile" }}>
-            Settings · profile
-          </Link>
-        </Entry>
+        {settingsPrototypeScenes.map(({ scene, label, note }) => (
+          <Entry key={`settings-${scene}`} note={note}>
+            <Link
+              to="/settings/$section"
+              params={{ section: sectionOfScene(scene) }}
+              search={{ scene }}
+            >
+              {label}
+            </Link>
+          </Entry>
+        ))}
+        {developerPrototypeScenes.map(({ scene, label, note }) => (
+          <Entry key={`developer-${scene}`} note={note}>
+            <Link to="/developer" search={{ scene }}>
+              {label}
+            </Link>
+          </Entry>
+        ))}
       </ul>
     </main>
   );

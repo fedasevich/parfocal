@@ -20,6 +20,7 @@ import {
   slideByIndex,
   threads,
 } from "./scenario.ts";
+import { settingsDraftOperations } from "./settings-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
@@ -66,6 +67,7 @@ export {
   getListReviewObjectsMockHandler,
   getListThreadCommentsMockHandler,
 } from "./review-handlers.ts";
+export { getGetMySettingsMockHandler } from "./settings-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
@@ -73,7 +75,6 @@ export {
   getListReviewerWorkloadMockHandler,
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
-
 export {
   getCancelNudgeMockHandler,
   getListTeamWorkloadMockHandler,
@@ -209,6 +210,7 @@ export const draftOperations: DraftOperation[] = [
   ...adminDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
+  ...settingsDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

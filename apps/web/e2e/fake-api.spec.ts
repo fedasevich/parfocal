@@ -18,14 +18,14 @@ test("home opens on the scenario's fake data with the badge", async ({ page }) =
 test("the prototype index links to every screen", async ({ page }) => {
   await page.goto("/prototype");
   const screens = page.getByRole("list", { name: "Screens" });
-  await expect(screens.getByRole("link")).toHaveCount(137);
+  await expect(screens.getByRole("link")).toHaveCount(163);
   await screens.getByRole("link", { name: "Slide · S26-04812 A1" }).click();
   await expect(page.getByRole("heading", { name: "Slide" })).toBeVisible();
   const url = new URL(page.url());
   expect(url.searchParams.get("object")).toBe("T2·C145");
   await page.goBack();
-  await screens.getByRole("link", { name: "Settings · profile" }).click();
-  await expect(page).toHaveURL(/\/settings\/profile$/);
+  await screens.getByRole("link", { name: "Shortcuts · key already used" }).click();
+  await expect(page).toHaveURL(/\/settings\/shortcuts\?scene=conflict$/);
 });
 
 test("a settings deep link to an unknown section is not found", async ({ page }) => {

@@ -1,0 +1,256 @@
+import type { IconName } from "@parfocal/ui/components/icon";
+import type { SettingScopeKind } from "@parfocal/ui/components/settings-dialog";
+import type { SceneOf } from "../scenes.ts";
+import { anyKeyMatches, type ShortcutScene } from "./shortcuts.ts";
+
+export const settingsSectionKeys = [
+  "display",
+  "review",
+  "layout",
+  "ai",
+  "navigation",
+  "shortcuts",
+  "notifications",
+  "privacy",
+  "account",
+] as const;
+
+export type SettingsSection = (typeof settingsSectionKeys)[number];
+
+export type SettingsScene = SceneOf<"settings">;
+
+export const settingsSections: { key: SettingsSection; title: string; icon: IconName }[] = [
+  { key: "display", title: "Display", icon: "sun" },
+  { key: "review", title: "Review", icon: "sliders" },
+  { key: "layout", title: "Layout", icon: "panel" },
+  { key: "ai", title: "AI and confidence", icon: "smart" },
+  { key: "navigation", title: "Navigation and devices", icon: "mouse" },
+  { key: "shortcuts", title: "Shortcuts", icon: "keyboard" },
+  { key: "notifications", title: "Notifications", icon: "bell" },
+  { key: "privacy", title: "Privacy and session", icon: "shield" },
+  { key: "account", title: "Account", icon: "user" },
+];
+
+export type RowKey =
+  | "theme"
+  | "brightness"
+  | "density"
+  | "lengths"
+  | "language"
+  | "presetKeys"
+  | "presets"
+  | "signature"
+  | "tools"
+  | "panelWidth"
+  | "hidePanel"
+  | "panelMoving"
+  | "minimap"
+  | "strip"
+  | "defaultPreset"
+  | "modelWarnings"
+  | "device"
+  | "wheel"
+  | "doubleClick"
+  | "speed"
+  | "invertZoom"
+  | "spaceMouseRotation"
+  | "noticeTask"
+  | "noticeMention"
+  | "noticeSubmit"
+  | "noticeRun"
+  | "noticeDue"
+  | "initials"
+  | "lockAfter"
+  | "otherDevices"
+  | "name"
+  | "email"
+  | "role"
+  | "workspace";
+
+export type SettingRow = { key: RowKey; label: string; help: string; scope: SettingScopeKind };
+
+const row = (key: RowKey, label: string, scope: SettingScopeKind, help = ""): SettingRow => ({
+  key,
+  label,
+  help,
+  scope,
+});
+
+export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingRow[]> = {
+  display: [
+    row("theme", "Theme", "device", "The interface only. Slides keep their own colors."),
+    row(
+      "brightness",
+      "Slide brightness",
+      "device",
+      "Changes the slide only, never the interface or the monitor. ⌥↑ and ⌥↓ do the same on the slide.",
+    ),
+    row("density", "Density", "personal", "Compact fits more rows on a laptop screen."),
+    row("lengths", "Lengths", "personal", "How sizes read on the slide and in reports."),
+    row(
+      "language",
+      "Language",
+      "personal",
+      "Report wording follows the lab's language, not this setting.",
+    ),
+  ],
+  review: [
+    row("presetKeys", "Preset keys", "personal", "Switch presets while you review."),
+    row(
+      "presets",
+      "Your presets",
+      "personal",
+      "Save, rename and reorder presets where you see the slide change.",
+    ),
+    row(
+      "signature",
+      "Signature block on reports",
+      "personal",
+      "Adds your name and role under the reports you sign.",
+    ),
+  ],
+  layout: [
+    row(
+      "tools",
+      "Tools",
+      "personal",
+      "The bottom dock gives the slide its full height. The left rail matches QuPath and ImageScope.",
+    ),
+    row("panelWidth", "Side panel width", "personal", "Drag the panel edge for any other width."),
+    row("hidePanel", "Hide the side panel", "personal", "I hides and shows it on the slide."),
+    row(
+      "panelMoving",
+      "Panel while moving",
+      "personal",
+      "Hiding gives the slide more room while you pan.",
+    ),
+    row(
+      "minimap",
+      "Minimap",
+      "personal",
+      "When useful shows it once you zoom past the whole slide.",
+    ),
+    row(
+      "strip",
+      "Pinned slide strip",
+      "personal",
+      "Off by default. The slide switcher in the top bar does the same job without taking width.",
+    ),
+  ],
+  ai: [
+    row(
+      "defaultPreset",
+      "Default display preset",
+      "personal",
+      "Guided review and the full viewer open with it. Settings a task locks stay as the task sets them.",
+    ),
+    row(
+      "modelWarnings",
+      "Model warnings",
+      "personal",
+      "Says when a model was trained on other tissue.",
+    ),
+  ],
+  navigation: [
+    row("device", "Main input device", "device", "Shows that device's controls on the slide."),
+    row(
+      "wheel",
+      "Mouse wheel",
+      "device",
+      "Zoom matches ImageScope, QuPath and Sectra. Trackpads always pan.",
+    ),
+    row("doubleClick", "Double-click", "personal", "What a double click on the slide does."),
+    row("speed", "Pan and zoom speed", "device", "For the mouse, the trackpad and the arrow keys."),
+    row("invertZoom", "Invert zoom direction", "device", "Scrolling up zooms out instead of in."),
+    row(
+      "spaceMouseRotation",
+      "SpaceMouse rotation",
+      "device",
+      "Off by default. Twisting the cap moved slides by accident in the 38-pathologist study.",
+    ),
+  ],
+  notifications: [
+    row("noticeTask", "A task is given to me", "personal", "A new review task or an adjudication."),
+    row(
+      "noticeMention",
+      "Someone mentions me",
+      "personal",
+      "An @mention or a reply in a thread you wrote in.",
+    ),
+    row(
+      "noticeSubmit",
+      "A reviewer submits a slide of my task",
+      "personal",
+      "For the researcher who set up the task.",
+    ),
+    row(
+      "noticeRun",
+      "A model run finishes",
+      "personal",
+      "Runs you started, and the ones that failed.",
+    ),
+    row("noticeDue", "A reminder before a due date", "personal", "Two days before, then each day."),
+  ],
+  privacy: [
+    row(
+      "initials",
+      "Initials while sharing",
+      "personal",
+      "Shows initials while your screen is shared or a guest is viewing.",
+    ),
+    row("lockAfter", "Lock after", "lab", "Set by your lab. Unlocking returns to the same view."),
+    row("otherDevices", "Other devices", "personal", "Other devices that are signed in."),
+  ],
+  account: [
+    row("name", "Name", "personal"),
+    row("email", "Email", "personal"),
+    row("role", "Role", "lab"),
+    row("workspace", "Workspace", "lab"),
+  ],
+};
+
+const hit = (query: string, ...texts: string[]) =>
+  !query || texts.some((text) => text.toLowerCase().includes(query));
+
+export function matchingRows(section: Exclude<SettingsSection, "shortcuts">, query: string) {
+  const title = settingsSections.find((item) => item.key === section)?.title ?? "";
+  const rows = sectionRows[section];
+  return hit(query, title) ? rows : rows.filter((item) => hit(query, item.label, item.help));
+}
+
+export function matchCount(section: SettingsSection, query: string): number {
+  if (section === "shortcuts") return anyKeyMatches(query) ? 1 : 0;
+  return matchingRows(section, query).length;
+}
+
+export const normalQuery = (query: string | undefined) => (query ?? "").trim().toLowerCase();
+
+export function visibleSections(query: string) {
+  return settingsSections.filter((section) => matchCount(section.key, query) > 0);
+}
+
+export function shownSection(section: SettingsSection, query: string) {
+  const visible = visibleSections(query);
+  return visible.find((item) => item.key === section) ?? visible[0];
+}
+
+const sceneSections: Partial<Record<SettingsScene, SettingsSection>> = {
+  display: "display",
+  review: "review",
+  layout: "layout",
+  ai: "ai",
+  nav: "navigation",
+  notify: "notifications",
+  privacy: "privacy",
+  account: "account",
+  search: "navigation",
+};
+
+export const sectionOfScene = (scene: SettingsScene): SettingsSection =>
+  sceneSections[scene] ?? "shortcuts";
+
+export const queryOfScene = (scene: SettingsScene | undefined) =>
+  scene === "search" ? "zoom" : undefined;
+
+export const shortcutSceneOf = (scene: SettingsScene | undefined): ShortcutScene =>
+  scene !== undefined && sectionOfScene(scene) === "shortcuts" ? (scene as ShortcutScene) : "keys";

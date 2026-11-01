@@ -40,14 +40,14 @@ const presences: { key: Presence; label: string; hint: string; tone: string }[] 
 type MenuEntry = { icon: IconName; label: string; href?: string; keys?: string };
 
 const entries: MenuEntry[] = [
-  { icon: "gear", label: "Settings", href: destinations.settings("appearance"), keys: "⌘," },
+  { icon: "gear", label: "Settings", href: destinations.settings("display"), keys: "⌘," },
   {
     icon: "keyboard",
     label: "Keyboard shortcuts",
     href: destinations.settings("shortcuts"),
     keys: "?",
   },
-  { icon: "pen", label: "Profile and signature", href: destinations.settings("profile") },
+  { icon: "pen", label: "Profile and signature", href: destinations.settings("account") },
   { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
   { icon: "help", label: "Help and what's new" },
 ];

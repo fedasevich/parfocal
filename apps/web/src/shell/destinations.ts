@@ -1,3 +1,5 @@
+import type { SettingsSection } from "../screens/settings/sections.ts";
+
 const query = (params: Record<string, string | undefined>) => {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -27,6 +29,6 @@ export const destinations = {
   evaluation: (taskId: string) => `/tasks/${taskId}/evaluation`,
   team: (link: { scene?: string; task?: string; focus?: string | undefined } = {}) =>
     `/team${query({ scene: link.scene, task: link.task, focus: link.focus })}`,
-  settings: (section: string) => `/settings/${section}`,
+  settings: (section: SettingsSection) => `/settings/${section}`,
   admin: () => "/admin",
 };
