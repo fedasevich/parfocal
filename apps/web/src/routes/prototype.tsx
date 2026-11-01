@@ -15,6 +15,7 @@ import {
 import { sectionOfScene } from "../screens/settings/sections.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
 import { viewerPrototypeLinks } from "../screens/viewer/prototype-scenes.ts";
+import { toolPrototypeLinks } from "../screens/viewer-tools/prototype-scenes.ts";
 
 export const Route = createFileRoute("/prototype")({
   beforeLoad: () => {
@@ -171,6 +172,13 @@ function PrototypeIndex() {
                 <Link {...link}>{label}</Link>
               </Entry>
             ))}
+            {toolPrototypeLinks(resume.project.id, resume.task_id, resume.slide_id).map(
+              ({ key, label, note, link }) => (
+                <Entry key={key} note={note}>
+                  <Link {...link}>{label}</Link>
+                </Entry>
+              ),
+            )}
             {reviewPrototypeLinks(
               resume.task_id,
               resume.slide_id,

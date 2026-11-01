@@ -54,11 +54,22 @@ import {
   ObjectsSummary,
   ViewerFrame,
 } from "../review/viewer-frame.tsx";
+import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
+import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
+import { reviewRail } from "../viewer-tools/rails.ts";
+import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
-import { AddedFoot, ObjectFoot, RunningObjects, TellMeWhenReady } from "./objects-panel.tsx";
+import {
+  AddedFoot,
+  MeasurementFoot,
+  ObjectFoot,
+  RunningObjects,
+  TellMeWhenReady,
+} from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
 import {
+  isNavigatorScene,
   type LayerView,
   layerViews,
   type ViewerScene,
@@ -72,6 +83,9 @@ export type ViewerSearch = {
   scene?: ViewerScene | undefined;
   tab?: ViewerTab | undefined;
   modal?: "preset" | undefined;
+  tool?: "ruler" | undefined;
+  peek?: boolean | undefined;
+  focus?: boolean | undefined;
 };
 
 type FullViewerProps = {
@@ -133,6 +147,10 @@ function ViewerBody({
 }: BodyProps) {
   const scene = search.scene;
   const setup = viewerSetup(scene);
+  const navigator = isNavigatorScene(scene) ? scene : null;
+  const measuring = search.tool === "ruler";
+  const peekOpen = search.peek === true;
+  const [peekHeld, setPeekHeld] = useState(false);
   const navigate = useNavigate();
   const router = useRouter();
   const person = usePeople();
@@ -158,6 +176,23 @@ function ViewerBody({
   const [overrides, setOverrides] = useState<Answers>(new Map());
   const answer = (object: string) => answerOf(base, overrides, object);
   const counts = countAnswers(objects, answer);
+  const areas = regions.map((region) => ({
+    object: region.object,
+    size: region.size_mm ?? 0,
+  }));
+  const decidedRegions = regions.filter((region) => answer(region.object)).length;
+  const closePeek = () => {
+    setPeekHeld(false);
+    onSearch({ peek: undefined });
+  };
+  usePeekKey(
+    peekOpen,
+    (held) => {
+      setPeekHeld(held);
+      if (!peekOpen) onSearch({ peek: true });
+    },
+    closePeek,
+  );
   const [filter, setFilter] = useState<ListFilter>(setup.filter);
   const [cellsOpen, setCellsOpen] = useState(setup.cells);
   const [cellsFolded, setCellsFolded] = useState(false);
@@ -175,7 +210,15 @@ function ViewerBody({
     ),
   );
   const firstOpenCell = cells.find((cell) => !answer(cell.object))?.object ?? cells[0]?.object;
-  const selected = search.object ?? setup.object ?? (setup.cells ? (firstOpenCell ?? null) : null);
+  const firstRegion = regions[0];
+  const measurement =
+    measuring && firstRegion
+      ? { object: "M1", mm: measuredSize(firstRegion.size_mm ?? 0), across: firstRegion.object }
+      : null;
+  const selected =
+    search.object ??
+    setup.object ??
+    (measurement ? measurement.object : setup.cells ? (firstOpenCell ?? null) : null);
   const tab: ViewerTab = search.tab ?? setup.tab;
   const view: LayerView = setup.view;
   const extraLocks: DisplayLock[] = setup.confidenceLock
@@ -276,7 +319,19 @@ function ViewerBody({
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, [contenteditable], [role=dialog], [role=menu]")) return;
+      if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
+        event.preventDefault();
+        onSearch({ focus: true, scene: undefined, tool: undefined });
+        return;
+      }
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "]" && navigator && navigator !== "overview") {
+        event.preventDefault();
+        if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
+        else onSearch({ scene: "travel" });
+        return;
+      }
+      if (event.key === "Escape" && peekOpen) return;
       if (event.key === "Escape" && selected) {
         pick(undefined);
         return;
@@ -421,13 +476,27 @@ function ViewerBody({
             note: item.note,
           }))}
           onOpenCells={() => pick(firstOpenCell)}
+          measurements={measurement ? [measurement] : []}
         />
       </>
     );
   const firstOpen = openRegions[0]?.object;
   const objectsFoot: ReactNode = running ? (
     <TellMeWhenReady on={tellMe} onChange={setTellMe} />
-  ) : nothing ? undefined : current ? (
+  ) : nothing ? undefined : measurement && selected === measurement.object ? (
+    <MeasurementFoot
+      {...measurement}
+      onClose={() => onSearch({ object: "" })}
+      onRemove={() => {
+        onSearch({ tool: undefined, object: undefined });
+        setToast({
+          id: Date.now(),
+          text: `${measurement.object} removed`,
+          undo: () => onSearch({ tool: "ruler", object: measurement.object }),
+        });
+      }}
+    />
+  ) : current ? (
     <ObjectFoot
       object={current}
       text={cardText(style, current, confidence)}
@@ -735,7 +804,29 @@ function ViewerBody({
       <ViewerFrame
         session={session}
         counts={counts}
-        tool={running || nothing ? "hand" : "select"}
+        tool={measuring ? "ruler" : running || nothing ? "hand" : "select"}
+        railGroups={reviewRail}
+        onToolChange={(next) => {
+          if (next === "ruler") onSearch({ tool: "ruler", object: undefined, scene: undefined });
+          if (next === "select") onSearch({ tool: undefined });
+        }}
+        onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
+        overlay={
+          peekOpen ? (
+            <SlidePeek
+              slideName={session.slideName}
+              areas={areas}
+              decided={decidedRegions}
+              atCell={navigator === "cells" || navigator === "focus" || current?.kind === "cell"}
+              held={peekHeld}
+              onClose={closePeek}
+              onPick={(point) => {
+                closePeek();
+                if (!navigator && !measuring) setCamera({ x: point[0], y: point[1], scale: 1.5 });
+              }}
+            />
+          ) : null
+        }
         tab={tab}
         onTabChange={(next) => onSearch({ tab: next as ViewerTab })}
         topBar={topBar}
@@ -786,115 +877,136 @@ function ViewerBody({
           { value: "opinion", label: "Opinion", body: opinionBody },
         ]}
       >
-        <SlideStill
-          view={stillView}
-          camera={camera}
-          onCameraChange={setCamera}
-          regionDecisions={regionDecisions}
-          cellDecisions={cellDecisions}
-          ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
-          claimHidden={!showsClaim(style)}
-          drawAs={settings.draw}
-          showIds={settings.ids}
-          failed={setup.issue === "slidefail"}
-          bare={nothing || running}
-          minimap={false}
-          hint={false}
-          tiles={setup.tiles}
-          slideName={session.slideName}
-          regionStyle={drawing.regionStyle}
-          tags={running || nothing ? [] : drawing.tags}
-          underlay={running ? () => <RunningHeat /> : drawing.underlay}
-          overlay={() => (
-            <>
-              {canvasNotice}
-              {drawing.legend ? (
-                <div className="absolute top-4 left-4">{drawing.legend}</div>
-              ) : null}
-              {drawing.extra}
-              {whole && cells.length && !running && view === "panel" ? (
-                <CellCluster
-                  className="absolute top-[50%] left-[54%]"
-                  split={countAnswers(cells, answer)}
-                  onClick={() => pick(firstOpenCell)}
-                />
-              ) : null}
-              {current?.kind === "cell" ? (
-                cellsOpen ? (
-                  <CellsGrid
-                    className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                    cells={cells}
-                    current={current.object}
-                    answer={answer}
-                    answerKeys={answersOf(style, session.classes, current).map((item) => item.key)}
-                    claimHidden={!showsClaim(style)}
-                    folded={cellsFolded}
-                    confirming={confirmRest}
-                    onPick={(object) => pick(object)}
-                    onAgreeRest={() => setConfirmRest(true)}
-                    onCancelRest={() => setConfirmRest(false)}
-                    onApplyRest={() => {
-                      const next = new Map(overrides);
-                      for (const cell of openCells) {
-                        next.set(cell.object, {
-                          value: "agree",
-                          raw: rawFor(style, "agree", cell),
-                          reasons: [],
-                          note: null,
+        {navigator === "overview" ? (
+          <OverviewCanvas areas={areas} checked={["T1"]} />
+        ) : navigator ? (
+          <NavigatorCanvas
+            scene={navigator}
+            areas={areas}
+            decided={decidedRegions}
+            current="T2"
+            onPeek={() => onSearch({ peek: true })}
+            onTravel={() => onSearch({ scene: "travel" })}
+            onGoTo={(object) => onSearch({ scene: undefined, object })}
+            onPopOut={() =>
+              setToast({ id: Date.now(), text: "Opens the whole slide on the second monitor" })
+            }
+          />
+        ) : measurement ? (
+          <MeasureCanvas measurement={measurement} regionSize={firstRegion?.size_mm ?? 0} />
+        ) : (
+          <SlideStill
+            view={stillView}
+            camera={camera}
+            onCameraChange={setCamera}
+            regionDecisions={regionDecisions}
+            cellDecisions={cellDecisions}
+            ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
+            claimHidden={!showsClaim(style)}
+            drawAs={settings.draw}
+            showIds={settings.ids}
+            failed={setup.issue === "slidefail"}
+            bare={nothing || running}
+            minimap={false}
+            hint={false}
+            tiles={setup.tiles}
+            slideName={session.slideName}
+            regionStyle={drawing.regionStyle}
+            tags={running || nothing ? [] : drawing.tags}
+            underlay={running ? () => <RunningHeat /> : drawing.underlay}
+            overlay={() => (
+              <>
+                {canvasNotice}
+                {drawing.legend ? (
+                  <div className="absolute top-4 left-4">{drawing.legend}</div>
+                ) : null}
+                {drawing.extra}
+                {whole && cells.length && !running && view === "panel" ? (
+                  <CellCluster
+                    className="absolute top-[50%] left-[54%]"
+                    split={countAnswers(cells, answer)}
+                    onClick={() => pick(firstOpenCell)}
+                  />
+                ) : null}
+                {current?.kind === "cell" ? (
+                  cellsOpen ? (
+                    <CellsGrid
+                      className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
+                      cells={cells}
+                      current={current.object}
+                      answer={answer}
+                      answerKeys={answersOf(style, session.classes, current).map(
+                        (item) => item.key,
+                      )}
+                      claimHidden={!showsClaim(style)}
+                      folded={cellsFolded}
+                      confirming={confirmRest}
+                      onPick={(object) => pick(object)}
+                      onAgreeRest={() => setConfirmRest(true)}
+                      onCancelRest={() => setConfirmRest(false)}
+                      onApplyRest={() => {
+                        const next = new Map(overrides);
+                        for (const cell of openCells) {
+                          next.set(cell.object, {
+                            value: "agree",
+                            raw: rawFor(style, "agree", cell),
+                            reasons: [],
+                            note: null,
+                          });
+                        }
+                        setOverrides(next);
+                        setConfirmRest(false);
+                        setToast({
+                          id: Date.now(),
+                          text: `${openCells.length} cells marked agree`,
+                          undo: () => setOverrides(overrides),
                         });
-                      }
-                      setOverrides(next);
-                      setConfirmRest(false);
-                      setToast({
-                        id: Date.now(),
-                        text: `${openCells.length} cells marked agree`,
-                        undo: () => setOverrides(overrides),
-                      });
-                    }}
-                    onFoldChange={setCellsFolded}
-                    onClose={() => setCellsOpen(false)}
-                  />
-                ) : (
-                  <CellsLauncher
-                    className="absolute bottom-18 left-1/2 -translate-x-1/2"
-                    decided={cells.length - openCells.length}
-                    total={cells.length}
-                    onClick={() => setCellsOpen(true)}
-                  />
-                )
-              ) : null}
-              {whole ? null : (
-                <Button
-                  size="lg"
-                  className="absolute bottom-4 left-4"
-                  onClick={() => pick(undefined)}
-                >
-                  <Icon name="expand" />
-                  Whole slide
-                </Button>
-              )}
-              <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
-                {tileHint}
-                <MagnificationBar
-                  magnification={stillView.kind === "cell" ? 40 : whole ? 1.25 : 2.5}
-                  scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
-                  scalePx={92}
-                  micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
-                />
-              </div>
-              {toast ? (
-                <div className="absolute right-4 bottom-4">
-                  <UndoToast
-                    key={toast.id}
-                    message={toast.text}
-                    {...(toast.undo ? { onUndo: toast.undo } : {})}
-                    onExpire={() => setToast(null)}
+                      }}
+                      onFoldChange={setCellsFolded}
+                      onClose={() => setCellsOpen(false)}
+                    />
+                  ) : (
+                    <CellsLauncher
+                      className="absolute bottom-18 left-1/2 -translate-x-1/2"
+                      decided={cells.length - openCells.length}
+                      total={cells.length}
+                      onClick={() => setCellsOpen(true)}
+                    />
+                  )
+                ) : null}
+                {whole ? null : (
+                  <Button
+                    size="lg"
+                    className="absolute bottom-4 left-4"
+                    onClick={() => pick(undefined)}
+                  >
+                    <Icon name="expand" />
+                    Whole slide
+                  </Button>
+                )}
+                <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
+                  {tileHint}
+                  <MagnificationBar
+                    magnification={stillView.kind === "cell" ? 40 : whole ? 1.25 : 2.5}
+                    scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
+                    scalePx={92}
+                    micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
                   />
                 </div>
-              ) : null}
-            </>
-          )}
-        />
+                {toast ? (
+                  <div className="absolute right-4 bottom-4">
+                    <UndoToast
+                      key={toast.id}
+                      message={toast.text}
+                      {...(toast.undo ? { onUndo: toast.undo } : {})}
+                      onExpire={() => setToast(null)}
+                    />
+                  </div>
+                ) : null}
+              </>
+            )}
+          />
+        )}
       </ViewerFrame>
       <SavePresetModal
         open={search.modal === "preset"}

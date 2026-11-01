@@ -432,5 +432,35 @@ export function issueTarget(screen: PrototypeScreen, scene: string, ids: Scenari
       search: { scene: oneOf(onboardingScenes.admin, scene), as },
     });
   }
+  if (screen === "navigator" || screen === "compare") {
+    const known = oneOf([...mockScenes.navigator, ...mockScenes.compare], scene);
+    return known === undefined
+      ? null
+      : linkOptions({
+          to: "/projects/$projectId/slides/$slideId",
+          params: { projectId: ids.researchProject, slideId: ids.slide },
+          search: { task: ids.task, scene: known, as },
+        });
+  }
+  if (screen === "annotate") {
+    return linkOptions({
+      to: "/projects/$projectId/slides/$slideId/annotate",
+      params: { projectId: ids.researchProject, slideId: ids.slide },
+      search: { task: ids.task, scene: oneOf(mockScenes.annotate, scene) },
+    });
+  }
+  if (screen === "measure" || screen === "focus" || screen === "peek") {
+    return linkOptions({
+      to: "/projects/$projectId/slides/$slideId",
+      params: { projectId: ids.researchProject, slideId: ids.slide },
+      search: {
+        task: ids.task,
+        as,
+        ...(screen === "measure" ? { tool: "ruler" as const } : {}),
+        ...(screen === "focus" ? { focus: true, object: "T5" } : {}),
+        ...(screen === "peek" ? { peek: true, object: "T5" } : {}),
+      },
+    });
+  }
   return targetFor(screen, ids, { scene, as });
 }

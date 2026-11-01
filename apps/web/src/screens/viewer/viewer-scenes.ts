@@ -9,7 +9,11 @@ export type CaseScene = SceneOf<"case">;
 
 export type LayersScene = SceneOf<"layers">;
 
-export type ViewerScene = CaseScene | LayersScene;
+export type NavigatorScene = SceneOf<"navigator">;
+
+export type CompareScene = SceneOf<"compare">;
+
+export type ViewerScene = CaseScene | LayersScene | NavigatorScene | CompareScene;
 
 export type LayerView =
   | "panel"
@@ -100,6 +104,15 @@ const scenes: Record<ViewerScene, Partial<ViewerSetup>> = {
   display,
   locked: { ...display, confidenceLock: "Confidence hidden this round" },
   preset: { ...display, preset: "Dots, no IDs", presetOpen: true },
+  overview: {},
+  reading: {},
+  avoid: {},
+  travel: {},
+  cells: {},
+  focus: {},
+  pointer: {},
+  picked: {},
+  picking: {},
 };
 
 export function viewerSetup(scene: ViewerScene | undefined): ViewerSetup {
@@ -128,3 +141,19 @@ export const findingsObjects: Record<SceneOf<"findings">, string> = {
   decided: "T2",
   added: "T6⁺",
 };
+
+const navigatorSceneSet: Record<NavigatorScene, true> = {
+  overview: true,
+  reading: true,
+  avoid: true,
+  travel: true,
+  cells: true,
+  focus: true,
+  pointer: true,
+};
+
+export const isNavigatorScene = (scene: ViewerScene | undefined): scene is NavigatorScene =>
+  scene !== undefined && scene in navigatorSceneSet;
+
+export const isCompareScene = (scene: ViewerScene | undefined): scene is CompareScene =>
+  scene === "picked" || scene === "picking";

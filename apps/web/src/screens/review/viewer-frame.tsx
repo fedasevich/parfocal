@@ -1,6 +1,6 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { Icon } from "@parfocal/ui/components/icon";
+import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { FactList } from "@parfocal/ui/components/inspector";
 import { ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SidePanel, type SidePanelTab } from "@parfocal/ui/components/side-panel";
@@ -16,23 +16,24 @@ import { ReviewTop, type SlideCounts } from "./review-top.tsx";
 
 export type ViewerTool = "select" | "hand" | "annotate" | "comment" | "ai";
 
-const tools: {
-  tool: ViewerTool;
-  icon: "select" | "hand" | "pen" | "comment" | "smart";
-  label: string;
-  key: string;
-}[] = [
+export type RailTool = { tool: string; icon: IconName; label: string; key: string; ai?: boolean };
+
+const tools: RailTool[] = [
   { tool: "select", icon: "select", label: "Select", key: "V" },
   { tool: "hand", icon: "hand", label: "Pan", key: "H" },
   { tool: "annotate", icon: "pen", label: "Annotate", key: "P" },
   { tool: "comment", icon: "comment", label: "Comment on an ID", key: "C" },
-  { tool: "ai", icon: "smart", label: "AI tools", key: "A" },
+  { tool: "ai", icon: "smart", label: "AI tools", key: "A", ai: true },
 ];
 
 type ViewerFrameProps = {
   session: ReviewSession;
   counts: SlideCounts | undefined;
-  tool: ViewerTool;
+  tool: string;
+  railGroups?: RailTool[][] | undefined;
+  onToolChange?: ((tool: string) => void) | undefined;
+  onCompare?: (() => void) | undefined;
+  overlay?: ReactNode;
   tab: string;
   onTabChange: (tab: string) => void;
   tabs: SidePanelTab[];
@@ -59,6 +60,10 @@ export function ViewerFrame({
   onSubmit,
   progressSub,
   scene,
+  railGroups = [tools],
+  onToolChange,
+  onCompare,
+  overlay,
 }: ViewerFrameProps) {
   return (
     <main
@@ -81,27 +86,43 @@ export function ViewerFrame({
         />
       )}
       {banner}
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
         <ToolRail className="justify-between">
-          <ToolRailGroup>
-            {tools.map((item) => (
-              <ToolRailButton
-                key={item.tool}
-                icon={item.icon}
-                label={item.label}
-                keyHint={item.key}
-                ai={item.tool === "ai"}
-                pressed={item.tool === tool}
-              />
+          <div className="grid gap-1">
+            {railGroups.map((group) => (
+              <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
+                {group.map((item) => (
+                  <ToolRailButton
+                    key={item.tool}
+                    icon={item.icon}
+                    label={item.label}
+                    keyHint={item.key}
+                    ai={item.ai ?? false}
+                    pressed={item.tool === tool}
+                    {...(onToolChange ? { onPressedChange: () => onToolChange(item.tool) } : {})}
+                  />
+                ))}
+              </ToolRailGroup>
             ))}
+          </div>
+          <ToolRailGroup>
+            {onCompare ? (
+              <ToolRailButton
+                icon="slides"
+                label="Compare slides"
+                pressed={false}
+                onPressedChange={onCompare}
+              />
+            ) : null}
+            <ToolRailButton icon="panel" label="Hide the side panel" keyHint="]" />
           </ToolRailGroup>
-          <ToolRailButton icon="panel" label="Hide the side panel" keyHint="]" />
         </ToolRail>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="relative flex min-h-0 min-w-0 flex-1">{children}</div>
           {below}
         </div>
         <SidePanel width={340} value={tab} onValueChange={onTabChange} tabs={tabs} />
+        {overlay}
       </div>
     </main>
   );
@@ -201,6 +222,8 @@ const filterWord: Record<Exclude<ListFilter, "all">, string> = {
 
 export type AddedRow = { object: string; size: string; note: string | null };
 
+export type MeasurementRow = { object: string; mm: number; across: string };
+
 type ObjectListProps = {
   objects: ReviewObject[];
   counts: SlideCounts;
@@ -213,6 +236,7 @@ type ObjectListProps = {
   added?: AddedRow[];
   onOpenCells?: () => void;
   notes?: (object: string) => boolean;
+  measurements?: MeasurementRow[];
 };
 
 export function ObjectList({
@@ -227,6 +251,7 @@ export function ObjectList({
   added = [],
   onOpenCells,
   notes,
+  measurements = [],
 }: ObjectListProps) {
   const shown = filter ?? "all";
   const matches = (object: string) => {
@@ -337,6 +362,27 @@ export function ObjectList({
               </span>
               <span />
               <span className="font-mono text-fg-dim">{item.size}</span>
+            </button>
+          </li>
+        ))}
+        {(shown === "all" ? measurements : []).map((item) => (
+          <li key={item.object}>
+            <button
+              type="button"
+              aria-current={item.object === current ? "true" : undefined}
+              onClick={() => onPick(item.object)}
+              className={row}
+            >
+              <ObjectIdTag>{item.object}</ObjectIdTag>
+              <span className="grid">
+                <span>Measurement</span>
+                <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
+                  <i aria-hidden="true" className="size-2 rounded-full bg-fg-faint" />
+                  ruler, across {item.across}
+                </small>
+              </span>
+              <span />
+              <span className="font-mono text-fg-dim">{item.mm.toFixed(2)} mm</span>
             </button>
           </li>
         ))}

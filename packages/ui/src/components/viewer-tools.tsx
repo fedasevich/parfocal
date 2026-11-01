@@ -522,7 +522,7 @@ function SlideSlot({
   return (
     <div
       data-slot="slide-slot"
-      className="grid grid-cols-[34px_56px_1fr_auto] items-center gap-2.5 rounded-[10px] bg-chrome-2 px-2.5 py-2"
+      className="grid grid-cols-[auto_64px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[10px] bg-chrome-2 px-2.5 py-2"
     >
       <span className="text-caption font-semibold text-fg-dim">{sideWord[side]}</span>
       <SlideThumb slide={slide} large />
@@ -534,7 +534,7 @@ function SlideSlot({
         type="button"
         onClick={onChange}
         aria-label={`Change the ${side} slide`}
-        className="h-8 cursor-pointer rounded-ctl border border-line-strong bg-btn-bg px-3 text-body-sm font-medium text-fg hover:bg-chrome-3"
+        className="h-8 cursor-pointer rounded-ctl border border-line-strong bg-btn-bg px-2.5 text-body-sm font-medium text-fg hover:bg-chrome-3"
       >
         Change
       </button>
@@ -577,7 +577,7 @@ function SideToggles({
   );
 }
 
-function Crosshair({ x, y }: { x: number; y: number }) {
+function Crosshair({ x, y }: { x: number | string; y: number | string }) {
   return (
     <span
       data-slot="crosshair"

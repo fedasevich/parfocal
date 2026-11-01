@@ -253,3 +253,35 @@ export function AddedFoot({
     </div>
   );
 }
+
+export function MeasurementFoot({
+  object,
+  mm,
+  across,
+  onClose,
+  onRemove,
+}: {
+  object: string;
+  mm: number;
+  across: string;
+  onClose: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="grid gap-2.5" data-slot="object-foot">
+      <div className="flex items-center gap-2">
+        <ObjectIdTag>{object}</ObjectIdTag>
+        <span className="flex-1 text-body-sm text-fg-dim">Measurement · {mm.toFixed(2)} mm</span>
+        <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
+          <Icon name="close" />
+        </Button>
+      </div>
+      <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
+        Drawn with the ruler across {across}. It is yours only and is not a decision.
+      </p>
+      <Button className="w-full" onClick={onRemove}>
+        Remove {object}
+      </Button>
+    </div>
+  );
+}

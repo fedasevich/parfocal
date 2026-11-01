@@ -1,0 +1,283 @@
+import { type ProjectSlide, useListProjectSlides } from "@parfocal/api-client";
+import { Button } from "@parfocal/ui/components/button";
+import { Icon } from "@parfocal/ui/components/icon";
+import { Keycap } from "@parfocal/ui/components/keycap";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { Switch } from "@parfocal/ui/components/switch";
+import {
+  Crosshair,
+  FloatingPill,
+  PaneHeader,
+  PanePicker,
+  type PaneSide,
+  type PaneSlide,
+  SideToggles,
+  SlideSlot,
+} from "@parfocal/ui/components/viewer-tools";
+import { Zone } from "@parfocal/ui/components/zone";
+import { type CSSProperties, useEffect, useState } from "react";
+import { okData } from "../placeholder.tsx";
+import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
+import { ViewerFrame } from "../review/viewer-frame.tsx";
+import type { SceneOf } from "../scenes.ts";
+import { lookUrl } from "../thumbnails.ts";
+import { reviewRail } from "./rails.ts";
+import { midEdge } from "./tool-geometry.ts";
+import { coverHome } from "./tool-maths.ts";
+import type { ToolSession } from "./tool-session.tsx";
+
+const stainFilter = "grayscale(1) sepia(.85) hue-rotate(-12deg) saturate(1.5) brightness(1.02)";
+
+type CompareSlide = PaneSlide & { id: string; ihc: boolean; flip: boolean; note: string };
+
+function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): CompareSlide {
+  const ihc = slide.stain !== "H&E";
+  const flip = !ihc && index % 2 === 1;
+  return {
+    key: slide.id,
+    id: slide.id,
+    name: `${slide.label} · ${slide.stain}`,
+    ihc,
+    flip,
+    simulated: ihc,
+    thumb: {
+      backgroundImage: `url(${lookUrl("overview")})`,
+      ...(ihc ? { filter: stainFilter } : {}),
+      ...(flip ? { transform: "scaleX(-1)" } : {}),
+    },
+    note:
+      slide.id === currentId
+        ? "The slide you were reading"
+        : ihc
+          ? "Cytokeratin, marks tumor cells brown"
+          : "Second level of the same block",
+  };
+}
+
+const other = (side: PaneSide): PaneSide => (side === "left" ? "right" : "left");
+
+type CompareViewProps = {
+  tools: ToolSession;
+  scene: SceneOf<"compare">;
+  onLeave: (change: {
+    scene?: undefined;
+    tab?: "objects" | "display" | "comments" | "opinion";
+  }) => void;
+};
+
+export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
+  const { session, projectId, counts } = tools;
+  const all = okData(useListProjectSlides(projectId).data) ?? [];
+  const caseSlides = all
+    .filter((slide) => slide.case?.label === session.caseLabel)
+    .map((slide, index) => toCompareSlide(slide, index, session.slideId));
+  const [chosen, setChosen] = useState<Record<PaneSide, string | null>>({
+    left: null,
+    right: null,
+  });
+  const [picking, setPicking] = useState<PaneSide | null>(scene === "picking" ? "right" : null);
+  const [linked, setLinked] = useState(true);
+  const [cursor, setCursor] = useState(true);
+  const [layout, setLayout] = useState("side");
+  const [layers, setLayers] = useState([
+    { key: "outline", name: "Tumor map outline", left: true, right: false },
+    { key: "measurements", name: "Measurements", left: true, right: false },
+    { key: "comments", name: "Comments", left: true, right: true },
+  ]);
+  const [cameras, setCameras] = useState<Record<PaneSide, Camera | null>>({
+    left: null,
+    right: null,
+  });
+  const fallbackRight = caseSlides.find((slide) => slide.ihc) ?? caseSlides[1];
+  const ids: Record<PaneSide, string | undefined> = {
+    left: chosen.left ?? session.slideId,
+    right: chosen.right ?? fallbackRight?.id,
+  };
+  const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
+  const pick = (side: PaneSide, id: string) => {
+    const there = other(side);
+    if (ids[there] === id) setChosen({ [side]: id, [there]: ids[side] ?? null } as typeof chosen);
+    else setChosen({ ...chosen, left: ids.left ?? null, right: ids.right ?? null, [side]: id });
+    setPicking(null);
+  };
+  const swap = () => {
+    setChosen({ left: ids.right ?? null, right: ids.left ?? null });
+    setLayers(layers.map((row) => ({ ...row, left: row.right, right: row.left })));
+    setPicking(null);
+  };
+  const moveCamera = (side: PaneSide, camera: Camera | null) =>
+    setCameras(linked ? { left: camera, right: camera } : { ...cameras, [side]: camera });
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPicking(null);
+      if (event.shiftKey && (event.key === "L" || event.key === "l")) setLinked(!linked);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const pane = (side: PaneSide) => {
+    const slide = slideOn(side);
+    if (slide === undefined) return null;
+    const outline = layers.find((row) => row.key === "outline")?.[side] ?? false;
+    const wrapper: CSSProperties = {
+      ...(slide.ihc ? { filter: stainFilter } : {}),
+      ...(slide.flip ? { transform: "scaleX(-1)" } : {}),
+    };
+    return (
+      <section
+        data-pane={side}
+        className="relative flex min-w-0 flex-1 overflow-hidden"
+        aria-label={`${side === "left" ? "Left" : "Right"}: ${slide.name}`}
+      >
+        <div className="absolute inset-0 flex" style={wrapper}>
+          <SlideStill
+            view={{ kind: "whole" }}
+            look="mid"
+            homeOf={coverHome(midSize, [760, 520])}
+            camera={cameras[side]}
+            onCameraChange={(camera) => moveCamera(side, camera)}
+            regionDecisions={{}}
+            bare
+            minimap={false}
+            hint={false}
+            underlay={() =>
+              outline ? (
+                <path d={midEdge} fill="none" stroke="var(--c-tumor)" strokeWidth={3} />
+              ) : null
+            }
+          />
+        </div>
+        <PaneHeader
+          side={side}
+          slide={slide}
+          open={picking === side}
+          onOpenChange={(open) => setPicking(open ? side : null)}
+        />
+        {picking === side ? (
+          <PanePicker
+            side={side}
+            onPick={(id) => pick(side, id)}
+            slides={caseSlides.map((item) => ({
+              ...item,
+              here: item.id === ids[side],
+              note:
+                item.id === ids[side]
+                  ? "Showing here"
+                  : item.id === ids[other(side)]
+                    ? `On the ${other(side)} now, picking it swaps the sides`
+                    : "Click to show here",
+            }))}
+          />
+        ) : null}
+        {cursor ? <Crosshair x="55%" y="45%" /> : null}
+      </section>
+    );
+  };
+
+  const left = slideOn("left");
+  const right = slideOn("right");
+  const body = (
+    <>
+      <Zone title="Slides on screen">
+        <div className="grid gap-2">
+          {left ? (
+            <SlideSlot
+              side="left"
+              slide={left}
+              note={left.note}
+              onChange={() => setPicking("left")}
+            />
+          ) : null}
+          {right ? (
+            <SlideSlot
+              side="right"
+              slide={right}
+              note={right.note}
+              onChange={() => setPicking("right")}
+            />
+          ) : null}
+          <Button className="w-full" onClick={swap}>
+            <Icon name="slides" />
+            Swap sides
+          </Button>
+        </div>
+      </Zone>
+      <Zone
+        title="Layers"
+        end={<span className="font-mono text-caption text-fg-dim">Left · Right</span>}
+      >
+        <SideToggles
+          rows={layers}
+          onToggle={(key, side) =>
+            setLayers(layers.map((row) => (row.key === key ? { ...row, [side]: !row[side] } : row)))
+          }
+        />
+      </Zone>
+      <Zone title="Views">
+        <div className="grid gap-2.5 rounded-zone bg-chrome-2 p-3">
+          <label className="flex items-center justify-between gap-2 text-body-sm">
+            Move both together
+            <Switch checked={linked} onCheckedChange={setLinked} />
+          </label>
+          <label className="flex items-center justify-between gap-2 text-body-sm">
+            Shared cursor
+            <Switch checked={cursor} onCheckedChange={setCursor} />
+          </label>
+          <SegmentedControl
+            aria-label="Layout"
+            fill
+            value={layout}
+            onValueChange={(value) => setLayout(String(value))}
+            options={[
+              { value: "one", label: "1" },
+              { value: "side", label: "Side by side" },
+              { value: "stacked", label: "Stacked" },
+              { value: "four", label: "4" },
+            ]}
+          />
+        </div>
+        <p className="m-0 text-caption text-fg-dim">
+          The capsule question in the comments is answered on the CK level at the same spot. The
+          shared cursor shows the same point on both.
+        </p>
+      </Zone>
+    </>
+  );
+
+  return (
+    <ViewerFrame
+      session={session}
+      counts={counts}
+      tool="select"
+      railGroups={reviewRail}
+      onToolChange={(tool) => {
+        if (tool === "select") onLeave({ scene: undefined });
+      }}
+      onCompare={() => setPicking("right")}
+      tab="objects"
+      onTabChange={(tab) => onLeave({ scene: undefined, tab: tab as "display" })}
+      scene={scene}
+      tabs={[
+        { value: "objects", label: "Objects", count: counts.total, body },
+        { value: "display", label: "Display", body: null },
+        { value: "comments", label: "Comments", count: session.threads.length, body: null },
+        { value: "opinion", label: "Opinion", body: null },
+      ]}
+    >
+      <div
+        className={`relative flex min-w-0 flex-1 ${layout === "stacked" ? "flex-col" : ""} gap-0.5 bg-line-strong`}
+      >
+        {pane("left")}
+        {layout === "one" ? null : pane("right")}
+        <FloatingPill className="top-auto bottom-4">
+          <Icon name="slides" />
+          <span>Linked: pan, zoom and rotation move both</span>
+          <Switch aria-label="Linked" checked={linked} onCheckedChange={setLinked} />
+          <Keycap keys="⇧L" size="sm" />
+        </FloatingPill>
+      </div>
+    </ViewerFrame>
+  );
+}

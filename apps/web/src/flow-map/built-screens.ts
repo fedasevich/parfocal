@@ -1,6 +1,17 @@
 import type { WalkScreen } from "./walkthrough.ts";
 
-export type PrototypeScreen = WalkScreen | "settings" | "signin" | "connectmodel" | "layers";
+export type PrototypeScreen =
+  | WalkScreen
+  | "settings"
+  | "signin"
+  | "connectmodel"
+  | "layers"
+  | "navigator"
+  | "measure"
+  | "annotate"
+  | "compare"
+  | "focus"
+  | "peek";
 
 export const builtScreens: ReadonlySet<PrototypeScreen> = new Set<PrototypeScreen>([
   "home",
@@ -23,6 +34,12 @@ export const builtScreens: ReadonlySet<PrototypeScreen> = new Set<PrototypeScree
   "disagree",
   "signoff",
   "evaluation",
+  "navigator",
+  "measure",
+  "annotate",
+  "compare",
+  "focus",
+  "peek",
 ]);
 
 export const pendingTask: Partial<Record<PrototypeScreen, string>> = {};

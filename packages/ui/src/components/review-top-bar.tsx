@@ -6,7 +6,7 @@ import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-type ReviewMode = "guided" | "full" | "adjudicate";
+type ReviewMode = "guided" | "full" | "annotate" | "adjudicate";
 
 type ReviewTopBarProps = React.ComponentProps<"header"> & {
   mode?: ReviewMode;
@@ -21,7 +21,7 @@ type ReviewTopBarProps = React.ComponentProps<"header"> & {
   primaryDisabledReason?: string | undefined;
   primaryTitle?: string | undefined;
   onPrimary?: (() => void) | undefined;
-  onModeChange?: (mode: "guided" | "full") => void;
+  onModeChange?: (mode: "guided" | "full" | "annotate") => void;
   backHref?: string | undefined;
   backLabel?: string;
   renderLink?: LinkRenderer | undefined;
@@ -51,7 +51,7 @@ function ReviewTopBar({
   className,
   ...props
 }: ReviewTopBarProps) {
-  const big = mode !== "full";
+  const big = mode === "guided" || mode === "adjudicate";
   const thumb = (
     <span
       aria-hidden="true"
@@ -127,11 +127,12 @@ function ReviewTopBar({
         <SegmentedControl
           aria-label="How to review"
           value={mode}
-          onValueChange={(value) => onModeChange?.(value as "guided" | "full")}
+          onValueChange={(value) => onModeChange?.(value as "guided" | "full" | "annotate")}
           size={big ? "lg" : "md"}
           options={[
             { value: "guided", label: "Guided" },
             { value: "full", label: "Full viewer" },
+            ...(mode === "annotate" ? [{ value: "annotate", label: "Annotate" }] : []),
           ]}
         />
       )}

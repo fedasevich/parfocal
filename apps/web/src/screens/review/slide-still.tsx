@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { lookUrl } from "../thumbnails.ts";
+import { type Look, lookUrl } from "../thumbnails.ts";
 import type { Count } from "./decision-style.ts";
 import { cellShapes, hpfSize, overviewSize, regionShapes } from "./slide-geometry.ts";
 
@@ -23,9 +23,15 @@ type Size = { width: number; height: number };
 const regionMaxScale = 3.3;
 const regionFill = 0.55;
 const cellScale = 3.5;
-const readoutPerScale = { overview: 1 / 1.52, hpf: 25 } as const;
+const readoutPerScale = { overview: 1 / 1.52, mid: 10, hpf: 25 } as const;
 
 export const imageOf = (view: StillView) => (view.kind === "cell" ? "hpf" : "overview");
+
+export const midSize = { width: 1600, height: 1000 } as const;
+
+export type StillLook = Exclude<Look, "heat">;
+
+const lookSizes: Record<StillLook, Size> = { overview: overviewSize, mid: midSize, hpf: hpfSize };
 
 export const shapeKey = (object: string) => object.replace("⁺", "");
 
@@ -105,6 +111,8 @@ type SlideStillProps = {
   tiles?: Tiles;
   regionStyle?: ((object: string) => RegionStyle | undefined) | undefined;
   tags?: SlideTag[];
+  look?: StillLook | undefined;
+  homeOf?: ((size: Size) => Camera) | undefined;
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
 };
@@ -129,16 +137,18 @@ export function SlideStill({
   tiles = "sharp",
   regionStyle,
   tags = [],
+  look,
+  homeOf,
   underlay,
   overlay,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
   const size = useElementSize(ref);
-  const home = homeCamera(view, size);
+  const home = homeOf ? homeOf(size) : homeCamera(view, size);
   const shown = camera ?? home;
   const drag = useRef<{ x: number; y: number; from: Camera } | null>(null);
-  const image = imageOf(view);
-  const full = image === "hpf" ? hpfSize : overviewSize;
+  const image = look ?? imageOf(view);
+  const full = lookSizes[image];
   const viewBox = `${shown.x - size.width / 2 / shown.scale} ${shown.y - size.height / 2 / shown.scale} ${size.width / shown.scale} ${size.height / shown.scale}`;
   const moved =
     Math.abs(shown.scale / home.scale - 1) > 0.001 ||
@@ -212,7 +222,7 @@ export function SlideStill({
           />
         )}
         {underlay?.({ camera: shown, size })}
-        {bare || image === "hpf"
+        {bare || image !== "overview"
           ? null
           : Object.entries(regionShapes).map(([id, shape]) => {
               const current = shapeKey(target ?? "") === id;

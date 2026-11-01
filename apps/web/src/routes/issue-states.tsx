@@ -42,6 +42,12 @@ const screenTitles: Record<PrototypeScreen, string> = {
   signin: "Sign in",
   connectmodel: "Connect a model",
   layers: "Display",
+  navigator: "Smart minimap",
+  measure: "Measuring",
+  annotate: "Annotate workspace",
+  compare: "Compare slides",
+  focus: "Focus mode",
+  peek: "Whole-slide peek",
 };
 
 function StateButton({

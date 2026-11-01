@@ -1,30 +1,13 @@
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { type MapRect, type MinimapSize, minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
-type MinimapSize = "full" | "travel" | "compact" | "pip";
-
-type MapRect = [number, number, number, number];
-
 type MapPoint = [number, number];
 
 type MapImage = { src: string; width: number; height: number };
-
-const mapWidths: Record<MinimapSize, number> = { full: 196, travel: 250, compact: 150, pip: 92 };
-
-function minimapBox(size: MinimapSize, extent: MapRect) {
-  let width = mapWidths[size];
-  let height = (width * extent[3]) / extent[2];
-  const maxHeight = size === "pip" ? 92 : width * 1.25;
-  if (height > maxHeight) {
-    width = (maxHeight * extent[2]) / extent[3];
-    height = maxHeight;
-  }
-  const chrome = size === "pip" ? 12 : size === "compact" ? 34 : 56;
-  return { mapWidth: width, mapHeight: height, width: width + 12, height: height + chrome };
-}
 
 const MapScale = createContext(1);
 
@@ -292,16 +275,18 @@ function SmartMinimap({
       {...props}
     >
       {head ? (
-        <div className="mx-0.5 mb-1.25 flex items-center justify-between gap-1.5 text-caption whitespace-nowrap text-fg-dim">
-          <span className="truncate [&_b]:font-semibold [&_b]:text-fg">{title}</span>
-          <span className="flex items-center gap-1 text-fg-faint">
+        <div className="mx-0.5 mb-1.25 flex items-center justify-between gap-1 text-caption whitespace-nowrap text-fg-dim">
+          <span className="min-w-0 truncate tracking-[-0.01em] [&_b]:font-semibold [&_b]:text-fg">
+            {title}
+          </span>
+          <span className="flex shrink-0 items-center gap-0.5 text-fg-faint">
             <Keycap keys="Z" size="sm" title="Hold Z to see the whole slide" />
             <button
               type="button"
               aria-label="Open on the second monitor"
               title="Open on the second monitor"
               onClick={onPopOut}
-              className="grid size-5.5 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
+              className="grid size-5 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
             >
               <Icon name="popout" size="xs" />
             </button>
