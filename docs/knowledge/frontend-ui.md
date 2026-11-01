@@ -121,3 +121,16 @@ Biome's `noLabelWithoutControl` lists `Switch`, `Checkbox` and `RadioGroupItem` 
 ## Playwright waits on an aria-disabled button
 
 The flow pages keep Next clickable while it is `aria-disabled="true"`, as the mock does, so a press marks the step's fields and moves focus to the first one. Playwright counts `aria-disabled` as disabled and waits for it to clear, so a test that presses a blocked Next asserts the attribute first and then clicks with `force: true`. Source: PROTO-006 (New review task over fake data).
+
+## A route's search keys and buttons that render links
+
+The root route owns the search keys `open`, `find` and `as`, so a screen must not use them for its own state. TanStack Router merges the root's search type into every route, and a screen's `open` turns into the overlay enum and fails the typecheck. A `Button` from `@parfocal/ui` that renders a router `Link` through `render` needs `nativeButton={false}`, or Base UI logs an error on every render, which the smoke specs catch. Source: PROTO-004 (project page, new project and upload over fake data).
+
+## One generated operation, two fake handlers
+
+A handler can answer only some calls of an operation. When the resolver returns nothing, MSW goes on to the next handler that matches, so `project-handlers.ts` answers `GET /api/me/slides` only when `project_id` is set and My work's handler answers the rest. The order in `fakeApiHandlers` decides which one is asked first. `packages/api-client/test/project.test.ts` checks both answers. Source: PROTO-004.
+
+## A flow page keeps its state across its steps
+
+The upload flow page moves between steps by changing its `scene` key, and its state (removed files, placed results, fixes) lives in the component, keyed by a `flow` search key that names the instance. Each step change carries the same `flow`, so the state stays, and a prototype index link carries none, so the scene starts fresh from the state the mock gives it. Source: PROTO-004.
+
