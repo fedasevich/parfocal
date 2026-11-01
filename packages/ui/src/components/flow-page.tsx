@@ -50,7 +50,7 @@ function Breadcrumbs({
 
 type StepState = "done" | "current" | "todo" | "warn";
 
-type FlowStep = { label: string; state?: StepState; why?: string };
+type FlowStep = { label: string; state?: StepState; why?: string; locked?: boolean };
 
 type StepperProps = Omit<React.ComponentProps<"ol">, "onSelect"> & {
   steps: FlowStep[];
@@ -75,7 +75,7 @@ function Stepper({ steps, current, onStepSelect, className, ...props }: StepperP
     >
       {steps.map((step, index) => {
         const state = stepState(step, index, current);
-        const reachable = state === "done" || state === "warn";
+        const reachable = (state === "done" || state === "warn") && !step.locked;
         const mark = (
           <i
             className={cn(

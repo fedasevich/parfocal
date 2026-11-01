@@ -249,6 +249,29 @@ export const StepperOnly: Story = {
   ),
 };
 
+export const StepperLockedAfterStart: Story = {
+  render: () => (
+    <div className="p-6">
+      <Stepper
+        steps={[
+          {
+            label: "Files",
+            locked: true,
+            why: "The upload has started. Files and checks are fixed now.",
+          },
+          {
+            label: "Check",
+            locked: true,
+            why: "The upload has started. Files and checks are fixed now.",
+          },
+          { label: "Upload" },
+        ]}
+        current={2}
+      />
+    </div>
+  ),
+};
+
 export const FlowBarWithBlockers: Story = {
   render: () => (
     <div className="mx-auto max-w-208 border-t border-line bg-surf-panel px-9">
