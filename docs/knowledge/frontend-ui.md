@@ -134,3 +134,10 @@ A handler can answer only some calls of an operation. When the resolver returns 
 
 The upload flow page moves between steps by changing its `scene` key, and its state (removed files, placed results, fixes) lives in the component, keyed by a `flow` search key that names the instance. Each step change carries the same `flow`, so the state stays, and a prototype index link carries none, so the scene starts fresh from the state the mock gives it. Source: PROTO-004.
 
+## Commits in a working tree that several agents share
+
+Lefthook's biome job has `stage_fixed: true`, so after it runs it stages the working copy of every staged file. When another agent has uncommitted edits in a file you staged from `HEAD` plus your own hunk, those edits go into your commit, and a generated file such as `apps/web/src/routeTree.gen.ts` then lists routes whose files are not committed, which breaks the typecheck on `main`. Build shared files as `HEAD` plus your own change, check the staged diff after the commit with `git show --stat HEAD`, and regenerate the route tree in a clean worktree (`git worktree add --detach`, `pnpm install --offline`, `pnpm --filter @parfocal/web build`) so it holds only committed routes. Another agent's commit can also take files you staged and have not committed yet, so commit right after staging. Source: PROTO-007 (guided review over fake data).
+
+## The slide still in prototype screens
+
+Until the viewer tasks put Viv in the review screens, `apps/web/src/screens/review/slide-still.tsx` draws the mock's `overview.jpg` (1400 by 1924) or `hpf-40x.jpg` (1600 by 1000) in an SVG whose viewBox follows a camera of centre and scale, with drag and wheel zoom. `slide-geometry.ts` holds the region outlines in overview pixels and the 50 sampled cells' centres and outlines in 40x pixels, read from the frozen mock's `regions[i].d` and `cells` arrays. The cells panel crops come from the same 40x image at 1.4 times. Object ID tags and the minimap are HTML placed from the camera, so they keep their size at any zoom. Source: PROTO-007 (guided review over fake data).
