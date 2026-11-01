@@ -3151,7 +3151,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
 
 - [ ] PROJ-008 · Project settings
-  Privacy mode, review defaults (blind review, hide the AI for a first read), the default study template (EVAL-007), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles.
+  Privacy mode, review defaults (blind review, hide the AI for a first read), the default study template (EVAL-007) with the decision style and the display defaults and locks it presets for new tasks (GUIDE-015, TASK-011, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles.
   Done when component and API tests cover each setting and its audit entry.
   Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006. Refs mock: project/settings.
 
@@ -3296,6 +3296,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when permission tests cover each role before and after submit, and API tests show the AI hidden before a first read, shown after it, and the first read kept unchanged.
   Depends on TASK-002, GUIDE-001. The first read is a stored step that is never changed, and the AI is hidden from a project reviewer on that slide until it is recorded ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Split on 2026-10-31: the E2E that reveals the AI after a first read moved to TASK-010, because it needs the review screens.
+  Display locks, such as confidence hidden for a round, also keep a reviewer blind to part of the AI. They are TASK-011 (display defaults, locks and presets, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
 
 - [ ] TASK-005 · New review task stepper
   A flow page with Slides, Reviewers, What to check, How it runs, and Send, where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
@@ -3327,6 +3328,11 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   In a task that hides the AI, a reviewer opens a task slide and sees no AI objects, answers the opinion form, adds an object they found, records the first read, sees the AI appear, gives decisions and submits. Their first read stays as it was recorded.
   Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the decisions and the submit.
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
+
+- [ ] TASK-011 · Display defaults, locks and presets
+  A task holds display defaults preset by its study template and changed in the New review task flow: draw as, width, opacity, colour by, ID labels, confidence as a number, a word, a colour or hidden, the heatmap, the score cutoff, the other result sets, the order, the zoom around the object, moving on by itself and where the buttons sit. The task may lock confidence, the heatmap, the score cutoff, the other result sets and the order, each with a reason of 5 to 120 characters, and the API refuses a reviewer's change to a locked value. A reviewer saves presets with a name of 1 to 40 characters, unique among their presets, for one task or for all their tasks. Every decision stores the preset in force, the task default or a preset's name, and the evaluation returns who used which preset on how many objects for the report's Methods block and its Preset column ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
+  Done when API tests cover the defaults from two templates, each lockable setting with and without a reason, a refused change to a locked value, saving, renaming and deleting presets with a refused duplicate name, the preset stored with a decision, and the preset counts in the evaluation, with isolation and audit.
+  Depends on TASK-001, EVAL-007, GUIDE-015. Refs mock: task/locks, mock: layers/locked, mock: layers/preset, doc 44.
 
 ---
 
@@ -3413,7 +3419,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001. Refs mock: guided, kit: decision styles.
 
 - [ ] GUIDE-015 · Decision styles with the raw answer and Counts as
-  A task asks every object in one decision style, preset by its study template and pinned by the task: 5-point certainty (the default, keys 1 to 5), Agree with the AI (K, X, U), Yes or no (Y, N, U) or Pick the class blind (one key per project class and U). Every style has Not sure. A decision stores the raw answer as pressed, the style and the agree, disagree or not sure value it counts as. For 5-point certainty the template's Counts as mapping decides that value, 4 and 5 agree, 3 not sure and 1 and 2 disagree by default, and a mapping must keep at least one agree and one disagree answer. Yes or no and Pick the class blind compare the answer with the AI's claim, and Agree with the AI counts each answer as itself. The task owner may change the mapping until sign-off. A change after answers exist is written with who and when to the audit log and the task's log, every stored value is recomputed from the raw answers, and the report's Methods block says so. The style cannot change once a decision exists. The evaluation reads the mapped values and returns the three-way counts with the spread of raw answers ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
+  A task asks every object in one decision style, preset by its study template and pinned by the task: 5-point certainty (the default, keys 1 to 5), Agree with the AI (K, X, U), Yes or no (Y, N, U) or Pick the class blind (one key per project class and U). Every style has Not sure, which gains the optional reason "Need a second look" next to the Not sure reasons of GUIDE-011 (optional and several reasons, reasons on Unsure). A decision stores the raw answer as pressed, the style and the agree, disagree or not sure value it counts as. For 5-point certainty the template's Counts as mapping decides that value, 4 and 5 agree, 3 not sure and 1 and 2 disagree by default, and a mapping must keep at least one agree and one disagree answer. Yes or no and Pick the class blind compare the answer with the AI's claim, and Agree with the AI counts each answer as itself. The task owner may change the mapping until sign-off. A change after answers exist is written with who and when to the audit log and the task's log, every stored value is recomputed from the raw answers, and the report's Methods block says so. The style cannot change once a decision exists. The evaluation reads the mapped values and returns the three-way counts with the spread of raw answers ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
   Done when API tests cover each style's answers with their mapped values, a refused answer outside the style, the default and an edited mapping, a refused mapping with no agree or no disagree answer, a mapping change that recomputes every value and writes both log entries, and a refused style change after the first decision, and EVAL tests return the three-way counts and the raw spread for a seeded 5-point certainty task.
   Depends on GUIDE-001, EVAL-006, EVAL-007. Refs mock: task/decision, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: admin (the template editor), kit: decision styles, doc 44.
 
@@ -3430,22 +3436,23 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   When every reviewer has submitted, objects where reviewers differ, or where more than half of them disagree with the AI, go into a queue per task ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)).
   Done when unit tests cover both kinds on a seeded task.
   Depends on GUIDE-001, TASK-002.
+  Since 2026-11-01 a Not sure with the reason "Need a second look" also queues an object. ADJ-007 (queue decisions in the task's style and leaving open) adds that rule ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), proposed).
 
 - [ ] ADJ-002 · Disagreement queue
-  A list filtered by all, reviewers differ and both against the AI, the object with the AI's call and each reviewer's decision side by side, and the researcher's two choices, keep the AI's call or go with the reviewers. Editing the object and asking an adjudicator are links under them, and a note can be added. The researcher's decision sits next to the reviewers' decisions and never replaces them.
-  Done when component tests cover each filter and decision, and E2E resolves a queue.
-  Depends on ADJ-001, ADJ-006. Refs mock: disagree, doc 40 D7.
+  The researcher's queue for one task, headed with the round, the result set and how many objects need a decision out of the task's total. The list is filtered by All, Reviewers differ and Both vs AI, and each row has the object, the AI's claim and score, why it is queued (reviewers differ, both vs AI or second look asked) and its state (with the adjudicator, left open, declined or edited after decisions). Under the slide sit the AI's claim and each reviewer's decision by name, because the researcher is not blinded, with the preset under a decision when it was not the task default ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)). The decide panel offers the buttons of the task's decision style, then "Edit T2 myself in the viewer", "Send to an adjudicator" and "Leave open". A decision moves to the next open row. Rows can be selected with checkboxes, and with a selection the only action is Send to an adjudicator, which opens the small modal of ADJ-008. "Go to sign-off" is the primary only when every row is decided, left open or with the adjudicator. The queue says it opens only when every reviewer has submitted and offers a nudge, and declined and edited rows offer their way out ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md)).
+  Done when component tests cover each filter, a decision in each decision style, leaving open, a multi-selection sent to an adjudicator, the locked queue, a declined row and an edited row, and E2E resolves a queue with one decision, three objects sent to an adjudicator and two left open.
+  Depends on ADJ-001, ADJ-006, ADJ-007, ADJ-008, GUIDE-015. Refs mock: disagree/queue, mock: disagree/selected, mock: disagree/sendadj, mock: disagree/sent, mock: disagree/lockedqueue, mock: disagree/declined, mock: disagree/edited, doc 40 D7, doc 44.
 
 - [ ] ADJ-003 · Adjudicator view
-  The adjudicator gets the guided one-object view with the reviewers anonymous.
-  Done when E2E adjudicates a sent object and the researcher sees the decision.
-  Depends on ADJ-002, GUIDE-002. Refs mock: disagree/adjudicate.
+  The adjudicator opens the sent objects from their own entry in My work, as in "Daniel Hruška asked you to decide 3 objects in RT-14". The view is guided review's layout with the review top bar in its adjudication form. Each object shows why it was queued, the AI's line as the task's confidence setting and locks allow, and Reviewer A and Reviewer B with their answers, reasons and notes, never a name or an avatar, then the buttons and keys of the task's decision style and a note. The adjudicator cannot edit outlines or classes. A decision moves to the next sent object, and after the last the card says they are all decided and that the researcher is told ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md)).
+  Done when component tests cover an object with each reason for queueing and the all decided state, an API test shows that no reviewer name, avatar or note author reaches the adjudicator, and E2E adjudicates the sent objects and the researcher sees the decisions in the queue.
+  Depends on ADJ-002, ADJ-008, GUIDE-002, GUIDE-015. Refs mock: disagree/adjudicate, mock: disagree/adjdone, mock: worklist/anna, doc 44.
 
 - [ ] ADJ-004 · Sign-off as a soft lock
-  Before signing, a list says what is complete. Signing is allowed only when every assigned reviewer has submitted every slide and no queued object is undecided ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md)). Signing confirms with single sign-on, makes Evaluation v1 with a checksum and notifies reviewers. The owner can still change things, every change is logged, and reopening is possible.
+  Before signing, a one-column modal lists what is complete, each open item with a Go to link. Signing is allowed only when every assigned reviewer has submitted every slide and every queued object is decided or left open on purpose ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md), amended by [ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), proposed). Objects left open show as an allowed warning and are named in the report. Signing confirms with single sign-on, with the password as a fallback when single sign-on does not answer, makes Evaluation v1 with a checksum and notifies reviewers. The exports leave the sign step and come after it, and starting v2 needs a reason. The owner can still change things, every change is logged, and reopening is possible.
   Signing also stores the report's block list (EVAL-008).
   Done when API tests cover signing, a change after sign-off with its log entry and reopening, and E2E signs off a task.
-  Depends on ADJ-002, IAM-002. Refs mock: signoff, doc 40 R2.
+  Depends on ADJ-002, ADJ-007, IAM-002. Refs mock: signoff/blocked, mock: signoff/ready, mock: signoff/ssofail, mock: signoff/signed, mock: signoff/amend, doc 40 R2, doc 44.
 
 - [ ] ADJ-005 · Changes after sign-off
   The log of changes after sign-off with who, when and what, flagged in the evaluation report.
@@ -3456,6 +3463,17 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   The researcher or an adjudicator decides a queued object: keep the AI's call or go with the reviewers, with an optional note. It sits next to the reviewers' decisions, can be changed until sign-off, removes the object from the open count and is audited.
   Done when API tests cover each decision, a change, a refused change after sign-off, the open count and the audit entry.
   Depends on ADJ-001. Split from ADJ-002 by [ADR 0084](adr/0084-evaluation-metrics.md).
+  Since 2026-11-01 the researcher decides in the task's decision style and may leave an object open on purpose. ADJ-007 (queue decisions in the task's style and leaving open) changes this API ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), proposed).
+
+- [ ] ADJ-007 · Queue decisions in the task's style and leaving open
+  A decision on a queued object takes the raw answer in the task's decision style and stores the value it counts as, like a reviewer's decision (GUIDE-015). Stored "keep the AI's call" and "go with the reviewers" read as agree and disagree. The researcher may leave a queued object open on purpose with an optional note, which takes it out of the open count, and sign-off then lists it as an allowed warning. The queue also takes an object that any reviewer answered Not sure with the reason "Need a second look", tagged "second look asked". An object redrawn after its reviewers decided is tagged "edited after decisions", and the researcher either reopens both decisions with a note or keeps them ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), proposed).
+  Done when API tests cover a decision in each decision style with its mapped value, the old two choices read back, leaving open and undoing it, sign-off allowed with objects left open and refused with an undecided one, the second look rule in the queue, and both ways out of an edited object, with isolation and audit.
+  Depends on ADJ-006, GUIDE-015, GUIDE-011. Refs mock: disagree/queue, mock: disagree/edited, doc 44.
+
+- [ ] ADJ-008 · Send to an adjudicator
+  The researcher sends one or more queued objects to one adjudicator, a member who is not a reviewer of the task, with an optional note of up to 300 characters, in the small Send to an adjudicator modal. A reviewer of the task is shown dim and cannot be picked, and someone away shows as a warning. The adjudicator gets one notification for all the objects, reads them with the reviewers as Reviewer A and Reviewer B fixed per task, without names, avatars or note authors, decides them as ADJ-007 does, and may decline with a note, after which the rows say so and can be sent to someone else. Objects with the adjudicator and not yet decided still block sign-off ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), proposed).
+  Done when API tests cover sending several objects, a refused reviewer of the task, declining with a note, sending again, a decision by the adjudicator next to both reviewers', the A and B labels staying the same across objects, and no reviewer name, avatar or note author in any adjudicator response, with isolation and audit.
+  Depends on ADJ-007, NOTIF-001. Refs mock: disagree/sendadj, mock: disagree/sent, mock: disagree/declined, mock: disagree/adjudicate, doc 44.
 
 
 ---
@@ -3503,7 +3521,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   A study template has a name, a kind of study, an ordered list of blocks from the catalogue with their settings, and task presets (objects to check, opinion form, blinding, first read, start mode, split). Templates are versioned per workspace, the five built-in ones (detection, segmentation, cell typing, reader study, sentinel node AI evaluation) are seeded, and a task pins a version. Researchers read and use templates, and only researchers with admin rights create, edit and retire them ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
   Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
-  Since 2026-11-01 the task presets also hold the decision style with its Counts as mapping, which GUIDE-015 (decision styles with the raw answer and Counts as) adds ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)).
+  Since 2026-11-01 the task presets also hold the decision style with its Counts as mapping, which GUIDE-015 (decision styles with the raw answer and Counts as) adds ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)), and the display defaults with their locks, which TASK-011 (display defaults, locks and presets) adds ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
 
 - [ ] EVAL-008 · Report from template blocks
   The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.
@@ -3679,37 +3697,44 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
 ## 51 VIZ · Layers and visualization
 
 - [ ] VIZ-000 · Research check
-  Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026).
+  Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026), and how the Display panel's state with its task locks ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)) reaches it.
 
-- [ ] VIZ-001 · Result sets in the Layers tab
-  Each result set is a row with show or hide, colour and opacity, and a menu to compare, run again or add another. The person's review is its own row.
-  Done when component tests cover each control and E2E hides a set.
-  Depends on RSET-001, VIEW-026. Refs mock: layers, doc 38 answer 2.
+- [ ] VIZ-001 · Result sets in the Display panel
+  The other result sets are rows in the Display panel's What the AI shows group, each with show or hide, its colour swatch, its version and "imported 12 Oct" or "run here 13 Oct". A set that is on draws its objects dashed in its colour behind the task's set. The person's review is its own row, "Your review". In the full viewer each row keeps a menu to compare, run again or add another. When the task locks the other result sets the rows are read-only and show the reason ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
+  Done when component tests cover each control and a locked group, and E2E hides a set.
+  Depends on RSET-001, VIEW-026, TASK-011. Refs mock: layers/display, doc 38 answer 2, doc 44.
 
-- [ ] VIZ-002 · Classes and style
-  Per class visibility with counts and keys, draw as outline, fill or dots, colour by class, score or decision, ID labels and a score cutoff that filters objects live.
-  Done when golden tests cover each style and a test proves the cutoff hides objects below it.
-  Depends on VIZ-001, VIEW-027.
+- [ ] VIZ-002 · How objects draw
+  Per class visibility with counts and keys, and the Display panel's How objects draw group: draw as outline, fill or dots (cells as dots, regions still outlined), width 1, 2 or 3 at screen scale, opacity 20 to 100, colour by class, score or decision, and ID labels. The score cutoff in What the AI shows draws objects below it dashed at half opacity and never changes the scope. Confidence shows as a number, a word, a colour or hidden in the "AI says" line, and colour also tints the current object's outline ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
+  Done when golden tests cover each style, width and opacity, and tests prove the cutoff dims objects below it without changing the scope, and each confidence form renders.
+  Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
 
 - [ ] VIZ-003 · Heatmap, density and confidence maps
-  Each with its ramp and a threshold. The heatmap is drawn at 30% by default so the tissue shows through.
-  Done when golden tests cover each map and the default opacity.
+  Each with its ramp and a threshold. The heatmap's strength is a slider in the Display panel, off or 20 to 100%, which starts at the task's display default and can be locked by the task. In the full viewer the maps sit in the Display panel's View group ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
+  Done when golden tests cover each map, the slider's steps and the off state.
   Depends on VIZ-001, AITUM-002. Refs mock: layers/heat, doc 40 G4.
 
 - [ ] VIZ-004 · Diff and agreement
   AI against reviewed, model A against B and reviewer against reviewer, coloured by agreement and also drawn differently (dashed for AI only, double for reviewer only), so colour is never the only cue.
   Done when golden tests cover each comparison and a test proves each kind has a non-colour cue.
   Depends on VIZ-001, OBJ-002. Refs mock: layers/diff, doc 40 G1.
+  In the full viewer the comparisons sit in the Display panel's View group ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
 
 - [ ] VIZ-005 · Swipe and side by side
   A swipe line and a side-by-side split between two sets.
   Done when E2E drags the swipe and both halves stay in sync.
   Depends on VIZ-004, CMP-002.
+  It sits in the Display panel's View group in the full viewer ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
 
 - [ ] VIZ-006 · Object table and stats
-  A table of ID, class, score, size and decision that stays in sync with the slide, with counts and histograms and a CSV download.
-  Done when component tests sync a selection both ways and a test counts the CSV rows.
-  Depends on VIZ-001, OBJ-005. Refs mock: layers/table.
+  A table of ID, class, score, size and decision that stays in sync with the slide, with counts and histograms and a CSV download. The Score column follows the confidence setting and hides when confidence is hidden, and a Preset column shows when anyone used a preset other than the task default ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
+  Done when component tests sync a selection both ways, hide the Score column with confidence hidden and show the Preset column only when a preset was used, and a test counts the CSV rows.
+  Depends on VIZ-001, OBJ-005, TASK-011. Refs mock: layers/table, mock: case/objects.
+
+- [ ] VIZ-007 · Display panel
+  One Display panel in four groups, How objects draw, What the AI shows, How the review moves and the presets at the top, plus a View group with the comparison views in the full viewer. It is the Display tab of the full viewer's side panel and of guided review's right column next to Review and Comments, and the review top bar has no Display button. Each group folds to a one-line summary such as "Outline 2 px · by class · IDs on". How the review moves holds the order (AI order, largest first, least sure first, random seeded per reviewer and slide), the zoom around the object (fit, tight, context), moving on by itself and the buttons in the card or under the slide. The presets menu reads "Task default" or the preset's name with a dot when the settings differ, and offers the saved presets with their keys, Save, Save as in the small Save a preset modal and Reset to the task default. Shift+1 is the task default and Shift+2 to Shift+4 the first three presets, each change with an Undo. A locked control is dim read-only text with a lock icon and the task's reason, as in "Locked by RT-14: confidence hidden this round" ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md)).
+  Done when component tests cover each group and its summary, the presets menu with a disabled Save that says why, Save as with a refused duplicate name, the Shift keys with Undo and a locked control, axe passes, and E2E switches presets in guided review and in the full viewer and finds the preset recorded with the next decision.
+  Depends on VIZ-001, VIZ-002, VIZ-003, TASK-011, GUIDE-002. Refs mock: layers/display, mock: layers/locked, mock: layers/preset, mock: guided/display, mock: guided/locked, mock: guided/preset, kit: Display, doc 44.
 
 ---
 
