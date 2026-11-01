@@ -38,7 +38,11 @@ export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetO
     case "home":
       return linkOptions({ to: "/", search: { as } });
     case "project":
-      return linkOptions({ to: "/projects/$projectId", params: project, search: { as } });
+      return linkOptions({
+        to: "/projects/$projectId",
+        params: project,
+        search: { scene: sceneIn("project", scene), as },
+      });
     case "upload":
       return linkOptions({
         to: "/projects/$projectId/upload",

@@ -3,8 +3,9 @@ import { Person } from "@parfocal/ui/components/person";
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { originStore, type Persona, useOrigin, usePeople } from "./hooks.ts";
+import { issueStatesTitle } from "./issue-states.ts";
 import type { Origin } from "./origin.ts";
-import { boxes, mapTitle, personaRoles } from "./review-flow.ts";
+import { boxes, mapTitle, type PersonaKey, personaRoles } from "./review-flow.ts";
 import { type ScenarioIds, targetFor } from "./targets.ts";
 import {
   chapters,
@@ -84,6 +85,21 @@ function MapOrigin({ box }: { box: string }) {
   );
 }
 
+function StatesOrigin({ who }: { who: PersonaKey }) {
+  const people = usePeople();
+  return (
+    <>
+      <Link to="/issue-states" className={barButtonClass} onClick={() => originStore.set(null)}>
+        <Icon name="back" size="sm" />
+        Back to the index
+      </Link>
+      <span>Opened from {issueStatesTitle}, as</span>
+      <PersonaChip persona={people(who)} role={personaRoles[who]} />
+      <span>· mock control, not in the app</span>
+    </>
+  );
+}
+
 function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
   const people = usePeople();
   const chapter = chapters[at.chapter];
@@ -139,6 +155,8 @@ function OriginBar({ origin }: { origin: Origin }) {
     <section aria-label="Prototype controls" className={barClass} data-testid="prototype-bar">
       {origin.kind === "map" ? (
         <MapOrigin box={origin.box} />
+      ) : origin.kind === "states" ? (
+        <StatesOrigin who={origin.who} />
       ) : (
         <WalkOrigin at={{ chapter: origin.chapter, step: origin.step }} ids={origin.ids} />
       )}
@@ -146,7 +164,7 @@ function OriginBar({ origin }: { origin: Origin }) {
   );
 }
 
-const ownPages = ["/flow-map", "/prototype"];
+const ownPages = ["/flow-map", "/prototype", "/issue-states"];
 
 export function PrototypeFrame({ children }: { children: ReactNode }) {
   const origin = useOrigin();

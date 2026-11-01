@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from "./routes/index.tsx";
 import { Route as AdminRouteImport } from "./routes/admin.tsx";
 import { Route as DeveloperRouteImport } from "./routes/developer.tsx";
 import { Route as InviteRouteImport } from "./routes/invite.tsx";
+import { Route as IssueStatesRouteImport } from "./routes/issue-states.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
@@ -60,6 +61,11 @@ const DeveloperRoute = DeveloperRouteImport.update({
 const InviteRoute = InviteRouteImport.update({
   id: "/invite",
   path: "/invite",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const IssueStatesRoute = IssueStatesRouteImport.update({
+  id: "/issue-states",
+  path: "/issue-states",
   getParentRoute: () => rootRouteImport,
 } as any);
 const MyWorkRoute = MyWorkRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   "/admin": typeof AdminRoute;
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
+  "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   "/admin": typeof AdminRoute;
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
+  "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   "/admin": typeof AdminRoute;
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
+  "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
@@ -322,6 +331,7 @@ export interface FileRouteTypes {
     | "/admin"
     | "/developer"
     | "/invite"
+    | "/issue-states"
     | "/my-work"
     | "/prototype"
     | "/setup"
@@ -356,6 +366,7 @@ export interface FileRouteTypes {
     | "/admin"
     | "/developer"
     | "/invite"
+    | "/issue-states"
     | "/my-work"
     | "/prototype"
     | "/setup"
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | "/admin"
     | "/developer"
     | "/invite"
+    | "/issue-states"
     | "/my-work"
     | "/prototype"
     | "/setup"
@@ -425,6 +437,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute;
   DeveloperRoute: typeof DeveloperRoute;
   InviteRoute: typeof InviteRoute;
+  IssueStatesRoute: typeof IssueStatesRoute;
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SetupRoute: typeof SetupRoute;
@@ -483,6 +496,13 @@ declare module "@tanstack/react-router" {
       path: "/invite";
       fullPath: "/invite";
       preLoaderRoute: typeof InviteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/issue-states": {
+      id: "/issue-states";
+      path: "/issue-states";
+      fullPath: "/issue-states";
+      preLoaderRoute: typeof IssueStatesRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/my-work": {
@@ -689,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   DeveloperRoute: DeveloperRoute,
   InviteRoute: InviteRoute,
+  IssueStatesRoute: IssueStatesRoute,
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
   SetupRoute: SetupRoute,

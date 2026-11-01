@@ -50,6 +50,9 @@ function PrototypeIndex() {
         <Entry note="The nine chapters from upload to the co-signed clinical report">
           <Link to="/flow-map/walkthrough">Walkthrough</Link>
         </Entry>
+        <Entry note="Every error and empty state grouped by flow, each opens its own screen">
+          <Link to="/issue-states">Issue states</Link>
+        </Entry>
         <Entry note="Launchpad">
           <Link to="/">Home</Link>
         </Entry>

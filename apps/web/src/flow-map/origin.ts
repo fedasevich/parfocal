@@ -16,6 +16,7 @@ const originSchema = z.discriminatedUnion("kind", [
     step: z.number().int().nonnegative(),
     ids: idsSchema,
   }),
+  z.object({ kind: z.literal("states"), who: z.enum(["DH", "LM", "AK", "TB"]) }),
 ]);
 
 export type Origin = z.infer<typeof originSchema>;

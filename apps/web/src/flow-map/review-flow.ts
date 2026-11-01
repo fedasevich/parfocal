@@ -1,3 +1,5 @@
+import { isScreenBuilt } from "./built-screens.ts";
+
 export type PersonaKey = "DH" | "LM" | "AK" | "TB";
 
 export type LaneKey = "res" | "rev" | "adj" | "cli";
@@ -305,14 +307,4 @@ export const boxes: MapBox[] = [
   },
 ];
 
-export const builtScreens: ReadonlySet<MapScreen> = new Set<MapScreen>([
-  "team",
-  "task",
-  "guided",
-  "gallery",
-  "next",
-  "upload",
-  "runmodel",
-]);
-
-export const isBuilt = (box: MapBox) => builtScreens.has(box.screen);
+export const isBuilt = (box: MapBox) => isScreenBuilt(box.screen);
