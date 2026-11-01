@@ -311,6 +311,7 @@ export const builtScreens: ReadonlySet<MapScreen> = new Set<MapScreen>([
   "guided",
   "gallery",
   "next",
+  "upload",
 ]);
 
 export const isBuilt = (box: MapBox) => builtScreens.has(box.screen);

@@ -11,14 +11,14 @@ test("home opens on the scenario's fake data with the badge", async ({ page }) =
   });
   expect(worker).toMatch(/\/mockServiceWorker\.js$/);
   await page.getByRole("button", { name: /^Sentinel node AI evaluation P07/ }).click();
-  await expect(page.getByTestId("project-name")).toHaveText("P07 · Sentinel node AI evaluation");
+  await expect(page.getByRole("heading", { name: "Sentinel node AI evaluation" })).toBeVisible();
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\?tab=slides$/);
 });
 
 test("the prototype index links to every screen", async ({ page }) => {
   await page.goto("/prototype");
   const screens = page.getByRole("list", { name: "Screens" });
-  await expect(screens.getByRole("link")).toHaveCount(74);
+  await expect(screens.getByRole("link")).toHaveCount(101);
   await screens.getByRole("link", { name: "Slide · S26-04812 A1" }).click();
   await expect(page.getByRole("heading", { name: "Slide" })).toBeVisible();
   const url = new URL(page.url());

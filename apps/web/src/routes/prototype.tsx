@@ -3,6 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { newTaskPrototypeScenes } from "../screens/new-task/prototype-scenes.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { projectPrototypeLinks } from "../screens/project/prototype-scenes.ts";
 import { reviewPrototypeLinks } from "../screens/review/prototype-scenes.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
 
@@ -106,6 +107,15 @@ function PrototypeIndex() {
               >
                 {label}
               </Link>
+            </Entry>
+          ))}
+        {project &&
+          projectPrototypeLinks(
+            project.id,
+            body?.projects.find((item) => item.privacy_mode === "clinical")?.id,
+          ).map(({ key, label, note, link }) => (
+            <Entry key={key} note={note}>
+              <Link {...link}>{label}</Link>
             </Entry>
           ))}
         {project && (

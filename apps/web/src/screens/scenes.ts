@@ -1,4 +1,7 @@
 export const mockScenes = {
+  project: ["slides", "results", "tasks", "settings", "importfail"],
+  newcase: ["project", "case", "casec"],
+  formats: ["help", "check"],
   upload: [
     "drop",
     "empty",

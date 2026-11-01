@@ -11,11 +11,15 @@
 import { Route as rootRouteImport } from "./routes/__root.tsx";
 import { Route as IndexRouteImport } from "./routes/index.tsx";
 import { Route as AdminRouteImport } from "./routes/admin.tsx";
+import { Route as InviteRouteImport } from "./routes/invite.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
+import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
+import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
+import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
 import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
@@ -30,6 +34,8 @@ import { Route as TasksTaskIdEvaluationRouteImport } from "./routes/tasks.$taskI
 import { Route as TasksTaskIdGuidedRouteImport } from "./routes/tasks.$taskId.guided.tsx";
 import { Route as TasksTaskIdSignOffRouteImport } from "./routes/tasks.$taskId.sign-off.tsx";
 import { Route as TasksTaskIdSubmittedRouteImport } from "./routes/tasks.$taskId.submitted.tsx";
+import { Route as ProjectsProjectIdCasesNewRouteImport } from "./routes/projects.$projectId.cases.new.tsx";
+import { Route as ProjectsProjectIdJobsJobIdRouteImport } from "./routes/projects.$projectId.jobs.$jobId.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdRouteImport } from "./routes/projects.$projectId.slides.$slideId.tsx";
 import { Route as ProjectsProjectIdTasksNewRouteImport } from "./routes/projects.$projectId.tasks.new.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdCoSignRouteImport } from "./routes/projects.$projectId.slides.$slideId_.co-sign.tsx";
@@ -43,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: "/admin",
   path: "/admin",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const InviteRoute = InviteRouteImport.update({
+  id: "/invite",
+  path: "/invite",
   getParentRoute: () => rootRouteImport,
 } as any);
 const MyWorkRoute = MyWorkRouteImport.update({
@@ -60,6 +71,16 @@ const SetupRoute = SetupRouteImport.update({
   path: "/setup",
   getParentRoute: () => rootRouteImport,
 } as any);
+const SignInRoute = SignInRouteImport.update({
+  id: "/sign-in",
+  path: "/sign-in",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SignUpRoute = SignUpRouteImport.update({
+  id: "/sign-up",
+  path: "/sign-up",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const TeamRoute = TeamRouteImport.update({
   id: "/team",
   path: "/team",
@@ -68,6 +89,11 @@ const TeamRoute = TeamRouteImport.update({
 const FlowMapIndexRoute = FlowMapIndexRouteImport.update({
   id: "/flow-map/",
   path: "/flow-map/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ProjectsNewRoute = ProjectsNewRouteImport.update({
+  id: "/projects/new",
+  path: "/projects/new",
   getParentRoute: () => rootRouteImport,
 } as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -143,6 +169,18 @@ const TasksTaskIdSubmittedRoute = TasksTaskIdSubmittedRouteImport.update({
   path: "/tasks/$taskId/submitted",
   getParentRoute: () => rootRouteImport,
 } as any);
+const ProjectsProjectIdCasesNewRoute =
+  ProjectsProjectIdCasesNewRouteImport.update({
+    id: "/projects/$projectId/cases/new",
+    path: "/projects/$projectId/cases/new",
+    getParentRoute: () => rootRouteImport,
+  } as any);
+const ProjectsProjectIdJobsJobIdRoute =
+  ProjectsProjectIdJobsJobIdRouteImport.update({
+    id: "/projects/$projectId/jobs/$jobId",
+    path: "/projects/$projectId/jobs/$jobId",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const ProjectsProjectIdSlidesSlideIdRoute =
   ProjectsProjectIdSlidesSlideIdRouteImport.update({
     id: "/projects/$projectId/slides/$slideId",
@@ -171,10 +209,14 @@ const ProjectsProjectIdSlidesSlideIdReportRoute =
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
+  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -190,6 +232,8 @@ export interface FileRoutesByFullPath {
   "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
   "/flow-map/walkthrough/": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId/": typeof ProjectsProjectIdIndexRoute;
+  "/projects/$projectId/cases/new": typeof ProjectsProjectIdCasesNewRoute;
+  "/projects/$projectId/jobs/$jobId": typeof ProjectsProjectIdJobsJobIdRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
@@ -198,10 +242,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
+  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/flow-map": typeof FlowMapIndexRoute;
   "/settings": typeof SettingsIndexRoute;
@@ -217,6 +265,8 @@ export interface FileRoutesByTo {
   "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
   "/flow-map/walkthrough": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId": typeof ProjectsProjectIdIndexRoute;
+  "/projects/$projectId/cases/new": typeof ProjectsProjectIdCasesNewRoute;
+  "/projects/$projectId/jobs/$jobId": typeof ProjectsProjectIdJobsJobIdRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
@@ -226,10 +276,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
+  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -245,6 +299,8 @@ export interface FileRoutesById {
   "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
   "/flow-map/walkthrough/": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId/": typeof ProjectsProjectIdIndexRoute;
+  "/projects/$projectId/cases/new": typeof ProjectsProjectIdCasesNewRoute;
+  "/projects/$projectId/jobs/$jobId": typeof ProjectsProjectIdJobsJobIdRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/slides/$slideId_/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
@@ -255,10 +311,14 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/admin"
+    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/sign-in"
+    | "/sign-up"
     | "/team"
+    | "/projects/new"
     | "/settings/$section"
     | "/flow-map/"
     | "/settings/"
@@ -274,6 +334,8 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/submitted"
     | "/flow-map/walkthrough/"
     | "/projects/$projectId/"
+    | "/projects/$projectId/cases/new"
+    | "/projects/$projectId/jobs/$jobId"
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/slides/$slideId/co-sign"
@@ -282,10 +344,14 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/admin"
+    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/sign-in"
+    | "/sign-up"
     | "/team"
+    | "/projects/new"
     | "/settings/$section"
     | "/flow-map"
     | "/settings"
@@ -301,6 +367,8 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/submitted"
     | "/flow-map/walkthrough"
     | "/projects/$projectId"
+    | "/projects/$projectId/cases/new"
+    | "/projects/$projectId/jobs/$jobId"
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/slides/$slideId/co-sign"
@@ -309,10 +377,14 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/admin"
+    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/sign-in"
+    | "/sign-up"
     | "/team"
+    | "/projects/new"
     | "/settings/$section"
     | "/flow-map/"
     | "/settings/"
@@ -328,6 +400,8 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/submitted"
     | "/flow-map/walkthrough/"
     | "/projects/$projectId/"
+    | "/projects/$projectId/cases/new"
+    | "/projects/$projectId/jobs/$jobId"
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/slides/$slideId_/co-sign"
@@ -337,10 +411,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AdminRoute: typeof AdminRoute;
+  InviteRoute: typeof InviteRoute;
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SetupRoute: typeof SetupRoute;
+  SignInRoute: typeof SignInRoute;
+  SignUpRoute: typeof SignUpRoute;
   TeamRoute: typeof TeamRoute;
+  ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
   FlowMapIndexRoute: typeof FlowMapIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
@@ -356,6 +434,8 @@ export interface RootRouteChildren {
   TasksTaskIdSubmittedRoute: typeof TasksTaskIdSubmittedRoute;
   FlowMapWalkthroughIndexRoute: typeof FlowMapWalkthroughIndexRoute;
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute;
+  ProjectsProjectIdCasesNewRoute: typeof ProjectsProjectIdCasesNewRoute;
+  ProjectsProjectIdJobsJobIdRoute: typeof ProjectsProjectIdJobsJobIdRoute;
   ProjectsProjectIdSlidesSlideIdRoute: typeof ProjectsProjectIdSlidesSlideIdRoute;
   ProjectsProjectIdTasksNewRoute: typeof ProjectsProjectIdTasksNewRoute;
   ProjectsProjectIdSlidesSlideIdCoSignRoute: typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
@@ -376,6 +456,13 @@ declare module "@tanstack/react-router" {
       path: "/admin";
       fullPath: "/admin";
       preLoaderRoute: typeof AdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/invite": {
+      id: "/invite";
+      path: "/invite";
+      fullPath: "/invite";
+      preLoaderRoute: typeof InviteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/my-work": {
@@ -399,6 +486,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof SetupRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/sign-in": {
+      id: "/sign-in";
+      path: "/sign-in";
+      fullPath: "/sign-in";
+      preLoaderRoute: typeof SignInRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sign-up": {
+      id: "/sign-up";
+      path: "/sign-up";
+      fullPath: "/sign-up";
+      preLoaderRoute: typeof SignUpRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/team": {
       id: "/team";
       path: "/team";
@@ -411,6 +512,13 @@ declare module "@tanstack/react-router" {
       path: "/flow-map";
       fullPath: "/flow-map/";
       preLoaderRoute: typeof FlowMapIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/new": {
+      id: "/projects/new";
+      path: "/projects/new";
+      fullPath: "/projects/new";
+      preLoaderRoute: typeof ProjectsNewRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/settings/": {
@@ -511,6 +619,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TasksTaskIdSubmittedRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/projects/$projectId/cases/new": {
+      id: "/projects/$projectId/cases/new";
+      path: "/projects/$projectId/cases/new";
+      fullPath: "/projects/$projectId/cases/new";
+      preLoaderRoute: typeof ProjectsProjectIdCasesNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/jobs/$jobId": {
+      id: "/projects/$projectId/jobs/$jobId";
+      path: "/projects/$projectId/jobs/$jobId";
+      fullPath: "/projects/$projectId/jobs/$jobId";
+      preLoaderRoute: typeof ProjectsProjectIdJobsJobIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/projects/$projectId/slides/$slideId": {
       id: "/projects/$projectId/slides/$slideId";
       path: "/projects/$projectId/slides/$slideId";
@@ -545,10 +667,14 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  InviteRoute: InviteRoute,
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
   SetupRoute: SetupRoute,
+  SignInRoute: SignInRoute,
+  SignUpRoute: SignUpRoute,
   TeamRoute: TeamRoute,
+  ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
   FlowMapIndexRoute: FlowMapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
@@ -564,6 +690,8 @@ const rootRouteChildren: RootRouteChildren = {
   TasksTaskIdSubmittedRoute: TasksTaskIdSubmittedRoute,
   FlowMapWalkthroughIndexRoute: FlowMapWalkthroughIndexRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+  ProjectsProjectIdCasesNewRoute: ProjectsProjectIdCasesNewRoute,
+  ProjectsProjectIdJobsJobIdRoute: ProjectsProjectIdJobsJobIdRoute,
   ProjectsProjectIdSlidesSlideIdRoute: ProjectsProjectIdSlidesSlideIdRoute,
   ProjectsProjectIdTasksNewRoute: ProjectsProjectIdTasksNewRoute,
   ProjectsProjectIdSlidesSlideIdCoSignRoute:
