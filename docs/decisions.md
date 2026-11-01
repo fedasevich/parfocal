@@ -535,6 +535,40 @@ This needs your answer. The controls are button, segmented control, toggle, popo
 
 Your choice:
 
+## 16. The prototype in React, ADR 0129 (the prototype moves into React and becomes the design source)
+
+The UX kit and the hi-fi mock move into `apps/web` and `packages/ui` once your current redesign round is done. The kit becomes the Storybook catalogue, the mock's screens become routes on fake data, and each feature task later wires its screen to the API. The new PROTO epic (prototype in React) in the backlog holds the tasks. PROTO-001 (freeze the redesigned prototype) is on hold until you say the redesign round is done, and every other component and screen task waits for it and for decision 15 (styling and component primitives).
+
+When the redesign round is done, say so in chat or write the date here:
+
+### 16a. Accept ADR 0129
+
+- A. Accept as written: port after the freeze, screens assembled from the design system components over fake data, then the React app becomes the design source and the artifacts are kept as frozen history. **Recommended**, because a design change is then made once, in the product itself
+- B. Port into a separate throwaway prototype app first, and build the real screens later
+- C. Keep the artifacts as the design source and build each screen when its feature task comes up
+- D. Other
+
+Your choice:
+
+### 16b. Where the frozen prototype copies live
+
+This repository is public. The POC repository cannot take them, because it is never modified.
+
+- A. In `docs/design/` in this repository, with the artifact version ids. **Recommended**, because agents in their own worktrees can read and search them in parts, and the React app that replaces them is public anyway
+- B. Only the artifact version ids, recorded in the inventory, and agents read the artifacts through the artifacts tools
+- C. In the private thesis repository `fedasevich/parfocal-thesis`
+- D. Other
+
+Your choice:
+
+### 16c. Your review of each ported screen group
+
+- A. You compare each screen group with the frozen mock in the running dev build before its task is ticked. **Recommended**, because the design is yours and differences are cheapest to fix one group at a time
+- B. The agent compares its screenshots with screenshots of the frozen mock, and you look at everything once at the end
+- C. Other
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.

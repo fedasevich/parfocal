@@ -28,6 +28,7 @@ Task format:
 - Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit), doc 41 (what is clickable, tags, icons and type) and doc 42 (round 5: upload by slide, the magnification chip, slide loading, verdict notes, passkeys and storage).
 - Epics with the milestone Idea and tasks whose title starts with `Idea:` are kept from the hospital direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). They are not planned. Don't start one unless the owner asks, and never make a planned task depend on one. A task that is needed again loses its `Idea:` prefix in a backlog edit with an ADR.
 - Tasks from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)) are backend first: models, rules, APIs, events and their tests. The screens for them are still changing in the prototype, so their UI tasks are added only when those screens settle, and no backend task here may depend on a layout.
+- UI tasks, meaning any task that builds a screen or a component in `apps/web` or `packages/ui`, wait until PROTO-001 (freeze the redesigned prototype) is done and the owner has answered decision 15 (styling and component primitives) in [decisions.md](decisions.md). Once a screen is ported by the PROTO epic, its feature UI task starts from that screen, wires it to the API, adds the behaviour and its tests and removes its fake data ([ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md)).
 - Every feature epic starts with an `xxx-000` research check. It re-checks the current state of the art for that feature's libraries and patterns, confirms or revises the STACK decisions it relies on, and records the outcome as an ADR in `docs/adr/`.
 
 ### Definition of Done (applies to every task)
@@ -176,6 +177,7 @@ Task format:
 | 50 | ADMIN | Admin page | M5 |
 | 51 | VIZ | Layers and visualization | M4 |
 | 52 | ADAPT | Reverting or reworking the built hospital code | M3 |
+| 53 | PROTO | Prototype in React | M3 |
 
 ---
 
@@ -1299,105 +1301,116 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] DS-000 · Research check for the design system tooling
   Done when STACK-007 is confirmed and Storybook (or the chosen catalogue) is set up.
+  Depends on STACK-007, PROTO-001. Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md).
 
 - [ ] DS-001 · Design tokens package
   Product tokens from the kit for dark and light: page, chrome, chrome-2, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, accent-soft, on-accent, ok, warn, bad, future, pin, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Spacing on a 4 px grid, radii 4, 7 and 10. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
-  Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+  Depends on DS-000. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] DS-002 · Colour measurement scripts in CI
   WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
   Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
-  Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
+  Depends on DS-000. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
 
 - [ ] DS-003 · Typography
   IBM Plex Sans and IBM Plex Mono, self-hosted. Nine sizes and nothing between them: label 11/600 in capitals, caption 12, body small 13, body 14, lead 16, title small 18/600, title 20/600, page title 24/600 and display 28/600. Running text is never under 12 px, and 11 px is only for capital labels, tags, counts and keycaps. Mono only for IDs, numbers in columns, file names and keys.
   Done when the type specimen story passes visual tests, fonts load without layout shift, and a lint check fails on a font size off the scale.
-  Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
+  Depends on DS-000. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
 
 - [ ] DS-004 · Icon set with key badges
   The SVG icon set from the mock (select, hand, smart, auto, poly, free, rect, ellipse, marker, ruler, arrow, text, comment, brush, slides, sun, gear, help, share, back, next, popout, device icons, panel, home, check, warn, eye, lock, search, flag and others) as React components. Five sizes: 12 inside tags and checkboxes, 16 by default, 20 for sidebar navigation, large buttons, tiles and zone headers, 24 for drop zones and empty states, and 40 for state badges. Icons take the text colour, the accent only for a selected state and a status colour only when the icon is the status. One stroke width. Tools show their key in the tooltip.
   Done when every icon has a story and an accessible name, and a test fails on an icon size off the scale.
-  Refs doc 41, doc 40 D4.
+  Depends on DS-000. Refs doc 41, doc 40 D4.
 
 - [ ] DS-005 · Theme switching
   System, dark and light, with the user setting stored per device. Neutral chroma near zero for chrome.
   Done when visual tests cover both themes for every component.
+  Depends on DS-000.
 
 - [ ] DS-006 · Buttons and icon buttons
   Primary, secondary, ghost. One filled primary button per screen, so the top bar's Upload is a normal button (doc 40 D2). States are default, hover, pressed, focus and disabled. Inline key hints. 32 px height, 24 px minimum target.
   Done when stories, interaction tests and axe pass.
+  Depends on DS-000.
 
 - [ ] DS-007 · Segmented control, toggle, slider, stepper
   A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1).
   Done when stories, keyboard tests and axe pass.
+  Depends on DS-000.
 
 - [ ] DS-008 · Tags
   Nine tag types cover the app. Status is round with a dot and a word, in the tones neutral, accent, ok, warn, bad and research. Category has square corners, is gray and may carry a 12 px icon. Object ID is monospace with a border, at 20 px and 28 px. Result set has a layers icon and a tone by its source. Count is 16 px, blue when it needs the person and gray for totals. Keycap (DS-009), token (DS-020) and filter chip, a control with a check when on, complete the set, with mock-only markers kept out of the product. Tags are 20 px, never clickable, in sentence case, and a status always has its dot and a word.
   Done when stories exist for every type and tone in both themes, and a test fails on a tag height or tone outside the set.
-  Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
+  Depends on DS-000. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] DS-009 · Keycap component
   Done when keycaps render the user's current binding from the key registry, not a hard-coded letter.
+  Depends on DS-000.
 
 - [ ] DS-010 · Tool rail button
   38 px, key badge, active state, AI dot.
   Done when stories and tests cover each state.
+  Depends on DS-000.
 
 - [ ] DS-011 · Popover, dialog, menu, tooltip, toast
   Toasts last 1.6 s by default and never cover the slide centre.
   Done when focus trapping, Esc handling and axe tests pass.
+  Depends on DS-000.
 
 - [ ] DS-012 · Inspector primitives
   Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, and the back link with its key.
   Done when stories render the mock 6 data and a unit test checks the range bar geometry.
+  Depends on DS-000.
 
 - [ ] DS-013 · Gallery tile
   92 px and 120 px sizes. States are to check, current, done. Dashed ring on the cell, label in AI wording.
   Done when stories and tests cover each state.
+  Depends on DS-000.
 
 - [ ] DS-014 · Avatar, avatar stack, presence dot
   A person is always an avatar with a name. A stack shows the names in a tooltip and a +N count (doc 38).
   Done when stories exist and colours come from the user profile.
+  Depends on DS-000.
 
 - [ ] DS-015 · Skeletons and placeholders that hold space
   Nothing jumps when data arrives.
   Done when a layout-shift test on the case inspector reports a CLS of zero while findings stream in.
-  Refs kit W18.
+  Depends on DS-000. Refs kit W18.
 
 - [ ] DS-016 · Motion tokens and reduced motion
   Durations 120 to 400 ms, easing tokens, a slow presenting mode at one third speed, reduced motion turns every transition into a cut.
   Done when tests run with `prefers-reduced-motion` and assert no animation.
-  Refs kit motion page.
+  Depends on DS-000. Refs kit motion page.
 
 - [ ] DS-017 · Density modes
   Comfortable and compact.
   Done when visual tests cover both densities for lists and inspector.
+  Depends on DS-000.
 
 - [ ] DS-018 · Surfaces and zones
   Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding.
   Done when stories show each level in both themes and a visual test covers a modal with three zones.
-  Refs doc 38 "Surfaces and spacing".
+  Depends on DS-000. Refs doc 38 "Surfaces and spacing".
 
 - [ ] DS-019 · Progress bar and ring
   One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, and one ring for review progress split by verdict colour (agree, disagree, not sure, open) with the percentage in the middle.
   Done when stories cover each state, a unit test checks the ring arcs add up, and the bar and ring expose progressbar and image roles with their values.
-  Refs doc 38 "One component per job".
+  Depends on DS-000. Refs doc 38 "One component per job".
 
 - [ ] DS-020 · Type-to-find token field
   A field where a person types a name or a slide, a list shows matches with avatar, name and role or a thumbnail, and picked items sit in the field as chips with a remove cross. It also offers to invite an email that matches nobody.
   Done when component tests cover typing, picking by keyboard, removing and inviting, and axe passes.
-  Refs doc 39, mock: task/find.
+  Depends on DS-000. Refs doc 39, mock: task/find.
 
 - [ ] DS-021 · Undo toast
   A toast that names what just happened ("T1 marked agree", "Run cancelled") with an Undo link, kept for 4 s and not covering the slide centre. Undo restores the exact state before the action.
   Done when component tests cover undo within and after the window, and E2E undoes a verdict and a cancelled run.
-  Refs doc 40 G2 and R1, doc 41.
+  Depends on DS-000. Refs doc 40 G2 and R1, doc 41.
 
 - [ ] DS-022 · Modals: small one-column and full-width wizard
   Small one-column modals for short tasks and a medium one-column stepper (New review task) that sizes to its content, with a shadow over the footer when more content follows. Only the upload wizard is full width. Steps of a stepper can be clicked to go back. The scrim is 62% black in dark.
   Done when stories cover each size, a test switches steps without the width changing, and focus trapping and Esc pass.
-  Refs doc 39, doc 40 R3 and R4.
+  Depends on DS-000. Refs doc 39, doc 40 R3 and R4.
 
 ---
 
@@ -4020,6 +4033,65 @@ Preparing a multidisciplinary tumor board, presenting at it and bringing its out
   A PDF for the session with each case's report and pinned views, with patients shown by initials when the session asks for it.
   Done when a golden PDF test checks a pack in both identity modes.
   Depends on TB-002, REPORT-009.
+
+## 53 PROTO · Prototype in React
+
+The approved prototype moves from the two HTML artifacts into `apps/web` and `packages/ui`, so that the design is changed in one place, as React components over fake data ([ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). This epic only assembles screens. Each component is built by its DS or SHELL task from the frozen kit, and each screen is wired to the API by its feature UI task, which then removes the screen's fake data. Everything after PROTO-000 waits for PROTO-001, which is on hold until the owner says the current redesign round is done. The screen groups below follow the mock's screens and may be regrouped when PROTO-001 writes the inventory.
+
+- [ ] PROTO-000 · Research check for the fake data layer
+  Re-checks Orval's MSW mock output (version, its faker dependency and how it sits next to the `react-query` client in `packages/api-client/orval.config.ts`), MSW in the Vite dev server and in Storybook, and how one screen's fake data is switched off once its API is wired. Confirms or revises [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md).
+  Done when an ADR records the fake data approach and a spike serves one generated handler in the dev server.
+  Refs STACK-012, [ADR 0017](adr/0017-orval-api-client.md).
+
+- [ ] PROTO-001 · Freeze the redesigned prototype (on hold)
+  On hold until the owner says in chat that the current redesign round of the UX kit and the hi-fi mock is done. The agent then removes "(on hold)" from this title, records each artifact's version id from `get_artifact`, keeps the frozen copies where decision 16b (where the frozen prototype copies live) in [decisions.md](decisions.md) says, and writes `docs/design/prototype-inventory.md`. The inventory lists every screen and scene of the mock and every page of the kit. Each row names the PROTO task that assembles it, the DS, SHELL or feature UI task that owns it and the API operations it reads, or "no API yet". A kit component with no DS task gets one in the same change.
+  Done when the inventory covers every mock screen and kit page, the owner has confirmed it, and the PROTO screen tasks match it.
+  Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), kit, mock.
+
+- [ ] PROTO-002 · Fake data layer for the app and the catalogue
+  MSW answers the app's API calls in `pnpm dev` and in Storybook. Handlers for operations the API has come from Orval's mock output against `openapi.json`, so their fake data has the real types. Screens with no API yet use hand-written fixtures in `apps/web` with a draft type that the feature task later replaces with the generated one. One scenario seed holds the mock's people, projects, slides and object IDs (such as `P07/S26-04812/A1/T2·C145`) so every screen tells the same story, and none of it is real patient data. A badge marks every screen that still shows fake data, and builds for staging and production contain no handlers.
+  Done when unit tests cover the handler switch and the scenario seed, a Playwright test opens one screen on fake data and one on the local API, and a build test confirms the production bundle holds no MSW code.
+  Depends on PROTO-000, PROTO-001, STACK-012, DS-000.
+
+- [ ] PROTO-003 · Home, My work and the shell over fake data
+  The global top bar, the sidebar, the account menu, the launchpad home and the To review, Assigned by me and All slides tabs of My work. Wired to the API later by HOME-002, WL-005, WL-018 and WL-019.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-001, SHELL-002, SHELL-012. Refs mock: home, mock: worklist.
+
+- [ ] PROTO-004 · Project page, new project and upload over fake data
+  The project page with its tabs and filters, New project and the upload wizard with its Check step and progress per slide. Wired later by PROJ-006, PROJ-007, INGEST-021, INGEST-022 and INGEST-024.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-002, DS-019, DS-022. Refs mock: project, mock: upload.
+
+- [ ] PROTO-005 · Model runs and jobs over fake data
+  The Run a model window, the jobs tray and the job window with steps per slide. Wired later by JOBS-002, JOBS-003 and JOBS-004.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-002, DS-019, DS-022. Refs mock: runmodel, mock: job.
+
+- [ ] PROTO-006 · New review task over fake data
+  The New review task stepper with slides, result set, reviewers, split, scope, opinion form, blinding, due date and study template. Wired later by TASK-005 and TASK-009.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, DS-020, DS-022. Refs mock: task.
+
+- [ ] PROTO-007 · Slide view, guided review and the opinion form over fake data
+  The slide top bar, the slides popover, the inspector with Objects, Layers, Comments and Opinion, guided review with verdicts and reasons, and the opinion form. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by CASE-002, CASE-014, GUIDE-002, GUIDE-003, GUIDE-005 and GUIDE-007.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-003, SHELL-005, DS-012, DS-013. Refs mock: case, mock: guided, mock: opinion.
+
+- [ ] PROTO-008 · Disagreements, sign-off and the evaluation report over fake data
+  The disagreement queue, the adjudicator view, sign-off and the evaluation report page. Wired later by ADJ-002, ADJ-003, ADJ-004 and EVAL-002.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-002, DS-019. Refs mock: disagree, mock: signoff, mock: evaluation.
+
+- [ ] PROTO-009 · Admin, setup, sign-in and empty and error states over fake data
+  The admin page and its sections, first-run setup, the sign-in and lock screens and the global empty and error states. Wired later by ADMIN-001, ONB-001, ONB-004 and SHELL-010.
+  Done when every scene of these screens in the PROTO-001 inventory renders at its route on fake data, a Playwright visual baseline of each scene is committed in dark and light, axe passes, and the owner has compared the screens with the frozen mock.
+  Depends on PROTO-002, SHELL-002, DS-022. Refs mock: admin, mock: setup and the mock's sign-in, lock, empty and error steps.
+
+- [ ] PROTO-010 · Make the React app the design source
+  Applies the consequences of [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md): the design source sentence in `AGENTS.md`, the two artifact bullets at the top of this file, the "Design sources" section of `docs/project/overview.md` and the "How to use" rule that UI tasks wait for screens to settle now point at the app and its Storybook, and the artifacts are described as frozen history.
+  Done when every PROTO screen task is ticked, the owner has accepted [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), and a docs check finds no remaining reference that calls the artifacts the design source.
+  Depends on PROTO-003, PROTO-004, PROTO-005, PROTO-006, PROTO-007, PROTO-008, PROTO-009.
 
 ---
 
