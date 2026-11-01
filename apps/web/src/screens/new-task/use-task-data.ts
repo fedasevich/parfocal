@@ -195,6 +195,7 @@ export function useTaskData(projectId: string): {
   });
   const data: TaskData = {
     code: defaults.code,
+    taskId: defaults.task_id,
     projectId,
     projectName: project.name,
     today: defaults.today,

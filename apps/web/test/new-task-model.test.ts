@@ -56,6 +56,7 @@ const slide = (id: string, caseLabel: string | null, sets: string[]) => ({
 
 const data: TaskData = {
   code: "RT-16",
+  taskId: "rt16",
   projectId: "p07",
   projectName: "Sentinel node AI evaluation",
   today: "2026-10-15",

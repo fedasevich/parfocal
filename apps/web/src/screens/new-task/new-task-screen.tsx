@@ -138,6 +138,7 @@ function NewTaskFlow({
     return field ? { field, move: false } : null;
   });
   const [toast, setToast] = useState<string | null>(null);
+  const [sentTaskId, setSentTaskId] = useState<string | null>(null);
   const create = useCreateReviewTask();
   const renderLink = useLinkRenderer();
   const page: PageKey = step ?? sceneStep[scene];
@@ -233,7 +234,8 @@ function NewTaskFlow({
     create.mutate(
       { projectId: data.projectId, data: toTaskDraft(draft, data) },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          if (response.status === 201) setSentTaskId(response.data.id);
           setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
           onNavigate({ step: "sent" });
         },
@@ -255,7 +257,7 @@ function NewTaskFlow({
               children: "Back to the project",
             })}
             {renderLink({
-              href: "/team",
+              href: `/team?task=${encodeURIComponent(sentTaskId ?? data.taskId)}`,
               className: buttonVariants({ variant: "primary" }),
               children: "Track it in Team",
             })}

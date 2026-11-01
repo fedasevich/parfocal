@@ -39,7 +39,7 @@ test("the sent scene says RT-16 is out and offers Team", async ({ page }) => {
   await expect(page.getByText("Sent to 2 reviewers on 15 Oct")).toBeVisible();
   await expect(page.getByRole("link", { name: "Track it in Team" })).toHaveAttribute(
     "href",
-    "/team",
+    "/team?task=00000000-0000-4000-8043-000000000016",
   );
 });
 
@@ -73,6 +73,10 @@ test("Next walks every step, Change goes back, and Send creates RT-16", async ({
   await flow(page).getByRole("button", { name: /Send/ }).click();
   await flow(page).getByRole("button", { name: "Create and notify 2 reviewers" }).click();
   await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Track it in Team" })).toHaveAttribute(
+    "href",
+    "/team?task=00000000-0000-4000-8043-000000000016",
+  );
 });
 
 test("Next on a blocked step keeps the step and focuses the field", async ({ page }) => {

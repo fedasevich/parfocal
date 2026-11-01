@@ -5,6 +5,7 @@ import { type DraftQueryOptions, type DraftRequest, defineDraftQuery } from "./d
 
 export const reviewTaskDefaultsSchema = z.object({
   code: z.string(),
+  task_id: z.string(),
   names: z.array(z.object({ result_set_id: z.string(), name: z.string() })),
   slide_ids: z.array(z.string()),
   result_set_id: z.string(),

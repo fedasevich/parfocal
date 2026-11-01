@@ -70,6 +70,7 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
 export const toReviewTaskDefaults = (): ReviewTaskDefaults =>
   reviewTaskDefaultsSchema.parse({
     code: newTask.code,
+    task_id: newTask.id,
     names: (["cam", "sam"] as const).map((key) => ({
       result_set_id: resultSetIdOf(key),
       name: newTask.names[key],
