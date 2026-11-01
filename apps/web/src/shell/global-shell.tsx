@@ -120,7 +120,12 @@ export function GlobalShell({ children }: { children: ReactNode }) {
             ...(slides === undefined ? {} : { count: slides }),
           };
         }),
-        { id: "new-project", href: "#new-project", label: "New project", icon: "folder" },
+        {
+          id: "new-project",
+          href: destinations.newProject(),
+          label: "New project",
+          icon: "folder",
+        },
       ],
     },
     {
@@ -143,6 +148,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
           renderLink={renderLink}
           jobs={jobs.filter((job) => job.status !== "done").length}
           onSearch={() => void overlay.set("palette")}
+          onNewProject={() => void goTo(destinations.newProject())}
           onUpload={() => void goTo(destinations.upload(firstProject))}
           bellSlot={<Bell />}
           accountSlot={<AccountMenu me={me} person={person} />}

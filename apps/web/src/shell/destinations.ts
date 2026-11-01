@@ -11,6 +11,7 @@ export const destinations = {
   home: () => "/",
   myWork: () => "/my-work",
   project: (projectId: string) => `/projects/${projectId}`,
+  newProject: () => "/projects/new",
   upload: (projectId: string) => `/projects/${projectId}/upload`,
   runModel: (projectId: string) => `/projects/${projectId}/run-model`,
   newReviewTask: (projectId: string) => `/projects/${projectId}/tasks/new`,

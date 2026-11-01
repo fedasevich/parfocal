@@ -239,7 +239,7 @@ function QuickActions({
       icon: "folder",
       title: "New project",
       text: "Privacy, classes and a template",
-      run: () => undefined,
+      run: () => void goTo(destinations.newProject()),
     },
   ];
   return (
@@ -498,6 +498,7 @@ export function HomeScreen() {
   const checklist = useGetMyChecklist().data?.data;
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
+  const goTo = useGoTo();
   if (home === undefined || me === undefined) {
     return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
   }
@@ -550,7 +551,7 @@ export function HomeScreen() {
           />
           <div className="mt-3 flex items-center justify-between">
             <Section>Projects</Section>
-            <Button variant="link" onClick={() => undefined}>
+            <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
               New project
             </Button>
           </div>
