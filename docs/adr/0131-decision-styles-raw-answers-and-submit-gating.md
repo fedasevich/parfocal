@@ -7,9 +7,9 @@
 
 ## Context
 
-[ADR 0072](0072-decisions-reasons-and-opinion-forms.md) gives every reviewer three answers per object, Agree, Disagree or Not sure, on K, X and U, and stores that value. [ADR 0084](0084-evaluation-metrics.md) builds the metrics from it. Round 6 of the POC mock (POC doc 44) found that studies ask the question in different ways. A reader study wants a certainty scale. A study that must not lead the reviewer hides the AI's claim and asks for a class or a plain yes or no. The metrics, the disagreement queue of [ADR 0080](0080-disagreement-rule-and-sign-off.md) and the report still need one three-way value per object, so that every study can be compared.
+[ADR 0072](0072-decisions-reasons-and-opinion-forms.md) (decisions, reasons and opinion forms) gives every reviewer three answers per object, Agree, Disagree or Not sure, on K, X and U, and stores that value. [ADR 0084](0084-evaluation-metrics.md) (evaluation metrics) builds the metrics from it. Round 6 of the POC mock (POC doc 44) found that studies ask the question in different ways. A reader study wants a certainty scale. A study that must not lead the reviewer hides the AI's claim and asks for a class or a plain yes or no. The metrics, the disagreement queue of [ADR 0080](0080-disagreement-rule-and-sign-off.md) (disagreement rule and sign-off) and the report still need one three-way value per object, so that every study can be compared.
 
-Submitting a slide is a stored move of the slide pipeline ([ADR 0069](0069-slide-pipeline.md)) with no condition on what was decided. In the mock a reviewer could submit with objects still open, and the evaluation then had holes nobody had chosen.
+Submitting a slide is a stored move of the slide pipeline ([ADR 0069](0069-slide-pipeline.md) (slide pipeline)) with no condition on what was decided. In the mock a reviewer could submit with objects still open, and the evaluation then had holes nobody had chosen.
 
 ## Options considered
 
@@ -40,7 +40,7 @@ A task has one decision style, preset by its study template and editable in the 
 | Yes or no | The template's question, "Is this tumor?" by default, with the AI's claim hidden by default, then Yes, No, Not sure | Y, N, U | Fixed. Yes counts as agree when the AI's claim is positive for the object and as disagree otherwise, No the other way round, Not sure as not sure |
 | Pick the class blind | "What is T2?" with the claim hidden, then one button per project class and Not sure | 1 to the number of classes, U | Fixed. The AI's class counts as agree, another class as disagree, Not sure as not sure |
 
-Every style has a Not sure path, because Not sure counts as decided. After Not sure the reviewer may add the Not sure reasons of [ADR 0095](0095-ux-round-5-upload-by-slide-and-decision-notes.md) plus "Need a second look". After an answer that counts as disagree the disagree reasons of ADR 0072 and ADR 0095 apply.
+Every style has a Not sure path, because Not sure counts as decided. After Not sure the reviewer may add the Not sure reasons of [ADR 0095](0095-ux-round-5-upload-by-slide-and-decision-notes.md) (UX round 5, upload by slide and decision notes) plus "Need a second look". After an answer that counts as disagree the disagree reasons of ADR 0072 and ADR 0095 apply.
 
 ### The raw answer and Counts as
 
@@ -60,4 +60,4 @@ Every style has a Not sure path, because Not sure counts as decided. After Not s
 - TASK-001, GUIDE-006, GUIDE-009, EVAL-001 and EVAL-007 are ticked, so each gains a line that points at GUIDE-015 or TASK-008 instead of changing what was built.
 - GUIDE-002 (guided review) asks in the task's style, TASK-005 (new review task stepper) gains the decision question with the Counts as line, and GUIDE-007 becomes the Slide done card with the opinion form.
 - TASK-008 (submit a slide review) builds the gating in the API and on screen.
-- Hiding the AI for a first read ([ADR 0118](0118-blinding-and-a-kept-first-read.md)) with a style that shows the claim makes the first read use Pick the class blind, and the mock warns about it in the New review task flow. TODO: decide in GUIDE-015 whether the API switches the style for the first read or only the screen does.
+- Hiding the AI for a first read ([ADR 0118](0118-blinding-and-a-kept-first-read.md) (blinding and a kept first read)) with a style that shows the claim makes the first read use Pick the class blind, and the mock warns about it in the New review task flow. TODO: decide in GUIDE-015 whether the API switches the style for the first read or only the screen does.
