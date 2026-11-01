@@ -2,7 +2,6 @@ import { useGetMyHome } from "@parfocal/api-client";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { okData } from "../screens/placeholder.tsx";
-import { projectPrototypeLinks } from "../screens/project/prototype-scenes.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
 
 export const Route = createFileRoute("/prototype")({
@@ -94,15 +93,6 @@ function PrototypeIndex() {
             </Link>
           </Entry>
         ))}
-        {project &&
-          projectPrototypeLinks(
-            project.id,
-            body?.projects.find((item) => item.privacy_mode === "clinical")?.id,
-          ).map(({ key, label, note, link }) => (
-            <Entry key={key} note={note}>
-              <Link {...link}>{label}</Link>
-            </Entry>
-          ))}
         {project && (
           <Entry note={`${project.code} with its slides tab`}>
             <Link to="/projects/$projectId" params={{ projectId: project.id }}>
