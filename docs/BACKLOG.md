@@ -144,7 +144,7 @@ Task format:
 | 16 | MEAS | Measurements | M3 |
 | 17 | COLLAB | Comments and realtime | M5 |
 | 18 | CMP | Compare slides | M5 |
-| 19 | REPORT | Clinical reports and sign-out | Idea |
+| 19 | REPORT | Clinical reports and sign-out | Idea, except the four planned clinical report tasks without the `Idea:` prefix |
 | 20 | CASES | Cases and patients | M3 to M5 |
 | 21 | AIP | AI platform, registry, jobs, GPU pool | M4 |
 | 22 | AISEG | Interactive segmentation | M4 |
@@ -163,7 +163,7 @@ Task format:
 | 35 | TEST | Test infrastructure | M0 to M6 |
 | 36 | PILOT | Documentation and pilot readiness | M6 |
 | 37 | BOARD | Status board, tickets and lab work | Idea |
-| 38 | TEAM | Team, capacity, absences and hand-over | Idea |
+| 38 | TEAM | Team, capacity, absences and hand-over | Idea, except TEAM-007 (Team, the researcher's workload view) |
 | 39 | TB | Tumor boards | Idea |
 | 40 | PROJ | Projects, privacy modes, class taxonomy and templates | M3 |
 | 41 | RSET | Result sets and AI result import | M3 |
