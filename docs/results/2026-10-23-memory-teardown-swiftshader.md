@@ -33,7 +33,7 @@ Four full runs of both tests were made on the final code. The tables show runs 2
 
 Heap is `Runtime.getHeapUsage` in MB, UASM in MB. "First" is visit 0, "baseline" is visit 5 after the warm-up cycle, "last" is visit 25.
 
-| Run | Release | Heap empty page | Heap first | Heap baseline | Heap last | Growth from baseline | Growth from first | UASM baseline | UASM last | Most Decks alive | Decks right after dispose | Decks after polling | Devices, contexts after dispose | Heap closed | UASM closed | Contexts created / lost | Load timeouts | Verdict |
+| Run | Release | Heap empty page | Heap first | Heap baseline | Heap last | Growth from baseline | Growth from first | UASM baseline | UASM last | Most Decks alive | Decks right after dispose | Decks after polling | Devices, contexts after dispose | Heap closed | UASM closed | Contexts created / lost | Load timeouts | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 2 | wrapper | 3.4 | 7.58 | 8.22 | 8.54 | 3.9% | 12.7% | 32.9 | 33.2 | 1 | 1 | 0 after 186 ms | 0, 0 | 6.6 | 16.0 | 26 / 26 | 0 | pass |
 | 3 | wrapper | 3.4 | 7.58 | 8.21 | 8.54 | 4.0% | 12.7% | 32.9 | 33.2 | 1 | 0 | 0 | 0, 0 | 6.6 | 16.0 | 26 / 26 | 0 | pass |

@@ -18,7 +18,7 @@ The kit records these as decisions D15 to D23 and the mock shows each one.
 
 ## Options considered
 
-1. Keep the backlog as written and treat the new prototype as a later iteration. Cheap now, but the review and report tasks would build a verdict that does not answer the sentinel node question, and the compare and minimap tasks would ship controls the pilot showed people cannot find.
+1. Keep the backlog as written and treat the new prototype as a later iteration. Cheap now, but the review and report tasks would build a result that does not answer the sentinel node question, and the compare and minimap tasks would ship controls the pilot showed people cannot find.
 2. Edit the affected tasks and add the missing ones, keeping every existing ID. The backlog stays the single source and nothing already planned is lost.
 3. Replace the REVIEW epic. Cleaner on paper, but most of it (gallery, focus review, wording, outline modes, track record) still holds.
 
@@ -28,7 +28,7 @@ Option 2. The edited and added tasks follow the prototype pair as published on 2
 
 - The case top bar keeps back, a case chip, a slide button, Review and Annotate, the viewed ring, the panel toggle, a "more" menu and Sign out. Details open in popovers. The slide tray becomes an optional pinned strip.
 - Upload is a window that opens from several places and from a drop, shows the label image and case match per file before upload, offers one-click fixes for the four problem classes seen in practice, and keeps running in a corner tray.
-- For a sentinel node, findings lead with the largest deposit on a size scale with the 0.2 and 2 mm lines. Each area asks three steps in order: is it tumor, how big is it, and only near 0.2 mm, how many tumor cells. Once the largest area is confirmed and measured, the category is settled and the smaller areas are marked as unable to change it. The tumor share verdict from doc 33 stays for specimen types that ask for cellularity (REVIEW-017).
+- For a sentinel node, findings lead with the largest deposit on a size scale with the 0.2 and 2 mm lines. Each area asks three steps in order: is it tumor, how big is it, and only near 0.2 mm, how many tumor cells. Once the largest area is confirmed and measured, the category is settled and the smaller areas are marked as unable to change it. The tumor share decision from doc 33 stays for specimen types that ask for cellularity (REVIEW-017).
 - Areas come from the existing tumor map. The outline is drawn at 0.5, an area is listed only if its peak reaches 0.97, and its size is the widest distance across its hull. On tumor_009 this listed 7 areas for 6 deposits and sized the largest at 8.1 mm against 8.1 mm. That slide is in the model's training set, so AITUM-003 must repeat the evaluation on CAMELYON16 test slides before the size range shown to doctors is fixed.
 - Compare labels each pane and makes the label the picker, with Side by side in the slides popover and Swap sides in the panel.
 - The minimap opens the whole-slide peek on click, and a tap on Z keeps the peek open. The earlier "tap toggles the last two magnifications" is dropped, because a tap now latches the peek open, which the pilot tested, and both cannot share the key. Double-click can still be set to toggle the last two magnifications.
@@ -37,7 +37,7 @@ Option 2. The edited and added tasks follow the prototype pair as published on 2
 ## Consequences
 
 - The mock gained an Upload slides screen at step 3, so every mock step from Case at low power onwards moved up by one. All `mock N` references in the backlog were renumbered in the same change.
-- REVIEW-003 and REVIEW-004 now build staging, not a tumor share verdict. REVIEW-017 keeps the share verdict for cellularity cases, so doc 33's work is not lost.
+- REVIEW-003 and REVIEW-004 now build staging, not a tumor share result. REVIEW-017 keeps the share result for cellularity cases, so doc 33's work is not lost.
 - AINUC-012 is new work: a tumor cell count per area with a range, which needs nuclei or the 64 px map because a 0.2 mm cluster is three cells across on the 256 px map.
 - The staging wording and the suggested pN stage must be checked with a pathologist in MEAS-000 before any of this is shown to a doctor.
 - The usability plan now has ten pilot tasks, and EXP-008 and EXP-009 follow it.

@@ -96,7 +96,7 @@ The production bundle's main chunk was 1,152,953 bytes minified.
 
 Heap is `Runtime.getHeapUsage` in MB, UASM is `measureUserAgentSpecificMemory` in MB. "Baseline" is after the first CMU-1.svs open and "last" is after switch 20, which opens CMU-1.svs again. luma.gl webgl is 9.4.2 unless the run says 9.4.1.
 
-| Run | Release | GL keys | Heap baseline | Heap last | Growth | UASM baseline | UASM last | Most Decks alive | Decks after close | Heap empty / closed | UASM closed | Contexts created / lost | `getGLKeys` calls | `getGLKeys` ms | Verdict |
+| Run | Release | GL keys | Heap baseline | Heap last | Growth | UASM baseline | UASM last | Most Decks alive | Decks after close | Heap empty / closed | UASM closed | Contexts created / lost | `getGLKeys` calls | `getGLKeys` ms | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | wrapper | patched | 13.5 | 14.1 | 4.4% | 82.1 | 82.6 | 1 | 0 | 3.8 / 6.9 | 20.2 | 21 / 21 | 0 | 0 | pass |
 | 1 | lose | patched | 13.5 | 107.5 | 696% | 82.1 | 985.9 | 21 | 21 | 3.8 / 107.0 | 985.4 | 21 / 21 | 0 | 0 | fail |

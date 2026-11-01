@@ -21,7 +21,7 @@ This repository is public, and FIT runs submitted theses through plagiarism dete
 Option 2. The thesis plan, its writing guidance, its decisions, its tasks and the text live in the private repository `fedasevich/parfocal-thesis`, checked out next to this one. This repository keeps only what the product must do.
 
 - GUIDE-012 (least sure first order) orders each reviewer's objects by the model's certainty, lowest first, with unscored objects after them in the task's fixed random order.
-- TEST-019 (application performance on main paths) measures opening a slide, a jump, importing result sets, a model run on a whole slide and the step from a verdict to the next object, each against a budget.
+- TEST-019 (application performance on main paths) measures opening a slide, a jump, importing result sets, a model run on a whole slide and the step from a decision to the next object, each against a budget.
 - GUIDE-002 (guided review) depends on GUIDE-012, because guided review shows objects in that order.
 
 ## Consequences

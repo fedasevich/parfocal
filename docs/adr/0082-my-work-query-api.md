@@ -13,17 +13,17 @@ My work replaces the worklist ([ADR 0053](0053-ai-results-review-direction.md)).
 
 1. One endpoint with a `tab` parameter. One route, but three different shapes behind one schema, and the generated client gets a union type.
 2. Three endpoints, one per tab, each with its own response. Clear shapes, and each can be cached and paged on its own terms.
-3. Store the derived states in a table and query that. Fast to filter, but every move and verdict must keep it in step, which ADR 0069 avoided on purpose.
+3. Store the derived states in a table and query that. Fast to filter, but every move and decision must keep it in step, which ADR 0069 avoided on purpose.
 
 ## Decision
 
 Option 2, computing states with the same pure functions.
 
-- `GET /api/me/review-tasks` (To review) lists the tasks where I hold an assignment, newest due date first and tasks I have started before new ones. Each has its project, scope, due date, blinding, start mode, my slides submitted out of assigned, my verdict count, my status (`not-started`, `in-review`, `submitted` or `signed-off`) and the next slide to open, which is my first unsubmitted slide in task order.
+- `GET /api/me/review-tasks` (To review) lists the tasks where I hold an assignment, newest due date first and tasks I have started before new ones. Each has its project, scope, due date, blinding, start mode, my slides submitted out of assigned, my decision count, my status (`not-started`, `in-review`, `submitted` or `signed-off`) and the next slide to open, which is my first unsubmitted slide in task order.
 - `GET /api/me/assigned-tasks` (Assigned by me) lists the tasks I created, with each reviewer's slides submitted out of assigned and state, and the task status: `not-started` (nobody has worked), `in-review`, `disagreements` (all submitted, queue not empty), `ready-to-sign-off` (all submitted, queue empty) or `signed-off`.
 - `GET /api/me/slides` (All slides) lists every slide I can read, with project, case label, result sets and the reviews on it (task, reviewer and state), and its status: its state in the newest task it is in, or `ready`, `ai-running` or `uploaded` from its result sets when it is in no task. Filters are `project_id`, `status`, `result_set` (a model name), `reviewer_id` and a `q` search on slide and case labels. Pages are keyset pages over creation time and id, with an opaque cursor and at most 200 rows.
 - The storage filter moves to REMOTE-001, which gives slides a source. WL-001 no longer asks for it.
-- Object-level progress (37 of 50 cells) needs the scope's candidates, and cell scopes need the chunk summary in storage, so these lists count slides and verdicts. TODO: add object progress when result chunks reach storage.
+- Object-level progress (37 of 50 cells) needs the scope's candidates, and cell scopes need the chunk summary in storage, so these lists count slides and decisions. TODO: add object progress when result chunks reach storage.
 
 ## Consequences
 

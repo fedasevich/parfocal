@@ -39,7 +39,7 @@ The chunk files are stored with `Content-Encoding: gzip`. httpx2 inflates such a
 
 ## Exporting a reviewed layer
 
-`GET /api/review-tasks/{task}/slides/{slide}/export` writes one reviewer's layer, or with `consensus=true` the consensus, as GeoJSON (the default) or as Parfocal JSON (`format=parfocal`). Each object keeps its full ID and path in `properties.parfocal`, with `changed` (`retyped`, `reshaped`, `added`), the AI class and the verdict, so the file reads back through `read_geojson` or `read_parfocal_json` with nothing lost. A reviewer exports only their own layer. Project owners and viewers export anyone's layer and the consensus.
+`GET /api/review-tasks/{task}/slides/{slide}/export` writes one reviewer's layer, or with `consensus=true` the consensus, as GeoJSON (the default) or as Parfocal JSON (`format=parfocal`). Each object keeps its full ID and path in `properties.parfocal`, with `changed` (`retyped`, `reshaped`, `added`), the AI class and the decision, so the file reads back through `read_geojson` or `read_parfocal_json` with nothing lost. A reviewer exports only their own layer. Project owners and viewers export anyone's layer and the consensus.
 
 The consensus keeps the AI regions whose consensus is agree, with the earliest saved reshape, and the objects reviewers added, merged across reviewers by the same rule as the evaluation (`SAME_ADDED`: regions overlapping by half their union, cells within 16 pixels, same class, different reviewers). `first_of_each_match` in `evaluation.py` keeps the earliest added object of each group, so the kept ID does not depend on UUID order.
 

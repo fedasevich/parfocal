@@ -39,7 +39,7 @@ For shortcuts, a separate read-only sheet next to an editor was weighed against 
 
 ## Consequences
 
-- REVIEW-002 now describes two findings layouts, and REVIEW-018 (zones) and REVIEW-019 (type bar and arrow jumps) are new. The gallery and focus review tasks (REVIEW-006, REVIEW-007, REVIEW-009) now work inside a zone. REVIEW-005 becomes the number line with sure and unsure parts, and REVIEW-017's verdict moves into it.
+- REVIEW-002 now describes two findings layouts, and REVIEW-018 (zones) and REVIEW-019 (type bar and arrow jumps) are new. The gallery and focus review tasks (REVIEW-006, REVIEW-007, REVIEW-009) now work inside a zone. REVIEW-005 becomes the number line with sure and unsure parts, and REVIEW-017's tumor share result moves into it.
 - DS-001 gains the `unsure` token, DS-002 gains the unsure thresholds and should start from the POC script, and DS-012 gains the zone row and number line.
 - AILEARN-003 shows learning as the "Changed after your corrections" zone.
 - CMD-003 no longer builds a sheet, CMD-006 and SET-007 describe the full editor.

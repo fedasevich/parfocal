@@ -26,11 +26,11 @@ Option 2 with a soft delete.
 - `result_objects` holds regions and zones, and `result_chunks` the chunk index, as ADR 0076 describes.
 - The database enforces immutability. Rows of `result_objects`, `result_chunks` and `result_set_classes` can be inserted only while their set is `importing`, and `result_objects` and `result_chunks` can never be updated or deleted by the app role. A set's status moves only from `importing` to `ready` or `failed`, and once it leaves `importing` only its `deleted_at` may change.
 - The API creates imported sets for project owners and service accounts with `upload-slides`, lists them per slide and per project, shows one with its classes, and soft-deletes it. Sets made by AI runs here are created by the run job (AIP-008) with source `run`.
-- The confirmation before deleting a reviewed set moves to a new task, RSET-009 (confirm deleting a reviewed result set), which depends on TASK-001, because "has reviews" means a review task or a verdict uses the set.
+- The confirmation before deleting a reviewed set moves to a new task, RSET-009 (confirm deleting a reviewed result set), which depends on TASK-001, because "has reviews" means a review task or a decision uses the set.
 
 ## Consequences
 
 - RSET-003 (readers) creates or receives a set in `importing`, writes chunks and region rows through `parfocal_api.result_sets` helpers, then finishes the set with its counts. A failed import marks the set `failed` with an error code, and its partial rows stay for the error report.
 - TASK-001 references a result set and refuses a set that is not `ready` or is deleted.
-- RSET-009 adds `confirm=true` on `deleteResultSet` when a task or verdict refers to the set, and its tests.
+- RSET-009 adds `confirm=true` on `deleteResultSet` when a task or decision refers to the set, and its tests.
 - Chunk files are not removed by a soft delete. Removing them is SEC-006 (retention).

@@ -1,6 +1,6 @@
 # Evaluation metrics
 
-How `parfocal_common.evaluation` turns verdicts, decisions and reviewed layers into the numbers of the evaluation report ([ADR 0084](../adr/0084-evaluation-metrics.md)).
+How `parfocal_common.evaluation` turns reviewer decisions, decisions on queued objects and reviewed layers into the numbers of the evaluation report ([ADR 0084](../adr/0084-evaluation-metrics.md)).
 
 ## The engine takes plain inputs
 
@@ -8,8 +8,8 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 
 ## Rules worth remembering
 
-- The consensus is the unanimous verdict, else the decision (`keep-ai` is agree, `go-with-reviewers` is disagree), else undecided. Unsure and undecided objects are counted but kept out of precision and sensitivity.
-- A disagree consensus is also a false negative for another class only when every disagreeing verdict is `wrong_class` with the same class.
+- The consensus is the unanimous decision, else the decision on the queued object (`keep-ai` is agree, `go-with-reviewers` is disagree), else undecided. Unsure and undecided objects are counted but kept out of precision and sensitivity.
+- A disagree consensus is also a false negative for another class only when every disagreeing decision is `wrong_class` with the same class.
 - Every rate is a `Ratio` with its numerator and denominator, and a zero denominator gives `None`, never 0.
 - Cohen's kappa is computed per pair of reviewers over the objects both judged, with agree, disagree and unsure as categories. `fleiss` reproduces the textbook example (κ ≈ 0.210, 10 subjects, 14 raters, 5 categories), and returns `None` when the subjects do not all have the same number of raters.
 - The fixture `packages/py-common/tests/fixtures/evaluation-task.json` holds the hand-computed values. The two reviewers there give κ = 51/87.

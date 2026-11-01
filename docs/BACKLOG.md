@@ -1,6 +1,6 @@
 # Parfocal backlog
 
-This file takes an empty repository to a production-quality, multi-tenant cloud platform where researchers evaluate AI results on whole slides and doctors review them. It covers whole-slide viewing, importing and running AI results, object IDs, review tasks with verdicts and opinions, disagreements and sign-off, the evaluation report, comments and annotation. Since 2026-10-17 it follows the AI results review direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). The earlier hospital sign-out workflow is kept as ideas for consideration. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
+This file takes an empty repository to a production-quality, multi-tenant cloud platform where researchers evaluate AI results on whole slides and doctors review them. It covers whole-slide viewing, importing and running AI results, object IDs, review tasks with decisions and opinions, disagreements and sign-off, the evaluation report, comments and annotation. Since 2026-10-17 it follows the AI results review direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). The earlier hospital sign-out workflow is kept as ideas for consideration. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
 
 The design source is the approved prototype pair:
 
@@ -25,7 +25,7 @@ Task format:
 - When a decision changes a later task, edit that task and add an ADR rather than leaving the old text in place.
 - `poc/` means `/Users/yuriifedas/WebstormProjects/poc/` locally or `https://github.com/fedasevich/pathlogy-poc/blob/master/` on GitHub, and code references are links. `doc NN` means `poc/docs/NN-*.md`, listed with full links in [project/poc-reference.md](project/poc-reference.md). `kit:` names a UX kit page or wireframe (W1 to W73). W39 to W73 and Flows 9 to 30 came from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)), and the hi-fi mock has them as steps 23 to 35, from 23 Sign in and lock to 35 Empty and error states. `mock N` names step N of the converged mock tab, from 1 Home to 21 Shortcuts. Step 3 is Status board and step 4 Upload slides, so the case screens start at 5 Case at low power and 6 Area at 10x, and step 15 is Report and PDF ([ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md)).
 - Tasks say what users must be able to do, the rules behind it and the tests that prove it. Layout, sizes, placement and wording follow the prototype at the time the task is built, so a later prototype change needs a backlog edit only when it changes behaviour or rules. `mock N` and `kit:` references point at the current design, not a fixed spec, and a test checks behaviour rather than a pixel layout unless the task says otherwise.
-- Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit), doc 41 (what is clickable, tags, icons and type) and doc 42 (round 5: upload by slide, the magnification chip, slide loading, verdict notes, passkeys and storage).
+- Since [ADR 0053](adr/0053-ai-results-review-direction.md), `mock: id` names a screen of the hi-fi mock by its id, with a scene after a slash where it matters, as in `mock: guided/disagree`, `mock: upload/check` or `mock: job`. `kit:` also names the Parfocal kit pages such as `kit: ID system` or `kit: UI kit: tags, icons and type`. The POC docs that hold the new direction are doc 37 (decisions), doc 38 and doc 39 (feedback rounds), doc 40 (UI and UX audit), doc 41 (what is clickable, tags, icons and type) and doc 42 (round 5: upload by slide, the magnification chip, slide loading, decision notes, passkeys and storage).
 - Epics with the milestone Idea and tasks whose title starts with `Idea:` are kept from the hospital direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). They are not planned. Don't start one unless the owner asks, and never make a planned task depend on one. A task that is needed again loses its `Idea:` prefix in a backlog edit with an ADR.
 - Tasks from the gap review ([ADR 0023](adr/0023-gap-review-backend-first.md)) are backend first: models, rules, APIs, events and their tests. The screens for them are still changing in the prototype, so their UI tasks are added only when those screens settle, and no backend task here may depend on a layout.
 - UI tasks, meaning any task that builds a screen or a component in `apps/web` or `packages/ui`, and copies the design wait until PROTO-001 (freeze the redesigned prototype) is done. They use shadcn/ui on Base UI with Tailwind CSS v4 ([ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md)). The PROTO epic first builds a rough copy of every kit component and every mock screen over fake data, so the owner can see and change the whole design early. A DS, SHELL or feature UI task then starts from that rough component or screen and makes it production grade with its tests, keyboard paths, accessibility, missing states and, for a feature task, the API in place of the fake data ([ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md)).
@@ -53,7 +53,7 @@ Task format:
 | Privacy | Each project is de-identified (the default, no patient fields, names stripped on upload) or clinical (patient fields optional, names can be hidden, access logged) ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Object IDs | Short IDs per slide (T2, T2·C145, C3021, R4, Z1, M1), a full path for links and exports (`P07/S26-04812/A1/T2·C145`), carried across result sets by overlap ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Reports | The evaluation report is an ordered list of blocks from a fixed catalogue. Study templates (detection, segmentation, cell typing, reader study, sentinel node) preset a review task and its report, live in the admin page's library, and one task's report can be rearranged ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)) |
-| Review | Review tasks with slides, a result set, reviewers, a split, a scope, an opinion form, blinding and a due date. Verdicts are Agree, Disagree or Not sure per object, in guided review or the full viewer. Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Review | Review tasks with slides, a result set, reviewers, a split, a scope, an opinion form, blinding and a due date. Decisions are Agree, Disagree or Not sure per object, in guided review or the full viewer. Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Interaction | A control responds only when clicking it changes something in the flow. Auto-advancing and far-reaching actions show an Undo. The bell is the only place for mentions, replies, tasks and jobs (doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Pilot data | Public slide datasets and their AI results in de-identified projects. Clinical projects use seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
 | Compliance | GDPR, HIPAA and ISO 27001 readiness in v1: audit log, encryption, residency, retention and erasure, BAA-ready logging, pen test |
@@ -114,9 +114,9 @@ Task format:
 | Milestone | Meaning | Gate |
 | --- | --- | --- |
 | M0 Stack decided | Every STACK task closed with an ADR | `docs/adr/` holds one ADR per slot |
-| M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one verdict and submit the review, all on staging | SKEL epic done, E2E green on staging |
+| M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one decision and submit the review, all on staging | SKEL epic done, E2E green on staging |
 | M2 Viewer parity | Every POC format opens correctly in Viv with POC-level performance, plus alternates behind the interface | VIEW, TILES, INGEST done, perf and golden suites green |
-| M3 Review loop | Projects, upload with AI results, object IDs, review tasks, My work, guided review and the slide view with verdicts and the opinion form, navigation aids, measurement, settings, palette, sign-up and setup | ADAPT, PROJ, RSET, OBJ, TASK, GUIDE, WL, CASE, NAV, REVIEW, MEAS, SET, CMD, ONB done |
+| M3 Review loop | Projects, upload with AI results, object IDs, review tasks, My work, guided review and the slide view with decisions and the opinion form, navigation aids, measurement, settings, palette, sign-up and setup | ADAPT, PROJ, RSET, OBJ, TASK, GUIDE, WL, CASE, NAV, REVIEW, MEAS, SET, CMD, ONB done |
 | M4 AI runs and visualization | Model runs and the jobs tray, lab model endpoints, layers, heatmaps, diff and the object table, interactive AI in Annotate | AIP, JOBS, VIZ, AISEG, AINUC, AITUM, MLEVAL core done |
 | M5 Collaboration and evaluation | Threads pinned to IDs, presence, compare, notifications, the disagreement queue and sign-off, the evaluation report, remote sources and webhooks, the admin page | COLLAB, CMP, NOTIF, ADJ, EVAL, REMOTE, ADMIN, CASES done |
 | M6 Pilot ready | Compliance controls, ops, experiments, devices, learning loop, pilot runbook | SEC, OPS, EXP, DEV, AILEARN, PILOT done |
@@ -169,7 +169,7 @@ Task format:
 | 41 | RSET | Result sets and AI result import | M3 |
 | 42 | OBJ | Object IDs | M3 |
 | 43 | TASK | Review tasks and the slide pipeline | M3 |
-| 44 | GUIDE | Verdicts, guided review and the opinion form | M3 |
+| 44 | GUIDE | Decisions, guided review and the opinion form | M3 |
 | 45 | ADJ | Disagreements, adjudication and sign-off | M5 |
 | 46 | EVAL | Evaluation report, study templates and exports | M5 |
 | 47 | JOBS | Model runs, the jobs tray and lab models | M4 |
@@ -239,7 +239,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike renders 10,000 worklist rows with keyboard J/K navigation at 60 fps.
 
 - [ ] STACK-011 · Charts for dashboards and confidence visuals
-  Candidates: visx, Recharts, Observable Plot, ECharts. Default: visx for the custom verdict range bars and sparklines, Observable Plot for dashboard charts.
+  Candidates: visx, Recharts, Observable Plot, ECharts. Default: visx for the custom tumor share range bars and sparklines, Observable Plot for dashboard charts.
   Done when the ADR covers theming through tokens and accessibility of charts.
 
 - [ ] STACK-012 · Frontend testing stack
@@ -527,7 +527,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an E2E test draws, reloads and sees the same polygon.
   Depends on ANN-001, ANN-020.
 
-- [ ] SKEL-008 · Stub verdict and submit
+- [ ] SKEL-008 · Stub decision and submit
   One Agree, Disagree or Not sure on the drawn polygon and a submit that records the reviewer and the time and moves the slide to submitted. Replaces the stub report and sign-out ([ADR 0053](adr/0053-ai-results-review-direction.md)).
   Done when an E2E test submits and the slide shows as submitted in a list, with an audit log entry.
   Depends on GUIDE-001, SEC-003.
@@ -640,7 +640,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-010. Refs kit W49, kit W62, kit Flow 21, [ADR 0023](adr/0023-gap-review-backend-first.md).
 
 - [ ] IAM-020 · Deactivation with hand-over
-  Deactivating a person first lists their open work: review tasks they are on, tasks they own, adjudications and open threads. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their verdicts, sign-offs and audit history stay.
+  Deactivating a person first lists their open work: review tasks they are on, tasks they own, adjudications and open threads. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their decisions, sign-offs and audit history stay.
   Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed-off evaluations still verify.
   Depends on IAM-014, TASK-007, ADJ-003. Refs kit W51, kit Flow 25.
 
@@ -655,7 +655,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-006, ADAPT-001. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
 - [ ] IAM-023 · Sign in and unlock with a passkey
-  Sign in and the lock screen offer "Sign in with a passkey" and "Unlock with a passkey" next to the other ways in. The button starts the BFF login with the identity provider's passwordless flow, the browser shows its own passkey window, and a passkey on a phone or security key works through the browser's QR option. Unlocking returns to the same view as IAM-021. Enrolment prompts, a passkey list in settings and an admin policy are not part of this task ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Sign in and the lock screen offer "Sign in with a passkey" and "Unlock with a passkey" next to the other ways in. The button starts the BFF login with the identity provider's passwordless flow, the browser shows its own passkey window, and a passkey on a phone or security key works through the browser's QR option. Unlocking returns to the same view as IAM-021. Enrolment prompts, a passkey list in settings and an admin policy are not part of this task ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when E2E with a virtual WebAuthn authenticator signs in with a passkey and unlocks a locked slide to the same camera position, and a test shows a cancelled passkey window leaves the sign-in page usable.
   Depends on IAM-001, IAM-002, IAM-021. Refs mock: signin/passkey, mock: signin/lockkey, doc 42.
 
@@ -821,7 +821,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 05 INGEST · Slide upload, validation and indexing
 
-Since [ADR 0053](adr/0053-ai-results-review-direction.md) an upload carries slides and their AI result files together through three steps, Files, Check and Upload (mock: upload, [ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)). Result files are read and checked by the RSET epic, and no model runs on arrival.
+Since [ADR 0053](adr/0053-ai-results-review-direction.md) an upload carries slides and their AI result files together through three steps, Files, Check and Upload (mock: upload, [ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)). Result files are read and checked by the RSET epic, and no model runs on arrival.
 
 Formats in scope, all read natively: Aperio SVS (JPEG and JPEG 2000), generic tiled TIFF, OME-TIFF (8 and 16 bit), Hamamatsu NDPI (including files above 4 GB), Ventana BIF, Leica SCN, Philips TIFF, Huron TIFF, ARGOS TIFF, OME-Zarr v0.4 and v0.5 (sharded). Out of scope for v1 (later epic): MRXS, iSyntax, CZI, VSI, DICOM WSI. Doc 08 has the per-format findings.
 
@@ -926,7 +926,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on CASES-006.
 
 - [ ] INGEST-021 · Upload wizard with slides and results
-  Opens from Upload in the top bar, the project page, Home's Start something and a drop anywhere on a project, with a drop overlay. Three steps, Files, Check and Upload, in one full-width wizard whose steps can be clicked once reached ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)). Files has one drop area for slides, result files or a whole folder, and when empty it explains the folder shape that works (a folder is a case, a result sits next to its slide with the same name or in a folder named like the slide). Dropped files are listed grouped by case and slide, with each result file under the slide it was paired with (RSET-004) and how it was paired, an "Add a result file" row per slide and a plain line for slides without results. Results that pair with no slide wait in "Not matched yet" with a slide picker and an Undo after placing. One line says how files were grouped and opens the pairing rule and the case choice (CASES-024). From a link or storage uses the same grouped list. Check shows one zone per problem with its fix (INGEST-022, RSET-005), including a result still not placed, and only Start upload is a filled button. Upload shows one bar for everything and one per file (INGEST-024). Closing keeps the upload going in the jobs tray (JOBS-003). A side summary shows where the files go, the privacy mode and the counts so far.
+  Opens from Upload in the top bar, the project page, Home's Start something and a drop anywhere on a project, with a drop overlay. Three steps, Files, Check and Upload, in one full-width wizard whose steps can be clicked once reached ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)). Files has one drop area for slides, result files or a whole folder, and when empty it explains the folder shape that works (a folder is a case, a result sits next to its slide with the same name or in a folder named like the slide). Dropped files are listed grouped by case and slide, with each result file under the slide it was paired with (RSET-004) and how it was paired, an "Add a result file" row per slide and a plain line for slides without results. Results that pair with no slide wait in "Not matched yet" with a slide picker and an Undo after placing. One line says how files were grouped and opens the pairing rule and the case choice (CASES-024). From a link or storage uses the same grouped list. Check shows one zone per problem with its fix (INGEST-022, RSET-005), including a result still not placed, and only Start upload is a filled button. Upload shows one bar for everything and one per file (INGEST-024). Closing keeps the upload going in the jobs tray (JOBS-003). A side summary shows where the files go, the privacy mode and the counts so far.
   Done when component tests cover each step and state, the folder shape help and placing an unmatched result, and E2E drops a folder of slides and results on a project, places an unmatched result on its slide, starts the upload, closes the window and finds the upload in the jobs tray.
   Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, doc 42, [ADR 0053](adr/0053-ai-results-review-direction.md).
 
@@ -1178,7 +1178,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md), doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
 
 - [ ] VIEW-041 · How a slide loads
-  The coarse level shows first, stretched under the view, and sharper tiles fade in over it without ever showing white or black. A quiet checker in chrome colours marks only places where no level has loaded, and outside the slide bounds the canvas is the plain background. Overlays draw at once over soft tiles and the checker. A hint by the magnification chip ("Loading sharper tiles · 12 left") appears after 1 s of waiting, and after 5 s it names the slow source and how long it answers, with a link to its status. Failed tiles keep the grey placeholder with Retry ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  The coarse level shows first, stretched under the view, and sharper tiles fade in over it without ever showing white or black. A quiet checker in chrome colours marks only places where no level has loaded, and outside the slide bounds the canvas is the plain background. Overlays draw at once over soft tiles and the checker. A hint by the magnification chip ("Loading sharper tiles · 12 left") appears after 1 s of waiting, and after 5 s it names the slow source and how long it answers, with a link to its status. Failed tiles keep the grey placeholder with Retry ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when golden tests show the coarse level under missing tiles, the checker only where no level loaded and the background past the edge, a test with a delayed tile server checks the hint at 1 s and the slow source at 5 s, and no frame shows an empty tile during a fling on the throttled fixture.
   Depends on VIEW-002, VIEW-004, NAV-001. Refs mock: states/loading, mock: states/unloaded, mock: states/slow, doc 42.
 
@@ -1394,7 +1394,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
 
 - [ ] DS-019 · Progress bar and ring
-  One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, and one ring for review progress split by verdict colour (agree, disagree, not sure, open) with the percentage in the middle.
+  One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, and one ring for review progress split by decision colour (agree, disagree, not sure, open) with the percentage in the middle.
   Done when stories cover each state, a unit test checks the ring arcs add up, and the bar and ring expose progressbar and image roles with their values.
   Depends on PROTO-011. Refs doc 38 "One component per job".
 
@@ -1405,7 +1405,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] DS-021 · Undo toast
   A toast that names what just happened ("T1 marked agree", "Run cancelled") with an Undo link, kept for 4 s and not covering the slide centre. Undo restores the exact state before the action.
-  Done when component tests cover undo within and after the window, and E2E undoes a verdict and a cancelled run.
+  Done when component tests cover undo within and after the window, and E2E undoes a decision and a cancelled run.
   Depends on PROTO-011. Refs doc 40 G2 and R1, doc 41.
 
 - [ ] DS-022 · Modals: small one-column and full-width wizard
@@ -1650,7 +1650,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the case view state model (slide, workspace, inspector tab, area, review position) is captured in an ADR.
 
 - [ ] CASE-001 · Case loader
-  Load the project, the optional case, the slides, their result sets, the review task and the person's verdicts, and open the slide fitted. Patient fields load only in clinical projects.
+  Load the project, the optional case, the slides, their result sets, the review task and the person's decisions, and open the slide fitted. Patient fields load only in clinical projects.
   Done when E2E opens a slide from My work and from the project page and the slide is fitted within the TEST-006 budget.
 
 - [ ] CASE-002 · Slides popover
@@ -1684,7 +1684,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 - [ ] CASE-008 · Idea: AI state: model not validated
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. It depends on per-specimen validation, which is an idea.
-  Warning bar, areas shown for reference only, no verdict, amber chip.
+  Warning bar, areas shown for reference only, no tumor share result, amber chip.
   Done when component tests cover the state and the report draft notes it.
   Depends on AIP-005.
 
@@ -1712,12 +1712,12 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Only in projects with the sentinel node staging template (PROJ-005).
 
 - [ ] CASE-014 · Inspector with Objects, Layers, Comments and Opinion
-  Four tabs with counts. Objects lists the object IDs with their verdicts and, with the staging template, the staging hero and area list. Layers holds the result sets and their styles (VIZ-001). Comments lists the threads by ID (COLLAB-005). Opinion holds the form (GUIDE-007). The template line names the project's analysis template.
+  Four tabs with counts. Objects lists the object IDs with their decisions and, with the staging template, the staging hero and area list. Layers holds the result sets and their styles (VIZ-001). Comments lists the threads by ID (COLLAB-005). Opinion holds the form (GUIDE-007). The template line names the project's analysis template.
   Done when component tests cover each tab with seeded data, the counts follow changes, and a project without a template shows no staging.
   Depends on CASE-001, OBJ-001, GUIDE-001. Refs mock: case, mock: layers, doc 37 "Viewer".
 
 - [ ] CASE-015 · Progress ring in the slide top bar
-  One ring split by verdict colour (agree, disagree, not sure, open) with this slide's percentage. Clicking it opens a popover with the task, slide n of N, the due date, time left and a button for the next slide.
+  One ring split by decision colour (agree, disagree, not sure, open) with this slide's percentage. Clicking it opens a popover with the task, slide n of N, the due date, time left and a button for the next slide.
   Done when component tests cover an empty, a partial and a finished slide, and E2E opens the next slide from the popover.
   Depends on DS-019, TASK-003. Refs doc 38 answer 3, mock: case.
 
@@ -1729,7 +1729,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the minimap state machine and placement algorithm are written as an ADR from kit and mock specs.
 
 - [ ] NAV-001 · Magnification bar
-  Presets 1.25×, 2.5×, 5×, 10×, 20×, 40× with Alt+1 to Alt+6, nearest preset highlighted, option to label as zoom percent. Folded by default to a chip with the magnification and the scale bar, opening to the presets, readout and brightness on hover and focus, while Alt plus a number is held, for 2 s after a zoom and while the brightness popover is open. Brightness shows when folded only if it is not 100%. No animation under reduced motion. Overlays that keep clear of the bar use its current size ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Presets 1.25×, 2.5×, 5×, 10×, 20×, 40× with Alt+1 to Alt+6, nearest preset highlighted, option to label as zoom percent. Folded by default to a chip with the magnification and the scale bar, opening to the presets, readout and brightness on hover and focus, while Alt plus a number is held, for 2 s after a zoom and while the brightness popover is open. Brightness shows when folded only if it is not 100%. No animation under reduced motion. Overlays that keep clear of the bar use its current size ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when tests cover preset jumps, highlighting at intermediate zooms, each way the chip opens and folds back, and the blocked area in both states.
   Refs mock §2.6.
 
@@ -1788,7 +1788,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 14 REVIEW · Review workspace
 
-Cell findings and node staging run in the Objects tab of the slide view (CASE-014). Verdicts on whole objects come from GUIDE-001 and use K, X and U in both modes ([ADR 0053](adr/0053-ai-results-review-direction.md)). Node staging applies only with the sentinel node template (PROJ-005).
+Cell findings and node staging run in the Objects tab of the slide view (CASE-014). Decisions on whole objects come from GUIDE-001 and use K, X and U in both modes ([ADR 0053](adr/0053-ai-results-review-direction.md)). Node staging applies only with the sentinel node template (PROJ-005).
 
 - [ ] REVIEW-000 · Research check
   Re-read docs 28 and 33 and confirm the confidence rules below still hold for the typer chosen in AINUC.
@@ -1814,7 +1814,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
 - [ ] REVIEW-005 · Number line
-  One line with the tumor share and its likely range for the slide, the open zone or a drawn outline. Opening it shows counts per class, each bar split into cells the AI is sure about (solid) and unsure cells (hatched in the unsure token), a total row split into checked by you, sure and unsure, and the cutoff verdict chip from REVIEW-017 when the lab sets a cutoff. Every answer moves cells from unsure to checked at once.
+  One line with the tumor share and its likely range for the slide, the open zone or a drawn outline. Opening it shows counts per class, each bar split into cells the AI is sure about (solid) and unsure cells (hatched in the unsure token), a total row split into checked by you, sure and unsure, and the cutoff result chip from REVIEW-017 when the lab sets a cutoff. Every answer moves cells from unsure to checked at once.
   Done when component tests render seeded counts in each state and a unit test checks that the parts add up to the total.
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
@@ -1868,13 +1868,13 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on AINUC-003.
 
 - [ ] REVIEW-016 · Your call on an area
-  Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call is the verdict on the area's ID (GUIDE-001), ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before submit. Marking the lead area Not tumor hands the category to the next largest.
+  Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call is the decision on the area's ID (GUIDE-001), ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before submit. Marking the lead area Not tumor hands the category to the next largest.
   Done when component tests cover the three calls and toggling off, and API tests persist the call with the reviewer and time and write it to the audit log.
   Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
 
-- [ ] REVIEW-017 · Tumor share verdict for cellularity cases
-  The doc 33 verdict (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings. Shown as the verdict chip in the number line (REVIEW-005), worded "Above 20% whatever the unsure cells are" or "Could be either side of 20%, check the unsure cells".
-  Done when unit tests reproduce doc 33's examples and a test confirms the verdict is hidden for a sentinel node case.
+- [ ] REVIEW-017 · Tumor share result for cellularity cases
+  The doc 33 result (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings. Shown as the result chip in the number line (REVIEW-005), worded "Above 20% whatever the unsure cells are" or "Could be either side of 20%, check the unsure cells".
+  Done when unit tests reproduce doc 33's examples and a test confirms the result is hidden for a sentinel node case.
   Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] REVIEW-018 · Zones where the AI is unsure
@@ -2264,7 +2264,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/files.
 
 - [ ] CASES-017 · Moving a slide between cases
-  A slide moves with its history to another case in the same project. Its result sets, IDs, verdicts and threads move with it, and the researchers of tasks that hold it are notified. A move is refused while a task that holds the slide is signed off, until it is reopened (ADJ-004). A reason is required and both cases log the move.
+  A slide moves with its history to another case in the same project. Its result sets, IDs, decisions and threads move with it, and the researchers of tasks that hold it are notified. A move is refused while a task that holds the slide is signed off, until it is reopened (ADJ-004). A reason is required and both cases log the move.
   Done when API tests cover a move, a refused move on a signed-off task and the moved result sets, with audit entries on both cases.
   Depends on CASES-012, ADJ-004. Refs kit W44, kit Flow 12.
 
@@ -2534,7 +2534,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 29.
 
 - [ ] AINUC-009 · Area extraction from cells
-  Group typed cells into areas for verdicts where no tumor map exists.
+  Group typed cells into areas for decisions where no tumor map exists.
   Done when tests produce stable areas on a fixture.
 
 - [ ] AINUC-010 · Whole-slide nuclei job UI
@@ -3064,7 +3064,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Dropped by [ADR 0011](adr/0011-hosted-ci-only.md). No self-hosted runners are used.
 
 - [ ] TEST-019 · Application performance on main paths
-  The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a verdict to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
+  The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a decision to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
   Done when the scripts run locally against the full stack, a result file records the numbers with the machine, browser, data and method, and CI runs the CPU-side paths against their budgets.
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
 
@@ -3136,7 +3136,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001. Refs doc 37, mock: upload/check. The API carries its own port of the colour check, so this no longer waits for DS-002 ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)).
 
 - [ ] PROJ-005 · Analysis templates
-  A project turns on an analysis template. Sentinel node staging adds the staging hero, the area list and the measure step (REVIEW-003, REVIEW-004, CASE-004, MEAS-006). Cell review adds unsure zones and cell typing. None shows objects, layers, verdicts and the opinion form only.
+  A project turns on an analysis template. Sentinel node staging adds the staging hero, the area list and the measure step (REVIEW-003, REVIEW-004, CASE-004, MEAS-006). Cell review adds unsure zones and cell typing. None shows objects, layers, decisions and the opinion form only.
   Done when API tests cover each template and component tests show the staging cards only with the staging template.
   Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
 
@@ -3208,7 +3208,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-007, OBJ-001.
 
 - [ ] RSET-009 · Confirm deleting a reviewed result set
-  Deleting a result set that a review task or a verdict uses needs `confirm=true`, and the response says how many tasks and verdicts it touches.
+  Deleting a result set that a review task or a reviewer's decision uses needs `confirm=true`, and the response says how many tasks and decisions it touches.
   Done when API tests refuse the delete without confirmation when a task uses the set, allow it with confirmation, and allow an unreviewed set without it.
   Depends on RSET-001, TASK-001. Split from RSET-001 by [ADR 0077](adr/0077-result-sets.md).
 
@@ -3291,7 +3291,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, OBJ-001.
 
 - [x] TASK-004 · Blinding and first read
-  Reviewers see others' verdicts and comments only after they submit. A project can hide the AI for a first read and reveal it afterwards. The researcher sees everything.
+  Reviewers see others' decisions and comments only after they submit. A project can hide the AI for a first read and reveal it afterwards. The researcher sees everything.
   Done when permission tests cover each role before and after submit, and API tests show the AI hidden before a first read, shown after it, and the first read kept unchanged.
   Depends on TASK-002, GUIDE-001. The first read is a stored step that is never changed, and the AI is hidden from a project reviewer on that slide until it is recorded ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Split on 2026-10-31: the E2E that reveals the AI after a first read moved to TASK-010, because it needs the review screens.
@@ -3312,7 +3312,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 - [ ] TASK-008 · Submit a slide review
-  Submitting shows what will be sent (verdicts by kind and the opinion), saves the review and opens the next slide. A submitted review can be reopened by its reviewer until sign-off.
+  Submitting shows what will be sent (decisions by kind and the opinion), saves the review and opens the next slide. A submitted review can be reopened by its reviewer until sign-off.
   Done when E2E submits, reopens and submits again, and the next slide opens.
   Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
@@ -3323,23 +3323,23 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-005, EVAL-007. Refs mock: task, doc 43.
 
 - [ ] TASK-010 · Reveal the AI after a first read, end to end
-  In a task that hides the AI, a reviewer opens a task slide and sees no AI objects, answers the opinion form, adds an object they found, records the first read, sees the AI appear, gives verdicts and submits. Their first read stays as it was recorded.
-  Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the verdicts and the submit.
+  In a task that hides the AI, a reviewer opens a task slide and sees no AI objects, answers the opinion form, adds an object they found, records the first read, sees the AI appear, gives decisions and submits. Their first read stays as it was recorded.
+  Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the decisions and the submit.
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 ---
 
-## 44 GUIDE · Verdicts, guided review and the opinion form
+## 44 GUIDE · Decisions, guided review and the opinion form
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
 
 - [x] GUIDE-000 · Research check
-  Done when an ADR records the verdict model, the disagree reasons per object kind and the opinion form schema.
-  Decided in [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md).
+  Done when an ADR records the decision model, the disagree reasons per object kind and the opinion form schema.
+  Decided in [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md).
 
-- [x] GUIDE-001 · Verdict model and API
+- [x] GUIDE-001 · Decision model and API
   Agree, Disagree or Not sure per object and reviewer, a reason on Disagree, saved at once, changeable until sign-off, and audited.
-  Done when API tests cover each verdict, a change, a refused change after sign-off and the audit entry.
+  Done when API tests cover each decision, a change, a refused change after sign-off and the audit entry.
   Depends on OBJ-001, TASK-002.
 
 - [ ] GUIDE-002 · Guided review
@@ -3349,18 +3349,18 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, VIEW-020, GUIDE-012. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
 
 - [ ] GUIDE-003 · Disagree reasons and optional fixes
-  Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
+  Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
   Done when component tests cover reasons for a region and a cell, and E2E redraws an outline from guided review.
   Depends on GUIDE-002, RSET-007. Refs mock: guided/disagree.
 
-- [ ] GUIDE-004 · Undo after a verdict
-  Every verdict shows what was recorded with an Undo (DS-021), which restores the verdict and the position.
-  Done when E2E undoes a verdict on the last object of a slide and the slide is open again.
+- [ ] GUIDE-004 · Undo after a decision
+  Every decision shows what was recorded with an Undo (DS-021), which restores the decision and the position.
+  Done when E2E undoes a decision on the last object of a slide and the slide is open again.
   Depends on GUIDE-002, DS-021. Refs doc 40 G2.
 
-- [ ] GUIDE-005 · Verdicts in the full viewer
-  K, X and U act on the selected object in the full viewer, and the Objects tab lists IDs with verdicts.
-  Done when E2E gives the same verdicts in both modes and sees one review.
+- [ ] GUIDE-005 · Decisions in the full viewer
+  K, X and U act on the selected object in the full viewer, and the Objects tab lists IDs with decisions.
+  Done when E2E gives the same decisions in both modes and sees one review.
   Depends on GUIDE-001, CASE-014.
 
 - [x] GUIDE-006 · Opinion form builder
@@ -3383,14 +3383,14 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover every question kind, a merge, a refused answer, the pinned version, the lock after submit and the roles.
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
 
-- [ ] GUIDE-010 · Notes on verdicts
-  After any verdict, in guided review, the full viewer and the cell view, an "Add a note" link and the N key open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the verdict, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's verdict in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
-  Done when component tests cover writing, editing and cancelling a note with each verdict, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
+- [ ] GUIDE-010 · Notes on decisions
+  After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the N key open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
+  Done when component tests cover writing, editing and cancelling a note with each decision, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
   Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
 
 - [ ] GUIDE-011 · Optional and several reasons, reasons on Unsure
-  The verdict API takes zero or more reason codes on Disagree instead of exactly one, and Unsure takes the optional codes `need_deeper_level`, `need_ihc`, `border_unclear` and `out_of_focus`. Existing verdicts keep their single reason as a set of one. The evaluation report counts each code of a verdict once ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md), amending [ADR 0072](adr/0072-verdicts-reasons-and-opinion-forms.md)).
-  Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per verdict.
+  The decision API takes zero or more reason codes on Disagree instead of exactly one, and Unsure takes the optional codes `need_deeper_level`, `need_ihc`, `border_unclear` and `out_of_focus`. Existing decisions keep their single reason as a set of one. The evaluation report counts each code of a decision once ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md), amending [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md)).
+  Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per decision.
   Depends on GUIDE-001, EVAL-001.
 
 - [x] GUIDE-012 · Least sure first order
@@ -3403,6 +3403,11 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Storing the least sure first order reads every chunk file of a cell scope inside the request that creates or rescopes a task ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). For real slides this moves onto the Postgres job engine ([ADR 0044](adr/0044-background-jobs-and-workflows.md), background jobs and workflows): the task is created at once, a job computes each slide's order, and the order route answers that the order is not ready until it is.
   Done when API tests create a cell scope task, see the order reported as not ready, run the job and read the same order the inline path gives, and a test shows a failed job retried without a duplicate order.
   Depends on GUIDE-012, INGEST-003.
+
+- [ ] GUIDE-014 · Use "decision" in code identifiers
+  The docs call a reviewer's call on an object a decision since 2026-11-01, as the mock and the kit do, and the code still uses the old word. Rename every identifier that carries it to decision: the table and its migration, the API module and its routes, the OpenAPI operation and schema names, the audit event names, the generated client, the Python and TypeScript types, the test files and their fixtures, and the agent guide's product sentence. A new migration renames the table. New audit entries use the new event names, and stored entries keep the old ones because the hash chain covers them. The docs that still quote an old identifier in backticks are updated in the same change.
+  Done when the API, database, isolation and client tests pass with the new names, the regenerated client has no old operation names, a test reads an audit entry written under the old event name, and a search of the repository finds the old word only in migration history and stored audit data.
+  Depends on GUIDE-001. Refs mock: guided, kit: decision styles.
 
 
 ---
@@ -3419,7 +3424,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, TASK-002.
 
 - [ ] ADJ-002 · Disagreement queue
-  A list filtered by all, reviewers differ and both against the AI, the object with the AI's call and each reviewer's verdict side by side, and two decisions, keep the AI's call or go with the reviewers. Editing the object and asking an adjudicator are links under them, and a note can be added. Decisions sit next to the verdicts and never replace them.
+  A list filtered by all, reviewers differ and both against the AI, the object with the AI's call and each reviewer's decision side by side, and the researcher's two choices, keep the AI's call or go with the reviewers. Editing the object and asking an adjudicator are links under them, and a note can be added. The researcher's decision sits next to the reviewers' decisions and never replaces them.
   Done when component tests cover each filter and decision, and E2E resolves a queue.
   Depends on ADJ-001, ADJ-006. Refs mock: disagree, doc 40 D7.
 
@@ -3440,7 +3445,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-004, EVAL-002.
 
 - [x] ADJ-006 · Decisions on queued objects
-  The researcher or an adjudicator decides a queued object: keep the AI's call or go with the reviewers, with an optional note. A decision sits next to the verdicts, can be changed until sign-off, removes the object from the open count and is audited.
+  The researcher or an adjudicator decides a queued object: keep the AI's call or go with the reviewers, with an optional note. It sits next to the reviewers' decisions, can be changed until sign-off, removes the object from the open count and is audited.
   Done when API tests cover each decision, a change, a refused change after sign-off, the open count and the audit entry.
   Depends on ADJ-001. Split from ADJ-002 by [ADR 0084](adr/0084-evaluation-metrics.md).
 
@@ -3456,7 +3461,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Decided in [ADR 0084](adr/0084-evaluation-metrics.md), with the PDF in [ADR 0083](adr/0083-typst-for-report-pdfs.md).
 
 - [x] EVAL-001 · Metrics engine
-  Computes the metrics from verdicts, decisions and the reviewed layers per task, as [ADR 0084](adr/0084-evaluation-metrics.md) defines them.
+  Computes the metrics from the reviewers' decisions, the decisions on queued objects and the reviewed layers per task, as [ADR 0084](adr/0084-evaluation-metrics.md) defines them.
   Done when unit tests reproduce hand-computed values on a fixture task.
   Depends on EVAL-000, ADJ-006.
 
@@ -3466,7 +3471,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-001, EVAL-006. Refs mock: evaluation, doc 40 D8 and E1.
 
 - [ ] EVAL-003 · Exports
-  PDF in the task's block order, verdicts per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
+  PDF in the task's block order, decisions per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
   Done when tests check every export's columns and counts and the PDF text.
   Depends on EVAL-002, RSET-008.
 
@@ -3481,7 +3486,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002.
 
 - [x] EVAL-006 · Task evaluation API
-  An endpoint that gathers a task's verdicts, decisions, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
+  An endpoint that gathers a task's reviewer decisions, decisions on queued objects, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
   Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
   Depends on EVAL-001. Split out so EVAL-002 (evaluation report page) has no backend work.
 
@@ -3645,7 +3650,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, JOBS-005, JOBS-006.
 
 - [ ] ADMIN-006 · Storage, sources, API and webhooks
-  Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003). Space is one bar split by kind (copied slides, tile cache for remote slides, results and reviews, free) with a legend and sizes, slides read in place as a line under it, and a by-project list largest first. The colours differ in lightness and avoid the tumor red ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-verdict-notes.md)).
+  Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003). Space is one bar split by kind (copied slides, tile cache for remote slides, results and reviews, free) with a legend and sizes, slides read in place as a line under it, and a by-project list largest first. The colours differ in lightness and avoid the tumor red ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when an API test checks the space per kind and per project adds up to the total, component tests render the bar with seeded usage including an empty workspace and a nearly full one, and E2E creates and revokes a token.
   Depends on ADMIN-001, REMOTE-002, IAM-011.
 
@@ -3672,7 +3677,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on RSET-001, VIEW-026. Refs mock: layers, doc 38 answer 2.
 
 - [ ] VIZ-002 · Classes and style
-  Per class visibility with counts and keys, draw as outline, fill or dots, colour by class, score or verdict, ID labels and a score cutoff that filters objects live.
+  Per class visibility with counts and keys, draw as outline, fill or dots, colour by class, score or decision, ID labels and a score cutoff that filters objects live.
   Done when golden tests cover each style and a test proves the cutoff hides objects below it.
   Depends on VIZ-001, VIEW-027.
 
@@ -3692,7 +3697,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-004, CMP-002.
 
 - [ ] VIZ-006 · Object table and stats
-  A table of ID, class, score, size and verdict that stays in sync with the slide, with counts and histograms and a CSV download.
+  A table of ID, class, score, size and decision that stays in sync with the slide, with counts and histograms and a CSV download.
   Done when component tests sync a selection both ways and a test counts the CSV rows.
   Depends on VIZ-001, OBJ-005. Refs mock: layers/table.
 
@@ -3845,7 +3850,7 @@ Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md)
 
 - [ ] REPORT-016 · Idea: Tumour cell content for molecular testing
   For cellularity cases the report gives the block and slide, the field assessed (outlined for macrodissection), the share of nucleated cells that are tumour cells with its likely range, whether it clears the assay minimum set by the lab, the cells counted, the unsure cells the pathologist checked, cells changed by learning and a macrodissection note, following the CAP Molecular Oncology Committee recommendations as confirmed in REPORT-000.
-  Done when tests fill the section from seeded REVIEW-017 data, the verdict is computed against the lab's minimum including the "could be either side" case, and the values match the review panel.
+  Done when tests fill the section from seeded REVIEW-017 data, the result is computed against the lab's minimum including the "could be either side" case, and the values match the review panel.
   Depends on REVIEW-017, REPORT-002, SET-011. Refs mock 15 cell case, [ADR 0022](adr/0022-sign-out-report-standards-and-pdf-preview.md).
 
 - [ ] REPORT-017 · Idea: HL7 v2 and IHE APSR output
@@ -4075,7 +4080,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Depends on PROTO-003, PROTO-011. Refs mock: task.
 
 - [ ] PROTO-007 · Slide view, guided review and the opinion form over fake data
-  The slide top bar, the slides popover, the inspector with Objects, Layers, Comments and Opinion, guided review with verdicts and reasons, and the opinion form. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by CASE-002, CASE-014, GUIDE-002, GUIDE-003, GUIDE-005 and GUIDE-007.
+  The slide top bar, the slides popover, the inspector with Objects, Layers, Comments and Opinion, guided review with decisions and reasons, and the opinion form. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by CASE-002, CASE-014, GUIDE-002, GUIDE-003, GUIDE-005 and GUIDE-007.
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: case, mock: guided, mock: opinion.
 

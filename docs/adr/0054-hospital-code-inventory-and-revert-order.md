@@ -76,7 +76,7 @@ Kept means it stays as it is. Reworked means it stays in a changed shape. Revert
 | `open-outside-folders` | Reworked into emergency access to a clinical project | ADAPT-002, ADAPT-010 |
 | `edit-cases` | Reworked into creating cases in a project | IAM-022 |
 | `upload-slides`, `move-slides` | Kept (CASES-017, moving a slide between cases, is still planned) | IAM-022 |
-| `annotate` | Reworked into verdicts and edits in a person's own tasks | IAM-022 |
+| `annotate` | Reworked into decisions and edits in a person's own tasks | IAM-022 |
 | `set-own-status`, `manage-people`, `integrations`, `audit-log`, `developer-mode` | Kept | IAM-022 |
 | `see-team` | Reworked into seeing the workspace's people | IAM-022 |
 | `lab-setup` | Reworked into workspace settings | IAM-022 |

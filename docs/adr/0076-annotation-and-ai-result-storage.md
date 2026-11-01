@@ -7,7 +7,7 @@
 
 ## Context
 
-A result set can hold over a million cells on one slide (POC doc 19 and doc 31), plus tens to thousands of regions, and people add regions of interest, measurements and their own objects. The viewer must page cells without holding every outline (doc 31 found that holding them all fails on every renderer), reviewers give verdicts per object ([ADR 0072](0072-verdicts-reasons-and-opinion-forms.md)), objects carry the IDs of [ADR 0071](0071-object-id-grammar.md), and imported AI output is immutable (RSET-001). The POC's paged format dropped the type probabilities, which confidence displays need (doc 33). The readers of [ADR 0070](0070-result-file-parsers.md) produce one object form for all of this.
+A result set can hold over a million cells on one slide (POC doc 19 and doc 31), plus tens to thousands of regions, and people add regions of interest, measurements and their own objects. The viewer must page cells without holding every outline (doc 31 found that holding them all fails on every renderer), reviewers give decisions per object ([ADR 0072](0072-decisions-reasons-and-opinion-forms.md)), objects carry the IDs of [ADR 0071](0071-object-id-grammar.md), and imported AI output is immutable (RSET-001). The POC's paged format dropped the type probabilities, which confidence displays need (doc 33). The readers of [ADR 0070](0070-result-file-parsers.md) produce one object form for all of this.
 
 ## Options considered
 
@@ -27,7 +27,7 @@ Option 1, with the formats below. A [spike](../results/2026-10-18-cell-chunk-pag
 | AI regions (T) and unsure zones (Z) | PostGIS rows per result set, immutable | Thousands at most, needed by IoU matching (OBJ-002), staging and containment queries |
 | Regions of interest (R), measurements (M), objects people add (T⁺, C⁺) | PostGIS rows with an append-only version table | Few, edited, audited |
 | Heatmaps and masks | Rasters aligned to a slide level (ADR 0070) | Not objects |
-| Verdicts | Rows keyed by result set, object kind and number (ADR 0072) | Never stored inside chunks, so AI output stays immutable |
+| Decisions | Rows keyed by result set, object kind and number (ADR 0072) | Never stored inside chunks, so AI output stays immutable |
 
 Geometry everywhere is in level-0 pixels of the slide, with y down. PostGIS columns use SRID 0.
 

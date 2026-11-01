@@ -29,7 +29,7 @@ Option 2.
 | Imported | Slide and result set | Derived: the task's result set on that slide finished importing (RSET-001) | The import |
 | Ready | Slide in a task | Derived: the slide is published and the task's result set on it is complete | Nobody, it follows |
 | Assigned | Task, slide and reviewer | Stored: an assignment row created from the task's split (TASK-001) | The researcher, by creating or changing the task (TASK-007) |
-| In review | Task, slide and reviewer | Derived: the reviewer saved a first verdict, opinion answer or comment on that slide in that task. Opening the slide alone does not count | Nobody, it follows the reviewer's work |
+| In review | Task, slide and reviewer | Derived: the reviewer saved a first decision, opinion answer or comment on that slide in that task. Opening the slide alone does not count | Nobody, it follows the reviewer's work |
 | Submitted | Task, slide and reviewer | Stored: `submitted_at` on the assignment, cleared on reopen | The reviewer submits (TASK-008) and may reopen until the task is signed off |
 | Disagreement queue | Task and slide | Derived: every assigned reviewer has submitted and ADJ-001 found disagreements without a decision | Leaves the queue when the researcher or an adjudicator decides every queued object (ADJ-002, ADJ-003) |
 | Signed off | Task | Stored: a sign-off record with the evaluation version (ADJ-004) | The project owner, confirmed by signing in again. The owner may reopen it |
@@ -47,7 +47,7 @@ Moves people make, which TASK-002 tests as a table with every allowed and refuse
 Rules that follow:
 
 - The state shown for a slide in a task is the earliest state of its reviewers until all have submitted, then the task-level state. The researcher sees each reviewer's state as well.
-- A reviewer who is removed from a slide (TASK-007) loses the assignment. Their saved verdicts stay in the record, but no longer count towards progress.
+- A reviewer who is removed from a slide (TASK-007) loses the assignment. Their saved decisions stay in the record, but no longer count towards progress.
 - Every stored move writes an audit entry (`task.review-submitted`, `task.review-reopened`, `task.signed-off`, `task.reopened`). Derived states write nothing.
 - The pure function takes the facts and returns the states, so TASK-002, TASK-003 (progress) and My work (WL) share one definition.
 - When sign-off is allowed (for example only when every slide is submitted and the queue is empty) and what it locks is decided by ADJ-000 (research check for disagreements and sign-off). TODO: the owner should confirm that rule there.

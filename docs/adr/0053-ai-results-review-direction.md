@@ -48,7 +48,7 @@ Built hospital work is reverted or reworked, never left unused. The owner asked 
 - [ADR 0035](0035-fhir-r4-through-fhir-resources-r4b.md) (FHIR) needs no revert, because the spike added no code. It stays Accepted for the FHIR idea.
 - The REPORT, BOARD, TEAM and TB epics have the milestone Idea, and single hospital tasks in other epics have titles that start with `Idea:`. "How to use" says not to start an idea unless the owner asks and never to make a planned task depend on one.
 - WL becomes My work, CASE becomes the slide view with Objects, Layers, Comments and Opinion tabs, and sentinel-node staging becomes a project analysis template (PROJ-005), so REVIEW keeps its staging tasks.
-- The milestones were redefined. M1 now ends with a verdict and a submitted review instead of a signed stub report, M3 is the review loop, M4 adds model runs and visualization, and M5 adds disagreements, sign-off and the evaluation report.
+- The milestones were redefined. M1 now ends with a decision and a submitted review instead of a signed stub report, M3 is the review loop, M4 adds model runs and visualization, and M5 adds disagreements, sign-off and the evaluation report.
 - The product KPIs now name review tasks instead of sign-out.
 - The CASES-025 claim (folder screens) was released, because folders are now an idea.
 - UI tasks still wait for the owner to say the UI is final, as the board claims say.

@@ -15,7 +15,7 @@ What was built since: roles and the permission matrix in code ([ADR 0026](0026-r
 
 ### Identity (STACK-028)
 
-| Option | What the sources say | Verdict |
+| Option | What the sources say | Outcome |
 |---|---|---|
 | Zitadel Cloud (current) | The [pricing page](https://zitadel.com/pricing) lists Free at US$0 with 100 daily active users, unlimited users and organisations, 3 identity providers, all security features and data residency in EU, US, Switzerland and Australia. Pro is US$100 a month with 25,000 daily active users and a 1 hour response objective. Enterprise is custom. The [endpoint reference](https://zitadel.com/docs/apis/openidoauth/endpoints) lists the end session endpoint, `prompt=login`, `S256` PKCE only, `offline_access` refresh tokens that return a new refresh token on each refresh, and revocation. | Keep |
 | Keycloak | The [release page](https://github.com/keycloak/keycloak/releases) shows five releases between 2026-08-31 and 2026-10-13, 26.7.3 to 26.8.1, most with security fixes (for example CVE-2026-94000 where a delegated admin can become realm admin, and CVE-2026-89298 where a confidential client secret reached the view-clients role). It is self-hosted, so we would patch it ourselves. | Reject, as before |
@@ -34,7 +34,7 @@ The [advisory list](https://github.com/zitadel/zitadel/security/advisories) show
 
 ### Authorization (STACK-023)
 
-| Option | What the sources say | Verdict |
+| Option | What the sources say | Outcome |
 |---|---|---|
 | Row-level security plus roles in code (current) | Built and tested. The catalog tests, the table-driven role test (ADR 0026), the mutation check in knowledge/database.md and the guest scope spike ([results](../results/2026-10-08-guest-scope-rls-spike.md)) all pass. | Keep |
 | OpenFGA | The [release page](https://github.com/openfga/openfga/releases) shows regular releases (v1.19.0 to v1.22.0 between 2026-08-25 and 2026-10-06), with breaking changes in v1.19.0 and v1.22.0. It is still a separate service with its own tuples to keep in step with Postgres. It also cannot filter our rows, so it would not replace the floor. | Keep deferred |

@@ -11,7 +11,7 @@
 
 1. Are the five built-in templates shared code that every workspace reads, or rows that each workspace owns?
 2. When a task is created with a template, does the API fill the task's fields from the presets, or does it only record which version the task used?
-3. Opinion forms are versioned per project ([ADR 0072](0072-verdicts-reasons-and-opinion-forms.md), verdicts, reasons and opinion forms), but templates belong to the workspace. How does a template preset an opinion form?
+3. Opinion forms are versioned per project ([ADR 0072](0072-decisions-reasons-and-opinion-forms.md), decisions, reasons and opinion forms), but templates belong to the workspace. How does a template preset an opinion form?
 4. What is versioned: only the blocks, or everything a researcher can change?
 
 ## Options considered

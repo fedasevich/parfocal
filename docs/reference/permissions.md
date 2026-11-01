@@ -8,7 +8,7 @@ Edit the matrix there, never this page. [ADR 0096](../adr/0096-researcher-and-re
 | Key | Role | Responsible for |
 |---|---|---|
 | `researcher` | Researcher | Runs studies. Creates projects and owns them, uploads slides and AI result files, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements, signs off and exports the evaluation report. Reviews when a task names them. Opens a clinical project without a project role only through emergency access |
-| `reviewer` | Reviewer | Reviews the slides of their tasks. Gives verdicts with reasons and notes, fixes outlines and types, adds missed objects, fills the opinion form and submits each slide. Decides queued objects when a researcher makes them adjudicator. Never uploads, runs models, creates projects or tasks, signs off or holds admin rights |
+| `reviewer` | Reviewer | Reviews the slides of their tasks. Gives decisions with reasons and notes, fixes outlines and types, adds missed objects, fills the opinion form and submits each slide. Decides queued objects when a researcher makes them adjudicator. Never uploads, runs models, creates projects or tasks, signs off or holds admin rights |
 
 Platform operators sit outside the matrix and only reach `/api/platform/*`.
 
@@ -36,7 +36,7 @@ Inside a project the narrower of the workspace grant and the project grant appli
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
 | Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
-| Give verdicts, fix results, comment | `review` | Yes | In their tasks |  |
+| Give decisions, fix results, comment | `review` | Yes | In their tasks |  |
 
 ## Matrix
 
@@ -51,7 +51,7 @@ An empty cell means no. A researcher with admin rights gets the researcher's col
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
 | Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
-| Give verdicts, fix results, comment | `review` | Yes | In their tasks |  |
+| Give decisions, fix results, comment | `review` | Yes | In their tasks |  |
 | Set their own status | `set-own-status` | Yes | Yes |  |
 | See the workspace's people and their status | `see-people` | Yes | View only |  |
 | Invite people, change roles and admin rights | `manage-people` |  |  | Yes |
