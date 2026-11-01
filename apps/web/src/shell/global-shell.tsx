@@ -3,7 +3,6 @@ import {
   useGetMe,
   useGetMyHome,
   useListMyAdjudications,
-  useListMyJobs,
   useListMyReviewTasks,
   useListProjects,
 } from "@parfocal/api-client";
@@ -23,6 +22,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "./account-menu.tsx";
 import { Bell } from "./bell.tsx";
 import { destinations } from "./destinations.ts";
+import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
@@ -81,7 +81,6 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   const me = okData(useGetMe().data);
   const projects = okData(useListProjects().data) ?? [];
   const homeProjects = okData(useGetMyHome().data)?.projects ?? [];
-  const jobs = useListMyJobs().data?.data ?? [];
   const toReview = useToReviewCount();
   const overlay = useOverlay();
   const goTo = useGoTo();
@@ -138,29 +137,31 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   ];
   const person = personOf(me);
   return (
-    <AppShell
-      className="h-dvh"
-      top={
-        <TopBar
-          user={person}
-          workspace={workspaceBrand(me)}
-          homeHref={destinations.home()}
-          renderLink={renderLink}
-          jobs={jobs.filter((job) => job.status !== "done").length}
-          onSearch={() => void overlay.set("palette")}
-          onNewProject={() => void goTo(destinations.newProject())}
-          onUpload={() => void goTo(destinations.upload(firstProject))}
-          bellSlot={<Bell />}
-          accountSlot={<AccountMenu me={me} person={person} />}
-        />
-      }
-      side={
-        showSide ? <Sidebar sections={sections} active={active} renderLink={renderLink} /> : null
-      }
-    >
-      <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
-        {children}
-      </ShellSidebarContext>
-    </AppShell>
+    <JobsTrayProvider>
+      <AppShell
+        className="h-dvh"
+        top={
+          <TopBar
+            user={person}
+            workspace={workspaceBrand(me)}
+            homeHref={destinations.home()}
+            renderLink={renderLink}
+            jobsSlot={<ShellJobs />}
+            onSearch={() => void overlay.set("palette")}
+            onNewProject={() => void goTo(destinations.newProject())}
+            onUpload={() => void goTo(destinations.upload(firstProject))}
+            bellSlot={<Bell />}
+            accountSlot={<AccountMenu me={me} person={person} />}
+          />
+        }
+        side={
+          showSide ? <Sidebar sections={sections} active={active} renderLink={renderLink} /> : null
+        }
+      >
+        <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
+          {children}
+        </ShellSidebarContext>
+      </AppShell>
+    </JobsTrayProvider>
   );
 }

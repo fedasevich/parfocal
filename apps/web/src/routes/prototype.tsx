@@ -1,6 +1,7 @@
 import { useGetMyHome, useListMySlides } from "@parfocal/api-client";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useJobsPrototypeLinks } from "../screens/jobs/prototype-scenes.ts";
 import { newTaskPrototypeScenes } from "../screens/new-task/prototype-scenes.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { projectPrototypeLinks } from "../screens/project/prototype-scenes.ts";
@@ -29,6 +30,7 @@ function PrototypeIndex() {
   const resume = body?.resume ?? null;
   const project = body?.projects[0];
   const slides = okData(useListMySlides().data)?.slides ?? [];
+  const jobLinks = useJobsPrototypeLinks(project?.id);
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
       <h1 className="font-semibold text-2xl text-fg">Prototype index</h1>
@@ -118,6 +120,11 @@ function PrototypeIndex() {
               <Link {...link}>{label}</Link>
             </Entry>
           ))}
+        {jobLinks.map(({ key, label, note, link }) => (
+          <Entry key={key} note={note}>
+            <Link {...link}>{label}</Link>
+          </Entry>
+        ))}
         {project && (
           <Entry note={`${project.code} with its slides tab`}>
             <Link to="/projects/$projectId" params={{ projectId: project.id }}>

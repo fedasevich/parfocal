@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { ProjectBackground } from "../screens/jobs/project-background.tsx";
+import { RunModelWindow } from "../screens/jobs/run-model-window.tsx";
 import { mockScenes } from "../screens/scenes.ts";
+import { useJobsTray, useOpenJobsTray } from "../shell/jobs-tray.tsx";
 
 const runModelSearch = z.object({
   scene: z.enum(mockScenes.runmodel).optional(),
@@ -13,13 +15,24 @@ export const Route = createFileRoute("/projects/$projectId/run-model")({
 });
 
 function RunAModel() {
-  const params = Route.useParams();
-  const search = Route.useSearch();
+  const { projectId } = Route.useParams();
+  const scene = Route.useSearch().scene ?? "pick";
+  const navigate = useNavigate();
+  const tray = useJobsTray();
+  useOpenJobsTray(scene === "started");
+  const toProject = () => navigate({ to: "/projects/$projectId", params: { projectId } });
   return (
-    <Placeholder
-      title="Run a model"
-      builtBy="PROTO-005 (model runs and jobs)"
-      route={{ params, search }}
-    />
+    <ProjectBackground projectId={projectId}>
+      {scene === "started" ? null : (
+        <RunModelWindow
+          projectId={projectId}
+          scene={scene}
+          onClose={() => void toProject()}
+          onStarted={() => {
+            void toProject().then(() => tray.setOpen(true));
+          }}
+        />
+      )}
+    </ProjectBackground>
   );
 }

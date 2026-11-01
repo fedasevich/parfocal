@@ -4,7 +4,7 @@ test("home opens on the scenario's fake data with the badge", async ({ page }) =
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
   await expect(page.getByTestId("fake-data-badge")).toHaveText("Fake data");
-  await expect(page.getByRole("button", { name: "2 jobs running" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Jobs, 2 running" })).toBeVisible();
   const worker = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.getRegistration();
     return registration?.active?.scriptURL ?? null;
@@ -18,7 +18,7 @@ test("home opens on the scenario's fake data with the badge", async ({ page }) =
 test("the prototype index links to every screen", async ({ page }) => {
   await page.goto("/prototype");
   const screens = page.getByRole("list", { name: "Screens" });
-  await expect(screens.getByRole("link")).toHaveCount(101);
+  await expect(screens.getByRole("link")).toHaveCount(108);
   await screens.getByRole("link", { name: "Slide · S26-04812 A1" }).click();
   await expect(page.getByRole("heading", { name: "Slide" })).toBeVisible();
   const url = new URL(page.url());

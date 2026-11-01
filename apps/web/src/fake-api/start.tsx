@@ -1,6 +1,7 @@
 import {
   fakeApiHandlers,
   scenario,
+  setFakeJobsScene,
   setFakeTeamScene,
   setFakeView,
 } from "@parfocal/api-client/fake";
@@ -10,6 +11,7 @@ import { fixClock } from "../clock.ts";
 import type { createAppRouter } from "../router.ts";
 import { mountFakeDataBadge } from "./badge.tsx";
 import type { FakeScope } from "./badge-state.ts";
+import { fakeJobsSceneFor } from "./jobs-scene-rules.ts";
 import { fakeTeamSceneFor } from "./team-scene-rules.ts";
 import { fakeViewFor } from "./view-rules.ts";
 
@@ -18,7 +20,8 @@ type AppRouter = ReturnType<typeof createAppRouter>;
 function applyFakeState(pathname: string, search: Record<string, unknown>): boolean {
   const viewChanged = setFakeView(fakeViewFor(pathname, search));
   const sceneChanged = setFakeTeamScene(fakeTeamSceneFor(pathname, search));
-  return viewChanged || sceneChanged;
+  const jobsChanged = setFakeJobsScene(fakeJobsSceneFor(pathname, search));
+  return viewChanged || sceneChanged || jobsChanged;
 }
 
 export async function startFakeApi(

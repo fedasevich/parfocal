@@ -7,6 +7,10 @@ export function fakeViewFor(pathname: string, search: Record<string, unknown>): 
   const persona = search["as"];
   if (isPersona(persona)) return { viewer: persona, firstWeek: false };
   if (pathname === "/" && search["scene"] === "new") return { viewer: "LM", firstWeek: true };
+  if (pathname === "/admin") return { viewer: "DH", firstWeek: false };
+  if (pathname === "/sign-in" && search["scene"] === "noaccess") {
+    return { viewer: "AK", firstWeek: false };
+  }
   if (pathname === "/my-work") {
     if (search["scene"] === "anna") return { viewer: "AK", firstWeek: false };
     const tab = search["tab"] ?? search["scene"];
@@ -18,6 +22,9 @@ export function fakeViewFor(pathname: string, search: Record<string, unknown>): 
     (search["scene"] === "cosign" || search["scene"] === "sent")
   ) {
     return { viewer: "TB", firstWeek: false };
+  }
+  if (/^\/projects\/[^/]+\/(run-model|jobs\/[^/]+)\/?$/.test(pathname)) {
+    return { viewer: "DH", firstWeek: false };
   }
   return defaultFakeView;
 }
