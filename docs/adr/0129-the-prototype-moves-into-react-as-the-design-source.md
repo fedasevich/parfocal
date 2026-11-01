@@ -1,7 +1,7 @@
 # 0129. The prototype moves into React and becomes the design source
 
 - Date: 2026-11-01
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: adds the PROTO epic (prototype in React) with PROTO-000 (research check for the fake data layer), PROTO-001 (freeze the redesigned prototype), PROTO-002 (fake data layer for the app and the catalogue), PROTO-003 (home, My work and the shell), PROTO-004 (project page and upload), PROTO-005 (model runs and jobs), PROTO-006 (new review task), PROTO-007 (slide view, guided review and the opinion form), PROTO-008 (disagreements, sign-off and the evaluation report), PROTO-009 (admin, setup, sign-in and empty and error states), PROTO-010 (make the React app the design source) and PROTO-011 (every kit component in rough form). Edits DS-000 (design system tooling check) so it waits for the freeze, and every component task of the DS epic (design system) so it hardens the rough component instead of starting from nothing.
 
@@ -33,9 +33,8 @@ Option 2, because it is the only one where a design change is made in one place 
 
 ## Consequences
 
-- The backlog gains the PROTO epic. PROTO-001 (freeze the redesigned prototype) is on hold until the owner says the redesign round is done, and every later PROTO task depends on it.
-- DS-000 (design system tooling check) now depends on STACK-007 (component primitives and styling) and PROTO-001 (freeze the redesigned prototype), PROTO-011 (every kit component in rough form) depends on DS-000, and every component task of the DS epic (design system) depends on PROTO-011, so no component is built before the owner has picked the styling and the redesign is frozen, and each production component starts from its rough copy.
+- The backlog gains the PROTO epic. PROTO-001 (freeze the redesigned prototype) is on hold until the owner says the redesign round is done, and every task that copies the design depends on it. The setup in PROTO-000 (research check for the fake data layer) and PROTO-002 (fake data layer for the app and the catalogue) does not depend on the design and starts at once.
+- DS-000 (design system tooling check) now depends on STACK-007 (component primitives and styling), PROTO-011 (every kit component in rough form) depends on DS-000, and every component task of the DS epic (design system) depends on PROTO-011, so no component is built before the owner has picked the styling and the redesign is frozen, and each production component starts from its rough copy.
 - The "How to use" section of the backlog gains a rule that UI tasks wait for the freeze and decision 15 (styling and component primitives), and that a feature UI task starts from its ported screen.
-- Until this record is accepted, the live rule still says UI tasks wait for settled screens. The PROTO epic is consistent with it, because every task except PROTO-000 (research check for the fake data layer) waits behind the freeze.
 - PROTO-010 (make the React app the design source) changes these lines once every screen is ported: the design source sentence in `AGENTS.md`, the two artifact bullets at the top of `docs/BACKLOG.md`, the "Design sources" section of `docs/project/overview.md` and the "How to use" rule that UI tasks wait for screens to settle in the prototype. They stay as they are until then.
-- Where the frozen copies live and whether the owner reviews each screen group before it is ticked are decisions 16b and 16c in [decisions.md](../decisions.md).
+- The owner accepted this record on 2026-11-01, chose to keep the frozen copies in `docs/design/` and allowed copying markup, styles, text and fake data from the two artifacts. Whether the owner reviews each screen group before it is ticked is decision 15a in [decisions.md](../decisions.md).

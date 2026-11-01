@@ -508,73 +508,14 @@ py-common has no numpy, so `build_cells` in `parfocal_common.chunk_store` stays 
 
 Your choice:
 
-## 15. Styling and component primitives, STACK-007 (component primitives and styling)
+## 15. Your review of the ported prototype, ADR 0129 (the prototype moves into React and becomes the design source)
 
-Nothing in the repository styles the UI yet. `packages/tokens` and `packages/ui` are empty scaffolds and `apps/web` has no styling dependency. The owner asked to be asked before this is decided, so these two items need your answer and "all recommended" does not cover them. No agent writes the STACK-007 ADR until both are answered.
+The port starts when the round 6 redesign has finished all its batches. The setup that does not depend on the design is being built now. Every PROTO screen task stays in review until you have looked at it, whichever option you pick here.
 
-### 15a. How components are styled
-
-This needs your answer.
-
-- A. CSS Modules over the kit's design tokens as CSS custom properties, the backlog default, which keeps styles in `.module.css` files next to each component and the token set as the one source of truth
-- B. Tailwind CSS v4 with the tokens mapped into `@theme`, which puts utility classes in the markup and generates the token utilities from the same CSS variables
-- C. vanilla-extract, typed styles written in TypeScript and compiled to static CSS
-- D. Panda CSS, typed style functions and recipes compiled to static CSS
-- E. Other
-
-Your choice:
-
-### 15b. Which library gives accessible behaviour to controls
-
-This needs your answer. The controls are button, segmented control, toggle, popover, dialog, menu, tabs, slider, listbox and tooltip.
-
-- A. React Aria Components, the backlog default, unstyled and with the widest keyboard and screen reader coverage
-- B. Radix Primitives, unstyled and widely used, the base of shadcn/ui
-- C. Ark UI, unstyled and built on state machines
-- D. Other
-
-Your choice:
-
-## 16. The prototype in React, ADR 0129 (the prototype moves into React and becomes the design source)
-
-The UX kit and the hi-fi mock move into `apps/web` and `packages/ui` once your current redesign round is done. A rough copy of every kit component and every mock screen comes first, over fake data, so you can click through the whole design and change it early. The production tasks then harden each component and wire each screen to the API. The first screen needs only the freeze, decision 15 (styling and component primitives), the Storybook setup, the fake data layer and the shell, not the finished components. The new PROTO epic (prototype in React) in the backlog holds the tasks. PROTO-001 (freeze the redesigned prototype) is on hold until you say the redesign round is done, and every other component and screen task waits for it and for decision 15 (styling and component primitives).
-
-When the redesign round is done, say so in chat or write the date here:
-
-### 16a. Accept ADR 0129
-
-- A. Accept as written: port after the freeze, rough components and screens over fake data first, hardened by the production tasks later, then the React app becomes the design source and the artifacts are kept as frozen history. **Recommended**, because a design change is then made once, in the product itself
-- B. Port into a separate throwaway prototype app first, and build the real screens later
-- C. Keep the artifacts as the design source and build each screen when its feature task comes up
-- D. Other
-
-Your choice:
-
-### 16b. Where the frozen prototype copies live
-
-This repository is public. The POC repository cannot take them, because it is never modified.
-
-- A. In `docs/design/` in this repository, with the artifact version ids. **Recommended**, because agents in their own worktrees can read and search them in parts, and the React app that replaces them is public anyway
-- B. Only the artifact version ids, recorded in the inventory, and agents read the artifacts through the artifacts tools
-- C. In the private thesis repository `fedasevich/parfocal-thesis`
-- D. Other
-
-Your choice:
-
-### 16c. Your review of each ported screen group
+### 15a. Your review of each ported screen group
 
 - A. You compare each screen group with the frozen mock in the running dev build before its task is ticked. **Recommended**, because the design is yours and differences are cheapest to fix one group at a time
 - B. The agent compares its screenshots with screenshots of the frozen mock, and you look at everything once at the end
-- C. Other
-
-Your choice:
-
-### 16d. When the port starts
-
-This needs your answer. Either way the port also waits for decision 15 (styling and component primitives).
-
-- A. After the current redesign round, as you first asked, so no screen is ported twice
-- B. Now. The finished parts of the redesign are ported first and the rest of the redesign is done in the React app, which is cheaper per change but ports some screens twice
 - C. Other
 
 Your choice:
