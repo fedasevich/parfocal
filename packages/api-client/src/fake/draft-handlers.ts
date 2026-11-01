@@ -3,6 +3,7 @@ import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
 import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adjudications.ts";
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
@@ -23,6 +24,18 @@ import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 
+export {
+  getGetAdminOverviewMockHandler,
+  getGetInvitePreviewMockHandler,
+  getGetSecuritySettingsMockHandler,
+  getGetSignInOptionsMockHandler,
+  getGetStorageUsageMockHandler,
+  getListAiModelsMockHandler,
+  getListJoinableWorkspacesMockHandler,
+  getListMemberActivityMockHandler,
+  getListWebhooksMockHandler,
+  getRequestProjectAccessMockHandler,
+} from "./admin-handlers.ts";
 export {
   getAmendClinicalReportMockHandler,
   getCosignClinicalReportMockHandler,
@@ -193,6 +206,7 @@ export const draftOperations: DraftOperation[] = [
   ...taskDraftOperations,
   ...projectDraftOperations,
   ...teamDraftOperations,
+  ...adminDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
 ];

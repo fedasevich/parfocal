@@ -37,6 +37,7 @@ import {
   week,
   workspaces,
 } from "./scenario.ts";
+import { adminRightsHolders } from "./scenario-admin.ts";
 import { fakeView } from "./view.ts";
 
 const me = () => people[fakeView().viewer];
@@ -44,7 +45,7 @@ const me = () => people[fakeView().viewer];
 const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
   tenant_id: workspace.id,
   role: me().role,
-  admin_rights: false,
+  admin_rights: adminRightsHolders.includes(me().key),
   slug: workspace.slug,
   name: workspace.name,
   kind: workspace.kind,
@@ -71,7 +72,7 @@ export const toMembers = (): Member[] =>
     avatar_colour: person.colour,
     title: person.title,
     role: person.role,
-    admin_rights: false,
+    admin_rights: adminRightsHolders.includes(person.key),
   }));
 
 export const toSession = (): Session => ({

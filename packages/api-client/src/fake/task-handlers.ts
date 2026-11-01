@@ -26,6 +26,7 @@ import type {
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { people, projects } from "./scenario.ts";
+import { reportBlocksOf } from "./scenario-admin.ts";
 import {
   away,
   displayDefault,
@@ -136,7 +137,7 @@ export const toStudyTemplates = (): StudyTemplateSummary[] =>
     id: template.id,
     name: template.name,
     study_kind: template.kind,
-    blocks: [],
+    blocks: reportBlocksOf(template.key),
     presets: {
       objects_to_check: { kind: scopeKindOf(template.scope) },
       blinding: template.blind,
