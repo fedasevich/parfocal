@@ -1,9 +1,10 @@
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { ScrollArea } from "@parfocal/ui/components/scroll-area";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
-import type * as React from "react";
+import * as React from "react";
 
 type ReportBlock = { id: string; name: string; shows: string; setting?: string };
 
@@ -142,6 +143,12 @@ type PdfPreviewProps = React.ComponentProps<"div"> & {
   pages: number;
   current?: number;
   failed?: boolean;
+  meta?: React.ReactNode;
+  renderPage?: (page: number) => React.ReactNode;
+  onCurrentChange?: (page: number) => void;
+  onPrint?: () => void;
+  onDownload?: () => void;
+  onClose?: () => void;
 };
 
 function PdfPreview({
@@ -149,9 +156,17 @@ function PdfPreview({
   pages,
   current = 1,
   failed = false,
+  meta,
+  renderPage,
+  onCurrentChange,
+  onPrint,
+  onDownload,
+  onClose,
   className,
   ...props
 }: PdfPreviewProps) {
+  const [zoom, setZoom] = React.useState(100);
+  const numbers = Array.from({ length: pages }, (_, index) => index + 1);
   return (
     <div
       data-slot="pdf-preview"
@@ -163,47 +178,84 @@ function PdfPreview({
     >
       <div className="flex items-center gap-2 border-b border-line bg-chrome px-3 py-2 text-body-sm">
         <Icon name="file" />
-        <b className="min-w-0 flex-1 truncate font-medium">{title}.pdf</b>
-        <span className="font-mono text-caption text-fg-dim">
+        <b className="min-w-0 truncate font-medium">{title}.pdf</b>
+        {meta ? <span className="min-w-0 flex-1 truncate text-fg-dim">{meta}</span> : null}
+        <span className={cn("font-mono text-caption text-fg-dim", meta ? "" : "ml-auto")}>
           {current} / {pages}
         </span>
-        <Button size="sm" variant="ghost" aria-label="Zoom out">
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label="Zoom out"
+          onClick={() => setZoom((value) => Math.max(50, value - 25))}
+        >
           <Icon name="minus" />
         </Button>
-        <Button size="sm" variant="ghost" aria-label="Zoom in">
+        <span className="w-10 text-center font-mono text-caption">{zoom}%</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label="Zoom in"
+          onClick={() => setZoom((value) => Math.min(200, value + 25))}
+        >
           <Icon name="plus" />
         </Button>
-        <Button size="sm">Print</Button>
-        <Button size="sm" variant="primary" disabled={failed}>
+        <Button size="sm" onClick={onPrint}>
+          Print
+        </Button>
+        <Button size="sm" variant="primary" disabled={failed} onClick={onDownload}>
           <Icon name="download" />
           Download
         </Button>
+        {onClose ? (
+          <Button size="sm" variant="ghost" aria-label="Close the preview" onClick={onClose}>
+            <Icon name="close" />
+          </Button>
+        ) : null}
       </div>
-      <div className="grid min-h-0 grid-cols-[96px_minmax(0,1fr)]">
-        <div className="grid content-start gap-2 overflow-auto border-r border-line bg-chrome p-2">
-          {Array.from({ length: pages }, (_, index) => index + 1).map((page) => (
+      <div className="grid min-h-0 grid-cols-[124px_minmax(0,1fr)]">
+        <div className="grid content-start gap-3 overflow-auto border-r border-line bg-chrome p-3">
+          {numbers.map((page) => (
             <button
               key={page}
               type="button"
-              aria-label={`Page ${page}`}
               aria-current={page === current ? "page" : undefined}
-              className="grid aspect-[210/297] cursor-pointer place-items-end rounded-[2px] border-2 border-transparent bg-white p-1 text-[9px] text-[#555] aria-[current=page]:border-accent"
+              onClick={() => onCurrentChange?.(page)}
+              className="group grid cursor-pointer justify-items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim"
             >
-              {page}
+              <span className="relative block aspect-[210/297] w-full overflow-hidden border-2 border-transparent bg-white group-aria-[current=page]:border-accent">
+                {renderPage ? (
+                  <span
+                    aria-hidden="true"
+                    inert
+                    className="pointer-events-none absolute top-0 left-0 block origin-top-left scale-[0.15]"
+                  >
+                    {renderPage(page)}
+                  </span>
+                ) : null}
+              </span>
+              <span>
+                <span className="sr-only">Page </span>
+                {page}
+              </span>
             </button>
           ))}
         </div>
-        <div className="grid place-items-center overflow-auto p-6">
-          {failed ? (
-            <div className="grid max-w-80 justify-items-center gap-2 text-center text-body-sm">
-              <Icon name="warn" size="xl" className="text-warn" />
-              <b>The PDF could not be made</b>
-              <span className="text-fg-dim">The CSV files still download.</span>
-            </div>
-          ) : (
-            <div className="aspect-[210/297] w-full max-w-90 bg-white shadow-pop" />
-          )}
-        </div>
+        <ScrollArea className="min-h-0">
+          <div className="grid justify-items-center p-6">
+            {failed ? (
+              <div className="grid max-w-80 justify-items-center gap-2 self-center text-center text-body-sm">
+                <Icon name="warn" size="xl" className="text-warn" />
+                <b>The PDF could not be made</b>
+                <span className="text-fg-dim">The CSV files still download.</span>
+              </div>
+            ) : renderPage ? (
+              <div style={{ zoom: zoom / 100 }}>{renderPage(current)}</div>
+            ) : (
+              <div className="aspect-[210/297] w-full max-w-90 bg-white shadow-pop" />
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

@@ -26,6 +26,8 @@ type SmallModalProps = Omit<DialogPrimitive.Root.Props, "children"> & {
   blockersTitle?: string;
   cancelLabel?: string;
   showCancel?: boolean;
+  onCancel?: () => void;
+  secondaryAction?: React.ReactNode;
   footerStart?: React.ReactNode;
   children?: React.ReactNode;
 };
@@ -44,6 +46,8 @@ function SmallModal({
   blockersTitle = "Before you can",
   cancelLabel = "Cancel",
   showCancel = true,
+  onCancel,
+  secondaryAction,
   footerStart,
   children,
   ...props
@@ -92,12 +96,17 @@ function SmallModal({
                 {footerStart}
                 {reason ?? hint}
               </div>
-              {showCancel ? (
+              {showCancel && onCancel ? (
+                <Button variant="ghost" onClick={onCancel}>
+                  {cancelLabel}
+                </Button>
+              ) : showCancel ? (
                 <DialogPrimitive.Close render={<Button />}>
                   {cancelLabel}
                   <Keycap keys="Esc" size="sm" />
                 </DialogPrimitive.Close>
               ) : null}
+              {secondaryAction}
               <Button variant="primary" disabled={off} onClick={onPrimary}>
                 {primaryBusy ? (
                   <span
