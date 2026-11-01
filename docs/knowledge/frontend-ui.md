@@ -16,7 +16,7 @@ Run `pnpm --filter @parfocal/ui shadcn:add <name>`, then `pnpm --filter @parfoca
 
 ## Biome needs Tailwind directives switched on
 
-Biome cannot parse `@theme`, `@custom-variant`, `@source` or `@apply` until `css.parser.tailwindDirectives` is `true` in `biome.json`. Three Biome rules are off only for `packages/ui/src/components/**`, because shadcn uses those patterns on purpose: `noArrayIndexKey` (slider thumbs are positional), `useSemanticElements` (a `div` with `role="group"` in the input group) and `useKeyWithClickEvents` (a click on the input group's addon focuses its input). `noLabelWithoutControl` lists `Switch` as an input component, so a `<label>` that wraps a switch, which is how Base UI labels it, passes. Source: DS-000.
+Biome cannot parse `@theme`, `@custom-variant`, `@source` or `@apply` until `css.parser.tailwindDirectives` is `true` in `biome.json`. Four Biome rules are off only for `packages/ui/src/components/**`, because shadcn uses those patterns on purpose: `noArrayIndexKey` (slider thumbs are positional), `useSemanticElements` (a `div` with `role="group"` in the input group), `useKeyWithClickEvents` (a click on the input group's addon focuses its input) and `noLabelWithoutControl` (the generic `Label` wrapper has no control of its own, added by PROTO-011). Biome's `useHookAtTopLevel` treats any function named `use…` as a hook, so a plain helper must not start with `use`. `noLabelWithoutControl` lists `Switch` as an input component, so a `<label>` that wraps a switch, which is how Base UI labels it, passes. Source: DS-000.
 
 ## The axe suite runs over the built Storybook
 
@@ -61,3 +61,27 @@ The generated hooks import `@tanstack/react-query` from `packages/api-client`, s
 ## MSW in Storybook
 
 `packages/ui/.storybook/preview.tsx` uses `mswLoader` from `msw-storybook-addon/csf3` with a setup function that starts the shared worker over `fakeApiHandlers("all")`. The addon's default setup passes MSW 2's `onUnhandledRequest`, which MSW 3 renamed, so the custom setup is required. A story overrides the scenario with `parameters: { msw: [handler] }`. `msw({ mode: "worker-only" })` in `packages/ui/vite.config.ts` serves the worker and emits it into `storybook-static`, which is right there because that config builds only the catalogue. `e2e/fake-api.spec.ts` checks the built catalogue reads the scenario and that a story's own handler wins. Source: PROTO-002 (fake data layer for the app and the catalogue).
+
+## The kit's text sizes need the configured cn
+
+The kit's nine type sizes are Tailwind theme sizes named `text-label`, `text-caption`, `text-body-sm`, `text-body`, `text-lead`, `text-title-sm`, `text-title`, `text-page-title` and `text-display`. The `cn` package that shadcn imports merges like tailwind-merge and takes an unknown `text-*` class for a text colour, so `cn("text-on-accent", "text-body-sm")` dropped the colour and every primary button showed grey text. `packages/ui/src/lib/utils.ts` builds `cn` with `createCn` from `cn/config` and adds the nine sizes, the `rounded-ctl` and `rounded-zone` radii and `shadow-pop`. Import `cn` from `@parfocal/ui/lib/utils`, never from `cn`. The adopt script rewrites `import { cn } from "cn"` in every adopted file, so a new shadcn component is fixed by `shadcn:adopt`, and `test/adopt.test.ts` fails on a bare import and checks that a colour survives next to a kit size. Source: PROTO-011 (every kit component in rough form).
+
+## Tokens: what sits where
+
+`tokens.css` has three blocks. The dark block (`:root, [data-theme="dark"]`) and the light block (`[data-theme="light"]`) hold exactly `themedTokens` from `src/index.ts`, which is every colour plus `shadow`, and `tokens.test.ts` fails if a theme block gains or loses one. The aliases `page`, `chrome` and `chrome-2` are written out in both blocks instead of `var(--surf-page)` on `:root`, because a custom property that refers to another one is resolved where it is declared, so a nested `data-theme` scope would keep the outer theme's value. Class colours, the proposal colour and every size live once in the plain `:root` block, because they do not change with the theme. The kit's research status tone uses `--res` (`#a78bfa` dark) for its tint and `research-fg` (`#c4b5fd`) for its text, so both exist. Source: PROTO-011.
+
+## Never type a bare bg-accent
+
+The adopt script renames the exact class `bg-accent` to `bg-chrome-2` (shadcn's hover surface), also in hand-written files, and `adopt.test.ts` then fails because the file changes. For a fill in the kit's accent write `bg-(--accent)`, and use `bg-accent-fill` or `bg-accent-soft` where those are meant. Source: PROTO-011.
+
+## Icons come from the frozen mock
+
+`packages/ui/scripts/generate-icons.ts` reads the 76 `<symbol id="i-…">` elements of `docs/design/ux-mock/index.html` and writes `src/components/icon-set.tsx`, then Biome formats it. `Icon` takes `name`, `size` (`xs` 12, `sm` 16, `md` 20, `lg` 24, `xl` 40) and an optional `label`. With a label it is `role="img"` with that name, without one it is `aria-hidden`. Each size also sets a `size-*` class, because shadcn components size every child `svg` that has no `size-` class to 16 px. Source: PROTO-011.
+
+## Writing stories for the catalogue
+
+Component stories sit on a panel surface through a `decorators` entry, because in light the story page is `#ececec` and accent, warn and bad tags only reach 4.5:1 on a panel. Kit page stories under `Kit/Pages` use `layout: "fullscreen"` and show both themes side by side with nested `data-theme` blocks, which works because the tokens are declared again on every `[data-theme]`. The `dark:` variant does not flip inside such a block, so do not rely on it in a specimen. The mock's slide images are served to Storybook at `/mock-assets/` through `staticDirs` in `.storybook/main.ts`. The repo uses `exactOptionalPropertyTypes`, so an optional prop that callers may pass as `undefined` is typed `prop?: T | undefined`. Source: PROTO-011.
+
+## The axe suite also catches render errors
+
+`e2e/axe.spec.ts` records page errors and console errors for every story in both themes and fails on any, next to the axe check, and it fails when Storybook shows its error display. The browser's request for `/favicon.ico` answers 404 and logs a console error, so that one location is ignored. `knownExclusions` lists a selector per story id that axe skips, each with the DS task that fixes it, and the [axe result](../results/2026-11-01-axe-over-the-component-stories.md) records why. Source: PROTO-011.

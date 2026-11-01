@@ -58,6 +58,40 @@ Runs after the fixes, on the same machine. Some runs followed a fresh `storybook
 
 Each of the two runs with failures took 1.0 min instead of about 14 s, and every failure was a 30 s test timeout on a story that passed in every other run. Neither run could be reproduced on demand, and no failure was an axe violation.
 
+## Rerun for PROTO-011 (every kit component in rough form)
+
+- Commit: a9126d7, with the token refresh of fd812ac
+- Environment: the same Mac, macOS 15.8.1, Node 26.13.0, Google Chrome 156.0.8078.74 headless through Playwright 1.64.0, axe-core 4.14.0, Storybook 10.6.5 static build, 8 workers
+- Data: 129 stories, the 32 above plus 97 from PROTO-011, with the frozen mock's fictional people, IDs and slide images and no PHI
+
+The method is the same, with two additions to each test. It fails on a page error or a console error, ignoring the browser's 404 for `/favicon.ico`, and it fails when Storybook shows its error display. The tests are named "renders and passes axe" since then.
+
+| Run | Tests | Failed | What failed |
+|---|---|---|---|
+| 1 | 261 | 254 | A console error on every story, the favicon 404 |
+| 2 | 261 | 45 | 36 `color-contrast`, 8 `label-content-name-mismatch`, 1 timeout while setting up the browser context |
+| 3 | 261 | 6 | 3 `color-contrast`, 2 `label-content-name-mismatch`, 1 timeout while setting up the page |
+| 4 | 261 | 0 | Nothing |
+
+What the failures were and how they were fixed.
+
+| Rule | Where | Cause | Fix |
+|---|---|---|---|
+| `color-contrast` | Every primary button and Submit | `cn` dropped `text-on-accent` next to a kit text size, so the label was `#ececec` on `#2563eb` (4.37:1) | The configured `cn` in `src/lib/utils.ts` |
+| `color-contrast` | Avatar of Daniel Hruška | White initials on `#0891b2` are 3.68:1 | Initials pick white or `#0b0b0b` by contrast |
+| `color-contrast` | Accent, warn and bad status tags in light | On the `#ececec` story page the tints reach 4.29:1 and less | Component stories sit on a panel surface, as tags do in the app |
+| `color-contrast` | A bad status tag in a selected table row, light | Two tints stack to `#d2bfc8`, 3.7:1 | The story selects a row with an ok tag. TODO: DS-026 (table) checks status tags on a selected row |
+| `color-contrast` | Destructive button, light | Text on a 15% tint of `bad` | It is now a secondary button with error text |
+| `label-content-name-mismatch` | Account menu button and the Display preset menu | An `aria-label` that did not contain the visible initials or preset name | The visible text is the name, with "Account menu" as hidden text |
+
+One exclusion stays, by story and selector in `knownExclusions` in `e2e/axe.spec.ts`.
+
+| Story | Selector | Why | Fixed by |
+|---|---|---|---|
+| `kit-pages--design-system` | the primary button forced into its hover state | The mock's hover mixes 14% white into the fill, so white text drops under 4.5:1 in both themes. Only this specimen forces the state | DS-006 (buttons and icon buttons) |
+
+Interpretation: the round 6 tokens pass where a component uses the token that means the same thing. The two timeouts passed on rerun and match the load-related timeouts above.
+
 ## Interpretation
 
 - The kit's colours pass axe once each component uses the kit token that means the same thing. The link button now uses `accent` (`#94c0ff` dark, `#1d5fd1` light) instead of the fill colour, and inactive tabs use `fg-dim`.
