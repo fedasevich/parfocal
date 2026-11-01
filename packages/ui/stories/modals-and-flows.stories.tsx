@@ -48,6 +48,25 @@ export const Nudge480: Story = {
   ),
 };
 
+export const DoneOnly560: Story = {
+  render: () => (
+    <SmallModal
+      defaultOpen
+      width={560}
+      trigger={<Button>Preview</Button>}
+      title="Preview the question"
+      subtitle="T2 on A1 · 5-point certainty"
+      hint="Nothing is saved. Reviewers get this card for every object."
+      primaryLabel="Done"
+      showCancel={false}
+    >
+      <SmallModalZone>
+        <p className="m-0 text-lead font-semibold text-fg">How sure are you that T2 is tumor?</p>
+      </SmallModalZone>
+    </SmallModal>
+  ),
+};
+
 export const Reassign560: Story = {
   render: () => (
     <SmallModal

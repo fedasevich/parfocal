@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { NewTaskScreen } from "../screens/new-task/new-task-screen.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const newTaskSearch = z.object({
   scene: z.enum(mockScenes.task).optional(),
+  step: z.enum(["slides", "reviewers", "check", "how", "send", "sent"]).optional(),
+  modal: z.enum(["addslides", "dpreview"]).optional(),
 });
 
 export const Route = createFileRoute("/projects/$projectId/tasks/new")({
@@ -15,11 +17,19 @@ export const Route = createFileRoute("/projects/$projectId/tasks/new")({
 function NewReviewTask() {
   const params = Route.useParams();
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="New review task"
-      builtBy="PROTO-006 (New review task)"
-      route={{ params, search }}
+    <NewTaskScreen
+      projectId={params.projectId}
+      scene={search.scene ?? "slides"}
+      step={search.step}
+      modal={search.modal}
+      onNavigate={(to) =>
+        void navigate({
+          search: (previous) => ({ ...previous, step: to.step, modal: to.modal }),
+          replace: to.step === search.step,
+        })
+      }
     />
   );
 }

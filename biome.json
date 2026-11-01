@@ -26,7 +26,7 @@
         "noLabelWithoutControl": {
           "level": "error",
           "options": {
-            "inputComponents": ["Switch"]
+            "inputComponents": ["Switch", "Checkbox", "RadioGroupItem"]
           }
         }
       }
