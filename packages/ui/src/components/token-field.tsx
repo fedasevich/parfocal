@@ -75,6 +75,7 @@ type TokenFieldProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   defaultOpen?: boolean;
   onInvite?: (email: string) => void;
   invalid?: boolean;
+  single?: boolean;
 };
 
 const fold = (text: string) =>
@@ -95,6 +96,7 @@ function TokenField({
   defaultOpen = false,
   onInvite,
   invalid = false,
+  single = false,
   className,
   ...props
 }: TokenFieldProps) {
@@ -111,9 +113,11 @@ function TokenField({
       (needle === "" || fold(`${item.name} ${item.find ?? ""}`).includes(needle)),
   );
   const inviteable = emailPattern.test(query.trim()) && matches.length === 0;
+  const full = single && pickedItems.length > 0;
   const pick = (id: string) => {
     onPickedChange?.([...picked, id]);
     setQuery("");
+    if (single) setOpen(false);
   };
   return (
     <div data-slot="token-field" className={cn("relative min-w-0", className)} {...props}>
@@ -132,25 +136,27 @@ function TokenField({
             }
           />
         ))}
-        <input
-          role="combobox"
-          aria-label={label}
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-invalid={invalid || undefined}
-          value={query}
-          placeholder={pickedItems.length ? "Add another" : placeholder}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setOpen(false)}
-          className="h-7 min-w-35 flex-1 border-0 bg-transparent px-1 text-body-sm text-fg outline-none placeholder:text-fg-faint"
-        />
+        {full ? null : (
+          <input
+            role="combobox"
+            aria-label={label}
+            aria-expanded={open}
+            aria-controls={listId}
+            aria-autocomplete="list"
+            aria-invalid={invalid || undefined}
+            value={query}
+            placeholder={pickedItems.length ? "Add another" : placeholder}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setOpen(false)}
+            className="h-7 min-w-35 flex-1 border-0 bg-transparent px-1 text-body-sm text-fg outline-none placeholder:text-fg-faint"
+          />
+        )}
       </div>
-      {open ? (
+      {open && !full ? (
         <div
           id={listId}
           role="listbox"
