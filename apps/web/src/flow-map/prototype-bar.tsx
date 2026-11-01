@@ -2,7 +2,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { originStore, type Persona, useOrigin, usePeople, useScenarioIds } from "./hooks.ts";
+import { originStore, type Persona, useOrigin, usePeople } from "./hooks.ts";
 import type { Origin } from "./origin.ts";
 import { boxes, mapTitle, personaRoles } from "./review-flow.ts";
 import { type ScenarioIds, targetFor } from "./targets.ts";
@@ -41,6 +41,7 @@ export function stepLink(ref: StepRef, ids: ScenarioIds) {
   return targetFor(step.screen, ids, {
     scene: step.scene,
     clinical: chapter.clinical ?? false,
+    as: stepWho(ref),
   });
 }
 
@@ -59,7 +60,7 @@ function WalkControl({
     <Link
       {...link}
       className={barButtonClass}
-      onClick={() => originStore.set({ kind: "walk", ...to })}
+      onClick={() => originStore.set({ kind: "walk", ...to, ids })}
     >
       {children}
     </Link>
@@ -83,9 +84,8 @@ function MapOrigin({ box }: { box: string }) {
   );
 }
 
-function WalkOrigin({ at }: { at: StepRef }) {
+function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
   const people = usePeople();
-  const ids = useScenarioIds();
   const chapter = chapters[at.chapter];
   const step = stepAt(at);
   const who = stepWho(at);
@@ -110,12 +110,12 @@ function WalkOrigin({ at }: { at: StepRef }) {
       <p className="m-0 basis-full text-fg" data-testid="walk-text">
         {step.text}
       </p>
-      {ids && previous ? (
+      {previous ? (
         <WalkControl to={previous} ids={ids}>
           Previous step
         </WalkControl>
       ) : null}
-      {ids && next ? (
+      {next ? (
         <WalkControl to={next} ids={ids}>
           Next step
           <Icon name="next" size="sm" />
@@ -140,7 +140,7 @@ function OriginBar({ origin }: { origin: Origin }) {
       {origin.kind === "map" ? (
         <MapOrigin box={origin.box} />
       ) : (
-        <WalkOrigin at={{ chapter: origin.chapter, step: origin.step }} />
+        <WalkOrigin at={{ chapter: origin.chapter, step: origin.step }} ids={origin.ids} />
       )}
     </section>
   );

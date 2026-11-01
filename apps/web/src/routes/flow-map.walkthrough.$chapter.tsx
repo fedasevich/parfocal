@@ -59,7 +59,9 @@ function ChapterPage() {
                 <Link
                   {...link}
                   className="shrink-0 rounded-md border border-line px-2.5 py-1 text-body-sm text-fg no-underline hover:border-accent"
-                  onClick={() => originStore.set({ kind: "walk", ...ref })}
+                  onClick={() => {
+                    if (ids) originStore.set({ kind: "walk", ...ref, ids });
+                  }}
                 >
                   Open step {stepIndex + 1}
                 </Link>

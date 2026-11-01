@@ -77,6 +77,7 @@ function FlowMapPage() {
                 scene: box.scene,
                 clinical: box.clinical ?? false,
                 submitted: box.submitted ?? false,
+                as: box.who,
               })
             : null;
           return (
@@ -93,7 +94,12 @@ function FlowMapPage() {
               aria-description={built ? undefined : "Not built yet, opens its placeholder"}
               render={
                 target ? (
-                  <Link {...target} onClick={() => originStore.set({ kind: "map", box: box.id })} />
+                  <Link
+                    {...target}
+                    onClick={() => {
+                      if (ids) originStore.set({ kind: "map", box: box.id, ids });
+                    }}
+                  />
                 ) : (
                   <span aria-disabled="true" />
                 )

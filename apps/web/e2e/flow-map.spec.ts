@@ -22,7 +22,7 @@ test("the flow map shows four lanes, every box and the hand-off labels", async (
   await expect(map.locator("[data-box]")).toHaveCount(21);
   await expect(map.locator('a[data-box="upload"]')).toHaveAttribute(
     "href",
-    /\/upload\?scene=files$/,
+    /\/upload\?scene=files&as=DH$/,
   );
   for (const label of [
     "Task sent",
@@ -40,18 +40,23 @@ test("a box opens its screen in its scene as the lane's persona, and Back to the
   page,
 }) => {
   const cases = [
-    { box: "team", heading: "Team", url: /\/team\?scene=open$/, persona: "Daniel Hruška" },
-    { box: "worklist", heading: "My work", url: /\/my-work\?tab=review$/, persona: "Lenka Malá" },
+    { box: "team", heading: "Team", url: /\/team\?scene=open&as=DH$/, persona: "Daniel Hruška" },
+    {
+      box: "worklist",
+      heading: "My work",
+      url: /\/my-work\?tab=review&as=LM$/,
+      persona: "Lenka Malá",
+    },
     {
       box: "adjudicate",
       heading: "Disagreements",
-      url: /\/tasks\/[0-9a-f-]+\/disagreements\?scene=adjudicate$/,
+      url: /\/tasks\/[0-9a-f-]+\/disagreements\?scene=adjudicate&as=AK$/,
       persona: "Anna Kopecká",
     },
     {
       box: "crcosign",
       heading: "Clinical report",
-      url: /\/slides\/[0-9a-f-]+\/report\?scene=cosign$/,
+      url: /\/slides\/[0-9a-f-]+\/report\?scene=cosign&as=TB$/,
       persona: "Tomáš Beneš",
     },
   ];
@@ -63,6 +68,9 @@ test("a box opens its screen in its scene as the lane's persona, and Back to the
     const bar = page.getByTestId("prototype-bar");
     await expect(bar).toContainText("Opened from How a review works");
     await expect(bar.getByTestId("persona-chip")).toContainText(persona);
+    if (persona !== "Lenka Malá") {
+      await expect(page.getByTestId("fake-data-badge")).toContainText(`viewing as ${persona}`);
+    }
     await page.reload();
     await expect(page.getByTestId("prototype-bar")).toBeVisible();
     await page.getByRole("link", { name: "Back to the map" }).click();
@@ -105,7 +113,7 @@ test("each walkthrough chapter opens with its steps, and a step steps on to the 
   await page.getByRole("link", { name: "Next step" }).click();
   await expect(page.getByTestId("walk-position")).toHaveText("9 · Clinical report, step 10 of 14");
   await expect(page.getByTestId("persona-chip")).toContainText("Tomáš Beneš");
-  await expect(page).toHaveURL(/\/report\?scene=cosign$/);
+  await expect(page).toHaveURL(/\/report\?scene=cosign&as=TB$/);
 });
 
 test("Play all starts the walkthrough at the first step of Upload", async ({ page }) => {
@@ -113,7 +121,7 @@ test("Play all starts the walkthrough at the first step of Upload", async ({ pag
   await page.getByRole("link", { name: "Play all, from upload to the signed report" }).click();
   await expect(page.getByTestId("walk-position")).toHaveText("1 · Upload, step 1 of 7");
   await page.getByRole("link", { name: "Next step" }).click();
-  await expect(page).toHaveURL(/\/upload\?scene=empty$/);
+  await expect(page).toHaveURL(/\/upload\?scene=empty&as=DH$/);
 });
 
 test("an unknown chapter is not found", async ({ page }) => {

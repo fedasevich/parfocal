@@ -16,7 +16,9 @@ export function WalkBar({ current }: { current?: number }) {
         <Link
           {...first}
           className="mr-1 rounded-lg border border-accent bg-accent-soft px-3 py-1 text-body-sm text-fg no-underline"
-          onClick={() => originStore.set({ kind: "walk", chapter: 0, step: 0 })}
+          onClick={() => {
+            if (ids) originStore.set({ kind: "walk", chapter: 0, step: 0, ids });
+          }}
         >
           Play all, from upload to the signed report
         </Link>

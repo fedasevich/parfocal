@@ -1,11 +1,20 @@
 import { z } from "zod";
 
+const idsSchema = z.object({
+  researchProject: z.string(),
+  clinicalProject: z.string(),
+  task: z.string(),
+  slide: z.string(),
+  clinicalSlide: z.string(),
+});
+
 const originSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("map"), box: z.string() }),
+  z.object({ kind: z.literal("map"), box: z.string(), ids: idsSchema }),
   z.object({
     kind: z.literal("walk"),
     chapter: z.number().int().nonnegative(),
     step: z.number().int().nonnegative(),
+    ids: idsSchema,
   }),
 ]);
 

@@ -123,20 +123,28 @@ test("the origin survives a reload through session storage and ignores junk", ()
     setItem: (key: string, value: string) => void values.set(key, value),
     removeItem: (key: string) => void values.delete(key),
   };
+  const ids = {
+    researchProject: "p07",
+    clinicalProject: "p03",
+    task: "rt14",
+    slide: "a1",
+    clinicalSlide: "c1",
+  };
   const store = createOriginStore(storage);
   let calls = 0;
   const stop = store.subscribe(() => {
     calls += 1;
   });
-  store.set({ kind: "map", box: "team" });
-  assert.deepEqual(createOriginStore(storage).get(), { kind: "map", box: "team" });
+  store.set({ kind: "map", box: "team", ids });
+  assert.deepEqual(createOriginStore(storage).get(), { kind: "map", box: "team", ids });
   store.set(null);
   assert.equal(values.has(originStorageKey), false);
   stop();
-  store.set({ kind: "walk", chapter: 1, step: 0 });
+  store.set({ kind: "walk", chapter: 1, step: 0, ids });
   assert.equal(calls, 2);
   assert.equal(parseOrigin("{"), null);
-  assert.equal(parseOrigin(JSON.stringify({ kind: "walk", chapter: -1, step: 0 })), null);
+  assert.equal(parseOrigin(JSON.stringify({ kind: "walk", chapter: -1, step: 0, ids })), null);
+  assert.equal(parseOrigin(JSON.stringify({ kind: "map", box: "team" })), null);
   assert.equal(createOriginStore(undefined).get(), null);
 });
 
