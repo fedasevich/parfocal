@@ -53,7 +53,7 @@ Task format:
 | Privacy | Each project is de-identified (the default, no patient fields, names stripped on upload) or clinical (patient fields optional, names can be hidden, access logged) ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Object IDs | Short IDs per slide (T2, T2·C145, C3021, R4, Z1, M1), a full path for links and exports (`P07/S26-04812/A1/T2·C145`), carried across result sets by overlap ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Reports | The evaluation report is an ordered list of blocks from a fixed catalogue. Study templates (detection, segmentation, cell typing, reader study, sentinel node) preset a review task and its report, live in the admin page's library, and one task's report can be rearranged ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)) |
-| Review | Review tasks with slides, a result set, reviewers, a split, a scope, an opinion form, blinding and a due date. Decisions are Agree, Disagree or Not sure per object, in guided review or the full viewer. Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
+| Review | Review tasks with slides, a result set, reviewers, a split, a scope, a decision style, an opinion form, blinding and a due date. Reviewers answer each object in the task's decision style, in guided review or the full viewer, and each decision keeps the raw answer and counts as Agree, Disagree or Not sure through the template's mapping. A slide is submitted only when everything in scope is decided ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)). Disagreements go to a queue, and sign-off is a soft lock ([ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Interaction | A control responds only when clicking it changes something in the flow. Auto-advancing and far-reaching actions show an Undo. The bell is the only place for mentions, replies, tasks and jobs (doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md)) |
 | Pilot data | Public slide datasets and their AI results in de-identified projects. Clinical projects use seeded fake patient identities. No real PHI until the triggers in [ADR 0003](adr/0003-pilot-platform-architecture.md) are met |
 | Compliance | GDPR, HIPAA and ISO 27001 readiness in v1: audit log, encryption, residency, retention and erasure, BAA-ready logging, pen test |
@@ -3279,6 +3279,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when API tests cover create, edit, list and each split, with isolation and audit.
   Depends on PROJ-003, RSET-001, TASK-000. A task refuses a result set that is not `ready` or is deleted ([ADR 0077](adr/0077-result-sets.md)).
   A project reviewer reads only the slides of their tasks, so this task extends `project_access.readable` and the case check with task slides ([ADR 0065](adr/0065-project-role-enforcement.md)).
+  Since 2026-11-01 a task also pins a decision style and its Counts as mapping from its study template. GUIDE-015 (decision styles with the raw answer and Counts as) adds them ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
 
 - [x] TASK-002 · Slide states per task and reviewer
   Each slide in a task moves through the pipeline per reviewer, with derived states (imported, ready) and states people move (submitted, signed off), each transition audited. One pure function derives the states from stored facts, and only submit, reopen, sign-off and task reopen are stored moves ([ADR 0069](adr/0069-slide-pipeline.md)).
@@ -3297,9 +3298,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Split on 2026-10-31: the E2E that reveals the AI after a first read moved to TASK-010, because it needs the review screens.
 
 - [ ] TASK-005 · New review task stepper
-  A medium one-column stepper with Slides, Reviewers, What to check, How and when, and Send. Reviewers are picked in the token field (DS-020). The estimate follows every choice. Send shows a summary with a Change link per row and the email the reviewers receive.
-  Done when component tests cover each step and the estimate, and E2E creates a task from the project page and from the end of an upload.
-  Depends on TASK-001, DS-020, DS-022. Refs mock: task, doc 39.
+  A flow page with Slides, Reviewers, What to check, How it runs, and Send, where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
+  Done when component tests cover each step, the estimate, each decision style with its Counts as line and a refused mapping with no agree or no disagree answer, and E2E creates a task from the project page and from the end of an upload.
+  Depends on TASK-001, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
 
 - [ ] TASK-006 · Invitations to a task
   Inviting someone new to a task sends an email without PHI that names who asked, the project, the work and the due date. Accepting creates the account and opens the first slide (ONB-003).
@@ -3312,9 +3313,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 - [ ] TASK-008 · Submit a slide review
-  Submitting shows what will be sent (decisions by kind and the opinion), saves the review and opens the next slide. A submitted review can be reopened by its reviewer until sign-off.
-  Done when E2E submits, reopens and submits again, and the next slide opens.
-  Depends on TASK-002, GUIDE-007, CASES-020. Refs mock: next. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
+  A slide is submitted only when every object in the task's scope on it has a decision, with Not sure counting as decided, and every required opinion question is answered ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)). Otherwise the API refuses with a problem that lists the open objects and the unanswered questions. Objects a reviewer added sit outside the scope and never block. On screen the primary is disabled while anything blocks. One blocker shows as the reason under it, as in "T5 is still open.", and two or more show as a "Before you submit" list with a Go to link per row, which jumps to the object, opens the cells panel at the first open cell or focuses the question. Skipped objects have hollow dots and are exactly what the list shows. The primary reads "Submit and open slide 9", or "Submit and finish the task" on the last slide. Submitting saves the review and opens the next slide, and the Submit buttons of the slide behind it are off and say why. A failed submit shows an inline error under the primary saying that every decision is saved, and the primary reads Try again. A submitted review can be reopened by its reviewer until sign-off.
+  Done when API tests refuse a submit with an open object and with an unanswered required question, accept one whose last open object was answered Not sure and ignore added objects, component tests cover one blocker, several blockers with each Go to link and a failed submit, and E2E submits, reopens and submits again, and the next slide opens.
+  Depends on TASK-002, GUIDE-007, GUIDE-015, CASES-020. Refs mock: guided/skipped, mock: guided/required, mock: guided/submitfail, mock: next, doc 44. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
 
 - [ ] TASK-009 · Study template in a new review task
   The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
@@ -3343,10 +3344,10 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on OBJ-001, TASK-002.
 
 - [ ] GUIDE-002 · Guided review
-  One object at a time with a plain question ("Is T2 tumor?"), what the AI said in a 16 px line, and Agree, Disagree and Not sure as large buttons with K, X and U. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review.
+  One object at a time with the question, the buttons and the keys of the task's decision style (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)), for example "How sure are you that T2 is tumor?" with 1 to 5 in the default 5-point certainty, what the AI said in a 16 px line when the style shows the claim, and a Not sure answer in every style. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review.
   Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
   Objects come in the task's review order (GUIDE-012).
-  Depends on GUIDE-001, VIEW-020, GUIDE-012. Refs mock: guided, doc 38, doc 40 G1, G3 and G5.
+  Depends on GUIDE-001, VIEW-020, GUIDE-012, GUIDE-015. Refs mock: guided/region, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, doc 38, doc 40 G1, G3 and G5, doc 44.
 
 - [ ] GUIDE-003 · Disagree reasons and optional fixes
   Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
@@ -3367,11 +3368,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   The researcher builds a short form per project from a default template (acceptable 1 to 5, main error type, a free comment), with scale, choice, yes or no and text questions, versioned.
   Done when API tests cover each question kind and a new version leaving old answers intact.
   Depends on PROJ-001.
+  The question asked of every object is not an opinion form question. It is the task's decision style, preset by the study template (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)).
 
-- [ ] GUIDE-007 · Opinion form for the reviewer
-  Three quick questions when a slide is done in guided review, and the whole form in the Opinion tab, saved as a draft.
-  Done when component tests cover each question kind and E2E answers in guided review and finds the answers in the tab.
-  Depends on GUIDE-006, GUIDE-002, GUIDE-009. Refs mock: opinion, mock: guided/done.
+- [ ] GUIDE-007 · Slide done card with the opinion form
+  One card in one column ends a slide. It replaces the question card in guided review and is the Opinion tab of the full viewer at panel width. It shows the counts in one line, as in "55 objects checked: 48 agree, 5 disagree, 2 not sure. 1 added.", then the opinion form's questions with "Required" next to the required ones, the submit blockers of TASK-008 and the submit button. Answers save at once as a draft and can change until sign-off. There is no separate opinion screen ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)).
+  Done when component tests cover each question kind, the Required mark, the counts from the mapped decisions of GUIDE-015 and the card at panel width, and E2E answers on the card in guided review and finds the same answers in the full viewer's Opinion tab.
+  Depends on GUIDE-006, GUIDE-002, GUIDE-009. Refs mock: guided/done, mock: guided/required, mock: case, doc 44.
 
 - [ ] GUIDE-008 · How this works
   A first-time coach in guided review with four numbered tips, reopened from How this works.
@@ -3382,6 +3384,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   One opinion per task, reviewer and slide on the form version the task pinned, saved as a draft by merging answers, checked against each question's kind, locked once the slide is submitted until it is reopened, and audited without the answers. The reviewer and project owners read it.
   Done when API tests cover every question kind, a merge, a refused answer, the pinned version, the lock after submit and the roles.
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
+  Required questions block the submit of a slide until they are answered, which TASK-008 (submit a slide review) checks ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)).
 
 - [ ] GUIDE-010 · Notes on decisions
   After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the N key open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
@@ -3408,6 +3411,11 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   The docs call a reviewer's call on an object a decision since 2026-11-01, as the mock and the kit do, and the code still uses the old word. Rename every identifier that carries it to decision: the table and its migration, the API module and its routes, the OpenAPI operation and schema names, the audit event names, the generated client, the Python and TypeScript types, the test files and their fixtures, and the agent guide's product sentence. A new migration renames the table. New audit entries use the new event names, and stored entries keep the old ones because the hash chain covers them. The docs that still quote an old identifier in backticks are updated in the same change.
   Done when the API, database, isolation and client tests pass with the new names, the regenerated client has no old operation names, a test reads an audit entry written under the old event name, and a search of the repository finds the old word only in migration history and stored audit data.
   Depends on GUIDE-001. Refs mock: guided, kit: decision styles.
+
+- [ ] GUIDE-015 · Decision styles with the raw answer and Counts as
+  A task asks every object in one decision style, preset by its study template and pinned by the task: 5-point certainty (the default, keys 1 to 5), Agree with the AI (K, X, U), Yes or no (Y, N, U) or Pick the class blind (one key per project class and U). Every style has Not sure. A decision stores the raw answer as pressed, the style and the agree, disagree or not sure value it counts as. For 5-point certainty the template's Counts as mapping decides that value, 4 and 5 agree, 3 not sure and 1 and 2 disagree by default, and a mapping must keep at least one agree and one disagree answer. Yes or no and Pick the class blind compare the answer with the AI's claim, and Agree with the AI counts each answer as itself. The task owner may change the mapping until sign-off. A change after answers exist is written with who and when to the audit log and the task's log, every stored value is recomputed from the raw answers, and the report's Methods block says so. The style cannot change once a decision exists. The evaluation reads the mapped values and returns the three-way counts with the spread of raw answers ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
+  Done when API tests cover each style's answers with their mapped values, a refused answer outside the style, the default and an edited mapping, a refused mapping with no agree or no disagree answer, a mapping change that recomputes every value and writes both log entries, and a refused style change after the first decision, and EVAL tests return the three-way counts and the raw spread for a seeded 5-point certainty task.
+  Depends on GUIDE-001, EVAL-006, EVAL-007. Refs mock: task/decision, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: admin (the template editor), kit: decision styles, doc 44.
 
 
 ---
@@ -3464,6 +3472,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Computes the metrics from the reviewers' decisions, the decisions on queued objects and the reviewed layers per task, as [ADR 0084](adr/0084-evaluation-metrics.md) defines them.
   Done when unit tests reproduce hand-computed values on a fixture task.
   Depends on EVAL-000, ADJ-006.
+  The engine reads each decision's agree, disagree or not sure value. Since [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md) that value is mapped from the raw answer in the task's decision style, and GUIDE-015 (decision styles with the raw answer and Counts as) adds the spread of raw answers next to the three-way counts.
 
 - [ ] EVAL-002 · Evaluation report page
   The report shows as its pages, the same pages as the PDF (EVAL-008), under a header with the Research output tag, the version, the page count and a flag for changes after sign-off. A side panel picks the study template, opens the PDF preview (EVAL-010), starts Arrange (EVAL-009) and offers the downloads the template allows. The blocks of the sentinel node template are the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
@@ -3494,6 +3503,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   A study template has a name, a kind of study, an ordered list of blocks from the catalogue with their settings, and task presets (objects to check, opinion form, blinding, first read, start mode, split). Templates are versioned per workspace, the five built-in ones (detection, segmentation, cell typing, reader study, sentinel node AI evaluation) are seeded, and a task pins a version. Researchers read and use templates, and only researchers with admin rights create, edit and retire them ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
   Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
+  Since 2026-11-01 the task presets also hold the decision style with its Counts as mapping, which GUIDE-015 (decision styles with the raw answer and Counts as) adds ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)).
 
 - [ ] EVAL-008 · Report from template blocks
   The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.
