@@ -1,8 +1,4 @@
-import {
-  useListProjectResultSets,
-  useSaveVerdict,
-  useSubmitSlideReview,
-} from "@parfocal/api-client";
+import { useSaveVerdict, useSubmitSlideReview } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -16,8 +12,8 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { usePeople } from "../people.ts";
-import { okData } from "../placeholder.tsx";
 import { CellsGrid } from "./cells-grid.tsx";
+import { useSetName } from "./cells-on-slide.tsx";
 import {
   answersOf,
   type Confidence,
@@ -168,16 +164,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
   const otherReviewer = person(blindReviewers[0])?.name.split(" ")[0] ?? "the other reviewer";
   const threadOf = (object: string) => session.threads.find((item) => item.anchor === object);
   const messages = useThreadMessages(threadOf(currentId), session.meId);
-  const resultSets = okData(
-    useListProjectResultSets(session.task?.project_id ?? "", {
-      query: { enabled: session.task !== undefined },
-    }).data,
-  );
-  const setName = (() => {
-    const id = session.task?.slides[0]?.result_set_id;
-    const set = (resultSets ?? []).find((item) => item.id === id) ?? resultSets?.[0];
-    return set ? `${set.name.split(" ")[0]} ${set.model_version ?? ""}`.trim() : "AI";
-  })();
+  const setName = useSetName(session);
 
   const goTo = (at: number) => {
     setIndex(Math.max(0, Math.min(objects.length - 1, at)));

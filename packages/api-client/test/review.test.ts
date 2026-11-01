@@ -6,6 +6,7 @@ import {
   fakeApiHandlers,
   scenario,
   scenarioReview,
+  scenarioTask,
   setFakeView,
 } from "../src/fake/index.ts";
 import {
@@ -146,4 +147,15 @@ test("another viewer gets no review of A1", async () => {
   assert.ok(rt14);
   setFakeView({ viewer: "AK", firstWeek: false });
   assert.equal((await listReviewObjects(rt14.id, a1.id)).data.objects.length, 0);
+});
+
+test("RT-16 is the task the new task flow sends, and slide 9 opens with its objects open", async () => {
+  assert.ok(rt14);
+  assert.equal(scenarioReview.rt16.id, scenarioTask.newTask.id);
+  const a2 = scenario.slideByIndex(2);
+  const next = (await listReviewObjects(rt14.id, a2.id)).data;
+  assert.equal(next.objects.filter((item) => item.kind === "region").length, 2);
+  assert.equal(next.objects.filter((item) => item.kind === "cell").length, 50);
+  assert.equal(body(await listVerdicts(rt14.id, a2.id)).length, 0);
+  assert.equal(next.slide.label, "A2");
 });

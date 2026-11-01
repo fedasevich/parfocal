@@ -181,7 +181,12 @@ type CommentComposerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   replyingTo?: string | undefined;
   onCancelReply?: (() => void) | undefined;
   picker?: React.ReactNode;
+  onPickerKey?: ((key: PickerKey) => void) | undefined;
 };
+
+type PickerKey = "ArrowDown" | "ArrowUp" | "Enter" | "Tab" | "Escape";
+
+const pickerKeys: string[] = ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"];
 
 function CommentComposer({
   value,
@@ -195,6 +200,7 @@ function CommentComposer({
   replyingTo,
   onCancelReply,
   picker,
+  onPickerKey,
   className,
   ...props
 }: CommentComposerProps) {
@@ -221,7 +227,12 @@ function CommentComposer({
           placeholder={replyingTo ? "Write a reply" : placeholder}
           onChange={(event) => onValueChange(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !picker) {
+            if (picker && pickerKeys.includes(event.key)) {
+              event.preventDefault();
+              onPickerKey?.(event.key as PickerKey);
+              return;
+            }
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               if (!empty && !offReason) onSend?.();
             }
@@ -257,4 +268,5 @@ export {
   MentionPicker,
   type MentionPickerProps,
   MentionText,
+  type PickerKey,
 };

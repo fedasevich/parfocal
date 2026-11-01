@@ -132,47 +132,43 @@ export function ObjectThread({
           No comments on {object} yet. Write the first one below.
         </p>
       )}
-      <div
-        onKeyDownCapture={(event) => {
-          if (query === undefined || pickable.length === 0) return;
-          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-            event.preventDefault();
-            setActive(
-              (active + (event.key === "ArrowDown" ? 1 : pickable.length - 1)) % pickable.length,
-            );
+      <CommentComposer
+        value={draft}
+        onValueChange={setDraft}
+        onSend={send}
+        label={`Comment on ${object}`}
+        hint={
+          blind
+            ? "Blind review. Other reviewers see it after they submit."
+            : "Everyone on the task sees it."
+        }
+        offReason={offReason}
+        replyingTo={replyingTo?.author.name}
+        onCancelReply={() => setReplyTo(null)}
+        onPickerKey={(key) => {
+          if (key === "Escape") {
+            setDraft(`${draft} `);
+            return;
           }
-          if (event.key === "Enter" || event.key === "Tab") {
-            event.preventDefault();
-            const chosen = pickable[Math.min(active, pickable.length - 1)];
-            if (chosen) pick(chosen.id);
+          if (key === "ArrowDown" || key === "ArrowUp") {
+            const step = key === "ArrowDown" ? 1 : pickable.length - 1;
+            setActive((active + step) % Math.max(1, pickable.length));
+            return;
           }
+          const chosen = pickable[Math.min(active, pickable.length - 1)];
+          if (chosen) pick(chosen.id);
         }}
-      >
-        <CommentComposer
-          value={draft}
-          onValueChange={setDraft}
-          onSend={send}
-          label={`Comment on ${object}`}
-          hint={
-            blind
-              ? "Blind review. Other reviewers see it after they submit."
-              : "Everyone on the task sees it."
-          }
-          offReason={offReason}
-          replyingTo={replyingTo?.author.name}
-          onCancelReply={() => setReplyTo(null)}
-          picker={
-            query === undefined ? undefined : (
-              <MentionPicker
-                options={options}
-                activeId={pickable[Math.min(active, pickable.length - 1)]?.id}
-                query={query}
-                onPick={pick}
-              />
-            )
-          }
-        />
-      </div>
+        picker={
+          query === undefined ? undefined : (
+            <MentionPicker
+              options={options}
+              activeId={pickable[Math.min(active, pickable.length - 1)]?.id}
+              query={query}
+              onPick={pick}
+            />
+          )
+        }
+      />
     </div>
   );
 }

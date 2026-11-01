@@ -21,7 +21,7 @@ import type {
   VerdictDraft,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
+import { objectsOn, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
 import { people, projectByCode, reviewTasks, slides, threads } from "./scenario.ts";
 import {
   addedByLenka,
@@ -51,17 +51,15 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
     task_id: taskId,
     slide_id: slideId,
     slide: slideSummary(slideId),
-    objects: reviewsA1(taskId, slideId)
-      ? reviewObjects.map((item, index) => ({
-          object: item.object,
-          kind: item.kind,
-          number: index + 1,
-          class_name: item.className,
-          score: item.score,
-          size_mm: item.sizeMm,
-          other_class: item.otherClass,
-        }))
-      : [],
+    objects: objectsOn(taskId, slideId).map((item, index) => ({
+      object: item.object,
+      kind: item.kind,
+      number: index + 1,
+      class_name: item.className,
+      score: item.score,
+      size_mm: item.sizeMm,
+      other_class: item.otherClass,
+    })),
     added: reviewsA1(taskId, slideId) ? addedByLenka : [],
   });
 

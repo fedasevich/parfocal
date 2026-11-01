@@ -1,8 +1,9 @@
-import { useGetMyHome } from "@parfocal/api-client";
+import { useGetMyHome, useListMySlides } from "@parfocal/api-client";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { newTaskPrototypeScenes } from "../screens/new-task/prototype-scenes.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { reviewPrototypeLinks } from "../screens/review/prototype-scenes.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
 
 export const Route = createFileRoute("/prototype")({
@@ -26,6 +27,7 @@ function PrototypeIndex() {
   const body = okData(home.data);
   const resume = body?.resume ?? null;
   const project = body?.projects[0];
+  const slides = okData(useListMySlides().data)?.slides ?? [];
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
       <h1 className="font-semibold text-2xl text-fg">Prototype index</h1>
@@ -124,15 +126,15 @@ function PrototypeIndex() {
                 Slide · {resume.case_label} {resume.slide_label}
               </Link>
             </Entry>
-            <Entry note={resume.task_name}>
-              <Link
-                to="/tasks/$taskId/guided"
-                params={{ taskId: resume.task_id }}
-                search={{ slide: resume.slide_id }}
-              >
-                Guided review · {resume.task_code}
-              </Link>
-            </Entry>
+            {reviewPrototypeLinks(
+              resume.task_id,
+              resume.slide_id,
+              slides.find((slide) => slide.label === "tumor_052")?.id,
+            ).map(({ key, label, note, link }) => (
+              <Entry key={key} note={note}>
+                <Link {...link}>{label}</Link>
+              </Entry>
+            ))}
             <Entry note="Metrics for the task">
               <Link to="/tasks/$taskId/evaluation" params={{ taskId: resume.task_id }}>
                 Evaluation report · {resume.task_code}

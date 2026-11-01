@@ -2,6 +2,7 @@ import type { ReviewOrder, Verdict } from "../generated/api.ts";
 import { reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
+  nextSlideFacts,
   reviewDecisionTimes,
   reviewObjects,
   rt16,
@@ -19,8 +20,23 @@ export const reviewsA1 = (taskId: string, slideId: string) => {
   );
 };
 
+const nextSlide = slideByIndex(2);
+
+const reviewsNext = (taskId: string, slideId: string) =>
+  slideId === nextSlide.id && reviewsA1(taskId, reviewedSlide.id);
+
+export const objectsOn = (taskId: string, slideId: string) => {
+  if (reviewsA1(taskId, slideId)) return reviewObjects;
+  if (reviewsNext(taskId, slideId)) {
+    return reviewObjects.filter(
+      (item, index) => item.kind === "cell" || index < nextSlideFacts.regions,
+    );
+  }
+  return [];
+};
+
 export const reviewOrderFor = (taskId: string, slideId: string): ReviewOrder => {
-  const objects = reviewsA1(taskId, slideId) ? reviewObjects : [];
+  const objects = objectsOn(taskId, slideId);
   return {
     task_id: taskId,
     slide_id: slideId,

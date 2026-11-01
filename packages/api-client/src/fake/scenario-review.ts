@@ -1,20 +1,23 @@
 import type { PersonKey, ScenarioReviewTask } from "./scenario.ts";
+import { newTask, taskSlides } from "./scenario-task.ts";
 
 const uuid = (group: number, index: number) =>
   `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
 
 export const rt16: ScenarioReviewTask = {
-  code: "RT-16",
-  id: uuid(7, 16),
-  name: "Round 3 · CAMELYON v1.0",
-  project: "P07",
-  resultSet: "cam",
-  reviewers: ["LM", "SM"],
+  code: newTask.code,
+  id: newTask.id,
+  name: newTask.names[newTask.resultSet],
+  project: newTask.project,
+  resultSet: newTask.resultSet,
+  reviewers: newTask.reviewers,
   scope: "all-regions",
   scopeText: "Tumor regions: all · Cells: random 50 per slide",
-  dueOn: "2026-10-30",
-  sentOn: "2026-10-15",
-  slides: 9,
+  dueOn: newTask.dueOn,
+  sentOn: newTask.sentOn,
+  slides: newTask.slideIds.filter((id) =>
+    taskSlides.some((slide) => slide.id === id && slide.sets.includes(newTask.resultSet)),
+  ).length,
   split: "all",
   progress: { LM: 0, SM: 0 },
   blinded: true,
