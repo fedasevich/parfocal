@@ -197,3 +197,19 @@ A table that keys its columns by a person's name renders before `listTenantMembe
 ## One test per scene in a smoke spec
 
 A Playwright test that opens 19 scenes in a loop needs more than its 30 s under three workers, so the smoke specs give each scene its own test. Source: PROTO-008.
+
+## Unit tests cannot import a .tsx file
+
+`node --test` strips TypeScript types but does not compile JSX, so a test that imports a `.tsx` module fails with `ERR_UNKNOWN_FILE_EXTENSION`. Put the pure maths a test needs in a `.ts` file next to the component, as PROTO-019 (viewer tools) did with `packages/ui/src/lib/minimap-box.ts` and `apps/web/src/screens/viewer-tools/tool-maths.ts`, and let the component import it. Source: PROTO-019.
+
+## A scene name that clashes moves the screen to its own route
+
+The full viewer route takes the scenes of several mock screens on one `scene` key, so a new screen's scenes can join only if no name is taken. PROTO-019 (viewer tools) put the navigator and compare scenes there and gave annotate its own route, `/projects/$projectId/slides/$slideId/annotate`, because its `models` scene is also a Visualize scene. Screens without scenes, such as measuring, focus mode and the peek, are their own search keys (`tool`, `focus`, `peek`), which can combine. Source: PROTO-019.
+
+## Tool stills: the 10x look and a clamped home camera
+
+`SlideStill` takes `look` (`overview`, `mid` or `hpf`) to draw another image than its view implies, and `homeOf(size)` to place the camera, so a tool can show the mock's 10x crop at a given zoom. `coverHome` in `apps/web/src/screens/viewer-tools/tool-maths.ts` covers the canvas and clamps the centre, so the image never leaves an empty band at an edge. The mock's own fit leaves such bands. The minimap turns a camera into overview pixels through the crop centres of the 10x and 40x images in `tool-geometry.ts`, read from the frozen mock. Source: PROTO-019.
+
+## A button around an SVG with text fails axe's name check
+
+A button whose aria-label is "Open the whole slide" but which holds an SVG with `<text>` badges fails `label-content-name-mismatch`, even when the SVG is `aria-hidden`. The smart minimap draws the map beside the button and lays the button over it with `absolute inset-0`. Source: PROTO-019.
