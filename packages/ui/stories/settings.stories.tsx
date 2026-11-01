@@ -100,9 +100,10 @@ function DisplaySection() {
 
 export const Dialog: Story = {
   render: () => (
-    <div className="min-h-[720px]">
+    <>
+      <p className="text-fg-dim">Settings open over the app.</p>
       <DisplaySection />
-    </div>
+    </>
   ),
 };
 

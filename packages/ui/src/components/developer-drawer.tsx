@@ -34,7 +34,7 @@ function DeveloperDrawer({
         <div className="grid min-w-0 gap-0.5">
           <b className="flex items-center gap-2 text-[16px] font-semibold">
             Developer
-            <span className="rounded-[3px] bg-bad px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
+            <span className="rounded-[3px] bg-bad-fill px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
               LAB
             </span>
           </b>
