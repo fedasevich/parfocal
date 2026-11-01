@@ -2,7 +2,7 @@
 
 - Date: 2026-10-20
 - Status: Accepted
-- Deciders: Yurii Fedas, after the supervisor meeting on 2026-10-20
+- Deciders: Yurii Fedas, after the supervisor meeting on 2026-10-20. Clinical sign-out as a project right added on 2026-11-01, after round 6 of the POC mock
 - Backlog: IAM-024 (admin as a right of a researcher), changes IAM-014, ADMIN-000, ADMIN-001, ADMIN-003, ONB-004, SET-011, JOBS-005, JOBS-006, PROJ-002, HOME-009, INGEST-026 and SEC-024. Supersedes [ADR 0061](0061-researcher-reviewer-and-admin-roles.md)
 
 ## Context
@@ -19,17 +19,24 @@
 
 Option 3, which the owner chose. `Role` becomes `researcher` or `reviewer`, and `memberships` gains `admin_rights`, which only a researcher may hold. Admin rights add the setup permissions and never add access to project data. A researcher with admin rights reaches a project's slides through a project role like any researcher, and a clinical project they are not in only through emergency access with a reason ([ADR 0066](0066-emergency-access-per-clinical-project.md)). Project roles stay as ADR 0061 set them: owner, reviewer and viewer.
 
+### Clinical sign-out is a project right
+
+The global roles stay researcher and reviewer, and signing a clinical report adds no third role. In a project in Clinical privacy mode each member holds a project right, "Can sign out", with one of three values: Own cases, Any case or Never. The project owner sets it per member in the project's settings. Own cases is the default for the owner and for project reviewers, so the case's assigned pathologist can sign it out without anyone changing a setting. Project viewers are fixed at Never. A member without the right sends the report for co-sign to a member who has it. The co-signer sees both values side by side, and either returns the report with a note or co-signs and signs it out, after which the report names both people. Setting Never for the last member who could sign out is allowed with a warning that every report would then go for co-sign. The right does not exist in a de-identified project, which has no clinical report, and it never covers the sign-off of a research evaluation, which stays the researcher's.
+
+Two other shapes were weighed. A third global role for signing pathologists would bring back the hospital roles that ADR 0061 and this ADR removed, and it would follow a person into projects where they only review. Letting every project reviewer sign would leave no way to require a second pair of eyes on a case. A right per project member keeps signing where the clinical work happens and needs no change to `Role`.
+
 ### What each role is responsible for
 
 | Who | Responsible for | Never does |
 |---|---|---|
 | Researcher | Runs studies. Creates projects and becomes their owner, uploads slides and AI result files, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers to them, nudges and reassigns, resolves disagreements or asks an adjudicator, signs off, arranges and exports the evaluation report and shares it read-only. Can also review when a task names them | Opens a project without a project role, except clinical projects through emergency access |
-| Reviewer | Reviews the slides of their tasks. Gives Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds missed objects, comments and mentions, fills the opinion form, submits each slide and reopens it until sign-off. Decides queued objects when a researcher makes them adjudicator | Uploads, runs models, creates projects or tasks, signs off, sees other reviewers' verdicts before submitting in a blind task, opens the admin page |
+| Reviewer | Reviews the slides of their tasks. Gives Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds missed objects, comments and mentions, fills the opinion form, submits each slide and reopens it until sign-off. Decides queued objects when a researcher makes them adjudicator | Uploads, runs models, creates projects or tasks, signs off, sees other reviewers' decisions before submitting in a blind task, opens the admin page |
 | Admin rights, on a researcher | Sets up the workspace in the admin page: invites people and sets their role and admin rights, deactivates people, archives projects and decides who may create them, shows or hides Parfocal models and connects the lab's models, connects storage and sources, issues API tokens and webhooks, keeps the workspace's report template library, reads and exports the audit log, and sets sign-in, session and two-factor rules | Sees project data because of the right. Removes the right from the last person who holds it |
 | Project owner | Manages one project: its members and their project roles, its settings, its tasks and their sign-off | |
 | Project reviewer | Sees only the slides of their tasks in that project | |
-| Project viewer | Reads the project's slides, results and reports without giving verdicts | |
+| Project viewer | Reads the project's slides, results and reports without making decisions | |
 | Adjudicator | Not a role. A reviewer or researcher whom a researcher asks to decide queued objects in one task, with the reviewers anonymous | |
+| Can sign out, a project right in a clinical project | Signs out the clinical report of a case in that project, for own cases or any case. On by default for the case's assigned pathologist. A member without it sends the report for co-sign to someone who has it | Signs out in a de-identified project. Signs out a research evaluation, which is the researcher's sign-off |
 
 ### Permission matrix
 
@@ -55,4 +62,5 @@ Option 3, which the owner chose. `Role` becomes `researcher` or `reviewer`, and 
 - The admin page stays its own page (ADMIN-001), opened by researchers with admin rights. Its People and roles section shows two roles and an admin rights switch (ADMIN-003).
 - First-run setup gives admin rights to the person who creates a workspace (ONB-004).
 - "An admin" in JOBS-005, JOBS-006, PROJ-002, SET-011, HOME-009, INGEST-026 and SEC-024 now means a researcher with admin rights.
+- Clinical sign-out comes back in this narrower form after ADAPT-003 (the removal of signing rights) took the hospital version out. REPORT-008 (sign-out) and REPORT-019 (co-sign) are ideas today and are rewritten to this shape with the backlog pass that follows the mock. A member's project role in a clinical project (PROJ-003, project roles) gains the right's value, and the permission test gains rows for Own cases, Any case and Never.
 - The kit's Roles page, the people section of the admin page and POC doc 43 describe the same responsibilities, and the supervisor sees the admin page in the next meeting.
