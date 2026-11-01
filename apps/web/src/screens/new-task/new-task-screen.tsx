@@ -7,6 +7,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { QueryState } from "../placeholder.tsx";
 import { AddSlidesModal, PreviewQuestionModal } from "./modals.tsx";
 import {
@@ -333,8 +334,9 @@ function NewTaskFlow({
       <FlowPage
         data-testid="new-task"
         data-step={page}
-        className="h-full min-h-dvh"
+        className="h-full"
         renderLink={renderLink}
+        crumbStart={<SidebarToggle />}
         crumbs={[
           { label: data.projectName, href: `${projectHref}?tab=slides` },
           { label: "Review tasks", href: `${projectHref}?tab=tasks` },
