@@ -115,56 +115,60 @@ function MentionPicker({
   className,
   ...props
 }: MentionPickerProps) {
+  const frame = cn(
+    "grid gap-0.5 rounded-zone border border-line-strong bg-chrome p-1 shadow-pop",
+    className,
+  );
+  if (options.length === 0) {
+    return (
+      <div data-slot="mention-picker" role="status" className={frame} {...props}>
+        <span className="px-3 py-2 text-body-sm text-fg-dim">
+          Nobody called "{query}" in this project.
+        </span>
+      </div>
+    );
+  }
   return (
     <div
       data-slot="mention-picker"
       role="listbox"
       aria-label="Mention someone"
-      className={cn(
-        "grid gap-0.5 rounded-zone border border-line-strong bg-chrome p-1 shadow-pop",
-        className,
-      )}
+      className={frame}
       {...props}
     >
-      {options.length === 0 ? (
-        <div className="px-3 py-2 text-body-sm text-fg-dim">
-          Nobody called "{query}" in this project.
-        </div>
-      ) : (
-        options.map((option) => {
-          const active = option.id === activeId && !option.disabledReason;
-          return (
-            <div
-              key={option.id}
-              role="option"
-              tabIndex={-1}
-              aria-selected={active}
-              aria-disabled={option.disabledReason ? true : undefined}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                if (!option.disabledReason) onPick?.(option.id);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !option.disabledReason) onPick?.(option.id);
-              }}
-              className={cn(
-                "flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2",
-                active && "bg-chrome-2",
-                option.disabledReason && "cursor-default opacity-50",
-              )}
-            >
-              <PersonAvatar person={option.person} size={24} />
-              <span className="grid min-w-0 flex-1 leading-tight">
-                <b className="text-body-sm font-medium text-fg">{option.person.name}</b>
-                <small className="text-caption text-fg-dim">{option.sub}</small>
-              </span>
-              {option.disabledReason ? (
-                <span className="text-caption text-fg-dim">{option.disabledReason}</span>
-              ) : null}
-            </div>
-          );
-        })
-      )}
+      {options.map((option) => {
+        const active = option.id === activeId && !option.disabledReason;
+        return (
+          <div
+            key={option.id}
+            role="option"
+            tabIndex={-1}
+            aria-selected={active}
+            aria-disabled={option.disabledReason ? true : undefined}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              if (!option.disabledReason) onPick?.(option.id);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !option.disabledReason) onPick?.(option.id);
+            }}
+            className={cn(
+              "flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2",
+              active && "bg-chrome-2",
+              option.disabledReason && "cursor-default opacity-50",
+            )}
+          >
+            <PersonAvatar person={option.person} size={24} />
+            <span className="grid min-w-0 flex-1 leading-tight">
+              <b className="text-body-sm font-medium text-fg">{option.person.name}</b>
+              <small className="text-caption text-fg-dim">{option.sub}</small>
+            </span>
+            {option.disabledReason ? (
+              <span className="text-caption text-fg-dim">{option.disabledReason}</span>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
