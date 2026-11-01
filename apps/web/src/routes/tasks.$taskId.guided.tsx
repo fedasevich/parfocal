@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { Placeholder } from "../screens/placeholder.tsx";
+import { mockScenes } from "../screens/scenes.ts";
 
 const guidedSearch = z.object({
   slide: z.string().optional(),
   object: z.string().optional(),
+  scene: z.enum(mockScenes.guided).optional(),
+  submitted: z.boolean().optional(),
 });
 
 export const Route = createFileRoute("/tasks/$taskId/guided")({

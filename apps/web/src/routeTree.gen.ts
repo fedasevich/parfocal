@@ -14,12 +14,25 @@ import { Route as AdminRouteImport } from "./routes/admin.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
+import { Route as TeamRouteImport } from "./routes/team.tsx";
+import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
+import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
+import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map.walkthrough.$chapter.tsx";
 import { Route as ProjectsProjectIdIndexRouteImport } from "./routes/projects.$projectId.index.tsx";
+import { Route as ProjectsProjectIdRunModelRouteImport } from "./routes/projects.$projectId.run-model.tsx";
+import { Route as ProjectsProjectIdUploadRouteImport } from "./routes/projects.$projectId.upload.tsx";
+import { Route as TasksTaskIdCellsRouteImport } from "./routes/tasks.$taskId.cells.tsx";
+import { Route as TasksTaskIdDisagreementsRouteImport } from "./routes/tasks.$taskId.disagreements.tsx";
 import { Route as TasksTaskIdEvaluationRouteImport } from "./routes/tasks.$taskId.evaluation.tsx";
 import { Route as TasksTaskIdGuidedRouteImport } from "./routes/tasks.$taskId.guided.tsx";
+import { Route as TasksTaskIdSignOffRouteImport } from "./routes/tasks.$taskId.sign-off.tsx";
+import { Route as TasksTaskIdSubmittedRouteImport } from "./routes/tasks.$taskId.submitted.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdRouteImport } from "./routes/projects.$projectId.slides.$slideId.tsx";
+import { Route as ProjectsProjectIdTasksNewRouteImport } from "./routes/projects.$projectId.tasks.new.tsx";
+import { Route as ProjectsProjectIdSlidesSlideIdCoSignRouteImport } from "./routes/projects.$projectId.slides.$slideId_.co-sign.tsx";
+import { Route as ProjectsProjectIdSlidesSlideIdReportRouteImport } from "./routes/projects.$projectId.slides.$slideId_.report.tsx";
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -46,6 +59,16 @@ const SetupRoute = SetupRouteImport.update({
   path: "/setup",
   getParentRoute: () => rootRouteImport,
 } as any);
+const TeamRoute = TeamRouteImport.update({
+  id: "/team",
+  path: "/team",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const FlowMapIndexRoute = FlowMapIndexRouteImport.update({
+  id: "/flow-map/",
+  path: "/flow-map/",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: "/settings/",
   path: "/settings/",
@@ -56,11 +79,44 @@ const SettingsSectionRoute = SettingsSectionRouteImport.update({
   path: "/settings/$section",
   getParentRoute: () => rootRouteImport,
 } as any);
+const FlowMapWalkthroughIndexRoute = FlowMapWalkthroughIndexRouteImport.update({
+  id: "/flow-map/walkthrough/",
+  path: "/flow-map/walkthrough/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const FlowMapWalkthroughChapterRoute =
+  FlowMapWalkthroughChapterRouteImport.update({
+    id: "/flow-map/walkthrough/$chapter",
+    path: "/flow-map/walkthrough/$chapter",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   id: "/projects/$projectId/",
   path: "/projects/$projectId/",
   getParentRoute: () => rootRouteImport,
 } as any);
+const ProjectsProjectIdRunModelRoute =
+  ProjectsProjectIdRunModelRouteImport.update({
+    id: "/projects/$projectId/run-model",
+    path: "/projects/$projectId/run-model",
+    getParentRoute: () => rootRouteImport,
+  } as any);
+const ProjectsProjectIdUploadRoute = ProjectsProjectIdUploadRouteImport.update({
+  id: "/projects/$projectId/upload",
+  path: "/projects/$projectId/upload",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TasksTaskIdCellsRoute = TasksTaskIdCellsRouteImport.update({
+  id: "/tasks/$taskId/cells",
+  path: "/tasks/$taskId/cells",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TasksTaskIdDisagreementsRoute =
+  TasksTaskIdDisagreementsRouteImport.update({
+    id: "/tasks/$taskId/disagreements",
+    path: "/tasks/$taskId/disagreements",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const TasksTaskIdEvaluationRoute = TasksTaskIdEvaluationRouteImport.update({
   id: "/tasks/$taskId/evaluation",
   path: "/tasks/$taskId/evaluation",
@@ -71,10 +127,38 @@ const TasksTaskIdGuidedRoute = TasksTaskIdGuidedRouteImport.update({
   path: "/tasks/$taskId/guided",
   getParentRoute: () => rootRouteImport,
 } as any);
+const TasksTaskIdSignOffRoute = TasksTaskIdSignOffRouteImport.update({
+  id: "/tasks/$taskId/sign-off",
+  path: "/tasks/$taskId/sign-off",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TasksTaskIdSubmittedRoute = TasksTaskIdSubmittedRouteImport.update({
+  id: "/tasks/$taskId/submitted",
+  path: "/tasks/$taskId/submitted",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const ProjectsProjectIdSlidesSlideIdRoute =
   ProjectsProjectIdSlidesSlideIdRouteImport.update({
     id: "/projects/$projectId/slides/$slideId",
     path: "/projects/$projectId/slides/$slideId",
+    getParentRoute: () => rootRouteImport,
+  } as any);
+const ProjectsProjectIdTasksNewRoute =
+  ProjectsProjectIdTasksNewRouteImport.update({
+    id: "/projects/$projectId/tasks/new",
+    path: "/projects/$projectId/tasks/new",
+    getParentRoute: () => rootRouteImport,
+  } as any);
+const ProjectsProjectIdSlidesSlideIdCoSignRoute =
+  ProjectsProjectIdSlidesSlideIdCoSignRouteImport.update({
+    id: "/projects/$projectId/slides/$slideId_/co-sign",
+    path: "/projects/$projectId/slides/$slideId/co-sign",
+    getParentRoute: () => rootRouteImport,
+  } as any);
+const ProjectsProjectIdSlidesSlideIdReportRoute =
+  ProjectsProjectIdSlidesSlideIdReportRouteImport.update({
+    id: "/projects/$projectId/slides/$slideId_/report",
+    path: "/projects/$projectId/slides/$slideId/report",
     getParentRoute: () => rootRouteImport,
   } as any);
 
@@ -84,12 +168,25 @@ export interface FileRoutesByFullPath {
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/team": typeof TeamRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
+  "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
+  "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
+  "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
+  "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
+  "/tasks/$taskId/sign-off": typeof TasksTaskIdSignOffRoute;
+  "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
+  "/flow-map/walkthrough/": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId/": typeof ProjectsProjectIdIndexRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
+  "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
+  "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
+  "/projects/$projectId/slides/$slideId/report": typeof ProjectsProjectIdSlidesSlideIdReportRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
@@ -97,12 +194,25 @@ export interface FileRoutesByTo {
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/team": typeof TeamRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/flow-map": typeof FlowMapIndexRoute;
   "/settings": typeof SettingsIndexRoute;
+  "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
+  "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
+  "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
+  "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
+  "/tasks/$taskId/sign-off": typeof TasksTaskIdSignOffRoute;
+  "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
+  "/flow-map/walkthrough": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId": typeof ProjectsProjectIdIndexRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
+  "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
+  "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
+  "/projects/$projectId/slides/$slideId/report": typeof ProjectsProjectIdSlidesSlideIdReportRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -111,12 +221,25 @@ export interface FileRoutesById {
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
+  "/team": typeof TeamRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
+  "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
+  "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
+  "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
+  "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
+  "/tasks/$taskId/sign-off": typeof TasksTaskIdSignOffRoute;
+  "/tasks/$taskId/submitted": typeof TasksTaskIdSubmittedRoute;
+  "/flow-map/walkthrough/": typeof FlowMapWalkthroughIndexRoute;
   "/projects/$projectId/": typeof ProjectsProjectIdIndexRoute;
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
+  "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
+  "/projects/$projectId/slides/$slideId_/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
+  "/projects/$projectId/slides/$slideId_/report": typeof ProjectsProjectIdSlidesSlideIdReportRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -126,12 +249,25 @@ export interface FileRouteTypes {
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/team"
     | "/settings/$section"
+    | "/flow-map/"
     | "/settings/"
+    | "/flow-map/walkthrough/$chapter"
+    | "/projects/$projectId/run-model"
+    | "/projects/$projectId/upload"
+    | "/tasks/$taskId/cells"
+    | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
+    | "/tasks/$taskId/sign-off"
+    | "/tasks/$taskId/submitted"
+    | "/flow-map/walkthrough/"
     | "/projects/$projectId/"
-    | "/projects/$projectId/slides/$slideId";
+    | "/projects/$projectId/slides/$slideId"
+    | "/projects/$projectId/tasks/new"
+    | "/projects/$projectId/slides/$slideId/co-sign"
+    | "/projects/$projectId/slides/$slideId/report";
   fileRoutesByTo: FileRoutesByTo;
   to:
     | "/"
@@ -139,12 +275,25 @@ export interface FileRouteTypes {
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/team"
     | "/settings/$section"
+    | "/flow-map"
     | "/settings"
+    | "/flow-map/walkthrough/$chapter"
+    | "/projects/$projectId/run-model"
+    | "/projects/$projectId/upload"
+    | "/tasks/$taskId/cells"
+    | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
+    | "/tasks/$taskId/sign-off"
+    | "/tasks/$taskId/submitted"
+    | "/flow-map/walkthrough"
     | "/projects/$projectId"
-    | "/projects/$projectId/slides/$slideId";
+    | "/projects/$projectId/slides/$slideId"
+    | "/projects/$projectId/tasks/new"
+    | "/projects/$projectId/slides/$slideId/co-sign"
+    | "/projects/$projectId/slides/$slideId/report";
   id:
     | "__root__"
     | "/"
@@ -152,12 +301,25 @@ export interface FileRouteTypes {
     | "/my-work"
     | "/prototype"
     | "/setup"
+    | "/team"
     | "/settings/$section"
+    | "/flow-map/"
     | "/settings/"
+    | "/flow-map/walkthrough/$chapter"
+    | "/projects/$projectId/run-model"
+    | "/projects/$projectId/upload"
+    | "/tasks/$taskId/cells"
+    | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
+    | "/tasks/$taskId/sign-off"
+    | "/tasks/$taskId/submitted"
+    | "/flow-map/walkthrough/"
     | "/projects/$projectId/"
-    | "/projects/$projectId/slides/$slideId";
+    | "/projects/$projectId/slides/$slideId"
+    | "/projects/$projectId/tasks/new"
+    | "/projects/$projectId/slides/$slideId_/co-sign"
+    | "/projects/$projectId/slides/$slideId_/report";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -166,12 +328,25 @@ export interface RootRouteChildren {
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SetupRoute: typeof SetupRoute;
+  TeamRoute: typeof TeamRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
+  FlowMapIndexRoute: typeof FlowMapIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
+  FlowMapWalkthroughChapterRoute: typeof FlowMapWalkthroughChapterRoute;
+  ProjectsProjectIdRunModelRoute: typeof ProjectsProjectIdRunModelRoute;
+  ProjectsProjectIdUploadRoute: typeof ProjectsProjectIdUploadRoute;
+  TasksTaskIdCellsRoute: typeof TasksTaskIdCellsRoute;
+  TasksTaskIdDisagreementsRoute: typeof TasksTaskIdDisagreementsRoute;
   TasksTaskIdEvaluationRoute: typeof TasksTaskIdEvaluationRoute;
   TasksTaskIdGuidedRoute: typeof TasksTaskIdGuidedRoute;
+  TasksTaskIdSignOffRoute: typeof TasksTaskIdSignOffRoute;
+  TasksTaskIdSubmittedRoute: typeof TasksTaskIdSubmittedRoute;
+  FlowMapWalkthroughIndexRoute: typeof FlowMapWalkthroughIndexRoute;
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute;
   ProjectsProjectIdSlidesSlideIdRoute: typeof ProjectsProjectIdSlidesSlideIdRoute;
+  ProjectsProjectIdTasksNewRoute: typeof ProjectsProjectIdTasksNewRoute;
+  ProjectsProjectIdSlidesSlideIdCoSignRoute: typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
+  ProjectsProjectIdSlidesSlideIdReportRoute: typeof ProjectsProjectIdSlidesSlideIdReportRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -211,6 +386,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof SetupRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/team": {
+      id: "/team";
+      path: "/team";
+      fullPath: "/team";
+      preLoaderRoute: typeof TeamRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/flow-map/": {
+      id: "/flow-map/";
+      path: "/flow-map";
+      fullPath: "/flow-map/";
+      preLoaderRoute: typeof FlowMapIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/settings/": {
       id: "/settings/";
       path: "/settings";
@@ -225,11 +414,53 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof SettingsSectionRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/flow-map/walkthrough/": {
+      id: "/flow-map/walkthrough/";
+      path: "/flow-map/walkthrough";
+      fullPath: "/flow-map/walkthrough/";
+      preLoaderRoute: typeof FlowMapWalkthroughIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/flow-map/walkthrough/$chapter": {
+      id: "/flow-map/walkthrough/$chapter";
+      path: "/flow-map/walkthrough/$chapter";
+      fullPath: "/flow-map/walkthrough/$chapter";
+      preLoaderRoute: typeof FlowMapWalkthroughChapterRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/projects/$projectId/": {
       id: "/projects/$projectId/";
       path: "/projects/$projectId";
       fullPath: "/projects/$projectId/";
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/run-model": {
+      id: "/projects/$projectId/run-model";
+      path: "/projects/$projectId/run-model";
+      fullPath: "/projects/$projectId/run-model";
+      preLoaderRoute: typeof ProjectsProjectIdRunModelRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/upload": {
+      id: "/projects/$projectId/upload";
+      path: "/projects/$projectId/upload";
+      fullPath: "/projects/$projectId/upload";
+      preLoaderRoute: typeof ProjectsProjectIdUploadRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tasks/$taskId/cells": {
+      id: "/tasks/$taskId/cells";
+      path: "/tasks/$taskId/cells";
+      fullPath: "/tasks/$taskId/cells";
+      preLoaderRoute: typeof TasksTaskIdCellsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tasks/$taskId/disagreements": {
+      id: "/tasks/$taskId/disagreements";
+      path: "/tasks/$taskId/disagreements";
+      fullPath: "/tasks/$taskId/disagreements";
+      preLoaderRoute: typeof TasksTaskIdDisagreementsRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/tasks/$taskId/evaluation": {
@@ -246,11 +477,46 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TasksTaskIdGuidedRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/tasks/$taskId/sign-off": {
+      id: "/tasks/$taskId/sign-off";
+      path: "/tasks/$taskId/sign-off";
+      fullPath: "/tasks/$taskId/sign-off";
+      preLoaderRoute: typeof TasksTaskIdSignOffRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tasks/$taskId/submitted": {
+      id: "/tasks/$taskId/submitted";
+      path: "/tasks/$taskId/submitted";
+      fullPath: "/tasks/$taskId/submitted";
+      preLoaderRoute: typeof TasksTaskIdSubmittedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/projects/$projectId/slides/$slideId": {
       id: "/projects/$projectId/slides/$slideId";
       path: "/projects/$projectId/slides/$slideId";
       fullPath: "/projects/$projectId/slides/$slideId";
       preLoaderRoute: typeof ProjectsProjectIdSlidesSlideIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/tasks/new": {
+      id: "/projects/$projectId/tasks/new";
+      path: "/projects/$projectId/tasks/new";
+      fullPath: "/projects/$projectId/tasks/new";
+      preLoaderRoute: typeof ProjectsProjectIdTasksNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/slides/$slideId_/co-sign": {
+      id: "/projects/$projectId/slides/$slideId_/co-sign";
+      path: "/projects/$projectId/slides/$slideId/co-sign";
+      fullPath: "/projects/$projectId/slides/$slideId/co-sign";
+      preLoaderRoute: typeof ProjectsProjectIdSlidesSlideIdCoSignRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$projectId/slides/$slideId_/report": {
+      id: "/projects/$projectId/slides/$slideId_/report";
+      path: "/projects/$projectId/slides/$slideId/report";
+      fullPath: "/projects/$projectId/slides/$slideId/report";
+      preLoaderRoute: typeof ProjectsProjectIdSlidesSlideIdReportRouteImport;
       parentRoute: typeof rootRouteImport;
     };
   }
@@ -262,12 +528,27 @@ const rootRouteChildren: RootRouteChildren = {
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
   SetupRoute: SetupRoute,
+  TeamRoute: TeamRoute,
   SettingsSectionRoute: SettingsSectionRoute,
+  FlowMapIndexRoute: FlowMapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  FlowMapWalkthroughChapterRoute: FlowMapWalkthroughChapterRoute,
+  ProjectsProjectIdRunModelRoute: ProjectsProjectIdRunModelRoute,
+  ProjectsProjectIdUploadRoute: ProjectsProjectIdUploadRoute,
+  TasksTaskIdCellsRoute: TasksTaskIdCellsRoute,
+  TasksTaskIdDisagreementsRoute: TasksTaskIdDisagreementsRoute,
   TasksTaskIdEvaluationRoute: TasksTaskIdEvaluationRoute,
   TasksTaskIdGuidedRoute: TasksTaskIdGuidedRoute,
+  TasksTaskIdSignOffRoute: TasksTaskIdSignOffRoute,
+  TasksTaskIdSubmittedRoute: TasksTaskIdSubmittedRoute,
+  FlowMapWalkthroughIndexRoute: FlowMapWalkthroughIndexRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
   ProjectsProjectIdSlidesSlideIdRoute: ProjectsProjectIdSlidesSlideIdRoute,
+  ProjectsProjectIdTasksNewRoute: ProjectsProjectIdTasksNewRoute,
+  ProjectsProjectIdSlidesSlideIdCoSignRoute:
+    ProjectsProjectIdSlidesSlideIdCoSignRoute,
+  ProjectsProjectIdSlidesSlideIdReportRoute:
+    ProjectsProjectIdSlidesSlideIdReportRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

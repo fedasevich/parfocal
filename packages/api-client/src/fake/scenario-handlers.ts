@@ -5,12 +5,14 @@ import {
   getGetSessionMockHandler,
   getListMyReviewTasksMockHandler,
   getListProjectsMockHandler,
+  getListTenantMembersMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   Announcement,
   Home,
   HomeProject,
   Me,
+  Member,
   MyStatus,
   MyTask,
   Project,
@@ -60,6 +62,17 @@ export const toMe = (): Me => ({
   active_tenant_id: workspaces[0]?.id ?? null,
   workspaces: workspaces.map(toWorkspace),
 });
+
+export const toMembers = (): Member[] =>
+  Object.values(people).map((person) => ({
+    user_id: person.id,
+    display_name: person.name,
+    initials: person.key,
+    avatar_colour: person.colour,
+    title: person.title,
+    role: person.role,
+    admin_rights: false,
+  }));
 
 export const toSession = (): Session => ({
   subject: me().id,
@@ -260,6 +273,7 @@ export function scenarioHandlers(): RequestHandler[] {
     getGetMyHomeMockHandler(() => toHome()),
     getListMyReviewTasksMockHandler(() => myTasks()),
     getListProjectsMockHandler(projects.map(toProject)),
+    getListTenantMembersMockHandler(toMembers()),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
       const project = projects.find(
         (candidate) => candidate.id === params.projectId || candidate.code === params.projectId,

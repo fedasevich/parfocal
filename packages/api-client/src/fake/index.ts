@@ -18,6 +18,6 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
 export * from "../generated/api.msw.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export * as scenario from "./scenario.ts";
-export { scenarioHandlers, toHome, toMe, toProject } from "./scenario-handlers.ts";
+export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
 export { searchScenario, tasksAssignedBy, toSlideRow } from "./work-handlers.ts";

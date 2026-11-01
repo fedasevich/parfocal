@@ -31,6 +31,12 @@ function PrototypeIndex() {
         Every screen of the app, opened with the scenario's data. Only the dev build has this page.
       </p>
       <ul className="flex flex-col gap-2" aria-label="Screens">
+        <Entry note="The four lanes, each box opens its screen in its scene">
+          <Link to="/flow-map">How a review works</Link>
+        </Entry>
+        <Entry note="The nine chapters from upload to the co-signed clinical report">
+          <Link to="/flow-map/walkthrough">Walkthrough</Link>
+        </Entry>
         <Entry note="Launchpad">
           <Link to="/">Home</Link>
         </Entry>

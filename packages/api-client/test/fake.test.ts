@@ -13,6 +13,7 @@ import {
   listMyJobs,
   listMyReviewTasks,
   listProjects,
+  listTenantMembers,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -70,6 +71,15 @@ test("seeded operations tell the scenario's story ahead of generated fake data",
     tasks.map((task) => task.code),
     ["RT-14", "RT-11", "RT-09"],
   );
+});
+
+test("the workspace's members are the scenario's people with their initials and colours", async () => {
+  const members = body(await listTenantMembers());
+  const daniel = members.find((member) => member.initials === "DH");
+  assert.equal(daniel?.display_name, "Daniel Hruška");
+  assert.equal(daniel?.role, "researcher");
+  assert.equal(daniel?.avatar_colour, scenario.people.DH.colour);
+  assert.equal(members.length, Object.keys(scenario.people).length);
 });
 
 test("a seeded detail answers by id and refuses an unknown one with a problem", async () => {

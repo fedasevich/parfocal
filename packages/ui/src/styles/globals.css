@@ -5,6 +5,7 @@
 @import "@parfocal/tokens/theme.css";
 
 @source "../../../../apps/web/src";
+@source "../components";
 
 @layer base {
   * {
