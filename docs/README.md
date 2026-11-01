@@ -6,18 +6,17 @@ Last consolidated: 2026-10-18
 
 ## In progress
 
-The PROTO epic (prototype in React) was stopped at a safe checkpoint on 2026-11-01 at the owner's request. Every screen task below that is built is pushed to `main` and waits in review for the owner's comparison with the frozen mock, which decision 15a (owner review of each ported screen group) in [decisions.md](decisions.md) asks about.
+The PROTO epic (prototype in React) resumed on 2026-11-01 at the owner's request, with at most two agents running at once. Every built screen task is pushed to `main` and waits in review for the owner's comparison with the frozen mock, which decision 15a (owner review of each ported screen group) in [decisions.md](decisions.md) asks about.
 
 | Task | State |
 |---|---|
-| PROTO-003 (home, My work and the shell), PROTO-004 (project page and upload), PROTO-005 (model runs and jobs), PROTO-006 (New review task), PROTO-007 (guided review), PROTO-011 (kit components), PROTO-012 (flow map), PROTO-013 (Team) | Built, pushed, in review |
-| PROTO-014 (clinical report, sign-out and co-sign) | Screens pushed in b12b83b with an axe fix in 8bf2808. Its log entry and the move to review are missing. The board claim still says in progress |
-| PROTO-009 (admin, sign-in, sign-up, invite and first-run setup) | Stopped mid-task in the shared tree. Its board claim's note says what is left and which files hold uncommitted work. Its sign-in, sign-up and invite routes are not on `main` yet |
-| PROTO-016 (settings, shortcuts and developer mode) | Stopped mid-task. Uncommitted work is in the worktree `.claude/worktrees/agent-addd926e31439d707`, and the board claim's note says what is left |
-| PROTO-018 (full viewer) and PROTO-008 (disagreements, sign-off and the evaluation report) | Barely started and stopped. Only a few uncommitted files in `.claude/worktrees/agent-af003acc245a3ef37` and `.claude/worktrees/agent-a3e17df9f08115a94`. Starting fresh is fine |
-| PROTO-015 (Connect a model), PROTO-017 (issue states index), PROTO-019 (viewer tools), PROTO-010 (make the React app the design source) | Not started |
+| PROTO-003 (home, My work and the shell), PROTO-004 (project page and upload), PROTO-005 (model runs and jobs), PROTO-006 (New review task), PROTO-007 (guided review), PROTO-009 (admin, sign-in, sign-up, invite and first-run setup), PROTO-011 (kit components), PROTO-012 (flow map), PROTO-013 (Team), PROTO-014 (clinical report, sign-out and co-sign) | Built, pushed, in review |
+| PROTO-016 (settings, shortcuts and developer mode) | Being finished by an agent in the worktree `.claude/worktrees/agent-addd926e31439d707` on branch `proto-016` |
+| PROTO-015 (Connect a model) | Being built by an agent in its own worktree |
+| PROTO-017 (issue states index), PROTO-018 (full viewer), PROTO-008 (disagreements, sign-off and the evaluation report), PROTO-019 (viewer tools) | Next, one at a time as an agent frees up. The stray files of PROTO-018 and PROTO-008 in `.claude/worktrees/agent-af003acc245a3ef37` and `.claude/worktrees/agent-a3e17df9f08115a94` are not used, and each starts fresh |
+| PROTO-010 (make the React app the design source) | Waits for every PROTO screen task to be ticked |
 
-The next step is to finish PROTO-014's log entry and board move, then resume PROTO-009 and PROTO-016 from their notes, with at most two agents running at once. Agents that share the main working tree must commit through a private git index, because the lint hook re-stages whole files ([knowledge/frontend-ui.md](knowledge/frontend-ui.md)). The owner's uncommitted answers to decisions 1 to 5 sit in the main tree's `docs/decisions.md` and must not be staged by anyone else.
+Agents work in their own worktrees and push to `main` after a rebase, and nobody but the owner touches the main tree's `docs/decisions.md`, which holds the owner's uncommitted answers to decisions 1 to 5. Agents that share one working tree must commit through a private git index, because the lint hook re-stages whole files ([knowledge/frontend-ui.md](knowledge/frontend-ui.md)).
 
 ## Where we are now
 
@@ -41,7 +40,7 @@ Accounts and tools are listed in [knowledge/agent-tooling.md](knowledge/agent-to
 
 ## Next up
 
-No UI work until the owner says so. The cloud is open again since 2026-10-31, and every run must keep costs as low as possible ([knowledge/platform.md](knowledge/platform.md)). Every open question for the owner, with options to pick, is in [decisions.md](decisions.md).
+The owner restarted the PROTO screen port on 2026-11-01, see "In progress". The cloud is open again since 2026-10-31, and every run must keep costs as low as possible ([knowledge/platform.md](knowledge/platform.md)). Every open question for the owner, with options to pick, is in [decisions.md](decisions.md).
 
 1. The owner's open decisions are all in [decisions.md](decisions.md), sections 1 to 14, each with options and a recommendation. They cover ADR 0117 (review order stored per task slide), ADR 0118 (blinding and a kept first read), ADR 0119 (inbox mutes), ADR 0120 (study templates as workspace rows that a task only pins), ADR 0121 (S3 client signed by hand on httpx2), ADR 0122 (the slide row appears only when it is ready), ADR 0123 (model runs as engine jobs per slide), ADR 0124 (labels and macros only for whole-project readers in clinical projects), ADR 0125 (result files pair in Python and import as their own job), ADR 0126 (cell chunks in object storage with a summary index), ADR 0127 (imported cells keep their numbers by centre distance and take the innermost region) and ADR 0128 (result files stream through a byte scanner into cell columns), the Modal ingest memory, and the `tofu apply` that INGEST-028 (upload protocol check on the R2 dev bucket) needs. Owner choices that differ from what was built come first when work resumes.
 2. Backend work that is free: JOBS-001 (model run API), SET-001 (settings storage and resolution), GUIDE-013 (review order as a background job), TASK-006 (invitations to a task), TASK-007 (nudge, reassign and change a task), OBJ-003 (split, merge and added objects), REVIEW-010 (review decisions API, first check whether the reviewed layer already covers it), AIP-009 (resumable whole-slide jobs), AIP-011 (job progress streaming), COLLAB-002 (threads API), INGEST-019 (slide metadata editing) and INGEST-020 (bulk import tool). TILES-001 (signed access to slide bytes) waits for decision 10e (how the original keeps its label pages out of byte-range reads). REVIEW-000 (confidence rules) waits for AINUC-000 (pick detector and typer).
