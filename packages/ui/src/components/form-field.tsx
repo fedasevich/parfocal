@@ -1,6 +1,6 @@
 import { Field as FieldPrimitive } from "@base-ui/react/field";
 import { Icon } from "@parfocal/ui/components/icon";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type FormFieldProps = Omit<FieldPrimitive.Root.Props, "children"> & {

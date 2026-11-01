@@ -1,5 +1,5 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 function Avatar({

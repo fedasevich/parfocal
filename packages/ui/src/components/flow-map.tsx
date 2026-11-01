@@ -1,4 +1,4 @@
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type FlowNodeKind = "root" | "screen" | "step" | "end";

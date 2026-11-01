@@ -1,5 +1,5 @@
 import type { Decision } from "@parfocal/tokens";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type GalleryTileState = "to-check" | "current" | "done";

@@ -2,7 +2,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { type DecisionSplit, ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type ReviewMode = "guided" | "full" | "adjudicate";

@@ -1,4 +1,4 @@
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 const presets = [1.25, 2.5, 5, 10, 20, 40] as const;

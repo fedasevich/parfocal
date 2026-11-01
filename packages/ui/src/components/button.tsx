@@ -1,6 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "cn";
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-ctl border font-medium leading-none whitespace-nowrap transition-colors outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=focus]:outline-2 data-[state=focus]:outline-offset-2 data-[state=focus]:outline-accent active:not-aria-[haspopup]:translate-y-px data-[state=pressed]:translate-y-px disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "border-transparent bg-transparent text-fg-dim hover:not-disabled:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:not-disabled:text-fg data-[state=hover]:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] data-[state=hover]:text-fg aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] aria-expanded:text-fg disabled:opacity-45",
         selected: "border-accent bg-accent-soft text-fg [&_svg]:text-accent",
         destructive:
-          "border-transparent bg-bad/15 text-bad hover:not-disabled:bg-bad/25 disabled:opacity-45",
+          "border-line-strong bg-btn-bg text-bad hover:not-disabled:border-bad disabled:opacity-45",
         link: "h-auto border-transparent bg-transparent px-0 text-accent underline-offset-4 hover:underline",
       },
       size: {
@@ -48,7 +48,7 @@ const buttonVariants = cva(
 
 type ButtonProps = ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & {
-    state?: "hover" | "pressed" | "focus";
+    state?: "hover" | "pressed" | "focus" | undefined;
   };
 
 function Button({ className, variant, size, block, state, ...props }: ButtonProps) {

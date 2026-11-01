@@ -3,7 +3,7 @@ import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
 import { CategoryTag } from "@parfocal/ui/components/tag";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 function Brand({ className }: { className?: string }) {
@@ -79,11 +79,11 @@ function TopBar({
       </span>
       <button
         type="button"
-        aria-label="Account menu"
         aria-haspopup="menu"
         className="cursor-pointer rounded-full border-0 bg-transparent p-0"
       >
         <PersonAvatar person={user} size={28} presence={presence} />
+        <span className="sr-only">Account menu</span>
       </button>
     </header>
   );

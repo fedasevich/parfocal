@@ -3,7 +3,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag, type StatusTone } from "@parfocal/ui/components/tag";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useState } from "react";
 

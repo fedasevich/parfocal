@@ -1,7 +1,7 @@
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 function InspectorCard({ className, ...props }: React.ComponentProps<"div">) {

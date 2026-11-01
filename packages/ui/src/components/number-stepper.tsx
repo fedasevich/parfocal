@@ -1,6 +1,6 @@
 import { NumberField as NumberFieldPrimitive } from "@base-ui/react/number-field";
 import { Icon } from "@parfocal/ui/components/icon";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 
 type NumberStepperProps = NumberFieldPrimitive.Root.Props & {
   label: string;

@@ -104,8 +104,15 @@ export function renameClasses(source: string): string {
   return output;
 }
 
+export const kitCnImport = 'import { cn } from "@parfocal/ui/lib/utils";';
+
+export function pointCnAtKit(filename: string, source: string): string {
+  if (filename.endsWith(join("lib", "utils.ts"))) return source;
+  return source.replace(/import \{ cn \} from "cn";/g, kitCnImport);
+}
+
 export function adoptSource(filename: string, source: string): string {
-  return renameClasses(stripComments(filename, source));
+  return pointCnAtKit(filename, renameClasses(stripComments(filename, source)));
 }
 
 export function sourceFiles(directories: readonly string[]): string[] {

@@ -1,7 +1,7 @@
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
 import { NumberStepper } from "@parfocal/ui/components/number-stepper";
 import { StackedBar } from "@parfocal/ui/components/progress-meter";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 const fixedRules: Record<Exclude<DecisionStyle, "certainty">, string> = {

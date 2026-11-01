@@ -2,7 +2,7 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Button } from "@parfocal/ui/components/button";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 

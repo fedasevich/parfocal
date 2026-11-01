@@ -17,7 +17,7 @@ import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/se
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
 import { FoldingZone, Zone, Zones } from "@parfocal/ui/components/zone";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type Lock = { value: string; reason: string };
@@ -194,11 +194,7 @@ function PresetMenu({ current, presets, changed = false, lockedCount = 0 }: Pres
     <div className="grid gap-1.5">
       <span className="text-caption font-semibold text-fg-dim">Preset</span>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button className="w-full justify-between font-medium" aria-label="Display preset" />
-          }
-        >
+        <DropdownMenuTrigger render={<Button className="w-full justify-between font-medium" />}>
           <span className="min-w-0 truncate">
             {current}
             {lockedCount ? (

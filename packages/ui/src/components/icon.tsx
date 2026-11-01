@@ -1,5 +1,5 @@
 import { type IconName, iconNames, iconSet } from "@parfocal/ui/components/icon-set";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type { SVGProps } from "react";
 
 const iconSizes = { xs: 12, sm: 16, md: 20, lg: 24, xl: 40 } as const;

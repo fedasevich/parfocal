@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@parfocal/ui/components/table";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type Deposit = {

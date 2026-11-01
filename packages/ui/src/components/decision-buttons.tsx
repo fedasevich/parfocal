@@ -1,6 +1,6 @@
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type DecisionStyle = "certainty" | "agree" | "yesno" | "blind";

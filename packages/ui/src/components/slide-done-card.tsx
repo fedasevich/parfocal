@@ -5,7 +5,7 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { FilterChip } from "@parfocal/ui/components/tag";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type OpinionQuestion = {

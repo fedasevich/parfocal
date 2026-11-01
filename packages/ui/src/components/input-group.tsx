@@ -3,8 +3,8 @@
 import { Button } from "@parfocal/ui/components/button";
 import { Input } from "@parfocal/ui/components/input";
 import { Textarea } from "@parfocal/ui/components/textarea";
+import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "cn";
 import type * as React from "react";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {

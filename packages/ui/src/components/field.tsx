@@ -2,8 +2,8 @@
 
 import { Label } from "@parfocal/ui/components/label";
 import { Separator } from "@parfocal/ui/components/separator";
+import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "cn";
 import { useMemo } from "react";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {

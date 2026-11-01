@@ -1,5 +1,5 @@
 import { Icon } from "@parfocal/ui/components/icon";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useId } from "react";
 

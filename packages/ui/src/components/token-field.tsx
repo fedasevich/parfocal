@@ -1,6 +1,6 @@
 import { Icon } from "@parfocal/ui/components/icon";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
-import { cn } from "cn";
+import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useId, useState } from "react";
 
