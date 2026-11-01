@@ -305,6 +305,6 @@ export const boxes: MapBox[] = [
   },
 ];
 
-export const builtScreens: ReadonlySet<MapScreen> = new Set<MapScreen>(["team"]);
+export const builtScreens: ReadonlySet<MapScreen> = new Set<MapScreen>(["team", "task"]);
 
 export const isBuilt = (box: MapBox) => builtScreens.has(box.screen);
