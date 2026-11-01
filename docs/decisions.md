@@ -23,7 +23,7 @@ To take every recommendation at once, write "all recommended" here:
 | RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
 | AIP-013 (result chunk store) | Versioned cell chunks and a summary index written gzip to object storage under the result set's prefix, and the API reads chunks from there | Ticked, decisions 12a to 12c |
 | RSET-011 (cells from imported files) | Imported files write their cells into chunks, inherit cell numbers from older sets and carry each cell's region, and files of only cells import | Ticked, decisions 13a to 13d |
-| RSET-012 (large result files in bounded memory) | A 900 MB GeoJSON of 1.6 million cells imports through the real worker in 824 to 1,025 MiB and 42 to 45 s, claimed once, by reading the file in batches into numpy columns | Built, waits for a green CI run on `main`, decisions 14a to 14c |
+| RSET-012 (large result files in bounded memory) | A 900 MB GeoJSON of 1.6 million cells imports through the real worker in 824 to 1,025 MiB and 42 to 45 s, claimed once, by reading the file in batches into numpy columns | Ticked, decisions 14a to 14c |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
