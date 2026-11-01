@@ -8,6 +8,7 @@ export default defineConfig({
       client: "react-query",
       httpClient: "fetch",
       mode: "single",
+      mock: { generators: [{ type: "msw" }] },
       tsconfig: { compilerOptions: { allowImportingTsExtensions: true } },
       override: {
         mutator: { path: "./src/fetcher.ts", name: "apiFetch" },

@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.node.json",
     "test": "node --test \"test/**/*.test.ts\"",
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "dev:fake": "PARFOCAL_PUBLIC_APP_ENV=dev PARFOCAL_PUBLIC_FAKE_API=all vite",
+    "test:browser": "playwright test"
   },
   "imports": {
     "#*": "./src/*"
@@ -23,6 +25,8 @@
   },
   "devDependencies": {
     "@parfocal/typescript-config": "workspace:*",
-    "vite": "8.3.3"
+    "vite": "8.3.3",
+    "msw": "3.0.3",
+    "@playwright/test": "1.64.0"
   }
 }

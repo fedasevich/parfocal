@@ -1,4 +1,7 @@
 {
   "extends": "@parfocal/typescript-config/node.json",
-  "include": ["vite.config.ts", "vite"]
+  "include": ["vite.config.ts", "vite", "e2e", "playwright.config.ts"],
+  "compilerOptions": {
+    "lib": ["es2024", "dom", "dom.iterable"]
+  }
 }

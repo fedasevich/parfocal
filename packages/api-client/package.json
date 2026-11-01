@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fake": "./src/fake/index.ts",
+    "./fake/browser": "./src/fake/browser.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
     "test": "node --test \"test/**/*.test.ts\"",
-    "generate": "orval --config orval.config.ts && biome check --write src/generated"
+    "generate": "orval --config orval.config.ts && node scripts/add-import-extensions.ts src/generated/api.msw.ts && biome check --write src/generated"
   },
   "imports": {
     "#*": "./src/*"
@@ -21,7 +23,9 @@
     "react": "19.3.0"
   },
   "dependencies": {
-    "@tanstack/react-query": "5.104.1"
+    "@faker-js/faker": "10.6.0",
+    "@tanstack/react-query": "5.104.1",
+    "msw": "3.0.3"
   },
   "peerDependencies": {
     "react": "^19.3.0"

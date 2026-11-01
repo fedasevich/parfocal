@@ -29,3 +29,15 @@ A Base UI slider labels its thumb inputs, not its root, so `aria-label` on `Slid
 ## Storybook runs React Compiler
 
 `packages/ui/vite.config.ts` uses `@vitejs/plugin-react` with `@rolldown/plugin-babel` and `reactCompilerPreset()`, as [ADR 0016](../adr/0016-react-19-spa-compiler-strictmode.md) (React 19 SPA with React Compiler) sets for the app, and Storybook picks that config up. plugin-react 6.1.2 accepts `@rolldown/plugin-babel` only up to 0.2.x, so it is pinned at 0.2.4 although 0.3.0 is out. `typescript.reactDocgen` is off because the catalogue has no docs pages, and its `react-docgen-typescript` option would need the TypeScript compiler API, which TypeScript 7 does not ship. Source: DS-000.
+
+## Orval's MSW sidecar needs its import extensions added
+
+`packages/api-client/orval.config.ts` turns on Orval's MSW generator, which writes `src/generated/api.msw.ts` next to `api.ts` in `single` mode. The sidecar imports `./api` without an extension even though the config sets `allowImportingTsExtensions`, which does not resolve under `nodenext`. Orval 8.46.0 does the same, and `split` mode leaves the schema imports bare too. `pnpm --filter @parfocal/api-client generate` therefore runs `scripts/add-import-extensions.ts` on the sidecar before Biome, and `test/generate.test.ts` fails if the committed file lacks the extension. Use the MSW generator alone, because `mock: true` also writes `api.faker.ts`, whose factories duplicate the ones in the MSW file. Source: [ADR 0135](../adr/0135-fake-data-through-the-api-client-with-msw.md) (fake data through the API client).
+
+## MSW 3 keeps the root imports Orval generates
+
+The MSW 2 to 3 migration guide moves `http`, `HttpResponse` and `delay` to `msw/http` and `msw/utils/*`, but the 3.0.3 root entry still exports them, so Orval's `from "msw"` imports work. What did change is `worker.start({ onUnhandledFrame })` and `server.listen({ onUnhandledFrame })`, which replace `onUnhandledRequest`. In Node tests the generated client's relative URLs need a base, so `packages/api-client/test/fake.test.ts` wraps the patched `fetch` with `new URL(input, "http://app.test")` after `server.listen()`. Source: PROTO-000 (research check for the fake data layer).
+
+## The MSW worker is served only by the dev server
+
+`apps/web/vite.config.ts` uses `msw({ mode: "worker-only" })` from `msw/vite` to serve `/mockServiceWorker.js`, with `apply: "serve"`. Without `apply: "serve"`, worker-only mode emits the worker into every build, the production one included. The fake layer is imported only inside `if (import.meta.env.DEV && config.fakeApi !== "off")`, so a production build drops it. Note that `vite build --mode development` still sets `DEV` to false unless `NODE_ENV=development` is set too. The flag is `PARFOCAL_PUBLIC_FAKE_API`, because the public env plugin fails the build for any other prefix, and config refuses anything but `off` in staging and production. `apps/web/test/bundle.test.ts` builds staging and production with the flag set and checks the output for `mockServiceWorker`, `[MSW]` and a generated handler path. Source: PROTO-000 (research check for the fake data layer).
