@@ -1,10 +1,13 @@
-import { useListMyReviewTasks } from "@parfocal/api-client";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { okData, Placeholder, QueryState } from "../screens/placeholder.tsx";
+import { MyWorkScreen } from "../screens/my-work/my-work-screen.tsx";
+import { tabOf } from "../screens/my-work/scenes.ts";
 
 const myWorkSearch = z.object({
-  tab: z.enum(["review", "assigned", "all"]).default("review"),
+  tab: z.enum(["review", "assigned", "all"]).optional(),
+  sel: z.string().optional(),
+  q: z.string().optional(),
+  scene: z.enum(["review", "preview", "anna", "assigned", "all", "allpreview"]).optional(),
 });
 
 export const Route = createFileRoute("/my-work")({
@@ -14,22 +17,21 @@ export const Route = createFileRoute("/my-work")({
 
 function MyWork() {
   const search = Route.useSearch();
-  const tasks = useListMyReviewTasks();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="My work"
-      builtBy="PROTO-003 (Home, My work and the shell)"
-      route={{ search }}
-    >
-      <QueryState label="your review tasks" isPending={tasks.isPending} error={tasks.error}>
-        <ul className="flex flex-col gap-1 text-fg text-sm">
-          {okData(tasks.data)?.map((task) => (
-            <li key={task.id}>
-              {task.code} · {task.name} · {task.slides_submitted} of {task.slides_assigned}
-            </li>
-          ))}
-        </ul>
-      </QueryState>
-    </Placeholder>
+    <MyWorkScreen
+      state={{
+        tab: tabOf(search.tab, search.scene),
+        sel: search.sel,
+        q: search.q ?? "",
+        scene: search.scene,
+      }}
+      change={(next) =>
+        void navigate({
+          replace: true,
+          search: (previous) => ({ ...previous, ...next }),
+        })
+      }
+    />
   );
 }

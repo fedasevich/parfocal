@@ -40,13 +40,51 @@ function PrototypeIndex() {
         <Entry note="Launchpad">
           <Link to="/">Home</Link>
         </Entry>
-        {(["review", "assigned", "all"] as const).map((tab) => (
-          <Entry key={tab} note={`My work, ${tab} tab`}>
-            <Link to="/my-work" search={{ tab }}>
-              My work · {tab}
-            </Link>
-          </Entry>
-        ))}
+        <Entry note="Lenka's first week, with the sample project and the checklist">
+          <Link to="/" search={{ scene: "new" }}>
+            Home · first week
+          </Link>
+        </Entry>
+        <Entry note="Continue reviewing, your tasks, asks and mentions">
+          <Link to="/my-work" search={{ tab: "review" }}>
+            My work · To review
+          </Link>
+        </Entry>
+        <Entry note="RT-14 opened in the preview on the right">
+          <Link to="/my-work" search={{ scene: "preview" }}>
+            My work · a task previewed
+          </Link>
+        </Entry>
+        <Entry note="Anna Kopecká with three objects to adjudicate on RT-14">
+          <Link to="/my-work" search={{ scene: "anna" }}>
+            My work · Anna as adjudicator
+          </Link>
+        </Entry>
+        <Entry note="Daniel Hruška's tasks with their reviewers">
+          <Link to="/my-work" search={{ tab: "assigned" }}>
+            My work · Assigned by me
+          </Link>
+        </Entry>
+        <Entry note="Every slide across projects">
+          <Link to="/my-work" search={{ tab: "all" }}>
+            My work · All slides
+          </Link>
+        </Entry>
+        <Entry note="A1 opened in the preview on the right">
+          <Link to="/my-work" search={{ scene: "allpreview" }}>
+            My work · a slide previewed
+          </Link>
+        </Entry>
+        <Entry note="The bell open over My work">
+          <Link to="/my-work" search={{ tab: "all", open: "notifications" }}>
+            Notifications
+          </Link>
+        </Entry>
+        <Entry note="⌘K with a search typed">
+          <Link to="/my-work" search={{ open: "palette", find: "meas" }}>
+            Command palette
+          </Link>
+        </Entry>
         {project && (
           <Entry note={`${project.code} with its slides tab`}>
             <Link to="/projects/$projectId" params={{ projectId: project.id }}>

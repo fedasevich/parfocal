@@ -3,6 +3,7 @@ import {
   getGetNotificationCountsMockHandler,
   getGetReviewOrderMockHandler,
   getGetReviewTaskMockHandler,
+  getGetReviewTaskStatesMockHandler,
   getListAnnouncementsMockHandler,
   getListMySlidesMockHandler,
   getListNotificationsMockHandler,
@@ -421,6 +422,14 @@ export function workHandlers(): RequestHandler[] {
     getGetReviewTaskMockHandler(({ params }) => {
       const task = reviewTasks.find((candidate) => candidate.id === params["taskId"]);
       return toReviewTaskDetail(task ?? taskByCode("RT-14"));
+    }),
+    getGetReviewTaskStatesMockHandler(({ params }) => {
+      const task = reviewTasks.find((candidate) => candidate.id === params["taskId"]);
+      return {
+        task_id: String(params["taskId"]),
+        signed_off_at: task?.signedOn ? `${task.signedOn}T16:00:00+02:00` : null,
+        slides: [],
+      };
     }),
     getListProjectResultSetsMockHandler(({ params }) =>
       projectResultSets(String(params["projectId"])),

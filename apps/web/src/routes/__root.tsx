@@ -1,12 +1,31 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { CommandPalette } from "../shell/command-palette.tsx";
+import { GlobalShell } from "../shell/global-shell.tsx";
+import { overlaySearch } from "../shell/overlays.ts";
+import { shellRouteIds } from "../shell/shell-routes.ts";
 
 export const Route = createRootRoute({
+  validateSearch: overlaySearch,
   component: Root,
   notFoundComponent: NotFound,
 });
 
 function Root() {
-  return <Outlet />;
+  const inShell = useMatches({
+    select: (matches) => matches.some((match) => shellRouteIds.has(match.routeId)),
+  });
+  return (
+    <>
+      {inShell ? (
+        <GlobalShell>
+          <Outlet />
+        </GlobalShell>
+      ) : (
+        <Outlet />
+      )}
+      <CommandPalette />
+    </>
+  );
 }
 
 function NotFound() {

@@ -14,9 +14,11 @@ export const clients = selectWebClients(config, {});
 
 const queryClient = createQueryClient();
 
+const router = createAppRouter();
+
 if (import.meta.env.DEV && config.fakeApi !== "off") {
   const { startFakeApi } = await import("./fake-api/start.tsx");
-  await startFakeApi(config.fakeApi, queryClient);
+  await startFakeApi(config.fakeApi, queryClient, router);
 }
 
 const container = document.getElementById("root");
@@ -25,7 +27,7 @@ if (container === null) throw new Error("index.html has no #root element");
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={createAppRouter()} />
+      <RouterProvider router={router} />
     </QueryClientProvider>
   </StrictMode>,
 );

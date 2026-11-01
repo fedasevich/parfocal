@@ -9,6 +9,7 @@ import {
   getNotificationCounts,
   getReviewOrder,
   getReviewTask,
+  getReviewTaskStates,
   listMyAdjudications,
   listMyCosignRequests,
   listMyReviewTasks,
@@ -192,6 +193,7 @@ test("a task's detail and its project's result sets come from the scenario", asy
   assert.equal(detail.split, "even");
   assert.equal(detail.slide_count, 40);
   assert.equal(detail.blinded, true);
+  assert.equal(body(await getReviewTaskStates(rt11.id)).signed_off_at?.slice(0, 10), "2026-10-14");
   const sets = body(await listProjectResultSets(detail.project_id));
   const used = sets.find((set) => set.id === detail.slides[0]?.result_set_id);
   assert.equal(used?.name, "PathoSAM + HoVer-NeXt");

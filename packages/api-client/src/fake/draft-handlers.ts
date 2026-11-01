@@ -91,6 +91,7 @@ export const toMyCosignRequests = (): CosignRequest[] =>
         from_user_id: people[item.from].id,
         case_id: cases.find((candidate) => candidate.label === item.caseLabel)?.id ?? null,
         case_label: item.caseLabel,
+        slide_id: slideByIndex(item.slide).id,
         project: { id: project.id, code: project.code, name: project.name },
         sent_at: item.sentAt,
       });

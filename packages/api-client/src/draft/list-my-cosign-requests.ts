@@ -8,6 +8,7 @@ export const cosignRequestSchema = z.object({
   from_user_id: z.string(),
   case_id: z.string().nullable(),
   case_label: z.string(),
+  slide_id: z.string(),
   project: z.object({ id: z.string(), code: z.string(), name: z.string() }),
   sent_at: z.iso.datetime({ offset: true }),
 });

@@ -666,6 +666,7 @@ export const cosignRequests = [
     from: "TB" as PersonKey,
     to: "LM" as PersonKey,
     caseLabel: "S26-04812",
+    slide: 1,
     project: "P03" as ProjectCode,
     sentAt: "2026-10-15T11:20:00+02:00",
   },
