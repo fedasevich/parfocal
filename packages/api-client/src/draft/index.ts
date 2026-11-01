@@ -77,6 +77,30 @@ export {
   useGetSlideAgreement,
 } from "./get-slide-agreement.ts";
 export {
+  type GetSlideAiProgressQueryError,
+  type GetSlideAiProgressQueryResult,
+  getGetSlideAiProgressQueryKey,
+  getGetSlideAiProgressQueryOptions,
+  getGetSlideAiProgressUrl,
+  getSlideAiProgress,
+  type getSlideAiProgressResponse,
+  type SlideAiProgress,
+  slideAiProgressSchema,
+  useGetSlideAiProgress,
+} from "./get-slide-ai-progress.ts";
+export {
+  type GetSlideResultStatsQueryError,
+  type GetSlideResultStatsQueryResult,
+  getGetSlideResultStatsQueryKey,
+  getGetSlideResultStatsQueryOptions,
+  getGetSlideResultStatsUrl,
+  getSlideResultStats,
+  type getSlideResultStatsResponse,
+  type SlideResultStats,
+  slideResultStatsSchema,
+  useGetSlideResultStats,
+} from "./get-slide-result-stats.ts";
+export {
   type GetTaskDisplayQueryError,
   type GetTaskDisplayQueryResult,
   getGetTaskDisplayQueryKey,

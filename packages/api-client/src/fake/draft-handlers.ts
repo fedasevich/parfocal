@@ -25,6 +25,7 @@ import { settingsDraftOperations } from "./settings-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
+import { viewerDraftOperations } from "./viewer-handlers.ts";
 
 export {
   getGetAdminOverviewMockHandler,
@@ -87,6 +88,10 @@ export {
   getReassignSlidesMockHandler,
   getUndoReassignmentMockHandler,
 } from "./team-handlers.ts";
+export {
+  getGetSlideAiProgressMockHandler,
+  getGetSlideResultStatsMockHandler,
+} from "./viewer-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
@@ -217,6 +222,7 @@ export const draftOperations: DraftOperation[] = [
   ...clinicalDraftOperations,
   ...settingsDraftOperations,
   ...connectModelDraftOperations,
+  ...viewerDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

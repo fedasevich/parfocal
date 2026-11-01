@@ -60,6 +60,7 @@ export * as scenarioReview from "./scenario-review.ts";
 export * as scenarioSettings from "./scenario-settings.ts";
 export * as scenarioTask from "./scenario-task.ts";
 export * as scenarioTeam from "./scenario-team.ts";
+export * as scenarioViewer from "./scenario-viewer.ts";
 export {
   resetSettingsActions,
   toPreferences,
@@ -74,4 +75,6 @@ export {
   setFakeTeamScene,
 } from "./team-scene.ts";
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
+export { toSlideAiProgress, toSlideResultStats } from "./viewer-handlers.ts";
+export { type FakeViewerScene, fakeViewerScene, setFakeViewerScene } from "./viewer-scene.ts";
 export { searchScenario, tasksAssignedBy, toSlideRow } from "./work-handlers.ts";
