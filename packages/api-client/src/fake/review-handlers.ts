@@ -5,7 +5,6 @@ import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.t
 import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
-  getGetOpinionFormMockHandler,
   getGetOpinionMockHandler,
   getGetSlideNeighboursMockHandler,
   getListProjectClassesMockHandler,
@@ -15,7 +14,6 @@ import {
 import type {
   Neighbours,
   Opinion,
-  OpinionForm,
   ProjectClass,
   TaskStates,
   VerdictDraft,
@@ -124,13 +122,6 @@ export const toOpinion = (): Opinion => ({
   answers: fakeView().viewer === "LM" ? lenkaOpinion : {},
   draft: true,
   updated_at: "2026-10-15T10:52:00+02:00",
-});
-
-export const toOpinionForm = (projectId: string): OpinionForm => ({
-  project_id: projectId,
-  version: 1,
-  questions: opinionQuestions,
-  created_at: "2026-09-02T09:00:00Z",
 });
 
 export const toProjectClasses = (projectId: string): ProjectClass[] =>
@@ -246,7 +237,6 @@ export function reviewHandlers(): RequestHandler[] {
       params.taskId === rt16.id ? HttpResponse.json(toReviewTaskDetail(rt16)) : undefined,
     ),
     getGetOpinionMockHandler(() => toOpinion()),
-    getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params["projectId"]))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
     getSaveVerdictMockHandler(async ({ request, params }) => {
