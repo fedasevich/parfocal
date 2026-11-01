@@ -2366,7 +2366,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures and compare pixels.
   Refs docs 10, 11, 15.
 
-- [ ] AIP-013 · Result chunk store
+- [x] AIP-013 · Result chunk store
   Typed-array chunks per job tile in object storage (offsets, level-0 vertices, class, scores, type probabilities, alternative types, flags), with a summary index.
   Done when unit tests round-trip chunks and the schema is versioned.
   Depends on STACK-021.
