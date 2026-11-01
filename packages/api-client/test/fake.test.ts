@@ -68,7 +68,7 @@ test("seeded operations tell the scenario's story ahead of generated fake data",
   const tasks = body(await listMyReviewTasks());
   assert.deepEqual(
     tasks.map((task) => task.code),
-    ["RT-14", "RT-11"],
+    ["RT-14", "RT-11", "RT-09"],
   );
 });
 

@@ -35,6 +35,14 @@ export type ScenarioProject = {
   owner: PersonKey;
   members: PersonKey[];
   createdAt: string;
+  counts: ProjectCounts;
+};
+
+export type ProjectCounts = {
+  cases: number;
+  slides: number;
+  resultSets: number;
+  reviewedPercent: number;
 };
 
 export type ScenarioCase = {
@@ -52,6 +60,9 @@ export type ScenarioSlide = {
   label: string;
   stain: string;
   state: "ready" | "processing";
+  file: string;
+  sets: ResultSetKey[];
+  remote?: string;
 };
 
 export type ResultSetKey = "cam" | "sam" | "rev";
@@ -81,10 +92,15 @@ export type ScenarioReviewTask = {
   dueOn: string;
   sentOn: string;
   slides: number;
+  split: "all" | "even";
   progress: Partial<Record<PersonKey, number>>;
   blinded: boolean;
   status: "review" | "assigned" | "signed";
   signedOn?: string;
+  ownerView?: {
+    progress: Partial<Record<PersonKey, number>>;
+    openDisagreements: number;
+  };
 };
 
 export type ScenarioJob = {
@@ -166,6 +182,7 @@ export const projects: ScenarioProject[] = [
     owner: "DH",
     members: ["DH", "LM", "SM", "AK"],
     createdAt: "2026-09-02T09:00:00Z",
+    counts: { cases: 24, slides: 61, resultSets: 3, reviewedPercent: 62 },
   },
   {
     code: "P03",
@@ -179,6 +196,7 @@ export const projects: ScenarioProject[] = [
     owner: "LM",
     members: ["LM", "SM", "TB", "JR"],
     createdAt: "2026-01-12T09:00:00Z",
+    counts: { cases: 12, slides: 31, resultSets: 1, reviewedPercent: 40 },
   },
   {
     code: "P09",
@@ -192,6 +210,7 @@ export const projects: ScenarioProject[] = [
     owner: "DH",
     members: ["DH", "AK", "SM", "LM"],
     createdAt: "2026-09-21T09:00:00Z",
+    counts: { cases: 0, slides: 40, resultSets: 3, reviewedPercent: 18 },
   },
   {
     code: "P11",
@@ -205,6 +224,7 @@ export const projects: ScenarioProject[] = [
     owner: "JR",
     members: ["JR", "DH"],
     createdAt: "2026-10-05T09:00:00Z",
+    counts: { cases: 8, slides: 22, resultSets: 2, reviewedPercent: 0 },
   },
 ];
 
@@ -233,15 +253,34 @@ const slide = (
   caseLabel: string | null,
   label: string,
   stain: string,
-  state: ScenarioSlide["state"] = "ready",
-): ScenarioSlide => ({ id: uuid(5, index), project, caseLabel, label, stain, state });
+  more: Partial<Pick<ScenarioSlide, "state" | "file" | "sets" | "remote">> = {},
+): ScenarioSlide => ({
+  id: uuid(5, index),
+  project,
+  caseLabel,
+  label,
+  stain,
+  state: "ready",
+  file: `${caseLabel ? `${caseLabel}_${label}_${stain.replace("&", "")}.svs` : `${label}.tif`}`,
+  sets: ["cam"],
+  ...more,
+});
 
 export const slides: ScenarioSlide[] = [
-  slide(1, "P07", "S26-04812", "A1", "H&E"),
+  slide(1, "P07", "S26-04812", "A1", "H&E", { sets: ["cam", "sam", "rev"] }),
   slide(2, "P07", "S26-04812", "A2", "H&E"),
-  slide(3, "P07", "S26-04812", "A3", "CK", "processing"),
+  slide(3, "P07", "S26-04812", "A3", "CK", {
+    state: "processing",
+    file: "S26-04812_A3_CK.ndpi",
+    sets: [],
+  }),
   slide(4, "P07", null, "tumor_031", "H&E"),
-  slide(5, "P07", null, "tumor_044", "H&E"),
+  slide(5, "P07", null, "tumor_044", "H&E", { sets: ["sam"] }),
+  slide(14, "P07", null, "tumor_052", "H&E", { sets: [] }),
+  slide(15, "P07", null, "tumor_090", "H&E", {
+    file: "s3://fnvltava-scans/…/tumor_090.tif",
+    remote: "S3",
+  }),
   slide(6, "P07", "S26-04769", "A1", "H&E"),
   slide(7, "P07", "S26-04777", "A1", "H&E"),
   slide(8, "P07", "S26-04740", "A1", "H&E"),
@@ -304,9 +343,11 @@ export const reviewTasks: ScenarioReviewTask[] = [
     dueOn: "2026-10-23",
     sentOn: "2026-10-09",
     slides: 12,
+    split: "all",
     progress: { LM: 7, SM: 4 },
     blinded: true,
     status: "review",
+    ownerView: { progress: { LM: 12, SM: 12 }, openDisagreements: 7 },
   },
   {
     code: "RT-15",
@@ -320,6 +361,7 @@ export const reviewTasks: ScenarioReviewTask[] = [
     dueOn: "2026-10-27",
     sentOn: "2026-10-14",
     slides: 12,
+    split: "all",
     progress: { AK: 0 },
     blinded: true,
     status: "assigned",
@@ -336,10 +378,29 @@ export const reviewTasks: ScenarioReviewTask[] = [
     dueOn: "2026-10-19",
     sentOn: "2026-10-02",
     slides: 40,
+    split: "even",
     progress: { AK: 14, SM: 13, LM: 13 },
     blinded: true,
     status: "signed",
     signedOn: "2026-10-14",
+  },
+  {
+    code: "RT-09",
+    id: uuid(7, 9),
+    name: "Round 1 · CAMELYON v1.0",
+    project: "P07",
+    resultSet: "cam",
+    reviewers: ["LM", "SM"],
+    scope: "all-regions",
+    scopeText: "Tumor regions: all",
+    dueOn: "2026-10-09",
+    sentOn: "2026-09-25",
+    slides: 12,
+    split: "all",
+    progress: { LM: 12, SM: 12 },
+    blinded: true,
+    status: "signed",
+    signedOn: "2026-10-09",
   },
 ];
 
@@ -417,3 +478,215 @@ export function slideOf(project: ProjectCode, caseLabel: string | null, label: s
   if (found === undefined) throw new Error(`no scenario slide ${caseLabel ?? ""}/${label}`);
   return found;
 }
+
+export const scenarioNow = "2026-10-15T14:30:00+02:00";
+
+export type ReviewState = "assigned" | "in-review" | "submitted";
+
+export const slideReviews: { task: string; slide: number; by: PersonKey; state: ReviewState }[] = [
+  { task: "RT-14", slide: 1, by: "LM", state: "in-review" },
+  { task: "RT-14", slide: 1, by: "SM", state: "submitted" },
+  { task: "RT-14", slide: 2, by: "LM", state: "assigned" },
+  { task: "RT-14", slide: 2, by: "SM", state: "assigned" },
+  { task: "RT-15", slide: 4, by: "AK", state: "submitted" },
+  { task: "RT-15", slide: 5, by: "AK", state: "in-review" },
+];
+
+export const slideByIndex = (index: number) => {
+  const found = slides.find((candidate) => candidate.id === uuid(5, index));
+  if (found === undefined) throw new Error(`no scenario slide ${index}`);
+  return found;
+};
+
+export const myWorkSlideIds = [1, 2, 3, 4, 5, 14, 15].map((index) => uuid(5, index));
+
+export const week = {
+  since: "2026-10-12",
+  objectsChecked: 147,
+  agreed: 119,
+  openDisagreements: 3,
+};
+
+export type ScenarioAnnouncement = {
+  id: string;
+  kind: "model" | "slowdown" | "change";
+  text: string;
+  createdAt: string;
+  endsAt: string | null;
+};
+
+export const announcements: ScenarioAnnouncement[] = [
+  {
+    id: uuid(11, 1),
+    kind: "model",
+    text: "CellViT is now one of Parfocal's models",
+    createdAt: "2026-10-14T10:00:00+02:00",
+    endsAt: null,
+  },
+  {
+    id: uuid(11, 2),
+    kind: "slowdown",
+    text: "Lab HoVer-Net fork is slow until 13:00, runs queue",
+    createdAt: "2026-10-15T08:30:00+02:00",
+    endsAt: "2026-10-15T13:00:00+02:00",
+  },
+  {
+    id: uuid(11, 3),
+    kind: "change",
+    text: "New: hold Z in any slide for a whole-slide peek",
+    createdAt: "2026-10-13T09:00:00+02:00",
+    endsAt: null,
+  },
+];
+
+export type ScenarioNotification = {
+  id: string;
+  kind:
+    | "mention"
+    | "reply"
+    | "model-run-finished"
+    | "model-run-paused"
+    | "upload-done"
+    | "task-signed-off"
+    | "task-assigned";
+  actor: PersonKey | null;
+  title: string;
+  detail: string;
+  quote?: string;
+  objectId?: string;
+  slideLabel?: string;
+  action: string;
+  createdAt: string;
+  read: boolean;
+};
+
+export const notifications: ScenarioNotification[] = [
+  {
+    id: uuid(12, 1),
+    kind: "mention",
+    actor: "DH",
+    title: "Daniel Hruška mentioned you",
+    detail: "asked about T2 on A1: does the boundary run past the fold?",
+    quote: "Does the boundary run past the fold?",
+    objectId: "T2",
+    slideLabel: "A1",
+    action: "Open the thread",
+    createdAt: "2026-10-15T14:20:00+02:00",
+    read: false,
+  },
+  {
+    id: uuid(12, 2),
+    kind: "reply",
+    actor: "SM",
+    title: "Simona Marková replied",
+    detail: "replied on T1·C145: agree, histiocyte",
+    quote: "Agree, histiocyte",
+    objectId: "T1·C145",
+    slideLabel: "A1",
+    action: "Open the thread",
+    createdAt: "2026-10-15T13:30:00+02:00",
+    read: false,
+  },
+  {
+    id: uuid(12, 3),
+    kind: "model-run-finished",
+    actor: null,
+    title: "PathoSAM + HoVer-NeXt finished",
+    detail: "tumor_052 and tumor_060 in P07 · a new result set on each",
+    action: "See the run",
+    createdAt: "2026-10-15T09:12:00+02:00",
+    read: false,
+  },
+  {
+    id: uuid(12, 4),
+    kind: "model-run-paused",
+    actor: null,
+    title: "CAMELYON run paused at 38%",
+    detail: "tumor_044 · the lab server is busy",
+    action: "Details",
+    createdAt: "2026-10-15T08:41:00+02:00",
+    read: false,
+  },
+  {
+    id: uuid(12, 5),
+    kind: "upload-done",
+    actor: null,
+    title: "Upload into P07 done",
+    detail: "6 slides and 4 result sets · 2 slides without results",
+    action: "See the steps",
+    createdAt: "2026-10-15T08:20:00+02:00",
+    read: false,
+  },
+  {
+    id: uuid(12, 6),
+    kind: "task-signed-off",
+    actor: "DH",
+    title: "RT-09 signed off",
+    detail: "Evaluation v1 by Daniel Hruška · 660 objects",
+    action: "Open the report",
+    createdAt: "2026-10-14T17:00:00+02:00",
+    read: true,
+  },
+  {
+    id: uuid(12, 7),
+    kind: "task-assigned",
+    actor: "DH",
+    title: "Daniel Hruška gave you a review task",
+    detail: "RT-14 · Round 2 · CAMELYON v1.0 · 12 slides · due Fri 23 Oct",
+    action: "Continue",
+    createdAt: "2026-10-09T10:00:00+02:00",
+    read: true,
+  },
+];
+
+export const adjudications = [
+  {
+    id: uuid(13, 1),
+    task: "RT-14",
+    adjudicator: "AK" as PersonKey,
+    askedBy: "DH" as PersonKey,
+    slide: 1,
+    objects: ["T4", "T5", "T1·C145"],
+    decided: 0,
+    sentAt: "2026-10-17T09:00:00+02:00",
+  },
+];
+
+export const cosignRequests = [
+  {
+    id: uuid(14, 1),
+    from: "TB" as PersonKey,
+    to: "LM" as PersonKey,
+    caseLabel: "S26-04812",
+    project: "P03" as ProjectCode,
+    sentAt: "2026-10-15T11:20:00+02:00",
+  },
+];
+
+export const checklist = [
+  { key: "confirm-email", label: "Confirm your email", done: true },
+  { key: "join-workspace", label: "Join Fakultní nemocnice Vltava", done: true },
+  { key: "open-sample", label: "Open the sample project", done: true },
+  { key: "guided-review", label: "Review one slide in guided review", done: false },
+  { key: "comment", label: "Comment on an object ID", done: false },
+  { key: "opinion", label: "Submit your first opinion form", done: false },
+] as const;
+
+export const sampleProject = {
+  id: uuid(3, 1),
+  code: "S01",
+  name: "Sample · sentinel nodes",
+  colour: 4,
+  members: ["LM"] as PersonKey[],
+  counts: { cases: 1, slides: 4, resultSets: 2, reviewedPercent: 0 },
+};
+
+export const threads = [
+  { id: uuid(15, 1), task: "RT-14", slide: 1, anchor: "T2", replies: 2, open: true },
+  { id: uuid(15, 2), task: "RT-14", slide: 1, anchor: "T1·C145", replies: 1, open: true },
+  { id: uuid(15, 3), task: "RT-14", slide: 1, anchor: "R2⁺", replies: 0, open: true },
+];
+
+export const slideDecisions = [
+  { task: "RT-14", slide: 1, total: 55, agree: 43, disagree: 3, unsure: 2 },
+];
