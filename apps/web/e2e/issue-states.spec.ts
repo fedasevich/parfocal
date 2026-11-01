@@ -11,8 +11,8 @@ test("the issue states index opens from the prototype index with every flow", as
   const index = page.getByTestId("issue-states");
   await expect(index.getByRole("region")).toHaveCount(15);
   await expect(index.locator("[data-issue-state]")).toHaveCount(45);
-  await expect(index.locator("a[data-state-button]")).toHaveCount(44);
-  await expect(index.locator("button[data-state-button][aria-disabled=true]")).toHaveCount(8);
+  await expect(index.locator("a[data-state-button]")).toHaveCount(52);
+  await expect(index.locator("button[data-state-button][aria-disabled=true]")).toHaveCount(0);
 });
 
 test("every enabled button reaches its screen in its scene and never the not found page", async ({
@@ -23,7 +23,7 @@ test("every enabled button reaches its screen in its scene and never the not fou
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/issue-states");
   const links = page.getByTestId("issue-states").locator("a[data-state-button]");
-  await expect(links).toHaveCount(44);
+  await expect(links).toHaveCount(52);
   const targets = await links.evaluateAll((anchors) =>
     anchors.map((anchor) => ({
       key: anchor.getAttribute("data-state-button") ?? "",

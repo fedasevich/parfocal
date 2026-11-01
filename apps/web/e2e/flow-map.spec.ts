@@ -49,7 +49,7 @@ test("a box opens its screen in its scene as the lane's persona, and Back to the
     },
     {
       box: "adjudicate",
-      heading: "Disagreements",
+      heading: "The AI says T4 is tumor, 58% sure.",
       url: /\/tasks\/[0-9a-f-]+\/disagreements\?scene=adjudicate&as=AK$/,
       persona: "Anna Kopecká",
     },
