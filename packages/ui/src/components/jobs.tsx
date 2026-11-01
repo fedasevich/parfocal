@@ -131,20 +131,8 @@ function JobRow({
   return (
     <div
       data-slot="job-row"
-      role="button"
-      tabIndex={0}
-      title="Show every step"
-      aria-label={label}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.target !== event.currentTarget) return;
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen?.();
-        }
-      }}
       className={cn(
-        "-mx-2 grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-start gap-3 rounded-ctl px-2 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-accent",
+        "relative -mx-2 grid grid-cols-[16px_minmax(0,1fr)] items-start gap-3 rounded-ctl px-2 py-2 focus-within:outline-2 focus-within:outline-accent hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)]",
         className,
       )}
       {...props}
@@ -152,8 +140,15 @@ function JobRow({
       <Icon name={icon} className="mt-0.5 text-fg-dim" />
       <div className="grid min-w-0 gap-2">
         <div className="flex min-w-0 items-baseline justify-between gap-2.5">
-          <b className="truncate text-body-sm font-semibold text-fg">{title}</b>
-          <span className="flex flex-none items-center gap-2.5">
+          <button
+            type="button"
+            title="Show every step"
+            onClick={onOpen}
+            className="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-body-sm font-semibold text-fg outline-none after:absolute after:inset-0 after:content-['']"
+          >
+            {title}
+          </button>
+          <span className="relative z-10 flex flex-none items-center gap-2.5">
             {action}
             <Icon name="next" className="self-center text-fg-faint" />
           </span>
@@ -170,18 +165,14 @@ function JobRow({
   );
 }
 
-function JobRowLink({ className, onClick, ...props }: React.ComponentProps<"button">) {
+function JobRowLink({ className, ...props }: React.ComponentProps<"button">) {
   return (
     <button
       type="button"
       className={cn(
-        "cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent",
+        "inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent px-1 text-body-sm text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent",
         className,
       )}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick?.(event);
-      }}
       {...props}
     />
   );
