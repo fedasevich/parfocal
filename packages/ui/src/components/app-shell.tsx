@@ -6,11 +6,83 @@ import { CategoryTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-function Brand({ className }: { className?: string }) {
-  return (
-    <span data-slot="brand" className={cn("flex min-w-0 items-center gap-2.5", className)}>
+type LinkRendererProps = {
+  href: string;
+  className?: string;
+  title?: string;
+  "aria-current"?: "page" | undefined;
+  children: React.ReactNode;
+};
+
+type LinkRenderer = (props: LinkRendererProps) => React.ReactNode;
+
+const anchorLink: LinkRenderer = ({ children, ...props }) => <a {...props}>{children}</a>;
+
+type WorkspaceBrand = {
+  name: string;
+  subtitle?: string;
+  logo?: string;
+  color?: string;
+};
+
+type BrandProps = {
+  className?: string;
+  workspace?: WorkspaceBrand | undefined;
+  homeHref?: string | undefined;
+  renderLink?: LinkRenderer | undefined;
+  onWorkspaceClick?: (() => void) | undefined;
+};
+
+function Brand({
+  className,
+  workspace,
+  homeHref,
+  renderLink = anchorLink,
+  onWorkspaceClick,
+}: BrandProps) {
+  const mark = (
+    <>
       <Icon name="parfocal" size="md" className="text-accent" />
       <b className="text-body font-semibold text-fg">Parfocal</b>
+    </>
+  );
+  return (
+    <span data-slot="brand" className={cn("flex min-w-0 items-center gap-2.5", className)}>
+      {homeHref
+        ? renderLink({
+            href: homeHref,
+            title: "Parfocal home",
+            className: "flex items-center gap-2.5 no-underline",
+            children: mark,
+          })
+        : mark}
+      {workspace ? (
+        <>
+          <i aria-hidden="true" className="mx-1 h-5.5 w-px bg-line-strong" />
+          <button
+            type="button"
+            data-slot="workspace-switch"
+            title="Switch workspace"
+            onClick={onWorkspaceClick}
+            className="flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-1.5 py-1 text-left hover:bg-chrome-2"
+          >
+            <span
+              aria-hidden="true"
+              className="grid size-6.5 shrink-0 place-items-center rounded-md text-caption font-bold text-white"
+              style={{ background: workspace.color }}
+            >
+              {workspace.logo}
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <b className="truncate text-body-sm font-semibold text-fg">{workspace.name}</b>
+              {workspace.subtitle ? (
+                <small className="truncate text-caption text-fg-dim">{workspace.subtitle}</small>
+              ) : null}
+            </span>
+            <Icon name="down" className="text-fg-dim" />
+          </button>
+        </>
+      ) : null}
     </span>
   );
 }
@@ -20,6 +92,16 @@ type TopBarProps = React.ComponentProps<"header"> & {
   presence?: Presence;
   unread?: number;
   jobs?: number;
+  workspace?: WorkspaceBrand | undefined;
+  homeHref?: string | undefined;
+  renderLink?: LinkRenderer | undefined;
+  onWorkspaceClick?: (() => void) | undefined;
+  onSearch?: (() => void) | undefined;
+  onNewProject?: (() => void) | undefined;
+  onUpload?: (() => void) | undefined;
+  jobsSlot?: React.ReactNode;
+  bellSlot?: React.ReactNode;
+  accountSlot?: React.ReactNode;
 };
 
 function TopBar({
@@ -27,6 +109,16 @@ function TopBar({
   presence = "available",
   unread = 0,
   jobs = 0,
+  workspace,
+  homeHref,
+  renderLink,
+  onWorkspaceClick,
+  onSearch,
+  onNewProject,
+  onUpload,
+  jobsSlot,
+  bellSlot,
+  accountSlot,
   className,
   ...props
 }: TopBarProps) {
@@ -39,10 +131,16 @@ function TopBar({
       )}
       {...props}
     >
-      <Brand />
+      <Brand
+        workspace={workspace}
+        homeHref={homeHref}
+        renderLink={renderLink}
+        onWorkspaceClick={onWorkspaceClick}
+      />
       <span className="flex-1" />
       <button
         type="button"
+        onClick={onSearch}
         className="flex w-105 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 py-1.5 text-left text-body-sm text-fg-faint"
       >
         <Icon name="search" />
@@ -50,47 +148,58 @@ function TopBar({
         <Keycap keys="⌘K" />
       </button>
       <span className="flex-1" />
-      <Button variant="ghost">
+      <Button variant="ghost" onClick={onNewProject}>
         <Icon name="folder" />
         New project
       </Button>
-      <Button variant="ghost">
+      <Button variant="ghost" onClick={onUpload}>
         <Icon name="upload" />
         Upload
       </Button>
-      {jobs > 0 ? (
+      {jobsSlot !== undefined ? (
+        jobsSlot
+      ) : jobs > 0 ? (
         <Button variant="ghost" aria-label={`${jobs} jobs running`}>
           <Icon name="clock" />
           {jobs}
         </Button>
       ) : null}
-      <span className="relative">
-        <Button variant="ghost" size="icon" aria-label={`Notifications, ${unread} unread`}>
-          <Icon name="bell" />
-        </Button>
-        {unread > 0 ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-0.5 right-px h-4 min-w-4 rounded-lg bg-accent-fill px-1 text-center text-label leading-4 font-bold text-on-accent"
-          >
-            {unread}
-          </span>
-        ) : null}
-      </span>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        className="cursor-pointer rounded-full border-0 bg-transparent p-0"
-      >
-        <PersonAvatar person={user} size={28} presence={presence} />
-        <span className="sr-only">Account menu</span>
-      </button>
+      {bellSlot !== undefined ? (
+        bellSlot
+      ) : (
+        <span className="relative">
+          <Button variant="ghost" size="icon" aria-label={`Notifications, ${unread} unread`}>
+            <Icon name="bell" />
+          </Button>
+          {unread > 0 ? (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-0.5 right-px h-4 min-w-4 rounded-lg bg-accent-fill px-1 text-center text-label leading-4 font-bold text-on-accent"
+            >
+              {unread}
+            </span>
+          ) : null}
+        </span>
+      )}
+      {accountSlot !== undefined ? (
+        accountSlot
+      ) : (
+        <button
+          type="button"
+          aria-haspopup="menu"
+          className="cursor-pointer rounded-full border-0 bg-transparent p-0"
+        >
+          <PersonAvatar person={user} size={28} presence={presence} />
+          <span className="sr-only">Account menu</span>
+        </button>
+      )}
     </header>
   );
 }
 
 type SidebarItem = {
   id: string;
+  href?: string;
   label: string;
   icon?: IconName;
   color?: string;
@@ -102,10 +211,11 @@ type SidebarSection = { title?: string; items: SidebarItem[] };
 
 type SidebarProps = React.ComponentProps<"nav"> & {
   sections: SidebarSection[];
-  active?: string;
+  active?: string | undefined;
+  renderLink?: LinkRenderer | undefined;
 };
 
-function Sidebar({ sections, active, className, ...props }: SidebarProps) {
+function Sidebar({ sections, active, renderLink = anchorLink, className, ...props }: SidebarProps) {
   return (
     <nav
       data-slot="sidebar"
@@ -121,11 +231,11 @@ function Sidebar({ sections, active, className, ...props }: SidebarProps) {
             </div>
           ) : null}
           {section.items.map((item) => (
-            <a
+            <SidebarLink
               key={item.id}
-              href={`#${item.id}`}
-              aria-current={active === item.id ? "page" : undefined}
-              className="grid grid-cols-[20px_1fr_auto] items-center gap-2.5 rounded-md px-2.5 py-1.75 text-body-sm whitespace-nowrap text-fg-dim no-underline hover:bg-chrome-2 hover:text-fg aria-[current=page]:bg-chrome-2 aria-[current=page]:font-medium aria-[current=page]:text-fg"
+              href={item.href ?? `#${item.id}`}
+              current={active === item.id}
+              renderLink={renderLink}
             >
               {item.color ? (
                 <i
@@ -146,12 +256,32 @@ function Sidebar({ sections, active, className, ...props }: SidebarProps) {
               ) : (
                 <span />
               )}
-            </a>
+            </SidebarLink>
           ))}
         </div>
       ))}
     </nav>
   );
+}
+
+function SidebarLink({
+  href,
+  current,
+  renderLink,
+  children,
+}: {
+  href: string;
+  current: boolean;
+  renderLink: LinkRenderer;
+  children: React.ReactNode;
+}) {
+  return renderLink({
+    href,
+    "aria-current": current ? "page" : undefined,
+    className:
+      "grid grid-cols-[20px_1fr_auto] items-center gap-2.5 rounded-md px-2.5 py-1.75 text-body-sm whitespace-nowrap text-fg-dim no-underline hover:bg-chrome-2 hover:text-fg aria-[current=page]:bg-chrome-2 aria-[current=page]:font-medium aria-[current=page]:text-fg",
+    children,
+  });
 }
 
 type AppShellProps = React.ComponentProps<"div"> & {
@@ -182,10 +312,14 @@ export {
   AppShell,
   type AppShellProps,
   Brand,
+  type BrandProps,
+  type LinkRenderer,
+  type LinkRendererProps,
   Sidebar,
   type SidebarItem,
   type SidebarProps,
   type SidebarSection,
   TopBar,
   type TopBarProps,
+  type WorkspaceBrand,
 };

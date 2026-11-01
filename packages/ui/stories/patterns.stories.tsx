@@ -70,6 +70,51 @@ export const Shell: Story = {
   ),
 };
 
+export const ShellWithWorkspace: Story = {
+  render: () => (
+    <div className="h-[560px]">
+      <AppShell
+        top={
+          <TopBar
+            user={people.LM}
+            homeHref="#home"
+            workspace={{
+              name: "Fakultní nemocnice Vltava",
+              subtitle: "Pathology and AI research",
+              logo: "FV",
+              color: "#0f766e",
+            }}
+            jobsSlot={null}
+            bellSlot={
+              <button type="button" className="text-fg-dim text-caption">
+                Bell slot
+              </button>
+            }
+          />
+        }
+        side={
+          <Sidebar
+            sections={sidebarSections.map((section) => ({
+              ...section,
+              items: section.items.map((item) => ({ ...item, href: `#/${item.id}` })),
+            }))}
+            active="home"
+            renderLink={({ children, ...props }) => (
+              <a {...props} data-router-link="">
+                {children}
+              </a>
+            )}
+          />
+        }
+      >
+        <div className="p-8">
+          <h1 className="m-0 text-page-title font-semibold">Home</h1>
+        </div>
+      </AppShell>
+    </div>
+  ),
+};
+
 const progress = { agree: 20, disagree: 6, unsure: 4, open: 25 };
 
 export const ReviewTopBarGuided: Story = {
