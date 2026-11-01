@@ -21,15 +21,13 @@ import type {
   MyStatus,
   NotificationKind,
   ResultSet,
-  ReviewOrder,
   ReviewTaskDetail,
   SearchHit,
   SlideRow,
   State,
   TaskStatus,
-  Verdict,
-  VerdictValue,
 } from "../generated/api.ts";
+import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
 import {
   announcements,
   cases,
@@ -45,7 +43,6 @@ import {
   type ScenarioNotification,
   type ScenarioReviewTask,
   slideByIndex,
-  slideDecisions,
   slideReviews,
   slides,
 } from "./scenario.ts";
@@ -367,43 +364,9 @@ export const searchScenario = (query: string): SearchHit[] => {
     .slice(0, 8);
 };
 
-const decisionsOf = (taskId: string, slideId: string) => {
-  const task = reviewTasks.find((candidate) => candidate.id === taskId);
-  return slideDecisions.find(
-    (item) => item.task === task?.code && slideByIndex(item.slide).id === slideId,
-  );
-};
+export const reviewOrderOf = reviewOrderFor;
 
-export const reviewOrderOf = (taskId: string, slideId: string): ReviewOrder => ({
-  task_id: taskId,
-  slide_id: slideId,
-  total: decisionsOf(taskId, slideId)?.total ?? 0,
-  offset: 0,
-  objects: [],
-});
-
-export const verdictsOf = (taskId: string, slideId: string): Verdict[] => {
-  const decisions = decisionsOf(taskId, slideId);
-  if (decisions === undefined) return [];
-  const values: VerdictValue[] = [
-    ...Array<VerdictValue>(decisions.agree).fill("agree"),
-    ...Array<VerdictValue>(decisions.disagree).fill("disagree"),
-    ...Array<VerdictValue>(decisions.unsure).fill("unsure"),
-  ];
-  return values.map((value, index) => {
-    const region = index < 5;
-    return {
-      object: region ? `T${index + 1}` : `T1·C${index + 96}`,
-      kind: region ? "region" : "cell",
-      number: index + 1,
-      value,
-      reason: null,
-      reason_class_id: null,
-      note: null,
-      updated_at: "2026-10-15T14:10:00+02:00",
-    };
-  });
-};
+export const verdictsOf = verdictsFor;
 
 export function workHandlers(): RequestHandler[] {
   const inbox = createInbox();
@@ -420,19 +383,19 @@ export function workHandlers(): RequestHandler[] {
       };
     }),
     getGetReviewTaskMockHandler(({ params }) => {
-      const task = reviewTasks.find((candidate) => candidate.id === params["taskId"]);
+      const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
       return toReviewTaskDetail(task ?? taskByCode("RT-14"));
     }),
     getGetReviewTaskStatesMockHandler(({ params }) => {
-      const task = reviewTasks.find((candidate) => candidate.id === params["taskId"]);
+      const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
       return {
-        task_id: String(params["taskId"]),
+        task_id: String(params.taskId),
         signed_off_at: task?.signedOn ? `${task.signedOn}T16:00:00+02:00` : null,
         slides: [],
       };
     }),
     getListProjectResultSetsMockHandler(({ params }) =>
-      projectResultSets(String(params["projectId"])),
+      projectResultSets(String(params.projectId)),
     ),
     getListNotificationsMockHandler(({ request }) => ({
       notifications: inbox.list(new URL(request.url)),
@@ -448,10 +411,10 @@ export function workHandlers(): RequestHandler[] {
     }),
     getListAnnouncementsMockHandler(announcements.map(toAnnouncement)),
     getGetReviewOrderMockHandler(({ params }) =>
-      reviewOrderOf(String(params["taskId"]), String(params["slideId"])),
+      reviewOrderOf(String(params.taskId), String(params.slideId)),
     ),
     getListVerdictsMockHandler(({ params }) =>
-      verdictsOf(String(params["taskId"]), String(params["slideId"])),
+      verdictsOf(String(params.taskId), String(params.slideId)),
     ),
   ];
 }

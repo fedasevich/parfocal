@@ -4,6 +4,7 @@ import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adju
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type MyJob, myJobSchema } from "../draft/list-my-jobs.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import { reviewDraftOperations } from "./review-handlers.ts";
 import {
   adjudications,
   cases,
@@ -20,6 +21,13 @@ import {
 import { taskDraftOperations } from "./task-handlers.ts";
 import { fakeView } from "./view.ts";
 
+export {
+  getGetDecisionStyleMockHandler,
+  getGetSlideAgreementMockHandler,
+  getGetTaskDisplayMockHandler,
+  getListReviewObjectsMockHandler,
+  getListThreadCommentsMockHandler,
+} from "./review-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
@@ -173,6 +181,7 @@ export const draftOperations: DraftOperation[] = [
     handler: () => getListSlideThreadsMockHandler(),
   },
   ...taskDraftOperations,
+  ...reviewDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>
