@@ -120,7 +120,9 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
         <div className="grid grid-cols-[40px_1fr] items-center gap-3 px-2.5 pt-2.5 pb-2">
           <PersonAvatar person={person} size={40} />
           <div className="min-w-0">
-            <b className="block text-body font-semibold text-fg">{person.name}</b>
+            <b data-testid="account-name" className="block text-body font-semibold text-fg">
+              {person.name}
+            </b>
             <small className="block text-caption text-fg-faint">{person.role}</small>
             <small className="block text-caption text-fg-faint">
               {workspace?.organisation_name ?? workspace?.name}

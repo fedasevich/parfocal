@@ -1,5 +1,6 @@
 import {
   type Announcement,
+  ApiError,
   type Checklist,
   type HomeProject,
   type MyTask,
@@ -492,18 +493,82 @@ function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[
   );
 }
 
+function HomeWithoutData({
+  firstName,
+  error,
+  retry,
+}: {
+  firstName: string;
+  error: unknown;
+  retry: () => void;
+}) {
+  const goTo = useGoTo();
+  const kind = error instanceof ApiError ? error.kind : undefined;
+  return (
+    <main className="grid content-start gap-5.5 px-8 pt-5.5 pb-4.5 pl-7">
+      <header>
+        <h1 className="m-0 text-[24px] font-semibold text-fg">
+          {greeting(now())}, {firstName}
+        </h1>
+        <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">{formatLongDay(now())}</p>
+      </header>
+      {error === null ? (
+        <p className="text-body-sm text-fg-dim">Loading your home…</p>
+      ) : kind === "forbidden" ? (
+        <section
+          aria-label="No workspace yet"
+          className="grid max-w-xl gap-3 rounded-xl border border-line bg-chrome p-4"
+        >
+          <b className="text-body font-semibold text-fg">You are not in a workspace yet</b>
+          <span className="text-body-sm text-fg-dim">
+            Your projects, tasks and slides show here once you join one. Open the invitation from
+            your email, or set up a workspace of your own.
+          </span>
+          <Button className="justify-self-start" onClick={() => void goTo("/setup")}>
+            Set up a workspace
+          </Button>
+        </section>
+      ) : (
+        <section
+          aria-label="Home did not load"
+          role="alert"
+          className="grid max-w-xl gap-3 rounded-xl border border-line bg-chrome p-4"
+        >
+          <b className="text-body font-semibold text-fg">Your home could not load</b>
+          <span className="text-body-sm text-fg-dim">
+            Nothing is lost. Try again, or open My work from the sidebar.
+          </span>
+          <Button className="justify-self-start" onClick={retry}>
+            Try again
+          </Button>
+        </section>
+      )}
+    </main>
+  );
+}
+
 export function HomeScreen() {
   const me = okData(useGetMe().data);
-  const home = okData(useGetMyHome().data);
+  const homeQuery = useGetMyHome();
+  const home = okData(homeQuery.data);
   const checklist = useGetMyChecklist().data?.data;
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
   const goTo = useGoTo();
-  if (home === undefined || me === undefined) {
+  if (me === undefined) {
     return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
   }
-  const firstWeek = checklist !== undefined && !checklist.hidden;
   const firstName = me.display_name.split(" ")[0] ?? me.display_name;
+  if (home === undefined) {
+    return (
+      <HomeWithoutData
+        firstName={firstName}
+        error={homeQuery.error}
+        retry={() => void homeQuery.refetch()}
+      />
+    );
+  }
+  const firstWeek = checklist !== undefined && !checklist.hidden;
   const inProgress = home.tasks.filter((task) => task.status === "in-review").length;
   const mentions = (counts?.kinds ?? [])
     .filter((kind) => kind.kind === "mention" || kind.kind === "reply")
