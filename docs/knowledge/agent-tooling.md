@@ -47,3 +47,7 @@ No secrets here. Secrets live in `.env` locally and in GitHub environments for C
 | Zitadel Cloud | Human user `e2e-pathologist@parfocal.eu` (id `394945461896722336`) | Created on 2026-10-13 through the v2 user API for the login E2E, not yet in `infra/tofu`. Password in `.env`. TODO: import it into OpenTofu in IAM-001 |
 | Modal | Workspace `fedasevich`, environments `main` (production), `dev`, `staging` | Starter plan. CLI token in `~/.modal.toml` |
 | GitHub | `fedasevich/parfocal` | Public. Linked as `origin`. Ruleset "main requires ci-ok" (id 24612221) with admin bypass. Workflows from outside contributors need approval |
+
+## Committing when other agents edit the same working tree
+
+Several agents can work in one checkout of `main` at once, so a file can hold another agent's uncommitted hunks next to yours. Stage files by name, and when a file has both, stage only your part without touching theirs: write HEAD's version plus your edits to a scratch file, then `git hash-object -w <file>` and `git update-index --cacheinfo 100644,<sha>,<path>`. Their changes stay in the working tree for them to commit. Before committing, check that nothing staged imports a file that is still untracked, because CI builds only what is committed. Source: PROTO-003 (home, My work and the shell over fake data).

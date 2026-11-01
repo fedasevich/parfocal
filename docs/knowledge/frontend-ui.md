@@ -93,3 +93,15 @@ Component stories sit on a panel surface through a `decorators` entry, because i
 ## The axe suite also catches render errors
 
 `e2e/axe.spec.ts` records page errors and console errors for every story in both themes and fails on any, next to the axe check, and it fails when Storybook shows its error display. The browser's request for `/favicon.ico` answers 404 and logs a console error, so that one location is ignored. `knownExclusions` lists a selector per story id that axe skips, each with the DS task that fixes it, and the [axe result](../results/2026-11-01-axe-over-the-component-stories.md) records why. Source: PROTO-011.
+
+## The global shell wraps a list of route ids
+
+The root route renders `GlobalShell` around every route whose id is in `apps/web/src/shell/shell-routes.ts`, so a screen task that wants the top bar and sidebar adds its route id there instead of moving files under a layout route. Slide routes, guided review, setup and admin stay outside. The root also owns two search params for overlays, `open` (`notifications` or `palette`) and `find` (the palette's query), and hosts the command palette, so ⌘K works on every route. Links to routes that other screen tasks own go through the href builders in `apps/web/src/shell/destinations.ts` and `router.navigate({ href })`, so a screen does not fail the typecheck while another task's route file is not committed yet. Source: PROTO-003 (home, My work and the shell over fake data).
+
+## The fake view switches the person the scenario answers for
+
+Some mock scenes are a different person, not a different screen state: My work's Assigned by me is Daniel Hruška, `scene=anna` is Anna Kopecká and home's `scene=new` is Lenka's first week. `setFakeView({ viewer, firstWeek })` from `@parfocal/api-client/fake` changes what every seeded handler answers, because the handlers read `fakeView()` at request time instead of building their bodies once. `apps/web/src/fake-api/view-rules.ts` maps a path and its search onto a view, the fake layer applies it on start and on every navigation, and resets the queries when it changed, so `getMe` and the lists refetch for the new person. The fake data badge names the persona. Unit tests that change the view reset it with `setFakeView(defaultFakeView)` after each test, because the store is module state. Source: PROTO-003.
+
+## Fake mode fixes the clock and serves the mock's images
+
+In `PARFOCAL_PUBLIC_FAKE_API=all` the fake layer calls `fixClock` with the scenario's `scenarioNow` (Thursday 15 October 2026, 14:30), so greetings, "10 min ago" and due dates read as in the mock. Screens take the time from `now()` in `apps/web/src/clock.ts`, never from `new Date()` directly. The dev server serves `docs/design/ux-mock/assets` at `/mock-assets` through a plugin with `apply: "serve"`, which slide thumbnails use until the viewer tasks bring real ones, and builds do not contain it. Source: PROTO-003.
