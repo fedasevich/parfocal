@@ -24,7 +24,8 @@ export const destinations = {
     `/tasks/${taskId}/disagreements${query({ scene })}`,
   signOff: (taskId: string) => `/tasks/${taskId}/sign-off`,
   evaluation: (taskId: string) => `/tasks/${taskId}/evaluation`,
-  team: (scene?: string) => `/team${query({ scene })}`,
+  team: (link: { scene?: string; task?: string; focus?: string | undefined } = {}) =>
+    `/team${query({ scene: link.scene, task: link.task, focus: link.focus })}`,
   settings: (section: string) => `/settings/${section}`,
   admin: () => "/admin",
 };

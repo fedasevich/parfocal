@@ -1,6 +1,6 @@
 import type { PersonKey } from "./scenario.ts";
 import { scenarioNow } from "./scenario.ts";
-import { newTask, taskSlides } from "./scenario-task.ts";
+import { newTask } from "./scenario-task.ts";
 
 export const teamNow = scenarioNow;
 
@@ -15,10 +15,6 @@ export const awaySceneAbsence: { key: PersonKey; until: string } = {
   key: "AK",
   until: "2026-10-19",
 };
-
-export const sentTaskSlides = newTask.slideIds.filter((id) =>
-  taskSlides.some((slide) => slide.id === id && slide.sets.includes(newTask.resultSet)),
-).length;
 
 export const sentTaskAt = `${newTask.sentOn}T14:30:00+02:00`;
 

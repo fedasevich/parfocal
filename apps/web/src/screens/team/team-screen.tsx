@@ -117,8 +117,8 @@ export function TeamScreen({
   useEffect(() => {
     if (!team || sceneKey === seeded) return;
     setSeeded(sceneKey);
-    const first = team.open[0];
-    const behind = first ? mostBehind(first) : undefined;
+    const first = team.open.find((task) => task.id === state.task) ?? team.open[0];
+    const behind = rowOf(first, state.focus ?? "") ?? (first ? mostBehind(first) : undefined);
     if (!first || !behind) return;
     if (state.scene === "nudge") setModal(nudgeFor(first, behind, team.as_of));
     if (state.scene === "reassign" || state.scene === "partial") {

@@ -15,14 +15,14 @@ import {
   reviewTasks,
   type ScenarioReviewTask,
 } from "./scenario.ts";
-import { away, newTask } from "./scenario-task.ts";
+import { rt16 } from "./scenario-review.ts";
+import { away } from "./scenario-task.ts";
 import {
   awaySceneAbsence,
   lastDecisions,
   minutesPerSlide,
   overdueNow,
   sentTaskAt,
-  sentTaskSlides,
   teamNow,
 } from "./scenario-team.ts";
 import { type FakeTeamScene, fakeTeamScene, nextActionId, teamActions } from "./team-scene.ts";
@@ -84,20 +84,7 @@ const fromScenario = (task: ScenarioReviewTask): TeamSource => ({
   signedOn: task.status === "signed" ? (task.signedOn ?? task.dueOn) : null,
 });
 
-const sentTask = (): TeamSource => ({
-  code: newTask.code,
-  id: newTask.id,
-  name: newTask.names[newTask.resultSet],
-  project: newTask.project,
-  reviewers: newTask.reviewers,
-  slides: sentTaskSlides,
-  split: "all",
-  progress: {},
-  sentOn: newTask.sentOn,
-  sentAt: sentTaskAt,
-  dueOn: newTask.dueOn,
-  signedOn: null,
-});
+const sentTask = (): TeamSource => ({ ...fromScenario(rt16), sentAt: sentTaskAt });
 
 const isSigned = (task: TeamSource) => task.signedOn !== null;
 

@@ -38,7 +38,17 @@ function AssignedRow({ task }: { task: AssignedTask }) {
   const signedOn = states?.signed_off_at ? formatDayMonth(new Date(states.signed_off_at)) : null;
   const [label, tone] = statusOf(task, signedOn);
   const busy = task.status === "in-review" || task.status === "not-started";
-  const firstReviewer = task.reviewers[0]?.user_id;
+  const behindmost = task.reviewers.reduce<(typeof task.reviewers)[number] | undefined>(
+    (worst, reviewer) =>
+      worst === undefined ||
+      reviewer.slides_assigned - reviewer.slides_submitted >
+        worst.slides_assigned - worst.slides_submitted
+        ? reviewer
+        : worst,
+    undefined,
+  )?.user_id;
+  const teamRow = (scene: "nudge" | "reassign") =>
+    destinations.team({ scene, task: task.id, focus: behindmost });
   return (
     <tr className="border-line border-b">
       <td className="px-2 py-2 align-middle">
@@ -92,15 +102,15 @@ function AssignedRow({ task }: { task: AssignedTask }) {
           ) : null}
           {busy ? (
             <>
-              <Button onClick={() => void goTo(destinations.team("nudge"))}>
+              <Button onClick={() => void goTo(teamRow("nudge"))}>
                 <Icon name="bell" />
                 Nudge
               </Button>
               <Button
-                onClick={() => void goTo(destinations.team("reassign"))}
+                onClick={() => void goTo(teamRow("reassign"))}
                 title={
-                  firstReviewer
-                    ? `Reassign from ${people(firstReviewer)?.name ?? "a reviewer"}`
+                  behindmost
+                    ? `Reassign from ${people(behindmost)?.name ?? "a reviewer"}`
                     : undefined
                 }
               >
