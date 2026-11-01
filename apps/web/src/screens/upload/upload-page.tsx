@@ -16,6 +16,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { useOpenJobsTray } from "../../shell/jobs-tray.tsx";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
 import { ProjectPage } from "../project/project-page.tsx";
@@ -71,6 +72,7 @@ function UploadFlow({
 }: UploadPageProps & { project: Project; batch: UploadBatch }) {
   const navigate = useNavigate();
   const toast = useMockToast();
+  useOpenJobsTray(scene === "tray");
   const [state, setState] = useState<UploadState & { maxStep: number }>(() => ({
     ...stateForScene(scene, batch),
     maxStep: Math.min(stepOf(scene), 1),
