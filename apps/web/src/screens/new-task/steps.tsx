@@ -72,7 +72,7 @@ export type StepProps = {
   draft: Draft;
   data: TaskData;
   update: (change: (draft: Draft) => Draft) => void;
-  errors: Record<string, string>;
+  errors: ReadonlyMap<string, string>;
   onTemplate: (template: TemplateChoice) => void;
   openModal: (modal: "addslides" | "dpreview") => void;
   goTo: (step: StepKey) => void;
@@ -130,7 +130,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
               <SelectTrigger
                 id={fieldId("tpl")}
                 aria-label="Study template"
-                aria-invalid={errors["tpl"] ? true : undefined}
+                aria-invalid={errors.get("tpl") ? true : undefined}
                 className="h-9.5 w-102 font-semibold"
               >
                 <SelectValue>
@@ -161,7 +161,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
             <TextLink>Preview the report</TextLink>
           </div>
           <FieldNote
-            error={errors["tpl"]}
+            error={errors.get("tpl")}
             help="It fills in what to check, how it runs and the display defaults. You can still change each of them."
           />
         </div>
@@ -227,7 +227,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
             Add slides
           </Button>
         </div>
-        <FieldNote error={errors["groups"]} />
+        <FieldNote error={errors.get("groups")} />
       </Zone>
       <Zone title="AI result to check">
         <div className="grid gap-1.5">
@@ -250,7 +250,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
               end: `on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
             }))}
           />
-          <FieldNote error={errors["rset"]} />
+          <FieldNote error={errors.get("rset")} />
           {!sum.ns && all.length ? (
             <Warn icon="smart">
               <a href="#run-model" className="text-accent">
@@ -278,7 +278,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
           <Input
             id={fieldId("name")}
             aria-label="Task name"
-            aria-invalid={errors["name"] ? true : undefined}
+            aria-invalid={errors.get("name") ? true : undefined}
             value={draft.name}
             maxLength={80}
             placeholder="For example, Round 3 · CAMELYON v1.0"
@@ -291,7 +291,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
             }
           />
           <FieldNote
-            error={errors["name"]}
+            error={errors.get("name")}
             help="Reviewers see this name in My work and in the email."
             count={`${draft.name.length} of 80`}
           />
@@ -367,7 +367,7 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
             label="Who reviews"
             items={personItems(draft, data)}
             picked={whoReviews(draft)}
-            invalid={Boolean(errors["revs"])}
+            invalid={Boolean(errors.get("revs"))}
             defaultQuery={draft.findQuery}
             defaultOpen={draft.findQuery !== ""}
             onPickedChange={(ids) => {
@@ -395,8 +395,8 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
               })
             }
           />
-          {errors["revs"] ? (
-            <FieldNote error={errors["revs"]} />
+          {errors.get("revs") ? (
+            <FieldNote error={errors.get("revs")} />
           ) : awayPerson ? (
             <Warn>
               {awayPerson.name} is away until {awayPerson.awayUntil}. The task waits for them unless
@@ -447,7 +447,7 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
               },
             ]}
           />
-          <FieldNote error={errors["split"]} />
+          <FieldNote error={errors.get("split")} />
         </div>
       </Zone>
     </>
@@ -645,7 +645,7 @@ function ScopeControl({
         decimals={0}
         unit="per slide"
         label="Cells per slide"
-        error={errors["scopeOpts.cells"]}
+        error={errors.get("scopeOpts.cells")}
         onChange={(value) => setOption("cells", value)}
       />
     );
@@ -661,7 +661,7 @@ function ScopeControl({
         decimals={2}
         unit="or lower"
         label="Score cutoff"
-        error={errors["scopeOpts.low"]}
+        error={errors.get("scopeOpts.low")}
         onChange={(value) => setOption("low", value)}
       />
     );
@@ -683,10 +683,10 @@ function ScopeControl({
         placeholder={kind === "roi" ? "Add an ROI" : "Add a zone"}
         items={items}
         picked={picked}
-        invalid={Boolean(errors[field])}
+        invalid={Boolean(errors.get(field))}
         onPickedChange={(ids) => setOption(kind === "roi" ? "roi" : "unsure", ids)}
       />
-      <FieldNote error={errors[field]} />
+      <FieldNote error={errors.get(field)} />
     </div>
   );
 }
@@ -740,7 +740,7 @@ export function CheckStep({ draft, data, update, errors, openModal }: StepProps)
           {scopeRows.map((row) => (
             <ScopeRow key={row.key} row={row} {...shared} />
           ))}
-          <FieldNote error={errors["scope"]} />
+          <FieldNote error={errors.get("scope")} />
         </div>
         <div className="mt-3 grid gap-2">
           <GroupTitle>Only inside</GroupTitle>
@@ -787,7 +787,7 @@ export function CheckStep({ draft, data, update, errors, openModal }: StepProps)
               ),
             }))}
           />
-          <FieldNote error={errors["decision"]} />
+          <FieldNote error={errors.get("decision")} />
         </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={() => openModal("dpreview")}>
@@ -949,7 +949,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
         locked={draft.locks[lockKey] !== undefined}
         reason={draft.locks[lockKey] ?? ""}
         id={fieldId(`locks.${key}`)}
-        reasonError={errors[`locks.${key}`]}
+        reasonError={errors.get(`locks.${key}`)}
         onLockedChange={(locked) =>
           update((current) => {
             const locks = { ...current.locks };
@@ -1177,7 +1177,7 @@ export function HowStep(props: StepProps) {
       <DisplayZone {...props} />
       <Zone title="When">
         <div className="grid grid-cols-2 gap-4">
-          <FormField id={fieldId("due")} label="Due" error={errors["due"]}>
+          <FormField id={fieldId("due")} label="Due" error={errors.get("due")}>
             <TextFieldInput
               type="date"
               value={draft.due}

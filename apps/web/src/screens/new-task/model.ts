@@ -644,10 +644,10 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
 }
 
 export function fieldErrors(draft: Draft, data: TaskData) {
-  const errors: Record<string, string> = {};
+  const errors = new Map<string, string>();
   for (const issue of issues(draft, data)) {
-    if (draft.touched[issue.field] && errors[issue.field] === undefined) {
-      errors[issue.field] = issue.text;
+    if (draft.touched[issue.field] && !errors.has(issue.field)) {
+      errors.set(issue.field, issue.text);
     }
   }
   return errors;
