@@ -30,6 +30,15 @@ test("the fake view follows the mock's persona switches", () => {
   assert.deepEqual(fakeViewFor("/team", { scene: "anna" }), { viewer: "LM", firstWeek: false });
 });
 
+test("the as param picks any scenario person on any route and wins over the scene", () => {
+  assert.deepEqual(fakeViewFor("/team", { as: "DH" }), { viewer: "DH", firstWeek: false });
+  assert.deepEqual(fakeViewFor("/my-work", { as: "TB", scene: "anna" }), {
+    viewer: "TB",
+    firstWeek: false,
+  });
+  assert.deepEqual(fakeViewFor("/", { as: "nobody" }), { viewer: "LM", firstWeek: false });
+});
+
 test("a scene picks the My work tab only when the URL names none", () => {
   assert.equal(tabOf(undefined, undefined), "review");
   assert.equal(tabOf(undefined, "allpreview"), "all");

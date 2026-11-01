@@ -1,6 +1,6 @@
 import { type Member, useListTenantMembers } from "@parfocal/api-client";
 import type { PersonInfo } from "@parfocal/ui/components/person";
-import { avatarColour } from "./palette.ts";
+import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
 import { okData } from "./placeholder.tsx";
 
 export const toPersonInfo = (

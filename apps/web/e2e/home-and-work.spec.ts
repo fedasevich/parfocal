@@ -139,3 +139,14 @@ test("the account menu shows the person and switches the theme", async ({ page }
   await menu.getByRole("radio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
+
+test("View as in the account menu switches the persona through the as param", async ({ page }) => {
+  await page.goto("/my-work");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Anna Kopecká" }).click();
+  await expect(page).toHaveURL(/as=AK/);
+  await expect(badge(page)).toContainText("viewing as Anna Kopecká");
+  await expect(page.getByText("Decide 3 objects on RT-14")).toBeVisible();
+  await page.goto("/team?as=DH");
+  await expect(badge(page)).toContainText("viewing as Daniel Hruška");
+});

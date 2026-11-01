@@ -15,15 +15,18 @@ import {
   type WorkspaceBrand,
 } from "@parfocal/ui/components/app-shell";
 import type { PersonInfo } from "@parfocal/ui/components/person";
+import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { avatarColour, projectColour } from "../screens/palette.ts";
+import { type ReactNode, useState } from "react";
+import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "./account-menu.tsx";
 import { Bell } from "./bell.tsx";
 import { destinations } from "./destinations.ts";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
+import { foldedShellRouteIds } from "./shell-routes.ts";
+import { ShellSidebarContext } from "./sidebar-toggle.tsx";
 
 const workspaceColours = ["#0f766e", "#7c3aed"];
 
@@ -84,6 +87,11 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   const goTo = useGoTo();
   const renderLink = useRouterLink();
   const active = useActiveItem();
+  const folded = useMatches({
+    select: (matches) => matches.some((match) => foldedShellRouteIds.has(match.routeId)),
+  });
+  const [navOpen, setNavOpen] = useState(false);
+  const showSide = !folded || navOpen;
   const firstProject = projects[0]?.id ?? "";
   const slidesIn = (id: string) => homeProjects.find((project) => project.id === id)?.slides;
   const sections: SidebarSection[] = [
@@ -140,9 +148,13 @@ export function GlobalShell({ children }: { children: ReactNode }) {
           accountSlot={<AccountMenu me={me} person={person} />}
         />
       }
-      side={<Sidebar sections={sections} active={active} renderLink={renderLink} />}
+      side={
+        showSide ? <Sidebar sections={sections} active={active} renderLink={renderLink} /> : null
+      }
     >
-      {children}
+      <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
+        {children}
+      </ShellSidebarContext>
     </AppShell>
   );
 }

@@ -25,6 +25,7 @@ import type {
   SearchHit,
   SlideRow,
   State,
+  TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
 import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
@@ -217,6 +218,45 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
   };
 };
 
+const taskSlideId = (task: ScenarioReviewTask, index: number, own: string[]) =>
+  own[index] ?? `${task.id.slice(0, 24)}${String(900000000000 + index).slice(-12)}`;
+
+export const toTaskStates = (task: ScenarioReviewTask): TaskStates => {
+  const own = slides.filter((slide) => slide.project === task.project).map((slide) => slide.id);
+  const signed = task.status === "signed";
+  const reviewersOf = (index: number) =>
+    task.split === "even" ? [task.reviewers[index % task.reviewers.length]] : task.reviewers;
+  const seen = new Map<PersonKey, number>();
+  return {
+    task_id: task.id,
+    signed_off_at: signed ? `${task.signedOn ?? task.dueOn}T16:00:00+02:00` : null,
+    slides: Array.from({ length: task.slides }, (_, index) => {
+      const reviewers = reviewersOf(index).flatMap((key) => {
+        if (key === undefined) return [];
+        const position = seen.get(key) ?? 0;
+        seen.set(key, position + 1);
+        const submitted = position < (task.progress[key] ?? 0);
+        return [
+          {
+            user_id: people[key].id,
+            state: signed ? "signed-off" : submitted ? "submitted" : "assigned",
+            submitted_at: submitted ? `${task.sentOn}T12:00:00+02:00` : null,
+          },
+        ];
+      });
+      const done = reviewers.filter((reviewer) => reviewer.submitted_at !== null).length;
+      const state: State = signed
+        ? "signed-off"
+        : done === reviewers.length
+          ? "submitted"
+          : done > 0
+            ? "in-review"
+            : "assigned";
+      return { slide_id: taskSlideId(task, index, own), state, reviewers };
+    }),
+  };
+};
+
 export const projectResultSets = (projectId: string): ResultSet[] => {
   const project = projects.find((candidate) => candidate.id === projectId);
   if (project === undefined) return [];
@@ -388,11 +428,9 @@ export function workHandlers(): RequestHandler[] {
     }),
     getGetReviewTaskStatesMockHandler(({ params }) => {
       const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
-      return {
-        task_id: String(params.taskId),
-        signed_off_at: task?.signedOn ? `${task.signedOn}T16:00:00+02:00` : null,
-        slides: [],
-      };
+      return task
+        ? toTaskStates(task)
+        : { task_id: String(params.taskId), signed_off_at: null, slides: [] };
     }),
     getListProjectResultSetsMockHandler(({ params }) =>
       projectResultSets(String(params.projectId)),

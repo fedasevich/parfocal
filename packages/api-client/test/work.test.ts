@@ -211,3 +211,28 @@ test("notifications go to Lenka only and All slides filters by case or label", a
   const caseRows = body(await listMySlides({ q: "s26-04812" })).slides;
   assert.equal(caseRows.length, 3);
 });
+
+test("a task's states give each reviewer their submitted slides first", async () => {
+  const rt14 = scenario.reviewTasks.find((item) => item.code === "RT-14");
+  const rt11 = scenario.reviewTasks.find((item) => item.code === "RT-11");
+  assert.ok(rt14 && rt11);
+  const states = body(await getReviewTaskStates(rt14.id));
+  assert.equal(states.slides.length, 12);
+  assert.equal(new Set(states.slides.map((slide) => slide.slide_id)).size, 12);
+  const submittedBy = (key: "LM" | "SM") =>
+    states.slides.filter((slide) =>
+      slide.reviewers.some(
+        (reviewer) =>
+          reviewer.user_id === scenario.people[key].id && reviewer.state === "submitted",
+      ),
+    ).length;
+  assert.equal(submittedBy("LM"), 7);
+  assert.equal(submittedBy("SM"), 4);
+  assert.equal(states.slides[0]?.state, "submitted");
+  assert.equal(states.slides[5]?.state, "in-review");
+  assert.equal(states.slides[11]?.state, "assigned");
+  const even = body(await getReviewTaskStates(rt11.id));
+  assert.equal(even.slides.length, 40);
+  assert.ok(even.slides.every((slide) => slide.reviewers.length === 1));
+  assert.ok(even.slides.every((slide) => slide.state === "signed-off"));
+});

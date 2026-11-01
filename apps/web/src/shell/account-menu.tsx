@@ -1,4 +1,4 @@
-import type { Me } from "@parfocal/api-client";
+import { type Me, useListTenantMembers } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import {
   DropdownMenu,
@@ -12,8 +12,12 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toPersonInfo } from "../screens/people.ts";
+import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
+import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 import { applyTheme, readTheme, type ThemeChoice } from "./theme.ts";
 
@@ -47,6 +51,44 @@ const entries: MenuEntry[] = [
   { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
   { icon: "help", label: "Help and what's new" },
 ];
+
+const viewAs: PersonaKey[] = ["DH", "LM", "AK", "TB"];
+
+function ViewAs({ current }: { current: string | undefined }) {
+  const members = okData(useListTenantMembers().data) ?? [];
+  const navigate = useNavigate();
+  const shown = viewAs.flatMap((key) => {
+    const member = members.find((candidate) => candidate.initials === key);
+    return member ? [{ key, person: toPersonInfo(member) }] : [];
+  });
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <div className="px-2.5 pt-1 pb-0.5 text-caption font-semibold text-fg-dim">
+        View as, dev build only
+      </div>
+      {shown.map(({ key, person }) => (
+        <DropdownMenuItem
+          key={key}
+          onClick={() =>
+            void navigate({
+              to: ".",
+              search: (previous: Record<string, unknown>) => ({
+                ...previous,
+                as: key === "LM" ? undefined : key,
+              }),
+            })
+          }
+          className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5"
+        >
+          <PersonAvatar person={person} size={18} />
+          <span>{person.name}</span>
+          {current === person.initials ? <Icon name="check" /> : <span />}
+        </DropdownMenuItem>
+      ))}
+    </>
+  );
+}
 
 export function AccountMenu({ me, person }: { me: Me | undefined; person: PersonInfo }) {
   const [presence, setPresence] = useState(0);
@@ -129,6 +171,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
             {entry.keys ? <Keycap keys={entry.keys} /> : <span />}
           </DropdownMenuItem>
         ))}
+        {import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5">
           <Icon name="logout" />
