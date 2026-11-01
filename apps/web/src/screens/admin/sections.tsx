@@ -1,0 +1,554 @@
+import {
+  useGetSecuritySettings,
+  useGetStorageUsage,
+  useListAiModels,
+  useListAuditEvents,
+  useListProjects,
+  useListServiceAccounts,
+  useListTaxonomyTemplates,
+  useListWebhooks,
+} from "@parfocal/api-client";
+import { NameCell, SettingRow } from "@parfocal/ui/components/admin";
+import { Button } from "@parfocal/ui/components/button";
+import { Icon } from "@parfocal/ui/components/icon";
+import { AvatarStack, Person } from "@parfocal/ui/components/person";
+import { ProgressBar } from "@parfocal/ui/components/progress-meter";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { Switch } from "@parfocal/ui/components/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
+import { CategoryTag, StatusTag } from "@parfocal/ui/components/tag";
+import { Zone } from "@parfocal/ui/components/zone";
+import { cn } from "@parfocal/ui/lib/utils";
+import { useState } from "react";
+import { destinations } from "../../shell/destinations.ts";
+import { useGoTo } from "../../shell/router-link.tsx";
+import { formatClock, percent } from "../format.ts";
+import { projectColour } from "../palette.ts";
+import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
+import {
+  InfoLine,
+  lastActive,
+  ModelStatus,
+  MoreButton,
+  type Notify,
+  TextLink,
+  tableClass,
+} from "./common.tsx";
+import { SystemActor } from "./overview.tsx";
+
+const right = "text-right";
+
+export function ProjectsSection({ notify }: { notify: Notify }) {
+  const projects = okData(useListProjects().data) ?? [];
+  const usage = useGetStorageUsage().data?.data;
+  const taxonomies = okData(useListTaxonomyTemplates().data) ?? [];
+  const personOf = usePeople();
+  const goTo = useGoTo();
+  const [privacy, setPrivacy] = useState("deid");
+  const [who, setWho] = useState("res");
+  const spaceOf = (id: string) => usage?.by_project.find((row) => row.project.id === id);
+  return (
+    <>
+      <Zone
+        title="Projects"
+        end={<span className="text-body-sm text-fg-dim">{projects.length} projects</span>}
+      >
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Project</TableHead>
+              <TableHead>Privacy</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Members</TableHead>
+              <TableHead className={right}>Space</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {projects.map((project) => {
+              const owner = project.members.find((member) => member.role === "owner");
+              const ownerPerson = personOf(owner?.user_id);
+              const space = spaceOf(project.id);
+              return (
+                <TableRow key={project.id}>
+                  <TableCell>
+                    <NameCell
+                      lead={
+                        <i
+                          aria-hidden="true"
+                          className="block size-3 rounded-[3px]"
+                          style={{ background: projectColour(project.colour) }}
+                        />
+                      }
+                      title={project.name}
+                      sub={<span className="font-mono">{project.code}</span>}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <StatusTag tone={project.privacy_mode === "clinical" ? "warn" : "accent"}>
+                      {project.privacy_mode === "clinical" ? "Clinical" : "De-identified"}
+                    </StatusTag>
+                  </TableCell>
+                  <TableCell>
+                    {ownerPerson ? <Person person={ownerPerson} size={20} /> : null}
+                  </TableCell>
+                  <TableCell>
+                    <AvatarStack
+                      size={22}
+                      people={project.members.flatMap((member) => {
+                        const person = personOf(member.user_id);
+                        return person ? [person] : [];
+                      })}
+                    />
+                  </TableCell>
+                  <TableCell className={cn(right, "font-mono")}>
+                    {space
+                      ? space.cap_gb
+                        ? `${space.gb} of ${space.cap_gb} GB`
+                        : `${space.gb} GB`
+                      : ""}
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex items-center justify-end gap-1.5">
+                      <Button size="sm" onClick={() => void goTo(destinations.project(project.id))}>
+                        Open
+                      </Button>
+                      <MoreButton label={`More for ${project.name}`} />
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Zone>
+      <Zone title="New projects">
+        <div className="grid grid-cols-[180px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
+          <span className="pt-1 text-fg-dim">Privacy</span>
+          <div className="grid gap-1.5">
+            <SegmentedControl
+              aria-label="Privacy of new projects"
+              value={privacy}
+              onValueChange={(value) => setPrivacy(String(value))}
+              options={[
+                { value: "deid", label: "De-identified" },
+                { value: "clin", label: "Clinical" },
+              ]}
+            />
+            <small className="text-caption text-fg-dim">
+              Owners can switch a project later. Clinical projects log every slide opened.
+            </small>
+          </div>
+          <span className="pt-1 text-fg-dim">Who can create one</span>
+          <SegmentedControl
+            aria-label="Who can create a project"
+            value={who}
+            onValueChange={(value) => setWho(String(value))}
+            options={[
+              { value: "res", label: "Every researcher" },
+              { value: "adm", label: "Researchers with admin rights" },
+            ]}
+          />
+          <span className="text-fg-dim">Class lists</span>
+          <span className="flex items-center gap-2">
+            {taxonomies
+              .map((item) => (item.template === "pannuke" ? "PanNuke" : "Sentinel node"))
+              .join(" · ")}
+            <TextLink
+              onClick={() => notify("Class lists: names, colors and the order they show in (mock)")}
+            >
+              Edit
+            </TextLink>
+          </span>
+        </div>
+      </Zone>
+    </>
+  );
+}
+
+export function ModelsSection({ notify }: { notify: Notify }) {
+  const data = useListAiModels().data?.data;
+  const personOf = usePeople();
+  const [shown, setShown] = useState<Record<string, boolean>>({});
+  const [cancelled, setCancelled] = useState<string[]>([]);
+  if (data === undefined) return null;
+  const parfocal = data.models.filter((model) => model.source === "parfocal");
+  const lab = data.models.filter((model) => model.source === "lab");
+  const running = data.running.filter((run) => !cancelled.includes(run.id));
+  return (
+    <>
+      <Zone
+        title="Parfocal models"
+        sub="Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
+      >
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Model</TableHead>
+              <TableHead>Makes</TableHead>
+              <TableHead>Who can run it</TableHead>
+              <TableHead className={right}>Result sets</TableHead>
+              <TableHead className={right}>Shown</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {parfocal.map((model) => {
+              const on = shown[model.id] ?? model.shown;
+              return (
+                <TableRow key={model.id} className={on ? "" : "opacity-55"}>
+                  <TableCell>
+                    <NameCell
+                      lead={<Icon name="smart" />}
+                      title={model.name}
+                      version={model.version}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex gap-1.5">
+                      {model.makes.map((item) => (
+                        <CategoryTag key={item}>{item}</CategoryTag>
+                      ))}
+                    </span>
+                  </TableCell>
+                  <TableCell>{model.who_can_run}</TableCell>
+                  <TableCell className={cn(right, "font-mono")}>{model.result_sets}</TableCell>
+                  <TableCell className={right}>
+                    <Switch
+                      aria-label={`Show ${model.name}`}
+                      checked={on}
+                      onCheckedChange={(next) => {
+                        setShown({ ...shown, [model.id]: next });
+                        notify(
+                          next
+                            ? `${model.name} shows in every model list again.`
+                            : `${model.name} is hidden from every model list. Result sets it made stay.`,
+                          () => setShown((current) => ({ ...current, [model.id]: !next })),
+                        );
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Zone>
+      <Zone
+        title="Your lab's models"
+        sub="Models your lab runs on its own server. They show in every model list next to Parfocal's."
+      >
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Model</TableHead>
+              <TableHead>Runs on</TableHead>
+              <TableHead>Who can run it</TableHead>
+              <TableHead className={right}>Result sets</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lab.map((model) => (
+              <TableRow key={model.id}>
+                <TableCell>
+                  <NameCell
+                    lead={<Icon name="smart" />}
+                    title={model.name}
+                    version={model.version}
+                    sub={model.description}
+                  />
+                </TableCell>
+                <TableCell>{model.runs_on}</TableCell>
+                <TableCell>{model.who_can_run}</TableCell>
+                <TableCell className={cn(right, "font-mono")}>{model.result_sets}</TableCell>
+                <TableCell>
+                  <ModelStatus model={model} />
+                </TableCell>
+                <TableCell>
+                  <span className="flex items-center justify-end gap-1.5">
+                    {model.status === "answering" ? (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          notify(
+                            `Sent one sample tile: answered in ${model.latency_ms ?? 0} ms, 38 cells (mock)`,
+                          )
+                        }
+                      >
+                        Test
+                      </Button>
+                    ) : null}
+                    <MoreButton label={`More for ${model.name}`} />
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Zone>
+      <Zone title="Running now">
+        <div>
+          {running.length === 0 ? (
+            <span className="text-body-sm text-fg-dim">Nothing is running.</span>
+          ) : (
+            running.map((run) => {
+              const by = personOf(run.started_by);
+              return (
+                <div
+                  key={run.id}
+                  className="grid min-h-10 grid-cols-[minmax(0,1fr)_150px_220px_auto] items-center gap-4.5 border-t border-line py-1.75 text-body-sm first:border-t-0"
+                >
+                  <NameCell
+                    lead={<Icon name="smart" />}
+                    title={run.model}
+                    sub={`${run.project.code} · ${run.slides} slides`}
+                  />
+                  {by ? <Person person={by} size={20} /> : <span />}
+                  <ProgressBar
+                    value={percent(run.slides_done, run.slides)}
+                    label={`${run.slides_done} of ${run.slides} slides`}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setCancelled([...cancelled, run.id]);
+                      notify(
+                        `${run.model} run cancelled. Slides already done keep their results.`,
+                        () => setCancelled((current) => current.filter((id) => id !== run.id)),
+                      );
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </Zone>
+      <InfoLine>
+        A model that runs somewhere else can still bring its results in as files, like Lab model
+        v3.0.
+      </InfoLine>
+    </>
+  );
+}
+
+export function ApiSection({ notify }: { notify: Notify }) {
+  const accounts = okData(useListServiceAccounts().data) ?? [];
+  const hooks = useListWebhooks().data?.data ?? [];
+  const [revoked, setRevoked] = useState<string[]>([]);
+  return (
+    <>
+      <Zone
+        title="Tokens"
+        end={
+          <Button
+            size="sm"
+            onClick={() =>
+              notify("New token: pick a project and what it can do. Shown once (mock)")
+            }
+          >
+            New token
+          </Button>
+        }
+      >
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Token</TableHead>
+              <TableHead>Can</TableHead>
+              <TableHead>Last used</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {accounts.flatMap((account) =>
+              account.tokens
+                .filter((token) => !revoked.includes(token.id))
+                .map((token) => (
+                  <TableRow key={token.id}>
+                    <TableCell className="font-mono font-semibold">
+                      pf_live_…{token.id.slice(-4)}
+                    </TableCell>
+                    <TableCell>{account.name}</TableCell>
+                    <TableCell>
+                      {token.last_used_at ? lastActive(token.last_used_at) : "Never"}
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setRevoked([...revoked, token.id]);
+                            notify("Token revoked. Pipelines using it stop at once (mock)");
+                          }}
+                        >
+                          Revoke
+                        </Button>
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                )),
+            )}
+          </TableBody>
+        </Table>
+      </Zone>
+      <Zone
+        title="Webhooks"
+        end={
+          <Button
+            size="sm"
+            onClick={() =>
+              notify("Add a webhook: incoming for a project, or outgoing to your server (mock)")
+            }
+          >
+            Add webhook
+          </Button>
+        }
+      >
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Webhook</TableHead>
+              <TableHead>Direction</TableHead>
+              <TableHead>Events</TableHead>
+              <TableHead className={right}>Today</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {hooks.map((hook) => (
+              <TableRow key={hook.id}>
+                <TableCell>
+                  <b>{hook.name}</b>
+                </TableCell>
+                <TableCell>{hook.direction === "incoming" ? "Incoming" : "Outgoing"}</TableCell>
+                <TableCell className="font-mono">{hook.events.join(", ")}</TableCell>
+                <TableCell className={cn(right, "font-mono")}>{hook.calls_today}</TableCell>
+                <TableCell>
+                  {hook.rejected_today > 0 ? (
+                    <StatusTag tone="warn">{hook.rejected_today} rejected</StatusTag>
+                  ) : (
+                    <StatusTag tone="ok">Answering</StatusTag>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <span className="flex justify-end">
+                    <MoreButton label={`More for ${hook.name}`} />
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Zone>
+      <InfoLine>
+        Pipelines post result files to a project's incoming webhook, signed with its token.
+        <TextLink onClick={() => notify("Opens the API reference in the docs (mock)")}>
+          API reference
+        </TextLink>
+      </InfoLine>
+    </>
+  );
+}
+
+const auditFlags: Record<string, { text: string; tone: "warn" | "bad" }> = {
+  "decision.changed-after-sign-off": { text: "After sign-off", tone: "warn" },
+  "webhook.rejected": { text: "Rejected", tone: "bad" },
+};
+
+export function AuditSection() {
+  const events = okData(useListAuditEvents().data) ?? [];
+  const personOf = usePeople();
+  return (
+    <Zone
+      title="Today"
+      end={<span className="text-body-sm text-fg-dim">{events.length} events</span>}
+    >
+      <div className="flex flex-wrap gap-2.5">
+        {["Everyone", "All projects", "Today", "All actions"].map((label) => (
+          <Button key={label} size="sm">
+            {label}
+            <Icon name="down" />
+          </Button>
+        ))}
+      </div>
+      <Table className={tableClass}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>When</TableHead>
+            <TableHead>Who</TableHead>
+            <TableHead>What</TableHead>
+            <TableHead>Project</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {events.map((event) => {
+            const person = personOf(event.actor_id);
+            const flag = auditFlags[event.action];
+            return (
+              <TableRow key={event.id}>
+                <TableCell className="font-mono">
+                  {formatClock(new Date(event.occurred_at))}
+                </TableCell>
+                <TableCell>
+                  {person ? <Person person={person} size={20} /> : <SystemActor />}
+                </TableCell>
+                <TableCell>{event.details}</TableCell>
+                <TableCell className="font-mono">{event.target_subject}</TableCell>
+                <TableCell>
+                  {flag ? <StatusTag tone={flag.tone}>{flag.text}</StatusTag> : null}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Zone>
+  );
+}
+
+export function SecuritySection() {
+  const settings = useGetSecuritySettings().data?.data;
+  const [values, setValues] = useState<Record<string, boolean>>({});
+  if (settings === undefined) return null;
+  const row = (item: (typeof settings.sign_in)[number]) => (
+    <SettingRow
+      key={item.key}
+      label={item.label}
+      detail={item.detail}
+      on={values[item.key] ?? item.on}
+      locked={item.locked}
+      onChange={(on) => setValues({ ...values, [item.key]: on })}
+    />
+  );
+  return (
+    <div className="grid grid-cols-2 gap-(--space-zone)">
+      <Zone title="Sign-in">
+        <div>{settings.sign_in.map(row)}</div>
+        <ProgressBar
+          value={percent(settings.two_factor.people, settings.two_factor.of)}
+          label="People with two factors"
+          valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
+        />
+      </Zone>
+      <Zone title="Sessions and data">
+        <div>{settings.data.map(row)}</div>
+      </Zone>
+    </div>
+  );
+}

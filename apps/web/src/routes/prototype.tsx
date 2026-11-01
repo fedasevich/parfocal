@@ -3,6 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useJobsPrototypeLinks } from "../screens/jobs/prototype-scenes.ts";
 import { newTaskPrototypeScenes } from "../screens/new-task/prototype-scenes.ts";
+import { onboardingPrototypeLinks } from "../screens/onboarding/prototype-scenes.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { projectPrototypeLinks } from "../screens/project/prototype-scenes.ts";
 import { reviewPrototypeLinks } from "../screens/review/prototype-scenes.ts";
@@ -159,16 +160,15 @@ function PrototypeIndex() {
             </Entry>
           </>
         )}
-        <Entry note="First-run setup">
-          <Link to="/setup">Setup</Link>
-        </Entry>
+        {onboardingPrototypeLinks.map(({ key, label, note, link }) => (
+          <Entry key={key} note={note}>
+            <Link {...link}>{label}</Link>
+          </Entry>
+        ))}
         <Entry note="Deep link to a settings section">
           <Link to="/settings/$section" params={{ section: "profile" }}>
             Settings · profile
           </Link>
-        </Entry>
-        <Entry note="Admin as its own page">
-          <Link to="/admin">Admin</Link>
         </Entry>
       </ul>
     </main>

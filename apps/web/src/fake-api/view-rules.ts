@@ -11,6 +11,10 @@ export function fakeViewFor(pathname: string, search: Record<string, unknown>): 
   if (pathname === "/sign-in" && search["scene"] === "noaccess") {
     return { viewer: "AK", firstWeek: false };
   }
+  if (pathname === "/admin") return { viewer: "DH", firstWeek: false };
+  if (pathname === "/sign-in" && search["scene"] === "noaccess") {
+    return { viewer: "AK", firstWeek: false };
+  }
   if (pathname === "/my-work") {
     if (search["scene"] === "anna") return { viewer: "AK", firstWeek: false };
     const tab = search["tab"] ?? search["scene"];

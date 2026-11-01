@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { onboardingScenes } from "../screens/onboarding/scenes.ts";
+import { SetupScreen } from "../screens/onboarding/setup-screen.tsx";
 
-const setupSearch = z.object({ step: z.number().int().min(1).max(5).default(1) });
+const setupSearch = z.object({
+  step: z.enum(onboardingScenes.setup).optional(),
+  scene: z.enum(onboardingScenes.setup).optional(),
+});
 
 export const Route = createFileRoute("/setup")({
   validateSearch: setupSearch,
@@ -11,11 +15,11 @@ export const Route = createFileRoute("/setup")({
 
 function Setup() {
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="Setup"
-      builtBy="PROTO-009 (admin, sign-in and first-run setup)"
-      route={{ search }}
+    <SetupScreen
+      step={search.step ?? search.scene ?? "role"}
+      change={(step) => void navigate({ search: { step } })}
     />
   );
 }

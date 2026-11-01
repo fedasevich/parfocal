@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { AdminScreen } from "../screens/admin/admin-screen.tsx";
+import { adminSections, onboardingScenes, sectionOf } from "../screens/onboarding/scenes.ts";
 
 const adminSearch = z.object({
-  section: z.enum(["members", "invitations", "audit", "retention", "security"]).default("members"),
+  section: z.enum(adminSections).optional(),
+  scene: z.enum(onboardingScenes.admin).optional(),
+  modal: z.enum(["invite"]).optional(),
 });
 
 export const Route = createFileRoute("/admin")({
@@ -13,11 +16,24 @@ export const Route = createFileRoute("/admin")({
 
 function Admin() {
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="Admin"
-      builtBy="PROTO-009 (admin, sign-in and first-run setup)"
-      route={{ search }}
+    <AdminScreen
+      section={sectionOf(search.section, search.scene)}
+      scene={search.scene}
+      modal={search.modal}
+      change={(next) =>
+        void navigate({
+          search: (previous) => {
+            const merged = { ...previous, ...next };
+            return {
+              ...(merged.section ? { section: merged.section } : {}),
+              ...(merged.scene ? { scene: merged.scene } : {}),
+              ...(merged.modal ? { modal: merged.modal } : {}),
+            };
+          },
+        })
+      }
     />
   );
 }

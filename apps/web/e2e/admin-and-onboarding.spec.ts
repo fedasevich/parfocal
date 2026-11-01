@@ -1,0 +1,227 @@
+import { expect, type Page, test } from "@playwright/test";
+
+const badge = (page: Page) => page.getByTestId("fake-data-badge");
+
+const scenes: { path: string; heading: string; shows: string }[] = [
+  { path: "/sign-in", heading: "Sign in to Parfocal", shows: "After you sign in:" },
+  { path: "/sign-in?scene=magic", heading: "Check your email", shows: "Resend in 0:42" },
+  {
+    path: "/sign-in?scene=sso",
+    heading: "Continue with your institution",
+    shows: "Matches your email",
+  },
+  { path: "/sign-in?scene=forgot", heading: "Reset your password", shows: "Send reset link" },
+  {
+    path: "/sign-in?scene=reset",
+    heading: "Choose a new password",
+    shows: "Not found in known leaks",
+  },
+  {
+    path: "/sign-in?scene=passkey",
+    heading: "Sign in to Parfocal",
+    shows: "Use your passkey for parfocal.eu",
+  },
+  {
+    path: "/sign-in?scene=passkeyqr",
+    heading: "Sign in to Parfocal",
+    shows: "Waiting for your phone or key",
+  },
+  { path: "/sign-in?scene=lock", heading: "", shows: "Locked after 15 minutes without input" },
+  { path: "/sign-in?scene=lockkey", heading: "", shows: "Use your passkey for parfocal.eu" },
+  {
+    path: "/sign-in?scene=expired",
+    heading: "Sign in to Parfocal",
+    shows: "Your session ended after 8 hours",
+  },
+  {
+    path: "/sign-in?scene=noaccess",
+    heading: "No access to Lymph nodes 2026",
+    shows: "Ask Lenka Malá, its owner",
+  },
+  { path: "/sign-up", heading: "Create your Parfocal account", shows: "Review AI results" },
+  { path: "/sign-up?scene=verify", heading: "Confirm your email", shows: "Resend the code" },
+  { path: "/invite", heading: "You're invited", shows: "Round 2 · CAMELYON v1.0" },
+  {
+    path: "/invite?scene=account",
+    heading: "Join Sentinel node AI evaluation",
+    shows: "from the invite",
+  },
+  { path: "/setup", heading: "What do you do in Parfocal?", shows: "Specialties" },
+  { path: "/setup?step=workspace", heading: "Your workspace", shows: "You join at once" },
+  { path: "/setup?step=project", heading: "Start with a project", shows: "Recommended" },
+  {
+    path: "/setup?step=device",
+    heading: "How do you move around a slide?",
+    shows: "Viewer you are used to",
+  },
+  { path: "/setup?step=done", heading: "You're set, Lenka", shows: "Account and email confirmed" },
+  { path: "/admin", heading: "Overview", shows: "3 invites waiting" },
+  {
+    path: "/admin?scene=people",
+    heading: "People and roles",
+    shows: "What each role is responsible for",
+  },
+  { path: "/admin?scene=projects", heading: "Projects", shows: "Who can create one" },
+  { path: "/admin?scene=models", heading: "AI models", shows: "Running now" },
+  { path: "/admin?scene=templates", heading: "Report templates", shows: "Study templates" },
+  { path: "/admin?scene=storage", heading: "Storage and sources", shows: "Rules for sources" },
+  { path: "/admin?scene=api", heading: "API and webhooks", shows: "pf_live_…3f9a" },
+  {
+    path: "/admin?scene=audit",
+    heading: "Audit log",
+    shows: "Rejected a call with a bad signature",
+  },
+  { path: "/admin?scene=security", heading: "Security", shows: "Lock after inactivity" },
+  { path: "/admin?scene=tplnew", heading: "", shows: "Opens in the editor." },
+  { path: "/admin?scene=tpledit", heading: "CAMELYON rounds", shows: "Back to the library" },
+  { path: "/admin?scene=addmodel", heading: "Connect your own model", shows: "PROTO-015" },
+];
+
+test("every sign-in, sign-up, invite, setup and admin scene opens on fake data", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  for (const { path, heading, shows } of scenes) {
+    await page.goto(path);
+    if (heading) {
+      await expect(page.getByRole("heading", { name: heading, exact: true }).first()).toBeVisible();
+    }
+    await expect(page.getByText(shows).first()).toBeVisible();
+    await expect(badge(page)).toContainText("Fake data");
+  }
+});
+
+test("sign-in moves between its scenes and lands on the deep link", async ({ page }) => {
+  await page.goto("/sign-in");
+  await page.getByRole("button", { name: "Forgot password?" }).click();
+  await expect(page).toHaveURL(/scene=forgot/);
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(page.getByRole("heading", { name: "Choose a new password" })).toBeVisible();
+  await page.goto("/sign-in?scene=passkey");
+  await page.getByRole("button", { name: "Use a phone or security key" }).click();
+  await expect(
+    page.getByRole("img", { name: "QR code for signing in with a phone" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "The phone answered" }).click();
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
+});
+
+test("the lock unlocks to the same slide and no access asks the owner", async ({ page }) => {
+  await page.goto("/sign-in?scene=lock");
+  await page.getByRole("button", { name: "Unlock with a passkey" }).click();
+  await expect(page).toHaveURL(/scene=lockkey/);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\//);
+  await page.goto("/sign-in?scene=noaccess");
+  await expect(badge(page)).toContainText("viewing as Anna Kopecká");
+  await page.getByRole("button", { name: "Ask for access" }).click();
+  await expect(page.getByText("Asked Lenka Malá to add you to Lymph nodes 2026")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Asked, 11:02/ })).toBeDisabled();
+});
+
+test("sign-up confirms the email and opens setup", async ({ page }) => {
+  await page.goto("/sign-up");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Confirm your email" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm and set up" }).click();
+  await expect(page).toHaveURL(/\/setup\?step=role$/);
+});
+
+test("the invite joins in one step and opens the first slide", async ({ page }) => {
+  await page.goto("/invite");
+  await expect(page.getByText("12 slides, about 3 hours")).toBeVisible();
+  await expect(page.getByText("This project is de-identified")).toBeVisible();
+  await page.getByRole("button", { name: "Accept and create my account" }).click();
+  await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue("simona@fnvltava.example");
+  await page.getByRole("button", { name: "Join and open my first slide" }).click();
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
+});
+
+test("setup carries the role into the first project and ends on the first-week home", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+  await page.getByRole("radio", { name: /Researcher/ }).click();
+  await expect(page.getByText("Home opens on your projects")).toBeVisible();
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await page.getByRole("radio", { name: /Create a new workspace/ }).click();
+  await page.getByRole("textbox", { name: "Name" }).fill("Brno AI group");
+  await page.getByRole("button", { name: "Create it and continue" }).click();
+  const create = page.getByRole("radio", { name: /Create a project/ });
+  await expect(create).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radio", { name: /Open the sample project/ }).click();
+  await page.getByRole("button", { name: "Skip this step" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Created Brno AI group")).toBeVisible();
+  await expect(page.getByText("Upload slides and their AI results")).toBeVisible();
+  await page.getByRole("button", { name: "Open the sample project", exact: true }).click();
+  await expect(page).toHaveURL(/\/\?scene=new$/);
+});
+
+test("admin is Daniel's, with its own sections and the app's top bar", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(badge(page)).toContainText("viewing as Daniel Hruška");
+  const nav = page.getByRole("navigation", { name: "Admin sections" });
+  await expect(nav.getByRole("link")).toHaveCount(10);
+  await nav.getByRole("link", { name: "People and roles" }).click();
+  await expect(page).toHaveURL(/section=people/);
+  await expect(page.getByRole("row", { name: /simona@fnvltava.example/ })).toContainText(
+    "Invite sent",
+  );
+  await expect(page.getByRole("switch", { name: "Admin rights for Daniel Hruška" })).toBeDisabled();
+  await page.getByRole("combobox", { name: "Role of Tomáš Beneš" }).click();
+  await page.getByRole("option", { name: "Researcher" }).click();
+  const tomas = page.getByRole("switch", { name: "Admin rights for Tomáš Beneš" });
+  await expect(tomas).not.toBeChecked();
+  await tomas.click();
+  await expect(page.getByText("Tomáš Beneš has admin rights now")).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Admin rights for Daniel Hruška" })).toBeEnabled();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(tomas).not.toBeChecked();
+  await nav.getByRole("link", { name: "Back to Parfocal" }).click();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("Invite people sends an invite that shows in the list", async ({ page }) => {
+  await page.goto("/admin?section=people");
+  await page.getByRole("button", { name: "Invite people" }).click();
+  const modal = page.getByRole("dialog", { name: "Invite people" });
+  await modal.getByRole("button", { name: "Send invite" }).click();
+  await expect(modal.getByText("Enter an email address.").first()).toBeVisible();
+  await modal.getByRole("textbox", { name: "Email" }).fill("Petr@Lab.example");
+  await modal.getByRole("radio", { name: "Researcher" }).click();
+  await modal.getByRole("switch").click();
+  await modal.getByRole("button", { name: "Send invite" }).click();
+  await expect(modal).toHaveCount(0);
+  await expect(page.getByRole("row", { name: /petr@lab.example/ })).toContainText("Invite sent");
+  await expect(page.getByText("4 invites waiting")).toBeVisible();
+});
+
+test("a new template opens in the editor and blocks are added by click", async ({ page }) => {
+  await page.goto("/admin?section=templates");
+  await expect(page.getByRole("row", { name: /Sentinel node AI evaluation/ })).toContainText(
+    "Headline numbers",
+  );
+  await page.getByRole("button", { name: "New template" }).click();
+  const modal = page.getByRole("dialog", { name: "New study template" });
+  await modal.getByRole("textbox", { name: "Name" }).fill("Lymph node detection");
+  await modal.getByRole("button", { name: "Create and open" }).click();
+  await expect(page).toHaveURL(/scene=tpledit/);
+  await expect(page.getByRole("heading", { name: "Lymph node detection" })).toBeVisible();
+  await page
+    .getByLabel("Block catalogue")
+    .getByRole("button", { name: /Headline numbers/ })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /Headline numbers The metrics you pick/ }).last(),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back to the library" }).click();
+  await expect(page).toHaveURL(/section=templates$/);
+});
+
+test("Connect your own model is left for PROTO-015", async ({ page }) => {
+  await page.goto("/admin?section=models");
+  await page.getByRole("button", { name: "Connect your own model" }).click();
+  await expect(page).toHaveURL(/scene=addmodel/);
+  await expect(page.getByText("PROTO-015 (Connect a model)")).toBeVisible();
+});
