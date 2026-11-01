@@ -27,7 +27,8 @@ test("the fake view follows the mock's persona switches", () => {
     firstWeek: false,
   });
   assert.deepEqual(fakeViewFor("/my-work", { tab: "all" }), { viewer: "LM", firstWeek: false });
-  assert.deepEqual(fakeViewFor("/team", { scene: "anna" }), { viewer: "LM", firstWeek: false });
+  assert.deepEqual(fakeViewFor("/flow-map", { scene: "anna" }), { viewer: "LM", firstWeek: false });
+  assert.deepEqual(fakeViewFor("/team", { scene: "anna" }), { viewer: "DH", firstWeek: false });
 });
 
 test("the as param picks any scenario person on any route and wins over the scene", () => {
