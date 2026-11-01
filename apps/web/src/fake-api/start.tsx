@@ -5,6 +5,7 @@ import {
   setFakeJobsScene,
   setFakeTeamScene,
   setFakeView,
+  setFakeViewerScene,
 } from "@parfocal/api-client/fake";
 import { startFakeWorker } from "@parfocal/api-client/fake/browser";
 import type { QueryClient } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ import { fakeConnectModelSceneFor } from "./connect-model-rules.ts";
 import { fakeJobsSceneFor } from "./jobs-scene-rules.ts";
 import { fakeTeamSceneFor } from "./team-scene-rules.ts";
 import { fakeViewFor } from "./view-rules.ts";
+import { fakeViewerSceneFor } from "./viewer-scene-rules.ts";
 
 type AppRouter = ReturnType<typeof createAppRouter>;
 
@@ -24,7 +26,8 @@ function applyFakeState(pathname: string, search: Record<string, unknown>): bool
   const sceneChanged = setFakeTeamScene(fakeTeamSceneFor(pathname, search));
   const jobsChanged = setFakeJobsScene(fakeJobsSceneFor(pathname, search));
   const modelChanged = setFakeConnectModelScene(fakeConnectModelSceneFor(pathname, search));
-  return viewChanged || sceneChanged || jobsChanged || modelChanged;
+  const viewerChanged = setFakeViewerScene(fakeViewerSceneFor(pathname, search));
+  return viewChanged || sceneChanged || jobsChanged || modelChanged || viewerChanged;
 }
 
 export async function startFakeApi(

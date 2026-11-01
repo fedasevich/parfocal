@@ -400,7 +400,16 @@ function oneOf<Known extends string>(known: readonly Known[], scene: string): Kn
 
 export function issueTarget(screen: PrototypeScreen, scene: string, ids: ScenarioIds) {
   const as = issueWho(screen);
-  if (screen === "layers") return null;
+  if (screen === "layers") {
+    const known = oneOf(mockScenes.layers, scene);
+    return known === undefined
+      ? null
+      : linkOptions({
+          to: "/projects/$projectId/slides/$slideId",
+          params: { projectId: ids.researchProject, slideId: ids.slide },
+          search: { task: ids.task, scene: known, as },
+        });
+  }
   if (screen === "settings") {
     const known = oneOf(mockScenes.settings, scene);
     return known === undefined

@@ -48,7 +48,8 @@ test("every screen that is not built names the task that builds it", () => {
 
 test("the flow map and the index read the same list of built screens", () => {
   assert.ok(builtScreens.has("guided"));
-  assert.ok(!builtScreens.has("case"));
+  assert.ok(builtScreens.has("case"));
+  assert.ok(builtScreens.has("layers"));
   assert.equal(isBuilt({ screen: "creport" } as Parameters<typeof isBuilt>[0]), true);
   assert.equal(isBuilt({ screen: "disagree" } as Parameters<typeof isBuilt>[0]), false);
 });

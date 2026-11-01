@@ -31,6 +31,9 @@ type ReviewTopProps = {
   nothingToDecide?: boolean;
   submitReason?: string | undefined;
   onSubmit?: () => void;
+  progressSub?: string | undefined;
+  primaryLabel?: string | undefined;
+  primaryTitle?: string | undefined;
 };
 
 export function ReviewTop({
@@ -40,6 +43,9 @@ export function ReviewTop({
   nothingToDecide = false,
   submitReason,
   onSubmit,
+  progressSub,
+  primaryLabel,
+  primaryTitle,
 }: ReviewTopProps) {
   const me = okData(useGetMe().data);
   const renderLink = useRouterLink();
@@ -56,10 +62,14 @@ export function ReviewTop({
       slideThumb={lookUrl("overview")}
       progress={nothingToDecide ? undefined : counts}
       progressTitle={position}
-      progressSub={nothingToDecide ? "Nothing to decide" : timeLeft(session)}
+      progressSub={progressSub ?? (nothingToDecide ? "Nothing to decide" : timeLeft(session))}
+      {...(primaryLabel ? { primaryLabel } : {})}
       primaryDisabledReason={submitReason}
       primaryTitle={
-        mode === "full" ? "Open the Slide done card in the Opinion tab" : "Open the Slide done card"
+        primaryTitle ??
+        (mode === "full"
+          ? "Open the Slide done card in the Opinion tab"
+          : "Open the Slide done card")
       }
       onPrimary={onSubmit}
       backHref={destinations.myWork()}

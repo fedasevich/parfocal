@@ -27,13 +27,23 @@ const readoutPerScale = { overview: 1 / 1.52, hpf: 25 } as const;
 
 export const imageOf = (view: StillView) => (view.kind === "cell" ? "hpf" : "overview");
 
+export const shapeKey = (object: string) => object.replace("⁺", "");
+
+export const objectOfShape = (key: string) => (key === "T6" ? "T6⁺" : key);
+
+export type RegionStyle = { stroke: string; fill?: string; dash?: string; width?: number };
+
+export type SlideTag = { object: string; text: string; color: string };
+
+export type Tiles = "sharp" | "loading" | "unloaded";
+
 export function homeCamera(view: StillView, size: Size): Camera {
   if (view.kind === "cell") {
     const cell = cellShapes[view.object];
     return { x: cell?.x ?? hpfSize.width / 2, y: cell?.y ?? hpfSize.height / 2, scale: cellScale };
   }
   if (view.kind === "region") {
-    const [x0, y0, x1, y1] = regionShapes[view.object]?.box ?? [0, 0, 1400, 1924];
+    const [x0, y0, x1, y1] = regionShapes[shapeKey(view.object)]?.box ?? [0, 0, 1400, 1924];
     const fit = Math.min(
       (size.width * regionFill) / Math.max(1, x1 - x0),
       (size.height * regionFill) / Math.max(1, y1 - y0),
@@ -92,6 +102,10 @@ type SlideStillProps = {
   hint?: boolean;
   slideName?: string;
   className?: string;
+  tiles?: Tiles;
+  regionStyle?: ((object: string) => RegionStyle | undefined) | undefined;
+  tags?: SlideTag[];
+  underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
 };
 
@@ -112,6 +126,10 @@ export function SlideStill({
   hint = true,
   slideName = "",
   className,
+  tiles = "sharp",
+  regionStyle,
+  tags = [],
+  underlay,
   overlay,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -151,7 +169,7 @@ export function SlideStill({
   const tagAt =
     view.kind === "region"
       ? (() => {
-          const box = regionShapes[view.object]?.box;
+          const box = regionShapes[shapeKey(view.object)]?.box;
           return box ? toScreen(box[2], box[1]) : null;
         })()
       : view.kind === "cell"
@@ -185,24 +203,34 @@ export function SlideStill({
         viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
       >
-        <image href={lookUrl(image)} width={full.width} height={full.height} />
+        {tiles === "unloaded" ? null : (
+          <image
+            href={lookUrl(image)}
+            width={full.width}
+            height={full.height}
+            style={tiles === "loading" ? { filter: "blur(1.6px)" } : undefined}
+          />
+        )}
+        {underlay?.({ camera: shown, size })}
         {bare || image === "hpf"
           ? null
           : Object.entries(regionShapes).map(([id, shape]) => {
-              const current = id === target;
+              const current = shapeKey(target ?? "") === id;
+              const custom = current ? undefined : regionStyle?.(objectOfShape(id));
               const stroke = current
                 ? "#ffffff"
-                : claimHidden
-                  ? "rgb(255 255 255 / 0.75)"
-                  : "var(--c-tumor)";
+                : (custom?.stroke ?? (claimHidden ? "rgb(255 255 255 / 0.75)" : "var(--c-tumor)"));
+              if (custom?.stroke === "none") return null;
               return (
                 <path
                   key={id}
                   d={shape.path}
-                  fill={current ? "rgb(255 255 255 / 0.08)" : "none"}
+                  fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
                   stroke={stroke}
-                  strokeWidth={current ? 3 : 1.5}
-                  strokeDasharray={drawAs === "dots" && !current ? "1 6" : undefined}
+                  strokeWidth={current ? 3 : (custom?.width ?? 1.5)}
+                  strokeDasharray={
+                    custom?.dash ?? (drawAs === "dots" && !current ? "1 6" : undefined)
+                  }
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                 />
@@ -259,6 +287,30 @@ export function SlideStill({
             })
           : null}
       </svg>
+      {tiles === "unloaded" ? (
+        <div
+          aria-hidden="true"
+          data-tiles="unloaded"
+          className="absolute inset-0 bg-[repeating-conic-gradient(rgb(255_255_255/0.04)_0_25%,transparent_0_50%)] bg-size-[32px_32px]"
+        />
+      ) : null}
+      {view.kind === "whole" && showIds && !bare
+        ? tags.map((tag) => {
+            const box = regionShapes[shapeKey(tag.object)]?.box;
+            if (box === undefined) return null;
+            const at = toScreen(box[2], box[1]);
+            return (
+              <span
+                key={tag.object}
+                data-tag={tag.object}
+                className="pointer-events-none absolute rounded-full border-2 bg-[#1d1d1d] px-2 py-px font-mono text-caption font-semibold whitespace-nowrap text-white"
+                style={{ left: at.left + 8, top: at.top - 10, borderColor: tag.color }}
+              >
+                {tag.text}
+              </span>
+            );
+          })
+        : null}
       {failed ? (
         <div
           aria-hidden="true"
@@ -312,7 +364,7 @@ function Minimap({
   const focus =
     view.kind === "cell"
       ? (regionShapes.T2?.box ?? [0, 0, 0, 0])
-      : (regionShapes[view.kind === "region" ? view.object : "T1"]?.box ?? [0, 0, 0, 0]);
+      : (regionShapes[view.kind === "region" ? shapeKey(view.object) : "T1"]?.box ?? [0, 0, 0, 0]);
   const viewport =
     view.kind === "region"
       ? {

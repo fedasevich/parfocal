@@ -2,6 +2,7 @@ const looks = {
   overview: "/mock-assets/overview.jpg",
   mid: "/mock-assets/mid-10x.jpg",
   hpf: "/mock-assets/hpf-40x.jpg",
+  heat: "/mock-assets/tumor-heat.png",
 } as const;
 
 export type Look = keyof typeof looks;

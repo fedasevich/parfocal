@@ -13,6 +13,7 @@ import {
 } from "../screens/settings/prototype-scenes.ts";
 import { sectionOfScene } from "../screens/settings/sections.ts";
 import { teamPrototypeScenes } from "../screens/team/prototype-scenes.ts";
+import { viewerPrototypeLinks } from "../screens/viewer/prototype-scenes.ts";
 
 export const Route = createFileRoute("/prototype")({
   beforeLoad: () => {
@@ -37,6 +38,12 @@ function PrototypeIndex() {
   const project = body?.projects[0];
   const slides = okData(useListMySlides().data)?.slides ?? [];
   const jobLinks = useJobsPrototypeLinks(project?.id);
+  const clinicalProject = body?.projects.find((item) => item.privacy_mode === "clinical");
+  const clinicalSlide = clinicalProject?.strip[0];
+  const clinicalCase =
+    clinicalProject && clinicalSlide
+      ? { projectId: clinicalProject.id, slideId: clinicalSlide.id }
+      : undefined;
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
       <h1 className="font-semibold text-2xl text-fg">Prototype index</h1>
@@ -152,6 +159,17 @@ function PrototypeIndex() {
                 Slide · {resume.case_label} {resume.slide_label}
               </Link>
             </Entry>
+            {viewerPrototypeLinks(
+              resume.project.id,
+              resume.task_id,
+              resume.slide_id,
+              slides.find((slide) => slide.label === "tumor_052")?.id,
+              clinicalCase,
+            ).map(({ key, label, note, link }) => (
+              <Entry key={key} note={note}>
+                <Link {...link}>{label}</Link>
+              </Entry>
+            ))}
             {reviewPrototypeLinks(
               resume.task_id,
               resume.slide_id,

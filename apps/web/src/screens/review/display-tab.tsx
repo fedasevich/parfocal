@@ -4,6 +4,7 @@ import {
   type DisplaySettings,
   defaultDisplaySettings,
 } from "@parfocal/ui/components/display-panel";
+import type { ReactNode } from "react";
 
 const lockedWords: Record<string, Record<string, string>> = {
   order: { ai: "AI order", size: "Largest first", leastsure: "Least sure first", random: "Random" },
@@ -49,9 +50,24 @@ type DisplayTabProps = {
   preset: string | null;
   extraLocks: DisplayLock[];
   viewer?: boolean;
+  resultSets?: ReactNode;
+  after?: ReactNode;
+  presetOpen?: boolean;
+  onPresetPick?: (name: string | null) => void;
+  onSaveAs?: () => void;
 };
 
-export function DisplayTab({ display, preset, extraLocks, viewer = false }: DisplayTabProps) {
+export function DisplayTab({
+  display,
+  preset,
+  extraLocks,
+  viewer = false,
+  resultSets,
+  after,
+  presetOpen,
+  onPresetPick,
+  onSaveAs,
+}: DisplayTabProps) {
   const settings = displaySettings(display, preset, extraLocks);
   return (
     <div className="grid gap-3">
@@ -64,9 +80,15 @@ export function DisplayTab({ display, preset, extraLocks, viewer = false }: Disp
         settings={settings}
         locks={displayLocks(display, extraLocks)}
         viewer={viewer}
+        resultSets={resultSets}
+        after={after}
         preset={{
           current: preset ?? "Task default",
           presets: (display?.presets ?? []).map((item) => ({ name: item.name, key: item.key })),
+          defaultOpen: presetOpen,
+          onPick: (name) => onPresetPick?.(name === "Task default" ? null : name),
+          onSaveAs,
+          onReset: () => onPresetPick?.(null),
         }}
       />
     </div>

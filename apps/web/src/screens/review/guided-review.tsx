@@ -874,7 +874,7 @@ function CoachTip({
   );
 }
 
-function IssueCard({
+export function IssueCard({
   icon,
   title,
   body,
@@ -895,13 +895,13 @@ function IssueCard({
   );
 }
 
-function CanvasNotice({
+export function CanvasNotice({
   icon,
   title,
   actions,
   children,
 }: {
-  icon: "warn" | "smart";
+  icon: "warn" | "smart" | "info";
   title: string;
   actions: ReactNode;
   children: ReactNode;

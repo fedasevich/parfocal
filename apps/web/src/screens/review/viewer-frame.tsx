@@ -1,4 +1,6 @@
 import type { ReviewObject } from "@parfocal/api-client";
+import { Button } from "@parfocal/ui/components/button";
+import { Icon } from "@parfocal/ui/components/icon";
 import { FactList } from "@parfocal/ui/components/inspector";
 import { ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SidePanel, type SidePanelTab } from "@parfocal/ui/components/side-panel";
@@ -35,6 +37,12 @@ type ViewerFrameProps = {
   onTabChange: (tab: string) => void;
   tabs: SidePanelTab[];
   children: ReactNode;
+  banner?: ReactNode;
+  below?: ReactNode;
+  topBar?: ReactNode;
+  onSubmit?: () => void;
+  progressSub?: string | undefined;
+  scene?: string | undefined;
 };
 
 export function ViewerFrame({
@@ -45,19 +53,34 @@ export function ViewerFrame({
   onTabChange,
   tabs,
   children,
+  banner,
+  below,
+  topBar,
+  onSubmit,
+  progressSub,
+  scene,
 }: ViewerFrameProps) {
   return (
-    <main className="flex h-dvh min-w-0 flex-col bg-page text-fg">
-      <ReviewTop
-        mode="full"
-        session={session}
-        counts={counts}
-        submitReason={
-          counts?.open
-            ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
-            : undefined
-        }
-      />
+    <main
+      className="flex h-dvh min-w-0 flex-col bg-page text-fg"
+      data-testid="full-viewer"
+      data-scene={scene}
+    >
+      {topBar ?? (
+        <ReviewTop
+          mode="full"
+          session={session}
+          counts={counts}
+          progressSub={progressSub}
+          submitReason={
+            counts?.open
+              ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
+              : undefined
+          }
+          {...(onSubmit ? { onSubmit } : {})}
+        />
+      )}
+      {banner}
       <div className="flex min-h-0 flex-1">
         <ToolRail className="justify-between">
           <ToolRailGroup>
@@ -74,7 +97,10 @@ export function ViewerFrame({
           </ToolRailGroup>
           <ToolRailButton icon="panel" label="Hide the side panel" keyHint="]" />
         </ToolRail>
-        <div className="relative flex min-w-0 flex-1">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="relative flex min-h-0 min-w-0 flex-1">{children}</div>
+          {below}
+        </div>
         <SidePanel width={340} value={tab} onValueChange={onTabChange} tabs={tabs} />
       </div>
     </main>
@@ -155,7 +181,9 @@ const decisionDot: Record<Count, string> = {
   unsure: "bg-v-unsure",
 };
 
-const filters: { key: "all" | "open" | Count; label: string }[] = [
+export type ListFilter = "all" | "open" | Count | "added";
+
+const filters: { key: Exclude<ListFilter, "added">; label: string }[] = [
   { key: "all", label: "All" },
   { key: "open", label: "Open" },
   { key: "agree", label: "Agree" },
@@ -163,65 +191,163 @@ const filters: { key: "all" | "open" | Count; label: string }[] = [
   { key: "unsure", label: "Unsure" },
 ];
 
+const filterWord: Record<Exclude<ListFilter, "all">, string> = {
+  open: "open",
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "not sure",
+  added: "added",
+};
+
+export type AddedRow = { object: string; size: string; note: string | null };
+
+type ObjectListProps = {
+  objects: ReviewObject[];
+  counts: SlideCounts;
+  answer: (object: string) => Answer | undefined;
+  current: string | undefined;
+  onPick: (object: string) => void;
+  filter?: ListFilter;
+  onFilterChange?: (filter: ListFilter) => void;
+  showScore?: boolean;
+  added?: AddedRow[];
+  onOpenCells?: () => void;
+  notes?: (object: string) => boolean;
+};
+
 export function ObjectList({
   objects,
   counts,
   answer,
   current,
   onPick,
-}: {
-  objects: ReviewObject[];
-  counts: SlideCounts;
-  answer: (object: string) => Answer | undefined;
-  current: string | undefined;
-  onPick: (object: string) => void;
-}) {
+  filter,
+  onFilterChange,
+  showScore = true,
+  added = [],
+  onOpenCells,
+  notes,
+}: ObjectListProps) {
+  const shown = filter ?? "all";
+  const matches = (object: string) => {
+    if (shown === "all") return true;
+    if (shown === "added") return false;
+    const value = answer(object)?.value;
+    return shown === "open" ? value === undefined : value === shown;
+  };
+  const regions = objects.filter((item) => item.kind === "region" && matches(item.object));
+  const cells = objects.filter((item) => item.kind === "cell");
+  const cellsHit = cells.filter((cell) => matches(cell.object)).length;
+  const cellsDone = cells.filter((cell) => answer(cell.object)).length;
+  const addedShown = shown === "all" || shown === "added" ? added : [];
+  const cellWord = shown === "all" ? `${cells.length} sampled` : `${cellsHit} ${filterWord[shown]}`;
+  const empty = regions.length === 0 && addedShown.length === 0 && !(onOpenCells && cellsHit);
+  const row =
+    "grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl";
   return (
     <div className="grid gap-3">
-      <div className="flex gap-1.5 overflow-hidden">
-        {filters.map((filter) => (
-          <FilterChip key={filter.key} defaultPressed={filter.key === "all"}>
-            {filter.label} {filter.key === "all" ? counts.total : counts[filter.key]}
+      <fieldset aria-label="Show" className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0">
+        {filters.map((item) => (
+          <FilterChip
+            key={item.key}
+            {...(filter === undefined
+              ? { defaultPressed: item.key === "all" }
+              : {
+                  pressed: item.key === shown,
+                  onPressedChange: () => onFilterChange?.(item.key),
+                })}
+          >
+            {item.label} {item.key === "all" ? counts.total : counts[item.key]}
           </FilterChip>
         ))}
-      </div>
+      </fieldset>
       <ul className="m-0 grid list-none gap-1 p-0">
-        {objects
-          .filter((item) => item.kind === "region")
-          .map((item) => {
-            const decided = answer(item.object);
-            return (
-              <li key={item.object}>
-                <button
-                  type="button"
-                  aria-current={item.object === current ? "true" : undefined}
-                  onClick={() => onPick(item.object)}
-                  className="grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl"
-                >
-                  <ObjectIdTag>{item.object}</ObjectIdTag>
-                  <span className="grid">
-                    <span>Tumor region</span>
-                    <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
-                      <i
-                        aria-hidden="true"
-                        className={cn(
-                          "size-2 rounded-full",
-                          decided ? decisionDot[decided.value] : "bg-fg-faint",
-                        )}
-                      />
-                      {decided ? countWord[decided.value].toLowerCase() : "open"}
-                      {decided?.reasons.length
-                        ? ` · ${decided.reasons.join(", ").toLowerCase()}`
-                        : ""}
-                    </small>
-                  </span>
-                  <span className="font-mono text-fg-dim">{item.score.toFixed(2)}</span>
-                  <span className="font-mono text-fg-dim">{item.size_mm?.toFixed(1)} mm</span>
-                </button>
-              </li>
-            );
-          })}
+        {regions.map((item) => {
+          const decided = answer(item.object);
+          return (
+            <li key={item.object}>
+              <button
+                type="button"
+                aria-current={item.object === current ? "true" : undefined}
+                onClick={() => onPick(item.object)}
+                className={row}
+              >
+                <ObjectIdTag>{item.object}</ObjectIdTag>
+                <span className="grid">
+                  <span>Tumor region</span>
+                  <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
+                    <i
+                      aria-hidden="true"
+                      className={cn(
+                        "size-2 rounded-full",
+                        decided ? decisionDot[decided.value] : "bg-fg-faint",
+                      )}
+                    />
+                    {decided ? countWord[decided.value].toLowerCase() : "open"}
+                    {decided?.reasons.length
+                      ? ` · ${decided.reasons.join(", ").toLowerCase()}`
+                      : ""}
+                    {notes?.(item.object) || decided?.note ? (
+                      <Icon name="comment" size="xs" label="Has a note" />
+                    ) : null}
+                  </small>
+                </span>
+                <span className="font-mono text-fg-dim">
+                  {showScore ? item.score.toFixed(2) : ""}
+                </span>
+                <span className="font-mono text-fg-dim">{item.size_mm?.toFixed(1)} mm</span>
+              </button>
+            </li>
+          );
+        })}
+        {onOpenCells && cellsHit ? (
+          <li>
+            <div
+              aria-current={current?.includes("·") ? "true" : undefined}
+              className="grid grid-cols-[44px_1fr_auto] items-center gap-2 rounded-ctl px-1 py-2 text-body-sm aria-[current=true]:bg-surf-hl"
+            >
+              <Icon name="target" className="justify-self-center text-fg-dim" />
+              <span className="grid">
+                <b className="font-semibold">Cells, {cellWord}</b>
+                <small className="text-caption text-fg-dim">
+                  {cellsDone} of {cells.length} decided
+                </small>
+              </span>
+              <Button size="sm" onClick={onOpenCells}>
+                Show the cells
+              </Button>
+            </div>
+          </li>
+        ) : null}
+        {addedShown.map((item) => (
+          <li key={item.object}>
+            <button
+              type="button"
+              aria-current={item.object === current ? "true" : undefined}
+              onClick={() => onPick(item.object)}
+              className={row}
+            >
+              <ObjectIdTag className="border-[#93c5fd]">{item.object}</ObjectIdTag>
+              <span className="grid">
+                <span>Tumor region</span>
+                <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
+                  <i aria-hidden="true" className="size-2 rounded-full bg-[#93c5fd]" />
+                  added by you
+                </small>
+              </span>
+              <span />
+              <span className="font-mono text-fg-dim">{item.size}</span>
+            </button>
+          </li>
+        ))}
       </ul>
+      {empty ? (
+        <p className="m-0 text-body-sm text-fg-dim">
+          Nothing{" "}
+          {shown === "open" ? "open" : `marked ${filterWord[shown as Exclude<ListFilter, "all">]}`}{" "}
+          on this slide.
+        </p>
+      ) : null}
     </div>
   );
 }
