@@ -219,7 +219,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike pans a Viv slide at 60 fps while a React inspector shows the zoom level, with zero React renders per frame, measured with the React profiler.
   Refs doc 24 (main-thread costs), doc 30 (code layout).
 
-- [ ] STACK-007 · Component primitives and styling
+- [x] STACK-007 · Component primitives and styling
   Candidates: React Aria Components, Radix Primitives, Ark UI. Styling: CSS Modules plus CSS custom properties, Tailwind CSS v4 with tokens, vanilla-extract, Panda CSS. Default: React Aria Components for accessible behaviour, and CSS Modules over design tokens as CSS variables. That keeps the kit's token set (dark and light) authoritative.
   The owner decided on 2026-11-01: shadcn/ui on Base UI with Tailwind CSS v4 and the kit's tokens in `@theme` ([ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md)).
   Done when the ADR lists the primitive set mapped to kit components (button, segmented control, toggle, popover, dialog, menu, tabs, slider, listbox, tooltip) and confirms axe-clean output.
@@ -1301,7 +1301,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ## 08 DS · Design system
 
-- [ ] DS-000 · Research check for the design system tooling
+- [x] DS-000 · Research check for the design system tooling
   Done when Tailwind CSS v4, shadcn/ui on Base UI and Storybook are set up as [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md) says, and axe passes over the stories of the controls in its table, which ticks STACK-007 (component primitives and styling) in the same change.
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md).
 
