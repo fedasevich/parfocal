@@ -3201,7 +3201,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when a component test opens it from both places and shows each format.
   Depends on RSET-002. Split from RSET-002 so the schema and validator have no screen work. Refs mock: formats.
 
-- [ ] RSET-011 · Cells from imported files
+- [x] RSET-011 · Cells from imported files
   An imported GeoJSON, QuPath export, Parfocal JSON or CSV writes its cells into chunks with the chunk store of AIP-013, numbered per slide and inheriting the numbers of cells an older set shares (OBJ-002, IDs across result sets), with each cell's region from the regions it lies in. It writes them with `build_cells` and `write_cells` and adds the rows with `ChunkRow.of`, and it adds each class's cell count from the chunk entries to the set's class counts, which `finish` counts only for regions and zones today. The API already reads chunk files from object storage since AIP-013 (result chunk store), so review order and cell scopes see them. Sets imported before this task have no cells, and their kept source file can be imported again as a new set.
   Done when an imported QuPath 0.7 export shows its cells in a ready set, a second import of it inherits every cell number, and a review task with a cell scope reads its chunks from MinIO.
   Depends on RSET-004, AIP-013. Split from RSET-004 by [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job).

@@ -22,7 +22,7 @@ To take every recommendation at once, write "all recommended" here:
 | SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
 | RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
 | AIP-013 (result chunk store) | Versioned cell chunks and a summary index written gzip to object storage under the result set's prefix, and the API reads chunks from there | Ticked, decisions 12a to 12c |
-| RSET-011 (cells from imported files) | Imported files write their cells into chunks, inherit cell numbers from older sets and carry each cell's region, and files of only cells import | Built, the tick waits for a green CI run on `main`, decisions 13a to 13d |
+| RSET-011 (cells from imported files) | Imported files write their cells into chunks, inherit cell numbers from older sets and carry each cell's region, and files of only cells import | Ticked, decisions 13a to 13d |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
