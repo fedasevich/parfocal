@@ -21,7 +21,7 @@ export const newTaskPrototypeScenes: {
   {
     scene: "reviewers",
     label: "New review task · Reviewers",
-    note: "Step 2 with Lenka Malá and Simona Marková",
+    note: "Step 2 with the two reviewers",
   },
   { scene: "find", label: "New review task · typing a name", note: "The token field open on k" },
   { scene: "check", label: "New review task · What to check", note: "Step 3 with the estimate" },
@@ -61,7 +61,7 @@ export const newTaskPrototypeScenes: {
   {
     scene: "away",
     label: "New review task · a reviewer is away",
-    note: "Issue, Petra Králová until 22 Oct",
+    note: "Issue, one reviewer is away until 22 Oct",
   },
   {
     scene: "retiredtpl",

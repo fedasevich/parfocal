@@ -1,4 +1,11 @@
-import { type PersonKey, people, projectByCode, resultSets, scenarioNow } from "./scenario.ts";
+import {
+  type PersonKey,
+  people,
+  projectByCode,
+  resultSets,
+  scenarioNow,
+  slides,
+} from "./scenario.ts";
 
 const uuid = (group: number, index: number) =>
   `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
@@ -36,8 +43,15 @@ const taskSlide = (
   stain = "H&E",
 ): TaskSlide => {
   slideIndex += 1;
+  const shared = slides.find(
+    (candidate) =>
+      candidate.project === "P07" &&
+      candidate.caseLabel === caseLabel &&
+      candidate.label === label &&
+      candidate.stain === stain,
+  );
   return {
-    id: uuid(41, slideIndex),
+    id: shared?.id ?? uuid(41, slideIndex),
     label,
     stain,
     caseLabel,
