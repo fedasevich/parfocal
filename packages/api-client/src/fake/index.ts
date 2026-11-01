@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import type { RequestHandler } from "msw";
 import { getParfocalAPIMock } from "../generated/api.msw.ts";
+import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
@@ -27,12 +28,20 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...taskHandlers(),
     ...jobHandlers(),
     ...adminHandlers(),
+    ...adjudicationHandlers(),
     ...settingsHandlers(),
     ...getParfocalAPIMock(),
   ];
 }
 
 export * from "../generated/api.msw.ts";
+export {
+  toDisagreementQueue,
+  toEvaluationReport,
+  toMyAdjudication,
+  toSignOffSummary,
+  toTaskEvaluation,
+} from "./adjudication-handlers.ts";
 export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
@@ -49,7 +58,16 @@ export {
   setFakeJobsScene,
 } from "./jobs-scene.ts";
 export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-handlers.ts";
+export {
+  defaultFakeQueueScene,
+  type FakeQueueScene,
+  fakeQueueScene,
+  type QueueStage,
+  resetQueueState,
+  setFakeQueueScene,
+} from "./queue-scene.ts";
 export * as scenario from "./scenario.ts";
+export * as scenarioAdjudication from "./scenario-adjudication.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";
 export * as scenarioClinical from "./scenario-clinical.ts";
 export * as scenarioConnectModel from "./scenario-connect-model.ts";

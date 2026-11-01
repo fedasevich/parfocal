@@ -28,6 +28,7 @@ import type {
   TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
+import { queueTaskView } from "./queue-scene.ts";
 import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
 import {
   announcements,
@@ -221,7 +222,8 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
 const taskSlideId = (task: ScenarioReviewTask, index: number, own: string[]) =>
   own[index] ?? `${task.id.slice(0, 24)}${String(900000000000 + index).slice(-12)}`;
 
-export const toTaskStates = (task: ScenarioReviewTask): TaskStates => {
+export const toTaskStates = (seeded: ScenarioReviewTask): TaskStates => {
+  const task = queueTaskView(seeded);
   const own = slides.filter((slide) => slide.project === task.project).map((slide) => slide.id);
   const signed = task.status === "signed";
   const reviewersOf = (index: number) =>

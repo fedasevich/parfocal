@@ -3,6 +3,7 @@ import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
 import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adjudications.ts";
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { connectModelDraftOperations } from "./connect-model-handlers.ts";
@@ -27,6 +28,16 @@ import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 import { viewerDraftOperations } from "./viewer-handlers.ts";
 
+export {
+  getDecideAdjudicationMockHandler,
+  getGetDisagreementQueueMockHandler,
+  getGetEvaluationReportMockHandler,
+  getGetMyAdjudicationMockHandler,
+  getGetSignOffSummaryMockHandler,
+  getSendToAdjudicatorMockHandler,
+  getStartEvaluationVersionMockHandler,
+  getUpdateQueuedObjectMockHandler,
+} from "./adjudication-handlers.ts";
 export {
   getGetAdminOverviewMockHandler,
   getGetInvitePreviewMockHandler,
@@ -223,6 +234,7 @@ export const draftOperations: DraftOperation[] = [
   ...settingsDraftOperations,
   ...connectModelDraftOperations,
   ...viewerDraftOperations,
+  ...adjudicationDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

@@ -1,5 +1,7 @@
 export * from "./admin.ts";
 export * from "./clinical-report.ts";
+export * from "./disagreements.ts";
+export * from "./evaluation-report.ts";
 export {
   type DecisionStyle,
   decisionStyleSchema,
