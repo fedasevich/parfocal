@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { GuidedReview } from "../screens/review/guided-review.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const guidedSearch = z.object({
@@ -8,21 +8,28 @@ const guidedSearch = z.object({
   object: z.string().optional(),
   scene: z.enum(mockScenes.guided).optional(),
   submitted: z.boolean().optional(),
+  tab: z.enum(["review", "comments", "display"]).optional(),
 });
 
 export const Route = createFileRoute("/tasks/$taskId/guided")({
   validateSearch: guidedSearch,
-  component: GuidedReview,
+  component: GuidedRoute,
 });
 
-function GuidedReview() {
-  const params = Route.useParams();
+function GuidedRoute() {
+  const { taskId } = Route.useParams();
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="Guided review"
-      builtBy="PROTO-007 (guided review and the Slide done card)"
-      route={{ params, search }}
+    <GuidedReview
+      taskId={taskId}
+      slideId={search.slide ?? ""}
+      scene={search.scene}
+      submitted={search.submitted ?? false}
+      tab={search.tab}
+      onTabChange={(tab) =>
+        void navigate({ search: (previous) => ({ ...previous, tab }), replace: true })
+      }
     />
   );
 }

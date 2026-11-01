@@ -41,10 +41,16 @@ import { toReviewTaskDetail } from "./work-handlers.ts";
 
 const taskById = (taskId: string) => [...reviewTasks, rt16].find((task) => task.id === taskId);
 
+const slideSummary = (slideId: string) => {
+  const slide = slides.find((candidate) => candidate.id === slideId) ?? reviewedSlide;
+  return { label: slide.label, case_label: slide.caseLabel, stain: slide.stain };
+};
+
 export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects =>
   reviewObjectsSchema.parse({
     task_id: taskId,
     slide_id: slideId,
+    slide: slideSummary(slideId),
     objects: reviewsA1(taskId, slideId)
       ? reviewObjects.map((item, index) => ({
           object: item.object,
@@ -149,13 +155,14 @@ export const toNeighbours = (slideId: string): Neighbours => {
   const at = ownSlides.indexOf(current);
   const previous = ownSlides[at - 1];
   const next = ownSlides[at + 1];
+  const position = current.id === reviewedSlide.id ? slideOrder.position : slideOrder.position + 1;
   return {
     current: slideRef(current),
     previous: previous ? slideRef(previous) : null,
     next: next ? slideRef(next) : null,
-    position: current.id === reviewedSlide.id ? slideOrder.position : at + 1,
-    total: current.id === reviewedSlide.id ? slideOrder.total : ownSlides.length,
-    at_end: next === undefined,
+    position,
+    total: slideOrder.total,
+    at_end: position === slideOrder.total,
   };
 };
 

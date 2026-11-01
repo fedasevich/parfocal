@@ -121,6 +121,7 @@ export const ReviewTopBarGuided: Story = {
   render: () => (
     <ReviewTopBar
       mode="guided"
+      backHref="#my-work"
       taskName="Sentinel node AI evaluation"
       taskSub="Sentinel node AI evaluation · due 24 Oct"
       slideName="A1 · H&E"
@@ -137,6 +138,7 @@ export const ReviewTopBarFull: Story = {
   render: () => (
     <ReviewTopBar
       mode="full"
+      backHref="#my-work"
       taskName="Sentinel node AI evaluation"
       taskSub="Sentinel node AI evaluation · due 24 Oct"
       slideName="A1 · H&E"
@@ -152,6 +154,7 @@ export const ReviewTopBarAdjudicate: Story = {
   render: () => (
     <ReviewTopBar
       mode="adjudicate"
+      backHref="#my-work"
       taskName="Adjudication · RT-14"
       taskSub="Sentinel node AI evaluation · due 24 Oct"
       slideName="A1 · H&E"

@@ -15,10 +15,14 @@ type GalleryTileProps = Omit<React.ComponentProps<"button">, "children"> & {
   image: string;
   objectId: string;
   label: string;
-  size?: 92 | 120;
+  size?: 40 | 92 | 120;
   state?: GalleryTileState;
   decision?: Decision;
   dimmed?: boolean;
+  ringed?: boolean;
+  imagePosition?: string | undefined;
+  imageSize?: string | undefined;
+  outline?: React.ReactNode;
 };
 
 function GalleryTile({
@@ -29,9 +33,14 @@ function GalleryTile({
   state = "to-check",
   decision = "open",
   dimmed = false,
+  ringed = false,
+  imagePosition,
+  imageSize,
+  outline,
   className,
   ...props
 }: GalleryTileProps) {
+  const crop = size === 40;
   return (
     <button
       type="button"
@@ -49,24 +58,38 @@ function GalleryTile({
       <span
         className={cn(
           "relative block rounded-md bg-[#111] bg-cover bg-center shadow-[inset_0_0_0_1px_var(--line)] group-hover/tile:shadow-[0_0_0_2px_var(--line-strong)] group-focus-visible/tile:shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_var(--accent)]",
+          crop && "rounded-[5px]",
           state === "current" && "shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_var(--accent)]",
+          ringed &&
+            "shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_color-mix(in_srgb,var(--accent)_75%,white)]",
         )}
-        style={{ width: size, height: size, backgroundImage: `url(${image})` }}
+        style={{
+          width: size,
+          height: size,
+          backgroundImage: `url(${image})`,
+          ...(imagePosition ? { backgroundPosition: imagePosition } : {}),
+          ...(imageSize ? { backgroundSize: imageSize } : {}),
+        }}
       >
-        <span
-          aria-hidden="true"
-          className="absolute top-1/2 left-1/2 size-[42%] -translate-1/2 rounded-full border-[1.5px] border-dashed border-white/85"
-        />
-        <span className="absolute bottom-1 left-1 rounded-[3px] bg-black/70 px-1 font-mono text-label leading-4 text-white">
-          {objectId}
-        </span>
+        {outline ??
+          (crop ? null : (
+            <span
+              aria-hidden="true"
+              className="absolute top-1/2 left-1/2 size-[42%] -translate-1/2 rounded-full border-[1.5px] border-dashed border-white/85"
+            />
+          ))}
+        {crop ? null : (
+          <span className="absolute bottom-1 left-1 rounded-[3px] bg-black/70 px-1 font-mono text-label leading-4 text-white">
+            {objectId}
+          </span>
+        )}
       </span>
       <span
         aria-hidden="true"
         className={cn(
           "absolute -right-0.75 -bottom-0.75 size-2.5 rounded-full shadow-[0_0_0_2px_var(--chrome)]",
           dotColors[decision],
-          state === "to-check" && decision === "open" && "hidden",
+          state === "to-check" && decision === "open" && !crop && "hidden",
         )}
       />
     </button>

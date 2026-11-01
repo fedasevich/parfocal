@@ -35,15 +35,30 @@ function doneLine(counts: SlideDoneCounts) {
   return `${head} objects checked: ${counts.agree} agree, ${counts.disagree} disagree, ${counts.unsure} not sure.${added}`;
 }
 
-function QuestionControl({ question }: { question: OpinionQuestion }) {
+type AnswerChange = ((id: string, value: string) => void) | undefined;
+
+function QuestionControl({
+  question,
+  onAnswerChange,
+}: {
+  question: OpinionQuestion;
+  onAnswerChange: AnswerChange;
+}) {
+  const change = (value: unknown) => onAnswerChange?.(question.id, String(value));
+  const picked = onAnswerChange
+    ? { value: question.answer ?? "" }
+    : question.answer
+      ? { value: question.answer }
+      : {};
   if (question.kind === "scale") {
     return (
-      <div className="grid gap-1.5">
+      <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
           aria-label={question.question}
           size="lg"
-          fill
-          {...(question.answer ? { value: question.answer } : {})}
+          className="w-fit [&>*]:min-w-11"
+          {...picked}
+          onValueChange={change}
           options={["1", "2", "3", "4", "5"].map((value) => ({ value, label: value }))}
         />
         {question.help ? <span className="text-body-sm text-fg-dim">{question.help}</span> : null}
@@ -55,8 +70,9 @@ function QuestionControl({ question }: { question: OpinionQuestion }) {
       <SegmentedControl
         aria-label={question.question}
         size="lg"
-        fill
-        {...(question.answer ? { value: question.answer } : {})}
+        className="w-fit"
+        {...picked}
+        onValueChange={change}
         options={[
           { value: "Yes", label: "Yes" },
           { value: "No", label: "No" },
@@ -68,7 +84,11 @@ function QuestionControl({ question }: { question: OpinionQuestion }) {
     return (
       <div className="flex flex-wrap gap-2">
         {(question.options ?? []).map((option) => (
-          <FilterChip key={option} defaultPressed={question.answer === option}>
+          <FilterChip
+            key={option}
+            pressed={question.answer === option}
+            onPressedChange={() => change(option)}
+          >
             {option}
           </FilterChip>
         ))}
@@ -80,7 +100,9 @@ function QuestionControl({ question }: { question: OpinionQuestion }) {
       aria-label={question.question}
       rows={2}
       placeholder="Optional"
-      defaultValue={question.answer}
+      {...(onAnswerChange
+        ? { value: question.answer ?? "", onChange: (event) => change(event.target.value) }
+        : { defaultValue: question.answer })}
       className="w-full resize-y rounded-ctl border border-line-strong bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]"
     />
   );
@@ -96,6 +118,7 @@ type SlideDoneCardProps = React.ComponentProps<"div"> & {
   lockedReason?: string;
   panel?: boolean;
   onSubmit?: () => void;
+  onAnswerChange?: AnswerChange;
 };
 
 function SlideDoneCard({
@@ -108,6 +131,7 @@ function SlideDoneCard({
   lockedReason,
   panel = false,
   onSubmit,
+  onAnswerChange,
   className,
   ...props
 }: SlideDoneCardProps) {
@@ -171,7 +195,7 @@ function SlideDoneCard({
                 <span className="shrink-0 text-caption text-fg-dim">Required</span>
               ) : null}
             </div>
-            <QuestionControl question={question} />
+            <QuestionControl question={question} onAnswerChange={onAnswerChange} />
           </div>
         ))}
       </div>

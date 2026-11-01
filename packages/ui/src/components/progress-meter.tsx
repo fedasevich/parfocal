@@ -1,4 +1,5 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -134,13 +135,17 @@ function ProgressRing({ split, size = 40, label, className, ...props }: Progress
           />
         ))}
       </svg>
-      <b
-        aria-hidden="true"
-        className="relative font-mono leading-none font-semibold tracking-tight text-fg"
-        style={{ fontSize: size >= 56 ? 14 : 11 }}
-      >
-        {percent}%
-      </b>
+      {percent === 100 ? (
+        <Icon name="check" size={size >= 56 ? "md" : "sm"} className="relative text-ok" />
+      ) : (
+        <b
+          aria-hidden="true"
+          className="relative font-mono leading-none font-semibold tracking-tight text-fg"
+          style={{ fontSize: size >= 56 ? 14 : 11 }}
+        >
+          {percent}%
+        </b>
+      )}
     </span>
   );
 }

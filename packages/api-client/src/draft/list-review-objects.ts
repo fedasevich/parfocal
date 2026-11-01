@@ -16,6 +16,7 @@ export const reviewObjectSchema = z.object({
 export const reviewObjectsSchema = z.object({
   task_id: z.string(),
   slide_id: z.string(),
+  slide: z.object({ label: z.string(), case_label: z.string().nullable(), stain: z.string() }),
   objects: z.array(reviewObjectSchema),
   added: z.array(z.object({ object: z.string(), note: z.string().nullable() })),
 });
