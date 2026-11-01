@@ -45,3 +45,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-31 | [A 4 GiB upload with Uppy resumes after a cut link and a closed page and never sends a stored part again](2026-10-31-resumable-upload-spike.md) | STACK-039 | spike |
 | 2026-10-31 | [Least sure first order on a synthetic 1.6 million cell slide](2026-10-31-review-order-large-slide.md) | GUIDE-012 | benchmark |
 | 2026-11-01 | [Importing cells from a result file, from 81 to 1.6 million cells](2026-11-01-cell-import.md) | RSET-011 | benchmark |
+| 2026-11-01 | [A 1.6 million cell GeoJSON imports through the real worker in about 1 GiB and 45 s, claimed once with at least 40 s of lease left](2026-11-01-bounded-cell-import.md) | RSET-012 | benchmark |

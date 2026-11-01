@@ -1,9 +1,10 @@
 import csv
 import io
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from itertools import chain
+from typing import Any, BinaryIO, TextIO
 
 import cv2
 import msgspec
@@ -16,7 +17,12 @@ from scipy import ndimage
 from shapely.geometry import Point, Polygon, shape
 from shapely.geometry.base import BaseGeometry
 
+from parfocal_ingest.json_stream import BLOCK_BYTES, JsonArray, Phase
+
 SNIFF_BYTES = 4096
+MIN_RING = 4
+BATCH_ROWS = 20000
+NOT_GEOJSON = "This is not GeoJSON: expected a FeatureCollection, a feature or a list"
 GEOMETRY_TYPES = frozenset({"Point", "Polygon", "MultiPolygon"})
 CELL_TYPES = frozenset({"cell", "detection"})
 REGION_TYPES = frozenset({"annotation", "region"})
@@ -68,6 +74,7 @@ class ReadResult:
     objects: list[ResultObject] = field(default_factory=list[ResultObject])
     heatmaps: list[Heatmap] = field(default_factory=list[Heatmap])
     problems: list[Problem] = field(default_factory=list[Problem])
+    read: int = 0
 
 
 class Classification(msgspec.Struct):
@@ -89,14 +96,17 @@ class FeatureCollection(msgspec.Struct):
 
 
 def features_of(data: bytes) -> list[Feature]:
-    raw = msgspec.json.decode(data)
+    return features_of_value(msgspec.json.decode(data))
+
+
+def features_of_value(raw: Any) -> list[Feature]:
     if isinstance(raw, list):
         return msgspec.convert(raw, list[Feature])
     if isinstance(raw, dict) and raw.get("type") == "FeatureCollection":
         return msgspec.convert(raw, FeatureCollection).features
     if isinstance(raw, dict) and raw.get("type") == "Feature":
         return [msgspec.convert(raw, Feature)]
-    raise ValueError("This is not GeoJSON: expected a FeatureCollection, a feature or a list")
+    raise ValueError(NOT_GEOJSON)
 
 
 def geometry_of(value: dict[str, Any]) -> BaseGeometry:
@@ -152,22 +162,87 @@ def number_or_none(value: Any) -> float | None:
         return None
 
 
-def read_geojson(data: bytes) -> ReadResult:
-    result = ReadResult()
+type Shaped = BaseGeometry | ValueError | TypeError | msgspec.ValidationError
+
+
+def shaped(value: dict[str, Any] | None) -> Shaped:
     try:
-        features = features_of(data)
-    except (msgspec.DecodeError, msgspec.ValidationError, ValueError) as error:
-        result.problems.append(Problem("file", str(error)))
-        return result
-    for index, feature in enumerate(features, start=1):
+        if value is None:
+            raise ValueError("The feature has no geometry")
+        return geometry_of(value)
+    except (ValueError, TypeError, msgspec.ValidationError) as error:
+        return error
+
+
+def shaped_each(values: Sequence[dict[str, Any] | None]) -> list[Shaped]:
+    return [shaped(value) for value in values]
+
+
+def single_ring(value: dict[str, Any] | None) -> list[Any] | None:
+    if value is None or value.get("type") != "Polygon":
+        return None
+    rings = value.get("coordinates")
+    if not isinstance(rings, list) or len(rings) != 1:
+        return None
+    ring = rings[0]
+    return ring if isinstance(ring, list) and len(ring) >= MIN_RING else None
+
+
+def simple_polygons(rings: Sequence[list[Any]]) -> NDArray[Any] | None:
+    try:
+        coords = np.array(list(chain.from_iterable(rings)), dtype=np.float64)
+    except ValueError, TypeError:
+        return None
+    if coords.ndim != 2 or coords.shape[1] != 2:
+        return None
+    lengths = np.fromiter((len(ring) for ring in rings), dtype=np.int64, count=len(rings))
+    owners = np.repeat(np.arange(len(rings)), lengths)
+    polygons: NDArray[Any] = np.asarray(
+        shapely.polygons(shapely.linearrings(coords, indices=owners)), dtype=object
+    )
+    invalid = ~shapely.is_valid(polygons)
+    if invalid.any():
+        polygons[invalid] = shapely.make_valid(polygons[invalid])
+    return polygons
+
+
+def batch_geometries(values: Sequence[dict[str, Any] | None]) -> list[Shaped]:
+    rings = [single_ring(value) for value in values]
+    fast = [index for index, ring in enumerate(rings) if ring is not None]
+    found: list[Shaped | None] = [None] * len(values)
+    polygons = simple_polygons([rings[index] or [] for index in fast]) if fast else None
+    if polygons is not None:
+        empty = shapely.is_empty(polygons)
+        for index, polygon, hollow in zip(fast, polygons.tolist(), empty.tolist(), strict=True):
+            found[index] = ValueError("The geometry is empty") if hollow else polygon
+    return [shaped(values[i]) if item is None else item for i, item in enumerate(found)]
+
+
+def feature_objects(
+    features: Sequence[Feature], first: int, result: ReadResult, *, batched: bool
+) -> None:
+    nucleus_values = [
+        feature.nucleus_geometry or (feature.properties or {}).get("nucleusGeometry")
+        for feature in features
+    ]
+    shape_all = batch_geometries if batched else shaped_each
+    geometries = shape_all([feature.geometry for feature in features])
+    present = [index for index, value in enumerate(nucleus_values) if value]
+    nuclei: list[Shaped | None] = [None] * len(features)
+    for index, nucleus in zip(
+        present, shape_all([nucleus_values[i] for i in present]), strict=True
+    ):
+        nuclei[index] = nucleus
+    for index, feature in enumerate(features, start=first):
         where = f"feature {index}"
         properties = dict(feature.properties or {})
+        geometry = geometries[index - first]
+        nucleus = nuclei[index - first]
         try:
-            if feature.geometry is None:
-                raise ValueError("The feature has no geometry")
-            geometry = geometry_of(feature.geometry)
-            nucleus_value = feature.nucleus_geometry or properties.pop("nucleusGeometry", None)
-            nucleus = geometry_of(nucleus_value) if nucleus_value else None
+            if not isinstance(geometry, BaseGeometry):
+                raise geometry
+            if nucleus is not None and not isinstance(nucleus, BaseGeometry):
+                raise nucleus
             kind = kind_of(properties, geometry)
         except (ValueError, TypeError, msgspec.ValidationError) as error:
             result.problems.append(Problem(where, str(error)))
@@ -193,7 +268,55 @@ def read_geojson(data: bytes) -> ReadResult:
                 },
             )
         )
+
+
+def read_geojson(data: bytes) -> ReadResult:
+    result = ReadResult()
+    try:
+        features = features_of(data)
+    except (msgspec.DecodeError, msgspec.ValidationError, ValueError) as error:
+        result.problems.append(Problem("file", str(error)))
+        return result
+    feature_objects(features, 1, result, batched=False)
     return result
+
+
+def file_problem(error: Exception) -> ReadResult:
+    return ReadResult(problems=[Problem("file", str(error))])
+
+
+def feature_batch(batch: bytes, first: int) -> ReadResult:
+    features = msgspec.json.decode(batch, type=list[Feature])
+    result = ReadResult(read=len(features))
+    feature_objects(features, first, result, batched=True)
+    return result
+
+
+def stream_geojson(handle: BinaryIO, *, block_bytes: int = BLOCK_BYTES) -> Iterator[ReadResult]:
+    scan = JsonArray(handle, "features", block_bytes=block_bytes)
+    first = 1
+    try:
+        for batch in scan.batches():
+            result = feature_batch(batch, first)
+            del batch
+            first += result.read
+            yield result
+            del result
+        rest: Any = msgspec.json.decode(bytes(scan.rest))
+        if scan.phase is Phase.SEEK:
+            yield from stream_whole(rest)
+        elif isinstance(rest, dict) and rest.get("type") != "FeatureCollection":
+            raise ValueError(NOT_GEOJSON)
+        else:
+            msgspec.convert(rest, FeatureCollection | list[Feature])
+    except (msgspec.DecodeError, msgspec.ValidationError, ValueError) as error:
+        yield file_problem(error)
+
+
+def stream_whole(raw: Any) -> Iterator[ReadResult]:
+    result = ReadResult()
+    feature_objects(features_of_value(raw), 1, result, batched=True)
+    yield result
 
 
 class ParfocalObject(msgspec.Struct):
@@ -213,21 +336,18 @@ class ParfocalFile(msgspec.Struct):
     objects: list[ParfocalObject]
 
 
-def read_parfocal_json(data: bytes) -> ReadResult:
-    result = ReadResult()
-    try:
-        document = msgspec.json.decode(data, type=ParfocalFile)
-    except (msgspec.DecodeError, msgspec.ValidationError) as error:
-        result.problems.append(Problem("file", str(error)))
-        return result
-    if document.format != "parfocal-results" or document.version != 1:
-        result.problems.append(Problem("file", "This is not a Parfocal results file, version 1"))
-        return result
-    for index, item in enumerate(document.objects, start=1):
+def parfocal_objects(
+    items: Sequence[ParfocalObject], first: int, result: ReadResult, *, batched: bool
+) -> None:
+    values = [item.geometry for item in items]
+    geometries = batch_geometries(values) if batched else shaped_each(values)
+    for index, item in enumerate(items, start=first):
+        geometry = geometries[index - first]
         try:
-            geometry = geometry_of(item.geometry)
+            if not isinstance(geometry, BaseGeometry):
+                raise geometry
             kind = ObjectKind(item.kind)
-        except (ValueError, TypeError) as error:
+        except (ValueError, TypeError, msgspec.ValidationError) as error:
             result.problems.append(Problem(f"object {index}", str(error)))
             continue
         result.objects.append(
@@ -242,7 +362,56 @@ def read_parfocal_json(data: bytes) -> ReadResult:
                 properties=dict(item.properties or {}),
             )
         )
+
+
+def parfocal_problem(document: ParfocalFile) -> Problem | None:
+    if document.format != "parfocal-results" or document.version != 1:
+        return Problem("file", "This is not a Parfocal results file, version 1")
+    return None
+
+
+def read_parfocal_json(data: bytes) -> ReadResult:
+    result = ReadResult()
+    try:
+        document = msgspec.json.decode(data, type=ParfocalFile)
+    except (msgspec.DecodeError, msgspec.ValidationError) as error:
+        result.problems.append(Problem("file", str(error)))
+        return result
+    problem = parfocal_problem(document)
+    if problem is not None:
+        result.problems.append(problem)
+        return result
+    parfocal_objects(document.objects, 1, result, batched=False)
     return result
+
+
+def parfocal_batch(batch: bytes, first: int) -> ReadResult:
+    items = msgspec.json.decode(batch, type=list[ParfocalObject])
+    result = ReadResult(read=len(items))
+    parfocal_objects(items, first, result, batched=True)
+    return result
+
+
+def stream_parfocal_json(scan: JsonArray) -> Iterator[ReadResult]:
+    first = 1
+    try:
+        for batch in scan.batches():
+            result = parfocal_batch(batch, first)
+            del batch
+            first += result.read
+            yield result
+            del result
+        document = msgspec.json.decode(bytes(scan.rest), type=ParfocalFile)
+    except (msgspec.DecodeError, msgspec.ValidationError) as error:
+        yield file_problem(error)
+        return
+    problem = parfocal_problem(document)
+    if problem is not None:
+        yield ReadResult(problems=[problem])
+    elif scan.phase is Phase.SEEK:
+        result = ReadResult()
+        parfocal_objects(document.objects, first, result, batched=True)
+        yield result
 
 
 @dataclass(frozen=True)
@@ -255,11 +424,12 @@ class ColumnMapping:
     source_id: str | None = None
 
 
-def dialect_of(text: str) -> type[csv.Dialect] | csv.Dialect:
+def dialect_of(sample: str, first_line: str | None = None) -> type[csv.Dialect] | csv.Dialect:
     try:
-        return csv.Sniffer().sniff(text[:SNIFF_BYTES], delimiters=",\t;")
+        return csv.Sniffer().sniff(sample[:SNIFF_BYTES], delimiters=",\t;")
     except csv.Error:
-        return csv.excel_tab if "\t" in text.splitlines()[0] else csv.excel
+        line = sample.splitlines()[0] if first_line is None else first_line
+        return csv.excel_tab if "\t" in line else csv.excel
 
 
 def guess_mapping(header: Sequence[str]) -> ColumnMapping:
@@ -276,50 +446,92 @@ def header_of(data: bytes) -> list[str]:
     return next(csv.reader(io.StringIO(text), dialect_of(text)), [])
 
 
+def mapping_problem(mapping: ColumnMapping) -> Problem | None:
+    if mapping.polygon is None and (mapping.x is None or mapping.y is None):
+        return Problem("file", "Map the x and y columns or a polygon column")
+    return None
+
+
+def row_object(row: dict[str, Any], line: int, mapping: ColumnMapping, result: ReadResult) -> None:
+    try:
+        if mapping.polygon is not None and row.get(mapping.polygon):
+            geometry = shapely.from_wkt(row[mapping.polygon])
+            if not geometry.is_valid:
+                geometry = shapely.make_valid(geometry)
+        else:
+            x, y = (
+                number_or_none(row.get(mapping.x or "")),
+                number_or_none(row.get(mapping.y or "")),
+            )
+            if x is None or y is None:
+                raise ValueError("x and y must be numbers")
+            geometry = Point(x, y)
+    except (ValueError, shapely.errors.GEOSException) as error:
+        result.problems.append(Problem(f"row {line}", str(error)))
+        return
+    used = {
+        mapping.x,
+        mapping.y,
+        mapping.class_name,
+        mapping.score,
+        mapping.polygon,
+        mapping.source_id,
+    }
+    result.objects.append(
+        ResultObject(
+            kind=ObjectKind.CELL,
+            geometry=geometry,
+            class_name=(row.get(mapping.class_name) or None) if mapping.class_name else None,
+            score=number_or_none(row.get(mapping.score)) if mapping.score else None,
+            source_id=(row.get(mapping.source_id) or None) if mapping.source_id else None,
+            properties={k: v for k, v in row.items() if k not in used and k is not None},
+        )
+    )
+
+
 def read_table(data: bytes, mapping: ColumnMapping) -> ReadResult:
     result = ReadResult()
     text = data.decode("utf-8-sig")
     rows = csv.DictReader(io.StringIO(text), dialect=dialect_of(text))
-    if mapping.polygon is None and (mapping.x is None or mapping.y is None):
-        result.problems.append(Problem("file", "Map the x and y columns or a polygon column"))
+    problem = mapping_problem(mapping)
+    if problem is not None:
+        result.problems.append(problem)
         return result
     for line, row in enumerate(rows, start=2):
-        where = f"row {line}"
-        try:
-            if mapping.polygon is not None and row.get(mapping.polygon):
-                geometry = shapely.from_wkt(row[mapping.polygon])
-                if not geometry.is_valid:
-                    geometry = shapely.make_valid(geometry)
-            else:
-                x, y = (
-                    number_or_none(row.get(mapping.x or "")),
-                    number_or_none(row.get(mapping.y or "")),
-                )
-                if x is None or y is None:
-                    raise ValueError("x and y must be numbers")
-                geometry = Point(x, y)
-        except (ValueError, shapely.errors.GEOSException) as error:
-            result.problems.append(Problem(where, str(error)))
-            continue
-        used = {
-            mapping.x,
-            mapping.y,
-            mapping.class_name,
-            mapping.score,
-            mapping.polygon,
-            mapping.source_id,
-        }
-        result.objects.append(
-            ResultObject(
-                kind=ObjectKind.CELL,
-                geometry=geometry,
-                class_name=(row.get(mapping.class_name) or None) if mapping.class_name else None,
-                score=number_or_none(row.get(mapping.score)) if mapping.score else None,
-                source_id=(row.get(mapping.source_id) or None) if mapping.source_id else None,
-                properties={k: v for k, v in row.items() if k not in used and k is not None},
-            )
-        )
+        row_object(row, line, mapping, result)
     return result
+
+
+def table_head(handle: TextIO) -> tuple[list[str], type[csv.Dialect] | csv.Dialect]:
+    first_line = handle.readline()
+    sample = first_line + handle.read(max(0, SNIFF_BYTES - len(first_line)))
+    dialect = dialect_of(sample, first_line.splitlines()[0] if first_line.strip() else "")
+    header = next(csv.reader(io.StringIO(sample), dialect), [])
+    return header, dialect
+
+
+def stream_table(
+    handle: TextIO,
+    mapping: ColumnMapping,
+    dialect: type[csv.Dialect] | csv.Dialect,
+    *,
+    batch_rows: int = BATCH_ROWS,
+) -> Iterator[ReadResult]:
+    problem = mapping_problem(mapping)
+    if problem is not None:
+        yield ReadResult(problems=[problem])
+        return
+    result = ReadResult()
+    try:
+        for line, row in enumerate(csv.DictReader(handle, dialect=dialect), start=2):
+            row_object(row, line, mapping, result)
+            if len(result.objects) + len(result.problems) >= batch_rows:
+                yield result
+                result = ReadResult()
+    except (UnicodeDecodeError, csv.Error) as error:
+        yield file_problem(error)
+        return
+    yield result
 
 
 def traced(mask: NDArray[np.bool_], top: int, left: int, downsample: float) -> BaseGeometry | None:

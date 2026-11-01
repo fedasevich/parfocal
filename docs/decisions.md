@@ -23,6 +23,7 @@ To take every recommendation at once, write "all recommended" here:
 | RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
 | AIP-013 (result chunk store) | Versioned cell chunks and a summary index written gzip to object storage under the result set's prefix, and the API reads chunks from there | Ticked, decisions 12a to 12c |
 | RSET-011 (cells from imported files) | Imported files write their cells into chunks, inherit cell numbers from older sets and carry each cell's region, and files of only cells import | Ticked, decisions 13a to 13d |
+| RSET-012 (large result files in bounded memory) | A 900 MB GeoJSON of 1.6 million cells imports through the real worker in 824 to 1,025 MiB and 42 to 45 s, claimed once, by reading the file in batches into numpy columns | Built, waits for a green CI run on `main`, decisions 14a to 14c |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
@@ -468,6 +469,41 @@ Your choice:
 
 - A. Keep none and show the notice `cell-probabilities-dropped` on the upload status, as built. **Recommended**, because the chunk format holds probabilities for all cells of a set or for none
 - B. Refuse the file
+- C. Other
+
+Your choice:
+
+## 14. Large result files, ADR 0128 (result files stream through a byte scanner into cell columns)
+
+The import no longer decodes a result file as one tree. A byte scanner finds the features of a GeoJSON or the objects of a Parfocal JSON in 1 MiB blocks and msgspec decodes them in batches, a CSV is read in batches of rows, cells are kept as numpy columns in files in the job's work folder, and the worker writes the chunks from those columns. In seven imports of the 900 MB synthetic file of 1,607,244 cells through `python -m parfocal_ingest` against MinIO, the worker peaked at 824 to 1,025 MiB of resident memory, the step took 42 to 45 s, the job was claimed once with a second worker waiting, and the lease never had less than 40 s of its 60 s left. RSET-011 (cells from imported files) needed about 6 GiB and two minutes for the same file. The numbers are from a MacBook Air M4, not from Modal.
+
+### 14a. Memory of the Modal ingest container
+
+Modal bills memory at $0.00000222 per GiB per second for the larger of what a function requests and what it uses, and kills a container that passes its hard limit. For a 47 s import that is $0.00010 at 1 GiB, $0.00021 at 2 GiB and $0.00042 at 4 GiB, so the difference between 2 and 4 GiB is $0.00021 per import, about $0.21 for 1,000 imports. CPU is billed on top and does not depend on this choice. The time on Modal is TODO until the benchmark runs there.
+
+- A. Request 2 GiB with a 2 GiB hard limit, as `INGEST_MEMORY_MIB = 2048`, and the benchmark fails when a run passes it. **Recommended**, because the measured peak is about half of it and it is the cheapest size that leaves that headroom
+- B. Request 2 GiB with a 4 GiB hard limit, which costs the same as A until a file needs more than 2 GiB, and keeps a larger slide or a QuPath export with nucleus outlines from being killed
+- C. Request and limit 4 GiB
+- D. Other, write the number below
+
+Your choice:
+
+Number:
+
+### 14b. Accept ADR 0128
+
+- A. Accept as written: a byte scanner of this project's own with msgspec, and cell columns spilled to the work folder. **Recommended**, because it adds no dependency, msgspec still checks every byte, and its tests compare it with a whole-file decode at block sizes down to one byte
+- B. Use ijson with its C backend for the batches, a new dependency that measured 0.53 s against the scanner's 0.57 s on 52 MB
+- C. Other
+
+Your choice:
+
+### 14c. Two writers of the chunk format
+
+py-common has no numpy, so `build_cells` in `parfocal_common.chunk_store` stays for the API and its tests, and the ingest worker writes imported cells with its own columnar writer, `parfocal_ingest.chunk_builder`. A test checks that both write the same bytes.
+
+- A. Keep both writers, held together by the byte-identity test. **Recommended**, because the API image stays without numpy and the API tests that build chunks stay as they are
+- B. Give py-common numpy and keep only the columnar writer
 - C. Other
 
 Your choice:

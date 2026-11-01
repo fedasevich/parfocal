@@ -2,7 +2,7 @@ import asyncio
 import re
 import shutil
 import uuid
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -27,7 +27,7 @@ from parfocal_api.result_sets import MAX_CLASSES, RegionRow, ResultSetDraft
 from parfocal_api.slide_ingest import record_refusal, upload_of
 from parfocal_api.tables import ResultObjectKind, UploadStatus
 from parfocal_common.cell_chunks import UNCLASSIFIED, ChunkError
-from parfocal_common.chunk_store import Cell, ChunkEntry, build_cells, read_summary, write_cells
+from parfocal_common.chunk_store import ChunkEntry, read_summary
 from parfocal_common.ingest import Failure
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_ids import Letter
@@ -44,17 +44,28 @@ from parfocal_common.result_imports import (
     source_key,
 )
 from parfocal_common.result_store import MissingObjectError, ObjectResultStore
-from parfocal_ingest.cell_import import Outlines, innermost_regions, latest_per_number, outlines
-from parfocal_ingest.matching import Known, Matching, cell_distance, match_centres, match_regions
+from parfocal_ingest.cell_import import (
+    NAME_LENGTH,
+    CellCollector,
+    IncomingCells,
+    class_key,
+    innermost_regions,
+    latest_per_number,
+    scaled,
+)
+from parfocal_ingest.chunk_builder import CellTable, plan_chunks, write_table
+from parfocal_ingest.json_stream import JsonArray
+from parfocal_ingest.matching import Known, Matching, cell_distance, match_regions, pair_centres
 from parfocal_ingest.results import (
+    ColumnMapping,
     ObjectKind,
     ReadResult,
     ResultObject,
     guess_mapping,
-    header_of,
-    read_geojson,
-    read_parfocal_json,
-    read_table,
+    stream_geojson,
+    stream_parfocal_json,
+    stream_table,
+    table_head,
 )
 from parfocal_ingest.workflow import Resources, resources_from_environment
 
@@ -62,10 +73,8 @@ __all__ = ["RESULT_IMPORT", "result_import_workflow"]
 
 PARFOCAL_FORMAT = re.compile(rb'"format"\s*:\s*"parfocal-results"')
 SNIFF_BYTES = 64 * 1024
-NAME_LENGTH = 120
 VERSION_LENGTH = 60
 FILE_NAME_LENGTH = 255
-SCORE_SCALE = 255
 DEFAULT_NAMES: Mapping[ResultFormat, str] = {
     ResultFormat.GEOJSON: "GeoJSON import",
     ResultFormat.PARFOCAL_JSON: "Parfocal JSON import",
@@ -95,7 +104,10 @@ class ParfocalHeader(msgspec.Struct):
 @dataclass
 class Parsed:
     format: ResultFormat
-    read: ReadResult
+    shapes: list[ResultObject]
+    cells: IncomingCells
+    skipped: int = 0
+    unreadable: bool = False
     model: Model = field(default_factory=Model)
     declared_classes: list[str] = field(default_factory=list[str])
 
@@ -115,54 +127,90 @@ def parfocal_header(data: bytes) -> ParfocalHeader:
         return ParfocalHeader()
 
 
-def read_file(data: bytes, stored_format: str | None) -> Parsed:
-    chosen = format_for(data, stored_format)
+@dataclass
+class Reading:
+    collector: CellCollector
+    shapes: list[ResultObject] = field(default_factory=list[ResultObject])
+    skipped: int = 0
+    unreadable: bool = False
+
+    def take(self, batches: Iterable[ReadResult]) -> None:
+        for batch in batches:
+            files = sum(1 for problem in batch.problems if problem.where == "file")
+            self.unreadable = self.unreadable or files > 0
+            self.skipped += len(batch.problems) - files
+            self.shapes += [item for item in batch.objects if item.kind in LETTERS]
+            self.collector.add([item for item in batch.objects if item.kind is ObjectKind.CELL])
+            batch.objects.clear()
+
+    def parsed(self, chosen: ResultFormat, header: ParfocalHeader | None = None) -> Parsed:
+        model = header.model if header is not None else None
+        declared = header.classes if header is not None else None
+        return Parsed(
+            chosen,
+            self.shapes,
+            self.collector.finish(),
+            self.skipped,
+            self.unreadable,
+            model or Model(),
+            [item.name for item in declared or []],
+        )
+
+
+def table_mapping(path: Path) -> tuple[ColumnMapping, Any]:
+    try:
+        with path.open(encoding="utf-8-sig", newline="") as text:
+            header, dialect = table_head(text)
+    except UnicodeDecodeError:
+        raise StepFailedError(ImportFailure.UNREADABLE) from None
+    mapping = guess_mapping(header)
+    if mapping.polygon is None and (mapping.x is None or mapping.y is None):
+        raise StepFailedError(ImportFailure.COLUMNS_UNMAPPED)
+    return mapping, dialect
+
+
+def read_path(path: Path, stored_format: str | None) -> Parsed:
+    with path.open("rb") as handle:
+        chosen = format_for(handle.read(SNIFF_BYTES), stored_format)
+    with CellCollector(path.parent) as collector:
+        return read_format(path, chosen, Reading(collector))
+
+
+def read_format(path: Path, chosen: ResultFormat, reading: Reading) -> Parsed:
     match chosen:
         case ResultFormat.GEOJSON:
-            return Parsed(chosen, read_geojson(data))
+            with path.open("rb") as handle:
+                reading.take(stream_geojson(handle))
+            return reading.parsed(chosen)
         case ResultFormat.PARFOCAL_JSON:
-            header = parfocal_header(data)
-            return Parsed(
-                chosen,
-                read_parfocal_json(data),
-                header.model or Model(),
-                [item.name for item in header.classes or []],
-            )
+            with path.open("rb") as handle:
+                scan = JsonArray(handle, "objects")
+                reading.take(stream_parfocal_json(scan))
+            return reading.parsed(chosen, parfocal_header(bytes(scan.rest)))
         case ResultFormat.CSV:
-            try:
-                mapping = guess_mapping(header_of(data))
-            except UnicodeDecodeError:
-                raise StepFailedError(ImportFailure.UNREADABLE) from None
-            if mapping.polygon is None and (mapping.x is None or mapping.y is None):
-                raise StepFailedError(ImportFailure.COLUMNS_UNMAPPED)
-            return Parsed(chosen, read_table(data, mapping))
+            mapping, dialect = table_mapping(path)
+            with path.open(encoding="utf-8-sig", newline="") as text:
+                reading.take(stream_table(text, mapping, dialect))
+            return reading.parsed(chosen)
 
 
-def class_key(name: str | None) -> str | None:
-    cleaned = (name or "").strip()[:NAME_LENGTH]
-    return cleaned.casefold() if cleaned else None
-
-
-def class_list(parsed: Parsed, objects: Sequence[ResultObject]) -> list[str]:
+def class_list(parsed: Parsed) -> list[str]:
     names: dict[str, str] = {}
     seen = [
         *parsed.declared_classes,
-        *(item.class_name or "" for item in objects),
-        *(name for item in objects for name in (item.probabilities or {})),
+        *(item.class_name or "" for item in parsed.shapes),
+        *parsed.cells.class_names.names,
+        *(name for item in parsed.shapes for name in (item.probabilities or {})),
+        *parsed.cells.probability_names.names,
     ]
     for name in seen:
         key = class_key(name)
         if key is not None and key not in names:
             names[key] = name.strip()[:NAME_LENGTH]
-    if len(names) > MAX_CLASSES:
+    overflow = parsed.cells.class_names.overflow or parsed.cells.probability_names.overflow
+    if overflow or len(names) > MAX_CLASSES:
         raise StepFailedError(ImportFailure.TOO_MANY_CLASSES)
     return list(names.values())
-
-
-def scaled(value: float | None) -> int | None:
-    if value is None:
-        return None
-    return max(0, min(SCORE_SCALE, round(value * SCORE_SCALE)))
 
 
 def probabilities_of(item: ResultObject, classes: Sequence[str]) -> list[int] | None:
@@ -238,7 +286,7 @@ async def load_upload(step: StepRun) -> Upload:
     return Upload(row)
 
 
-async def fetch(context: Context) -> bytes:
+async def fetch(context: Context) -> Path:
     row = context.upload.row
     stored = await context.store.head_object(row.object_key)
     if stored is None:
@@ -249,38 +297,14 @@ async def fetch(context: Context) -> bytes:
     downloaded = await context.store.download(row.object_key, context.local)
     if downloaded.size != row.size_bytes:
         raise StepFailedError(Failure.SIZE_MISMATCH)
-    return await asyncio.to_thread(context.local.read_bytes)
+    return context.local
 
 
-def objects_to_import(parsed: Parsed) -> tuple[list[ResultObject], list[ResultObject]]:
-    read = parsed.read
-    if any(problem.where == "file" for problem in read.problems):
+def objects_to_import(parsed: Parsed) -> None:
+    if parsed.unreadable:
         raise StepFailedError(ImportFailure.UNREADABLE)
-    shapes = [item for item in read.objects if item.kind in LETTERS]
-    cells = [item for item in read.objects if item.kind is ObjectKind.CELL]
-    if not shapes and not cells:
+    if not parsed.shapes and not len(parsed.cells):
         raise StepFailedError(ImportFailure.EMPTY)
-    return shapes, cells
-
-
-@dataclass(frozen=True)
-class IncomingCells:
-    items: list[ResultObject]
-    outlines: Outlines
-    nuclei: dict[int, list[float]]
-
-    def __len__(self) -> int:
-        return len(self.items)
-
-
-def incoming_cells(cells: list[ResultObject]) -> IncomingCells:
-    nuclei = [(index, item.nucleus) for index, item in enumerate(cells) if item.nucleus]
-    traced = outlines([nucleus for _, nucleus in nuclei])
-    return IncomingCells(
-        cells,
-        outlines([item.geometry for item in cells]),
-        {index: ring for (index, _), ring in zip(nuclei, traced.rings, strict=True)},
-    )
 
 
 @dataclass(frozen=True)
@@ -355,32 +379,46 @@ async def known_cells(
     return latest_per_number(np.concatenate(numbers), np.concatenate(centres))
 
 
-def cell_values(
+def class_positions(names: Sequence[str], classes: Sequence[str], missing: int) -> NDArray[Any]:
+    positions = positions_of(classes)
+    found = [positions.get(class_key(name), missing) for name in names]
+    return np.array([*found, missing], dtype=np.int64)
+
+
+def cell_probabilities(incoming: IncomingCells, classes: Sequence[str]) -> NDArray[np.uint8]:
+    lookup = class_positions(incoming.probability_names.names, classes, -1)
+    columns = lookup[incoming.probability_name]
+    kept = columns >= 0
+    found = np.zeros((len(incoming), len(classes)), dtype=np.uint8)
+    found[incoming.probability_owner[kept], columns[kept]] = incoming.probability_scaled[kept]
+    return found
+
+
+def cell_table(
     incoming: IncomingCells,
-    numbers: Sequence[int],
+    numbers: NDArray[np.int64],
     regions: Sequence[NumberedRegion],
     classes: Sequence[str],
-) -> tuple[list[Cell], bool]:
-    positions = positions_of(classes)
+) -> tuple[CellTable, bool]:
+    lookup = class_positions(incoming.class_names.names, classes, UNCLASSIFIED).astype(np.uint8)
+    keep = incoming.probability_cells == len(incoming)
+    dropped = not keep and incoming.probability_cells > 0
     inside = innermost_regions(
         incoming.outlines.centres, [(region.number, region.geometry) for region in regions]
-    ).tolist()
-    probabilities = [probabilities_of(item, classes) for item in incoming.items]
-    keep = all(value is not None for value in probabilities)
-    dropped = not keep and any(value is not None for value in probabilities)
-    cells = [
-        Cell(
-            number=number,
-            ring=incoming.outlines.rings[index],
-            class_index=positions.get(class_key(item.class_name), UNCLASSIFIED),
-            score=scaled(item.score) or 0,
-            region=inside[index],
-            probs=probabilities[index] if keep else None,
-            nucleus=incoming.nuclei.get(index),
-        )
-        for index, (item, number) in enumerate(zip(incoming.items, numbers, strict=True))
-    ]
-    return cells, dropped
+    )
+    nucleus = incoming.nucleus
+    table = CellTable(
+        numbers=numbers,
+        points=incoming.outlines.points,
+        offsets=incoming.outlines.offsets,
+        class_index=lookup[incoming.class_ids],
+        score=incoming.scores,
+        region=inside.astype(np.int64),
+        probs=cell_probabilities(incoming, classes) if keep else None,
+        nucleus_points=None if nucleus is None else nucleus.points,
+        nucleus_offsets=None if nucleus is None else nucleus.offsets,
+    )
+    return table, dropped
 
 
 @dataclass(frozen=True)
@@ -405,34 +443,42 @@ async def write_imported_cells(
     set_ids = await cell_sets(connection, slide.id)
     known_numbers, known_centres = await known_cells(context.store, tenant_id, slide.id, set_ids)
     matching = await asyncio.to_thread(
-        match_centres,
+        pair_centres,
         known_numbers,
         known_centres,
         incoming.outlines.centres,
         cell_distance(slide.mpp_x),
     )
+    del known_numbers, known_centres
     first = (
         await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new))
-        if matching.new
+        if len(matching.new)
         else 0
     )
-    cells, dropped = await asyncio.to_thread(
-        cell_values, incoming, matching.numbers(first), regions, classes
+    table, dropped = await asyncio.to_thread(
+        cell_table, incoming, matching.numbers(first), regions, classes
     )
-    built = await asyncio.to_thread(build_cells, tenant_id, slide.id, set_id, cells, len(classes))
-    entries = await write_cells(ObjectResultStore(context.store), built)
-    return WrittenCells(entries, len(matching.inherited), dropped)
+    plan = await asyncio.to_thread(plan_chunks, tenant_id, slide.id, set_id, table, len(classes))
+    entries = await write_table(ObjectResultStore(context.store), table, plan)
+    return WrittenCells(entries, matching.inherited, dropped)
+
+
+async def keep_source(context: Context, key: str) -> None:
+    row = context.upload.row
+    if await context.store.head_object(key) != row.size_bytes:
+        await context.store.copy_object(
+            row.object_key, key, row.size_bytes, context.resources.copy_part_bytes
+        )
 
 
 async def import_step(context: Context) -> Mapping[str, Any]:
     upload = context.upload.row
     if upload.result_set_id is not None:
         return {"result_set_id": str(upload.result_set_id), "notices": []}
-    data = await fetch(context)
-    parsed = await asyncio.to_thread(read_file, data, upload.result_format)
-    shapes, cell_objects = objects_to_import(parsed)
-    classes = class_list(parsed, [*shapes, *cell_objects])
-    incoming = await asyncio.to_thread(incoming_cells, cell_objects)
+    path = await fetch(context)
+    parsed = await asyncio.to_thread(read_path, path, upload.result_format)
+    objects_to_import(parsed)
+    classes = class_list(parsed)
     set_id = result_set_id_for(upload.id)
     async with context.step.transaction() as connection:
         locked = await locked_result_upload(connection, upload.id)
@@ -441,19 +487,18 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         slide = await import_target(connection, locked.slide_id)
         if slide is None:
             raise StepFailedError(ImportFailure.SLIDE_MISSING)
-        rows, regions = await rows_of(connection, locked, slide.id, shapes, classes)
+        rows, regions = await rows_of(connection, locked, slide.id, parsed.shapes, classes)
         written = await write_imported_cells(
-            context, connection, slide, set_id, incoming, regions, classes
+            context, connection, slide, set_id, parsed.cells, regions, classes
         )
-        key = source_key(locked.tenant_id, slide.id, set_id, locked.file_name)
-        await context.store.put_object(key, data, "application/octet-stream")
+        await keep_source(context, source_key(locked.tenant_id, slide.id, set_id, locked.file_name))
         draft = draft_of(parsed, classes, locked.file_name)
         await store_result_set(
             connection, locked, slide, set_id, draft, rows, context.step.job_id, written.entries
         )
     notices = [
         *([ImportNotice.PROBABILITIES_DROPPED.value] if written.probabilities_dropped else []),
-        *([ImportNotice.OBJECTS_SKIPPED.value] if parsed.read.problems else []),
+        *([ImportNotice.OBJECTS_SKIPPED.value] if parsed.skipped else []),
     ]
     await context.store.delete_object(upload.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
@@ -461,10 +506,10 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         "result_set_id": str(set_id),
         "regions": sum(1 for row in rows if row.kind is ResultObjectKind.REGION),
         "zones": sum(1 for row in rows if row.kind is ResultObjectKind.ZONE),
-        "cells": len(incoming),
+        "cells": len(parsed.cells),
         "cells_inherited": written.inherited,
         "chunks": len(written.entries),
-        "skipped": len(parsed.read.problems),
+        "skipped": parsed.skipped,
         "notices": notices,
     }
 

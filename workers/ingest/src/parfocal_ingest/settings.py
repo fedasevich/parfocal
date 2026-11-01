@@ -10,6 +10,7 @@ from parfocal_common.settings import StorageSettings
 GIB = 1024 * MIB
 DEFAULT_COPY_PART_BYTES = GIB
 MAX_COPY_PART_BYTES = 4 * GIB
+INGEST_MEMORY_MIB = 2048
 
 
 def default_work_dir() -> str:

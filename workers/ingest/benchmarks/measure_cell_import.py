@@ -9,18 +9,18 @@ from pathlib import Path
 import httpx2
 import numpy as np
 
-from parfocal_common.chunk_store import build_cells, read_summary, write_cells
+from parfocal_common.chunk_store import read_summary
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
-from parfocal_ingest.matching import match_centres, match_regions
+from parfocal_ingest.chunk_builder import plan_chunks, write_table
+from parfocal_ingest.matching import match_regions, pair_centres
 from parfocal_ingest.result_import import (
     NumberedRegion,
-    cell_values,
+    cell_table,
     class_list,
-    incoming_cells,
     objects_to_import,
-    read_file,
+    read_path,
     summary_centres,
 )
 
@@ -61,40 +61,39 @@ class Timer:
         return "\n".join(lines)
 
 
-async def main(path: Path) -> None:
+async def main(path: Path, size: int) -> None:
     timer = Timer()
     tenant, slide, set_id = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
-    data = timer.run("read file bytes", path.read_bytes)
-    parsed = timer.run("parse GeoJSON", lambda: read_file(data, "geojson"))
-    shapes, cells = timer.run("split regions and cells", lambda: objects_to_import(parsed))
-    classes = timer.run("class list", lambda: class_list(parsed, [*shapes, *cells]))
-    incoming = timer.run("outlines and centres", lambda: incoming_cells(cells))
+    parsed = timer.run("stream the file into cell columns", lambda: read_path(path, "geojson"))
+    objects_to_import(parsed)
+    classes = timer.run("class list", lambda: class_list(parsed))
     found = timer.run(
-        "match regions, first import", lambda: match_regions([], [s.geometry for s in shapes])
+        "match regions, first import",
+        lambda: match_regions([], [s.geometry for s in parsed.shapes]),
     )
     regions = [
         NumberedRegion(number, item.geometry)
-        for item, number in zip(shapes, found.numbers(1), strict=True)
+        for item, number in zip(parsed.shapes, found.numbers(1), strict=True)
     ]
-    centres = incoming.outlines.centres
+    centres = parsed.cells.outlines.centres
     nothing = np.zeros(0, dtype=np.int64)
     first = timer.run(
         "match cells, first import",
-        lambda: match_centres(nothing, np.zeros((0, 2)), centres, DISTANCE),
+        lambda: pair_centres(nothing, np.zeros((0, 2)), centres, DISTANCE),
     )
     numbers = first.numbers(1)
-    values, _ = timer.run(
-        "cell values with innermost region",
-        lambda: cell_values(incoming, numbers, regions, classes),
+    table, _ = timer.run(
+        "cell table with innermost region",
+        lambda: cell_table(parsed.cells, numbers, regions, classes),
     )
-    built = timer.run(
-        "build_cells", lambda: build_cells(tenant, slide, set_id, values, len(classes))
-    )
+    plan = timer.run("plan chunks", lambda: plan_chunks(tenant, slide, set_id, table, len(classes)))
     async with httpx2.AsyncClient(timeout=httpx2.Timeout(120.0)) as http:
         store = ObjectStore(STORAGE, http)
         results = ObjectResultStore(store)
         try:
-            await timer.wait("write_cells to MinIO", write_cells(results, built))
+            entries = await timer.wait(
+                "build and write chunks to MinIO", write_table(results, table, plan)
+            )
             summary = await timer.wait(
                 "read older summary from MinIO",
                 read_summary(results, result_set_prefix(tenant, slide, set_id)),
@@ -103,23 +102,22 @@ async def main(path: Path) -> None:
             older = summary_centres(summary.arrays)
             again = timer.run(
                 "match cells, second import",
-                lambda: match_centres(known, older, centres, DISTANCE),
+                lambda: pair_centres(known, older, centres, DISTANCE),
             )
-            assert again.numbers(len(cells) + 1) == numbers
+            assert again.numbers(len(parsed.cells) + 1).tolist() == numbers.tolist()
         finally:
             keys = await store.list_keys(f"t/{tenant}/")
             for key in keys:
                 await store.delete_object(key)
             left = await store.list_keys(f"t/{tenant}/")
-    chunk_bytes = sum(len(chunk.data) for chunk in built.chunks)
-    print(f"file bytes: {len(data)}, cells: {len(cells)}, regions: {len(shapes)}")
-    print(f"classes: {len(classes)}, chunks: {len(built.chunks)}, chunk bytes: {chunk_bytes}")
-    print(f"summary bytes: {len(built.summary.data)}")
-    print(f"vertices: {sum(entry.vertex_count for entry in built.entries)}")
-    print(f"inherited on second import: {len(again.inherited)} of {len(cells)}")
+    print(f"file bytes: {size}, cells: {len(parsed.cells)}")
+    print(f"regions: {len(parsed.shapes)}, classes: {len(classes)}, chunks: {len(entries)}")
+    print(f"vertices: {sum(entry.vertex_count for entry in entries)}")
+    print(f"inherited on second import: {again.inherited} of {len(parsed.cells)}")
     print(f"objects deleted: {len(keys)}, left: {len(left)}")
     print(timer.table())
 
 
 if __name__ == "__main__":
-    asyncio.run(main(Path(sys.argv[1])))
+    source = Path(sys.argv[1])
+    asyncio.run(main(source, source.stat().st_size))

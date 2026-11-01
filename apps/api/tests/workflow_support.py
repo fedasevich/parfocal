@@ -8,6 +8,7 @@ from storage_support import TEST_STORAGE
 
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_store import ObjectStore
+from parfocal_ingest.result_import import result_import_workflow
 from parfocal_ingest.workflow import Resources, ingest_workflow
 
 TILES = 20
@@ -69,3 +70,15 @@ def slow_resources() -> Resources:
 
 
 SLOW_INGEST = ingest_workflow(slow_resources, lease_seconds=3)
+
+
+SHORT_LEASE_SECONDS = 0.5
+
+
+def short_lease_resources() -> Resources:
+    return Resources(storage=TEST_STORAGE, work_dir=Path(os.environ["PARFOCAL_TEST_INGEST_DIR"]))
+
+
+SHORT_LEASE_IMPORT = result_import_workflow(
+    short_lease_resources, lease_seconds=SHORT_LEASE_SECONDS
+)

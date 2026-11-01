@@ -2919,6 +2919,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] OPS-002 · Deploy definitions
   Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  The ingest function takes its memory from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, 2 GiB since RSET-012 (large result files in bounded memory) and [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns), and the bounded cell import benchmark is repeated on Modal once it runs there.
   Done when CI recreates staging from git alone.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
 
@@ -3208,9 +3209,10 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Decided in [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region): cells match older sets by the vertex-mean centres of their summary files within 4 µm, each cell takes the innermost region of its own set, and a file of only cells imports.
 
 - [ ] RSET-012 · Large result files in bounded memory
-  A result file of 1.6 million cells imports through the real worker within a memory ceiling picked for the Modal worker (TODO: the number), with the GeoJSON features read in batches instead of one decoded tree, and the job's lease never lapses during the import step. The [cell import result](results/2026-11-01-cell-import.md) measured about two minutes and 6 GB of memory for a 900 MB GeoJSON outside the worker.
+  A result file of 1.6 million cells imports through the real worker within a memory ceiling of 2 GiB for the Modal worker (`INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, decision 14a in [decisions.md](decisions.md) asks the owner to confirm it), with the GeoJSON features read in batches instead of one decoded tree, and the job's lease never lapses during the import step. The [cell import result](results/2026-11-01-cell-import.md) measured about two minutes and 6 GB of memory for a 900 MB GeoJSON outside the worker.
   Done when a benchmark imports the synthetic 1.6 million cell GeoJSON through `python -m parfocal_ingest` against MinIO, records the peak memory and the step time in a result file, and the job is claimed once.
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
+  Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
 
 ---
 
