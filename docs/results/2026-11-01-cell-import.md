@@ -3,7 +3,7 @@
 - Date: 2026-11-01
 - Backlog: RSET-011 (cells from imported files)
 - Kind: benchmark
-- Commit: the working tree of RSET-011 on top of `fb882b2`, committed unchanged as the RSET-011 feature commit
+- Commit: `4f3525c` (measured as the working tree on top of `fb882b2` just before that commit, with the same code)
 - Environment: MacBook Air, Apple M4, 24 GB memory, macOS 15.8.1, CPython 3.14.7, numpy 2.5.4, scipy 1.18.1, shapely 2.2.0, msgspec 0.21.1, one process. Object storage is the local compose MinIO (`storage` service) on 127.0.0.1:9000, bucket `parfocal-test`. No database in the staged run
 - Data: the real QuPath 0.7.0 export `workers/ingest/tests/fixtures/results/qupath-0.7-cells.geojson` (81 cells and one region), and a GeoJSON generated into the session scratchpad from the POC's synthetic whole-slide job `synth0001503` (Huron-1-40x nucleus outlines tiled over the tissue of CAMELYON16 `tumor_009`, 1,607,244 cells), with each cell as a QuPath-style feature (`objectType: "cell"`, a polygon outline, `classification.name` from the POC type, `score` from the POC score), no nucleus outlines and no probabilities, plus 16 region annotations that tile the cells' bounding box in a 4 by 4 grid. No PHI. The generated file was deleted after the runs
 
