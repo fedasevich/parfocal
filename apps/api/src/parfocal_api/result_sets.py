@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any
@@ -368,7 +368,18 @@ async def add_chunks(
         )
 
 
-async def finish(connection: AsyncConnection, set_id: uuid.UUID) -> None:
+def cells_per_class(entries: Sequence[ChunkEntry]) -> dict[int, int]:
+    counts: dict[int, int] = {}
+    for entry in entries:
+        for position, count in enumerate(entry.class_counts):
+            if count:
+                counts[position] = counts.get(position, 0) + count
+    return counts
+
+
+async def finish(
+    connection: AsyncConnection, set_id: uuid.UUID, class_cells: Mapping[int, int] | None = None
+) -> None:
     await importing(connection, set_id)
     cells = select(func.coalesce(func.sum(result_chunks.c.cell_count), 0)).where(
         result_chunks.c.result_set_id == set_id
@@ -384,7 +395,10 @@ async def finish(connection: AsyncConnection, set_id: uuid.UUID) -> None:
         .where(result_objects.c.result_set_id == set_id, result_objects.c.class_index.is_not(None))
         .group_by(result_objects.c.class_index)
     )
+    totals = dict(class_cells or {})
     for position, count in (await connection.execute(per_class)).all():
+        totals[position] = totals.get(position, 0) + count
+    for position, count in sorted(totals.items()):
         await connection.execute(
             update(result_set_classes)
             .where(

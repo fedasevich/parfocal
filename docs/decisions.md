@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-10-31
+Last updated: 2026-11-01
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -22,6 +22,7 @@ To take every recommendation at once, write "all recommended" here:
 | SEC-009 (slide label and macro image handling) | Labels and macros served only in clinical projects to owners and viewers, every read audited, deleted with the slide and on patient erasure | Ticked, decisions 10a to 10e |
 | RSET-004 (pairing results with slides) | Pairing rules on drop, result uploads paired with a slide or slide upload, import as a result set once the slide is ready, and an override route | Ticked, decisions 11a to 11e |
 | AIP-013 (result chunk store) | Versioned cell chunks and a summary index written gzip to object storage under the result set's prefix, and the API reads chunks from there | Ticked, decisions 12a to 12c |
+| RSET-011 (cells from imported files) | Imported files write their cells into chunks, inherit cell numbers from older sets and carry each cell's region, and files of only cells import | Built, the tick waits for a green CI run on `main`, decisions 13a to 13d |
 
 ## 1. Least sure first order, ADR 0117 (review order stored per task slide)
 
@@ -379,6 +380,8 @@ Writing cells needs the chunk store of AIP-013 (result chunk store), which is no
 
 Your choice:
 
+Built since: RSET-011 (cells from imported files) landed on 2026-11-01, so a file's cells are now imported with its regions, a file of only cells imports, and the `cells-not-imported` notice is gone. Sets imported before it keep no cells, and uploading their file again adds them as a new set. Your letter here now only records how files were handled until then.
+
 ### 11d. Which pairings count as likely rather than sure
 
 - A. Sure for the same name next to the slide, a folder named like the slide, the same name anywhere and a Parfocal slide ID inside the file. Likely for a name that only starts with the slide's name, such as `tumor_031_prob` for `tumor_031`, and for a slide file name inside the file, as built. **Recommended**, because only the mock's "Similar name only" case carries a warning
@@ -425,6 +428,46 @@ The backlog asks for alternative types in each chunk. The POC stored one per cel
 
 - A. One `alt_class` per cell, the class a second model gave, with none when there is no second model, as built. **Recommended**, because it keeps the second opinion even when an import has no probabilities
 - B. No stored field, and take the second most likely class from the probabilities
+- C. Other
+
+Your choice:
+
+## 13. Cells from imported files, ADR 0127 (imported cells keep their numbers by centre distance and take the innermost region)
+
+An imported GeoJSON, QuPath export, Parfocal JSON or CSV now writes its cells into chunks in object storage. A cell inherits the number of an older set's cell whose centre is within 4 µm (16 pixels on a slide without a pixel size), read from the older sets' summary files, and new cells get the next numbers in reading order. A second import of the same QuPath 0.7 export keeps every number. Each cell carries the region of its own set that its centre lies in.
+
+### 13a. Accept ADR 0127
+
+- A. Accept as written. **Recommended**, because it reuses the ADR 0071 (object ID grammar) rule and matched 1.6 million cells in under two seconds
+- B. Match cells by outline overlap, as regions are matched
+- C. Other
+
+Your choice:
+
+### 13b. A cell whose centre lies inside two overlapping regions
+
+- A. It takes the smaller region, and the lower number when both are the same size, as built. **Recommended**, because a nested region such as a tumour nest is the more specific place
+- B. It takes the larger region, which is the lower number
+- C. It takes the region the file names as its parent when there is one, and the smaller region otherwise
+- D. Other
+
+Your choice:
+
+### 13c. Cells with no score in the file
+
+QuPath exports carry no detection score, and the chunk format has no way to mark one as missing.
+
+- A. Store score 0, so a "cells below a score" task takes every unscored cell, as built. **Recommended** until a set can say it has no scores, because a reviewer then sees every unscored cell instead of none
+- B. Store score 255, so such a task takes none of them
+- C. Refuse a "cells below a score" task on a set without scores, which needs an optional marker in the summary header and a small follow-up
+- D. Other
+
+Your choice:
+
+### 13d. Probabilities on only some cells of a file
+
+- A. Keep none and show the notice `cell-probabilities-dropped` on the upload status, as built. **Recommended**, because the chunk format holds probabilities for all cells of a set or for none
+- B. Refuse the file
 - C. Other
 
 Your choice:

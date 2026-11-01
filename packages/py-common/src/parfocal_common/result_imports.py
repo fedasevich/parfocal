@@ -45,7 +45,6 @@ def can_sniff(name: str) -> bool:
 class ImportFailure(StrEnum):
     UNREADABLE = "result-unreadable"
     EMPTY = "result-empty"
-    CELLS_ONLY = "result-cells-only"
     COLUMNS_UNMAPPED = "result-columns-unmapped"
     TOO_MANY_CLASSES = "result-too-many-classes"
     SLIDE_MISSING = "result-slide-missing"
@@ -57,9 +56,6 @@ IMPORT_FAILURES: Mapping[str, str] = {
         "CSV of cells."
     ),
     ImportFailure.EMPTY: "The result file holds no objects that Parfocal can read.",
-    ImportFailure.CELLS_ONLY: (
-        "This result file holds only cells, and Parfocal cannot import cells from a file yet."
-    ),
     ImportFailure.COLUMNS_UNMAPPED: (
         "Parfocal could not find the x and y columns or a polygon column in this table."
     ),
@@ -86,14 +82,14 @@ WAITING: Mapping[str, str] = {
 
 
 class ImportNotice(StrEnum):
-    CELLS_NOT_IMPORTED = "cells-not-imported"
+    PROBABILITIES_DROPPED = "cell-probabilities-dropped"
     OBJECTS_SKIPPED = "objects-skipped"
 
 
 IMPORT_NOTICES: Mapping[str, str] = {
-    ImportNotice.CELLS_NOT_IMPORTED: (
-        "The file also holds cells. Parfocal cannot import cells from a file yet, so only its "
-        "regions and zones were added."
+    ImportNotice.PROBABILITIES_DROPPED: (
+        "Only some cells in the file have class probabilities, so Parfocal kept the probabilities "
+        "of none of them."
     ),
     ImportNotice.OBJECTS_SKIPPED: "Some objects in the file could not be read and were left out.",
 }

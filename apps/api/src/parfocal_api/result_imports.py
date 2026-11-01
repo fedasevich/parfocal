@@ -6,9 +6,12 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.result_sets import (
+    ChunkRow,
     RegionRow,
     ResultSetDraft,
+    add_chunks,
     add_regions,
+    cells_per_class,
     finish,
     insert_result_set,
 )
@@ -23,6 +26,7 @@ from parfocal_api.tables import (
     slides,
     uploads,
 )
+from parfocal_common.chunk_store import ChunkEntry
 from parfocal_common.result_imports import UploadKind, enqueue_result_import
 
 
@@ -105,7 +109,7 @@ async def locked_result_upload(connection: AsyncConnection, upload_id: uuid.UUID
 async def import_target(connection: AsyncConnection, slide_id: uuid.UUID) -> Any:
     return (
         await connection.execute(
-            select(slides.c.id, slides.c.project_id).where(
+            select(slides.c.id, slides.c.project_id, slides.c.mpp_x).where(
                 slides.c.id == slide_id, slides.c.deleted_at.is_(None)
             )
         )
@@ -130,6 +134,20 @@ async def known_objects(
     return sorted(latest.items())
 
 
+async def cell_sets(connection: AsyncConnection, slide_id: uuid.UUID) -> list[uuid.UUID]:
+    rows = await connection.scalars(
+        select(result_sets.c.id)
+        .where(
+            result_sets.c.slide_id == slide_id,
+            result_sets.c.status == ResultStatus.READY,
+            result_sets.c.deleted_at.is_(None),
+            result_sets.c.cell_count > 0,
+        )
+        .order_by(result_sets.c.created_at, result_sets.c.id)
+    )
+    return list(rows)
+
+
 async def store_result_set(
     connection: AsyncConnection,
     upload: Any,
@@ -138,6 +156,7 @@ async def store_result_set(
     draft: ResultSetDraft,
     regions: Sequence[RegionRow],
     job_id: uuid.UUID | None,
+    chunks: Sequence[ChunkEntry] = (),
 ) -> None:
     await insert_result_set(
         connection,
@@ -151,7 +170,8 @@ async def store_result_set(
         set_id,
     )
     await add_regions(connection, set_id, regions)
-    await finish(connection, set_id)
+    await add_chunks(connection, set_id, [ChunkRow.of(entry) for entry in chunks])
+    await finish(connection, set_id, cells_per_class(chunks))
     await connection.execute(
         update(uploads).where(uploads.c.id == upload.id).values(result_set_id=set_id)
     )

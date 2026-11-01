@@ -44,3 +44,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-10-26 | [A 16-bit OME-TIFF channel stack draws through Viv's contrast limits at the expected values, and halving the limit doubles the value](2026-10-26-ome-channel-contrast-through-viv.md) | VIEW-012 | baseline |
 | 2026-10-31 | [A 4 GiB upload with Uppy resumes after a cut link and a closed page and never sends a stored part again](2026-10-31-resumable-upload-spike.md) | STACK-039 | spike |
 | 2026-10-31 | [Least sure first order on a synthetic 1.6 million cell slide](2026-10-31-review-order-large-slide.md) | GUIDE-012 | benchmark |
+| 2026-11-01 | [Importing cells from a result file, from 81 to 1.6 million cells](2026-11-01-cell-import.md) | RSET-011 | benchmark |

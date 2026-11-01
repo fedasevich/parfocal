@@ -125,10 +125,7 @@ def test_a_result_uploaded_with_its_slide_is_imported_once_the_slide_is_ready(
     slide_id = status_of(api, lab.lead, slide_upload)["slide_id"]
     after = status_of(api, lab.lead, result)
     assert (after["status"], after["slide_id"], after["reason"]) == ("ready", slide_id, None)
-    assert {notice["code"] for notice in after["notices"]} == {
-        "cells-not-imported",
-        "objects-skipped",
-    }
+    assert {notice["code"] for notice in after["notices"]} == {"objects-skipped"}
     set_id = after["result_set_id"]
     assert set_id == str(result_set_id_for(uuid.UUID(result["uploadId"])))
     detail = result_set(api, lab.colleague, set_id)
@@ -138,10 +135,11 @@ def test_a_result_uploaded_with_its_slide_is_imported_once_the_slide_is_ready(
         "import",
         "GeoJSON import",
     )
-    assert (detail["region_count"], detail["zone_count"], detail["cell_count"]) == (2, 1, 0)
+    assert (detail["region_count"], detail["zone_count"], detail["cell_count"]) == (2, 1, 1)
     assert [(item["source_name"], item["object_count"]) for item in detail["classes"]] == [
         ("Tumor", 1),
         ("Stroma", 1),
+        ("Lymphocyte", 1),
     ]
     assert numbers(database, set_id) == [
         ("region", 1, 0, 232),
@@ -150,7 +148,11 @@ def test_a_result_uploaded_with_its_slide_is_imported_once_the_slide_is_ready(
     ]
     listed = api(lab.colleague).get(f"/api/slides/{slide_id}/result-sets").json()
     assert [item["id"] for item in listed] == [set_id]
-    assert keys_under(f"t/{lab.tenant_id}/s/{slide_id}/results/{set_id}/") == {"source.geojson"}
+    assert keys_under(f"t/{lab.tenant_id}/s/{slide_id}/results/{set_id}/") == {
+        "source.geojson",
+        "chunk-00000.pfc",
+        "summary.pfc",
+    }
     assert not exists(result["key"])
     assert keys_under(f"t/{lab.tenant_id}/quarantine/") == set()
     assert ("upload.completed",) in owner(
@@ -272,7 +274,6 @@ def test_a_slide_upload_cannot_be_paired(api: ApiAs, database: str, lab: Lab) ->
     ("name", "data", "reason"),
     [
         ("broken.geojson", b'{"type": "FeatureCollection", "features": [', "result-unreadable"),
-        ("cells.tsv", (RESULTS / "cells.tsv").read_bytes(), "result-cells-only"),
         (
             "cells-renamed.csv",
             (RESULTS / "cells-renamed.csv").read_bytes(),

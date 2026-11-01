@@ -10,11 +10,14 @@ from typing import Any
 
 import httpx2
 import msgspec
+import numpy as np
 import shapely
+from numpy.typing import NDArray
 from shapely.geometry.base import BaseGeometry
 
 from parfocal_api.numbering import reserve
 from parfocal_api.result_imports import (
+    cell_sets,
     import_target,
     known_objects,
     locked_result_upload,
@@ -23,6 +26,8 @@ from parfocal_api.result_imports import (
 from parfocal_api.result_sets import MAX_CLASSES, RegionRow, ResultSetDraft
 from parfocal_api.slide_ingest import record_refusal, upload_of
 from parfocal_api.tables import ResultObjectKind, UploadStatus
+from parfocal_common.cell_chunks import UNCLASSIFIED, ChunkError
+from parfocal_common.chunk_store import Cell, ChunkEntry, build_cells, read_summary, write_cells
 from parfocal_common.ingest import Failure
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_ids import Letter
@@ -35,9 +40,12 @@ from parfocal_common.result_imports import (
     ResultFormat,
     UploadKind,
     result_set_id_for,
+    result_set_prefix,
     source_key,
 )
-from parfocal_ingest.matching import Known, Matching, match_regions
+from parfocal_common.result_store import MissingObjectError, ObjectResultStore
+from parfocal_ingest.cell_import import Outlines, innermost_regions, latest_per_number, outlines
+from parfocal_ingest.matching import Known, Matching, cell_distance, match_centres, match_regions
 from parfocal_ingest.results import (
     ObjectKind,
     ReadResult,
@@ -244,15 +252,45 @@ async def fetch(context: Context) -> bytes:
     return await asyncio.to_thread(context.local.read_bytes)
 
 
-def objects_to_import(parsed: Parsed) -> tuple[list[ResultObject], int]:
+def objects_to_import(parsed: Parsed) -> tuple[list[ResultObject], list[ResultObject]]:
     read = parsed.read
     if any(problem.where == "file" for problem in read.problems):
         raise StepFailedError(ImportFailure.UNREADABLE)
     shapes = [item for item in read.objects if item.kind in LETTERS]
-    cells = sum(1 for item in read.objects if item.kind is ObjectKind.CELL)
-    if not shapes:
-        raise StepFailedError(ImportFailure.CELLS_ONLY if cells else ImportFailure.EMPTY)
+    cells = [item for item in read.objects if item.kind is ObjectKind.CELL]
+    if not shapes and not cells:
+        raise StepFailedError(ImportFailure.EMPTY)
     return shapes, cells
+
+
+@dataclass(frozen=True)
+class IncomingCells:
+    items: list[ResultObject]
+    outlines: Outlines
+    nuclei: dict[int, list[float]]
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+
+def incoming_cells(cells: list[ResultObject]) -> IncomingCells:
+    nuclei = [(index, item.nucleus) for index, item in enumerate(cells) if item.nucleus]
+    traced = outlines([nucleus for _, nucleus in nuclei])
+    return IncomingCells(
+        cells,
+        outlines([item.geometry for item in cells]),
+        {index: ring for (index, _), ring in zip(nuclei, traced.rings, strict=True)},
+    )
+
+
+@dataclass(frozen=True)
+class NumberedRegion:
+    number: int
+    geometry: BaseGeometry
+
+
+def positions_of(classes: Sequence[str]) -> dict[str | None, int]:
+    return {class_key(name): position for position, name in enumerate(classes)}
 
 
 async def rows_of(
@@ -261,9 +299,10 @@ async def rows_of(
     slide_id: uuid.UUID,
     shapes: Sequence[ResultObject],
     classes: Sequence[str],
-) -> list[RegionRow]:
-    positions = {class_key(name): position for position, name in enumerate(classes)}
+) -> tuple[list[RegionRow], list[NumberedRegion]]:
+    positions = positions_of(classes)
     rows: list[RegionRow] = []
+    numbered: list[NumberedRegion] = []
     for kind, (letter, stored_kind) in LETTERS.items():
         items = [item for item in shapes if item.kind is kind]
         if not items:
@@ -277,6 +316,8 @@ async def rows_of(
             else 0
         )
         for item, number in zip(items, matching.numbers(first), strict=True):
+            if stored_kind is ResultObjectKind.REGION:
+                numbered.append(NumberedRegion(number, item.geometry))
             rows.append(
                 RegionRow(
                     kind=stored_kind,
@@ -287,7 +328,100 @@ async def rows_of(
                     probabilities=probabilities_of(item, classes),
                 )
             )
-    return rows
+    return rows, numbered
+
+
+def summary_centres(arrays: Mapping[str, memoryview]) -> NDArray[np.float64]:
+    xs = np.asarray(arrays["x"], dtype=np.float64)
+    ys = np.asarray(arrays["y"], dtype=np.float64)
+    return np.column_stack((xs, ys))
+
+
+async def known_cells(
+    store: Any, tenant_id: uuid.UUID, slide_id: uuid.UUID, set_ids: Sequence[uuid.UUID]
+) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
+    results = ObjectResultStore(store)
+    numbers: list[NDArray[np.int64]] = []
+    centres: list[NDArray[np.float64]] = []
+    for set_id in set_ids:
+        try:
+            summary = await read_summary(results, result_set_prefix(tenant_id, slide_id, set_id))
+        except MissingObjectError, ChunkError:
+            continue
+        numbers.append(np.asarray(summary.numbers(), dtype=np.int64))
+        centres.append(summary_centres(summary.arrays))
+    if not numbers:
+        return np.zeros(0, dtype=np.int64), np.zeros((0, 2), dtype=np.float64)
+    return latest_per_number(np.concatenate(numbers), np.concatenate(centres))
+
+
+def cell_values(
+    incoming: IncomingCells,
+    numbers: Sequence[int],
+    regions: Sequence[NumberedRegion],
+    classes: Sequence[str],
+) -> tuple[list[Cell], bool]:
+    positions = positions_of(classes)
+    inside = innermost_regions(
+        incoming.outlines.centres, [(region.number, region.geometry) for region in regions]
+    ).tolist()
+    probabilities = [probabilities_of(item, classes) for item in incoming.items]
+    keep = all(value is not None for value in probabilities)
+    dropped = not keep and any(value is not None for value in probabilities)
+    cells = [
+        Cell(
+            number=number,
+            ring=incoming.outlines.rings[index],
+            class_index=positions.get(class_key(item.class_name), UNCLASSIFIED),
+            score=scaled(item.score) or 0,
+            region=inside[index],
+            probs=probabilities[index] if keep else None,
+            nucleus=incoming.nuclei.get(index),
+        )
+        for index, (item, number) in enumerate(zip(incoming.items, numbers, strict=True))
+    ]
+    return cells, dropped
+
+
+@dataclass(frozen=True)
+class WrittenCells:
+    entries: tuple[ChunkEntry, ...] = ()
+    inherited: int = 0
+    probabilities_dropped: bool = False
+
+
+async def write_imported_cells(
+    context: Context,
+    connection: Any,
+    slide: Any,
+    set_id: uuid.UUID,
+    incoming: IncomingCells,
+    regions: Sequence[NumberedRegion],
+    classes: Sequence[str],
+) -> WrittenCells:
+    if not len(incoming):
+        return WrittenCells()
+    tenant_id = context.upload.tenant_id
+    set_ids = await cell_sets(connection, slide.id)
+    known_numbers, known_centres = await known_cells(context.store, tenant_id, slide.id, set_ids)
+    matching = await asyncio.to_thread(
+        match_centres,
+        known_numbers,
+        known_centres,
+        incoming.outlines.centres,
+        cell_distance(slide.mpp_x),
+    )
+    first = (
+        await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new))
+        if matching.new
+        else 0
+    )
+    cells, dropped = await asyncio.to_thread(
+        cell_values, incoming, matching.numbers(first), regions, classes
+    )
+    built = await asyncio.to_thread(build_cells, tenant_id, slide.id, set_id, cells, len(classes))
+    entries = await write_cells(ObjectResultStore(context.store), built)
+    return WrittenCells(entries, len(matching.inherited), dropped)
 
 
 async def import_step(context: Context) -> Mapping[str, Any]:
@@ -296,8 +430,9 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         return {"result_set_id": str(upload.result_set_id), "notices": []}
     data = await fetch(context)
     parsed = await asyncio.to_thread(read_file, data, upload.result_format)
-    shapes, cells = objects_to_import(parsed)
-    classes = class_list(parsed, shapes)
+    shapes, cell_objects = objects_to_import(parsed)
+    classes = class_list(parsed, [*shapes, *cell_objects])
+    incoming = await asyncio.to_thread(incoming_cells, cell_objects)
     set_id = result_set_id_for(upload.id)
     async with context.step.transaction() as connection:
         locked = await locked_result_upload(connection, upload.id)
@@ -306,13 +441,18 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         slide = await import_target(connection, locked.slide_id)
         if slide is None:
             raise StepFailedError(ImportFailure.SLIDE_MISSING)
-        rows = await rows_of(connection, locked, slide.id, shapes, classes)
+        rows, regions = await rows_of(connection, locked, slide.id, shapes, classes)
+        written = await write_imported_cells(
+            context, connection, slide, set_id, incoming, regions, classes
+        )
         key = source_key(locked.tenant_id, slide.id, set_id, locked.file_name)
         await context.store.put_object(key, data, "application/octet-stream")
         draft = draft_of(parsed, classes, locked.file_name)
-        await store_result_set(connection, locked, slide, set_id, draft, rows, context.step.job_id)
+        await store_result_set(
+            connection, locked, slide, set_id, draft, rows, context.step.job_id, written.entries
+        )
     notices = [
-        *([ImportNotice.CELLS_NOT_IMPORTED.value] if cells else []),
+        *([ImportNotice.PROBABILITIES_DROPPED.value] if written.probabilities_dropped else []),
         *([ImportNotice.OBJECTS_SKIPPED.value] if parsed.read.problems else []),
     ]
     await context.store.delete_object(upload.object_key)
@@ -321,7 +461,9 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         "result_set_id": str(set_id),
         "regions": sum(1 for row in rows if row.kind is ResultObjectKind.REGION),
         "zones": sum(1 for row in rows if row.kind is ResultObjectKind.ZONE),
-        "cells_not_imported": cells,
+        "cells": len(incoming),
+        "cells_inherited": written.inherited,
+        "chunks": len(written.entries),
         "skipped": len(parsed.read.problems),
         "notices": notices,
     }

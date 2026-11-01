@@ -3205,6 +3205,12 @@ Importing AI results made elsewhere is first class. A result set is one import o
   An imported GeoJSON, QuPath export, Parfocal JSON or CSV writes its cells into chunks with the chunk store of AIP-013, numbered per slide and inheriting the numbers of cells an older set shares (OBJ-002, IDs across result sets), with each cell's region from the regions it lies in. It writes them with `build_cells` and `write_cells` and adds the rows with `ChunkRow.of`, and it adds each class's cell count from the chunk entries to the set's class counts, which `finish` counts only for regions and zones today. The API already reads chunk files from object storage since AIP-013 (result chunk store), so review order and cell scopes see them. Sets imported before this task have no cells, and their kept source file can be imported again as a new set.
   Done when an imported QuPath 0.7 export shows its cells in a ready set, a second import of it inherits every cell number, and a review task with a cell scope reads its chunks from MinIO.
   Depends on RSET-004, AIP-013. Split from RSET-004 by [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job).
+  Decided in [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region): cells match older sets by the vertex-mean centres of their summary files within 4 µm, each cell takes the innermost region of its own set, and a file of only cells imports.
+
+- [ ] RSET-012 · Large result files in bounded memory
+  A result file of 1.6 million cells imports through the real worker within a memory ceiling picked for the Modal worker (TODO: the number), with the GeoJSON features read in batches instead of one decoded tree, and the job's lease never lapses during the import step. The [cell import result](results/2026-11-01-cell-import.md) measured about two minutes and 6 GB of memory for a 900 MB GeoJSON outside the worker.
+  Done when a benchmark imports the synthetic 1.6 million cell GeoJSON through `python -m parfocal_ingest` against MinIO, records the peak memory and the step time in a result file, and the job is claimed once.
+  Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
 
 ---
 

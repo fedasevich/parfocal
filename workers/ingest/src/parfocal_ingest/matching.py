@@ -1,8 +1,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 import shapely
+from numpy.typing import NDArray
 from scipy.spatial import KDTree
 from shapely import STRtree
 from shapely.geometry.base import BaseGeometry
@@ -76,20 +78,50 @@ def match_regions(
     return finish(pairs, known, largest_first)
 
 
+def reading_order(xy: NDArray[np.float64]) -> list[int]:
+    if not len(xy):
+        return []
+    return np.lexsort((np.arange(len(xy)), xy[:, 0], xy[:, 1])).tolist()
+
+
+def match_centres(
+    known_numbers: NDArray[np.integer[Any]],
+    known_xy: NDArray[np.float64],
+    incoming_xy: NDArray[np.float64],
+    distance: float,
+) -> Matching:
+    inherited: dict[int, int] = {}
+    taken = bytearray(len(known_numbers))
+    if len(known_numbers) and len(incoming_xy):
+        pairs = KDTree(known_xy).sparse_distance_matrix(
+            KDTree(incoming_xy), distance, output_type="ndarray"
+        )
+        order = np.lexsort((pairs["j"], pairs["i"], pairs["v"]))
+        numbers = known_numbers.tolist()
+        for known_index, incoming_index in zip(
+            pairs["i"][order].tolist(), pairs["j"][order].tolist(), strict=True
+        ):
+            if taken[known_index] or incoming_index in inherited:
+                continue
+            taken[known_index] = 1
+            inherited[incoming_index] = numbers[known_index]
+    pairs_left = zip(known_numbers.tolist(), taken, strict=True)
+    return Matching(
+        inherited=inherited,
+        new=[index for index in reading_order(incoming_xy) if index not in inherited],
+        missing=sorted(int(number) for number, used in pairs_left if not used),
+    )
+
+
+def centres(geometries: Sequence[BaseGeometry]) -> NDArray[np.float64]:
+    points = [geometry.centroid for geometry in geometries]
+    return np.array([[point.x, point.y] for point in points], dtype=np.float64).reshape(-1, 2)
+
+
 def match_cells(
     known: Sequence[Known], incoming: Sequence[BaseGeometry], distance: float
 ) -> Matching:
-    pairs: list[tuple[float, int, int]] = []
-    if known and incoming:
-        before = np.array([[p.x, p.y] for p in (item.geometry.centroid for item in known)])
-        after = np.array([[p.x, p.y] for p in (geometry.centroid for geometry in incoming)])
-        tree = KDTree(before)
-        for incoming_index, neighbours in enumerate(tree.query_ball_point(after, r=distance)):
-            for known_index in neighbours:
-                gap = float(np.hypot(*(after[incoming_index] - before[known_index])))
-                pairs.append((gap, known_index, incoming_index))
-    reading = [
-        (point.y, point.x, index)
-        for index, point in enumerate(geometry.centroid for geometry in incoming)
-    ]
-    return finish(pairs, known, reading)
+    numbers = np.array([item.number for item in known], dtype=np.int64)
+    return match_centres(
+        numbers, centres([item.geometry for item in known]), centres(incoming), distance
+    )
