@@ -17,7 +17,16 @@ import {
   slideByIndex,
   threads,
 } from "./scenario.ts";
+import { taskDraftOperations } from "./task-handlers.ts";
 import { fakeView } from "./view.ts";
+
+export {
+  getGetProjectScopeOptionsMockHandler,
+  getGetReviewTaskDefaultsMockHandler,
+  getListProjectSlidesMockHandler,
+  getListReviewerWorkloadMockHandler,
+  getListStudyTemplateReviewDefaultsMockHandler,
+} from "./task-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
@@ -162,6 +171,7 @@ export const draftOperations: DraftOperation[] = [
     path: "/api/slides/{slide_id}/threads",
     handler: () => getListSlideThreadsMockHandler(),
   },
+  ...taskDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>
