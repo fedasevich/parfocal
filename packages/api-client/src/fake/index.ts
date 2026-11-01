@@ -27,6 +27,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
 }
 
 export * from "../generated/api.msw.ts";
+export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-handlers.ts";
 export * as scenario from "./scenario.ts";

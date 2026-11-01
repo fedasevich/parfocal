@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { ReportScreen } from "../screens/clinical-report/report-screen.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const clinicalReportSearch = z.object({
   scene: z.enum(mockScenes.creport).optional(),
+  step: z.enum(["findings", "staging", "text", "sign"]).optional(),
+  modal: z.enum(["deposit", "sign", "amend"]).optional(),
 });
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/report")({
@@ -15,11 +17,20 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/repo
 function ClinicalReport() {
   const params = Route.useParams();
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Placeholder
-      title="Clinical report"
-      builtBy="PROTO-014 (clinical report, sign-out and co-sign)"
-      route={{ params, search }}
+    <ReportScreen
+      projectId={params.projectId}
+      slideId={params.slideId}
+      scene={search.scene ?? "findings"}
+      step={search.step}
+      modal={search.modal}
+      onNavigate={(to) =>
+        void navigate({
+          search: (previous) => ({ ...previous, step: to.step, modal: to.modal }),
+          replace: to.step === search.step,
+        })
+      }
     />
   );
 }

@@ -1,0 +1,657 @@
+import {
+  useAmendClinicalReport,
+  useSendClinicalReportForCosign,
+  useSignOutClinicalReport,
+  useWithdrawCosignRequest,
+} from "@parfocal/api-client";
+import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
+import { Button, buttonVariants } from "@parfocal/ui/components/button";
+import { ReportDocument } from "@parfocal/ui/components/clinical-report";
+import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
+import { Icon } from "@parfocal/ui/components/icon";
+import { useRouter } from "@tanstack/react-router";
+import { type ReactNode, useEffect, useState } from "react";
+import { destinations } from "../../shell/destinations.ts";
+import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { usePeople } from "../people.ts";
+import { QueryState } from "../placeholder.tsx";
+import { DepositModal, ReasonModal, SignModal } from "./modals.tsx";
+import {
+  andJoin,
+  canSign,
+  documentOf,
+  fieldNames,
+  followDiagnosis,
+  issuesOf,
+  modeOf,
+  nextDepositId,
+  plural,
+  type Report,
+  type ReportData,
+  type ReportModal,
+  type ReportScene,
+  type StepKey,
+  sceneModal,
+  sceneReport,
+  sceneStep,
+  signedAt,
+  signersOf,
+  slideOf,
+  stepLabel,
+  toApiValues,
+  type Values,
+} from "./model.ts";
+import { fieldId, useLinkRenderer, useReportData, useToast } from "./parts.tsx";
+import {
+  DonePanel,
+  FindingsStep,
+  SentPanel,
+  SignStep,
+  StagingStep,
+  type StepProps,
+  TextStep,
+} from "./steps.tsx";
+
+export const workEmail = (name: string) => {
+  const [first = "", ...rest] = name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .split(" ");
+  return `${first[0] ?? ""}.${rest.join(".")}@fnvltava.cz`;
+};
+
+export type ReportNavigation = { step?: StepKey | undefined; modal?: ReportModal | undefined };
+
+type ReportScreenProps = {
+  projectId: string;
+  slideId: string;
+  scene: ReportScene;
+  step: StepKey | undefined;
+  modal: ReportModal | undefined;
+  onNavigate: (to: ReportNavigation) => void;
+};
+
+export function ReportScreen(props: ReportScreenProps) {
+  const { data, pending, failed } = useReportData(props.projectId, props.slideId, props.scene);
+  if (!data) {
+    return (
+      <main className="p-8">
+        <QueryState label="the clinical report" isPending={pending} error={failed || !pending}>
+          {null}
+        </QueryState>
+      </main>
+    );
+  }
+  return (
+    <ReportFlow key={`${props.scene}-${data.id}-${data.author_user_id}`} data={data} {...props} />
+  );
+}
+
+function ReportFlow({
+  data,
+  scene,
+  step,
+  modal,
+  onNavigate,
+}: ReportScreenProps & { data: ReportData }) {
+  const [report, setReport] = useState(() => sceneReport(data, scene));
+  const [sceneModalOpen, setSceneModalOpen] = useState(() => sceneModal[scene] !== undefined);
+  const [focus, setFocus] = useState<string | null>(null);
+  const [lastText, setLastText] = useState<"diag" | "micro" | "comment">("micro");
+  const toast = useToast();
+  const renderLink = useLinkRenderer();
+  const router = useRouter();
+  const person = usePeople();
+  const signOut = useSignOutClinicalReport();
+  const send = useSendClinicalReportForCosign();
+  const withdraw = useWithdrawCosignRequest();
+  const amend = useAmendClinicalReport();
+  const target = { projectId: data.project.id, slideId: data.slides[0]?.id ?? "" };
+  const steps = data.template.steps;
+  const wanted = step ?? sceneStep[scene];
+  const page: StepKey = steps.some((candidate) => candidate.key === wanted) ? wanted : "findings";
+  const done = report.signed !== null;
+  const sent = !done && report.sent !== null;
+  const openModal = modal ?? (sceneModalOpen ? sceneModal[scene] : undefined);
+  const all = issuesOf(data, report);
+  const errorFor = (list: typeof all) =>
+    Object.fromEntries(
+      list
+        .filter((issue) => report.touched[issue.field])
+        .reverse()
+        .map((issue) => [issue.field, issue.text]),
+    );
+  const projectHref = destinations.project(data.project.id);
+
+  useEffect(() => {
+    if (done || sent) return;
+    setReport((current) =>
+      current.seen.includes(page) ? current : { ...current, seen: [...current.seen, page] },
+    );
+  }, [page, done, sent]);
+
+  useEffect(() => {
+    if (!focus) return;
+    const element = document.getElementById(fieldId(focus));
+    if (!element) return;
+    element.scrollIntoView({ block: "center" });
+    const control = element.matches("input, textarea, button, [tabindex]")
+      ? element
+      : element.querySelector<HTMLElement>(
+          "input, textarea, button, [role='combobox'], [role='radio']",
+        );
+    control?.focus({ preventScroll: true });
+    setFocus(null);
+  }, [focus]);
+
+  const update = (change: (current: Report) => Report) => setReport(change);
+  const setValues = (patch: Partial<Values>) =>
+    setReport((current) => ({
+      ...current,
+      values: followDiagnosis(data, { ...current.values, ...patch }),
+    }));
+  const touch = (field: string) =>
+    setReport((current) => ({ ...current, touched: { ...current.touched, [field]: true } }));
+  const touchAll = (fields: string[]) =>
+    setReport((current) => ({
+      ...current,
+      touched: { ...current.touched, ...Object.fromEntries(fields.map((field) => [field, true])) },
+    }));
+  const goTo = (to: StepKey, field?: string, mark = false) => {
+    if (field && mark) touch(field);
+    if (to !== page) setReport((current) => ({ ...current, removed: null }));
+    onNavigate({ step: to });
+    if (field) setFocus(field);
+  };
+  const closeModal = () => {
+    setSceneModalOpen(false);
+    onNavigate({ step: page, modal: undefined });
+  };
+
+  const stepProps: StepProps = {
+    data,
+    report,
+    errors: errorFor(issuesOf(data, report, true)),
+    update,
+    setValues,
+    touch,
+    goTo: (to, field) => goTo(to, field),
+    person,
+    onOpenSlide: (objectId) =>
+      void router.navigate({
+        href: destinations.slide(data.project.id, target.slideId, undefined, objectId),
+      }),
+    onAddDeposit: () => onNavigate({ step: page, modal: "deposit" }),
+    onRemoveDeposit: (id) => {
+      setReport((current) => {
+        const index = current.values.deposits.findIndex((deposit) => deposit.id === id);
+        const deposit = current.values.deposits[index];
+        if (!deposit) return current;
+        return {
+          ...current,
+          removed: { index, deposit },
+          touched: Object.fromEntries(
+            Object.entries(current.touched).filter(([field]) => !field.startsWith("deps.")),
+          ),
+          values: followDiagnosis(data, {
+            ...current.values,
+            ack: false,
+            deposits: current.values.deposits.filter((candidate) => candidate.id !== id),
+          }),
+        };
+      });
+      window.setTimeout(
+        () => document.querySelector<HTMLElement>("[data-removed] button")?.focus(),
+        0,
+      );
+    },
+    onUndoRemove: () => {
+      const removed = report.removed;
+      if (!removed) return;
+      setReport((current) => {
+        const deposits = [...current.values.deposits];
+        deposits.splice(Math.min(removed.index, deposits.length), 0, removed.deposit);
+        return {
+          ...current,
+          removed: null,
+          values: followDiagnosis(data, { ...current.values, ack: false, deposits }),
+        };
+      });
+      toast.show({ text: `${removed.deposit.id} is back in the list` });
+    },
+    onMeasure: () => {
+      const pending = report.values.deposits.find(
+        (deposit) => deposit.unmeasured && !deposit.size.trim(),
+      );
+      if (!pending) return;
+      const object = data.objects.find(
+        (candidate) =>
+          candidate.slide === pending.slide && candidate.object_id === pending.objectId,
+      );
+      if (!object) return;
+      setValues({
+        ack: false,
+        deposits: report.values.deposits.map((deposit) =>
+          deposit.id === pending.id
+            ? { ...deposit, size: object.size_mm.toFixed(1), unmeasured: false }
+            : deposit,
+        ),
+      });
+      toast.show({
+        text: `${pending.objectId} on ${slideOf(data, pending.slide).short} measured ${object.size_mm.toFixed(1)} mm with the ruler`,
+      });
+    },
+    onInsert: (text) => {
+      const key =
+        lastText === "diag" ? "diagnosis" : lastText === "micro" ? "microscopic" : "comment";
+      const current = report.values[key].trim();
+      setValues({ [key]: current ? `${current} ${text}` : text });
+      touch(lastText);
+      setFocus(lastText);
+      toast.show({ text: `Inserted into ${fieldNames[lastText]}` });
+    },
+    onFocusText: setLastText,
+  };
+
+  const next = () => {
+    const own = all.filter((issue) => issue.step === page);
+    if (own.length) {
+      touchAll(own.map((issue) => issue.field));
+      setFocus(own[0]?.field ?? null);
+      return;
+    }
+    const index = steps.findIndex((candidate) => candidate.key === page);
+    const after = steps[index + 1];
+    if (after) goTo(after.key);
+  };
+
+  const mode = modeOf(data, report);
+  const signNow = () => {
+    const blockers = issuesOf(data, report, true);
+    if (blockers.length) {
+      touchAll(blockers.map((issue) => issue.field));
+      return;
+    }
+    onNavigate({ step: page, modal: "sign" });
+  };
+  const sendNow = () => {
+    const blockers = issuesOf(data, report, true);
+    if (blockers.length) {
+      touchAll(blockers.map((issue) => issue.field));
+      if (blockers.some((issue) => issue.field === "cosigner")) setFocus("cosigner");
+      return;
+    }
+    const to = report.cosigner;
+    if (!to) return;
+    send.mutate(
+      { ...target, data: { cosigner_user_id: to, values: toApiValues(report.values) } },
+      {
+        onSuccess: (response) => {
+          setReport((current) => ({
+            ...current,
+            sent: { to, at: "15 Oct 11:20", id: response.data.id },
+          }));
+          toast.show({ text: `Sent to ${person(to)?.name ?? "the co-signer"} for co-sign` });
+        },
+        onError: () => toast.show({ text: "The report could not be sent. Try again." }),
+      },
+    );
+  };
+
+  let bar: ReactNode;
+  const back = (label: string) =>
+    renderLink({
+      href: `${projectHref}?tab=slides`,
+      className: buttonVariants({}),
+      children: label,
+    });
+  if (done) {
+    bar = (
+      <FlowBar
+        back={back("Back to the project")}
+        hint={
+          report.amend
+            ? "Both versions stay in the case. The clinician has version 2."
+            : "A change from now on is an amendment with a reason."
+        }
+        next={
+          <span className="flex gap-3">
+            <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>Amend</Button>
+            <Button
+              variant="primary"
+              onClick={() =>
+                toast.show({
+                  text: `${data.case.label}_report_v${report.amend ? 2 : 1}.pdf saved to Downloads`,
+                })
+              }
+            >
+              <Icon name="download" />
+              Download PDF
+            </Button>
+          </span>
+        }
+      />
+    );
+  } else if (sent) {
+    bar = (
+      <FlowBar
+        back={
+          <Button
+            onClick={() => {
+              const was = report.sent;
+              if (!was) return;
+              withdraw.mutate({ ...target, requestId: was.id || "request" });
+              setReport((current) => ({ ...current, sent: null }));
+              toast.show({
+                text: "The request is withdrawn. The report is a draft again.",
+                undo: () => setReport((current) => ({ ...current, sent: was })),
+              });
+            }}
+          >
+            Withdraw the request
+          </Button>
+        }
+        hint="You are told when it is signed or returned."
+        next={renderLink({
+          href: `${projectHref}?tab=slides`,
+          className: buttonVariants({ variant: "primary" }),
+          children: "Back to the project",
+        })}
+      />
+    );
+  } else {
+    const index = steps.findIndex((candidate) => candidate.key === page);
+    const before = steps[index - 1];
+    const backButton = before ? (
+      <Button onClick={() => goTo(before.key)}>Back</Button>
+    ) : (
+      back("Cancel")
+    );
+    if (page !== "sign") {
+      bar = (
+        <FlowBar
+          back={backButton}
+          hint="The draft is saved as you go."
+          next={
+            <Button variant="primary" onClick={next}>
+              Next
+            </Button>
+          }
+        />
+      );
+    } else {
+      const blockers = issuesOf(data, report, true);
+      const signers = signersOf(data);
+      const can = canSign(data);
+      const me = person(data.author_user_id);
+      const hint = !can
+        ? `You cannot sign out in this project. ${signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : "Nobody can yet."}`
+        : blockers.length
+          ? `${plural(blockers.length, "thing")} to finish first.`
+          : mode === "sign"
+            ? `Signed by ${me?.name ?? "you"}, MUDr. The report leaves for the clinician.`
+            : `${person(report.cosigner)?.name ?? "The co-signer"} gets it in My work.`;
+      bar = (
+        <FlowBar
+          blockers={
+            blockers.length ? (
+              <BeforeYouList
+                showSingle
+                title={`Before you can ${mode === "sign" ? "sign out" : "send"}`}
+                className="rounded-none border-0 bg-transparent p-0"
+                blockers={blockers.map((issue) => ({
+                  id: issue.field,
+                  text: issue.blockText,
+                  goTo:
+                    issue.step !== page
+                      ? `Go to ${stepLabel(data, issue.step)}`
+                      : issue.field === "cosigner"
+                        ? "Pick who co-signs"
+                        : "Show me",
+                  onGoTo: () => goTo(issue.step, issue.field, true),
+                }))}
+              />
+            ) : null
+          }
+          back={backButton}
+          hint={<span className={blockers.length ? "text-fg" : undefined}>{hint}</span>}
+          next={
+            mode === "sign" ? (
+              <span className="flex gap-3">
+                <Button onClick={() => update((current) => ({ ...current, mode: "cosign" }))}>
+                  Send for co-sign instead
+                </Button>
+                <Button variant="primary" aria-disabled={blockers.length > 0} onClick={signNow}>
+                  Sign out
+                </Button>
+              </span>
+            ) : (
+              <span className="flex gap-3">
+                {can ? (
+                  <Button onClick={() => update((current) => ({ ...current, mode: "sign" }))}>
+                    Sign out myself
+                  </Button>
+                ) : null}
+                <Button
+                  variant="primary"
+                  aria-disabled={blockers.length > 0 || send.isPending}
+                  onClick={sendNow}
+                >
+                  <Icon name="mail" />
+                  Send for co-sign
+                </Button>
+              </span>
+            )
+          }
+        />
+      );
+    }
+  }
+
+  const stepStates: FlowStep[] = steps.map((candidate) => {
+    const count = all.filter((issue) => issue.step === candidate.key).length;
+    const seen = report.seen.includes(candidate.key);
+    const state = candidate.key === page ? "current" : !seen ? "todo" : count ? "warn" : "done";
+    return {
+      label: candidate.label,
+      state,
+      why:
+        state === "todo"
+          ? `Not reached yet. Finish ${stepLabel(data, page)} first, then use Next.`
+          : `Go to ${candidate.label}${count ? `. ${plural(count, "thing")} to fix` : ""}`,
+    };
+  });
+
+  const status = done ? (
+    <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+      <Icon name="lock" className="text-fg-dim" />
+      <span>Locked as version {report.amend ? 2 : 1}. A change is an amendment with a reason.</span>
+    </p>
+  ) : sent ? (
+    <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+      <Icon name="clock" className="text-fg-dim" />
+      <span>
+        Sent to {person(report.sent?.to)?.name}, {report.sent?.at} · waiting
+      </span>
+    </p>
+  ) : undefined;
+
+  const assigned = andJoin(data.case.assigned_user_ids.map((id) => person(id)?.name ?? ""));
+  const nameOf = (userId: string) => person(userId)?.name ?? "";
+
+  return (
+    <>
+      <FlowPage
+        data-testid="clinical-report"
+        data-step={done ? "signed" : sent ? "sent" : page}
+        className="h-full"
+        renderLink={renderLink}
+        crumbStart={<SidebarToggle />}
+        crumbs={[
+          { label: data.project.name, href: `${projectHref}?tab=slides` },
+          { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
+          { label: "Clinical report" },
+        ]}
+        title="Clinical report"
+        subtitle={
+          <>
+            <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
+            {data.template.version} · assigned to {assigned}
+          </>
+        }
+        steps={stepStates}
+        current={Math.max(
+          0,
+          steps.findIndex((candidate) => candidate.key === page),
+        )}
+        onStepSelect={(chosen) => {
+          const key = steps[chosen]?.key;
+          if (key && report.seen.includes(key)) goTo(key);
+        }}
+        status={status}
+        bar={bar}
+      >
+        {done ? <DonePanel {...stepProps} /> : null}
+        {sent ? <SentPanel {...stepProps} /> : null}
+        {!done && !sent && page === "findings" ? <FindingsStep {...stepProps} /> : null}
+        {!done && !sent && page === "staging" ? <StagingStep {...stepProps} /> : null}
+        {!done && !sent && page === "text" ? <TextStep {...stepProps} /> : null}
+        {!done && !sent && page === "sign" ? <SignStep {...stepProps} /> : null}
+      </FlowPage>
+      {report.preview && !done ? (
+        <div
+          role="dialog"
+          aria-label="Preview of the report"
+          className="fixed inset-0 z-40 grid grid-rows-[auto_minmax(0,1fr)] bg-scrim"
+        >
+          <div className="flex items-center gap-3 border-b border-line bg-chrome px-5 py-2.5 text-body-sm">
+            <Icon name="file" />
+            <b>{data.case.label}_draft.pdf</b>
+            <span className="text-fg-dim">A4 · draft, from what you typed</span>
+            <span className="flex-1" />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Close the preview"
+              onClick={() => update((current) => ({ ...current, preview: false }))}
+            >
+              <Icon name="close" />
+            </Button>
+          </div>
+          <div className="grid justify-center overflow-auto p-8">
+            <ReportDocument model={documentOf(data, report, "draft", nameOf)} />
+          </div>
+        </div>
+      ) : null}
+      {openModal === "deposit" && !done && !sent ? (
+        <DepositModal
+          data={data}
+          caseLabel={data.case.label}
+          deposits={report.values.deposits}
+          hand={scene === "dephand" && sceneModalOpen}
+          onClose={closeModal}
+          onAdd={(deposit) => {
+            const id = nextDepositId(report);
+            const before = report.values.deposits;
+            const added = [...before, { ...deposit, id }];
+            setReport((current) => ({
+              ...current,
+              removed: null,
+              values: followDiagnosis(data, { ...current.values, ack: false, deposits: added }),
+            }));
+            closeModal();
+            const sizes = (list: typeof added) =>
+              list.reduce<{ id: string; mm: number } | null>((best, item) => {
+                const mm = Number(item.size);
+                return best === null || mm > best.mm ? { id: item.id, mm } : best;
+              }, null);
+            const was = sizes(before);
+            const now = sizes(added);
+            toast.show({
+              text:
+                now?.id === id && was?.id !== id
+                  ? `${id} added. It is the largest now and sets the category.`
+                  : `${id} added. ${now ? `${now.id} is still the largest.` : ""}`,
+            });
+          }}
+        />
+      ) : null}
+      {openModal === "sign" && !done && !sent ? (
+        <SignModal
+          title={`Sign out ${data.case.label}`}
+          subtitle={`${data.template.name} ${data.template.version} · version 1`}
+          rows={[
+            {
+              icon: "user",
+              label: "Signed by",
+              value: `${person(data.author_user_id)?.name ?? ""}, MUDr.`,
+            },
+            {
+              icon: "mail",
+              label: "Goes to",
+              value: `${data.case.requested_by}, who requested it`,
+            },
+            { icon: "file", label: "What you sign", value: "The report as it reads now" },
+          ]}
+          email={workEmail(person(data.author_user_id)?.name ?? "")}
+          failed={scene === "ssofail" && sceneModalOpen}
+          pending={signOut.isPending}
+          onClose={closeModal}
+          onSign={(method, doneWith) =>
+            signOut.mutate(
+              { ...target, data: { method, values: toApiValues(report.values) } },
+              {
+                onSuccess: () => {
+                  setReport((current) => ({
+                    ...current,
+                    signed: { by: data.author_user_id, co: null, at: signedAt },
+                    v1: current.values,
+                    preview: false,
+                  }));
+                  closeModal();
+                  toast.show({
+                    text: `${data.case.label} is signed out. It goes to the clinician.`,
+                  });
+                },
+                onError: () => doneWith(false),
+              },
+            )
+          }
+        />
+      ) : null}
+      {openModal === "amend" && done ? (
+        <ReasonModal
+          title="Amend the report"
+          subtitle={`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")}`}
+          whatLabel="What changes"
+          what="Version 2 of the report, with your reason on top"
+          told={
+            report.signed?.co
+              ? `The clinician and ${nameOf(report.signed.co)}, the co-signer`
+              : "The clinician"
+          }
+          label="Reason"
+          placeholder="For example, measured again on deeper levels of A1"
+          help="The reason goes into the report."
+          hint="v1 stays readable."
+          primary="Amend and sign again"
+          tooShort="Give a reason of at least 10 characters."
+          tried={scene === "amend" && sceneModalOpen}
+          onClose={closeModal}
+          onSubmit={(why) => {
+            const was = report.amend;
+            amend.mutate({ ...target, data: { reason: why, values: toApiValues(report.values) } });
+            setReport((current) => ({ ...current, amend: { why, at: "16 Oct" }, showV1: false }));
+            closeModal();
+            toast.show({
+              text: "Amended and signed again. Version 1 stays readable.",
+              undo: () => setReport((current) => ({ ...current, amend: was })),
+            });
+          }}
+        />
+      ) : null}
+      {toast.view}
+    </>
+  );
+}

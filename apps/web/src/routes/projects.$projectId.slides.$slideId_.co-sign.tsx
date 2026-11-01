@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { Placeholder } from "../screens/placeholder.tsx";
+import { CosignScreen } from "../screens/clinical-report/cosign-screen.tsx";
 import { mockScenes } from "../screens/scenes.ts";
 
 const coSignSearch = z.object({
@@ -16,10 +16,10 @@ function CoSignReview() {
   const params = Route.useParams();
   const search = Route.useSearch();
   return (
-    <Placeholder
-      title="Co-sign review"
-      builtBy="PROTO-014 (clinical report, sign-out and co-sign)"
-      route={{ params, search }}
+    <CosignScreen
+      projectId={params.projectId}
+      slideId={params.slideId}
+      scene={search.scene ?? "review"}
     />
   );
 }

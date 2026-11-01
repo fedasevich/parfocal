@@ -13,5 +13,11 @@ export function fakeViewFor(pathname: string, search: Record<string, unknown>): 
     if (tab === "assigned") return { viewer: "DH", firstWeek: false };
   }
   if (pathname === "/team") return { viewer: "DH", firstWeek: false };
+  if (
+    pathname.endsWith("/report") &&
+    (search["scene"] === "cosign" || search["scene"] === "sent")
+  ) {
+    return { viewer: "TB", firstWeek: false };
+  }
   return defaultFakeView;
 }
