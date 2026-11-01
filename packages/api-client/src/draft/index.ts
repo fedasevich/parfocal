@@ -100,6 +100,11 @@ export {
   getListMyJobsQueryKey,
   getListMyJobsQueryOptions,
   getListMyJobsUrl,
+  type JobPause,
+  JobPauseReason,
+  type JobSlide,
+  jobPauseSchema,
+  jobSlideSchema,
   type ListMyJobsQueryError,
   type ListMyJobsQueryResult,
   listMyJobs,
@@ -206,6 +211,7 @@ export {
   threadCommentSchema,
   useListThreadComments,
 } from "./list-thread-comments.ts";
+export * from "./model-runs.ts";
 export * from "./project.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";
 export {

@@ -18,16 +18,43 @@ export const MyJobKind = {
   import: "import",
 } as const;
 
+export const jobSlideSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  file: z.string(),
+});
+
+export type JobSlide = z.infer<typeof jobSlideSchema>;
+
+export const JobPauseReason = {
+  "server-not-answering": "server-not-answering",
+  "server-busy": "server-busy",
+} as const;
+
+export const jobPauseSchema = z.object({
+  reason: z.enum(JobPauseReason),
+  server: z.string(),
+  since: z.iso.datetime({ offset: true }),
+});
+
+export type JobPause = z.infer<typeof jobPauseSchema>;
+
 export const myJobSchema = z.object({
   id: z.string(),
   kind: z.enum(MyJobKind),
   title: z.string(),
   project: z.object({ id: z.string(), code: z.string(), name: z.string() }),
   status: z.enum(JobStatus),
+  detail: z.string(),
+  percent: z.number().int().min(0).max(100),
+  minutes_left: z.number().int().nonnegative().nullable(),
   units_done: z.number().int().nonnegative(),
   units_total: z.number().int().nonnegative().nullable(),
-  created_at: z.iso.datetime(),
-  finished_at: z.iso.datetime().nullable(),
+  started_by_user_id: z.string(),
+  slides: z.array(jobSlideSchema),
+  pause: jobPauseSchema.nullable(),
+  created_at: z.iso.datetime({ offset: true }),
+  finished_at: z.iso.datetime({ offset: true }).nullable(),
 });
 
 export type MyJob = z.infer<typeof myJobSchema>;

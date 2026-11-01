@@ -2,9 +2,9 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
 import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adjudications.ts";
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
-import { type MyJob, myJobSchema } from "../draft/list-my-jobs.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
+import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import {
@@ -12,7 +12,6 @@ import {
   cases,
   checklist,
   cosignRequests,
-  jobs,
   people,
   projectByCode,
   reviewTasks,
@@ -35,6 +34,12 @@ export {
   getSignOutClinicalReportMockHandler,
   getWithdrawCosignRequestMockHandler,
 } from "./clinical-handlers.ts";
+export {
+  getGetModelRunDefaultsMockHandler,
+  getListMyJobsMockHandler,
+  getListProjectModelsMockHandler,
+  getMoveModelRunMockHandler,
+} from "./job-handlers.ts";
 export {
   getGetProjectImportsMockHandler,
   getGetProjectOverviewMockHandler,
@@ -70,24 +75,6 @@ export type DraftOperation = {
   path: string;
   handler: () => RequestHandler;
 };
-
-const toMyJob = (job: (typeof jobs)[number]): MyJob => {
-  const project = projectByCode(job.project);
-  return myJobSchema.parse({
-    id: job.id,
-    kind: job.kind,
-    title: `${job.title} · ${people[job.by].name}`,
-    project: { id: project.id, code: project.code, name: project.name },
-    status: job.status,
-    units_done: job.unitsDone,
-    units_total: job.unitsTotal,
-    created_at: job.createdAt,
-    finished_at: job.finishedAt,
-  });
-};
-
-export const getListMyJobsMockHandler = (overrideResponse?: MyJob[]) =>
-  http.get("*/api/me/jobs", () => HttpResponse.json(overrideResponse ?? jobs.map(toMyJob)));
 
 const taskByCode = (code: string) => {
   const task = reviewTasks.find((candidate) => candidate.code === code);
@@ -179,12 +166,6 @@ export const getListSlideThreadsMockHandler = (overrideResponse?: SlideThread[])
 
 export const draftOperations: DraftOperation[] = [
   {
-    operationId: "listMyJobs",
-    method: "get",
-    path: "/api/me/jobs",
-    handler: () => getListMyJobsMockHandler(),
-  },
-  {
     operationId: "listMyAdjudications",
     method: "get",
     path: "/api/me/adjudications",
@@ -208,6 +189,7 @@ export const draftOperations: DraftOperation[] = [
     path: "/api/slides/{slide_id}/threads",
     handler: () => getListSlideThreadsMockHandler(),
   },
+  ...jobDraftOperations,
   ...taskDraftOperations,
   ...projectDraftOperations,
   ...teamDraftOperations,

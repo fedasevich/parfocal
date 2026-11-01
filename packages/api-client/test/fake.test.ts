@@ -105,6 +105,7 @@ test("a draft hook's fetch function reads its handler through the Zod schema", a
       ["P07", "running"],
       ["P07", "paused"],
       ["P09", "done"],
+      ["P09", "done"],
     ],
   );
 });

@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import type { RequestHandler } from "msw";
 import { getParfocalAPIMock } from "../generated/api.msw.ts";
 import { draftHandlers } from "./draft-handlers.ts";
+import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
@@ -22,6 +23,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...projectHandlers(),
     ...workHandlers(),
     ...taskHandlers(),
+    ...jobHandlers(),
     ...getParfocalAPIMock(),
   ];
 }
@@ -29,10 +31,17 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
 export * from "../generated/api.msw.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
+export {
+  type FakeJobsScene,
+  fakeJobsState,
+  resetJobsState,
+  setFakeJobsScene,
+} from "./jobs-scene.ts";
 export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-handlers.ts";
 export * as scenario from "./scenario.ts";
 export * as scenarioClinical from "./scenario-clinical.ts";
 export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
+export * as scenarioJobs from "./scenario-jobs.ts";
 export * as scenarioProject from "./scenario-project.ts";
 export * as scenarioReview from "./scenario-review.ts";
 export * as scenarioTask from "./scenario-task.ts";

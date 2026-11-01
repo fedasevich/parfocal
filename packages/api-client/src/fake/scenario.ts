@@ -114,6 +114,9 @@ export type ScenarioJob = {
   createdAt: string;
   finishedAt: string | null;
   by: PersonKey;
+  detail: string;
+  percent: number;
+  minutesLeft: number | null;
 };
 
 const uuid = (group: number, index: number) =>
@@ -406,16 +409,19 @@ export const reviewTasks: ScenarioReviewTask[] = [
 
 export const jobs: ScenarioJob[] = [
   {
-    id: uuid(8, 1),
-    kind: "model-run",
-    title: "PathoSAM + HoVer-NeXt v1.2",
+    id: uuid(8, 4),
+    kind: "upload",
+    title: "Upload into P07",
     project: "P07",
     status: "running",
-    unitsDone: 0,
-    unitsTotal: 2,
-    createdAt: `${scenarioToday}T10:14:00Z`,
+    unitsDone: 2,
+    unitsTotal: 6,
+    createdAt: "2026-10-15T14:21:00+02:00",
     finishedAt: null,
     by: "DH",
+    detail: "6 slides and 4 result files",
+    percent: 46,
+    minutesLeft: 3,
   },
   {
     id: uuid(8, 2),
@@ -425,9 +431,27 @@ export const jobs: ScenarioJob[] = [
     status: "paused",
     unitsDone: 0,
     unitsTotal: 1,
-    createdAt: `${scenarioToday}T08:20:00Z`,
+    createdAt: "2026-10-15T08:20:00+02:00",
     finishedAt: null,
     by: "DH",
+    detail: "tumor_044",
+    percent: 38,
+    minutesLeft: null,
+  },
+  {
+    id: uuid(8, 5),
+    kind: "upload",
+    title: "Upload into P09",
+    project: "P09",
+    status: "done",
+    unitsDone: 12,
+    unitsTotal: 12,
+    createdAt: "2026-10-15T08:58:00+02:00",
+    finishedAt: "2026-10-15T09:12:00+02:00",
+    by: "DH",
+    detail: "12 slides",
+    percent: 100,
+    minutesLeft: null,
   },
   {
     id: uuid(8, 3),
@@ -437,9 +461,12 @@ export const jobs: ScenarioJob[] = [
     status: "done",
     unitsDone: 4,
     unitsTotal: 4,
-    createdAt: "2026-10-16T16:02:00Z",
-    finishedAt: "2026-10-16T16:36:00Z",
+    createdAt: "2026-10-14T16:02:00+02:00",
+    finishedAt: "2026-10-14T16:36:00+02:00",
     by: "AK",
+    detail: "4 slides in P09",
+    percent: 100,
+    minutesLeft: null,
   },
 ];
 
