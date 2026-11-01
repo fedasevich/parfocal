@@ -21,12 +21,26 @@
     "@parfocal/api-client": "workspace:*",
     "@parfocal/tokens": "workspace:*",
     "@parfocal/ui": "workspace:*",
-    "@parfocal/viewer-engine": "workspace:*"
+    "@parfocal/viewer-engine": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
+    "@tanstack/react-router": "1.170.46",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
+    "@babel/core": "8.0.10",
     "@parfocal/typescript-config": "workspace:*",
-    "vite": "8.3.3",
+    "@playwright/test": "1.64.0",
+    "@rolldown/plugin-babel": "0.2.4",
+    "@tailwindcss/vite": "4.3.3",
+    "@tanstack/router-plugin": "1.168.48",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "babel-plugin-react-compiler": "1.0.0",
     "msw": "3.0.3",
-    "@playwright/test": "1.64.0"
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.3"
   }
 }

@@ -1,12 +1,21 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
+import { getResponse } from "msw";
 import { setupServer } from "msw/node";
-import { fakeApiHandlers } from "../src/fake/index.ts";
+import { fakeApiHandlers, scenario } from "../src/fake/index.ts";
 import { getGetHealthMockHandler } from "../src/generated/api.msw.ts";
-import { getHealth, listProjects } from "../src/index.ts";
+import {
+  ApiError,
+  getHealth,
+  getMe,
+  getMyHome,
+  getProject,
+  listMyJobs,
+  listMyReviewTasks,
+  listProjects,
+} from "../src/index.ts";
 
-const server = setupServer(...fakeApiHandlers());
-
+const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
 
 before(() => {
@@ -21,21 +30,77 @@ after(() => {
   server.close();
 });
 
-test("a generated handler answers the generated client with data of the real type", async () => {
-  const response = await getHealth();
+function body<Response extends { status: number; data: unknown }>(
+  response: Response,
+): Extract<Response, { status: 200 }>["data"] {
   assert.equal(response.status, 200);
-  assert.equal(typeof response.data.status, "string");
+  return (response as Extract<Response, { status: 200 }>).data;
+}
+
+const answers = async (scope: "all" | "drafts", path: string) =>
+  (await getResponse(fakeApiHandlers(scope), new Request(`http://app.test${path}`))) !== undefined;
+
+test("all answers generated, seeded and draft operations", async () => {
+  assert.equal(await answers("all", "/api/health"), true);
+  assert.equal(await answers("all", "/api/me"), true);
+  assert.equal(await answers("all", "/api/me/jobs"), true);
 });
 
-test("generated list handlers return arrays", async () => {
-  const response = await listProjects();
-  assert.equal(response.status, 200);
-  assert.ok(Array.isArray(response.data));
+test("drafts answers only draft operations and lets the rest reach the API", async () => {
+  assert.equal(await answers("drafts", "/api/me/jobs"), true);
+  assert.equal(await answers("drafts", "/api/me"), false);
+  assert.equal(await answers("drafts", "/api/health"), false);
+  assert.equal(await answers("drafts", "/api/projects"), false);
+});
+
+test("seeded operations tell the scenario's story ahead of generated fake data", async () => {
+  const me = body(await getMe());
+  assert.equal(me.display_name, "Lenka Malá");
+  assert.equal(me.workspaces[0]?.name, "Fakultní nemocnice Vltava");
+  const projects = body(await listProjects());
+  assert.deepEqual(
+    projects.map((project) => project.code),
+    ["P07", "P03", "P09", "P11"],
+  );
+  const home = body(await getMyHome());
+  assert.equal(home.resume?.task_code, "RT-14");
+  assert.equal(home.resume?.object_id, "T2·C145");
+  const tasks = body(await listMyReviewTasks());
+  assert.deepEqual(
+    tasks.map((task) => task.code),
+    ["RT-14", "RT-11"],
+  );
+});
+
+test("a seeded detail answers by id and refuses an unknown one with a problem", async () => {
+  const p07 = scenario.projectByCode("P07");
+  const project = body(await getProject(p07.id));
+  assert.equal(project.name, "Sentinel node AI evaluation");
+  await assert.rejects(getProject("00000000-0000-4000-8000-000000000000"), (error: unknown) => {
+    assert.ok(error instanceof ApiError);
+    assert.equal(error.status, 404);
+    return true;
+  });
+});
+
+test("operations outside the seed still answer with typed generated data", async () => {
+  assert.equal(typeof body(await getHealth()).status, "string");
+});
+
+test("a draft hook's fetch function reads its handler through the Zod schema", async () => {
+  const response = await listMyJobs();
+  assert.deepEqual(
+    response.data.map((job) => [job.project.code, job.status]),
+    [
+      ["P07", "running"],
+      ["P07", "paused"],
+      ["P09", "done"],
+    ],
+  );
 });
 
 test("an override replaces the generated fake body", async () => {
   server.use(getGetHealthMockHandler({ status: "fake" }));
-  const response = await getHealth();
-  assert.deepEqual(response.data, { status: "fake" });
+  assert.deepEqual(body(await getHealth()), { status: "fake" });
   server.resetHandlers();
 });

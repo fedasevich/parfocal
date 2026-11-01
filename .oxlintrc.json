@@ -35,7 +35,18 @@
     "typescript/no-unsafe-member-access": "error",
     "typescript/no-unsafe-return": "error",
     "typescript/no-unsafe-unary-minus": "error",
-    "typescript/only-throw-error": "error",
+    "typescript/only-throw-error": [
+      "error",
+      {
+        "allow": [
+          {
+            "from": "package",
+            "package": "@tanstack/router-core",
+            "name": ["NotFoundError", "Redirect"]
+          }
+        ]
+      }
+    ],
     "typescript/prefer-promise-reject-errors": "error",
     "typescript/require-await": "error",
     "typescript/restrict-plus-operands": "error",
@@ -45,5 +56,5 @@
     "typescript/unbound-method": "error",
     "typescript/use-unknown-in-catch-callback-variable": "error"
   },
-  "ignorePatterns": ["infra/**", "docs/**"]
+  "ignorePatterns": ["infra/**", "docs/**", "apps/web/src/routeTree.gen.ts"]
 }

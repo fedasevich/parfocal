@@ -10,6 +10,7 @@
       "**",
       "!**/.terraform.lock.hcl",
       "!packages/api-client/openapi.json",
+      "!apps/web/src/routeTree.gen.ts",
       "!docs/design"
     ]
   },

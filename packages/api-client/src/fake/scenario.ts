@@ -1,0 +1,419 @@
+export const scenarioToday = "2026-10-17";
+
+export type PersonKey = "LM" | "AK" | "SM" | "JR" | "TB" | "PK" | "HL" | "MV" | "DH";
+
+export type ScenarioPerson = {
+  key: PersonKey;
+  id: string;
+  name: string;
+  title: string;
+  email: string;
+  colour: number;
+  role: "researcher" | "reviewer";
+};
+
+export type ScenarioWorkspace = {
+  id: string;
+  slug: string;
+  name: string;
+  subtitle: string;
+  organisation: string;
+  kind: "diagnostic" | "research";
+};
+
+export type ProjectCode = "P07" | "P03" | "P09" | "P11";
+
+export type ScenarioProject = {
+  code: ProjectCode;
+  id: string;
+  name: string;
+  privacy: "de-identified" | "clinical";
+  template: "none" | "sentinel-node" | "cell-review";
+  studyTemplate: string;
+  taxonomy: string;
+  colour: number;
+  owner: PersonKey;
+  members: PersonKey[];
+  createdAt: string;
+};
+
+export type ScenarioCase = {
+  id: string;
+  label: string;
+  project: ProjectCode;
+  specimen: string;
+  folder: string;
+};
+
+export type ScenarioSlide = {
+  id: string;
+  project: ProjectCode;
+  caseLabel: string | null;
+  label: string;
+  stain: string;
+  state: "ready" | "processing";
+};
+
+export type ResultSetKey = "cam" | "sam" | "rev";
+
+export type ScenarioResultSet = {
+  key: ResultSetKey;
+  id: string;
+  project: ProjectCode;
+  name: string;
+  version: string;
+  source: "imported" | "run" | "reviewed";
+  createdOn: string;
+  by: PersonKey;
+  regions: number;
+  cells: number;
+};
+
+export type ScenarioReviewTask = {
+  code: string;
+  id: string;
+  name: string;
+  project: ProjectCode;
+  resultSet: ResultSetKey;
+  reviewers: PersonKey[];
+  scope: "all-regions" | "random-cells" | "cells-below-score" | "inside-rois" | "unsure-zones";
+  scopeText: string;
+  dueOn: string;
+  sentOn: string;
+  slides: number;
+  progress: Partial<Record<PersonKey, number>>;
+  blinded: boolean;
+  status: "review" | "assigned" | "signed";
+  signedOn?: string;
+};
+
+export type ScenarioJob = {
+  id: string;
+  kind: "upload" | "model-run" | "import";
+  title: string;
+  project: ProjectCode;
+  status: "running" | "paused" | "done";
+  unitsDone: number;
+  unitsTotal: number;
+  createdAt: string;
+  finishedAt: string | null;
+  by: PersonKey;
+};
+
+const uuid = (group: number, index: number) =>
+  `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
+
+const person = (
+  key: PersonKey,
+  index: number,
+  name: string,
+  title: string,
+  colour: number,
+  role: ScenarioPerson["role"] = "reviewer",
+): ScenarioPerson => ({
+  key,
+  id: uuid(1, index),
+  name,
+  title,
+  email: `${name.split(" ")[0]?.toLowerCase() ?? key.toLowerCase()}@fnvltava.example`,
+  colour,
+  role,
+});
+
+export const people: Record<PersonKey, ScenarioPerson> = {
+  LM: person("LM", 1, "Lenka Malá", "Consultant · breast, nodes", 0),
+  AK: person("AK", 2, "Anna Kopecká", "Consultant · breast", 1),
+  SM: person("SM", 3, "Simona Marková", "Consultant · consults", 2),
+  JR: person("JR", 4, "Jan Růžička", "Consultant · GI, nodes", 3),
+  TB: person("TB", 5, "Tomáš Beneš", "Pathologist · nodes", 4),
+  PK: person("PK", 6, "Petra Králová", "On leave until 22 Oct", 5),
+  HL: person("HL", 7, "Hana Lukešová", "Histology technician", 6),
+  MV: person("MV", 8, "Martin Vlček", "IHC technician", 7),
+  DH: person("DH", 9, "Daniel Hruška", "Researcher · AI evaluation", 8, "researcher"),
+};
+
+export const signedInAs: PersonKey = "LM";
+
+export const workspaces: ScenarioWorkspace[] = [
+  {
+    id: uuid(2, 1),
+    slug: "fn-vltava",
+    name: "Fakultní nemocnice Vltava",
+    subtitle: "Pathology and AI research",
+    organisation: "FN Vltava",
+    kind: "research",
+  },
+  {
+    id: uuid(2, 2),
+    slug: "cu-ai-lab",
+    name: "Charles University AI Lab",
+    subtitle: "Research workspace",
+    organisation: "Charles University",
+    kind: "research",
+  },
+];
+
+export const projects: ScenarioProject[] = [
+  {
+    code: "P07",
+    id: uuid(3, 7),
+    name: "Sentinel node AI evaluation",
+    privacy: "de-identified",
+    template: "sentinel-node",
+    studyTemplate: "Sentinel node AI evaluation",
+    taxonomy: "Sentinel node",
+    colour: 0,
+    owner: "DH",
+    members: ["DH", "LM", "SM", "AK"],
+    createdAt: "2026-09-02T09:00:00Z",
+  },
+  {
+    code: "P03",
+    id: uuid(3, 3),
+    name: "Lymph nodes 2026",
+    privacy: "clinical",
+    template: "sentinel-node",
+    studyTemplate: "Sentinel node AI evaluation",
+    taxonomy: "Sentinel node",
+    colour: 1,
+    owner: "LM",
+    members: ["LM", "SM", "TB", "JR"],
+    createdAt: "2026-01-12T09:00:00Z",
+  },
+  {
+    code: "P09",
+    id: uuid(3, 9),
+    name: "Breast TILs, cell typing",
+    privacy: "de-identified",
+    template: "cell-review",
+    studyTemplate: "Cell typing study",
+    taxonomy: "PanNuke",
+    colour: 2,
+    owner: "DH",
+    members: ["DH", "AK", "SM", "LM"],
+    createdAt: "2026-09-21T09:00:00Z",
+  },
+  {
+    code: "P11",
+    id: uuid(3, 11),
+    name: "Colon biopsies, model B pilot",
+    privacy: "de-identified",
+    template: "none",
+    studyTemplate: "Detection study",
+    taxonomy: "Colon",
+    colour: 3,
+    owner: "JR",
+    members: ["JR", "DH"],
+    createdAt: "2026-10-05T09:00:00Z",
+  },
+];
+
+const scenarioCase = (
+  index: number,
+  label: string,
+  project: ProjectCode,
+  specimen: string,
+  folder: string,
+): ScenarioCase => ({ id: uuid(4, index), label, project, specimen, folder });
+
+export const cases: ScenarioCase[] = [
+  scenarioCase(1, "S26-04812", "P07", "Sentinel lymph node, left axilla", "Lymph nodes"),
+  scenarioCase(2, "S26-04769", "P07", "Axillary dissection, 14 nodes", "Lymph nodes"),
+  scenarioCase(3, "S26-04777", "P07", "Sentinel lymph node, right axilla", "Lymph nodes"),
+  scenarioCase(4, "S26-04740", "P07", "Lymph node, cervical", "Lymph nodes"),
+  scenarioCase(5, "S26-04751", "P07", "Sentinel lymph node, left axilla", "Lymph nodes"),
+  scenarioCase(6, "S26-04820", "P03", "Breast core biopsy, right", "Breast"),
+  scenarioCase(7, "S26-04728", "P03", "Skin excision, back", "Skin"),
+  scenarioCase(8, "S26-04733", "P11", "Colon biopsies, 4 sites", "GI"),
+];
+
+const slide = (
+  index: number,
+  project: ProjectCode,
+  caseLabel: string | null,
+  label: string,
+  stain: string,
+  state: ScenarioSlide["state"] = "ready",
+): ScenarioSlide => ({ id: uuid(5, index), project, caseLabel, label, stain, state });
+
+export const slides: ScenarioSlide[] = [
+  slide(1, "P07", "S26-04812", "A1", "H&E"),
+  slide(2, "P07", "S26-04812", "A2", "H&E"),
+  slide(3, "P07", "S26-04812", "A3", "CK", "processing"),
+  slide(4, "P07", null, "tumor_031", "H&E"),
+  slide(5, "P07", null, "tumor_044", "H&E"),
+  slide(6, "P07", "S26-04769", "A1", "H&E"),
+  slide(7, "P07", "S26-04777", "A1", "H&E"),
+  slide(8, "P07", "S26-04740", "A1", "H&E"),
+  slide(9, "P07", "S26-04751", "A1", "H&E"),
+  slide(10, "P03", "S26-04820", "A1", "H&E"),
+  slide(11, "P03", "S26-04728", "A1", "H&E"),
+  slide(12, "P11", "S26-04733", "A1", "H&E"),
+  slide(13, "P09", null, "LN-0141", "H&E"),
+];
+
+export const resultSets: ScenarioResultSet[] = [
+  {
+    key: "cam",
+    id: uuid(6, 1),
+    project: "P07",
+    name: "CAMELYON tumor model",
+    version: "v1.0",
+    source: "imported",
+    createdOn: "2026-10-12",
+    by: "DH",
+    regions: 5,
+    cells: 0,
+  },
+  {
+    key: "sam",
+    id: uuid(6, 2),
+    project: "P07",
+    name: "PathoSAM + HoVer-NeXt",
+    version: "v1.2",
+    source: "run",
+    createdOn: "2026-10-13",
+    by: "DH",
+    regions: 5,
+    cells: 18240,
+  },
+  {
+    key: "rev",
+    id: uuid(6, 3),
+    project: "P07",
+    name: "Reviewed",
+    version: "live",
+    source: "reviewed",
+    createdOn: scenarioToday,
+    by: "LM",
+    regions: 6,
+    cells: 18238,
+  },
+];
+
+export const reviewTasks: ScenarioReviewTask[] = [
+  {
+    code: "RT-14",
+    id: uuid(7, 14),
+    name: "Round 2 · CAMELYON v1.0",
+    project: "P07",
+    resultSet: "cam",
+    reviewers: ["LM", "SM"],
+    scope: "all-regions",
+    scopeText: "Tumor regions: all · Cells: random 50 per slide",
+    dueOn: "2026-10-23",
+    sentOn: "2026-10-09",
+    slides: 12,
+    progress: { LM: 7, SM: 4 },
+    blinded: true,
+    status: "review",
+  },
+  {
+    code: "RT-15",
+    id: uuid(7, 15),
+    name: "PathoSAM vs CAMELYON",
+    project: "P07",
+    resultSet: "sam",
+    reviewers: ["AK"],
+    scope: "unsure-zones",
+    scopeText: "Unsure zones only",
+    dueOn: "2026-10-27",
+    sentOn: "2026-10-14",
+    slides: 12,
+    progress: { AK: 0 },
+    blinded: true,
+    status: "assigned",
+  },
+  {
+    code: "RT-11",
+    id: uuid(7, 11),
+    name: "TIL typing, first 40",
+    project: "P09",
+    resultSet: "sam",
+    reviewers: ["AK", "SM", "LM"],
+    scope: "cells-below-score",
+    scopeText: "Cells below 0.6 confidence",
+    dueOn: "2026-10-19",
+    sentOn: "2026-10-02",
+    slides: 40,
+    progress: { AK: 14, SM: 13, LM: 13 },
+    blinded: true,
+    status: "signed",
+    signedOn: "2026-10-14",
+  },
+];
+
+export const jobs: ScenarioJob[] = [
+  {
+    id: uuid(8, 1),
+    kind: "model-run",
+    title: "PathoSAM + HoVer-NeXt v1.2",
+    project: "P07",
+    status: "running",
+    unitsDone: 0,
+    unitsTotal: 2,
+    createdAt: `${scenarioToday}T10:14:00Z`,
+    finishedAt: null,
+    by: "DH",
+  },
+  {
+    id: uuid(8, 2),
+    kind: "model-run",
+    title: "CAMELYON tumor model v1.0",
+    project: "P07",
+    status: "paused",
+    unitsDone: 0,
+    unitsTotal: 1,
+    createdAt: `${scenarioToday}T08:20:00Z`,
+    finishedAt: null,
+    by: "DH",
+  },
+  {
+    id: uuid(8, 3),
+    kind: "model-run",
+    title: "HoVer-Net v2.1",
+    project: "P09",
+    status: "done",
+    unitsDone: 4,
+    unitsTotal: 4,
+    createdAt: "2026-10-16T16:02:00Z",
+    finishedAt: "2026-10-16T16:36:00Z",
+    by: "AK",
+  },
+];
+
+export const objectIds = {
+  region: (index: number) => `T${index + 1}`,
+  cell: (cell: number, region = 0) => `T${region + 1}·C${cell + 101}`,
+  zone: (index: number) => `Z${index + 1}`,
+  full: (project: ProjectCode, caseLabel: string, slideLabel: string, short: string) =>
+    `${project}/${caseLabel}/${slideLabel}/${short}`,
+};
+
+export const resumePoint = {
+  task: "RT-14",
+  project: "P07" as ProjectCode,
+  caseLabel: "S26-04812",
+  slideLabel: "A1",
+  object: objectIds.cell(44, 1),
+  position: 7,
+};
+
+export const fullObjectIdPattern = /^P\d{2}\/S\d{2}-\d{5}\/[A-Z]\d+\/[TZRM]\d+(·C\d+)?$/;
+
+export function projectByCode(code: ProjectCode): ScenarioProject {
+  const project = projects.find((candidate) => candidate.code === code);
+  if (project === undefined) throw new Error(`no scenario project ${code}`);
+  return project;
+}
+
+export function slideOf(project: ProjectCode, caseLabel: string | null, label: string) {
+  const found = slides.find(
+    (candidate) =>
+      candidate.project === project &&
+      candidate.caseLabel === caseLabel &&
+      candidate.label === label,
+  );
+  if (found === undefined) throw new Error(`no scenario slide ${caseLabel ?? ""}/${label}`);
+  return found;
+}

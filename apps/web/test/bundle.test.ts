@@ -7,7 +7,13 @@ import { fileURLToPath } from "node:url";
 import { build } from "vite";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const fakeApiMarkers = ["mockServiceWorker", "[MSW]", "*/api/health"];
+const fakeApiMarkers = [
+  "mockServiceWorker",
+  "[MSW]",
+  "*/api/health",
+  "fake-data-badge",
+  "Lenka Mal",
+];
 
 async function buildFor(appEnv: string): Promise<Map<string, string>> {
   const outDir = await mkdtemp(join(tmpdir(), "web-bundle-"));
