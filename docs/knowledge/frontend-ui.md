@@ -105,3 +105,15 @@ Some mock scenes are a different person, not a different screen state: My work's
 ## Fake mode fixes the clock and serves the mock's images
 
 In `PARFOCAL_PUBLIC_FAKE_API=all` the fake layer calls `fixClock` with the scenario's `scenarioNow` (Thursday 15 October 2026, 14:30), so greetings, "10 min ago" and due dates read as in the mock. Screens take the time from `now()` in `apps/web/src/clock.ts`, never from `new Date()` directly. The dev server serves `docs/design/ux-mock/assets` at `/mock-assets` through a plugin with `apply: "serve"`, which slide thumbnails use until the viewer tasks bring real ones, and builds do not contain it. Source: PROTO-003 (home, My work and the shell over fake data).
+
+## The slider sizes by its orientation attribute
+
+Base UI 1.9 marks the slider root, control and track with `data-orientation="horizontal"`, but the shadcn slider was generated with Tailwind's `data-horizontal:` variants, which match a bare `data-horizontal` attribute. The track had no height and the root no width, so every slider was invisible. `packages/ui/src/components/slider.tsx` now uses `data-[orientation=horizontal]:` and `data-[orientation=vertical]:`. The root's `data-[orientation=horizontal]:w-full` outranks a plain width class such as `w-60`, because an attribute selector adds specificity, so give a slider its width through the cell it sits in, for example a `grid-cols-[240px_auto]` row. Source: PROTO-006 (New review task over fake data).
+
+## A label may wrap a checkbox or a radio
+
+Biome's `noLabelWithoutControl` lists `Switch`, `Checkbox` and `RadioGroupItem` as input components in `biome.json`, so a `<label>` that wraps one of the Base UI controls with its text passes without a suppression comment. Source: PROTO-006 (New review task over fake data).
+
+## Playwright waits on an aria-disabled button
+
+The flow pages keep Next clickable while it is `aria-disabled="true"`, as the mock does, so a press marks the step's fields and moves focus to the first one. Playwright counts `aria-disabled` as disabled and waits for it to clear, so a test that presses a blocked Next asserts the attribute first and then clicks with `force: true`. Source: PROTO-006 (New review task over fake data).
