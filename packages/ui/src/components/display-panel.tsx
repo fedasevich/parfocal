@@ -187,13 +187,26 @@ type PresetMenuProps = {
   presets: Preset[];
   changed?: boolean;
   lockedCount?: number;
+  defaultOpen?: boolean | undefined;
+  onPick?: ((name: string) => void) | undefined;
+  onSaveAs?: (() => void) | undefined;
+  onReset?: (() => void) | undefined;
 };
 
-function PresetMenu({ current, presets, changed = false, lockedCount = 0 }: PresetMenuProps) {
+function PresetMenu({
+  current,
+  presets,
+  changed = false,
+  lockedCount = 0,
+  defaultOpen,
+  onPick,
+  onSaveAs,
+  onReset,
+}: PresetMenuProps) {
   return (
     <div className="grid gap-1.5">
       <span className="text-caption font-semibold text-fg-dim">Preset</span>
-      <DropdownMenu>
+      <DropdownMenu {...(defaultOpen === undefined ? {} : { defaultOpen })}>
         <DropdownMenuTrigger render={<Button className="w-full justify-between font-medium" />}>
           <span className="min-w-0 truncate">
             {current}
@@ -215,7 +228,7 @@ function PresetMenu({ current, presets, changed = false, lockedCount = 0 }: Pres
           <Icon name="down" className="text-fg-faint" />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72">
-          <DropdownMenuRadioGroup value={current}>
+          <DropdownMenuRadioGroup value={current} onValueChange={(name) => onPick?.(String(name))}>
             <DropdownMenuRadioItem value="Task default">
               Task default
               <DropdownMenuShortcut>⇧1</DropdownMenuShortcut>
@@ -231,9 +244,14 @@ function PresetMenu({ current, presets, changed = false, lockedCount = 0 }: Pres
             </DropdownMenuGroup>
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={!changed}>Save</DropdownMenuItem>
-          <DropdownMenuItem>Save as</DropdownMenuItem>
-          <DropdownMenuItem>Reset to the task default</DropdownMenuItem>
+          <DropdownMenuItem disabled={!changed}>
+            <span className="grid">
+              Save
+              {changed ? null : <small className="text-caption text-fg-dim">Nothing changed</small>}
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onSaveAs}>Save as</DropdownMenuItem>
+          <DropdownMenuItem onClick={onReset}>Reset to the task default</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {changed ? (
@@ -251,6 +269,8 @@ type DisplayPanelProps = React.ComponentProps<"div"> & {
   folded?: Array<"draw" | "ai" | "move">;
   preset?: PresetMenuProps;
   viewer?: boolean;
+  resultSets?: React.ReactNode;
+  after?: React.ReactNode;
 };
 
 function DisplayPanel({
@@ -259,6 +279,8 @@ function DisplayPanel({
   folded = [],
   preset = { current: "Task default", presets: [{ name: "Tumor first", key: "⇧2" }] },
   viewer = false,
+  resultSets,
+  after,
   className,
   ...props
 }: DisplayPanelProps) {
@@ -313,6 +335,12 @@ function DisplayPanel({
           format={(value) => value.toFixed(2)}
           help="Objects under it draw dashed and faint"
         />
+        {resultSets ? (
+          <div className="grid gap-2">
+            <span className="text-caption font-semibold text-fg-dim">Result sets</span>
+            {resultSets}
+          </div>
+        ) : null}
       </FoldingZone>
       <FoldingZone
         title="How the review moves"
@@ -341,6 +369,7 @@ function DisplayPanel({
           lock={locks.buttons}
         />
       </FoldingZone>
+      {after}
     </Zones>
   );
 }
