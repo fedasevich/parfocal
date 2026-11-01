@@ -1,0 +1,8 @@
+{
+  "extends": "@parfocal/typescript-config/node.json",
+  "include": [".storybook", "scripts", "e2e", "vite.config.ts", "playwright.config.ts"],
+  "compilerOptions": {
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "jsx": "react-jsx"
+  }
+}

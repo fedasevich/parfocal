@@ -42,7 +42,9 @@ The kit's controls map to these components and primitives.
 | Listbox and select | `select`, `combobox` | Select, Combobox |
 | Tooltip | `tooltip` | Tooltip |
 
-TODO: STACK-007's Done-when asks for axe-clean output. DS-000 (design system tooling check) runs axe over the stories of these components and records the result here before STACK-007 is ticked.
+The component names above are the ones shadcn's Base UI registry uses, checked on 2026-11-01 with shadcn 4.23.0 and the `base-nova` style. Adding them also brings in `toggle` (for `toggle-group`) and `input`, `textarea` and `input-group` (for `combobox`).
+
+Axe outcome, measured by DS-000 (design system tooling check) on 2026-11-01 ([result](../results/2026-11-01-axe-over-the-component-stories.md)). axe-core 4.14.0 ran with the WCAG 2.0, 2.1 and 2.2 A and AA rules over all 30 stories of the 11 controls above, each in dark and in light, with every popup also measured open. Violations: none. The first run found 16 failing story and theme pairs, and each was fixed in our copy of the component or its token mapping: the link button and inactive tabs used colours with too little contrast, the slider thumbs and the combobox's chevron button had no name, and the chevron button stayed focusable inside an `aria-hidden` addon. Base UI's focus guard spans (`[data-base-ui-focus-guard]`) are excluded from the check, because axe reports them as `aria-hidden-focus` although Base UI moves focus away from them at once. The suite runs in the CI `browser` job on every change.
 
 ## Consequences
 

@@ -1,0 +1,82 @@
+@custom-variant dark (&:not(:where([data-theme="light"], [data-theme="light"] *)));
+
+:root,
+[data-theme] {
+  --background: var(--page);
+  --foreground: var(--fg);
+  --card: var(--chrome);
+  --card-foreground: var(--fg);
+  --popover: var(--chrome);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent-fill);
+  --primary-foreground: var(--on-accent);
+  --secondary: var(--chrome-2);
+  --secondary-foreground: var(--fg);
+  --muted: var(--chrome-2);
+  --muted-foreground: var(--fg-dim);
+  --destructive: var(--bad);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--accent);
+  --radius: var(--r-md);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-page: var(--page);
+  --color-chrome: var(--chrome);
+  --color-chrome-2: var(--chrome-2);
+  --color-chrome-3: var(--chrome-3);
+  --color-canvas: var(--canvas);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-dim: var(--fg-dim);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-future: var(--future);
+  --color-pin: var(--pin);
+  --color-unsure: var(--unsure);
+
+  --color-background: var(--page);
+  --color-foreground: var(--fg);
+  --color-card: var(--chrome);
+  --color-card-foreground: var(--fg);
+  --color-popover: var(--chrome);
+  --color-popover-foreground: var(--fg);
+  --color-primary: var(--accent-fill);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--chrome-2);
+  --color-secondary-foreground: var(--fg);
+  --color-muted: var(--chrome-2);
+  --color-muted-foreground: var(--fg-dim);
+  --color-destructive: var(--bad);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+
+  --spacing: var(--space);
+
+  --radius-xs: var(--r-sm);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+  --radius-2xl: var(--r-lg);
+  --radius-3xl: var(--r-lg);
+  --radius-4xl: var(--r-lg);
+
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-data);
+}

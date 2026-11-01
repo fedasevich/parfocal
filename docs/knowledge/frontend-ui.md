@@ -1,0 +1,31 @@
+# Components, styling and the catalogue
+
+How `packages/ui` and `packages/tokens` are put together, as [ADR 0130](../adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md) (shadcn/ui on Base UI with Tailwind CSS v4) decided and DS-000 (design system tooling check) set up.
+
+## Adding a shadcn component
+
+Run `pnpm --filter @parfocal/ui shadcn:add <name>`, then `pnpm --filter @parfocal/ui shadcn:adopt`, then `pnpm exec biome check --write packages/ui`. `components.json` uses the `base-nova` style, so components come from the Base UI base. Its aliases point at `@parfocal/ui/components` and friends, which resolve through the package's own `exports` and the `paths` entry in `packages/ui/tsconfig.json` that only the shadcn CLI reads. The CLI also adds the component's registry dependencies, so `combobox` brought `input`, `textarea` and `input-group`, and `toggle-group` brought `toggle`. If it adds an npm dependency, it writes a `^` range into `package.json`. Pin it back to an exact version before committing. Add a story for the new component, because the axe suite only covers what has a story. Source: DS-000 log entry of 2026-11-01.
+
+## The adopt script strips comments and renames clashing classes
+
+`packages/ui/scripts/adopt.ts` parses each file in `src` and `stories` with oxc-parser and removes every comment, including JSX comments in empty `{}` containers. It parses the result again and stops if the file no longer parses. It also renames three shadcn class names that mean something else in the kit: `bg-accent` becomes `bg-chrome-2` (the kit's hover surface for menu items), `text-accent-foreground` becomes `text-fg`, and `text-primary` becomes `text-accent`, because `primary` is the accent fill and failed contrast as link text on the dark page. `test/adopt.test.ts` fails if any file there still has a comment or one of those names, or if the Storybook config, scripts or browser tests have a comment. The shadcn components generated on 2026-11-01 had no comments at all, but later registry versions may. Source: DS-000.
+
+## Kit tokens and shadcn's names share one theme
+
+`packages/tokens/src/tokens.css` holds the kit's colour tokens under their kit names (`--page`, `--chrome`, `--accent` and the rest) on `:root` and `[data-theme="dark"]`, and the light values on `[data-theme="light"]`. Dark is the default. `theme.css` removes Tailwind's default palette with `--color-*: initial` and then maps both the kit names and shadcn's names (`background`, `primary`, `muted`, `border` and the rest) to the kit variables in `@theme inline`, so `bg-chrome-2` and `bg-muted` read the same token. It also defines shadcn's raw variables such as `--secondary` and `--radius` on `:root, [data-theme]`, because a few generated classes read them inside arbitrary values. They are set on `[data-theme]` as well so a nested theme scope recomputes them. shadcn's own raw `--accent` is never defined, because the kit's `--accent` owns that name. The `dark:` variant matches anything not inside `[data-theme="light"]`. Radii map `sm` to 4 px, `md` and `lg` to 7 px and `xl` and above to 10 px, and `--spacing` is the 4 px `--space` token. Source: DS-000.
+
+## Biome needs Tailwind directives switched on
+
+Biome cannot parse `@theme`, `@custom-variant`, `@source` or `@apply` until `css.parser.tailwindDirectives` is `true` in `biome.json`. Three Biome rules are off only for `packages/ui/src/components/**`, because shadcn uses those patterns on purpose: `noArrayIndexKey` (slider thumbs are positional), `useSemanticElements` (a `div` with `role="group"` in the input group) and `useKeyWithClickEvents` (a click on the input group's addon focuses its input). `noLabelWithoutControl` lists `Switch` as an input component, so a `<label>` that wraps a switch, which is how Base UI labels it, passes. Source: DS-000.
+
+## The axe suite runs over the built Storybook
+
+`pnpm --filter @parfocal/ui test:browser` builds the static Storybook and runs `e2e/axe.spec.ts` with Playwright on Chrome. It opens every story in `storybook-static/index.json` in dark and in light and runs `@axe-core/playwright` with the WCAG 2.0, 2.1 and 2.2 A and AA tags. Turborepo's `test:browser` task picks it up, so the CI `browser` job runs it. Three things matter. First, the story URL sets `globals=theme:<theme>;a11y.manual:!true`, because Storybook's a11y addon otherwise starts its own axe run in the same frame and the second one fails with "Axe is already running". Second, the wait for open animations uses `Promise.allSettled`, because a cancelled animation rejects its `finished` promise with `AbortError`. Third, the suite excludes `[data-base-ui-focus-guard]`. Base UI puts these visually hidden `span`s with `tabindex="0"` and `aria-hidden="true"` around open popups so it can move focus back into them, and axe reports them as `aria-hidden-focus`. Source: [axe result](../results/2026-11-01-axe-over-the-component-stories.md).
+
+## Base UI controls that need a name
+
+A Base UI slider labels its thumb inputs, not its root, so `aria-label` on `Slider` leaves the thumbs nameless. The shadcn `Slider` here passes `getAriaLabel` through to every thumb. The combobox's chevron button had no name, and Base UI hides the input group's addon with `aria-hidden` while the list is open, which made the focusable button an `aria-hidden-focus` violation. `ComboboxInput` now names it with `triggerLabel`, which defaults to "Show options", and takes it out of the tab order as the ARIA combobox pattern does. Source: [axe result](../results/2026-11-01-axe-over-the-component-stories.md).
+
+## Storybook runs React Compiler
+
+`packages/ui/vite.config.ts` uses `@vitejs/plugin-react` with `@rolldown/plugin-babel` and `reactCompilerPreset()`, as [ADR 0016](../adr/0016-react-19-spa-compiler-strictmode.md) (React 19 SPA with React Compiler) sets for the app, and Storybook picks that config up. plugin-react 6.1.2 accepts `@rolldown/plugin-babel` only up to 0.2.x, so it is pinned at 0.2.4 although 0.3.0 is out. `typescript.reactDocgen` is off because the catalogue has no docs pages, and its `react-docgen-typescript` option would need the TypeScript compiler API, which TypeScript 7 does not ship. Source: DS-000.

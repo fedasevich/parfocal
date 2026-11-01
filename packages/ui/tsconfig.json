@@ -1,11 +1,19 @@
 {
   "files": [],
+  "compilerOptions": {
+    "paths": {
+      "@parfocal/ui/*": ["./src/*"]
+    }
+  },
   "references": [
     {
       "path": "./tsconfig.src.json"
     },
     {
       "path": "./tsconfig.test.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
     }
   ]
 }
