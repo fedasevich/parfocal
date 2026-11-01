@@ -1306,7 +1306,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md).
 
 - [ ] DS-001 · Design tokens package
-  Product tokens from the kit for dark and light: page, chrome, chrome-2, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, accent-soft, on-accent, ok, warn, bad, future, pin, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Spacing on a 4 px grid, radii 4, 7 and 10. Exported as CSS variables and TS constants.
+  Product tokens from the frozen kit's Design system page ([docs/design/](design/README.md)) for dark and light: surf-page, surf-panel, surf-section, surf-field, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, ok, warn, bad, research-fg, the decision colours v-agree, v-disagree, v-unsure and v-open, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Sizes are space-zone 28, space-in 10, pad-zone 18, pad-modal 24 (20 in a small modal), r-zone 12, r-ctl 8, control heights 28, 32 and 40, tag height 20 and count height 16. The kit's pink mock marker colour is left out. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
@@ -1336,7 +1336,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
 
 - [ ] DS-007 · Segmented control, toggle, slider, stepper
-  A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1).
+  A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1). The small number stepper is the one the Counts as line of the decision styles uses. Every control has a locked state that reads as dim text with a lock icon and the reason under it, such as "Locked by RT-14: confidence hidden this round".
   Done when stories, keyboard tests and axe pass.
   Depends on PROTO-011.
 
@@ -1360,7 +1360,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
 
 - [ ] DS-012 · Inspector primitives
-  Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, and the back link with its key.
+  Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, the back link with its key, and the fact list of icon, key and value rows (the mock's `kvList`).
   Done when stories render the mock 6 data and a unit test checks the range bar geometry.
   Depends on PROTO-011.
 
@@ -1390,13 +1390,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
 
 - [ ] DS-018 · Surfaces and zones
-  Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding.
+  Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding. A zone can fold to a one-line summary of its settings, such as "Outline 2 px · by class · IDs on" in the Display panel.
   Done when stories show each level in both themes and a visual test covers a modal with three zones.
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
 
-- [ ] DS-019 · Progress bar and ring
-  One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, and one ring for review progress split by decision colour (agree, disagree, not sure, open) with the percentage in the middle.
-  Done when stories cover each state, a unit test checks the ring arcs add up, and the bar and ring expose progressbar and image roles with their values.
+- [ ] DS-019 · Progress bar, ring and stacked bar
+  One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, one ring for review progress split by decision colour (agree, disagree, not sure, open) with the percentage in the middle, and one stacked bar in the three decision colours for a split such as the one under the Counts as line, which says when no answers are in yet.
+  Done when stories cover each state, a unit test checks the ring arcs and the stacked bar's parts add up, and the bar and ring expose progressbar and image roles with their values.
   Depends on PROTO-011. Refs doc 38 "One component per job".
 
 - [ ] DS-020 · Type-to-find token field
@@ -1409,10 +1409,40 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when component tests cover undo within and after the window, and E2E undoes a decision and a cancelled run.
   Depends on PROTO-011. Refs doc 40 G2 and R1, doc 41.
 
-- [ ] DS-022 · Modals: small one-column and full-width wizard
-  Small one-column modals for short tasks and a medium one-column stepper (New review task) that sizes to its content, with a shadow over the footer when more content follows. Only the upload wizard is full width. Steps of a stepper can be clicked to go back. The scrim is 62% black in dark.
-  Done when stories cover each size, a test switches steps without the width changing, and focus trapping and Esc pass.
-  Depends on PROTO-011. Refs doc 39, doc 40 R3 and R4.
+- [ ] DS-022 · Small modal
+  One small modal anatomy for every short form, at 480 px for one group of fields or 560 px for two or three zones and no other width. A title at 18/600 with the close cross, a 13 px subtitle in the dim text colour, zones as plain groups on the modal background 20 px apart with 12 px between rows, and a footer with a hint on the left, then Cancel and one primary, never two primaries. With one blocker the primary is off and the hint says why, and with two or more the Before you can list (DS-027) sits above the footer. Esc and the cross close without saving, Enter runs the primary when it is on, focus starts on the first field, and the scrim is 62% black in dark. Every form longer than three zones is a flow page (DS-023), so the round 6 mock has no full-width wizard.
+  Done when stories cover both widths, one blocker and a blocker list, a test checks the width never changes with the content, and focus trapping, Esc, Enter and axe pass.
+  Depends on PROTO-011. Refs kit: small modals and flow pages, mock: team/nudge, mock: disagree/sendadj, mock: signoff/ready, POC doc 44 (the round 6 working mock) section 1.
+
+- [ ] DS-023 · Flow page with the shared stepper
+  One page shape for every long form: New review task, upload, the clinical report, Connect a model, sign-up, setup and the invite landing. A breadcrumb, a 24 px title and a 13 px subtitle, then one stepper row where every visited step can be clicked and opens that step and a step that cannot be reached yet says why in its tooltip. The main column, up to 760 px, holds the step's zones, with no summary panel, and the last step is the one place that sums everything up, with a Change link on each row. A sticky bottom bar has Back, the reason or hint and Next or the primary, a disabled Next names its reason, a shadow over the bar shows when more content follows, and leaving with a draft keeps it.
+  Done when stories cover a flow at its first, a middle and its last step, a test opens a visited step from the stepper and finds an unreached step refused with its reason, keyboard tests move through the stepper, and axe passes.
+  Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
+
+- [ ] DS-024 · Form fields with labels, hints and inline errors
+  The text field, the textarea with a character count, the select, the checkbox and the radio row, each with a label, an optional help line, a Required mark where it applies and the one inline error style of SHELL-010 (error and issue states in every flow) under the field. The error names what is wrong and how to fix it, and typed text is never cleared by an error.
+  Done when stories cover each control in its default, focus, filled, error and disabled states in both themes, a test checks that every label, help line and error is tied to its control for assistive technology, and axe passes.
+  Depends on PROTO-011. Refs kit: small modals and flow pages, mock: signin/email, mock: task/send, mock: admin/addmodel.
+
+- [ ] DS-025 · Tabs
+  Three kinds of tabs: the page tabs of My work, the project page, Team and Admin, the side panel tabs of the full viewer with their counts (Objects, Display, Comments, Opinion), and the quiet tabs of guided review's right column (Review, Comments, Display).
+  Done when stories cover each kind with and without counts in both themes, keyboard tests move between tabs with the arrow keys and Home and End, and axe passes.
+  Depends on PROTO-011. Refs mock: worklist, mock: case/objects, mock: guided/comments, mock: guided/display.
+
+- [ ] DS-026 · Table
+  One table for lists of rows across the app: the admin sections, the project's slides, the object table, the disagreement queue and the deposits of the clinical report. Header cells in the 12 px label style, numbers in tabular figures and IDs in monospace, row hover and a selected row, an optional checkbox column for picking several rows, sortable columns that say their order, and one empty row that says why the table is empty.
+  Done when stories cover selection, sorting and the empty row in both themes, keyboard tests reach every row and its actions, and axe passes.
+  Depends on PROTO-011. Refs mock: admin/people, mock: project/slides, mock: layers/table, mock: disagree/queue, mock: creport/deposits.
+
+- [ ] DS-027 · Before you list with Go to links
+  The list that names everything that blocks a primary action, one row per blocker with a Go to link that opens the object, the first open cell, the field or the question. It reads "Before you submit" on the Slide done card, "Before you can sign out" on the clinical report and "Before you can" in small modals and on flow pages. With a single blocker there is no list, and the reason sits under the disabled primary instead.
+  Done when stories cover one blocker and several, a test checks that Go to moves focus to its target and that the disabled primary's description names the reason, and axe passes.
+  Depends on PROTO-011. Refs kit: submit and Slide done, mock: guided/skipped, mock: signoff/blocked, mock: creport/missing.
+
+- [ ] DS-028 · Decision buttons in the four decision styles
+  The answer buttons of a decision with their keycaps in each of the four styles: 5-point certainty (1 to 5), Agree with the AI (K, X, U), Yes or no (Y, N, U) and Pick the class blind (one key per project class and U). Every style has Not sure. They come in the large guided size, 40 px with 24 px keycaps, and the compact size of the Objects tab, the cells panel, the disagreement queue and the adjudicator view, with the chosen answer marked. GUIDE-015 (decision styles with the raw answer and Counts as) owns what each answer means.
+  Done when stories cover each style in both sizes and themes, a test checks that the keys come from the key registry and match the style, and axe passes.
+  Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
 
 ---
 
@@ -4105,16 +4135,16 @@ Preparing a multidisciplinary tumor board, presenting at it and bringing its out
 
 ## 53 PROTO · Prototype in React
 
-The approved prototype moves from the two HTML artifacts into `apps/web` and `packages/ui`, so that the design is changed in one place, as React components over fake data ([ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). Speed comes first. The epic builds a rough copy of every kit component (PROTO-011) and every mock screen, so the owner can click through the whole design and change it early. Rough means the right names, props, layout, tokens and clicks, without the production tests. The DS and SHELL tasks then harden each component and the feature UI tasks wire each screen to the API and remove its fake data, so nothing is built twice. The setup tasks PROTO-000 and PROTO-002 can start now, and everything that copies the design waits for PROTO-001, which is on hold until the owner says the current redesign round is done. The owner allows copying markup, styles, text and fake data from the two prototype artifacts into this repository. That permission covers the kit and the mock only, and the rule against copying POC code still stands. The screen groups below follow the mock's screens and may be regrouped when PROTO-001 writes the inventory.
+The approved prototype moves from the two HTML artifacts into `apps/web` and `packages/ui`, so that the design is changed in one place, as React components over fake data ([ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). Speed comes first. The epic builds a rough copy of every kit component (PROTO-011) and every mock screen, so the owner can click through the whole design and change it early. Rough means the right names, props, layout, tokens and clicks, without the production tests. The DS and SHELL tasks then harden each component and the feature UI tasks wire each screen to the API and remove its fake data, so nothing is built twice. The setup tasks PROTO-000 and PROTO-002 can start now. PROTO-001 froze round 6 of the redesign in [docs/design/](design/README.md) on 2026-11-01, and everything that copies the design starts from those frozen copies. The owner allows copying markup, styles, text and fake data from the two prototype artifacts into this repository. That permission covers the kit and the mock only, and the rule against copying POC code still stands. The screen groups below follow the PROTO-001 inventory ([docs/design/prototype-inventory.md](design/prototype-inventory.md)), where every one of the mock's 40 screens sits in exactly one screen task.
 
 - [ ] PROTO-000 · Research check for the fake data layer
   Re-checks Orval's MSW mock output (version, its faker dependency and how it sits next to the `react-query` client in `packages/api-client/orval.config.ts`), MSW in the Vite dev server and in Storybook, and how one screen's fake data is switched off once its API is wired. Confirms or revises [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md).
   Done when an ADR records the fake data approach and a spike serves one generated handler in the dev server.
   Refs STACK-012, [ADR 0017](adr/0017-orval-api-client.md).
 
-- [ ] PROTO-001 · Freeze the redesigned prototype (on hold)
-  On hold until the owner says in chat that the current redesign round of the UX kit and the hi-fi mock is done. The agent then removes "(on hold)" from this title, records each artifact's version id from `get_artifact`, copies both artifacts into `docs/design/` (the owner chose this on 2026-11-01), and writes `docs/design/prototype-inventory.md`. The inventory lists every screen and scene of the mock and every page of the kit. Each row names the PROTO task that assembles it, the DS, SHELL or feature UI task that owns it and the API operations it reads, or "no API yet". A kit component with no DS task gets one in the same change.
-  Done when the inventory covers every mock screen and kit page, the owner has confirmed it, and the PROTO screen tasks match it.
+- [ ] PROTO-001 · Freeze the redesigned prototype
+  The owner finished round 6 of the redesign on 2026-11-01 and asked for the port to start. The agent records each artifact's version id, copies both artifacts into `docs/design/` (the owner chose this on 2026-11-01), and writes `docs/design/prototype-inventory.md`. The inventory lists every screen and scene of the mock and every page of the kit. Each row names the PROTO task that assembles it, the DS, SHELL or feature UI task that owns it and the API operations it reads, or "no API yet". A kit component with no DS task gets one in the same change.
+  Done when the inventory covers every mock screen and kit page and the PROTO screen tasks match it. The owner reviews the inventory together with each screen group, as decision 15a in [decisions.md](decisions.md) (the owner's review of each ported screen group) says, so the owner's confirmation does not hold this task.
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), kit, mock.
 
 - [ ] PROTO-002 · Fake data layer for the app and the catalogue
@@ -4123,49 +4153,89 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Depends on PROTO-000.
 
 - [ ] PROTO-003 · Home, My work and the shell over fake data
-  The global top bar, the sidebar, the account menu, the launchpad home and the To review, Assigned by me and All slides tabs of My work. Wired to the API later by HOME-002, WL-005, WL-018 and WL-019.
+  The global top bar, the sidebar, the account menu, the launchpad home with the first-week checklist, the To review, Assigned by me and All slides tabs of My work with Anna's adjudication entry, the bell and the command palette. Wired to the API later by HOME-002 (launchpad home), ONB-006 (getting-started checklist), WL-005 (To review tab), WL-018 (Assigned by me tab), WL-019 (All slides tab), NOTIF-002 (the bell), CMD-002 (command palette), SHELL-002 (global top bar and sidebar) and SHELL-012 (account menu).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
-  Depends on PROTO-002, PROTO-011. Refs mock: home, mock: worklist.
+  Depends on PROTO-002, PROTO-011. Refs mock: home, mock: worklist, mock: notifs, mock: palette.
 
 - [ ] PROTO-004 · Project page, new project and upload over fake data
-  The project page with its tabs and filters, New project and the upload wizard with its Check step and progress per slide. Wired later by PROJ-006, PROJ-007, INGEST-021, INGEST-022 and INGEST-024.
+  The project page with its Slides, Review tasks and Settings tabs, the result sets of a slide, the Add a class modal and the import failure, New project and New case, the upload flow page with its Files, Check and Upload steps, the drop, the link, the remote source, the viewer and the automatic imports with their issue scenes, and the "What files work" help. Wired later by PROJ-006 (project page), PROJ-007 (new project and new case), PROJ-008 (project settings), PROJ-009 (Can sign out, a project right in clinical projects), CASES-002 (case creation UI), INGEST-021 (upload wizard with slides and results), INGEST-022 (per-file problems in the Check step), INGEST-024 (upload progress with steps per slide), INGEST-025 (import slides from a link), RSET-006 (add a result set from the viewer), RSET-010 (help drawer "What files work?"), REMOTE-001 (read in place from a connected source) and REMOTE-002 (webhook in per project).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
-  Depends on PROTO-003, PROTO-011. Refs mock: project, mock: upload.
+  Depends on PROTO-003, PROTO-011. Refs mock: project, mock: newcase, mock: upload, mock: formats.
 
 - [ ] PROTO-005 · Model runs and jobs over fake data
-  The Run a model window, the jobs tray and the job window with steps per slide. Wired later by JOBS-002, JOBS-003 and JOBS-004.
+  The Run a model window, 560 px with a row per slide, the jobs tray and the job window with steps per slide. Wired later by JOBS-002 (Run a model window), JOBS-003 (jobs tray) and JOBS-004 (job window with steps per slide).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: runmodel, mock: job.
 
 - [ ] PROTO-006 · New review task over fake data
-  The New review task stepper with slides, result set, reviewers, split, scope, opinion form, blinding, due date and study template. Wired later by TASK-005 and TASK-009.
+  The New review task flow page with its five steps, Slides, Reviewers, What to check, How it runs and Send. It covers the slides and result set with the Add slides modal, reviewers with type-to-find, the scope and split, the decision question in each of the four decision styles with the Counts as line and the Preview the question modal, the display defaults with a lock and its reason, the opinion form, blinding, the due date, the study template, the Send step that sums the task up with a Change link on each row, and the flow's five issue scenes. Wired later by TASK-005 (New review task stepper), TASK-009 (study template in a new review task), GUIDE-015 (decision styles with the raw answer and Counts as) and TASK-011 (display defaults, locks and presets).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: task.
 
-- [ ] PROTO-007 · Slide view, guided review and the opinion form over fake data
-  The slide top bar, the slides popover, the inspector with Objects, Layers, Comments and Opinion, guided review with decisions and reasons, and the opinion form. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by CASE-002, CASE-014, GUIDE-002, GUIDE-003, GUIDE-005 and GUIDE-007.
+- [ ] PROTO-007 · Guided review, the Slide done card and the next slide over fake data
+  The shared review top bar, guided review with the Review, Comments and Display tabs in its right column, the decision card in each of the four decision styles, disagree reasons and notes, the floating cells panel with its crops, decision dots and Agree with the rest, comments as one thread per object ID with replies and the @ picker, the Display tab with a locked setting and a preset switch, the Slide done card with the opinion questions and submit gating, the next slide screen after a submit, and guided review's issue scenes. The Slide done card and the full viewer's Opinion tab replaced the old opinion screen. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by SHELL-003 (slide top bar), GUIDE-002 (guided review), GUIDE-003 (disagree reasons and optional fixes), GUIDE-007 (Slide done card with the opinion form), GUIDE-008 (How this works), GUIDE-010 (notes on decisions), GUIDE-015 (decision styles with the raw answer and Counts as), TASK-008 (submit a slide review), REVIEW-007 (cells gallery in the zone view), VIZ-007 (Display panel), COLLAB-005 (Comments tab), COLLAB-006 (mentions) and CASES-020 (next slide in a task).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
-  Depends on PROTO-003, PROTO-011. Refs mock: case, mock: guided, mock: opinion.
+  Depends on PROTO-003, PROTO-011. Refs mock: guided, mock: next, mock: gallery, mock: comments.
 
 - [ ] PROTO-008 · Disagreements, sign-off and the evaluation report over fake data
-  The disagreement queue, the adjudicator view, sign-off and the evaluation report page. Wired later by ADJ-002, ADJ-003, ADJ-004 and EVAL-002.
+  The disagreement queue with row selection and the Send to an adjudicator modal, the adjudicator view with Reviewer A and Reviewer B, the queue's issue scenes, sign-off as a one-column small modal with its blockers, SSO failure and amendment, and the evaluation report as its pages with Arrange, the PDF preview and its issue scenes. Wired later by ADJ-002 (disagreement queue), ADJ-003 (adjudicator view), ADJ-004 (sign-off as a soft lock), ADJ-005 (changes after sign-off), ADJ-007 (queue decisions in the task's style and leaving open), ADJ-008 (send to an adjudicator), EVAL-002 (evaluation report page), EVAL-008 (report from template blocks), EVAL-009 (arrange one report) and EVAL-010 (PDF preview).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: disagree, mock: signoff, mock: evaluation.
 
-- [ ] PROTO-009 · Admin, setup, sign-in and empty and error states over fake data
-  The admin page and its sections, first-run setup, the sign-in and lock screens and the global empty and error states. Wired later by ADMIN-001, ONB-001, ONB-004 and SHELL-010.
+- [ ] PROTO-009 · Admin, sign-in, sign-up, invite and first-run setup over fake data
+  The admin page with its sections, the report templates with New template and the template editor, the Invite people modal, the sign-in screens with single sign-on, a link, a passkey, the lock after inactivity, an expired session and no access, sign-up with the email confirmation, the invite landing and first-run setup. Connect a model inside Admin is PROTO-015, and the issue states index is PROTO-017. Wired later by ADMIN-001 (admin page shell), ADMIN-002 (overview), ADMIN-003 (people and roles), ADMIN-004 (projects), ADMIN-005 (AI models), ADMIN-006 (storage, sources, API and webhooks), ADMIN-007 (audit log and security), ADMIN-008 (report templates), ONB-001 (sign-in screens), ONB-002 (sign-up and email confirmation), ONB-003 (invite landing), ONB-004 (first-run setup), IAM-021 (lock screen that returns to the same view) and IAM-023 (sign in and unlock with a passkey).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
-  Depends on PROTO-003, PROTO-011. Refs mock: admin, mock: setup and the mock's sign-in, lock, empty and error steps.
+  Depends on PROTO-003, PROTO-011. Refs mock: admin, mock: signin, mock: signup, mock: invite, mock: setup.
 
 - [ ] PROTO-010 · Make the React app the design source
   Applies the consequences of [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md): the design source sentence in `AGENTS.md`, the two artifact bullets at the top of this file, the "Design sources" section of `docs/project/overview.md` and the "How to use" rule that UI tasks wait for screens to settle now point at the app and its Storybook, and the artifacts are described as frozen history.
   Done when every PROTO screen task is ticked, the owner has accepted [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), and a docs check finds no remaining reference that calls the artifacts the design source.
-  Depends on PROTO-003, PROTO-004, PROTO-005, PROTO-006, PROTO-007, PROTO-008, PROTO-009, PROTO-011.
+  Depends on PROTO-003, PROTO-004, PROTO-005, PROTO-006, PROTO-007, PROTO-008, PROTO-009, PROTO-011, PROTO-012, PROTO-013, PROTO-014, PROTO-015, PROTO-016, PROTO-017, PROTO-018, PROTO-019.
 
 - [ ] PROTO-011 · Every kit component in rough form
-  Every component and page of the frozen kit in `packages/ui`, with the kit's tokens as CSS variables in `packages/tokens` and a Storybook story for each state the kit shows, built with shadcn/ui on Base UI and Tailwind CSS v4 ([ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md)) wherever a shadcn component fits. Each component already has the name and props its DS task keeps, so the DS task adds tests, keyboard behaviour and missing states instead of rewriting it. A Storybook page lays out the whole kit the way the kit artifact does, so the owner can browse every component in one place.
-  Done when every kit page and component in the PROTO-001 inventory has its stories, a test renders every story without errors in dark and light, and the owner has looked through the catalogue. Axe, visual baselines and interaction tests come with the DS tasks.
+  Every component and pattern page of the frozen kit in `packages/ui`, with the kit's tokens as CSS variables in `packages/tokens` and a Storybook story for each state the kit shows, built with shadcn/ui on Base UI and Tailwind CSS v4 ([ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md)) wherever a shadcn component fits. The PROTO-001 inventory marks which kit pages carry components: UI kit (tags, icons and type), Design system, decision styles, Display panel, submit and Slide done, Team, clinical report and sign-out, study templates, small modals and flow pages, error and issue states, and the flow map. The prose pages, the decision log, the roadmap and the galleries of mock stills stay in the frozen kit and are not rebuilt. Each component already has the name and props its DS task keeps, so the DS task adds tests, keyboard behaviour and missing states instead of rewriting it. A Storybook page lays out those pages the way the kit artifact does, so the owner can browse every component in one place.
+  Done when every component and pattern page in the PROTO-001 inventory has its stories, a test renders every story without errors in dark and light, and the owner has looked through the catalogue. Axe, visual baselines and interaction tests come with the DS tasks.
   Depends on PROTO-001, DS-000. Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), kit.
+
+- [ ] PROTO-012 · How a review works, the flow map, over fake data
+  The flow map in four lanes for the researcher, the reviewer, the adjudicator and the clinical project, with labelled arrows for the hand-offs. Each box opens its screen in the scene the map names, with Back to the map above the frame, and a box whose screen task has not landed yet shows dim. It is the start page of the dev build next to the prototype index of PROTO-002 (fake data layer for the app and the catalogue) and is not shipped, so no feature task wires it. The mock's nine-chapter walkthrough stays in the frozen mock.
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: flowmap.
+
+- [ ] PROTO-013 · Team over fake data
+  Team, the researcher's workload view, with one block per open task and a row per reviewer with progress, a status word and the due date, Nudge all behind confirmed in the button, the Nudge and Reassign modals with Undo, the Project and Reviewer filters, the Done tab with the reports, Team opened from sign-off, and its three issue scenes. Wired later by TEAM-007 (Team, the researcher's workload view) and TASK-007 (nudge, reassign and change a task).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: team.
+
+- [ ] PROTO-014 · Clinical report, sign-out and co-sign over fake data
+  The clinical report of a case as a flow page with the steps Findings, Staging, Report text and Sign out, a template without Staging, the deposits with Add a deposit, a removed row with Undo and a category against the size, Sign out with the right and Send for co-sign without it, the sign-out modal with single sign-on and the password fallback, the signed and amended report, the co-signer's side-by-side review with Return and co-sign, and the report's issue scenes. Open report in the review top bar of a clinical project leads here. Wired later by REPORT-024 (clinical report model and API), REPORT-025 (clinical report flow page), REPORT-008 (sign-out of a clinical report), REPORT-019 (co-sign of a clinical report) and PROJ-009 (Can sign out, a project right in clinical projects).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: creport, mock: cosign.
+
+- [ ] PROTO-015 · Connect a model over fake data
+  The Connect your own model flow page in Admin, with the endpoint and its authentication, the test as the last zone, a passing and a failing test, the classes and who can run it, and The model contract modal. Wired later by JOBS-005 (connect a lab model) and ADMIN-005 (AI models).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: admin/addmodel, mock: admin/addtested, mock: admin/addfail, mock: admin/addmap.
+
+- [ ] PROTO-016 · Settings, Shortcuts and Developer mode over fake data
+  The settings dialog with its sections and search for zoom, your changes, the Shortcuts section with recording a key, a key already used, a key kept by the browser, a risky single key and What does this key do, the Shortcuts screen that opens the same dialog at Shortcuts, and Developer mode with its sections. Wired later by SET-002 (settings modal shell), SET-003 (Display section), SET-004 (Layout section), SET-005 (AI and confidence section), SET-006 (Navigation and devices section), SET-007 (Shortcuts section), SET-008 (Notifications section), SET-009 (Privacy and session section), SET-010 (Account section), CMD-003 (`?` opens Shortcuts in Settings), CMD-004 (key conflict check), CMD-006 (rebinding UI), LAB-001 (developer drawer), LAB-002 (performance HUD), LAB-004 (pan sweep benchmark and export) and LAB-005 (debug handle).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: settings, mock: shortcuts, mock: developer.
+
+- [ ] PROTO-017 · Issue states index over fake data
+  The Issue states screen, an index of every issue state grouped by flow, each with a button that opens it in its own flow. The states themselves are built by the task of the screen they live on, so a button whose screen task has not landed yet shows dim. Wired later by SHELL-010 (error and issue states in every flow).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: states.
+
+- [ ] PROTO-018 · Full viewer with Objects, Display and Visualize over fake data
+  The full viewer with the shared review top bar, the side panel's Objects tab listing every object with what the AI says and the question in the task's style, the cells panel, AI still running, tiles loading and not loaded yet, one object at a time with its note, the Display tab with presets and a locked setting, the Visualize views (heatmap, cell density, AI against reviewed, model against model, reviewer against reviewer, swipe and the object table), the Opinion tab with the Slide done card at panel width, and the viewer's issue scenes. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by SHELL-003 (slide top bar), SHELL-005 (inspector panel with resize and hide), CASE-014 (inspector with Objects, Layers, Comments and Opinion), CASE-005 (AI state: still running), GUIDE-005 (decisions in the full viewer), GUIDE-007 (Slide done card with the opinion form), OBJ-005 (IDs on the slide and in lists), VIEW-041 (how a slide loads), VIZ-001 (result sets in the Display panel), VIZ-002 (how objects draw), VIZ-003 (heatmap, density and confidence maps), VIZ-004 (diff and agreement), VIZ-005 (swipe and side by side), VIZ-006 (object table and stats), VIZ-007 (Display panel) and TASK-011 (display defaults, locks and presets).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: case, mock: findings, mock: layers.
+
+- [ ] PROTO-019 · Viewer tools over fake data
+  The smart minimap in each of its states, measuring, the annotate workspace with the auto region and its model picker, compare slides with the pane picker, focus mode and the whole-slide peek. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by NAV-006 (smart minimap state machine), NAV-007 (minimap placement scoring), NAV-008 (minimap content), NAV-010 (whole-slide peek), NAV-011 (travel animation and route line), MEAS-001 (ruler tool), MEAS-003 (measurement list in the inspector), ANN-002 (annotate rail with five families), AISEG-010 (auto region tool), AIP-004 (model tier picker), CMP-001 (split viewer layouts), CMP-004 (pane slide picker) and SHELL-008 (focus mode).
+  Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
+  Depends on PROTO-003, PROTO-011. Refs mock: navigator, mock: measure, mock: annotate, mock: compare, mock: focus, mock: peek.
 
 ---
 

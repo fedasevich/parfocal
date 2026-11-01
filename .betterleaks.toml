@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Button labels in the frozen prototype that name the password sign-in"
+condition = "AND"
+paths = ['''^docs/design/ux-mock/index\.html$''']
+regexTarget = "line"
+regexes = ['''Sign with password''']
