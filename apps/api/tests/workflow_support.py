@@ -72,7 +72,7 @@ def slow_resources() -> Resources:
 SLOW_INGEST = ingest_workflow(slow_resources, lease_seconds=3)
 
 
-SHORT_LEASE_SECONDS = 0.5
+SHORT_LEASE_SECONDS = 1.0
 
 
 def short_lease_resources() -> Resources:

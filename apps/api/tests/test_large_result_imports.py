@@ -32,7 +32,7 @@ BENCH_OUT = os.environ.get("PARFOCAL_BENCH_OUT")
 GIB = 1024**3
 BENCH_PART_BYTES = 64 * 1024 * 1024
 SAMPLE_SECONDS = 0.25
-GENERATED_CELLS = 80_000
+GENERATED_CELLS = 120_000
 MAX_RSS = re.compile(r"(\d+)\s+maximum resident set size")
 
 
