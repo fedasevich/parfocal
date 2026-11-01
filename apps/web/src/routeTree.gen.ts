@@ -11,12 +11,9 @@
 import { Route as rootRouteImport } from "./routes/__root.tsx";
 import { Route as IndexRouteImport } from "./routes/index.tsx";
 import { Route as AdminRouteImport } from "./routes/admin.tsx";
-import { Route as InviteRouteImport } from "./routes/invite.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
-import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
-import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
@@ -51,11 +48,6 @@ const AdminRoute = AdminRouteImport.update({
   path: "/admin",
   getParentRoute: () => rootRouteImport,
 } as any);
-const InviteRoute = InviteRouteImport.update({
-  id: "/invite",
-  path: "/invite",
-  getParentRoute: () => rootRouteImport,
-} as any);
 const MyWorkRoute = MyWorkRouteImport.update({
   id: "/my-work",
   path: "/my-work",
@@ -69,16 +61,6 @@ const PrototypeRoute = PrototypeRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: "/setup",
   path: "/setup",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SignInRoute = SignInRouteImport.update({
-  id: "/sign-in",
-  path: "/sign-in",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SignUpRoute = SignUpRouteImport.update({
-  id: "/sign-up",
-  path: "/sign-up",
   getParentRoute: () => rootRouteImport,
 } as any);
 const TeamRoute = TeamRouteImport.update({
@@ -209,12 +191,9 @@ const ProjectsProjectIdSlidesSlideIdReportRoute =
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
-  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
-  "/sign-in": typeof SignInRoute;
-  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
@@ -242,12 +221,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
-  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
-  "/sign-in": typeof SignInRoute;
-  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
@@ -276,12 +252,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/admin": typeof AdminRoute;
-  "/invite": typeof InviteRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/setup": typeof SetupRoute;
-  "/sign-in": typeof SignInRoute;
-  "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
@@ -311,12 +284,9 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/admin"
-    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
-    | "/sign-in"
-    | "/sign-up"
     | "/team"
     | "/projects/new"
     | "/settings/$section"
@@ -344,12 +314,9 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/admin"
-    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
-    | "/sign-in"
-    | "/sign-up"
     | "/team"
     | "/projects/new"
     | "/settings/$section"
@@ -377,12 +344,9 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/admin"
-    | "/invite"
     | "/my-work"
     | "/prototype"
     | "/setup"
-    | "/sign-in"
-    | "/sign-up"
     | "/team"
     | "/projects/new"
     | "/settings/$section"
@@ -411,12 +375,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AdminRoute: typeof AdminRoute;
-  InviteRoute: typeof InviteRoute;
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SetupRoute: typeof SetupRoute;
-  SignInRoute: typeof SignInRoute;
-  SignUpRoute: typeof SignUpRoute;
   TeamRoute: typeof TeamRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
@@ -458,13 +419,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AdminRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    "/invite": {
-      id: "/invite";
-      path: "/invite";
-      fullPath: "/invite";
-      preLoaderRoute: typeof InviteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
     "/my-work": {
       id: "/my-work";
       path: "/my-work";
@@ -484,20 +438,6 @@ declare module "@tanstack/react-router" {
       path: "/setup";
       fullPath: "/setup";
       preLoaderRoute: typeof SetupRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-in": {
-      id: "/sign-in";
-      path: "/sign-in";
-      fullPath: "/sign-in";
-      preLoaderRoute: typeof SignInRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-up": {
-      id: "/sign-up";
-      path: "/sign-up";
-      fullPath: "/sign-up";
-      preLoaderRoute: typeof SignUpRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/team": {
@@ -667,12 +607,9 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  InviteRoute: InviteRoute,
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
   SetupRoute: SetupRoute,
-  SignInRoute: SignInRoute,
-  SignUpRoute: SignUpRoute,
   TeamRoute: TeamRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
