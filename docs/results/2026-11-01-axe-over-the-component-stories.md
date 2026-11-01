@@ -62,7 +62,7 @@ Each of the two runs with failures took 1.0 min instead of about 14 s, and every
 
 - Commit: a9126d7, with the token refresh of fd812ac
 - Environment: the same Mac, macOS 15.8.1, Node 26.13.0, Google Chrome 156.0.8078.74 headless through Playwright 1.64.0, axe-core 4.14.0, Storybook 10.6.5 static build, 8 workers
-- Data: 129 stories, the 32 above plus 97 from PROTO-011, with the frozen mock's fictional people, IDs and slide images and no PHI
+- Data: 129 stories, the 30 above, the 2 fake data stories of PROTO-002 (fake data layer for the app and the catalogue) and 97 from PROTO-011, with the frozen mock's fictional people, IDs and slide images and no PHI
 
 The method is the same, with two additions to each test. It fails on a page error or a console error, ignoring the browser's 404 for `/favicon.ico`, and it fails when Storybook shows its error display. The tests are named "renders and passes axe" since then.
 

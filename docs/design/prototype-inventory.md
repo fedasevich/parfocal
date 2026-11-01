@@ -164,7 +164,7 @@ The mock builds every screen from a few shared helpers. Each maps to one owner. 
 | Flow page with breadcrumb, stepper and sticky bottom bar | `flowPage`, `nxSteps`, `crumbs` | DS-023 (flow page with the shared stepper) | None, custom |
 | Text field, textarea, select, checkbox and radio row with label, help and inline error | `smFld`, `smIn`, `nxFld`, `nxIn`, `nxCb`, `nxRadio` | DS-024 (form fields with labels, hints and inline errors) | Input, Input group, Textarea, Select |
 | Page tabs, side panel tabs with counts and the quiet tabs of guided review | `.tabs`, `.insp-tabs`, `.app-tabs` | DS-025 (tabs) | Tabs |
-| Table | `.nx-tbl` | DS-026 (table) | None installed yet, shadcn Table fits |
+| Table | `.nx-tbl` | DS-026 (table) | Table, added by PROTO-011 (every kit component in rough form) |
 | Before you submit and Before you can lists with Go to links | `submitBlockers`, `smBlockers` | DS-027 (Before you list with Go to links) | None, custom |
 | Decision buttons in the task's style | `gDecision`, `revStyle` | DS-028 (decision buttons in the four decision styles) | Toggle group |
 | The one banner and the one inline error | `nxBanner`, `.sm-msg` | SHELL-010 (error and issue states in every flow) | None, custom |
