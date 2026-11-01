@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppShell, Sidebar, TopBar } from "../src/components/app-shell.tsx";
-import { CoSignColumns, DepositTable } from "../src/components/clinical-report.tsx";
+import { CoSignColumns, DepositTable, ReportDocument } from "../src/components/clinical-report.tsx";
 import { DecisionButtons } from "../src/components/decision-buttons.tsx";
 import { DisplayPanel } from "../src/components/display-panel.tsx";
 import { FlowMap } from "../src/components/flow-map.tsx";
@@ -456,6 +456,58 @@ export const Deposits: Story = {
           { id: "3", slide: "A2", hand: true },
           { id: "4", slide: "A2", objectId: "T1", sizeMm: 0.4, removed: true },
         ]}
+      />
+    </div>
+  ),
+};
+
+export const DepositsEditable: Story = {
+  render: () => (
+    <div className="w-[760px] p-6">
+      <DepositTable
+        onSizeChange={() => {}}
+        onNoteChange={() => {}}
+        errors={{ D3: "Enter the size." }}
+        deposits={[
+          { id: "D1", slide: "A1 · H&E", node: 1, objectId: "T1", sizeMm: 8, size: "8.0" },
+          { id: "D2", slide: "A1 · H&E", node: 1, objectId: "T2", removed: true, sizeMm: 6.4 },
+          { id: "D3", slide: "A2 · H&E", node: 2, hand: true, size: "", note: "Deeper level" },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const ClinicalReportDocument: Story = {
+  render: () => (
+    <div className="p-6">
+      <ReportDocument
+        model={{
+          status: "final",
+          lab: {
+            name: "Fakultní nemocnice Vltava",
+            department: "Department of Pathology",
+            address: "Vltavská 1, 150 00 Praha 5",
+            footer: "Laboratory 0001 · sample data · not a real patient",
+          },
+          head: [
+            ["Accession", "S26-04812"],
+            ["Received", "14 Oct 2026 14:20"],
+          ],
+          sections: [
+            { title: "Specimen", body: "Sentinel lymph nodes #1 and #2, left axilla, excision" },
+            {
+              title: "Final diagnosis",
+              body: "METASTATIC CARCINOMA, macrometastasis",
+              diagnosis: true,
+            },
+          ],
+          synopticTitle: "Synoptic report",
+          standards: [["TNM", "UICC and AJCC 8th edition"]],
+          rows: [["Size of largest metastatic deposit", "8.0 mm"]],
+          after: [],
+          sign: { by: "Electronically signed by MUDr. Lenka Malá", at: "15 October 2026 at 11:42" },
+        }}
       />
     </div>
   ),
