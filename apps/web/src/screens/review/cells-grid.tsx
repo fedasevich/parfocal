@@ -2,18 +2,11 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
 import { lookUrl } from "../thumbnails.ts";
-import type { Count } from "./decision-style.ts";
 import type { Answer } from "./review-state.ts";
 import { cellShapes, hpfSize } from "./slide-geometry.ts";
 
 const tile = 40;
 const zoom = 1.4;
-
-const outlineColour: Record<Count, string> = {
-  agree: "var(--c-tumor)",
-  disagree: "var(--c-tumor)",
-  unsure: "var(--c-tumor)",
-};
 
 export function cropStyle(object: string) {
   const cell = cellShapes[object];
@@ -38,7 +31,7 @@ export function CellOutline({ object, white = false }: { object: string; white?:
       <path
         d={cell.path}
         fill="none"
-        stroke={white ? "#ffffff" : outlineColour.agree}
+        stroke={white ? "#ffffff" : "var(--c-tumor)"}
         strokeWidth={1.5 / zoom}
       />
     </svg>
