@@ -397,7 +397,7 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
           </>
         )}
       </div>
-      <div className="mt-3 flex justify-between text-[8px] text-[#777]">
+      <div className="mt-3 flex justify-between text-[8px] text-[#6b6b6b]">
         <span>{model.lab.footer}</span>
         <span>Page 1 of 1</span>
       </div>
