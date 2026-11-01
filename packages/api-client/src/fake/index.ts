@@ -30,5 +30,14 @@ export * as scenario from "./scenario.ts";
 export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
 export * as scenarioReview from "./scenario-review.ts";
 export * as scenarioTask from "./scenario-task.ts";
+export * as scenarioTeam from "./scenario-team.ts";
+export { teamReviewerStatus, toTeamWorkload } from "./team-handlers.ts";
+export {
+  defaultFakeTeamScene,
+  type FakeTeamScene,
+  fakeTeamScene,
+  resetTeamActions,
+  setFakeTeamScene,
+} from "./team-scene.ts";
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
 export { searchScenario, tasksAssignedBy, toSlideRow } from "./work-handlers.ts";

@@ -19,6 +19,7 @@ import {
   threads,
 } from "./scenario.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
+import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 
 export {
@@ -35,6 +36,14 @@ export {
   getListReviewerWorkloadMockHandler,
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
+
+export {
+  getCancelNudgeMockHandler,
+  getListTeamWorkloadMockHandler,
+  getNudgeReviewerMockHandler,
+  getReassignSlidesMockHandler,
+  getUndoReassignmentMockHandler,
+} from "./team-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
@@ -181,6 +190,7 @@ export const draftOperations: DraftOperation[] = [
     handler: () => getListSlideThreadsMockHandler(),
   },
   ...taskDraftOperations,
+  ...teamDraftOperations,
   ...reviewDraftOperations,
 ];
 

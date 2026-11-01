@@ -33,14 +33,15 @@ test("no draft operation's planned path is in openapi.json", async () => {
 
 test("each draft operation exports every name Orval would generate for it", () => {
   const exported = new Set([...Object.keys(draft), ...draftFakeExports]);
-  for (const { operationId } of draftOperations) {
+  for (const { operationId, method } of draftOperations) {
     const name = capitalised(operationId);
+    const kind = method === "get" ? "Query" : "Mutation";
     for (const expected of [
       operationId,
       `use${name}`,
       `get${name}Url`,
-      `get${name}QueryKey`,
-      `get${name}QueryOptions`,
+      `get${name}${kind}Key`,
+      `get${name}${kind}Options`,
       `get${name}MockHandler`,
     ]) {
       assert.ok(exported.has(expected), expected);
