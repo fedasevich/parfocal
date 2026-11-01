@@ -2,9 +2,11 @@ import type { RequestHandler } from "msw";
 import {
   getGetNotificationCountsMockHandler,
   getGetReviewOrderMockHandler,
+  getGetReviewTaskMockHandler,
   getListAnnouncementsMockHandler,
   getListMySlidesMockHandler,
   getListNotificationsMockHandler,
+  getListProjectResultSetsMockHandler,
   getListTasksAssignedByMeMockHandler,
   getListVerdictsMockHandler,
   getMarkNotificationsReadMockHandler,
@@ -17,7 +19,9 @@ import type {
   MarkRead,
   MyStatus,
   NotificationKind,
+  ResultSet,
   ReviewOrder,
+  ReviewTaskDetail,
   SearchHit,
   SlideRow,
   State,
@@ -34,6 +38,7 @@ import {
   people,
   projectByCode,
   projects,
+  type ResultSetKey,
   resultSets,
   reviewTasks,
   type ScenarioNotification,
@@ -171,8 +176,81 @@ const notificationKinds = [
   "task-assigned",
 ] as const satisfies readonly NotificationKind[];
 
+const scopeOf = (task: ScenarioReviewTask): ReviewTaskDetail["scope"] => {
+  if (task.scope === "random-cells") return { kind: task.scope, count: 50 };
+  if (task.scope === "cells-below-score") return { kind: task.scope, score: 0.6 };
+  return { kind: task.scope };
+};
+
+const resultSetOf = (key: ResultSetKey) => {
+  const set = resultSets.find((candidate) => candidate.key === key);
+  if (set === undefined) throw new Error(`no scenario result set ${key}`);
+  return set;
+};
+
+export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail => {
+  const project = projectByCode(task.project);
+  const own = slides.filter((slide) => slide.project === task.project).slice(0, 2);
+  return {
+    id: task.id,
+    project_id: project.id,
+    number: Number(task.code.slice(3)),
+    code: task.code,
+    name: task.name,
+    split: task.split === "even" ? "even" : "everyone",
+    scope: scopeOf(task),
+    opinion_form_version: 1,
+    blinded: task.blinded,
+    ai_hidden_first_read: false,
+    start_mode: "guided",
+    due_on: task.dueOn,
+    reminder_days: [2, 1],
+    study_template_id: null,
+    study_template_version: null,
+    created_by_user_id: people[project.owner].id,
+    created_at: `${task.sentOn}T09:00:00+02:00`,
+    slide_count: task.slides,
+    reviewer_count: task.reviewers.length,
+    slides: own.map((slide) => ({
+      slide_id: slide.id,
+      result_set_id: resultSetOf(task.resultSet).id,
+      reviewer_ids: task.reviewers.map((key) => people[key].id),
+    })),
+  };
+};
+
+export const projectResultSets = (projectId: string): ResultSet[] => {
+  const project = projects.find((candidate) => candidate.id === projectId);
+  if (project === undefined) return [];
+  const used = new Set(
+    reviewTasks.filter((task) => task.project === project.code).map((task) => task.resultSet),
+  );
+  const firstSlide = slides.find((slide) => slide.project === project.code);
+  return resultSets
+    .filter((set) => set.source !== "reviewed")
+    .filter((set) => set.project === project.code || used.has(set.key))
+    .map((set) => ({
+      id: set.id,
+      project_id: project.id,
+      slide_id: firstSlide?.id ?? "",
+      name: set.name,
+      model_version: set.version,
+      source: set.source === "run" ? "run" : "import",
+      source_file: set.source === "imported" ? "tumor_009_camelyon.geojson" : null,
+      produced_at: `${set.createdOn}T09:00:00+02:00`,
+      status: "ready",
+      error_code: null,
+      cell_count: set.cells,
+      region_count: set.regions,
+      zone_count: 0,
+      created_by_user_id: people[set.by].id,
+      created_at: `${set.createdOn}T09:00:00+02:00`,
+    }));
+};
+
 export function createInbox() {
   const read = new Set(notifications.filter((item) => item.read).map((item) => item.id));
+  const mine = () => notifications.filter((item) => item.to === fakeView().viewer);
 
   const toItem = (item: ScenarioNotification): InboxItem => ({
     id: item.id,
@@ -200,14 +278,14 @@ export function createInbox() {
   const list = (url: URL): InboxItem[] => {
     const kinds = url.searchParams.getAll("kind");
     const readParam = url.searchParams.get("read");
-    return notifications
+    return mine()
       .map(toItem)
       .filter((item) => kinds.length === 0 || kinds.includes(item.kind))
       .filter((item) => readParam === null || String(item.read) === readParam);
   };
 
   const counts = (): InboxCounts => {
-    const items = notifications.map(toItem);
+    const items = mine().map(toItem);
     return {
       total: items.length,
       unread: items.filter((item) => !item.read).length,
@@ -223,14 +301,15 @@ export function createInbox() {
 
   const mark = (body: MarkRead) => {
     const before = read.size;
-    for (const item of notifications) {
+    for (const item of mine()) {
       const chosen =
         body.all === true ||
         (body.ids ?? []).includes(item.id) ||
         (body.kinds ?? []).includes(item.kind);
       if (chosen) read.add(item.id);
     }
-    return { marked: read.size - before, unread: notifications.length - read.size };
+    const unread = mine().filter((item) => !read.has(item.id)).length;
+    return { marked: read.size - before, unread };
   };
 
   return { list, counts, mark };
@@ -329,10 +408,23 @@ export function workHandlers(): RequestHandler[] {
   const inbox = createInbox();
   return [
     getListTasksAssignedByMeMockHandler(() => tasksAssignedBy(fakeView().viewer)),
-    getListMySlidesMockHandler(() => ({
-      slides: myWorkSlideIds.map(toSlideRow),
-      next_cursor: null,
-    })),
+    getListMySlidesMockHandler(({ request }) => {
+      const query = fold(new URL(request.url).searchParams.get("q") ?? "");
+      const rows = myWorkSlideIds.map(toSlideRow);
+      return {
+        slides: rows.filter((row) =>
+          fold(`${row.case_label ?? ""} ${row.label}`).includes(query.trim()),
+        ),
+        next_cursor: null,
+      };
+    }),
+    getGetReviewTaskMockHandler(({ params }) => {
+      const task = reviewTasks.find((candidate) => candidate.id === params["taskId"]);
+      return toReviewTaskDetail(task ?? taskByCode("RT-14"));
+    }),
+    getListProjectResultSetsMockHandler(({ params }) =>
+      projectResultSets(String(params["projectId"])),
+    ),
     getListNotificationsMockHandler(({ request }) => ({
       notifications: inbox.list(new URL(request.url)),
       next_cursor: null,

@@ -541,6 +541,7 @@ export const announcements: ScenarioAnnouncement[] = [
 
 export type ScenarioNotification = {
   id: string;
+  to: PersonKey;
   kind:
     | "mention"
     | "reply"
@@ -562,6 +563,7 @@ export type ScenarioNotification = {
 
 export const notifications: ScenarioNotification[] = [
   {
+    to: "LM",
     id: uuid(12, 1),
     kind: "mention",
     actor: "DH",
@@ -575,6 +577,7 @@ export const notifications: ScenarioNotification[] = [
     read: false,
   },
   {
+    to: "LM",
     id: uuid(12, 2),
     kind: "reply",
     actor: "SM",
@@ -588,6 +591,7 @@ export const notifications: ScenarioNotification[] = [
     read: false,
   },
   {
+    to: "LM",
     id: uuid(12, 3),
     kind: "model-run-finished",
     actor: null,
@@ -598,6 +602,7 @@ export const notifications: ScenarioNotification[] = [
     read: false,
   },
   {
+    to: "LM",
     id: uuid(12, 4),
     kind: "model-run-paused",
     actor: null,
@@ -608,6 +613,7 @@ export const notifications: ScenarioNotification[] = [
     read: false,
   },
   {
+    to: "LM",
     id: uuid(12, 5),
     kind: "upload-done",
     actor: null,
@@ -618,6 +624,7 @@ export const notifications: ScenarioNotification[] = [
     read: false,
   },
   {
+    to: "LM",
     id: uuid(12, 6),
     kind: "task-signed-off",
     actor: "DH",
@@ -628,6 +635,7 @@ export const notifications: ScenarioNotification[] = [
     read: true,
   },
   {
+    to: "LM",
     id: uuid(12, 7),
     kind: "task-assigned",
     actor: "DH",

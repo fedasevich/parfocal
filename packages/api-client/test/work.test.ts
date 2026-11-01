@@ -8,11 +8,13 @@ import {
   getMyHome,
   getNotificationCounts,
   getReviewOrder,
+  getReviewTask,
   listMyAdjudications,
   listMyCosignRequests,
   listMyReviewTasks,
   listMySlides,
   listNotifications,
+  listProjectResultSets,
   listSlideThreads,
   listTasksAssignedByMe,
   listVerdicts,
@@ -181,4 +183,29 @@ test("the preview of A1 reads its decisions, its object count and its open threa
     threads.map((thread) => thread.anchor),
     ["T2", "T1·C145", "R2⁺"],
   );
+});
+
+test("a task's detail and its project's result sets come from the scenario", async () => {
+  const rt11 = scenario.reviewTasks.find((item) => item.code === "RT-11");
+  assert.ok(rt11);
+  const detail = body(await getReviewTask(rt11.id));
+  assert.equal(detail.split, "even");
+  assert.equal(detail.slide_count, 40);
+  assert.equal(detail.blinded, true);
+  const sets = body(await listProjectResultSets(detail.project_id));
+  const used = sets.find((set) => set.id === detail.slides[0]?.result_set_id);
+  assert.equal(used?.name, "PathoSAM + HoVer-NeXt");
+  assert.equal(used?.model_version, "v1.2");
+  assert.equal(used?.source, "run");
+});
+
+test("notifications go to Lenka only and All slides filters by case or label", async () => {
+  setFakeView({ viewer: "AK", firstWeek: false });
+  assert.equal(body(await listNotifications()).notifications.length, 0);
+  assert.equal(body(await getNotificationCounts()).unread, 0);
+  setFakeView(defaultFakeView);
+  const tumors = body(await listMySlides({ q: "tumor" })).slides.map((slide) => slide.label);
+  assert.deepEqual(tumors, ["tumor_031", "tumor_044", "tumor_052", "tumor_090"]);
+  const caseRows = body(await listMySlides({ q: "s26-04812" })).slides;
+  assert.equal(caseRows.length, 3);
 });
