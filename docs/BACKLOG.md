@@ -218,6 +218,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] STACK-007 · Component primitives and styling
   Candidates: React Aria Components, Radix Primitives, Ark UI. Styling: CSS Modules plus CSS custom properties, Tailwind CSS v4 with tokens, vanilla-extract, Panda CSS. Default: React Aria Components for accessible behaviour, and CSS Modules over design tokens as CSS variables. That keeps the kit's token set (dark and light) authoritative.
+  Ask the owner first. Before writing the ADR or adding any styling or primitives dependency, the owner picks the styling approach and the primitives library in [decisions.md](decisions.md) (decision 15, styling and component primitives). Do not take the default without their answer.
   Done when the ADR lists the primitive set mapped to kit components (button, segmented control, toggle, popover, dialog, menu, tabs, slider, listbox, tooltip) and confirms axe-clean output.
 
 - [x] STACK-008 · API contract and client generation

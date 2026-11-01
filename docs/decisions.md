@@ -508,6 +508,33 @@ py-common has no numpy, so `build_cells` in `parfocal_common.chunk_store` stays 
 
 Your choice:
 
+## 15. Styling and component primitives, STACK-007 (component primitives and styling)
+
+Nothing in the repository styles the UI yet. `packages/tokens` and `packages/ui` are empty scaffolds and `apps/web` has no styling dependency. The owner asked to be asked before this is decided, so these two items need your answer and "all recommended" does not cover them. No agent writes the STACK-007 ADR until both are answered.
+
+### 15a. How components are styled
+
+This needs your answer.
+
+- A. CSS Modules over the kit's design tokens as CSS custom properties, the backlog default, which keeps styles in `.module.css` files next to each component and the token set as the one source of truth
+- B. Tailwind CSS v4 with the tokens mapped into `@theme`, which puts utility classes in the markup and generates the token utilities from the same CSS variables
+- C. vanilla-extract, typed styles written in TypeScript and compiled to static CSS
+- D. Panda CSS, typed style functions and recipes compiled to static CSS
+- E. Other
+
+Your choice:
+
+### 15b. Which library gives accessible behaviour to controls
+
+This needs your answer. The controls are button, segmented control, toggle, popover, dialog, menu, tabs, slider, listbox and tooltip.
+
+- A. React Aria Components, the backlog default, unstyled and with the widest keyboard and screen reader coverage
+- B. Radix Primitives, unstyled and widely used, the base of shadcn/ui
+- C. Ark UI, unstyled and built on state machines
+- D. Other
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
