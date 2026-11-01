@@ -537,13 +537,13 @@ Your choice:
 
 ## 16. The prototype in React, ADR 0129 (the prototype moves into React and becomes the design source)
 
-The UX kit and the hi-fi mock move into `apps/web` and `packages/ui` once your current redesign round is done. The kit becomes the Storybook catalogue, the mock's screens become routes on fake data, and each feature task later wires its screen to the API. The new PROTO epic (prototype in React) in the backlog holds the tasks. PROTO-001 (freeze the redesigned prototype) is on hold until you say the redesign round is done, and every other component and screen task waits for it and for decision 15 (styling and component primitives).
+The UX kit and the hi-fi mock move into `apps/web` and `packages/ui` once your current redesign round is done. A rough copy of every kit component and every mock screen comes first, over fake data, so you can click through the whole design and change it early. The production tasks then harden each component and wire each screen to the API. The first screen needs only the freeze, decision 15 (styling and component primitives), the Storybook setup, the fake data layer and the shell, not the finished components. The new PROTO epic (prototype in React) in the backlog holds the tasks. PROTO-001 (freeze the redesigned prototype) is on hold until you say the redesign round is done, and every other component and screen task waits for it and for decision 15 (styling and component primitives).
 
 When the redesign round is done, say so in chat or write the date here:
 
 ### 16a. Accept ADR 0129
 
-- A. Accept as written: port after the freeze, screens assembled from the design system components over fake data, then the React app becomes the design source and the artifacts are kept as frozen history. **Recommended**, because a design change is then made once, in the product itself
+- A. Accept as written: port after the freeze, rough components and screens over fake data first, hardened by the production tasks later, then the React app becomes the design source and the artifacts are kept as frozen history. **Recommended**, because a design change is then made once, in the product itself
 - B. Port into a separate throwaway prototype app first, and build the real screens later
 - C. Keep the artifacts as the design source and build each screen when its feature task comes up
 - D. Other
@@ -565,6 +565,16 @@ Your choice:
 
 - A. You compare each screen group with the frozen mock in the running dev build before its task is ticked. **Recommended**, because the design is yours and differences are cheapest to fix one group at a time
 - B. The agent compares its screenshots with screenshots of the frozen mock, and you look at everything once at the end
+- C. Other
+
+Your choice:
+
+### 16d. When the port starts
+
+This needs your answer. Either way the port also waits for decision 15 (styling and component primitives).
+
+- A. After the current redesign round, as you first asked, so no screen is ported twice
+- B. Now. The finished parts of the redesign are ported first and the rest of the redesign is done in the React app, which is cheaper per change but ports some screens twice
 - C. Other
 
 Your choice:
