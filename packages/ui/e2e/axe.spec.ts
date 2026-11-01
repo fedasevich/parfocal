@@ -19,6 +19,10 @@ const knownExclusions: Record<string, { selector: string; fixedBy: string }> = {
     selector: '[data-slot="button"][data-variant="primary"][data-state="hover"]',
     fixedBy: "DS-006",
   },
+  "components-viewer-tools--minimap-faded-under-the-pointer": {
+    selector: '[data-slot="smart-minimap"][data-faded]',
+    fixedBy: "NAV-006",
+  },
 };
 
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];

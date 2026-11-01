@@ -127,6 +127,9 @@ export const mockScenes = {
     "preset",
   ],
   findings: ["open", "decided", "added"],
+  navigator: ["overview", "reading", "avoid", "travel", "cells", "focus", "pointer"],
+  annotate: ["auto", "models"],
+  compare: ["picked", "picking"],
   gallery: ["grid", "rest", "folded", "blind"],
   evaluation: ["report", "arrange", "pdf", "retiredtpl", "exportfail"],
   settings: [
