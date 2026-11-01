@@ -155,6 +155,19 @@ export const BeforeYouSubmit: Story = {
   ),
 };
 
+export const BeforeYouSendOne: Story = {
+  render: () => (
+    <BeforeYouList
+      className="w-96"
+      title="Before you can send"
+      showSingle
+      blockers={[
+        { id: "due", text: "The due date is in the past. Pick a later day.", goTo: "Go to" },
+      ]}
+    />
+  ),
+};
+
 export const ProgressBars: Story = {
   render: () => (
     <div className="grid w-80 gap-4">

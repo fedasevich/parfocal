@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ControlRow, LockedReason } from "../src/components/control-row.tsx";
 import { CountsAsLine } from "../src/components/counts-as.tsx";
 import { FormField, TextFieldInput } from "../src/components/form-field.tsx";
+import { LockableRow } from "../src/components/lockable-row.tsx";
 import { NumberStepper } from "../src/components/number-stepper.tsx";
 import { SegmentedControl } from "../src/components/segmented-control.tsx";
 import { TokenField } from "../src/components/token-field.tsx";
@@ -221,4 +222,76 @@ export const TokenFieldSlides: Story = {
       picked={["A1", "A2"]}
     />
   ),
+};
+
+export const TokenFieldAway: Story = {
+  render: () => (
+    <div className="h-72 w-[480px]">
+      <TokenField
+        label="Reviewers"
+        items={tokenItems.map((item) =>
+          item.id === "PK"
+            ? {
+                id: item.id,
+                name: item.name,
+                person: people.PK,
+                end: "Away until 22 Oct",
+                endTone: "warn" as const,
+              }
+            : item,
+        )}
+        picked={["LM", "SM"]}
+        defaultOpen
+        defaultQuery="k"
+      />
+    </div>
+  ),
+};
+
+export const LockableRows: Story = {
+  render: () => {
+    const [locked, setLocked] = useState(true);
+    const [reason, setReason] = useState("Confidence hidden this round");
+    return (
+      <div className="grid w-[640px] gap-3">
+        <LockableRow label="Draw as">
+          <SegmentedControl aria-label="Draw as" defaultValue="outline" options={drawOptions} />
+        </LockableRow>
+        <LockableRow
+          label="Confidence"
+          lockable
+          locked={locked}
+          onLockedChange={setLocked}
+          reason={reason}
+          onReasonChange={setReason}
+        >
+          <SegmentedControl
+            aria-label="Confidence"
+            defaultValue="number"
+            options={[
+              { value: "number", label: "Number" },
+              { value: "word", label: "Word" },
+              { value: "hidden", label: "Hidden" },
+            ]}
+          />
+        </LockableRow>
+        <LockableRow
+          label="Order"
+          lockable
+          locked
+          reason="Or"
+          reasonError="Use at least 5 characters."
+        >
+          <SegmentedControl
+            aria-label="Order"
+            defaultValue="ai"
+            options={[
+              { value: "ai", label: "AI order" },
+              { value: "random", label: "Random" },
+            ]}
+          />
+        </LockableRow>
+      </div>
+    );
+  },
 };

@@ -1,3 +1,4 @@
+import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -5,7 +6,17 @@ import type * as React from "react";
 
 type Crumb = { label: string; href?: string };
 
-function Breadcrumbs({ items, className }: { items: Crumb[]; className?: string }) {
+const anchorLink: LinkRenderer = ({ children, ...props }) => <a {...props}>{children}</a>;
+
+function Breadcrumbs({
+  items,
+  className,
+  renderLink = anchorLink,
+}: {
+  items: Crumb[];
+  className?: string | undefined;
+  renderLink?: LinkRenderer | undefined;
+}) {
   return (
     <nav
       aria-label="Breadcrumb"
@@ -21,12 +32,11 @@ function Breadcrumbs({ items, className }: { items: Crumb[]; className?: string 
           </span>
         ) : (
           <span key={item.label} className="inline-flex items-center gap-1.5">
-            <a
-              href={item.href ?? "#"}
-              className="text-fg-dim no-underline hover:text-fg hover:underline"
-            >
-              {item.label}
-            </a>
+            {renderLink({
+              href: item.href ?? "#",
+              className: "text-fg-dim no-underline hover:text-fg hover:underline",
+              children: item.label,
+            })}
             <span aria-hidden="true">/</span>
           </span>
         ),
@@ -93,6 +103,7 @@ function Stepper({ steps, current, onStepSelect, className, ...props }: StepperP
             ) : reachable ? (
               <button
                 type="button"
+                title={step.why}
                 onClick={() => onStepSelect?.(index)}
                 className="inline-flex cursor-pointer items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
               >
@@ -132,6 +143,8 @@ type FlowPageProps = Omit<React.ComponentProps<"div">, "title"> & {
   onStepSelect?: (index: number) => void;
   bar: React.ReactNode;
   moreBelow?: boolean;
+  status?: React.ReactNode;
+  renderLink?: LinkRenderer | undefined;
 };
 
 function FlowPage({
@@ -143,6 +156,8 @@ function FlowPage({
   onStepSelect,
   bar,
   moreBelow = false,
+  status,
+  renderLink,
   className,
   children,
   ...props
@@ -158,14 +173,16 @@ function FlowPage({
     >
       <header className="border-b border-line pt-5 pb-4.5">
         <div className="mx-auto w-full max-w-208 px-9">
-          <Breadcrumbs items={crumbs} className="mb-2" />
+          <Breadcrumbs items={crumbs} className="mb-2" renderLink={renderLink} />
           <h2 className="m-0 text-page-title leading-[1.25] font-semibold">{title}</h2>
           {subtitle ? (
             <p className="mt-1 mb-4 text-body-sm leading-[1.45] text-fg-dim">{subtitle}</p>
           ) : (
             <div className="h-4" />
           )}
-          <Stepper steps={steps} current={current} {...(onStepSelect ? { onStepSelect } : {})} />
+          {status ?? (
+            <Stepper steps={steps} current={current} {...(onStepSelect ? { onStepSelect } : {})} />
+          )}
         </div>
       </header>
       <div className="min-h-0 overflow-auto">

@@ -11,6 +11,8 @@ type TokenItem = {
   person?: PersonInfo;
   thumbnail?: string;
   end?: string;
+  endTone?: "warn" | undefined;
+  find?: string;
   dim?: string;
 };
 
@@ -72,7 +74,14 @@ type TokenFieldProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   defaultQuery?: string;
   defaultOpen?: boolean;
   onInvite?: (email: string) => void;
+  invalid?: boolean;
 };
+
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -85,6 +94,7 @@ function TokenField({
   defaultQuery = "",
   defaultOpen = false,
   onInvite,
+  invalid = false,
   className,
   ...props
 }: TokenFieldProps) {
@@ -94,16 +104,11 @@ function TokenField({
   const pickedItems = picked
     .map((id) => items.find((item) => item.id === id))
     .filter((item): item is TokenItem => item !== undefined);
-  const needle = query.trim().toLowerCase();
+  const needle = fold(query.trim());
   const matches = items.filter(
     (item) =>
       !picked.includes(item.id) &&
-      (needle === "" ||
-        item.name
-          .toLowerCase()
-          .split(" ")
-          .some((word) => word.startsWith(needle)) ||
-        item.name.toLowerCase().startsWith(needle)),
+      (needle === "" || fold(`${item.name} ${item.find ?? ""}`).includes(needle)),
   );
   const inviteable = emailPattern.test(query.trim()) && matches.length === 0;
   const pick = (id: string) => {
@@ -112,7 +117,10 @@ function TokenField({
   };
   return (
     <div data-slot="token-field" className={cn("relative min-w-0", className)} {...props}>
-      <div className="flex min-h-10 cursor-text flex-wrap items-center gap-1.5 rounded-ctl border border-line-strong bg-surf-field px-2 py-1.25 focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_18%,transparent)]">
+      <div
+        data-invalid={invalid || undefined}
+        className="flex min-h-10 cursor-text flex-wrap items-center gap-1.5 rounded-ctl border border-line-strong bg-surf-field px-2 py-1.25 focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_18%,transparent)] data-invalid:border-bad data-invalid:focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--bad)_22%,transparent)]"
+      >
         {pickedItems.map((item) => (
           <Token
             key={item.id}
@@ -130,6 +138,7 @@ function TokenField({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-invalid={invalid || undefined}
           value={query}
           placeholder={pickedItems.length ? "Add another" : placeholder}
           onChange={(event) => {
@@ -176,7 +185,12 @@ function TokenField({
                   <small className="block truncate text-caption text-fg-dim">{item.sub}</small>
                 ) : null}
               </span>
-              <span className="text-caption whitespace-nowrap text-fg-dim">
+              <span
+                className={cn(
+                  "text-caption whitespace-nowrap",
+                  item.endTone === "warn" ? "text-warn" : "text-fg-dim",
+                )}
+              >
                 {item.dim ?? item.end}
               </span>
             </div>

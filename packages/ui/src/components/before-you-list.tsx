@@ -12,15 +12,17 @@ type Blocker = {
 type BeforeYouListProps = Omit<React.ComponentProps<"div">, "title"> & {
   title?: string;
   blockers: Blocker[];
+  showSingle?: boolean;
 };
 
 function BeforeYouList({
   title = "Before you can",
   blockers,
+  showSingle = false,
   className,
   ...props
 }: BeforeYouListProps) {
-  if (blockers.length < 2) return null;
+  if (blockers.length < (showSingle ? 1 : 2)) return null;
   return (
     <div
       data-slot="before-you-list"
