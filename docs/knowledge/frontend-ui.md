@@ -177,3 +177,23 @@ The full viewer route `/projects/$projectId/slides/$slideId` holds the mock's `c
 ## Screenshots of the frozen mock for comparison
 
 `docs/design/ux-mock/index.html` opens a screen from its hash, such as `#layers`, but only on load, so a script that moves between screens must reload after changing the hash. The scene chips are buttons with `data-scene="<key>"`, and the app frame is `#app`, so a Playwright script can click each chip and screenshot `#app` to compare a scene with the app. Source: PROTO-018.
+
+## A scene link without a scene keeps the fake server state
+
+PROTO-008 (disagreements, sign-off and the evaluation report) shares one piece of fake server state across three routes: the stage of RT-14's queue in `packages/api-client/src/fake/queue-scene.ts`. `apps/web/src/fake-api/queue-scene-rules.ts` returns `null` for the disagreements and sign-off routes when the URL has no `scene`, and `start.tsx` then leaves the state alone, so decisions and sends made in the queue are still there when Go to sign-off opens the modal. A prototype link with a scene sets the canonical state, and every other route resets it. The evaluation route maps its report, arrange and PDF scenes onto the same state, so moving between them does not reset the queries, which would unmount the page and lose an arrangement. Source: PROTO-008.
+
+## A route can leave the global shell for some scenes
+
+The adjudicator view is the `adjudicate` and `adjdone` scenes of `/tasks/$taskId/disagreements`, the same route as the researcher's queue, but it has the review layout without the global shell. `inGlobalShell` in `apps/web/src/shell/shell-routes.ts` reads the match's search, and `outsideShellScenes` names the scenes of a shell route that render without it. Source: PROTO-008.
+
+## The slide still needs a sized parent
+
+`SlideStill` sizes itself with `flex-1` and measures its box, so inside a block that is not a flex container it measures zero height and its viewBox becomes NaN, which the browser logs as an error. Give it `className="h-full"` in a fixed-height box, or put it in a flex container. Source: PROTO-008.
+
+## Keys from names that load later collide
+
+A table that keys its columns by a person's name renders before `listTenantMembers` answers, when every name is still empty, so React sees duplicate keys and can keep stale cells after the names arrive. Key such cells by their position or by the user id. Source: PROTO-008.
+
+## One test per scene in a smoke spec
+
+A Playwright test that opens 19 scenes in a loop needs more than its 30 s under three workers, so the smoke specs give each scene its own test. Commit headers are capped at 100 characters by commitlint. Source: PROTO-008.
