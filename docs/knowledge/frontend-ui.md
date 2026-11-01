@@ -196,4 +196,4 @@ A table that keys its columns by a person's name renders before `listTenantMembe
 
 ## One test per scene in a smoke spec
 
-A Playwright test that opens 19 scenes in a loop needs more than its 30 s under three workers, so the smoke specs give each scene its own test. Commit headers are capped at 100 characters by commitlint. Source: PROTO-008.
+A Playwright test that opens 19 scenes in a loop needs more than its 30 s under three workers, so the smoke specs give each scene its own test. Source: PROTO-008.
