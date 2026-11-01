@@ -3,7 +3,7 @@
 - Date: 2026-11-01
 - Backlog: RSET-012 (large result files in bounded memory)
 - Kind: benchmark
-- Commit: the RSET-012 (large result files in bounded memory) commit on top of `958de59`, measured as the working tree just before that commit with the same code
+- Commit: `f72fe22` (measured as the working tree on top of `958de59` just before that commit, with the same code, and only the new test module's types were fixed afterwards)
 - Environment: MacBook Air, Apple M4, 24 GB memory, macOS 15.8.1, CPython 3.14.7, numpy 2.5.4, scipy 1.18.1, shapely 2.2.0, msgspec 0.21.1. Postgres 17.10 with PostGIS 3.6.1 behind PgBouncer 1.26.0 and MinIO from the local compose stack (`postgres`, `pooler` and `storage` services), bucket `parfocal-test`. The worker is `python -m parfocal_ingest` with its default workflows and the real 60 s lease, started as its own process
 - Data: the same synthetic GeoJSON as the [cell import result](2026-11-01-cell-import.md), written by `workers/ingest/benchmarks/make_cells_geojson.py` from the POC's synthetic whole-slide job `synth0001503` (Huron-1-40x nucleus outlines tiled over the tissue of CAMELYON16 `tumor_009`): 901,125,253 bytes, 1,607,244 cells as QuPath-style features with a polygon outline, a class and a score, no nucleus outlines and no probabilities, and 16 regions in a 4 by 4 grid. No PHI. The file was written to the session scratchpad and deleted after the runs
 
@@ -99,6 +99,7 @@ The ijson run used a throwaway virtual environment in the session scratchpad, an
 
 ## Interpretation
 
+- The ceiling is set to 2 GiB as `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, about twice the highest peak seen, and the benchmark fails when a run passes it. Decision 14a asks the owner to confirm it.
 - Facts: the peak resident memory of the worker stayed between 824 and 1,025 MiB over seven imports, about a sixth of the RSET-011 peak, and the step took 42 to 45 s, about 2.6 times faster. The lowest lease left was 40.0 s every time, which is the 60 s lease minus the 20 s between renewals, so every renewal arrived on time while the step ran, and the competing worker never claimed.
 - The stream itself holds little. Python's heap stayed under 46 MiB for 100,000 cells, and the resident memory of the in-process script grew from about 210 MiB of imported libraries to 374 MiB while it read all 1.6 million cells (seen once in a trace of the reading stage alone). What remains is about 8 bytes per outline vertex, 30,339,178 vertices here, plus the per-cell columns, the matching and the summary file.
 - The second import used about the same memory as the first, 944 to 951 MiB in the worker. In the script, where both imports share one process, matching against the 1.6 million known cells added 135 MiB to the peak.
