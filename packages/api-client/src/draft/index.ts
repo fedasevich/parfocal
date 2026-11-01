@@ -1,3 +1,4 @@
+export * from "./clinical-report.ts";
 export {
   type DecisionStyle,
   decisionStyleSchema,

@@ -30,6 +30,7 @@ export * from "../generated/api.msw.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-handlers.ts";
 export * as scenario from "./scenario.ts";
+export * as scenarioClinical from "./scenario-clinical.ts";
 export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
 export * as scenarioProject from "./scenario-project.ts";
 export * as scenarioReview from "./scenario-review.ts";

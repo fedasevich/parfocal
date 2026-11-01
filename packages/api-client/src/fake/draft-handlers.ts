@@ -4,6 +4,7 @@ import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adju
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type MyJob, myJobSchema } from "../draft/list-my-jobs.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import {
@@ -23,6 +24,17 @@ import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 
+export {
+  getAmendClinicalReportMockHandler,
+  getCosignClinicalReportMockHandler,
+  getGetClinicalReportMockHandler,
+  getGetCosignReviewMockHandler,
+  getListClinicalReportsMockHandler,
+  getReturnCosignRequestMockHandler,
+  getSendClinicalReportForCosignMockHandler,
+  getSignOutClinicalReportMockHandler,
+  getWithdrawCosignRequestMockHandler,
+} from "./clinical-handlers.ts";
 export {
   getGetProjectImportsMockHandler,
   getGetProjectOverviewMockHandler,
@@ -200,6 +212,7 @@ export const draftOperations: DraftOperation[] = [
   ...projectDraftOperations,
   ...teamDraftOperations,
   ...reviewDraftOperations,
+  ...clinicalDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>
