@@ -647,7 +647,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] IAM-021 · Lock screen that returns to the same view
   Split from IAM-009. The web app sends `recordActivity` on keyboard, pointer and viewer input at most once a minute, shows the kit's lock screen when the API answers `session-locked`, unlocks through `/api/auth/login?reauth=true` and comes back to the same view and camera position.
   Done when a component test and an E2E test lock an open slide, unlock and find the same camera position.
-  Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session.
+  After a session that ended, the sign-in page says so and names the last saved decision, as in "Your session ended after 8 hours. Sign in to go on. Your last decision, T5 on A1, is saved.", and signing in returns to that object.
+  Depends on IAM-009 and the final UI shell. Refs mock 23 Sign in and lock, mock §2.15 Privacy and session, mock: signin/expired, doc 44.
 
 - [x] IAM-022 · Researcher, reviewer and admin roles with project roles
   Workspace roles researcher, reviewer and admin, and project roles owner, reviewer and viewer, replace the five membership roles left after ADAPT-001 in the permission matrix, in the `memberships` and `invitations` role checks and in the service account scopes. The kept and reworked permissions are renamed for the new product as [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) lists, and "assigned to them" becomes "in their tasks". No memberships are mapped, because the code is throwaway. A reviewer sees only the projects and tasks they are in. A researcher creates projects, uploads, runs models, creates tasks, resolves disagreements and signs off. An admin manages people, models, sources and security and sees no patient data without IAM-017.
@@ -1463,9 +1464,10 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when CI enforces under 35% in Review at 1440×900 (KPI).
   Refs doc 35.
 
-- [ ] SHELL-010 · Global error and empty states
-  Offline banner, session expired, permission denied, not found, server error.
-  Done when component tests cover each state.
+- [ ] SHELL-010 · Error and issue states in every flow
+  One banner style and one inline error style serve every issue state in the app, and each state lives in its own flow. Every state says what happened, what still works and the one action that fixes it, and never loses anything typed. Parfocal has no offline mode, so a lost connection shows "Connection lost" under the top bar and retries by itself with a "Retry now" in the banner. The actions that would save are disabled with the reason, the current object, the chosen answer and any typed note stay on screen, and a toast confirms the pending save when the connection is back. The shell also covers session expired (IAM-021), no access, which names the project's owner and offers "Ask for access", not found and server error. The flows' own states use the same styles and are built by their flow's task: upload (a duplicate slide, storage full, a result with no slide, a source that stops answering), the New review task flow (no result set, a due date in the past, a reviewer away, a retired template, nobody picked), review (a slide that fails to load, no results, connection lost, a withdrawn task, read-only after sign-off), submit, the disagreement queue, sign-off, the evaluation report (a retired template, a failed export), the clinical report, Team, the shortcuts in Settings and connecting a model.
+  Done when component tests cover the banner and the inline error, Connection lost with its retry and a kept note, session expired, no access with its request, not found and server error, and axe passes on each.
+  Refs mock: states, mock: guided/connlost, mock: case/connlost, mock: signin/expired, mock: signin/noaccess, kit: issue states, doc 44.
 
 - [ ] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
@@ -2708,9 +2710,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting and per-device speed persistence.
 
 - [ ] SET-007 · Shortcuts section
-  The rebinding editor from CMD-006, with the preset (viewer default, QuPath-like, Figma-like), filters for all, your changes and conflicts, and reset all. `?` opens Settings at this section.
-  Done when tests rebind a key and the keycaps update everywhere.
-  Depends on CMD-001, CMD-006. Refs mock 19, mock 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
+  The rebinding editor from CMD-006, with the preset (viewer default, QuPath-like, Figma-like), filters for all, your changes and conflicts, and reset all. `?` opens Settings at this section. Its issue states sit in the row being edited: a key that already does something else offers to swap or take it, a key the browser keeps is refused with a request to pick another, and a key that changes a report needs ⌘ or ⌃. The Deciding group lists the keys of each decision style (GUIDE-015).
+  Done when tests rebind a key and the keycaps update everywhere, and component tests cover the conflict, the reserved key and the safety rule.
+  Depends on CMD-001, CMD-006. Refs mock 19, mock 21, mock: settings/conflict, mock: settings/reserved, mock: settings/safety, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
 - [ ] SET-008 · Notifications section
   AI finished, replies, STAT assigned, STAT sound.
@@ -3064,7 +3066,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Dropped by [ADR 0011](adr/0011-hosted-ci-only.md). No self-hosted runners are used.
 
 - [ ] TEST-019 · Application performance on main paths
-  The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a decision to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
+  The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md), tasks the thesis assignment adds). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a decision to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
   Done when the scripts run locally against the full stack, a result file records the numbers with the machine, browser, data and method, and CI runs the CPU-side paths against their budgets.
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
 
@@ -3194,8 +3196,9 @@ Importing AI results made elsewhere is first class. A result set is one import o
 
 - [ ] RSET-005 · Import checks and fixes
   Schema and parse errors name the line or feature and offer a downloadable error report and "import the other N". A coordinate or scale mismatch guesses the level or microns per pixel and shows both overlays with the share on tissue. Unknown classes are mapped to project classes once and remembered (PROJ-004). Missing scores count as no score or as 1.0.
-  Done when tests cover each problem with fixtures: three objects without a class, a heatmap at level 2 scaled by 4, three new classes, and rows without a score.
-  Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: states/importfail.
+  A heatmap with no slide at Check offers "Choose a slide" or "Leave it out", and either clears it. A result file that lands outside its slide changes nothing and says so on the project page. Each problem shows in place in the upload or the project, in the issue styles of SHELL-010.
+  Done when tests cover each problem with fixtures: three objects without a class, a heatmap at level 2 scaled by 4, three new classes, rows without a score, a heatmap without a slide and a file outside its slide.
+  Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: upload/unmatched, mock: project/importfail, doc 44.
 
 - [ ] RSET-006 · Add a result set from the viewer
   On an open slide a file is previewed as an overlay before it is saved, with alignment and scale fixes, and shown next to the existing sets once added.
@@ -3314,9 +3317,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, IAM-007, NOTIF-004.
 
 - [ ] TASK-007 · Nudge, reassign and change a task
-  The researcher nudges reviewers who are behind, reassigns slides, adds a reviewer and changes the due date, each audited and notified.
-  Done when API tests cover each action and E2E nudges from Assigned by me.
-  Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
+  The researcher nudges reviewers who are behind with a message, reassigns slides, adds a reviewer and changes the due date, each audited and notified. Reassigning moves a reviewer's slides that are not started by default, or every slide, and then the decisions already given stay with the first reviewer's name and the new reviewer starts fresh on those slides. A reassign never goes to the same person.
+  Done when API tests cover each action, both ways of reassigning with the decisions kept under the first reviewer, and a refused reassign to the same person, and E2E nudges from Assigned by me and from Team (TEAM-007).
+  Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Refs mock: team/nudge, mock: team/reassign, mock: team/partial, doc 44.
 
 - [ ] TASK-008 · Submit a slide review
   A slide is submitted only when every object in the task's scope on it has a decision, with Not sure counting as decided, and every required opinion question is answered ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md)). Otherwise the API refuses with a problem that lists the open objects and the unanswered questions. Objects a reviewer added sit outside the scope and never block. On screen the primary is disabled while anything blocks. One blocker shows as the reason under it, as in "T5 is still open.", and two or more show as a "Before you submit" list with a Go to link per row, which jumps to the object, opens the cells panel at the first open cell or focuses the question. Skipped objects have hollow dots and are exactly what the list shows. The primary reads "Submit and open slide 9", or "Submit and finish the task" on the last slide. Submitting saves the review and opens the next slide, and the Submit buttons of the slide behind it are off and say why. A failed submit shows an inline error under the primary saying that every decision is saved, and the primary reads Try again. A submitted review can be reopened by its reviewer until sign-off.
@@ -3408,7 +3411,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, EVAL-001.
 
 - [x] GUIDE-012 · Least sure first order
-  The thesis assignment promises a review that starts with the outputs the model is least sure of ([ADR 0114](adr/0114-thesis-assignment-tasks.md)). Each reviewer's objects in a task come in ascending order of the model's certainty: the calibrated probability of the AI class where the result set has one, else its score. Ties break by object ID. Objects without a score come after the scored ones in the task's fixed random order (TASK-003), so imported outputs without scores are still reviewed in an order every reviewer shares. Regions are few and all of them are checked, so the order matters most for cells. The order is computed once per task and stored, so a later recalibration does not reshuffle a running review.
+  The thesis assignment promises a review that starts with the outputs the model is least sure of ([ADR 0114](adr/0114-thesis-assignment-tasks.md), tasks the thesis assignment adds). Each reviewer's objects in a task come in ascending order of the model's certainty: the calibrated probability of the AI class where the result set has one, else its score. Ties break by object ID. Objects without a score come after the scored ones in the task's fixed random order (TASK-003), so imported outputs without scores are still reviewed in an order every reviewer shares. Regions are few and all of them are checked, so the order matters most for cells. The order is computed once per task and stored, so a later recalibration does not reshuffle a running review.
   Done when unit tests cover the order on a fixture with known scores, ties, a set without scores and a mixed set, and API tests show two reviewers getting the same order and a recalibration leaving a running task unchanged.
   Depends on TASK-003, GUIDE-001. Refs doc 33 (showing type confidence to a doctor), doc 28 (calibrated type confidence).
   The order covers the regions and cells in the task's scope and is stored as one packed array per task slide in `review_order` when the task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). Cells are read from their chunk files through the result store. A cell's certainty is its chunk's probability for its AI class, and a chunk without probabilities gives unscored cells rather than falling back to the detection score, because the chunk format cannot mark a score as missing.
@@ -4023,7 +4026,7 @@ A page of its own next to the worklist ([ADR 0021](adr/0021-chosen-home-worklist
 
 ## 38 TEAM · Team, capacity, absences and hand-over
 
-Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Every task here starts with `Idea:` and keeps its ID.
+Idea for consideration since [ADR 0053](adr/0053-ai-results-review-direction.md), apart from TEAM-007 (Team, the researcher's workload view), which round 6 of the POC mock brought back and which depends on no idea. Every other task here starts with `Idea:` and keeps its ID.
 
 How a lead controls who works on what: absences and back-ups, each person's capacity, moving many cases at once and handing work over. Backend first ([ADR 0023](adr/0023-gap-review-backend-first.md)). The Team page with its People, Capacity and Rota views (kit W45 to W48) gets its UI tasks when the prototype settles.
 
@@ -4055,11 +4058,18 @@ How a lead controls who works on what: absences and back-ups, each person's capa
   Move many cases in one request. Each case gets a suggested person by room and folders, the lead can override any of them, and an optional reason applies to all. The move is all or nothing, it is audited per case, and notifications are batched per person.
   Done when API tests cover a full move, a refused move that leaves every case where it was, the per-case audit entries and one notification per person.
   Depends on BOARD-007, TEAM-003. Refs kit W46, kit Flow 23.
+  Reassigning one reviewer's slides in a review task is part of TEAM-007 (Team, the researcher's workload view) and TASK-007 (nudge, reassign and change a task). Moving many cases at once stays in this idea.
 
 - [ ] TEAM-006 · Idea: Team directory API
   People with role, folders, availability, open cases against capacity, back-up and last activity. Leads and administrators see everything, other staff see names, roles, folders and availability only, and outside consultants see nothing.
   Done when API tests cover each role's view and tenant isolation.
   Depends on IAM-016, TEAM-003. Refs kit W45.
+  Who is reviewing what, with progress and last activity per reviewer, is part of TEAM-007 (Team, the researcher's workload view). Capacity, folders and back-ups stay in this idea.
+
+- [ ] TEAM-007 · Team, the researcher's workload view
+  Team, under Workspace in the sidebar, shows researchers who is reviewing what. Invites and roles stay in the admin page. It has one block per open task with the result set, the due date and "overdue by 1 day" in the bad colour once it has passed, and a row per reviewer with avatar and name, a progress bar with "7 of 12", the last activity and a status word: on track, behind (fewer slides done than the share due by today), not started, away until a date (ADAPT-009) or done. The researcher's own reviewing shows with "(you)". Nudge opens the small Nudge modal with a message filled in, and the row then says "nudged just now". Reassign opens the small Reassign modal with who takes over and what moves, and warns when slides with decisions would move. Both show an Undo. "Nudge all behind" asks to confirm inside the button. The Project and Reviewer filters work, and a Done tab lists the signed-off tasks with their sign-off dates and a link to each report. The API extends the Assigned by me query of [ADR 0082](adr/0082-my-work-query-api.md) (My work query API) with the last activity and the status word. This task takes over the parts of TEAM-005 (bulk reassign) and TEAM-006 (team directory API) that a research lab needs.
+  Done when API tests compute each status word with a fake clock, including behind and overdue, component tests cover each status, the filters, the Done tab, both modals with the partial progress warning, Undo and the confirm of Nudge all behind, axe passes, and E2E nudges and reassigns from Team.
+  Depends on TASK-007, WL-018, DS-022. Refs mock: team/open, mock: team/done, mock: team/nudge, mock: team/reassign, mock: team/sent, mock: team/overdue, mock: team/away, mock: team/partial, kit: Team, doc 44.
 
 ---
 
