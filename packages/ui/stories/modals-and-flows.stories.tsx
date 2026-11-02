@@ -156,6 +156,64 @@ export const Busy: Story = {
   ),
 };
 
+function RenameFlow({ width }: { width: 480 | 560 }) {
+  const [open, setOpen] = useState(true);
+  const [name, setName] = useState("");
+  const [saved, setSaved] = useState("");
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Rename</Button>
+      <output aria-label="Saved name" className="ml-3 text-body-sm text-fg-dim">
+        {saved}
+      </output>
+      <SmallModal
+        open={open}
+        onOpenChange={setOpen}
+        width={width}
+        title="Rename the study"
+        subtitle="The name shows in every list."
+        hint="Esc closes without saving."
+        primaryLabel="Rename"
+        primaryDisabled={name.trim() === ""}
+        onPrimary={() => {
+          setSaved(name.trim());
+          setOpen(false);
+        }}
+      >
+        <SmallModalZone>
+          <FormField label="Name">
+            <TextFieldInput value={name} onChange={(event) => setName(event.target.value)} />
+          </FormField>
+        </SmallModalZone>
+      </SmallModal>
+    </>
+  );
+}
+
+export const TypeToEnable480: Story = { render: () => <RenameFlow width={480} /> };
+
+export const LongContent: Story = {
+  render: () => (
+    <SmallModal
+      defaultOpen
+      trigger={<Button>Reassign</Button>}
+      title="Reassign slides with a very long title that wraps onto a second line inside the modal"
+      subtitle="A subtitle that is also quite long so the header grows taller but never wider than the frame"
+      hint="A long hint on the left of the footer wraps instead of widening the modal."
+      primaryLabel="Reassign slides"
+    >
+      <SmallModalZone title="Which slides">
+        <p className="m-0 break-all text-body-sm text-fg">
+          {"slide-0001-with-a-very-long-unbreakable-file-name-".repeat(6)}
+        </p>
+      </SmallModalZone>
+      <SmallModalZone title="Notes">
+        <Hint>{"One more row of text. ".repeat(40)}</Hint>
+      </SmallModalZone>
+    </SmallModal>
+  ),
+};
+
 const taskSteps = [
   { label: "Slides" },
   { label: "Reviewers" },

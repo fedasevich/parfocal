@@ -120,6 +120,7 @@ function TokenField({
   );
   const inviteable = emailPattern.test(query.trim()) && matches.length === 0;
   const full = single && pickedItems.length > 0;
+  const listOpen = open && !full && (matches.length > 0 || inviteable);
   const pick = (id: string) => {
     onPickedChange?.([...picked, id]);
     setQuery("");
@@ -146,8 +147,8 @@ function TokenField({
           <input
             role="combobox"
             aria-label={label}
-            aria-expanded={open}
-            aria-controls={listId}
+            aria-expanded={listOpen}
+            aria-controls={listOpen ? listId : undefined}
             aria-autocomplete="list"
             aria-invalid={invalid || undefined}
             value={query}
@@ -162,7 +163,7 @@ function TokenField({
           />
         )}
       </div>
-      {open && !full ? (
+      {listOpen ? (
         <div
           id={listId}
           role="listbox"
