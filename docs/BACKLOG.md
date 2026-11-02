@@ -3203,7 +3203,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-014 is confirmed.
   Size: S.
 
-- [ ] CMD-001 · Key registry
+- [x] CMD-001 · Key registry
   Every action registered once with id, default keys per preset, scope (global, viewer, review, annotate, worklist), chords (G then n), hold versus tap (Z, 180 ms), and input-focus awareness.
   Done when unit tests cover chords, hold and tap, scope precedence and typing in inputs.
   Size: M.
