@@ -718,9 +718,54 @@ export const sampleProject = {
 };
 
 export const threads = [
-  { id: uuid(15, 1), task: "RT-14", slide: 1, anchor: "T2", replies: 2, open: true },
-  { id: uuid(15, 2), task: "RT-14", slide: 1, anchor: "T1·C145", replies: 1, open: true },
-  { id: uuid(15, 3), task: "RT-14", slide: 1, anchor: "R2⁺", replies: 0, open: true },
+  {
+    id: uuid(15, 1),
+    task: "RT-14",
+    slide: 1,
+    anchor: "T2",
+    title: "Does the boundary run past the capsule fold?",
+    by: "DH" as PersonKey,
+    at: "2026-10-15T10:02:00+02:00",
+    last: "2026-10-16T15:22:00+02:00",
+    replies: 2,
+    open: true,
+  },
+  {
+    id: uuid(15, 2),
+    task: "RT-14",
+    slide: 1,
+    anchor: "T1·C145",
+    title: "Histiocyte, not tumor",
+    by: "LM" as PersonKey,
+    at: "2026-10-15T09:40:00+02:00",
+    last: "2026-10-15T11:05:00+02:00",
+    replies: 1,
+    open: true,
+  },
+  {
+    id: uuid(15, 3),
+    task: "RT-14",
+    slide: 1,
+    anchor: "R2⁺",
+    title: "Check this rim on the CK slide",
+    by: "LM" as PersonKey,
+    at: "2026-10-15T10:44:00+02:00",
+    last: "2026-10-15T10:44:00+02:00",
+    replies: 0,
+    open: true,
+  },
+  {
+    id: uuid(15, 4),
+    task: "RT-14",
+    slide: 1,
+    anchor: "T4",
+    title: "Reactive sinus histiocytes, no atypia",
+    by: "SM" as PersonKey,
+    at: "2026-10-16T15:30:00+02:00",
+    last: "2026-10-16T15:30:00+02:00",
+    replies: 0,
+    open: false,
+  },
 ];
 
 export const slideDecisions = [

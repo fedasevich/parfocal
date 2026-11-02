@@ -7,6 +7,7 @@ import {
   getGetOpinionMockHandler,
   getGetSlideNeighboursMockHandler,
   getListProjectClassesMockHandler,
+  getListThreadsMockHandler,
   getSaveVerdictMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
@@ -15,12 +16,13 @@ import type {
   Opinion,
   ProjectClass,
   TaskStates,
+  Thread,
   VerdictDraft,
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { objectsOn, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
-import { people, projectByCode, reviewTasks, slides, threads } from "./scenario.ts";
+import { people, projectByCode, reviewTasks, slideByIndex, slides, threads } from "./scenario.ts";
 import {
   addedByLenka,
   agreementWithSimona,
@@ -92,6 +94,34 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
         created_at: item.at,
       }),
     );
+};
+
+export const toThreads = (taskId: string, slideId: string, resolved: boolean | null): Thread[] => {
+  const task = taskById(taskId);
+  if (task === undefined) return [];
+  const project = projectByCode(task.project);
+  return threads
+    .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
+    .filter((item) => resolved === null || item.open === !resolved)
+    .map((item) => ({
+      id: item.id,
+      project_id: project.id,
+      task_id: task.id,
+      slide_id: slideId,
+      title: item.title,
+      anchor: {
+        kind: item.anchor.endsWith("⁺") ? "roi" : "object",
+        object_id: item.anchor,
+        geometry: null,
+        offset: null,
+      },
+      created_by: people[item.by].id,
+      created_at: item.at,
+      resolved_at: item.open ? null : item.last,
+      resolved_by: item.open ? null : people[item.by].id,
+      message_count: item.replies + 1,
+      last_message_at: item.last,
+    }));
 };
 
 export const toSlideAgreement = (taskId: string, slideId: string): SlideAgreement =>
@@ -215,6 +245,14 @@ export function reviewHandlers(): RequestHandler[] {
       params.taskId === rt16.id ? HttpResponse.json(toReviewTaskDetail(rt16)) : undefined,
     ),
     getGetOpinionMockHandler(() => toOpinion()),
+    getListThreadsMockHandler(({ params, request }) => {
+      const asked = new URL(request.url).searchParams.get("resolved");
+      return toThreads(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        asked === null ? null : asked === "true",
+      );
+    }),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
     getSaveVerdictMockHandler(async ({ request, params }) => {
