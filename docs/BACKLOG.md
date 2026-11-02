@@ -1506,7 +1506,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-008 · Tags
+- [x] DS-008 · Tags
   Nine tag types cover the app. Status is round with a dot and a word, in the tones neutral, accent, ok, warn, bad and research. Category has square corners, is gray and may carry a 12 px icon. Object ID is monospace with a border, at 20 px and 28 px. Result set has a layers icon and a tone by its source. Count is 16 px, blue when it needs the person and gray for totals. Keycap (DS-009), token (DS-020) and filter chip, a control with a check when on, complete the set, with mock-only markers kept out of the product. Tags are 20 px, never clickable, in sentence case, and a status always has its dot and a word.
   Done when stories exist for every type and tone in both themes, and a test fails on a tag height or tone outside the set.
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
