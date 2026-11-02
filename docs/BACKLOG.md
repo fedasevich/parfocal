@@ -1630,7 +1630,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when STACK-003 and STACK-005 are confirmed for the shell.
   Size: S.
 
-- [ ] SHELL-001 · Routes and code splitting
+- [x] SHELL-001 · Routes and code splitting
   Home, My work (with its tab), project (with tab and filters), slide (with project, task, slide, camera and selected object in the URL), guided review, evaluation report, setup, settings deep links and admin as its own page. The viewer engine is split into its own chunk.
   Done when routing tests cover deep links and the initial home bundle stays under the budget set in TEST-006.
   Size: M.
