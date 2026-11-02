@@ -1,4 +1,5 @@
 import asyncio
+import gzip
 import hashlib
 import json
 import shutil
@@ -40,6 +41,7 @@ from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
 from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 from parfocal_ingest.thumbnail import previews
+from parfocal_ingest.tile_index import index_document, tile_index
 from parfocal_ingest.tissue import tissue_mask
 
 __all__ = ["INGEST", "STEP_NAMES", "Resources", "ingest_workflow"]
@@ -54,6 +56,7 @@ READER_ERRORS = (
 UNIT_PREVIEWS = 0
 UNIT_TISSUE = 1
 UNIT_RESTRICTED = 2
+TILE_INDEX_NAME = "tile-index.json"
 
 
 @dataclass(frozen=True)
@@ -237,10 +240,18 @@ def slide_id_of(results: Mapping[str, Mapping[str, Any]]) -> uuid.UUID:
 
 async def index(context: Context) -> Mapping[str, Any]:
     results = await earlier_results(context.step)
-    _, _, found = await opened(context)
+    path, identified, found = await opened(context)
     prefix = slide_prefix(context.upload.tenant_id, slide_id_of(results))
     await context.store.put_object(f"{prefix}levels.json", level_table(found), "application/json")
-    return {"levels": len(found.levels)}
+    tiles = await asyncio.to_thread(tile_index, path, identified, found)
+    if tiles is not None:
+        await context.store.put_object(
+            f"{prefix}{TILE_INDEX_NAME}",
+            gzip.compress(index_document(tiles), mtime=0),
+            "application/json",
+            content_encoding="gzip",
+        )
+    return {"levels": len(found.levels), "tile_index": tiles is not None}
 
 
 async def derive(context: Context) -> Mapping[str, Any]:

@@ -1,3 +1,4 @@
+import gzip
 import hashlib
 import io
 import json
@@ -46,6 +47,7 @@ pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 TESTS = Path(__file__).resolve().parent
 PUBLIC_FILES = {
     "levels.json",
+    "tile-index.json",
     "thumbnail.jpg",
     "overview.jpg",
     "tissue.png",
@@ -155,6 +157,10 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     ]
     assert sizes == [(0, 1, 2220, 2967)]
     assert (table["scale"]["mpp_x"], table["scale"]["mpp_y"]) == (mpp_x, mpp_y)
+    stored_index = with_store(lambda store: store.get_stored_bytes(f"{public}tile-index.json"))
+    tiles = json.loads(gzip.decompress(stored_index))
+    assert (tiles["formatId"], tiles["tileKind"]) == ("aperio-svs", "grid")
+    assert [(level["page"], level["width"]) for level in tiles["levels"]] == [(0, 2220)]
     thumbnail = with_store(lambda store: store.get_object(f"{public}thumbnail.jpg"))
     assert max(Image.open(io.BytesIO(thumbnail)).size) == THUMBNAIL_SIDE
     expected = fixture_thumbnail("CMU-1-Small-Region.svs")
