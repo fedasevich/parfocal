@@ -20,7 +20,7 @@ Presigned URLs work only on `<account>.r2.cloudflarestorage.com`, not on a custo
 
 ## The Workers Cache API does not store partial responses
 
-`cache.put` refuses 206 responses, so byte-range reads of a large SVS cannot be cached as-is. If caching is needed, store each range as a full response under a synthetic key built from object, offset and length, without the token. geotiff.js requests tile-aligned ranges, so keys repeat across users. Source: ADR 0003.
+`cache.put` refuses 206 responses, so byte-range reads of a large SVS cannot be cached as-is. If caching is needed, store each range as a full response under a synthetic key built from object, offset and length, without the token. geotiff.js requests tile-aligned ranges, so keys repeat across users. The stored copy needs `public` in `Cache-Control`, because `cache.put` refuses responses that say not to cache. `RangeCache` in `apps/edge/src/tiles.ts` does this, and it works on `workers.dev` as well as on a custom domain. A hit takes about 10 ms inside the Worker against about 60 ms for an R2 read ([result](../results/2026-11-02-tile-gateway-latency.md)). Source: ADR 0003.
 
 ## The Workers free plan runs out on tile traffic
 

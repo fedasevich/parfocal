@@ -11,6 +11,11 @@ export type TileRead = { readonly tenant: string; readonly slide: string };
 
 export type TileLog = (read: TileRead) => void;
 
+export type RangeCache = {
+  readonly store: Cache;
+  readonly keep: (work: Promise<unknown>) => void;
+};
+
 export const consoleTileLog: TileLog = ({ tenant, slide }) => {
   console.log(JSON.stringify({ tenant, slide }));
 };
@@ -20,6 +25,8 @@ type Span = { readonly offset: number; readonly length?: number } | { readonly s
 const TILES_PREFIX = "/tiles/";
 const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/;
+const CACHE_ORIGIN = "https://tile-range-cache.invalid/";
+const CACHED_FOR_SECONDS = 86_400;
 const BASE_HEADERS = {
   "Cache-Control": "private, max-age=3600",
   "Cross-Origin-Resource-Policy": "same-origin",
@@ -106,7 +113,85 @@ function objectHeaders(object: R2Object): Headers {
   return headers;
 }
 
-async function serve(request: Request, env: TileEnv, key: string, span: Span | null) {
+function timing(entries: readonly (readonly [string, number])[]): string {
+  return entries.map(([name, ms]) => `${name};dur=${ms}`).join(", ");
+}
+
+function cacheKey(key: string, span: Span | null): Request | null {
+  if (span === null) {
+    return new Request(`${CACHE_ORIGIN}${key}`);
+  }
+  if ("suffix" in span || span.length === undefined) {
+    return null;
+  }
+  return new Request(`${CACHE_ORIGIN}${key}?offset=${span.offset}&length=${span.length}`);
+}
+
+function answer(stored: Response, span: Span | null, outcome: string, ms: number): Response {
+  const size = Number(stored.headers.get("X-Object-Size"));
+  const headers = new Headers(BASE_HEADERS);
+  headers.set("Accept-Ranges", "bytes");
+  headers.set("ETag", stored.headers.get("ETag") ?? "");
+  headers.set("Content-Type", stored.headers.get("Content-Type") ?? "application/octet-stream");
+  headers.set("Content-Length", stored.headers.get("Content-Length") ?? "0");
+  headers.set("Server-Timing", `${timing([["cache", ms]])}, cache;desc=${outcome}`);
+  if (span === null || "suffix" in span) {
+    return new Response(stored.body, { status: 200, headers });
+  }
+  const length = Number(stored.headers.get("Content-Length"));
+  headers.set("Content-Range", `bytes ${span.offset}-${span.offset + length - 1}/${size}`);
+  return new Response(stored.body, { status: 206, headers });
+}
+
+async function serveCached(env: TileEnv, key: string, span: Span | null, cache: RangeCache) {
+  const lookup = cacheKey(key, span);
+  if (lookup === null) {
+    return serveFromBucket(env, key, span);
+  }
+  const started = Date.now();
+  const hit = await cache.store.match(lookup);
+  const looked = Date.now() - started;
+  if (hit !== undefined) {
+    return answer(hit, span, "hit", looked);
+  }
+  const fresh = await serveFromBucket(env, key, span, [["cache", looked]]);
+  if (fresh.status !== 200 && fresh.status !== 206) {
+    return fresh;
+  }
+  const [mine, theirs] = (fresh.body as ReadableStream).tee();
+  const stored = new Headers({
+    "Cache-Control": `public, max-age=${CACHED_FOR_SECONDS}`,
+    "Content-Length": fresh.headers.get("Content-Length") ?? "0",
+    "Content-Type": fresh.headers.get("Content-Type") ?? "application/octet-stream",
+    ETag: fresh.headers.get("ETag") ?? "",
+    "X-Object-Size": String(sizeOf(fresh)),
+  });
+  cache.keep(cache.store.put(lookup, new Response(theirs, { status: 200, headers: stored })));
+  const headers = new Headers(fresh.headers);
+  headers.append("Server-Timing", "cache;desc=miss");
+  return new Response(mine, { status: fresh.status, headers });
+}
+
+function sizeOf(response: Response): number {
+  const range = response.headers.get("Content-Range");
+  return range === null
+    ? Number(response.headers.get("Content-Length"))
+    : Number(range.slice(range.lastIndexOf("/") + 1));
+}
+
+async function serve(
+  request: Request,
+  env: TileEnv,
+  key: string,
+  span: Span | null,
+  cache: RangeCache | undefined,
+) {
+  if (request.method === "GET" && cache !== undefined) {
+    return serveCached(env, key, span, cache);
+  }
+  if (request.method === "GET") {
+    return serveFromBucket(env, key, span);
+  }
   if (request.method === "HEAD") {
     const object = await env.SLIDES.head(key);
     if (object === null) {
@@ -116,11 +201,23 @@ async function serve(request: Request, env: TileEnv, key: string, span: Span | n
     headers.set("Content-Length", String(object.size));
     return new Response(null, { status: 200, headers });
   }
+  return problem(405, "method-not-allowed", "Tiles are read only");
+}
+
+async function serveFromBucket(
+  env: TileEnv,
+  key: string,
+  span: Span | null,
+  earlier: readonly (readonly [string, number])[] = [],
+) {
+  const started = Date.now();
   const object = await env.SLIDES.get(key, span === null ? {} : { range: span });
+  const read = Date.now() - started;
   if (object === null) {
     return problem(404, "not-found", "No such file");
   }
   const headers = objectHeaders(object);
+  headers.set("Server-Timing", timing([...earlier, ["r2", read]]));
   if (span === null) {
     headers.set("Content-Length", String(object.size));
     return new Response(object.body, { status: 200, headers });
@@ -141,6 +238,7 @@ export async function handleTiles(
   env: TileEnv,
   now: Clock,
   log: TileLog = consoleTileLog,
+  cache?: RangeCache,
 ): Promise<Response> {
   const url = new URL(request.url);
   const [slide = "", name = "", ...rest] = url.pathname.slice(TILES_PREFIX.length).split("/");
@@ -174,7 +272,7 @@ export async function handleTiles(
   if (wanted !== null && overlapsRestricted(capability.restricted, wanted[0], wanted[1])) {
     return problem(403, "range-restricted", "These bytes hold a label or macro image");
   }
-  return serve(request, env, slideKey(capability, name), span);
+  return serve(request, env, slideKey(capability, name), span, cache);
 }
 
 export function isTilesPath(pathname: string): boolean {

@@ -312,7 +312,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare Durable Objects with WebSocket Hibernation, one room per case and one per user. Durable Objects carry ephemeral events only and Postgres stays the system of record. FastAPI posts events to a room over an authenticated internal route, and clients refetch on reconnect.
   Done when the spike shows presence and a thread update reaching two browsers under 300 ms on staging.
 
-- [ ] STACK-025 · Object storage, CDN and signed access
+- [x] STACK-025 · Object storage, CDN and signed access
   Candidates: S3, Google Cloud Storage, Azure Blob, Cloudflare R2, with CloudFront, Cloud CDN or Cloudflare in front. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare R2 with one bucket per environment, keys under `t/{tenant}/s/{slide}/`, and a Worker gateway under the app origin that verifies capability tokens and serves byte ranges through the R2 binding. Presigned URLs are for uploads only, because presigned GETs work only on the S3 API domain and bypass the CDN. Requirements are HTTP/2 or HTTP/3 at the edge, Range requests, signed URLs or signed cookies scoped to a tenant and slide, COOP and COEP header injection, and no SPA fallback on data paths.
   Done when a spike measures cold and warm tile fetch latency through the Worker gateway, with and without a Cache API layer keyed per byte range, for SVS byte ranges and OME-Zarr chunks.
   Refs docs 09, 20 §3.2, 32.

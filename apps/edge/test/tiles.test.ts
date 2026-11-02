@@ -8,7 +8,13 @@ import {
   signingKey,
   verifyCapability,
 } from "../src/capability.ts";
-import { consoleTileLog, handleTiles, type TileEnv, type TileRead } from "../src/tiles.ts";
+import {
+  consoleTileLog,
+  handleTiles,
+  type RangeCache,
+  type TileEnv,
+  type TileRead,
+} from "../src/tiles.ts";
 
 type Vector = {
   secret: string;
@@ -314,5 +320,127 @@ describe("tile access logs", () => {
       spy.mock.restore();
     }
     assert.deepEqual(lines, [[JSON.stringify({ tenant: TENANT, slide: SLIDE })]]);
+  });
+});
+
+class FakeCache {
+  readonly entries = new Map<string, { bytes: Uint8Array; headers: Headers }>();
+  readonly puts: string[] = [];
+  readonly pending: Promise<unknown>[] = [];
+
+  match(request: Request) {
+    const entry = this.entries.get(request.url);
+    return Promise.resolve(
+      entry === undefined
+        ? undefined
+        : new Response(entry.bytes.slice(), { headers: entry.headers }),
+    );
+  }
+
+  async put(request: Request, response: Response) {
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("Cache-Control") ?? "", /^public/);
+    this.puts.push(request.url);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    this.entries.set(request.url, { bytes, headers: new Headers(response.headers) });
+  }
+
+  layer(): RangeCache {
+    return {
+      store: this as unknown as Cache,
+      keep: (work) => {
+        this.pending.push(work);
+      },
+    };
+  }
+}
+
+async function cachedRequest(
+  bucket: FakeBucket,
+  cache: FakeCache,
+  path: string,
+  token: string,
+  range?: string,
+  method = "GET",
+): Promise<Response> {
+  const headers = new Headers({ Authorization: `Bearer ${token}` });
+  if (range !== undefined) {
+    headers.set("Range", range);
+  }
+  const env = { SLIDES: bucket as unknown as R2Bucket, TILE_TOKEN_KEY: SECRET } satisfies TileEnv;
+  const response = await handleTiles(
+    new Request(`https://parfocal.test${path}`, { method, headers }),
+    env,
+    () => NOW,
+    () => undefined,
+    cache.layer(),
+  );
+  await Promise.all(cache.pending);
+  return response;
+}
+
+describe("the byte range cache", () => {
+  test("a repeated range is served from the cache with the same bytes and range", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const first = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=100-199");
+    const firstBytes = new Uint8Array(await first.arrayBuffer());
+    await Promise.all(cache.pending);
+    const second = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=100-199");
+    assert.equal(second.status, 206);
+    assert.equal(second.headers.get("Content-Range"), `bytes 100-199/${SIZE}`);
+    assert.equal(second.headers.get("Cache-Control"), "private, max-age=3600");
+    assert.match(second.headers.get("Server-Timing") ?? "", /cache;desc=hit/);
+    assert.deepEqual(new Uint8Array(await second.arrayBuffer()), firstBytes);
+    assert.deepEqual(firstBytes, bytesOf(SIZE, 1).slice(100, 200));
+    assert.equal(bucket.reads.length, 1);
+    assert.equal(cache.puts.length, 1);
+    assert.ok(!(cache.puts[0] ?? "").includes(token));
+  });
+
+  test("a whole file is cached once and served whole", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const path = `/tiles/${SLIDE}/levels.json`;
+    await (await cachedRequest(bucket, cache, path, token)).arrayBuffer();
+    await Promise.all(cache.pending);
+    const second = await cachedRequest(bucket, cache, path, token);
+    assert.equal(second.status, 200);
+    assert.equal(await second.text(), "[]");
+    assert.equal(bucket.reads.length, 1);
+  });
+
+  test("suffix and open ended ranges skip the cache", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const suffix = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=-100");
+    const open = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=9900-");
+    assert.equal(suffix.status, 206);
+    assert.equal(open.status, 206);
+    assert.equal(cache.puts.length, 0);
+  });
+
+  test("a restricted range is refused before the cache is touched", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const response = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=4500-4599");
+    assert.equal(response.status, 403);
+    assert.equal(cache.puts.length, 0);
+    assert.equal(bucket.reads.length, 0);
+  });
+
+  test("HEAD and missing files are never cached", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const head = await cachedRequest(bucket, cache, ORIGINAL, token, undefined, "HEAD");
+    const missing = await cachedRequest(bucket, cache, `/tiles/${SLIDE}/nothing.bin`, token);
+    assert.equal(head.status, 200);
+    assert.equal(missing.status, 404);
+    assert.equal(cache.puts.length, 0);
   });
 });

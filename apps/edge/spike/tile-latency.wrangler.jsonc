@@ -1,0 +1,7 @@
+{
+  "name": "parfocal-edge-spike",
+  "main": "../src/tile-spike.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-dev" }]
+}
