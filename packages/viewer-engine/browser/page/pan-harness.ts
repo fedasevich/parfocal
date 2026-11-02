@@ -20,9 +20,26 @@ export interface PanSlide {
   readonly formatId: SlideFormatId;
   readonly workers: number;
   readonly reader: "shared-bytes" | "geotiff-direct";
+  readonly magnification: number | null;
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface JumpTarget {
   readonly magnification: number;
   readonly x: number;
   readonly y: number;
+}
+
+export interface Opened {
+  readonly openMs: number;
+  readonly decode: DecodeStats | null;
+}
+
+export interface JumpReport {
+  readonly sharpMs: number;
+  readonly decode: DecodeStats | null;
+  readonly errors: readonly string[];
 }
 
 export interface PanLeg {
@@ -41,7 +58,8 @@ export interface PanReport {
 }
 
 export interface PanHarness {
-  open(slide: PanSlide): Promise<{ readonly decode: DecodeStats | null }>;
+  open(slide: PanSlide): Promise<Opened>;
+  jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport>;
   pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<PanReport>;
   close(): void;
 }
@@ -75,8 +93,9 @@ function mounted(): { engine: ViewerEngine; route: VivRoute } {
   return { engine, route };
 }
 
-async function open(slide: PanSlide) {
+async function open(slide: PanSlide): Promise<Opened> {
   close();
+  const started = performance.now();
   const factory = vivRendererFactory({
     decodeWorkers: slide.workers,
     useDevicePixels: 1,
@@ -104,14 +123,34 @@ async function open(slide: PanSlide) {
   engine = current;
   current.mount(viewer());
   const opened = await current.openSlide({ id: slide.url });
-  if (opened.micronsPerPixel === null) throw new Error("The slide has no pixel size");
-  current.setCamera({
-    x: slide.x,
-    y: slide.y,
-    zoom: zoomForMagnification(opened.micronsPerPixel, slide.magnification),
-  });
+  if (slide.magnification !== null) {
+    if (opened.micronsPerPixel === null) throw new Error("The slide has no pixel size");
+    current.setCamera({
+      x: slide.x,
+      y: slide.y,
+      zoom: zoomForMagnification(opened.micronsPerPixel, slide.magnification),
+    });
+  }
   await mounted().route.whenIdle();
-  return { decode: mounted().route.decodeStats() };
+  return { openMs: performance.now() - started, decode: mounted().route.decodeStats() };
+}
+
+async function jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport> {
+  const { engine: current, route: shown } = mounted();
+  const micronsPerPixel = current.getSlide()?.micronsPerPixel ?? null;
+  if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
+  const started = performance.now();
+  current.setCamera({
+    x: target.x,
+    y: target.y,
+    zoom: zoomForMagnification(micronsPerPixel, target.magnification),
+  });
+  await shown.whenIdle(AbortSignal.timeout(settleTimeoutMs));
+  return {
+    sharpMs: performance.now() - started,
+    decode: shown.decodeStats(),
+    errors: [...errors],
+  };
 }
 
 async function pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<PanReport> {
@@ -151,4 +190,4 @@ function close(): void {
   errors.length = 0;
 }
 
-window.panHarness = { open, pan, close };
+window.panHarness = { open, jump, pan, close };

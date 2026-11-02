@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { build } from "vite";
+import { checkBudget } from "../../../scripts/perf-budgets.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -29,7 +30,7 @@ async function buildProd(): Promise<{ built: Built; cleanup: () => Promise<void>
   );
   const names = (await readdir(join(outDir, "assets"))).map((name) => `assets/${name}`);
   const sizes = new Map<string, number>();
-  for (const name of initial) {
+  for (const name of names.filter((entry) => /\.(?:js|css)$/.test(entry))) {
     sizes.set(name, gzipSync(await readFile(join(outDir, name))).length);
   }
   return {
@@ -50,7 +51,7 @@ const splitChunks = [
   "home-screen-",
 ];
 
-test("the first page loads no viewer engine and no other route, and stays under the bundle budget", async () => {
+test("the first page loads no viewer engine and no other route, and every bundle stays under its budget", async () => {
   const { built, cleanup } = await buildProd();
   try {
     for (const chunk of splitChunks) {
@@ -66,14 +67,17 @@ test("the first page loads no viewer engine and no other route, and stays under 
     for (const name of built.initial) {
       assert.doesNotMatch(name, /zstd|blosc|lz4|openjpeg|lerc/);
     }
-    const budget = JSON.parse(await readFile(join(root, "bundle-budget.json"), "utf8")) as {
-      initialHomeGzipBytes: number;
-    };
-    const total = built.initial.reduce((sum, name) => sum + built.gzipBytes(name), 0);
-    assert.ok(
-      total <= budget.initialHomeGzipBytes,
-      `the first page loads ${total} bytes gzip, budget ${budget.initialHomeGzipBytes}`,
+    const firstPage = built.initial.reduce((sum, name) => sum + built.gzipBytes(name), 0);
+    const viewerEngine = built.names
+      .filter((name) => name.includes("viewer-engine-"))
+      .reduce((sum, name) => sum + built.gzipBytes(name), 0);
+    const allCode = built.names.reduce((sum, name) => sum + built.gzipBytes(name), 0);
+    console.log(
+      `gzip bytes: first page ${firstPage}, viewer engine ${viewerEngine}, all JS and CSS ${allCode}`,
     );
+    await checkBudget("web.first-page-gzip-bytes", firstPage);
+    await checkBudget("web.viewer-engine-gzip-bytes", viewerEngine);
+    await checkBudget("web.all-code-gzip-bytes", allCode);
   } finally {
     await cleanup();
   }

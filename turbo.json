@@ -1,7 +1,14 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "agentGuidance": false,
-  "globalDependencies": [".node-version", ".python-version", "pyproject.toml", "uv.lock"],
+  "globalDependencies": [
+    ".node-version",
+    ".python-version",
+    "pyproject.toml",
+    "uv.lock",
+    "perf-budgets.json",
+    "scripts/perf-budgets.ts"
+  ],
   "globalEnv": ["APP_ENV"],
   "tasks": {
     "topo": {
