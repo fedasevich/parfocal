@@ -1,5 +1,6 @@
 import { type MyTask, type SlideRow, useGetMe } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
+import { FilterChip } from "@parfocal/ui/components/filter-chip";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
@@ -18,6 +19,13 @@ import {
   useOpenThreads,
   useSetLook,
 } from "./parts.tsx";
+import {
+  activeFilterCount,
+  filterChoices,
+  type SlideFilterValues,
+  statusChoices,
+  withFilter,
+} from "./slide-filters.ts";
 
 const reviewWords: Record<string, { word: string; tone: string }> = {
   "in-review": { word: "in review", tone: "text-accent" },
@@ -30,8 +38,6 @@ function statusOf(row: SlideRow) {
   if (row.reviews.length > 0) return <StatusTag tone="accent">in review</StatusTag>;
   return <StatusTag>ready</StatusTag>;
 }
-
-const filters = ["Project: all", "Status: any", "Has results", "Reviewer: any", "Remote"];
 
 function SlidePreview({
   row,
@@ -120,22 +126,30 @@ function SlidePreview({
 
 export function AllSlidesTab({
   rows,
+  everyRow,
   tasks,
   query,
   onQuery,
+  filters,
+  onFilters,
   selected,
   onSelect,
 }: {
   rows: SlideRow[];
+  everyRow: SlideRow[];
   tasks: MyTask[];
   query: string;
   onQuery: (query: string) => void;
+  filters: SlideFilterValues;
+  onFilters: (filters: SlideFilterValues) => void;
   selected: string | undefined;
   onSelect: (key: string | undefined) => void;
 }) {
   const people = usePeople();
   const look = useSetLook(rows[0]?.project.id);
   const preview = rows.find((row) => row.id === selected);
+  const choices = filterChoices(everyRow, (userId) => people(userId)?.name ?? "Reviewer");
+  const active = activeFilterCount(filters);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -149,12 +163,55 @@ export function AllSlidesTab({
             className="min-w-0 flex-1 border-0 bg-transparent text-fg outline-none placeholder:text-fg-faint"
           />
         </label>
-        {filters.map((filter) => (
-          <Button key={filter} size="sm">
-            {filter}
-            <Icon name="down" />
+        <FilterChip
+          label="Project"
+          anyLabel="all"
+          options={choices.projects}
+          value={filters.project}
+          onValueChange={(value) => onFilters(withFilter(filters, "project", value))}
+        />
+        <FilterChip
+          label="Status"
+          options={statusChoices}
+          value={filters.status}
+          onValueChange={(value) =>
+            onFilters(
+              withFilter(
+                filters,
+                "status",
+                statusChoices.find((choice) => choice.value === value)?.value,
+              ),
+            )
+          }
+        />
+        <FilterChip
+          label="Result set"
+          options={choices.sets}
+          value={filters.set}
+          onValueChange={(value) => onFilters(withFilter(filters, "set", value))}
+        />
+        <FilterChip
+          label="Reviewer"
+          options={choices.reviewers}
+          value={filters.reviewer}
+          onValueChange={(value) => onFilters(withFilter(filters, "reviewer", value))}
+        />
+        {active > 0 ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              onFilters({
+                project: undefined,
+                status: undefined,
+                set: undefined,
+                reviewer: undefined,
+              })
+            }
+          >
+            Clear filters
           </Button>
-        ))}
+        ) : null}
       </div>
       <div
         className={`mt-1 grid items-start gap-5 ${preview ? "grid-cols-[minmax(0,1fr)_360px]" : "grid-cols-[minmax(0,1fr)]"}`}
@@ -228,6 +285,11 @@ export function AllSlidesTab({
             })}
           </tbody>
         </table>
+        {rows.length === 0 ? (
+          <p className="m-0 py-6 text-center text-body-sm text-fg-dim">
+            {active > 0 || query ? "No slide matches these filters." : "No slides yet."}
+          </p>
+        ) : null}
         {preview ? (
           <SlidePreview row={preview} tasks={tasks} onClose={() => onSelect(undefined)} />
         ) : null}

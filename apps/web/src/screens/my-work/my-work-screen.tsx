@@ -14,9 +14,13 @@ import { okData } from "../placeholder.tsx";
 import { AllSlidesTab } from "./all-slides-tab.tsx";
 import { AssignedTab } from "./assigned-tab.tsx";
 import type { MyWorkState, MyWorkTab } from "./scenes.ts";
+import { slideQuery } from "./slide-filters.ts";
 import { activeTasks, adjudicationKey, ToReviewTab } from "./to-review-tab.tsx";
 
-type Change = Partial<Omit<MyWorkState, "q">> & { q?: string | undefined };
+type Change = Partial<Omit<MyWorkState, "q" | "filters">> & {
+  q?: string | undefined;
+  filters?: MyWorkState["filters"];
+};
 
 export function MyWorkScreen({
   state,
@@ -29,7 +33,8 @@ export function MyWorkScreen({
   const tasks = okData(useListMyReviewTasks().data) ?? [];
   const adjudications = useListMyAdjudications().data?.data ?? [];
   const assigned = okData(useListTasksAssignedByMe().data) ?? [];
-  const slides = okData(useListMySlides(state.q ? { q: state.q } : undefined).data)?.slides ?? [];
+  const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
+  const everySlide = okData(useListMySlides().data)?.slides ?? [];
   const active = activeTasks(tasks);
   const toReview = active.length + adjudications.length;
   const reviewKeys = [...adjudications.map(adjudicationKey), ...active.map((task) => task.id)];
@@ -112,7 +117,10 @@ export function MyWorkScreen({
         {state.tab === "all" ? (
           <AllSlidesTab
             rows={slides}
+            everyRow={everySlide}
             tasks={tasks}
+            filters={state.filters}
+            onFilters={(filters) => change({ filters, sel: undefined })}
             query={state.q}
             onQuery={(q) => change({ q: q || undefined })}
             selected={state.sel}
