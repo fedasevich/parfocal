@@ -210,7 +210,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR covers caching, invalidation from realtime events (STACK-024), optimistic updates with retry for annotation edits, and suspense usage.
   Decided in [ADR 0049](adr/0049-server-state-and-data-fetching.md): TanStack Query v5 on the generated client, with invalidation from realtime events.
 
-- [ ] STACK-005 · Client UI state
+- [x] STACK-005 · Client UI state
   Candidates: Zustand, Jotai, Redux Toolkit, XState for the complex state machines. Default: Zustand for app UI state (panels, tools, workspace, selection), and XState only where a real state machine helps (smart minimap, review loop, one-click prompt flow).
   Done when the ADR defines which state lives where: server state in Query, UI state in Zustand, URL state in the router, and viewer hot state outside React (STACK-006).
 
