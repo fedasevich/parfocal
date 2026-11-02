@@ -2005,7 +2005,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the minimap state machine and placement algorithm are written as an ADR from kit and mock specs.
   Size: S.
 
-- [ ] NAV-001 · Magnification bar
+- [x] NAV-001 · Magnification bar
   Presets 1.25×, 2.5×, 5×, 10×, 20×, 40× with Alt+1 to Alt+6, nearest preset highlighted, option to label as zoom percent. Folded by default to a chip with the magnification and the scale bar, opening to the presets, readout and brightness on hover and focus, while Alt plus a number is held, for 2 s after a zoom and while the brightness popover is open. Brightness shows when folded only if it is not 100%. No animation under reduced motion. Overlays that keep clear of the bar use its current size ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when tests cover preset jumps, highlighting at intermediate zooms, each way the chip opens and folds back, and the blocked area in both states.
   Refs mock §2.6.
