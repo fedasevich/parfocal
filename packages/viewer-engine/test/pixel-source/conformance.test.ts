@@ -138,6 +138,23 @@ pixelSourceConformance(
     }),
   { levels: 2, photometric: "rgb", dtype: "uint8", micronsPerPixel: 0.25 },
 );
+pixelSourceConformance(
+  "geotiff, levels found by their stored size in a slide index",
+  () =>
+    openTiffSource({
+      formatId: "generic-tiff",
+      url: served.url("/synthetic/synthetic-jpeg.tiff"),
+      index: {
+        formatId: "generic-tiff",
+        levels: [
+          { stored: { width: 1024, height: 768 }, downsample: 1, width: 1024, height: 768 },
+          { stored: { width: 256, height: 192 }, downsample: 4, width: 256, height: 192 },
+        ],
+        micronsPerPixel: { x: 0.25, y: 0.25 },
+      },
+    }),
+  { levels: 2, photometric: "rgb", dtype: "uint8", micronsPerPixel: 0.25 },
+);
 
 const rgb8 = { photometric: "rgb", dtype: "uint8" } as const;
 

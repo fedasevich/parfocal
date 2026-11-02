@@ -34,6 +34,7 @@ export {
   type SlideIndex,
   type SlideIndexLevel,
   SourceClosedError,
+  type StoredSize,
   slideFormatIds,
   type TileRequest,
   UnsupportedCodecError,

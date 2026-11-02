@@ -1,6 +1,21 @@
 export const packageName = "@parfocal/viewer-engine";
 
-export type { Mint, MintedAccess } from "./access/tile-access.ts";
+export {
+  createSlideAccess,
+  LEVEL_TABLE_FILE,
+  type LevelTable,
+  LevelTableError,
+  type LevelTableLevel,
+  parseLevelTable,
+  type SignedSlideOptions,
+  type SlideAccess,
+  SlideBytesError,
+  signedOpenRequest,
+  slideFormatFromName,
+  slideIndexFromLevelTable,
+  type TileGrant,
+} from "./access/signed-slide.ts";
+export type { Fetcher, Mint, MintedAccess } from "./access/tile-access.ts";
 export { TileAccess } from "./access/tile-access.ts";
 
 export type {

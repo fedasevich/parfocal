@@ -93,13 +93,15 @@ function fixtureServer(): Plugin {
   };
 }
 
-export async function startVivHarness(): Promise<ViteDevServer> {
+export async function startVivHarness(
+  extraPlugins: readonly Plugin[] = [],
+): Promise<ViteDevServer> {
   const server = await createServer({
     root: harnessRoot,
     configFile: false,
     logLevel: "error",
     clearScreen: false,
-    plugins: [fixtureServer()],
+    plugins: [...extraPlugins, fixtureServer()],
     server: { host: "127.0.0.1", port: 0, strictPort: false },
   });
   await server.listen();

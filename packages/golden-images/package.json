@@ -20,6 +20,7 @@
     "pngjs": "7.0.0"
   },
   "devDependencies": {
+    "@parfocal/edge": "workspace:*",
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@parfocal/viewer-engine": "workspace:*",

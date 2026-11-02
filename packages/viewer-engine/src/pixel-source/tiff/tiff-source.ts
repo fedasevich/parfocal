@@ -15,6 +15,7 @@ import {
   type PixelSource,
   type PixelWindow,
   type RasterRequest,
+  type SlideIndexLevel,
   SourceClosedError,
   type TileRequest,
 } from "../types.ts";
@@ -146,6 +147,32 @@ function layoutOf(image: GeoTIFFImage): Layout {
   throw new Error(`Unsupported photometric interpretation ${photometric} with ${dtype} samples`);
 }
 
+function indexedPage(pages: readonly TiffPage[], level: SlideIndexLevel): TiffPage {
+  if (level.page !== undefined) {
+    const named = pages.find(
+      (candidate) => candidate.ifd === level.page && candidate.subIfd === null,
+    );
+    if (named === undefined)
+      throw new Error(`The slide index names page ${level.page}, which the file lacks`);
+    return named;
+  }
+  const { stored } = level;
+  if (stored === undefined) throw new Error("A slide index level needs a page or a stored size");
+  const sized = pages.find(
+    (candidate) =>
+      candidate.subIfd === null &&
+      candidate.image.isTiled &&
+      candidate.image.getWidth() === stored.width &&
+      candidate.image.getHeight() === stored.height,
+  );
+  if (sized === undefined) {
+    throw new Error(
+      `The slide index names a ${stored.width} x ${stored.height} level, which the file lacks`,
+    );
+  }
+  return sized;
+}
+
 async function chooseLevels(
   pages: readonly TiffPage[],
   request: OpenRequest,
@@ -154,11 +181,7 @@ async function chooseLevels(
   if (indexed !== undefined && indexed.length > 0) {
     return Promise.all(
       indexed.map(async (level) => {
-        const page = pages.find(
-          (candidate) => candidate.ifd === level.page && candidate.subIfd === null,
-        );
-        if (page === undefined)
-          throw new Error(`The slide index names page ${level.page}, which the file lacks`);
+        const page = indexedPage(pages, level);
         return describe(page, level.downsample, level.width, level.height);
       }),
     );

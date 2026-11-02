@@ -128,8 +128,14 @@ export interface PixelSource {
   close(): void;
 }
 
+export interface StoredSize {
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface SlideIndexLevel {
-  readonly page: number;
+  readonly page?: number;
+  readonly stored?: StoredSize;
   readonly downsample: number;
   readonly width: number;
   readonly height: number;
