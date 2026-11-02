@@ -62,7 +62,7 @@ export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
         kind: item.kind,
         number: index + 1,
         value: decision.value,
-        reason: decision.reason,
+        reasons: decision.reason ? [decision.reason] : [],
         reason_class_id: null,
         note: decision.note,
         updated_at: reviewDecisionTimes(index),

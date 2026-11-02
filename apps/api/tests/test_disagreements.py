@@ -8,12 +8,12 @@ pytestmark = pytest.mark.db
 VERDICTS = {
     "first": {
         "T1": {"value": "agree"},
-        "T2": {"value": "disagree", "reason": "not_class"},
+        "T2": {"value": "disagree", "reasons": ["not_class"]},
         "C1": {"value": "agree"},
     },
     "second": {
-        "T1": {"value": "disagree", "reason": "boundary_off"},
-        "T2": {"value": "disagree", "reason": "artefact"},
+        "T1": {"value": "disagree", "reasons": ["boundary_off"]},
+        "T2": {"value": "disagree", "reasons": ["artefact"]},
         "C1": {"value": "agree"},
     },
 }

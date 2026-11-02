@@ -50,20 +50,32 @@ REASONS = {
     ),
 }
 
+UNSURE_REASONS = frozenset(
+    {
+        VerdictReason.NEED_DEEPER_LEVEL,
+        VerdictReason.NEED_IHC,
+        VerdictReason.BORDER_UNCLEAR,
+        VerdictReason.OUT_OF_FOCUS,
+    }
+)
+
 type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
 
 
 class VerdictDraft(BaseModel):
     value: VerdictValue
-    reason: VerdictReason | None = None
+    reasons: list[VerdictReason] = []
     reason_class_id: uuid.UUID | None = None
     note: Note | None = None
 
     @model_validator(mode="after")
-    def reason_fits_value(self) -> VerdictDraft:
-        if (self.value is VerdictValue.DISAGREE) != (self.reason is not None):
-            raise ValueError("Disagree needs a reason, and only disagree has one")
-        if (self.reason is VerdictReason.WRONG_CLASS) != (self.reason_class_id is not None):
+    def reasons_fit_value(self) -> VerdictDraft:
+        self.reasons = sorted(set(self.reasons))
+        if self.value is VerdictValue.AGREE and self.reasons:
+            raise ValueError("Agree takes no reason")
+        if self.value is VerdictValue.UNSURE and not UNSURE_REASONS.issuperset(self.reasons):
+            raise ValueError("Unsure takes only the unsure reasons")
+        if (VerdictReason.WRONG_CLASS in self.reasons) != (self.reason_class_id is not None):
             raise ValueError("Wrong class names the right class, and only it does")
         return self
 
@@ -73,7 +85,7 @@ class Verdict(BaseModel):
     kind: AnnotationKind
     number: int
     value: VerdictValue
-    reason: VerdictReason | None
+    reasons: list[VerdictReason]
     reason_class_id: uuid.UUID | None
     note: str | None
     updated_at: datetime
@@ -97,7 +109,7 @@ def verdict_of(row: Any) -> Verdict:
         kind=kind,
         number=row.number,
         value=VerdictValue(row.value),
-        reason=VerdictReason(row.reason) if row.reason else None,
+        reasons=[VerdictReason(code) for code in row.reasons],
         reason_class_id=row.reason_class_id,
         note=row.note,
         updated_at=row.updated_at,
@@ -205,22 +217,24 @@ async def save_verdict(
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
-    if draft.reason is not None and draft.reason not in REASONS[kind]:
-        raise ReasonNotForKindError(f"{draft.reason} is not a reason for a {kind}")
+    if draft.value is VerdictValue.DISAGREE:
+        for reason in draft.reasons:
+            if reason not in REASONS[kind]:
+                raise ReasonNotForKindError(f"{reason} is not a reason for a {kind}")
     await check_exists(connection, row, found)
     if draft.reason_class_id is not None:
         await check_classes(connection, row.project_id, {draft.reason_class_id})
     me = user_of(principal)
     previous = (
         await connection.execute(
-            select(verdicts.c.reason, verdicts.c.reason_class_id).where(
+            select(verdicts.c.reason_class_id).where(
                 *same_object(verdicts, task_id, slide_id, me, kind, found.number)
             )
         )
     ).one_or_none()
     values = {
         "value": draft.value,
-        "reason": draft.reason,
+        "reasons": [reason.value for reason in draft.reasons],
         "reason_class_id": draft.reason_class_id,
         "note": draft.note or None,
     }
@@ -259,7 +273,7 @@ async def save_verdict(
         {
             "object": found.text(ascii=True),
             "value": draft.value.value,
-            "reason": draft.reason.value if draft.reason else None,
+            "reasons": [reason.value for reason in draft.reasons],
         },
     )
     saved = (

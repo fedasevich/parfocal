@@ -29,17 +29,18 @@ def test_each_verdict_is_saved_listed_and_audited(api: ApiAs, database: str) -> 
     agree = verdict(api, r, "first", "T1", {"value": "agree"})
     assert agree.status_code == 200, agree.text
     assert agree.json()["object"] == "T1"
-    assert verdict(api, r, "first", "T2", {"value": "unsure"}).status_code == 200
+    unsure = verdict(api, r, "first", "T2", {"value": "unsure", "reasons": ["need_ihc"]})
+    assert unsure.json()["reasons"] == ["need_ihc"]
     note = "Looks like a crush artefact near the edge"
     disagree = verdict(
-        api, r, "first", "C1", {"value": "disagree", "reason": "not_a_cell", "note": note}
+        api, r, "first", "C1", {"value": "disagree", "reasons": ["not_a_cell"], "note": note}
     )
     assert disagree.json()["note"] == note
     mine = listed(api, r, "first").json()
-    assert [(v["object"], v["value"], v["reason"]) for v in mine] == [
-        ("C1", "disagree", "not_a_cell"),
-        ("T1", "agree", None),
-        ("T2", "unsure", None),
+    assert [(v["object"], v["value"], v["reasons"]) for v in mine] == [
+        ("C1", "disagree", ["not_a_cell"]),
+        ("T1", "agree", []),
+        ("T2", "unsure", ["need_ihc"]),
     ]
     actions = owner(
         database,
@@ -52,8 +53,8 @@ def test_each_verdict_is_saved_listed_and_audited(api: ApiAs, database: str) -> 
 def test_a_verdict_changes_and_clearing_is_undo(api: ApiAs, database: str) -> None:
     r = review(api, database)
     verdict(api, r, "first", "T1", {"value": "agree"})
-    changed = verdict(api, r, "first", "T1", {"value": "disagree", "reason": "boundary_off"})
-    assert (changed.json()["value"], changed.json()["reason"]) == ("disagree", "boundary_off")
+    changed = verdict(api, r, "first", "T1", {"value": "disagree", "reasons": ["boundary_off"]})
+    assert (changed.json()["value"], changed.json()["reasons"]) == ("disagree", ["boundary_off"])
     assert len(listed(api, r, "first").json()) == 1
     assert api(r.people["first"]).delete(f"{r.base}/verdicts/T1").status_code == 204
     assert listed(api, r, "first").json() == []
@@ -66,7 +67,7 @@ def test_a_verdict_changes_and_clearing_is_undo(api: ApiAs, database: str) -> No
 def test_wrong_class_retypes_the_cell_in_the_layer_together(api: ApiAs, database: str) -> None:
     r = review(api, database)
     tumor = str(r.tumor)
-    wrong = {"value": "disagree", "reason": "wrong_class", "reason_class_id": tumor}
+    wrong = {"value": "disagree", "reasons": ["wrong_class"], "reason_class_id": tumor}
     assert verdict(api, r, "first", "C2", wrong).status_code == 200
     assert layer_classes(api, r) == {"C2": (tumor, False)}
     assert verdict(api, r, "first", "C2", {"value": "agree"}).status_code == 200
@@ -77,15 +78,52 @@ def test_wrong_class_retypes_the_cell_in_the_layer_together(api: ApiAs, database
     assert layer_classes(api, r) == {"C2": (None, True)}
 
 
+def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    bare = verdict(api, r, "first", "T1", {"value": "disagree"})
+    assert (bare.status_code, bare.json()["reasons"]) == (200, []), bare.text
+    several = verdict(
+        api,
+        r,
+        "first",
+        "T2",
+        {"value": "disagree", "reasons": ["two_regions", "boundary_off", "two_regions"]},
+    )
+    assert several.json()["reasons"] == ["boundary_off", "two_regions"]
+    tumor = str(r.tumor)
+    retyped = verdict(
+        api,
+        r,
+        "first",
+        "C2",
+        {"value": "disagree", "reasons": ["boundary_off", "wrong_class"], "reason_class_id": tumor},
+    )
+    assert retyped.json()["reasons"] == ["boundary_off", "wrong_class"]
+    assert layer_classes(api, r) == {"C2": (tumor, False)}
+    audited = owner(
+        database,
+        f"SELECT details::jsonb -> 'reasons' FROM audit_events WHERE target_id = '{r.task}' "
+        "AND action = 'review.verdict-set' ORDER BY seq",
+    )
+    assert [row[0] for row in audited] == [
+        [],
+        ["boundary_off", "two_regions"],
+        ["boundary_off", "wrong_class"],
+    ]
+
+
 @pytest.mark.parametrize(
     ("object_id", "body", "status", "code"),
     [
-        ("T1", {"value": "disagree"}, 422, "validation"),
-        ("T1", {"value": "agree", "reason": "artefact"}, 422, "validation"),
-        ("C1", {"value": "disagree", "reason": "wrong_class"}, 422, "validation"),
+        ("T1", {"value": "agree", "reasons": ["artefact"]}, 422, "validation"),
+        ("T1", {"value": "agree", "reasons": ["need_ihc"]}, 422, "validation"),
+        ("T1", {"value": "unsure", "reasons": ["artefact"]}, 422, "validation"),
+        ("T1", {"value": "unsure", "reasons": ["maybe"]}, 422, "validation"),
+        ("C1", {"value": "disagree", "reasons": ["wrong_class"]}, 422, "validation"),
         ("T1", {"value": "maybe"}, 422, "validation"),
-        ("T1", {"value": "disagree", "reason": "not_a_cell"}, 400, "reason-not-for-kind"),
-        ("C1", {"value": "disagree", "reason": "two_regions"}, 400, "reason-not-for-kind"),
+        ("T1", {"value": "disagree", "reasons": ["not_a_cell"]}, 400, "reason-not-for-kind"),
+        ("C1", {"value": "disagree", "reasons": ["two_regions"]}, 400, "reason-not-for-kind"),
+        ("T1", {"value": "disagree", "reasons": ["need_ihc"]}, 400, "reason-not-for-kind"),
         ("T9", {"value": "agree"}, 404, "unknown-object"),
         ("R1", {"value": "agree"}, 400, "not-an-ai-object"),
         ("T1", {"value": "agree", "note": "x" * 501}, 422, "validation"),

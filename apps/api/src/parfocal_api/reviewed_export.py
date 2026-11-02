@@ -160,7 +160,7 @@ async def layer_items(
                     "ai_class": ai_class,
                     "changed": changed,
                     "verdict": verdict.value if verdict else None,
-                    "reason": verdict.reason if verdict else None,
+                    "reasons": list(verdict.reasons) if verdict else [],
                 },
             )
         )

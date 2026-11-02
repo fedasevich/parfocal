@@ -32,7 +32,7 @@ from parfocal_common.object_ids import Letter, ObjectId
 class ReviewerVerdict(BaseModel):
     user_id: uuid.UUID
     value: VerdictValue
-    reason: VerdictReason | None
+    reasons: list[VerdictReason]
 
 
 class QueuedObject(BaseModel):
@@ -123,7 +123,7 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
                     ReviewerVerdict(
                         user_id=row.user_id,
                         value=VerdictValue(row.value),
-                        reason=VerdictReason(row.reason) if row.reason else None,
+                        reasons=[VerdictReason(code) for code in row.reasons],
                     )
                     for row in rows
                 ],

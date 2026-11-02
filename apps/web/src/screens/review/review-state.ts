@@ -19,7 +19,7 @@ export function answerFromVerdict(
   return {
     value: verdict.value,
     raw: rawFor(style, verdict.value, object),
-    reasons: verdict.reason ? [reasonText[verdict.reason] ?? verdict.reason] : [],
+    reasons: verdict.reasons.map((code) => reasonText[code] ?? code),
     note: verdict.note,
   };
 }

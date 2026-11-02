@@ -3203,10 +3203,7 @@ export const getSaveVerdictResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
   number: faker.number.int(),
   value: faker.helpers.arrayElement(Object.values(VerdictValue)),
-  reason: faker.helpers.arrayElement([
-    faker.helpers.arrayElement(Object.values(VerdictReason)),
-    null,
-  ]),
+  reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
   reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -3219,10 +3216,7 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
     kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
     number: faker.number.int(),
     value: faker.helpers.arrayElement(Object.values(VerdictValue)),
-    reason: faker.helpers.arrayElement([
-      faker.helpers.arrayElement(Object.values(VerdictReason)),
-      null,
-    ]),
+    reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
     reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
     updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -3483,10 +3477,7 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
       () => ({
         user_id: faker.string.uuid(),
         value: faker.helpers.arrayElement(Object.values(VerdictValue)),
-        reason: faker.helpers.arrayElement([
-          faker.helpers.arrayElement(Object.values(VerdictReason)),
-          null,
-        ]),
+        reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
       }),
     ),
     decision: faker.helpers.arrayElement([
@@ -3508,10 +3499,7 @@ export const getDecideDisagreementResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
-      reason: faker.helpers.arrayElement([
-        faker.helpers.arrayElement(Object.values(VerdictReason)),
-        null,
-      ]),
+      reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
     }),
   ),
   decision: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Decision)), null]),

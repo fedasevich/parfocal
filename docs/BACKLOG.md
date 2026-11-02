@@ -3464,7 +3464,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when component tests cover writing, editing and cancelling a note with each decision, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
   Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
 
-- [ ] GUIDE-011 · Optional and several reasons, reasons on Unsure
+- [x] GUIDE-011 · Optional and several reasons, reasons on Unsure
   The decision API takes zero or more reason codes on Disagree instead of exactly one, and Unsure takes the optional codes `need_deeper_level`, `need_ihc`, `border_unclear` and `out_of_focus`. Existing decisions keep their single reason as a set of one. The evaluation report counts each code of a decision once ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md), amending [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md)).
   Done when API tests cover Disagree with no reason and with several, Unsure with a code, a refused Agree with a code and the migrated rows, and EVAL tests count several codes per decision.
   Depends on GUIDE-001, EVAL-001.

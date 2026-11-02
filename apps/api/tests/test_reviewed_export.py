@@ -89,12 +89,12 @@ def test_the_consensus_keeps_agreed_regions_and_merges_added_ones(
     assert second.put(f"{r.base}/verdicts/T1", json={"value": "agree"}).status_code == 200
     assert (
         second.put(
-            f"{r.base}/verdicts/T2", json={"value": "disagree", "reason": "artefact"}
+            f"{r.base}/verdicts/T2", json={"value": "disagree", "reasons": ["artefact"]}
         ).status_code
         == 200
     )
     api(r.people["first"]).put(
-        f"{r.base}/verdicts/T2", json={"value": "disagree", "reason": "artefact"}
+        f"{r.base}/verdicts/T2", json={"value": "disagree", "reasons": ["artefact"]}
     )
     near = api(r.people["second"]).post(
         f"{r.base}/added", json={"kind": "region", "geometry": NEARLY, "class_id": str(r.tumor)}

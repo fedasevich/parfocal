@@ -512,7 +512,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             kind="region",
             number=1,
             value="disagree",
-            reason="not_class",
+            reasons=["not_class"],
             note=verdict_note,
         )
     )

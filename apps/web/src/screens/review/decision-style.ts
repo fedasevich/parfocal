@@ -180,4 +180,8 @@ export const reasonText: Record<string, string> = {
   artefact: "Artefact or fold",
   not_a_cell: "Not a cell",
   wrong_class: "It is an immune cell",
+  need_deeper_level: "Need a deeper level",
+  need_ihc: "Need IHC",
+  border_unclear: "Border unclear",
+  out_of_focus: "Out of focus",
 };

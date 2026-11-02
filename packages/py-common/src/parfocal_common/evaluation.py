@@ -24,7 +24,7 @@ class Consensus(StrEnum):
 @dataclass(frozen=True)
 class Verdict:
     value: str
-    reason: str | None = None
+    reasons: tuple[str, ...] = ()
     reason_class: str | None = None
 
 
@@ -124,8 +124,8 @@ def retyped_to(item: AiObject) -> str | None:
     if consensus(item) is not Consensus.DISAGREE:
         return None
     disagreeing = [v for v in item.verdicts.values() if v.value == DISAGREE]
-    classes = {v.reason_class for v in disagreeing if v.reason == WRONG_CLASS}
-    if disagreeing and len(classes) == 1 and all(v.reason == WRONG_CLASS for v in disagreeing):
+    classes = {v.reason_class for v in disagreeing if WRONG_CLASS in v.reasons}
+    if disagreeing and len(classes) == 1 and all(WRONG_CLASS in v.reasons for v in disagreeing):
         return classes.pop()
     return None
 
@@ -236,10 +236,11 @@ def cell_agreement(objects: Iterable[AiObject]) -> tuple[Ratio, Ratio]:
 
 def reasons(objects: Iterable[AiObject]) -> list[tuple[str, int]]:
     counted = Counter(
-        verdict.reason
+        reason
         for item in objects
         for verdict in item.verdicts.values()
-        if verdict.value == DISAGREE and verdict.reason
+        if verdict.value == DISAGREE
+        for reason in set(verdict.reasons)
     )
     return sorted(counted.items(), key=lambda pair: (-pair[1], pair[0]))
 

@@ -21,18 +21,18 @@ def put(api: ApiAs, r: Review, who: str, path: str, body: dict[str, Any]) -> Non
 def scenario(api: ApiAs, database: str) -> Review:
     r = review(api, database)
     tumor = str(r.tumor)
-    wrong = {"value": "disagree", "reason": "wrong_class", "reason_class_id": tumor}
+    wrong = {"value": "disagree", "reasons": ["wrong_class"], "reason_class_id": tumor}
     for object_id, body in {
         "T1": {"value": "agree"},
-        "T2": {"value": "disagree", "reason": "boundary_off"},
+        "T2": {"value": "disagree", "reasons": ["boundary_off"]},
         "C1": {"value": "agree"},
         "C2": wrong,
     }.items():
         put(api, r, "first", f"verdicts/{object_id}", body)
     for object_id, body in {
         "T1": {"value": "agree"},
-        "T2": {"value": "disagree", "reason": "not_class"},
-        "C1": {"value": "disagree", "reason": "not_a_cell"},
+        "T2": {"value": "disagree", "reasons": ["not_class"]},
+        "C1": {"value": "disagree", "reasons": ["not_a_cell"]},
         "C2": wrong,
     }.items():
         put(api, r, "second", f"verdicts/{object_id}", body)

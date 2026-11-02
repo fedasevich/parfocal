@@ -1591,6 +1591,10 @@ class VerdictReason(StrEnum):
     ARTEFACT = "artefact"
     NOT_A_CELL = "not_a_cell"
     WRONG_CLASS = "wrong_class"
+    NEED_DEEPER_LEVEL = "need_deeper_level"
+    NEED_IHC = "need_ihc"
+    BORDER_UNCLEAR = "border_unclear"
+    OUT_OF_FOCUS = "out_of_focus"
 
 
 verdicts = Table(
@@ -1604,7 +1608,7 @@ verdicts = Table(
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
     Column("value", String(10), nullable=False, info=OPERATIONAL),
-    Column("reason", String(20), nullable=True, info=OPERATIONAL),
+    Column("reasons", ARRAY(String(20)), nullable=False, server_default="{}", info=OPERATIONAL),
     Column("reason_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("note", String(500), nullable=True, info=PHI),
     *timestamps(),
@@ -1619,15 +1623,19 @@ verdicts = Table(
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
     one_of("value", VerdictValue),
-    CheckConstraint("(value = 'disagree') = (reason IS NOT NULL)", name="reason_on_disagree"),
     CheckConstraint(
-        "(reason = 'wrong_class') = (reason_class_id IS NOT NULL)", name="wrong_class_names_class"
+        "(value = 'agree' AND cardinality(reasons) = 0) OR "
+        "(value = 'unsure' AND reasons <@ ARRAY['need_deeper_level', 'need_ihc', "
+        "'border_unclear', 'out_of_focus']::varchar[]) OR "
+        "(value = 'disagree' AND kind = 'region' AND reasons <@ ARRAY['not_class', "
+        "'boundary_off', 'two_regions', 'artefact']::varchar[]) OR "
+        "(value = 'disagree' AND kind = 'cell' AND reasons <@ ARRAY['not_a_cell', "
+        "'wrong_class', 'boundary_off', 'artefact']::varchar[])",
+        name="reasons_fit",
     ),
     CheckConstraint(
-        "reason IS NULL OR (kind = 'region' AND reason IN "
-        "('not_class', 'boundary_off', 'two_regions', 'artefact')) OR (kind = 'cell' AND reason IN "
-        "('not_a_cell', 'wrong_class', 'boundary_off', 'artefact'))",
-        name="reason_fits_kind",
+        "('wrong_class' = ANY(reasons)) = (reason_class_id IS NOT NULL)",
+        name="wrong_class_names_class",
     ),
 )
 

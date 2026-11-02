@@ -86,7 +86,7 @@ test("the verdicts on A1 add up to the counts Home, My work and the ring read", 
   assert.equal(counts.total - verdicts.length, open.length);
   assert.ok(open.every((object) => !verdicts.some((verdict) => verdict.object === object)));
   const t2 = verdicts.find((verdict) => verdict.object === "T2");
-  assert.equal(t2?.reason, "boundary_off");
+  assert.deepEqual(t2?.reasons, ["boundary_off"]);
   assert.match(t2?.note ?? "", /@Daniel Hruška/);
 });
 

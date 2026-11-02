@@ -212,3 +212,43 @@ async def test_models_match_the_migrations(empty_database: str) -> None:
             assert await connection.run_sync(differences) == []
     finally:
         await engine.dispose()
+
+
+def seed_verdict(url: str, kind: str, number: int, value: str, reason: str) -> None:
+    query(
+        url,
+        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        f"value, reason) SELECT p.tenant_id, p.id, gen_random_uuid(), s.id, u.id, '{kind}', "
+        f"{number}, '{value}', {reason} FROM projects p, slides s, users u",
+    )
+
+
+def test_each_old_verdict_reason_becomes_a_set_of_one(empty_database: str) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0049")
+    for statement in CONTEXT_SEED:
+        query(empty_database, statement)
+    query(empty_database, "ALTER TABLE verdicts DISABLE TRIGGER ALL")
+    seed_verdict(empty_database, "region", 1, "disagree", "'boundary_off'")
+    seed_verdict(empty_database, "region", 2, "agree", "NULL")
+    seed_verdict(empty_database, "cell", 1, "unsure", "NULL")
+    query(empty_database, "ALTER TABLE verdicts ENABLE TRIGGER ALL")
+
+    command.upgrade(config, "0050")
+    listed = "SELECT kind, number, value, reasons FROM verdicts ORDER BY kind, number"
+    assert query(empty_database, listed) == [
+        ("cell", 1, "unsure", []),
+        ("region", 1, "disagree", ["boundary_off"]),
+        ("region", 2, "agree", []),
+    ]
+    query(
+        empty_database,
+        "UPDATE verdicts SET reasons = '{two_regions,boundary_off}' WHERE number = 1 "
+        "AND kind = 'region'",
+    )
+    command.downgrade(config, "0049")
+    assert query(empty_database, "SELECT reason FROM verdicts ORDER BY kind, number") == [
+        (None,),
+        ("two_regions",),
+        (None,),
+    ]

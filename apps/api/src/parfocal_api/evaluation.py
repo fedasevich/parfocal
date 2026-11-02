@@ -153,7 +153,7 @@ async def ai_objects(
         grouped.setdefault((row.slide_id, row.kind, row.number), {})[str(row.user_id)] = (
             engine.Verdict(
                 row.value,
-                row.reason,
+                tuple(row.reasons),
                 names.get(row.reason_class_id) if row.reason_class_id else None,
             )
         )

@@ -26,11 +26,11 @@ def judge(
     value: str,
     ago: str = "0 seconds",
 ) -> None:
-    reason = "'not_class'" if value == "disagree" else "NULL"
+    reason = "'{not_class}'" if value == "disagree" else "'{}'"
     owner(
         database,
         "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
-        f"value, reason, updated_at) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
+        f"value, reasons, updated_at) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
         f"'{slide}', '{s.people[who].user_id}', 'region', {number}, '{value}', {reason}, "
         f"now() - interval '{ago}')",
     )

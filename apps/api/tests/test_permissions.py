@@ -959,7 +959,7 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                     kind="region",
                     number=1,
                     value="disagree",
-                    reason="not_class",
+                    reasons=["not_class"],
                 )
             )
             await connection.execute(

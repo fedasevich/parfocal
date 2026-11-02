@@ -287,7 +287,7 @@ def test_judging_the_ai_waits_for_the_first_read(api: ApiAs, database: str) -> N
     ok(api(first).post(f"{s.base}/added", json={"kind": "cell", "geometry": SQUARE}))
     ok(api(first).put(f"{s.base}/opinion", json={"answers": {"comment": "Blind"}}))
     ok(api(first).post(f"{s.base}/first-read"))
-    ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "disagree", "reason": "artefact"}))
+    ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "disagree", "reasons": ["artefact"]}))
     unknown = api(first).put(f"{s.base}/verdicts/T9", json={"value": "agree"})
     assert (unknown.status_code, unknown.json()["code"]) == (404, "unknown-object")
     ok(api(first).post(f"{s.base}/submit"))

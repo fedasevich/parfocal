@@ -28065,22 +28065,19 @@
           "value": {
             "$ref": "#/components/schemas/VerdictValue"
           },
-          "reason": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VerdictReason"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/VerdictReason"
+            },
+            "type": "array",
+            "title": "Reasons"
           }
         },
         "type": "object",
         "required": [
           "user_id",
           "value",
-          "reason"
+          "reasons"
         ],
         "title": "ReviewerVerdict"
       },
@@ -31035,15 +31032,12 @@
           "value": {
             "$ref": "#/components/schemas/VerdictValue"
           },
-          "reason": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VerdictReason"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/VerdictReason"
+            },
+            "type": "array",
+            "title": "Reasons"
           },
           "reason_class_id": {
             "anyOf": [
@@ -31080,7 +31074,7 @@
           "kind",
           "number",
           "value",
-          "reason",
+          "reasons",
           "reason_class_id",
           "note",
           "updated_at"
@@ -31092,15 +31086,13 @@
           "value": {
             "$ref": "#/components/schemas/VerdictValue"
           },
-          "reason": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VerdictReason"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/VerdictReason"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "default": []
           },
           "reason_class_id": {
             "anyOf": [
@@ -31139,7 +31131,11 @@
           "two_regions",
           "artefact",
           "not_a_cell",
-          "wrong_class"
+          "wrong_class",
+          "need_deeper_level",
+          "need_ihc",
+          "border_unclear",
+          "out_of_focus"
         ],
         "title": "VerdictReason"
       },

@@ -20,6 +20,7 @@ from parfocal_common.evaluation import (
     overall,
     pairwise_kappa,
     reasons,
+    retyped_to,
     summarise,
 )
 
@@ -28,7 +29,7 @@ EXPECTED = FIXTURE["expected"]
 
 
 def verdict(given: list[str]) -> Verdict:
-    return Verdict(given[0], *given[1:])
+    return Verdict(given[0], tuple(given[1:2]), *given[2:])
 
 
 def objects() -> list[AiObject]:
@@ -124,6 +125,18 @@ def test_cell_agreement_and_reasons_match_the_hand_counts() -> None:
         EXPECTED["cell_agreement"]
     )
     assert [list(pair) for pair in reasons(objects())] == EXPECTED["reasons"]
+
+
+def test_each_code_of_a_decision_counts_once() -> None:
+    several = Verdict("disagree", ("wrong_class", "boundary_off", "wrong_class"), "lymphocyte")
+    bare = Verdict("disagree")
+    unsure = Verdict("unsure", ("need_ihc",))
+    item = AiObject("s", "cell", 1, "tumor", {"a": several, "b": bare, "c": unsure})
+    assert reasons([item]) == [("boundary_off", 1), ("wrong_class", 1)]
+    assert retyped_to(item) is None
+    both = AiObject("s", "cell", 2, "tumor", {"a": several, "b": several})
+    assert reasons([both]) == [("boundary_off", 2), ("wrong_class", 2)]
+    assert retyped_to(both) == "lymphocyte"
 
 
 def test_opinions_are_summarised_by_kind() -> None:

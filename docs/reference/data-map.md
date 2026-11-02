@@ -833,7 +833,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `kind` | operational |
 | `number` | operational |
 | `value` | operational |
-| `reason` | operational |
+| `reasons` | operational |
 | `reason_class_id` | operational |
 | `note` | phi |
 | `created_at` | operational |

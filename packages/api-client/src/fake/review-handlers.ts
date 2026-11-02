@@ -249,7 +249,7 @@ export function reviewHandlers(): RequestHandler[] {
         kind: reviewObjects[index]?.kind === "cell" ? "cell" : "region",
         number: index + 1,
         value: body.value,
-        reason: body.reason ?? null,
+        reasons: body.reasons ?? [],
         reason_class_id: body.reason_class_id ?? null,
         note: body.note ?? null,
         updated_at: "2026-10-15T10:52:00+02:00",

@@ -9,7 +9,7 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 ## Rules worth remembering
 
 - The consensus is the unanimous decision, else the decision on the queued object (`keep-ai` is agree, `go-with-reviewers` is disagree), else undecided. Unsure and undecided objects are counted but kept out of precision and sensitivity.
-- A disagree consensus is also a false negative for another class only when every disagreeing decision is `wrong_class` with the same class.
+- A disagree consensus is also a false negative for another class only when every disagreeing decision has `wrong_class` among its codes with the same class. The reason counts take each code of a disagreeing decision once, so a decision with two codes adds one to each, and Unsure codes stay out of the "Why reviewers disagreed" counts.
 - Every rate is a `Ratio` with its numerator and denominator, and a zero denominator gives `None`, never 0.
 - Cohen's kappa is computed per pair of reviewers over the objects both judged, with agree, disagree and unsure as categories. `fleiss` reproduces the textbook example (κ ≈ 0.210, 10 subjects, 14 raters, 5 categories), and returns `None` when the subjects do not all have the same number of raters.
 - The fixture `packages/py-common/tests/fixtures/evaluation-task.json` holds the hand-computed values. The two reviewers there give κ = 51/87.

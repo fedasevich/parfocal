@@ -2157,12 +2157,16 @@ export const VerdictReason = {
   artefact: "artefact",
   not_a_cell: "not_a_cell",
   wrong_class: "wrong_class",
+  need_deeper_level: "need_deeper_level",
+  need_ihc: "need_ihc",
+  border_unclear: "border_unclear",
+  out_of_focus: "out_of_focus",
 } as const;
 
 export interface ReviewerVerdict {
   user_id: string;
   value: VerdictValue;
-  reason: VerdictReason | null;
+  reasons: VerdictReason[];
 }
 
 export interface QueuedObject {
@@ -3056,7 +3060,7 @@ export interface Verdict {
   kind: AnnotationKind;
   number: number;
   value: VerdictValue;
-  reason: VerdictReason | null;
+  reasons: VerdictReason[];
   reason_class_id: string | null;
   note: string | null;
   updated_at: string;
@@ -3069,7 +3073,7 @@ export type ParfocalApiVerdictsNote = string;
 
 export interface VerdictDraft {
   value: VerdictValue;
-  reason?: VerdictReason | null;
+  reasons?: VerdictReason[];
   reason_class_id?: string | null;
   note?: ParfocalApiVerdictsNote | null;
 }
