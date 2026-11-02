@@ -195,52 +195,77 @@ type ConfusionMatrixProps = React.ComponentProps<"figure"> & {
   classes: string[];
   counts: number[][];
   caption?: React.ReactNode;
+  rowTitle?: string;
+  columnTitle?: string;
 };
 
-function ConfusionMatrix({ classes, counts, caption, className, ...props }: ConfusionMatrixProps) {
+function ConfusionMatrix({
+  classes,
+  counts,
+  caption,
+  rowTitle = "The AI said",
+  columnTitle = "Consensus of the reviewers",
+  className,
+  ...props
+}: ConfusionMatrixProps) {
   const max = Math.max(1, ...counts.flat());
   return (
     <figure data-slot="confusion-matrix" className={cn("m-0 grid gap-2", className)} {...props}>
-      <table className="w-fit border-separate border-spacing-0.5 text-[8.5px]">
-        <thead>
-          <tr>
-            <th scope="col">
-              <span className="sr-only">The AI said</span>
-            </th>
-            {classes.map((name) => (
-              <th key={name} scope="col" className="w-12 pb-0.5 font-normal text-[#444]">
-                {name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {classes.map((name, row) => (
-            <tr key={name}>
-              <th scope="row" className="pr-1.5 text-right font-normal text-[#444]">
-                {name}
-              </th>
-              {classes.map((column, index) => {
-                const value = counts[row]?.[index] ?? 0;
-                const diagonal = row === index;
-                return (
-                  <td
-                    key={column}
-                    className={cn("h-5 text-center", diagonal && "font-bold")}
-                    style={{
-                      background: diagonal
-                        ? `rgba(29, 95, 209, ${(0.25 + (0.45 * value) / max).toFixed(2)})`
-                        : "#eef3fb",
-                    }}
-                  >
-                    {value}
-                  </td>
-                );
-              })}
+      <div className="grid w-fit grid-cols-[auto_auto] items-center gap-x-1.5">
+        <span
+          aria-hidden="true"
+          className="row-start-2 rotate-180 text-center text-[7.5px] font-semibold text-[#444] [writing-mode:vertical-rl]"
+        >
+          {rowTitle}
+        </span>
+        <span
+          aria-hidden="true"
+          className="col-start-2 pl-14 text-center text-[7.5px] font-semibold text-[#444]"
+        >
+          {columnTitle}
+        </span>
+        <table className="col-start-2 row-start-2 w-fit border-separate border-spacing-0.5 text-[8.5px]">
+          <caption className="sr-only">
+            Rows: {rowTitle}. Columns: {columnTitle}.
+          </caption>
+          <thead>
+            <tr>
+              <td />
+              {classes.map((name) => (
+                <th key={name} scope="col" className="w-12 pb-0.5 font-normal text-[#444]">
+                  {name}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {classes.map((name, row) => (
+              <tr key={name}>
+                <th scope="row" className="w-12 pr-1.5 text-right font-normal text-[#444]">
+                  {name}
+                </th>
+                {classes.map((column, index) => {
+                  const value = counts[row]?.[index] ?? 0;
+                  const diagonal = row === index;
+                  return (
+                    <td
+                      key={column}
+                      className={cn("h-5 text-center", diagonal && "font-bold")}
+                      style={{
+                        background: diagonal
+                          ? `rgba(29, 95, 209, ${(0.25 + (0.45 * value) / max).toFixed(2)})`
+                          : "#eef3fb",
+                      }}
+                    >
+                      {value}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {caption ? <figcaption className="text-[7.5px] text-[#666]">{caption}</figcaption> : null}
     </figure>
   );

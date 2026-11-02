@@ -60,7 +60,7 @@ function BlockBody({
       <ConfusionMatrix
         classes={report.confusion.classes}
         counts={report.confusion.counts}
-        caption="Rows are what the AI said, columns the consensus. The diagonal is agreement."
+        caption="The diagonal is agreement between the AI and the consensus."
       />
     );
   }
@@ -79,7 +79,9 @@ function BlockBody({
     return (
       <div className="grid gap-1.5">
         <ReportObjectsTable
-          people={report.reviewer_ids.map(nameOf)}
+          people={report.reviewer_ids.map(
+            (id, index) => nameOf(id) || `Reviewer ${String.fromCharCode(65 + index)}`,
+          )}
           rows={report.worst.map((row, index) => ({
             object: row.object,
             what: row.what,

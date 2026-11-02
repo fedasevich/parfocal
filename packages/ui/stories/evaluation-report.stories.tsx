@@ -72,7 +72,7 @@ function Page({ selected, onSelect }: { selected?: string; onSelect?: (id: strin
               [5, 14, 201, 7],
               [3, 11, 8, 101],
             ]}
-            caption="Rows are what the AI said, columns the consensus."
+            caption="The diagonal is agreement between the AI and the consensus."
           />
         </ReportBlock>
         <ReportBlock title="Why reviewers disagreed" half>

@@ -25,13 +25,15 @@ const reasonLabel: Record<string, string> = {
 };
 
 export const reasonRows = (evaluation: Evaluation) =>
-  evaluation.reasons.map(([code, count]) => ({ label: reasonLabel[code] ?? code, count }));
+  evaluation.reasons
+    .map(([code, count]) => ({ label: reasonLabel[code] ?? code, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
 const scoreLabel: Record<string, string> = { "1": "1 · unusable", "5": "5 · sign as is" };
 
 export const opinionRows = (evaluation: Evaluation) => {
   const counts = evaluation.opinions[0]?.counts ?? {};
   return Object.keys(counts)
-    .sort()
+    .sort((a, b) => Number(a) - Number(b))
     .map((score) => ({ label: scoreLabel[score] ?? score, count: counts[score] ?? 0 }));
 };
