@@ -141,8 +141,12 @@ export interface SlideIndexPage {
   readonly tileByteCounts?: readonly number[];
 }
 
+export type TileRun = readonly [start: number, length: number];
+
 export interface SlideIndexLevel extends Omit<SlideIndexPage, "page"> {
   readonly page?: number;
+  readonly path?: string;
+  readonly absentTiles?: readonly TileRun[];
   readonly stored?: StoredSize;
   readonly downsample: number;
   readonly width: number;

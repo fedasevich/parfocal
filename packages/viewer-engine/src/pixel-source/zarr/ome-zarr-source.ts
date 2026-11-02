@@ -1,5 +1,6 @@
 import * as zarr from "zarrita";
-import { checkTile, checkWindow, levelAt, tileWindow } from "../geometry.ts";
+import { checkTile, checkWindow, levelAt, tileColumns, tileWindow } from "../geometry.ts";
+import { isAbsentTile, TileIndexError } from "../tile-index.ts";
 import type {
   ChannelInfo,
   MicronsPerPixel,
@@ -12,7 +13,9 @@ import type {
   PixelSource,
   PixelWindow,
   RasterRequest,
+  SlideIndex,
   TileRequest,
+  TileRun,
 } from "../types.ts";
 import { SourceClosedError } from "../types.ts";
 import { absoluteUrl } from "../url.ts";
@@ -57,6 +60,7 @@ type NumberArray = zarr.Array<PixelDtype, zarr.Readable>;
 
 interface ZarrLevel extends PixelLevel {
   readonly array: NumberArray;
+  readonly absentTiles: readonly TileRun[] | undefined;
 }
 
 interface AxisIndex {
@@ -203,6 +207,33 @@ function planesOf(
   );
 }
 
+function absenceMaps(
+  index: SlideIndex | undefined,
+  levels: number,
+): (readonly TileRun[] | undefined)[] {
+  const indexed = index?.levels;
+  if (indexed === undefined) return Array.from({ length: levels }, () => undefined);
+  if (indexed.length !== levels)
+    throw new TileIndexError(`it lists ${indexed.length} levels for a store with ${levels}`);
+  return indexed.map((level) => level.absentTiles);
+}
+
+function absentOver(window: PixelWindow): PixelResult {
+  return { absent: true, width: window[2] - window[0], height: window[3] - window[1] };
+}
+
+function tilesIn(level: PixelLevel, window: PixelWindow): number[] {
+  const [x0, y0, x1, y1] = window;
+  const columns = tileColumns(level);
+  const tiles: number[] = [];
+  for (let ty = Math.floor(y0 / level.tileHeight); ty * level.tileHeight < y1; ty++) {
+    for (let tx = Math.floor(x0 / level.tileWidth); tx * level.tileWidth < x1; tx++) {
+      tiles.push(ty * columns + tx);
+    }
+  }
+  return tiles;
+}
+
 export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSource> {
   const url = absoluteUrl(request.url, request.baseUrl);
   const fetcher = request.fetch;
@@ -227,6 +258,7 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
   const [baseArray] = arrays;
   if (baseArray === undefined) throw new Error("The OME multiscales block lists no datasets");
   const baseWidth = baseArray.shape[axes.x] ?? 0;
+  const absence = absenceMaps(request.index, arrays.length);
   const levels: ZarrLevel[] = arrays.map((array, index) => {
     const width = array.shape[axes.x] ?? 0;
     const scale = scaleOf(multiscale.datasets[index])?.[axes.x];
@@ -237,6 +269,7 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
         : undefined;
     return {
       array,
+      absentTiles: absence[index],
       downsample: declared ?? baseWidth / width,
       width,
       height: array.shape[axes.y] ?? 0,
@@ -288,29 +321,29 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
     const background = photometric === "rgb" ? 255 : 0;
     const planes = Array.from({ length: channelCount }, () => allocate(dtype, width * height));
     let anyPresent = false;
-    for (let ty = Math.floor(y0 / level.tileHeight); ty * level.tileHeight < y1; ty++) {
-      for (let tx = Math.floor(x0 / level.tileWidth); tx * level.tileWidth < x1; tx++) {
-        const tile = tileWindow(level, tx, ty);
-        const result = await readWindow(level, tile, signal);
-        const left = Math.max(x0, tile[0]);
-        const top = Math.max(y0, tile[1]);
-        const right = Math.min(x1, tile[2]);
-        const bottom = Math.min(y1, tile[3]);
-        for (let y = top; y < bottom; y++) {
-          for (const [index, plane] of planes.entries()) {
-            const start = (y - y0) * width + (left - x0);
-            if (result.absent) {
-              plane.fill(background, start, start + right - left);
-            } else {
-              const source = result.planes[index];
-              const from = (y - tile[1]) * result.width + (left - tile[0]);
-              if (source !== undefined)
-                plane.set(source.subarray(from, from + right - left), start);
-            }
+    const columns = tileColumns(level);
+    for (const number of tilesIn(level, window)) {
+      const tile = tileWindow(level, number % columns, Math.floor(number / columns));
+      const result = isAbsentTile(level.absentTiles, number)
+        ? ({ absent: true, width: tile[2] - tile[0], height: tile[3] - tile[1] } as const)
+        : await readWindow(level, tile, signal);
+      const left = Math.max(x0, tile[0]);
+      const top = Math.max(y0, tile[1]);
+      const right = Math.min(x1, tile[2]);
+      const bottom = Math.min(y1, tile[3]);
+      for (let y = top; y < bottom; y++) {
+        for (const [index, plane] of planes.entries()) {
+          const start = (y - y0) * width + (left - x0);
+          if (result.absent) {
+            plane.fill(background, start, start + right - left);
+          } else {
+            const source = result.planes[index];
+            const from = (y - tile[1]) * result.width + (left - tile[0]);
+            if (source !== undefined) plane.set(source.subarray(from, from + right - left), start);
           }
         }
-        anyPresent ||= !result.absent;
       }
+      anyPresent ||= !result.absent;
     }
     if (!anyPresent) return { absent: true, width, height };
     return { absent: false, width, height, planes };
@@ -335,12 +368,19 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
     async getTile(tile: TileRequest) {
       const level = checkTile(levels, tile);
       ensureOpen(tile.signal);
-      return readWindow(level, tileWindow(level, tile.x, tile.y), tile.signal);
+      const window = tileWindow(level, tile.x, tile.y);
+      if (isAbsentTile(level.absentTiles, tile.y * tileColumns(level) + tile.x))
+        return absentOver(window);
+      return readWindow(level, window, tile.signal);
     },
     async getRaster(raster: RasterRequest) {
       const level = levelAt(levels, raster.level);
       const window = checkWindow(level, raster.window);
       ensureOpen(raster.signal);
+      if (level.absentTiles !== undefined) {
+        const absent = (tile: number) => isAbsentTile(level.absentTiles, tile);
+        if (tilesIn(level, window).some(absent)) return compose(level, window, raster.signal);
+      }
       const whole = await readWindow(level, window, raster.signal);
       if (!whole.absent) return whole;
       return compose(level, window, raster.signal);

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { after, describe, it } from "node:test";
 import { fromUrl } from "geotiff";
 import * as zarr from "zarrita";
@@ -7,6 +8,7 @@ import {
   openTiffSource,
   type PixelResult,
   type Raster,
+  readTileIndex,
   recoverLadder,
 } from "../../src/index.ts";
 import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
@@ -22,6 +24,17 @@ const zarrOptions = {
   levels: 2,
 } as const;
 const sparseZarr = await writeZarrFixture({ ...zarrOptions, version: 2, missing: [[0, 0, 1]] });
+const sparseZarrIndex = readTileIndex(
+  JSON.parse(
+    await readFile(
+      new URL(
+        "../../../../workers/ingest/tests/golden/tile-index/sparse-ome-zarr-0.4.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ),
+);
 const zarrV3 = await writeZarrFixture({ ...zarrOptions, version: 3 });
 
 const served = await serve({
@@ -310,5 +323,49 @@ describe("zarrita workaround: a missing chunk is absent, not fill", () => {
     const mixed = present(await source.getRaster({ level: 0, window: [120, 0, 136, 1] }));
     assert.equal(mixed.planes[0]?.[0], sparseZarr.value(0, 0, 120, 0));
     assert.deepEqual(Array.from(mixed.planes[0]?.slice(8) ?? []), new Array(8).fill(255));
+  });
+
+  it("with the ingest absence map, an absent chunk is never requested (generated sparse OME-Zarr 0.4)", async () => {
+    const requested: string[] = [];
+    const source = await openOmeZarrSource({
+      formatId: "ome-zarr",
+      url: served.url("/sparse.zarr"),
+      index: sparseZarrIndex,
+      fetch: (input, init) => {
+        requested.push(new URL(input instanceof Request ? input.url : String(input)).pathname);
+        return fetch(input, init);
+      },
+    });
+    const opened = requested.length;
+    assert.deepEqual(await source.getTile({ level: 0, x: 1, y: 0 }), {
+      absent: true,
+      width: 128,
+      height: 128,
+    });
+    assert.deepEqual(await source.getRaster({ level: 0, window: [130, 0, 250, 100] }), {
+      absent: true,
+      width: 120,
+      height: 100,
+    });
+    const mixed = present(await source.getRaster({ level: 0, window: [120, 0, 136, 1] }));
+    assert.equal(mixed.planes[0]?.[0], sparseZarr.value(0, 0, 120, 0));
+    assert.deepEqual(Array.from(mixed.planes[0]?.slice(8) ?? []), new Array(8).fill(255));
+    const chunks = requested.slice(opened);
+    assert.ok(
+      chunks.every((path) => !path.endsWith("/0/0/0/1")),
+      chunks.join(", "),
+    );
+    assert.ok(chunks.some((path) => path.endsWith("/0/0/0/0")));
+  });
+
+  it("refuses an absence map whose levels do not match the store", async () => {
+    await assert.rejects(
+      openOmeZarrSource({
+        formatId: "ome-zarr",
+        url: served.url("/sparse.zarr"),
+        index: { ...sparseZarrIndex, levels: sparseZarrIndex.levels?.slice(0, 1) ?? [] },
+      }),
+      { name: "TileIndexError" },
+    );
   });
 });

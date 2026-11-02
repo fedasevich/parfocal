@@ -11,6 +11,7 @@ export {
 } from "./tiff/native-jpeg.ts";
 export { openTiffSource } from "./tiff/tiff-source.ts";
 export {
+  isAbsentTile,
   locatesEveryDirectory,
   readTileIndex,
   TILE_INDEX_FILE,
@@ -48,6 +49,7 @@ export {
   type StoredSize,
   slideFormatIds,
   type TileRequest,
+  type TileRun,
   UnsupportedCodecError,
   UnsupportedFormatError,
 } from "./types.ts";
