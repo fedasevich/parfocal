@@ -31,7 +31,7 @@ A task body may hold a line `Size: S.`, `Size: M.` or `Size: L.` S is one kind o
 
 `Needs: owner.` marks a task that cannot finish without the owner's yes for a production write or for new spend ([ADR 0115](../adr/0115-production-access-and-spend-caps.md), production access and spend caps). Nothing else counts. Questions go into `docs/decisions.md` with a recommended option and the work carries on, agents use the owner's Mac for every browser and device check, and no task may wait on a pathologist.
 
-Each card shows how many open tasks wait on it all the way down. Status lists quick wins, which are ready S tasks with no `Needs` line and no `Idea:` title, sorted by that count, next to the tasks that unblock the most and a table of epics that depend on each other. `python3 scripts/board.py ready --size S --agent-only` prints the same quick wins.
+Each card shows how many open tasks wait on it all the way down. Status lists quick wins, which are ready S tasks with no `Needs` line, no `Idea:` title and no "(moved)" or "(dropped)" at the end of the title, sorted by that count, next to the tasks that unblock the most and a table of epics that depend on each other. `python3 scripts/board.py ready --size S --agent-only` prints the same quick wins.
 
 ## Claim files
 
@@ -53,7 +53,7 @@ Optional longer notes in Markdown.
 
 | Command | What it does |
 |---|---|
-| `python3 scripts/board.py ready [--epic IAM] [--milestone M1] [--size S] [--agent-only]` | Tasks whose dependencies are done and that nobody holds, with size and unblock count. `--agent-only` skips `Needs` and `Idea:` tasks |
+| `python3 scripts/board.py ready [--epic IAM] [--milestone M1] [--size S] [--agent-only]` | Tasks whose dependencies are done and that nobody holds, with size and unblock count. `--agent-only` skips `Needs`, `Idea:`, moved and dropped tasks |
 | `python3 scripts/board.py show IAM-009` | The task, both dependency trees, its docs and its log lines |
 | `python3 scripts/board.py tree IAM-009 [--down]` | Only the tree of what it needs, or with `--down` what it unblocks |
 | `python3 scripts/board.py claim IAM-009 --by NAME [--branch B] [--note N]` | Take a task. Refuses a done or taken task, and one whose dependencies are open unless `--force` |

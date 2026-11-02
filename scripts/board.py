@@ -27,6 +27,7 @@ DOC_TITLE = re.compile(r"^# (.+)$", re.MULTILINE)
 ADR_STATUS = re.compile(r"^- Status: (.+)$", re.MULTILINE)
 ADR_DATE = re.compile(r"^- Date: (.+)$", re.MULTILINE)
 ACTIVE_FIELD = re.compile(r"^([a-z]+): ?(.*)$")
+PARKED = re.compile(r"\((?:moved|dropped)\)$")
 MARKER = re.compile(r"^(Size|Needs): (.+?)\.?$")
 DONE_WHEN = re.compile(r"Done when (.+?)(?:\.(?=\s|$)|$)")
 CHECK_KINDS = (
@@ -560,7 +561,9 @@ def command_ready(args: argparse.Namespace) -> int:
             continue
         if args.size and task.size != args.size.upper():
             continue
-        if args.agent_only and (task.needs or task.title.startswith("Idea:")):
+        if args.agent_only and (
+            task.needs or task.title.startswith("Idea:") or PARKED.search(task.title)
+        ):
             continue
         picked.append(task)
     if args.size or args.agent_only:

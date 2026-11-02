@@ -373,7 +373,7 @@ function sizePill(t) {
   return `<span class="pill size-${t.size}" title="Size ${t.size}, ${how}">${t.size}${t.size_source === "guess" ? "?" : ""}</span>`;
 }
 function isQuickWin(t) {
-  return t.status === "ready" && t.size === "S" && !t.needs.length && !t.title.startsWith("Idea:");
+  return t.status === "ready" && t.size === "S" && !t.needs.length && !t.title.startsWith("Idea:") && !/\((moved|dropped)\)$/.test(t.title);
 }
 function epicPairs() {
   const pairs = new Map();
@@ -475,7 +475,7 @@ function renderOverview() {
       <div class="panel"><h2>Milestones</h2><p class="small muted">Tasks counted by the last milestone of their epic.</p><ul class="list">${ms}</ul></div>
     </div>
     <div class="grid section">
-      <div class="panel"><h2>Quick wins <span class="muted small">${wins.length}</span></h2><p class="small muted">Ready, size S, no owner needed and not an idea. Sorted by how many open tasks they unblock.</p><ul class="list">${wins.slice(0, 25).map(rankRow).join("") || `<li class="empty">None right now.</li>`}</ul>${wins.length > 25 ? `<p><button type="button" class="chipbtn" data-quick>See all ${wins.length} on the board</button></p>` : ""}</div>
+      <div class="panel"><h2>Quick wins <span class="muted small">${wins.length}</span></h2><p class="small muted">Ready, size S, no owner needed, not an idea and not moved or dropped. Sorted by how many open tasks they unblock.</p><ul class="list">${wins.slice(0, 25).map(rankRow).join("") || `<li class="empty">None right now.</li>`}</ul>${wins.length > 25 ? `<p><button type="button" class="chipbtn" data-quick>See all ${wins.length} on the board</button></p>` : ""}</div>
       <div class="panel"><h2>Unblocks the most</h2><p class="small muted">Open tasks by how many open tasks wait on them, all the way down.</p><ul class="list">${unblockers.map(rankRow).join("")}</ul></div>
     </div>
     <div class="panel section"><h2>Epics that depend on each other</h2><p class="small muted">Pairs with at least three dependencies. Open counts dependencies on tasks not done yet.</p><table class="pairs"><thead><tr><th>Epic</th><th>needs</th><th>Links</th><th>Open</th></tr></thead><tbody>${pairs.map((r) => `<tr><td><button type="button" class="linkbtn" data-epic="${r.from}">${r.from}</button> ${esc(epics.get(r.from)?.name || "")}</td><td><button type="button" class="linkbtn" data-epic="${r.to}">${r.to}</button> ${esc(epics.get(r.to)?.name || "")}</td><td class="nums">${r.total}</td><td class="nums">${r.open}</td></tr>`).join("")}</tbody></table></div>

@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from board import (
+    PARKED,
     ROOT,
     Active,
     add_log_entry,
@@ -243,6 +244,11 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(tasks["SKEL-003"].needs, ["owner"])
         self.assertEqual((tasks["STACK-002"].size, tasks["STACK-002"].size_source), ("S", "guess"))
         self.assertEqual(tasks["STACK-002"].needs, [])
+
+    def test_moved_and_dropped_titles_are_parked(self) -> None:
+        self.assertTrue(PARKED.search("Worklist sidebar (moved)"))
+        self.assertTrue(PARKED.search("View C Status board (dropped)"))
+        self.assertFalse(PARKED.search("Moved objects (moved later) list"))
 
     def test_check_rejects_unknown_markers(self) -> None:
         backlog = self.root / "docs" / "BACKLOG.md"
