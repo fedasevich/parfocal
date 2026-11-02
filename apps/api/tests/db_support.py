@@ -74,6 +74,7 @@ def api_settings(database: str) -> ApiSettings:
             "zitadel_issuer": "https://issuer.invalid",
             "zitadel_client_id": "test",
             "zitadel_client_secret": "test",
+            "tile_token_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             "storage_endpoint": TEST_STORAGE.endpoint,
             "storage_region": TEST_STORAGE.region,
             "storage_bucket": TEST_STORAGE.bucket,

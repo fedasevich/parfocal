@@ -337,6 +337,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
+    "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "requestEmergencyAccess": lambda w: Call(
         "POST",
         f"/api/projects/{w.outside_project}/emergency-access",

@@ -1,0 +1,13 @@
+{
+  "secret": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "claims": {
+    "v": 1,
+    "t": "7d3f1c2e-0000-4000-8000-000000000001",
+    "s": "7d3f1c2e-0000-4000-8000-000000000002",
+    "o": "original.svs",
+    "n": 1048576,
+    "d": [[1000, 2000], [4096, 8192]],
+    "e": 1800000000
+  },
+  "token": "eyJkIjpbWzEwMDAsMjAwMF0sWzQwOTYsODE5Ml1dLCJlIjoxODAwMDAwMDAwLCJuIjoxMDQ4NTc2LCJvIjoib3JpZ2luYWwuc3ZzIiwicyI6IjdkM2YxYzJlLTAwMDAtNDAwMC04MDAwLTAwMDAwMDAwMDAwMiIsInQiOiI3ZDNmMWMyZS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJ2IjoxfQ.AEbEcyZqWWs0pVRkeK4fY_YiNfinPK9tI04vIIGeOic"
+}

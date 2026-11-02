@@ -105,6 +105,7 @@ import type {
   Tenant,
   TextBlock,
   TextQuestion,
+  TileAccess,
   UploadedPart,
   UploadState,
   Validation,
@@ -2942,6 +2943,17 @@ export const getGetRestrictedImageResponseMock = (): Blob =>
     new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
     new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
   ]);
+
+export const getGetTileAccessResponseMock = (
+  overrideResponse: Partial<Extract<TileAccess, object>> = {},
+): TileAccess => ({
+  token: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  lifetime_seconds: faker.number.int(),
+  base_path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  original: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
 
 export const getListNotificationsResponseMock = (
   overrideResponse: Partial<Extract<InboxPage, object>> = {},
@@ -8625,6 +8637,28 @@ export const getGetRestrictedImageMockHandler = (
   );
 };
 
+export const getGetTileAccessMockHandler = (
+  overrideResponse?:
+    | TileAccess
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TileAccess> | TileAccess),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/tile-access",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTileAccessResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListNotificationsMockHandler = (
   overrideResponse?:
     | InboxPage
@@ -10368,6 +10402,7 @@ export const getParfocalAPIMock = () => [
   getErasePersonMockHandler(),
   getGetSlideNeighboursMockHandler(),
   getGetRestrictedImageMockHandler(),
+  getGetTileAccessMockHandler(),
   getListNotificationsMockHandler(),
   getGetNotificationCountsMockHandler(),
   getMarkNotificationsReadMockHandler(),

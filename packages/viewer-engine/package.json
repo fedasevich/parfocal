@@ -17,6 +17,7 @@
     "#*": "./src/*"
   },
   "devDependencies": {
+    "@parfocal/edge": "workspace:*",
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.64.0",

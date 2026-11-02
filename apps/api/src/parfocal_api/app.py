@@ -47,6 +47,7 @@ from parfocal_api import (
     study_templates,
     taxonomy,
     tenants,
+    tile_access,
     uploads,
     users,
     verdicts,
@@ -170,6 +171,7 @@ def create_app(
     app.include_router(personal_data.platform_router)
     app.include_router(neighbours.router)
     app.include_router(restricted_images.router)
+    app.include_router(tile_access.router)
     app.include_router(inbox.router)
     app.include_router(notification_targets.router)
     app.include_router(notifications.schedule_router)

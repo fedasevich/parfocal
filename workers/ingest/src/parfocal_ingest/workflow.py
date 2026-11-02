@@ -27,6 +27,7 @@ from parfocal_common.ingest import (
     original_key,
     original_suffix,
     restricted_key,
+    restricted_ranges_key,
     slide_prefix,
 )
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
@@ -36,6 +37,7 @@ from parfocal_ingest.associated import associated_images
 from parfocal_ingest.identify import Format, Identified, Refusal, identify
 from parfocal_ingest.integrity import check_integrity
 from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
+from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 from parfocal_ingest.thumbnail import previews
 from parfocal_ingest.tissue import tissue_mask
@@ -271,6 +273,10 @@ async def derive(context: Context) -> Mapping[str, Any]:
             await context.store.put_object(key, image.data, image.media_type)
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_RESTRICTED)
+    ranges = await asyncio.to_thread(restricted_ranges, context.local)
+    await context.store.put_object(
+        restricted_ranges_key(tenant_id, slide_id), ranges_document(ranges), "application/json"
+    )
     present = [
         image.value
         for image in RestrictedImage

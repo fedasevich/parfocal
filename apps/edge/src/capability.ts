@@ -1,0 +1,135 @@
+export type ByteRange = readonly [start: number, end: number];
+
+export type Capability = {
+  readonly tenant: string;
+  readonly slide: string;
+  readonly original: string;
+  readonly size: number;
+  readonly restricted: readonly ByteRange[];
+  readonly expires: number;
+};
+
+export type Verdict =
+  | { readonly ok: true; readonly capability: Capability }
+  | { readonly ok: false; readonly reason: "malformed" | "signature" | "expired" };
+
+const TOKEN_VERSION = 1;
+const encoder = new TextEncoder();
+
+export function fromBase64Url(text: string): Uint8Array<ArrayBuffer> | null {
+  if (!/^[A-Za-z0-9_-]*$/.test(text)) {
+    return null;
+  }
+  const padded = text.replaceAll("-", "+").replaceAll("_", "/");
+  const binary = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+export function toBase64Url(bytes: Uint8Array): string {
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
+
+export async function signingKey(secret: string): Promise<CryptoKey> {
+  const raw = Uint8Array.from(atob(secret.replaceAll("-", "+").replaceAll("_", "/")), (char) =>
+    char.charCodeAt(0),
+  );
+  return crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+    "verify",
+  ]);
+}
+
+function isRange(value: unknown): value is ByteRange {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((part) => Number.isSafeInteger(part) && part >= 0) &&
+    value[0] < value[1]
+  );
+}
+
+function capabilityOf(claims: unknown): Capability | null {
+  if (typeof claims !== "object" || claims === null) {
+    return null;
+  }
+  const { v, t, s, o, n, d, e } = claims as Record<string, unknown>;
+  if (
+    v !== TOKEN_VERSION ||
+    typeof t !== "string" ||
+    typeof s !== "string" ||
+    typeof o !== "string" ||
+    !Number.isSafeInteger(n) ||
+    !Number.isSafeInteger(e) ||
+    !Array.isArray(d) ||
+    !d.every(isRange)
+  ) {
+    return null;
+  }
+  return {
+    tenant: t,
+    slide: s,
+    original: o,
+    size: n as number,
+    restricted: d,
+    expires: e as number,
+  };
+}
+
+export async function verifyCapability(
+  token: string,
+  key: CryptoKey,
+  nowSeconds: number,
+): Promise<Verdict> {
+  const parts = token.split(".");
+  if (parts.length !== 2) {
+    return { ok: false, reason: "malformed" };
+  }
+  const [payload = "", signature = ""] = parts;
+  const signatureBytes = fromBase64Url(signature);
+  const payloadBytes = fromBase64Url(payload);
+  if (signatureBytes === null || payloadBytes === null) {
+    return { ok: false, reason: "malformed" };
+  }
+  const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
+  if (!valid) {
+    return { ok: false, reason: "signature" };
+  }
+  let claims: unknown;
+  try {
+    claims = JSON.parse(new TextDecoder().decode(payloadBytes));
+  } catch {
+    return { ok: false, reason: "malformed" };
+  }
+  const capability = capabilityOf(claims);
+  if (capability === null) {
+    return { ok: false, reason: "malformed" };
+  }
+  if (capability.expires <= nowSeconds) {
+    return { ok: false, reason: "expired" };
+  }
+  return { ok: true, capability };
+}
+
+export async function signCapability(capability: Capability, key: CryptoKey): Promise<string> {
+  const claims = {
+    d: capability.restricted,
+    e: capability.expires,
+    n: capability.size,
+    o: capability.original,
+    s: capability.slide,
+    t: capability.tenant,
+    v: TOKEN_VERSION,
+  };
+  const payload = toBase64Url(encoder.encode(JSON.stringify(claims)));
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return `${payload}.${toBase64Url(new Uint8Array(signature))}`;
+}
+
+export function overlapsRestricted(
+  restricted: readonly ByteRange[],
+  start: number,
+  endExclusive: number,
+): boolean {
+  return restricted.some(([from, to]) => start < to && from < endExclusive);
+}

@@ -166,6 +166,10 @@ def slide_prefixes(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> tuple[str, str]
     return slide_prefix(tenant_id, slide_id), restricted_prefix(tenant_id, slide_id)
 
 
+def restricted_ranges_key(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> str:
+    return f"{slide_prefix(tenant_id, slide_id)}restricted-ranges.json"
+
+
 def original_key(tenant_id: uuid.UUID, slide_id: uuid.UUID, name: str) -> str:
     return f"{slide_prefix(tenant_id, slide_id)}original{original_suffix(name)}"
 

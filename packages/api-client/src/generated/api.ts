@@ -3002,6 +3002,14 @@ export interface TenantDraft {
   plan?: Plan;
 }
 
+export interface TileAccess {
+  token: string;
+  expires_at: string;
+  lifetime_seconds: number;
+  base_path: string;
+  original: string;
+}
+
 export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
@@ -19094,6 +19102,193 @@ export function useGetRestrictedImage<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetRestrictedImageQueryOptions(slideId, image, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getTileAccessResponse200 = {
+  data: TileAccess;
+  status: 200;
+};
+
+export type getTileAccessResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTileAccessResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTileAccessResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTileAccessResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTileAccessResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTileAccessResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTileAccessResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTileAccessResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTileAccessResponseSuccess = getTileAccessResponse200 & {
+  headers: Headers;
+};
+export type getTileAccessResponseError = (
+  | getTileAccessResponse400
+  | getTileAccessResponse401
+  | getTileAccessResponse403
+  | getTileAccessResponse404
+  | getTileAccessResponse409
+  | getTileAccessResponse422
+  | getTileAccessResponse429
+  | getTileAccessResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTileAccessResponse = getTileAccessResponseSuccess | getTileAccessResponseError;
+
+export const getGetTileAccessUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/tile-access`;
+};
+
+/**
+ * @summary Get Tile Access
+ */
+export const getTileAccess = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTileAccessResponse> => {
+  return apiFetch<getTileAccessResponse>(getGetTileAccessUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTileAccessQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/tile-access`] as const;
+};
+
+export const getGetTileAccessQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTileAccess>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTileAccessQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTileAccess>>> = ({ signal }) =>
+    getTileAccess(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTileAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getTileAccess>>>;
+export type GetTileAccessQueryError = Problem;
+
+export function useGetTileAccess<
+  TData = Awaited<ReturnType<typeof getTileAccess>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTileAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getTileAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTileAccess<
+  TData = Awaited<ReturnType<typeof getTileAccess>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTileAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getTileAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTileAccess<
+  TData = Awaited<ReturnType<typeof getTileAccess>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Tile Access
+ */
+
+export function useGetTileAccess<
+  TData = Awaited<ReturnType<typeof getTileAccess>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTileAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTileAccessQueryOptions(slideId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

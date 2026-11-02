@@ -777,6 +777,7 @@ GET_ROUTES = {
     "getRestrictedImage": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
     ),
+    "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"

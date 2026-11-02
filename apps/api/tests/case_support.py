@@ -10,6 +10,7 @@ from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, publish
 from parfocal_api.tables import PrivacyMode, blocks, cases, projects, slides, specimens
 from parfocal_common.envelope import MasterKeyring
+from parfocal_common.ingest import original_key
 
 TEST_KEYRING = MasterKeyring.from_setting(TEST_MASTER_KEYS)
 
@@ -105,6 +106,8 @@ async def seed_case(connection: AsyncConnection, tenant_id: uuid.UUID) -> Seeded
                 "block_id": block_ids[0],
                 "label": "A1",
                 "barcode": f"{label}-A1",
+                "original_key": None,
+                "file_bytes": None,
             },
             {
                 "id": slide_ids[1],
@@ -114,6 +117,8 @@ async def seed_case(connection: AsyncConnection, tenant_id: uuid.UUID) -> Seeded
                 "block_id": None,
                 "label": "A2",
                 "barcode": None,
+                "original_key": None,
+                "file_bytes": None,
             },
             {
                 "id": loose_slide_id,
@@ -123,6 +128,8 @@ async def seed_case(connection: AsyncConnection, tenant_id: uuid.UUID) -> Seeded
                 "block_id": None,
                 "label": f"tcga-{uuid.uuid4().hex[:4]}",
                 "barcode": None,
+                "original_key": original_key(tenant_id, loose_slide_id, "tcga.svs"),
+                "file_bytes": 1000,
             },
         ],
     )

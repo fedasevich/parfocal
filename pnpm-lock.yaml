@@ -532,6 +532,9 @@ importers:
         specifier: 0.7.5
         version: 0.7.5
     devDependencies:
+      '@parfocal/edge':
+        specifier: workspace:*
+        version: link:../../apps/edge
       '@parfocal/test-fixtures':
         specifier: workspace:*
         version: link:../test-fixtures

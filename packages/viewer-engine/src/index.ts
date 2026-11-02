@@ -1,5 +1,8 @@
 export const packageName = "@parfocal/viewer-engine";
 
+export type { Mint, MintedAccess } from "./access/tile-access.ts";
+export { TileAccess } from "./access/tile-access.ts";
+
 export type {
   Camera,
   CameraBounds,

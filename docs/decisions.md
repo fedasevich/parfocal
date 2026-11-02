@@ -42,6 +42,18 @@ PROJ-002 (privacy modes) asked that an upload arrives without the names in its f
 
 Your choice:
 
+## 17. Slide files
+
+### 17a. Barcodes in file headers
+
+TILES-001 (signed access to slide bytes) closes the label and macro pages of the original, but the Leica SCN header, an XML block in the first IFD that every viewer must read, holds the slide barcode (`<barcode>` in `Leica-1.scn`). A task reviewer who may not see labels could read it through the tile path. ADR 0137 (capability tokens for slide bytes) records the gap.
+
+- a. (recommended) Ingest also closes header fields that hold a barcode, and the viewer reads the slide's geometry from `levels.json` instead of the file header for those formats. Needs a small reader change in SKEL-006 (open the slide in Viv).
+- b. Leave it, because the barcode is an accession code without a name, and add it to ADR 0124 (labels and macros) as a known gap.
+- c. Serve SCN slides only to whole-project readers until a or b.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.

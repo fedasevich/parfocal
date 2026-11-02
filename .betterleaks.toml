@@ -7,3 +7,8 @@ condition = "AND"
 paths = ['''^docs/design/ux-mock/index\.html$''']
 regexTarget = "line"
 regexes = ['''Sign with password''']
+
+[[allowlists]]
+description = "The public test key for slide capability tokens, the bytes 0 to 31 in base64"
+regexTarget = "match"
+regexes = ['''AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=''']

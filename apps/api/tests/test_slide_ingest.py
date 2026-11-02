@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import signal
 import subprocess
@@ -13,6 +14,7 @@ import pytest
 from db_support import APP_URL, ApiAs, with_database
 from fixture_support import fixture_path
 from storage_support import with_store
+from test_tile_access import claims_of
 from upload_support import (
     Lab,
     exists,
@@ -27,12 +29,24 @@ from workspace_support import make_case, make_slide, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
-from parfocal_common.ingest import STEP_NAMES, restricted_prefix, slide_prefix
+from parfocal_common.ingest import (
+    STEP_NAMES,
+    restricted_prefix,
+    restricted_ranges_key,
+    slide_prefix,
+)
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
 TESTS = Path(__file__).resolve().parent
-PUBLIC_FILES = {"levels.json", "thumbnail.jpg", "overview.jpg", "tissue.png", "tissue.json"}
+PUBLIC_FILES = {
+    "levels.json",
+    "thumbnail.jpg",
+    "overview.jpg",
+    "tissue.png",
+    "tissue.json",
+    "restricted-ranges.json",
+}
 DERIVE = STEP_NAMES.index("derive")
 
 
@@ -114,6 +128,13 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     assert keys_under(restricted_prefix(lab.tenant_id, slide_id)) == {"label.png", "macro.jpg"}
     assert keys_under(f"t/{lab.tenant_id}/quarantine/") == set()
     assert with_store(lambda store: store.get_object(original)) == data
+    ranges = json.loads(
+        with_store(lambda store: store.get_object(restricted_ranges_key(lab.tenant_id, slide_id)))
+    )["ranges"]
+    assert ranges
+    access = api(lab.colleague).get(f"/api/slides/{slide_id}/tile-access")
+    assert access.status_code == 200, access.text
+    assert claims_of(access.json()["token"])["d"] == ranges
 
     job = uuid.UUID(final["job_id"])
     assert upload_done_notifications(database, lab.lead) == [("job", job, str(slide_id))]

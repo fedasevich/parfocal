@@ -993,7 +993,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] TILES-000 · Research check for tile delivery
   Done when STACK-025 is confirmed with measured CDN numbers.
 
-- [ ] TILES-001 · Signed access to slide bytes
+- [x] TILES-001 · Signed access to slide bytes
   Short-lived capability tokens minted by the API, scoped to tenant and slide, verified by the edge Worker without a database call ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and refreshed before expiry without interrupting the viewer.
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
   The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, ). Ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload, as the owner chose on 2026-11-02.
