@@ -1059,7 +1059,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
   Size: S.
 
-- [ ] INGEST-028 · Upload protocol check on the R2 dev bucket
+- [x] INGEST-028 · Upload protocol check on the R2 dev bucket
   The upload spike ran against MinIO, which differs from R2 in ways that matter. Repeat its protocol checks against the `parfocal-dev` bucket with a per-run prefix that is deleted afterwards: a presigned part `PUT` from the dev app origin with the CORS policy of [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired part URL answering 403 without CORS headers, ListParts over more than one page, the `AbortIncompleteMultipartUpload` lifecycle rule being accepted, whether parts accept `x-amz-checksum-sha256`, and the `UploadPartCopy` with `x-amz-copy-source-range` that the ingest job of INGEST-017 (publish step and slide status) uses to move a file out of quarantine. The bucket CORS and lifecycle settings go through `infra/tofu`, and their `tofu apply` needs the owner's yes.
   Done when `packages/upload-spike` runs against `parfocal-dev` at 1 GiB with every check passing or ADR 0116 revised, and a result file records the numbers and the R2 operation count.
   Depends on STACK-039. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md).
