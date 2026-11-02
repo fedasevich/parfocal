@@ -242,7 +242,7 @@ function SlideRow({
   const own = slide.result_sets.flatMap((ref) => sets.filter((set) => set.id === ref.id));
   const open = () =>
     void navigate({
-      to: "/projects/$projectId/slides/$slideId",
+      to: "/projects/$projectId/slides/$slideId/live",
       params: { projectId: project.id, slideId: slide.id },
     });
   const toggle = () =>

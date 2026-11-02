@@ -3,6 +3,7 @@ import type { RequestHandler } from "msw";
 import { getParfocalAPIMock } from "../generated/api.msw.ts";
 import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
+import { caseHandlers } from "./case-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
@@ -31,6 +32,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...jobHandlers(),
     ...adminHandlers(),
     ...adjudicationHandlers(),
+    ...caseHandlers(),
     ...settingsHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),

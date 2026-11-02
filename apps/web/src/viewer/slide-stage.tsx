@@ -7,7 +7,7 @@ import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 
 type Phase =
   | { readonly state: "loading" }
-  | { readonly state: "ready" }
+  | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
 type Grant = {
@@ -48,6 +48,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
     if (container === null) return;
     let disposed = false;
     let dispose: (() => void) | null = null;
+    const startedAt = performance.now();
     const fail = (error: unknown) => {
       if (!disposed) setPhase({ state: "failed", failure: describeOpenFailure(error) });
     };
@@ -71,7 +72,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       viewport.ready
         .then(() => viewport.route()?.whenIdle())
         .then(() => {
-          if (!disposed) setPhase({ state: "ready" });
+          if (!disposed) setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
         })
         .catch(fail);
     }, fail);
@@ -85,6 +86,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
     <div
       data-testid="slide-stage"
       data-state={phase.state}
+      data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
       className="relative size-full min-h-0 bg-chrome"
     >
       <div ref={host} className="absolute inset-0" />
