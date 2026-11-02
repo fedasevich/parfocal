@@ -69,7 +69,7 @@ Other facts from every run: `crossOriginIsolated` was true in the page and the w
 - WebAssembly is far faster here than in doc 14 because doc 14's tab was hidden and its CPU was shared with a node run. The 5.5 s encode is the foreground fallback figure, still too slow to feel like one click, so WebAssembly stays a fallback.
 - Load-to-load spread on WebGPU is about 200 ms on encode. Four loads are enough to say "reproduces", not to rank versions finely.
 - Transformers.js and WebNN were not measured. Why they were not chosen is in [ADR 0148](../adr/0148-browser-ml-runtime-onnxruntime-web.md).
-- Assumption: a pseudo-random input times the same as a real slide patch, because the graphs have no data-dependent control flow. Mask quality was not checked here. Doc 13 and doc 14 measured it for these exact graphs.
+- Assumption: a pseudo-random input times the same as a real slide patch, because the graphs have no data-dependent control flow. Mask quality was not checked here. POC doc 13 (annotation accuracy) and doc 14 (one-click annotation and its browser numbers) measured it for these exact graphs.
 
 ## Follow-ups
 
