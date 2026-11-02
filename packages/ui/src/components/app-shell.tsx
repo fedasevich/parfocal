@@ -3,6 +3,7 @@ import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
 import { CategoryTag } from "@parfocal/ui/components/tag";
+import { type WorkspaceBrand, WorkspaceButton } from "@parfocal/ui/components/workspace-switcher";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -18,19 +19,13 @@ type LinkRenderer = (props: LinkRendererProps) => React.ReactNode;
 
 const anchorLink: LinkRenderer = ({ children, ...props }) => <a {...props}>{children}</a>;
 
-type WorkspaceBrand = {
-  name: string;
-  subtitle?: string;
-  logo?: string;
-  color?: string;
-};
-
 type BrandProps = {
   className?: string;
   workspace?: WorkspaceBrand | undefined;
   homeHref?: string | undefined;
   renderLink?: LinkRenderer | undefined;
   onWorkspaceClick?: (() => void) | undefined;
+  workspaceSlot?: React.ReactNode;
 };
 
 function Brand({
@@ -39,6 +34,7 @@ function Brand({
   homeHref,
   renderLink = anchorLink,
   onWorkspaceClick,
+  workspaceSlot,
 }: BrandProps) {
   const mark = (
     <>
@@ -59,28 +55,11 @@ function Brand({
       {workspace ? (
         <>
           <i aria-hidden="true" className="mx-1 h-5.5 w-px bg-line-strong" />
-          <button
-            type="button"
-            data-slot="workspace-switch"
-            title="Switch workspace"
-            onClick={onWorkspaceClick}
-            className="flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-1.5 py-1 text-left hover:bg-chrome-2"
-          >
-            <span
-              aria-hidden="true"
-              className="grid size-6.5 shrink-0 place-items-center rounded-md text-caption font-bold text-white"
-              style={{ background: workspace.color }}
-            >
-              {workspace.logo}
-            </span>
-            <span className="flex min-w-0 flex-col leading-tight">
-              <b className="truncate text-body-sm font-semibold text-fg">{workspace.name}</b>
-              {workspace.subtitle ? (
-                <small className="truncate text-caption text-fg-dim">{workspace.subtitle}</small>
-              ) : null}
-            </span>
-            <Icon name="down" className="text-fg-dim" />
-          </button>
+          {workspaceSlot !== undefined ? (
+            workspaceSlot
+          ) : (
+            <WorkspaceButton workspace={workspace} onClick={onWorkspaceClick} />
+          )}
         </>
       ) : null}
     </span>
@@ -96,6 +75,7 @@ type TopBarProps = React.ComponentProps<"header"> & {
   homeHref?: string | undefined;
   renderLink?: LinkRenderer | undefined;
   onWorkspaceClick?: (() => void) | undefined;
+  workspaceSlot?: React.ReactNode;
   onSearch?: (() => void) | undefined;
   onNewProject?: (() => void) | undefined;
   onUpload?: (() => void) | undefined;
@@ -113,6 +93,7 @@ function TopBar({
   homeHref,
   renderLink,
   onWorkspaceClick,
+  workspaceSlot,
   onSearch,
   onNewProject,
   onUpload,
@@ -136,6 +117,7 @@ function TopBar({
         homeHref={homeHref}
         renderLink={renderLink}
         onWorkspaceClick={onWorkspaceClick}
+        workspaceSlot={workspaceSlot}
       />
       <span className="flex-1" />
       <button

@@ -28,6 +28,7 @@ import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 import { viewerDraftOperations } from "./viewer-handlers.ts";
 import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
+import { inScenarioWorkspace } from "./workspace-scene.ts";
 
 export {
   getDecideAdjudicationMockHandler,
@@ -117,7 +118,7 @@ const taskByCode = (code: string) => {
 
 export const toMyAdjudications = (): MyAdjudication[] =>
   adjudications
-    .filter((item) => item.adjudicator === fakeView().viewer)
+    .filter((item) => inScenarioWorkspace() && item.adjudicator === fakeView().viewer)
     .map((item) => {
       const task = taskByCode(item.task);
       const project = projectByCode(task.project);

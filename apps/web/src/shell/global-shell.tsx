@@ -6,13 +6,7 @@ import {
   useListMyReviewTasks,
   useListProjects,
 } from "@parfocal/api-client";
-import {
-  AppShell,
-  Sidebar,
-  type SidebarSection,
-  TopBar,
-  type WorkspaceBrand,
-} from "@parfocal/ui/components/app-shell";
+import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/components/app-shell";
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
@@ -27,28 +21,7 @@ import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
 import { ShellSidebarContext } from "./sidebar-toggle.tsx";
-
-const workspaceColours = ["#0f766e", "#7c3aed"];
-
-const initialsOf = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter((word) => /^\p{Lu}/u.test(word))
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2);
-
-function workspaceBrand(me: Me | undefined): WorkspaceBrand | undefined {
-  const index = me?.workspaces.findIndex((item) => item.tenant_id === me.active_tenant_id) ?? -1;
-  const workspace = me?.workspaces[index];
-  if (workspace === undefined) return undefined;
-  return {
-    name: workspace.name,
-    subtitle: workspace.kind === "research" ? "Pathology and AI research" : "Diagnostic workspace",
-    logo: initialsOf(workspace.name),
-    color: workspaceColours[index % workspaceColours.length] ?? "#0f766e",
-  };
-}
+import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
 
 export function personOf(me: Me | undefined): PersonInfo {
   return {
@@ -144,6 +117,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
           <TopBar
             user={person}
             workspace={workspaceBrand(me)}
+            workspaceSlot={<ShellWorkspaceSwitcher me={me} />}
             homeHref={destinations.home()}
             renderLink={renderLink}
             jobsSlot={<ShellJobs />}

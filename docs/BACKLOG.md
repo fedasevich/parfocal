@@ -590,7 +590,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when E2E covers invite, accept and expiry, and the audit log records each step.
   Built as [ADR 0030](adr/0030-invitations-bound-to-verified-email.md) says. The `/invitations/{token}` page waits for the final UI.
 
-- [ ] IAM-008 · Workspace switcher
+- [x] IAM-008 · Workspace switcher
   The top-left organisation and workspace switcher from mock 1 and kit W1.
   Done when a component test and an E2E test switch workspace and the worklist reloads in the new scope.
 

@@ -41,6 +41,11 @@ import {
 } from "./scenario.ts";
 import { adminRightsHolders } from "./scenario-admin.ts";
 import { fakeView } from "./view.ts";
+import {
+  activeFakeWorkspace,
+  inScenarioWorkspace,
+  switchFakeWorkspace,
+} from "./workspace-scene.ts";
 
 const me = () => people[fakeView().viewer];
 
@@ -62,7 +67,7 @@ export const toMe = (): Me => ({
   avatar_colour: me().colour,
   title: me().title,
   email: me().email,
-  active_tenant_id: workspaces[0]?.id ?? null,
+  active_tenant_id: activeFakeWorkspace(),
   workspaces: workspaces.map(toWorkspace),
 });
 
@@ -154,6 +159,7 @@ export const toMyTask = (task: ScenarioReviewTask, viewer = fakeView().viewer): 
 };
 
 export const myTasks = () => {
+  if (!inScenarioWorkspace()) return [];
   const viewer = fakeView().viewer;
   return reviewTasks
     .filter((task) => task.reviewers.includes(viewer))
@@ -273,6 +279,26 @@ export const toAnnouncement = (item: ScenarioAnnouncement): Announcement => ({
 const announcementsFor = (firstWeek: boolean) =>
   firstWeek ? announcements.filter((item) => item.kind === "change") : announcements;
 
+const emptyWorkspaceHome = (home: Home): Home => ({
+  ...home,
+  resume: null,
+  tasks: [],
+  projects: [],
+  slides_without_results: 0,
+  week: { ...home.week, objects_checked: 0, agreed: 0, agree_share: 0, open_disagreements: 0 },
+});
+
+const notAMember = () =>
+  HttpResponse.json(
+    {
+      type: "about:blank",
+      title: "You are not a member of this workspace",
+      status: 403,
+      code: "not-a-member",
+    },
+    { status: 403, headers: { "content-type": "application/problem+json" } },
+  );
+
 const projectNotFound = () =>
   HttpResponse.json(
     { type: "about:blank", title: "Project not found", status: 404, code: "not-found" },
@@ -283,9 +309,17 @@ export function scenarioHandlers(): RequestHandler[] {
   return [
     getGetSessionMockHandler(() => toSession()),
     getGetMeMockHandler(() => toMe()),
-    getGetMyHomeMockHandler(() => toHome()),
+    getGetMyHomeMockHandler(() =>
+      inScenarioWorkspace() ? toHome() : emptyWorkspaceHome(toHome()),
+    ),
     getListMyReviewTasksMockHandler(() => myTasks()),
-    getListProjectsMockHandler(projects.map(toProject)),
+    getListProjectsMockHandler(() => (inScenarioWorkspace() ? projects.map(toProject) : [])),
+    http.put("*/api/me/workspace", async ({ request }) => {
+      const { tenant_id } = (await request.json()) as { tenant_id: string };
+      if (!switchFakeWorkspace(tenant_id)) return notAMember();
+      const chosen = toMe().workspaces.find((workspace) => workspace.tenant_id === tenant_id);
+      return HttpResponse.json(chosen);
+    }),
     getListTenantMembersMockHandler(toMembers()),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
       const project = projects.find(
