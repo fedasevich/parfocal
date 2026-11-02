@@ -21,6 +21,7 @@ import {
   listStudyTemplates,
   listTenantMembers,
   requestProjectAccess,
+  resendInvitation,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -89,12 +90,27 @@ test("only researchers hold admin rights, and Daniel is one of them", async () =
 });
 
 test("member activity lists each member's projects from the seed", async () => {
-  const rows = (await listMemberActivity()).data;
+  const rows = okBody<{ user_id: string; project_codes: string[]; email: string | null }[]>(
+    await listMemberActivity(),
+  );
   const daniel = rows.find((row) => row.user_id === scenario.people.DH.id);
   assert.deepEqual(daniel?.project_codes, ["P07", "P09", "P11"]);
-  const simona = rows.find((row) => row.user_id === scenario.people.SM.id);
-  assert.equal(simona?.status, "invited");
-  assert.equal(simona?.last_active_at, null);
+  const members = okBody<{ user_id: string }[]>(await listTenantMembers());
+  const invited = okBody<{ email: string }[]>(await listInvitations()).map((row) => row.email);
+  const memberEmails = rows.map((row) => row.email);
+  assert.ok(invited.every((email) => !memberEmails.includes(email)));
+  assert.ok(rows.every((row) => members.some((member) => member.user_id === row.user_id)));
+});
+
+test("resending an invitation replaces it with a new one", async () => {
+  const [first] = okBody<{ id: string; email: string }[]>(await listInvitations());
+  assert.ok(first);
+  const resent = await resendInvitation(first.id);
+  assert.equal(resent.status, 201);
+  const waiting = okBody<{ id: string; email: string }[]>(await listInvitations());
+  assert.equal(waiting.length, 3);
+  assert.ok(!waiting.some((row) => row.id === first.id));
+  assert.equal(waiting.at(-1)?.email, first.email);
 });
 
 test("a new invitation joins the waiting list and lowercases the email", async () => {

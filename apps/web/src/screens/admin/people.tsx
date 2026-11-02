@@ -8,6 +8,8 @@ import {
   useListMemberActivity,
   useListProjects,
   useListTenantMembers,
+  useResendInvitation,
+  useRevokeInvitation,
   useSetMemberAdminRights,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -40,8 +42,9 @@ import { useState } from "react";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { lastActive, MoreButton, type Notify, tableClass } from "./common.tsx";
+import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from "./people-rules.ts";
 
-type Filter = "all" | "res" | "rev" | "adm";
+type Filter = PeopleFilter;
 
 const roleText = { researcher: "Researcher", reviewer: "Reviewer" } as const;
 
@@ -84,15 +87,16 @@ export function PeopleSection({
   setInviting: (open: boolean) => void;
 }) {
   const members = okData(useListTenantMembers().data) ?? [];
-  const activity = useListMemberActivity().data?.data ?? [];
+  const activity = okData(useListMemberActivity().data) ?? [];
   const invitationList = useListInvitations();
   const invitations = okData(invitationList.data) ?? [];
   const overview = useGetAdminOverview().data?.data;
   const setRights = useSetMemberAdminRights();
   const changeRole = useChangeMemberRole();
+  const resend = useResendInvitation();
+  const revoke = useRevokeInvitation();
   const [rights, setRightsState] = useState<Record<string, boolean>>({});
   const [roles, setRoles] = useState<Record<string, Member["role"]>>({});
-  const [sent, setSent] = useState<Invitation[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [find, setFind] = useState("");
   const roleOf = (member: Member) => roles[member.user_id] ?? member.role;
@@ -112,10 +116,19 @@ export function PeopleSection({
   const holders = members.filter(rightOf);
   const toggleRight = (member: Member) => {
     const was = rightOf(member);
-    if (was && holders.length <= 1) return;
+    if (adminSwitchOf(roleOf(member), was, holders.length) === "locked") return;
     const apply = (on: boolean) => {
       setRightsState((current) => ({ ...current, [member.user_id]: on }));
-      setRights.mutate({ userId: member.user_id, data: { admin_rights: on } });
+      setRights.mutate(
+        { userId: member.user_id, data: { admin_rights: on } },
+        {
+          onSuccess: (response) => {
+            if (response.status === 200) return;
+            setRightsState((current) => ({ ...current, [member.user_id]: !on }));
+            notify(problemText(response.data));
+          },
+        },
+      );
     };
     apply(!was);
     notify(
@@ -125,6 +138,43 @@ export function PeopleSection({
       () => apply(was),
     );
   };
+  const changeRoleOf = (member: Member, next: Member["role"]) => {
+    const was = roleOf(member);
+    setRoles((current) => ({ ...current, [member.user_id]: next }));
+    changeRole.mutate(
+      { userId: member.user_id, data: { role: next } },
+      {
+        onSuccess: (response) => {
+          if (response.status === 200) {
+            notify(`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
+            return;
+          }
+          setRoles((current) => ({ ...current, [member.user_id]: was }));
+          notify(problemText(response.data));
+        },
+      },
+    );
+  };
+  const resendTo = (invitation: Invitation) =>
+    resend.mutate(
+      { invitationId: invitation.id },
+      {
+        onSuccess: (response) => {
+          void invitationList.refetch();
+          notify(
+            response.status === 201
+              ? `Invite sent again to ${invitation.email}. The earlier link no longer works.`
+              : problemText(response.data),
+          );
+        },
+      },
+    );
+  const withdraw = (invitation: Invitation) =>
+    revoke.mutate(
+      { invitationId: invitation.id },
+      { onSuccess: () => void invitationList.refetch() },
+    );
+  const shownInvites = shownInvitations(invitations, find, filter);
   const waiting = invitations.length;
   const signOutIds = overview?.can_sign_out_user_ids ?? [];
   const peopleFor = (who: (typeof roleDefinitions)[number]["who"]) => {
@@ -183,7 +233,6 @@ export function PeopleSection({
             {rows.map((member) => {
               const row = activityOf(member);
               const role = roleOf(member);
-              const invited = row?.status === "invited";
               return (
                 <TableRow key={member.user_id}>
                   <TableCell>
@@ -192,12 +241,7 @@ export function PeopleSection({
                   <TableCell>
                     <Select
                       value={role}
-                      onValueChange={(value) => {
-                        const next = value as Member["role"];
-                        setRoles({ ...roles, [member.user_id]: next });
-                        changeRole.mutate({ userId: member.user_id, data: { role: next } });
-                        notify(`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
-                      }}
+                      onValueChange={(value) => changeRoleOf(member, value as Member["role"])}
                     >
                       <SelectTrigger
                         size="sm"
@@ -213,11 +257,11 @@ export function PeopleSection({
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {role === "researcher" ? (
+                    {adminSwitchOf(role, rightOf(member), holders.length) !== "absent" ? (
                       <Switch
                         aria-label={`Admin rights for ${member.display_name}`}
                         checked={rightOf(member)}
-                        disabled={rightOf(member) && holders.length <= 1}
+                        disabled={adminSwitchOf(role, rightOf(member), holders.length) === "locked"}
                         onCheckedChange={() => toggleRight(member)}
                       />
                     ) : (
@@ -227,27 +271,17 @@ export function PeopleSection({
                   <TableCell className="font-mono">{row?.project_codes.join(", ")}</TableCell>
                   <TableCell>{lastActive(row?.last_active_at ?? null)}</TableCell>
                   <TableCell>
-                    <StatusTag tone={invited ? "warn" : "ok"}>
-                      {invited ? "Invite sent" : "Active"}
-                    </StatusTag>
+                    <StatusTag tone="ok">Active</StatusTag>
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center justify-end gap-1.5">
-                      {invited ? (
-                        <Button
-                          size="sm"
-                          onClick={() => notify(`Invite sent again to ${row?.email ?? ""} (mock)`)}
-                        >
-                          Resend
-                        </Button>
-                      ) : null}
                       <MoreButton label={`More for ${member.display_name}`} />
                     </span>
                   </TableCell>
                 </TableRow>
               );
             })}
-            {sent.map((invitation) => (
+            {shownInvites.map((invitation) => (
               <TableRow key={invitation.id}>
                 <TableCell>
                   <Person
@@ -257,7 +291,7 @@ export function PeopleSection({
                       color: "var(--chrome-3)",
                     }}
                     size={28}
-                    sub="Invited just now"
+                    sub={`Invited ${lastActive(invitation.created_at).toLowerCase()}`}
                   />
                 </TableCell>
                 <TableCell>{roleText[invitation.role]}</TableCell>
@@ -269,9 +303,22 @@ export function PeopleSection({
                 </TableCell>
                 <TableCell>Not yet</TableCell>
                 <TableCell>
-                  <StatusTag tone="warn">Invite sent</StatusTag>
+                  <StatusTag tone="warn">
+                    {invitation.expired ? "Invite expired" : "Invite sent"}
+                  </StatusTag>
                 </TableCell>
-                <TableCell />
+                <TableCell>
+                  <span className="flex items-center justify-end gap-1.5">
+                    <Button
+                      size="sm"
+                      aria-label={`Resend the invite to ${invitation.email}`}
+                      disabled={resend.isPending}
+                      onClick={() => resendTo(invitation)}
+                    >
+                      Resend
+                    </Button>
+                  </span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -319,18 +366,20 @@ export function PeopleSection({
       </Zone>
       <InvitePeopleModal
         open={inviting}
-        taken={activity.map((row) => row.email)}
+        taken={takenEmails(activity, invitations)}
         onClose={() => setInviting(false)}
         onSent={(invitation) => {
-          setSent((current) => [...current, invitation]);
           void invitationList.refetch();
-          notify(`Invite sent to ${invitation.email}`, () =>
-            setSent((current) => current.filter((item) => item.id !== invitation.id)),
-          );
+          notify(`Invite sent to ${invitation.email}`, () => withdraw(invitation));
         }}
       />
     </>
   );
+}
+
+function problemText(body: unknown): string {
+  const title = (body as { title?: unknown } | null)?.title;
+  return typeof title === "string" ? title : "That did not work. Try again.";
 }
 
 const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;

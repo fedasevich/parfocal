@@ -1,12 +1,5 @@
 import type { ReportBlock } from "../generated/api.ts";
-import {
-  type PersonKey,
-  type ProjectCode,
-  people,
-  projects,
-  scenarioNow,
-  workspaces,
-} from "./scenario.ts";
+import { type PersonKey, type ProjectCode, projects, scenarioNow, workspaces } from "./scenario.ts";
 
 const uuid = (group: number, index: number | string) =>
   `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
@@ -32,19 +25,18 @@ export const workspaceTotals = {
 export type MemberActivitySeed = {
   key: PersonKey;
   lastActiveAt: string | null;
-  status: "active" | "invited";
 };
 
 export const memberActivity: MemberActivitySeed[] = [
-  { key: "DH", lastActiveAt: at("14:30"), status: "active" },
-  { key: "LM", lastActiveAt: at("14:20"), status: "active" },
-  { key: "SM", lastActiveAt: null, status: "invited" },
-  { key: "AK", lastActiveAt: at("16:05", "2026-10-14"), status: "active" },
-  { key: "JR", lastActiveAt: at("11:40", "2026-10-13"), status: "active" },
-  { key: "TB", lastActiveAt: at("13:30"), status: "active" },
-  { key: "PK", lastActiveAt: at("09:10", "2026-10-02"), status: "active" },
-  { key: "HL", lastActiveAt: at("08:15"), status: "active" },
-  { key: "MV", lastActiveAt: at("12:50", "2026-10-14"), status: "active" },
+  { key: "DH", lastActiveAt: at("14:30") },
+  { key: "LM", lastActiveAt: at("14:20") },
+  { key: "SM", lastActiveAt: at("15:40", "2026-10-14") },
+  { key: "AK", lastActiveAt: at("16:05", "2026-10-14") },
+  { key: "JR", lastActiveAt: at("11:40", "2026-10-13") },
+  { key: "TB", lastActiveAt: at("13:30") },
+  { key: "PK", lastActiveAt: at("09:10", "2026-10-02") },
+  { key: "HL", lastActiveAt: at("08:15") },
+  { key: "MV", lastActiveAt: at("12:50", "2026-10-14") },
 ];
 
 export const projectsOf = (key: PersonKey): ProjectCode[] =>
@@ -62,7 +54,7 @@ export type InvitationSeed = {
 export const invitations: InvitationSeed[] = [
   {
     id: uuid(60, 1),
-    email: people.SM.email,
+    email: "ondrej@fnvltava.example",
     role: "reviewer",
     adminRights: false,
     createdAt: at("09:30"),

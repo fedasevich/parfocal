@@ -219,3 +219,28 @@ def test_operators_add_and_list_members(api: ApiAs, browser: Browser) -> None:
         json={"user_id": user, "role": "researcher"},
     )
     assert unknown_tenant.status_code == 404
+
+
+def test_admins_see_each_members_email_projects_and_last_activity(
+    browser: Browser, second_browser: Browser
+) -> None:
+    browser.login()
+    second_browser.login()
+    tenant = make_tenant(browser)
+    join(browser, tenant, "researcher")
+    browser.sql(f"UPDATE memberships SET admin_rights = true WHERE tenant_id = '{tenant}'")
+    join(second_browser, tenant)
+    switch(browser, tenant)
+    created = browser.client.post("/api/projects", json={"name": "Activity study"})
+    assert created.status_code == 201, created.text
+    activity = browser.client.get("/api/tenant/members/activity")
+    assert activity.status_code == 200, activity.text
+    rows = {row["user_id"]: row for row in activity.json()}
+    mine, theirs = rows[user_id_of(browser)], rows[user_id_of(second_browser)]
+    assert mine["project_codes"] == [created.json()["code"]]
+    assert mine["email"] is not None
+    assert mine["last_active_at"] is not None
+    assert (theirs["project_codes"], theirs["last_active_at"]) == ([], None)
+    switch(second_browser, tenant)
+    refused = second_browser.client.get("/api/tenant/members/activity")
+    assert refused.status_code == 403

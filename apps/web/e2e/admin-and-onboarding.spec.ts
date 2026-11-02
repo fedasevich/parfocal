@@ -165,12 +165,17 @@ test("admin is Daniel's, with its own sections and the app's top bar", async ({ 
   await expect(nav.getByRole("link")).toHaveCount(10);
   await nav.getByRole("link", { name: "People and roles" }).click();
   await expect(page).toHaveURL(/section=people/);
-  await expect(page.getByRole("row", { name: /simona@fnvltava.example/ })).toContainText(
+  await expect(page.getByRole("row", { name: /ondrej@fnvltava.example/ })).toContainText(
     "Invite sent",
+  );
+  await expect(page.getByRole("row", { name: /simona@fnvltava.example/ })).toContainText("Active");
+  await expect(page.getByRole("switch", { name: "Admin rights for Simona Marková" })).toHaveCount(
+    0,
   );
   await expect(page.getByRole("switch", { name: "Admin rights for Daniel Hruška" })).toBeDisabled();
   await page.getByRole("combobox", { name: "Role of Tomáš Beneš" }).click();
   await page.getByRole("option", { name: "Researcher" }).click();
+  await expect(page.getByText("Tomáš Beneš is a researcher now.")).toBeVisible();
   const tomas = page.getByRole("switch", { name: "Admin rights for Tomáš Beneš" });
   await expect(tomas).not.toBeChecked();
   await tomas.click();
@@ -195,6 +200,18 @@ test("Invite people sends an invite that shows in the list", async ({ page }) =>
   await expect(modal).toHaveCount(0);
   await expect(page.getByRole("row", { name: /petr@lab.example/ })).toContainText("Invite sent");
   await expect(page.getByText("4 invites waiting")).toBeVisible();
+});
+
+test("Resend sends a pending invite again and keeps one row for it", async ({ page }) => {
+  await page.goto("/admin?section=people");
+  const row = page.getByRole("row", { name: /karel@cuailab.example/ });
+  await expect(row).toContainText("Invite sent");
+  await row.getByRole("button", { name: "Resend the invite to karel@cuailab.example" }).click();
+  await expect(
+    page.getByText("Invite sent again to karel@cuailab.example. The earlier link no longer works."),
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /karel@cuailab.example/ })).toHaveCount(1);
+  await expect(page.getByText("3 invites waiting")).toBeVisible();
 });
 
 test("a new template opens in the editor and blocks are added by click", async ({ page }) => {

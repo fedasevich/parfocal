@@ -7,6 +7,5 @@ export * from "./get-sign-in-options.ts";
 export * from "./get-storage-usage.ts";
 export * from "./list-ai-models.ts";
 export * from "./list-joinable-workspaces.ts";
-export * from "./list-member-activity.ts";
 export * from "./list-webhooks.ts";
 export * from "./request-project-access.ts";

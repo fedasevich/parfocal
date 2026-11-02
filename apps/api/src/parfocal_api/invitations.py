@@ -241,6 +241,49 @@ async def revoke_invitation(
     )
 
 
+@tenant_router.post(
+    "/{invitation_id}/resend",
+    operation_id="resendInvitation",
+    status_code=201,
+    **require(Permission.MANAGE_PEOPLE, write=True),
+)
+async def resend_invitation(
+    invitation_id: uuid.UUID,
+    request: Request,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Invitation:
+    earlier = (
+        await connection.execute(
+            select(invitations.c.email, invitations.c.role, invitations.c.admin_rights)
+            .where(
+                invitations.c.id == invitation_id,
+                invitations.c.tenant_id == literal_column(CURRENT_TENANT),
+                *PENDING,
+            )
+            .with_for_update()
+        )
+    ).one_or_none()
+    if earlier is None:
+        raise InvitationNotFoundError
+    tenant_id = database_scope(principal).tenant_id
+    assert tenant_id is not None
+    draft = InvitationDraft(
+        email=earlier.email, role=earlier.role, admin_rights=earlier.admin_rights
+    )
+    resent = await invite(connection, request, principal, tenant_id, draft)
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.INVITATION_RESENT,
+        AuditTarget.INVITATION,
+        resent.id,
+        tenant_id=tenant_id,
+        details={"replaces": str(invitation_id)},
+    )
+    return resent
+
+
 @platform_router.post(
     "/tenants/{tenant_id}/invitations", operation_id="invitePlatformMember", status_code=201
 )

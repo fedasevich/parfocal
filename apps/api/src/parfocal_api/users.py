@@ -1,9 +1,10 @@
 import uuid
+from datetime import datetime
 from typing import Annotated, Self
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field, StringConstraints, model_validator
-from sqlalchemy import exists, insert, literal_column, or_, select, update
+from sqlalchemy import exists, func, insert, literal_column, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -24,6 +25,7 @@ from parfocal_api.problems import (
     TenantSuspendedError,
     UnauthenticatedError,
 )
+from parfocal_api.projects import code_of
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     ProjectRole,
@@ -33,6 +35,7 @@ from parfocal_api.tables import (
     memberships,
     organisations,
     project_members,
+    projects,
     sessions,
     tenants,
     users,
@@ -57,6 +60,13 @@ class Profile(BaseModel):
 class Member(Profile):
     role: Role
     admin_rights: bool
+
+
+class MemberActivity(BaseModel):
+    user_id: uuid.UUID
+    email: str | None
+    last_active_at: datetime | None
+    project_codes: list[str]
 
 
 class Workspace(BaseModel):
@@ -297,6 +307,58 @@ async def list_tenant_members(connection: TenantConnection) -> list[Member]:
         .order_by(users.c.display_name)
     )
     return [member_of(row) for row in rows]
+
+
+@tenant_router.get(
+    "/members/activity",
+    operation_id="listMemberActivity",
+    **require(Permission.MANAGE_PEOPLE),
+)
+async def list_member_activity(
+    request: Request, principal: CurrentPrincipal, connection: TenantConnection
+) -> list[MemberActivity]:
+    in_this_tenant = memberships.c.tenant_id == literal_column(CURRENT_TENANT)
+    people = (
+        await connection.execute(
+            select(users.c.id, users.c.email, users.c.subject)
+            .join(memberships, memberships.c.user_id == users.c.id)
+            .where(in_this_tenant)
+            .order_by(users.c.display_name)
+        )
+    ).all()
+    projects_of: dict[uuid.UUID, list[str]] = {}
+    rows = await connection.execute(
+        select(project_members.c.user_id, projects.c.number)
+        .join(projects, projects.c.id == project_members.c.project_id)
+        .where(
+            project_members.c.tenant_id == literal_column(CURRENT_TENANT),
+            projects.c.deleted_at.is_(None),
+            projects.c.sample.is_(False),
+        )
+        .order_by(projects.c.number)
+    )
+    for row in rows:
+        projects_of.setdefault(row.user_id, []).append(code_of(row.number))
+    tenant_id = database_scope(principal).tenant_id
+    async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as auth:
+        latest = await auth.execute(
+            select(sessions.c.subject, func.max(sessions.c.last_seen_at).label("seen_at"))
+            .where(
+                sessions.c.active_tenant_id == tenant_id,
+                sessions.c.subject.in_([person.subject for person in people]),
+            )
+            .group_by(sessions.c.subject)
+        )
+        seen = {row.subject: row.seen_at for row in latest}
+    return [
+        MemberActivity(
+            user_id=person.id,
+            email=person.email,
+            last_active_at=seen.get(person.subject),
+            project_codes=projects_of.get(person.id, []),
+        )
+        for person in people
+    ]
 
 
 @tenant_router.put(

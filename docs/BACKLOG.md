@@ -618,7 +618,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a SCIM test client creates, updates and deactivates users.
   Depends on IAM-012.
 
-- [ ] IAM-014 · Admin console for users and roles
+- [x] IAM-014 · Admin console for users and roles
   Admin page screen to list members, change roles and admin rights, deactivate and resend invites.
   Done when component and E2E tests cover each action and each action is audited.
   The screen is ADMIN-003 in the admin page.

@@ -101,6 +101,7 @@ class AuditAction(StrEnum):
     API_TOKEN_REVOKED = "api-token.revoked"
     INVITATION_CREATED = "invitation.created"
     INVITATION_REVOKED = "invitation.revoked"
+    INVITATION_RESENT = "invitation.resent"
     INVITATION_ACCEPTED = "invitation.accepted"
     INVITATION_EXPIRED = "invitation.expired"
     ANNOUNCEMENT_POSTED = "announcement.posted"

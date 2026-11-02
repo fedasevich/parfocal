@@ -571,6 +571,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"email": f"{uuid.uuid4().hex[:8]}@example.test", "role": "researcher"},
     ),
     "revokeInvitation": lambda w: Call("DELETE", f"/api/tenant/invitations/{w.invitations.pop()}"),
+    "resendInvitation": lambda w: Call(
+        "POST", f"/api/tenant/invitations/{w.invitations.pop()}/resend"
+    ),
     "listServiceAccounts": lambda _: Call("GET", "/api/tenant/service-accounts"),
     "createServiceAccount": lambda _: Call(
         "POST",
@@ -588,6 +591,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "exportAuditEvents": lambda _: Call("GET", "/api/tenant/audit-events/export"),
     "listAuditSigningKeys": lambda _: Call("GET", "/api/tenant/audit-events/signing-keys"),
     "listTenantMembers": lambda _: Call("GET", "/api/tenant/members"),
+    "listMemberActivity": lambda _: Call("GET", "/api/tenant/members/activity"),
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
     ),
@@ -695,7 +699,11 @@ def guarded_operations() -> dict[str, Permission]:
     }
 
 
-WRITES = {name for name, call in GUARDED_CALLS.items() if call(PLACEHOLDER).method != "GET"}
+WRITES = {
+    name
+    for name, call in GUARDED_CALLS.items()
+    if call(replace(PLACEHOLDER, invitations=[uuid.uuid4()])).method != "GET"
+}
 
 
 def writes() -> set[str]:
@@ -921,7 +929,7 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                     )
                     .returning(invitations.c.id)
                 )
-                for index in range(len(SEATS))
+                for index in range(2 * len(SEATS))
             ]
             case = await seed_case(connection, tenant_id)
             doomed_patient = await add_patient(

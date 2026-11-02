@@ -48,7 +48,6 @@ export {
   getGetStorageUsageMockHandler,
   getListAiModelsMockHandler,
   getListJoinableWorkspacesMockHandler,
-  getListMemberActivityMockHandler,
   getListWebhooksMockHandler,
   getRequestProjectAccessMockHandler,
 } from "./admin-handlers.ts";

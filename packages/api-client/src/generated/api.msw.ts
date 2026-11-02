@@ -52,6 +52,7 @@ import type {
   Marked,
   Me,
   Member,
+  MemberActivity,
   MemberAvailability,
   Membership,
   ModelRun,
@@ -7199,6 +7200,20 @@ export const getListTenantMembersResponseMock = (): Member[] =>
     admin_rights: faker.datatype.boolean(),
   }));
 
+export const getListMemberActivityResponseMock = (): MemberActivity[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    last_active_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    project_codes: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+  }));
+
 export const getChangeMemberRoleResponseMock = (
   overrideResponse: Partial<Extract<Member, object>> = {},
 ): Member => ({
@@ -7443,6 +7458,20 @@ export const getListInvitationsResponseMock = (): Invitation[] =>
   }));
 
 export const getCreateInvitationResponseMock = (
+  overrideResponse: Partial<Extract<Invitation, object>> = {},
+): Invitation => ({
+  id: faker.string.uuid(),
+  tenant_id: faker.string.uuid(),
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  expired: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getResendInvitationResponseMock = (
   overrideResponse: Partial<Extract<Invitation, object>> = {},
 ): Invitation => ({
   id: faker.string.uuid(),
@@ -11329,6 +11358,30 @@ export const getListTenantMembersMockHandler = (
   );
 };
 
+export const getListMemberActivityMockHandler = (
+  overrideResponse?:
+    | MemberActivity[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MemberActivity[]> | MemberActivity[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/members/activity",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListMemberActivityResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getChangeMemberRoleMockHandler = (
   overrideResponse?:
     | Member
@@ -11667,6 +11720,28 @@ export const getRevokeInvitationMockHandler = (
   );
 };
 
+export const getResendInvitationMockHandler = (
+  overrideResponse?:
+    | Invitation
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Invitation> | Invitation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/invitations/:invitationId/resend",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResendInvitationResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getInvitePlatformMemberMockHandler = (
   overrideResponse?:
     | Invitation
@@ -11949,6 +12024,7 @@ export const getParfocalAPIMock = () => [
   getUpdateMeMockHandler(),
   getSwitchWorkspaceMockHandler(),
   getListTenantMembersMockHandler(),
+  getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),
   getSetMemberAdminRightsMockHandler(),
   getAddMemberMockHandler(),
@@ -11964,6 +12040,7 @@ export const getParfocalAPIMock = () => [
   getListInvitationsMockHandler(),
   getCreateInvitationMockHandler(),
   getRevokeInvitationMockHandler(),
+  getResendInvitationMockHandler(),
   getInvitePlatformMemberMockHandler(),
   getAcceptInvitationMockHandler(),
   getGetMySettingLayersMockHandler(),

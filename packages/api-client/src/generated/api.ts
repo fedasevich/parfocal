@@ -1731,6 +1731,13 @@ export interface Member {
   admin_rights: boolean;
 }
 
+export interface MemberActivity {
+  user_id: string;
+  email: string | null;
+  last_active_at: string | null;
+  project_codes: string[];
+}
+
 export interface MemberAvailability {
   user_id: string;
   status: Availability;
@@ -33429,6 +33436,188 @@ export function useListTenantMembers<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type listMemberActivityResponse200 = {
+  data: MemberActivity[];
+  status: 200;
+};
+
+export type listMemberActivityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMemberActivityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMemberActivityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMemberActivityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMemberActivityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMemberActivityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMemberActivityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMemberActivityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMemberActivityResponseSuccess = listMemberActivityResponse200 & {
+  headers: Headers;
+};
+export type listMemberActivityResponseError = (
+  | listMemberActivityResponse400
+  | listMemberActivityResponse401
+  | listMemberActivityResponse403
+  | listMemberActivityResponse404
+  | listMemberActivityResponse409
+  | listMemberActivityResponse422
+  | listMemberActivityResponse429
+  | listMemberActivityResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMemberActivityResponse =
+  | listMemberActivityResponseSuccess
+  | listMemberActivityResponseError;
+
+export const getListMemberActivityUrl = () => {
+  return `/api/tenant/members/activity`;
+};
+
+/**
+ * @summary List Member Activity
+ */
+export const listMemberActivity = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMemberActivityResponse> => {
+  return apiFetch<listMemberActivityResponse>(getListMemberActivityUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMemberActivityQueryKey = () => {
+  return [`/api/tenant/members/activity`] as const;
+};
+
+export const getListMemberActivityQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMemberActivity>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMemberActivity>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMemberActivityQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMemberActivity>>> = ({ signal }) =>
+    listMemberActivity({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMemberActivity>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMemberActivityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMemberActivity>>
+>;
+export type ListMemberActivityQueryError = Problem;
+
+export function useListMemberActivity<
+  TData = Awaited<ReturnType<typeof listMemberActivity>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMemberActivity>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMemberActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listMemberActivity>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMemberActivity<
+  TData = Awaited<ReturnType<typeof listMemberActivity>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMemberActivity>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMemberActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listMemberActivity>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMemberActivity<
+  TData = Awaited<ReturnType<typeof listMemberActivity>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMemberActivity>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Member Activity
+ */
+
+export function useListMemberActivity<
+  TData = Awaited<ReturnType<typeof listMemberActivity>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMemberActivity>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMemberActivityQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type changeMemberRoleResponse200 = {
   data: Member;
   status: 200;
@@ -36019,6 +36208,153 @@ export const useRevokeInvitation = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRevokeInvitationMutationOptions(options), queryClient);
+};
+
+export type resendInvitationResponse201 = {
+  data: Invitation;
+  status: 201;
+};
+
+export type resendInvitationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resendInvitationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resendInvitationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resendInvitationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resendInvitationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resendInvitationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resendInvitationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resendInvitationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resendInvitationResponseSuccess = resendInvitationResponse201 & {
+  headers: Headers;
+};
+export type resendInvitationResponseError = (
+  | resendInvitationResponse400
+  | resendInvitationResponse401
+  | resendInvitationResponse403
+  | resendInvitationResponse404
+  | resendInvitationResponse409
+  | resendInvitationResponse422
+  | resendInvitationResponse429
+  | resendInvitationResponse500
+) & {
+  headers: Headers;
+};
+
+export type resendInvitationResponse =
+  | resendInvitationResponseSuccess
+  | resendInvitationResponseError;
+
+export const getResendInvitationUrl = (invitationId: string) => {
+  return `/api/tenant/invitations/${invitationId}/resend`;
+};
+
+/**
+ * @summary Resend Invitation
+ */
+export const resendInvitation = async (
+  invitationId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resendInvitationResponse> => {
+  return apiFetch<resendInvitationResponse>(getResendInvitationUrl(invitationId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getResendInvitationMutationKey = () => ["resendInvitation"] as const;
+
+export const getResendInvitationMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendInvitation>>,
+    TError,
+    ResendInvitationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resendInvitation>>,
+  TError,
+  ResendInvitationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResendInvitationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resendInvitation>>,
+    ResendInvitationMutationVariables
+  > = (props) => {
+    const { invitationId } = props ?? {};
+
+    return resendInvitation(invitationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResendInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resendInvitation>>
+>;
+
+export type ResendInvitationMutationError = Problem;
+export type ResendInvitationMutationVariables = { invitationId: string };
+
+/**
+ * @summary Resend Invitation
+ */
+export const useResendInvitation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resendInvitation>>,
+      TError,
+      ResendInvitationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resendInvitation>>,
+  TError,
+  ResendInvitationMutationVariables,
+  TContext
+> => {
+  return useMutation(getResendInvitationMutationOptions(options), queryClient);
 };
 
 export type invitePlatformMemberResponse201 = {

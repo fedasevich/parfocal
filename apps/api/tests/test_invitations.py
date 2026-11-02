@@ -172,6 +172,33 @@ def test_inviting_again_replaces_the_earlier_link(api: ApiAs, browser: Browser) 
     assert accept(browser, second).json()["role"] == "researcher"
 
 
+def test_resending_sends_a_new_link_and_is_audited(api: ApiAs, browser: Browser) -> None:
+    workspace = make_workspace(api, browser)
+    email = fresh_email()
+    first = invite(api, workspace, email, "researcher")
+    earlier = api(workspace.admin).get(INVITATIONS).json()[0]
+    resent = api(workspace.admin).post(f"{INVITATIONS}/{earlier['id']}/resend")
+    assert resent.status_code == 201, resent.text
+    assert (resent.json()["email"], resent.json()["role"]) == (email, "researcher")
+    assert [row["id"] for row in api(workspace.admin).get(INVITATIONS).json()] == [
+        resent.json()["id"]
+    ]
+    message = outbox(api).sent[-1]
+    assert message.to == email
+    second = message.link.rsplit("/", 1)[1]
+    assert second != first
+    assert trail(api, workspace)[-3:] == [
+        "invitation.revoked",
+        "invitation.created",
+        "invitation.resent",
+    ]
+    again = api(workspace.admin).post(f"{INVITATIONS}/{earlier['id']}/resend")
+    assert (again.status_code, again.json()["code"]) == (404, "invitation-not-found")
+    invitee(browser, email)
+    assert accept(browser, first).status_code == 404
+    assert accept(browser, second).json()["role"] == "researcher"
+
+
 def test_members_cannot_be_invited_again(api: ApiAs, browser: Browser) -> None:
     workspace = make_workspace(api, browser)
     email = browser.sql(f"SELECT email FROM users WHERE id = '{workspace.admin.user_id}'")[0][0]

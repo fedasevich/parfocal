@@ -9,7 +9,6 @@ import {
   type JoinableWorkspace,
   joinableWorkspaceListSchema,
 } from "../draft/list-joinable-workspaces.ts";
-import { type MemberActivity, memberActivityListSchema } from "../draft/list-member-activity.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
 import { type AccessRequest, accessRequestSchema } from "../draft/request-project-access.ts";
 import {
@@ -21,7 +20,10 @@ import {
   getGetSessionPolicyMockHandler,
   getListAuditEventsMockHandler,
   getListInvitationsMockHandler,
+  getListMemberActivityMockHandler,
   getListServiceAccountsMockHandler,
+  getResendInvitationMockHandler,
+  getRevokeInvitationMockHandler,
   getSetMemberAdminRightsMockHandler,
 } from "../generated/api.msw.ts";
 import type {
@@ -29,6 +31,7 @@ import type {
   Invitation,
   InvitationDraft,
   Member,
+  MemberActivity,
   ServiceAccount,
   SessionPolicy,
   StudyTemplate,
@@ -77,10 +80,15 @@ import {
 } from "./scenario-admin.ts";
 
 const created: Invitation[] = [];
+const withdrawn = new Set<string>();
 
 export const resetAdminActions = () => {
   created.length = 0;
+  withdrawn.clear();
 };
+
+const newInvitationId = () =>
+  `00000000-0000-4000-8060-${String(100 + created.length).padStart(12, "0")}`;
 
 const ref = (code: (typeof projects)[number]["code"]) => {
   const project = projectByCode(code);
@@ -98,7 +106,10 @@ const toInvitation = (seed: (typeof invitations)[number]): Invitation => ({
   expired: false,
 });
 
-export const toInvitations = (): Invitation[] => [...invitations.map(toInvitation), ...created];
+export const toInvitations = (): Invitation[] =>
+  [...invitations.map(toInvitation), ...created].filter(
+    (invitation) => !withdrawn.has(invitation.id),
+  );
 
 export const toAdminOverview = (): AdminOverview =>
   adminOverviewSchema.parse({
@@ -119,15 +130,12 @@ export const toAdminOverview = (): AdminOverview =>
   });
 
 export const toMemberActivity = (): MemberActivity[] =>
-  memberActivityListSchema.parse(
-    memberActivity.map((row) => ({
-      user_id: people[row.key].id,
-      email: people[row.key].email,
-      status: row.status,
-      last_active_at: row.lastActiveAt,
-      project_codes: projectsOf(row.key),
-    })),
-  );
+  memberActivity.map((row) => ({
+    user_id: people[row.key].id,
+    email: people[row.key].email,
+    last_active_at: row.lastActiveAt,
+    project_codes: projectsOf(row.key),
+  }));
 
 export const toAiModels = (): AiModels =>
   aiModelsSchema.parse({
@@ -414,7 +422,7 @@ export function adminHandlers(): RequestHandler[] {
     getCreateInvitationMockHandler(async ({ request }) => {
       const body = (await request.json()) as InvitationDraft;
       const invitation: Invitation = {
-        id: `00000000-0000-4000-8060-${String(100 + created.length).padStart(12, "0")}`,
+        id: newInvitationId(),
         tenant_id: tenant.id,
         email: body.email.trim().toLowerCase(),
         role: body.role,
@@ -426,6 +434,25 @@ export function adminHandlers(): RequestHandler[] {
       created.push(invitation);
       return invitation;
     }),
+    getResendInvitationMockHandler(({ request }) => {
+      const earlierId = new URL(request.url).pathname.split("/").at(-2) ?? "";
+      const earlier = toInvitations().find((invitation) => invitation.id === earlierId);
+      if (earlier === undefined) throw new Error(`No pending invitation ${earlierId}`);
+      const resent: Invitation = {
+        ...earlier,
+        id: newInvitationId(),
+        created_at: scenarioNow,
+        expires_at: "2026-10-29T23:59:00+02:00",
+        expired: false,
+      };
+      withdrawn.add(earlier.id);
+      created.push(resent);
+      return resent;
+    }),
+    getRevokeInvitationMockHandler(({ request }) => {
+      withdrawn.add(new URL(request.url).pathname.split("/").at(-1) ?? "");
+    }),
+    getListMemberActivityMockHandler(() => toMemberActivity()),
     getListAuditEventsMockHandler(() => toAuditEvents()),
     getListServiceAccountsMockHandler(() => toServiceAccounts()),
     getGetSessionPolicyMockHandler(() => toSessionPolicy()),
@@ -447,11 +474,6 @@ export function adminHandlers(): RequestHandler[] {
 
 export const getGetAdminOverviewMockHandler = (overrideResponse?: AdminOverview) =>
   http.get("*/api/tenant/overview", () => HttpResponse.json(overrideResponse ?? toAdminOverview()));
-
-export const getListMemberActivityMockHandler = (overrideResponse?: MemberActivity[]) =>
-  http.get("*/api/tenant/members/activity", () =>
-    HttpResponse.json(overrideResponse ?? toMemberActivity()),
-  );
 
 export const getListAiModelsMockHandler = (overrideResponse?: AiModels) =>
   http.get("*/api/tenant/models", () => HttpResponse.json(overrideResponse ?? toAiModels()));
@@ -503,12 +525,6 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/tenant/overview",
     handler: () => getGetAdminOverviewMockHandler(),
-  },
-  {
-    operationId: "listMemberActivity",
-    method: "get",
-    path: "/api/tenant/members/activity",
-    handler: () => getListMemberActivityMockHandler(),
   },
   {
     operationId: "listAiModels",
