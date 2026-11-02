@@ -288,13 +288,16 @@ const emptyWorkspaceHome = (home: Home): Home => ({
   week: { ...home.week, objects_checked: 0, agreed: 0, agree_share: 0, open_disagreements: 0 },
 });
 
-const notAMember = () =>
+const switchRefused = (code: "not-a-member" | "tenant-suspended") =>
   HttpResponse.json(
     {
       type: "about:blank",
-      title: "You are not a member of this workspace",
+      title:
+        code === "not-a-member"
+          ? "You are not a member of this workspace"
+          : "This workspace is suspended",
       status: 403,
-      code: "not-a-member",
+      code,
     },
     { status: 403, headers: { "content-type": "application/problem+json" } },
   );
@@ -316,7 +319,8 @@ export function scenarioHandlers(): RequestHandler[] {
     getListProjectsMockHandler(() => (inScenarioWorkspace() ? projects.map(toProject) : [])),
     http.put("*/api/me/workspace", async ({ request }) => {
       const { tenant_id } = (await request.json()) as { tenant_id: string };
-      if (!switchFakeWorkspace(tenant_id)) return notAMember();
+      const outcome = switchFakeWorkspace(tenant_id);
+      if (outcome !== "switched") return switchRefused(outcome);
       const chosen = toMe().workspaces.find((workspace) => workspace.tenant_id === tenant_id);
       return HttpResponse.json(chosen);
     }),

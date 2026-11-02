@@ -7,12 +7,13 @@ import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
+import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 
 const config = readBuildConfig();
 
 export const clients = selectWebClients(config, {});
 
-const queryClient = createQueryClient();
+const queryClient = createQueryClient(showErrorToast);
 
 const router = createAppRouter();
 
@@ -28,6 +29,7 @@ createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <ErrorToasts />
     </QueryClientProvider>
   </StrictMode>,
 );

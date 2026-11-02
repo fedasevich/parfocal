@@ -5,6 +5,7 @@ import {
   setFakeConnectModelScene,
   setFakeJobsScene,
   setFakeQueueScene,
+  setFakeSuspendedWorkspace,
   setFakeTeamScene,
   setFakeView,
   setFakeViewerScene,
@@ -32,6 +33,8 @@ function applyFakeState(pathname: string, search: Record<string, unknown>): bool
   const viewerChanged = setFakeViewerScene(fakeViewerSceneFor(pathname, search));
   const queue = fakeQueueSceneFor(pathname, search);
   const queueChanged = queue === null ? false : setFakeQueueScene(queue);
+  const suspended = search["suspended"];
+  setFakeSuspendedWorkspace(typeof suspended === "string" ? suspended : null);
   return (
     viewChanged || sceneChanged || jobsChanged || modelChanged || viewerChanged || queueChanged
   );

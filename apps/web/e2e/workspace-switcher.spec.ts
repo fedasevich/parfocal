@@ -38,3 +38,25 @@ test("switching workspace from a project page goes home", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
   await expect(switcher(page)).toContainText("Charles University AI Lab");
 });
+
+test("a refused switch keeps the workspace and says why in a toast", async ({ page }) => {
+  await page.goto("/my-work?tab=review&suspended=cu-ai-lab");
+  await expect(page.getByText("Continue reviewing")).toBeVisible();
+  await switcher(page).click();
+  await page.getByRole("menuitem", { name: /Charles University AI Lab/ }).click();
+  const toast = page.getByRole("alert").filter({ hasText: "You do not have access" });
+  await expect(toast).toBeVisible();
+  await expect(switcher(page)).toContainText("Fakultní nemocnice Vltava");
+  await expect(page.getByText("Continue reviewing")).toBeVisible();
+  await toast.getByRole("button", { name: "Dismiss" }).click();
+  await expect(toast).toBeHidden();
+});
+
+test("admin's top bar switches workspace too", async ({ page }) => {
+  await page.goto("/admin?section=people");
+  await expect(switcher(page)).toContainText("Fakultní nemocnice Vltava");
+  await switcher(page).click();
+  await page.getByRole("menuitem", { name: /Charles University AI Lab/ }).click();
+  await expect(switcher(page)).toContainText("Charles University AI Lab");
+  await expect(page).toHaveURL(/\/admin/);
+});

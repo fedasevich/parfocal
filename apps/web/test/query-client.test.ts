@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError } from "@parfocal/api-client";
-import { createQueryClient, retryDelay, shouldRetry } from "../src/query-client.ts";
+import {
+  createQueryClient,
+  retryDelay,
+  shouldRetry,
+  toastsMutationError,
+} from "../src/query-client.ts";
 
 test("only network and server failures retry, at most three times", () => {
   assert.equal(shouldRetry(0, new ApiError("network", 0)), true);
@@ -21,4 +26,29 @@ test("the query client carries ADR 0049's defaults", () => {
   assert.equal(queries?.staleTime, 30_000);
   assert.equal(queries?.gcTime, 300_000);
   assert.equal(queries?.refetchOnWindowFocus, true);
+});
+
+test("a failed mutation toasts unless its caller handles it or it is a field error", () => {
+  const forbidden = new ApiError("forbidden", 403);
+  assert.equal(toastsMutationError(forbidden, false), true);
+  assert.equal(toastsMutationError(forbidden, true), false);
+  assert.equal(toastsMutationError(new ApiError("validation", 422), false), false);
+  assert.equal(toastsMutationError(new Error("boom"), false), false);
+});
+
+test("the query client hands an unhandled mutation failure to the toast", async () => {
+  const seen: string[] = [];
+  const client = createQueryClient((error) => seen.push(error.kind));
+  const failing = () => Promise.reject(new ApiError("forbidden", 403));
+  await client
+    .getMutationCache()
+    .build(client, { mutationFn: failing })
+    .execute(undefined)
+    .catch(() => {});
+  await client
+    .getMutationCache()
+    .build(client, { mutationFn: failing, onError: () => {} })
+    .execute(undefined)
+    .catch(() => {});
+  assert.deepEqual(seen, ["forbidden"]);
 });

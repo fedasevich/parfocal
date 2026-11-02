@@ -1,5 +1,5 @@
 import { ApiError } from "@parfocal/api-client";
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryClient } from "@tanstack/react-query";
 
 const maxRetries = 3;
 const firstRetryDelayMs = 250;
@@ -14,8 +14,19 @@ export function retryDelay(attempt: number): number {
   return Math.min(firstRetryDelayMs * 2 ** attempt, maxRetryDelayMs);
 }
 
-export function createQueryClient(): QueryClient {
+export function toastsMutationError(error: unknown, handledByCaller: boolean): error is ApiError {
+  return !handledByCaller && error instanceof ApiError && error.kind !== "validation";
+}
+
+export function createQueryClient(onMutationError?: (error: ApiError) => void): QueryClient {
   return new QueryClient({
+    mutationCache: new MutationCache({
+      onError: (error, _variables, _context, mutation) => {
+        if (toastsMutationError(error, mutation.options.onError !== undefined)) {
+          onMutationError?.(error);
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,
