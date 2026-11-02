@@ -66,6 +66,19 @@ export {
   shortestFlightMs,
   smoothFlightTiming,
 } from "./camera/flight.ts";
+export type { LinkedView, LinkedViews, PaneViews, ViewOffset } from "./camera/linked-views.ts";
+export {
+  alignViews,
+  createLinkedViews,
+  isNoOffset,
+  moveView,
+  noOffset,
+  offsetBetween,
+  relinkViews,
+  shiftView,
+  toggleLinked,
+  unlinkViews,
+} from "./camera/linked-views.ts";
 export type { ObjectivePreset } from "./camera/magnification.ts";
 export {
   magnificationAtZoom,

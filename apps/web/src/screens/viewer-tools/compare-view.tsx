@@ -14,12 +14,22 @@ import {
   SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
-import { type CSSProperties, useEffect, useState } from "react";
+import {
+  createLinkedViews,
+  moveView,
+  relinkViews,
+  toggleLinked,
+  unlinkViews,
+} from "@parfocal/viewer-engine";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { keyRegistry } from "../../keys/catalogue.ts";
+import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
+import { cameraOfView, viewOfCamera } from "./link-camera.ts";
 import { reviewRail } from "./rails.ts";
 import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
@@ -53,6 +63,9 @@ function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): 
   };
 }
 
+const sides: readonly PaneSide[] = ["left", "right"];
+const linkReference: PaneSide = "left";
+
 const other = (side: PaneSide): PaneSide => (side === "left" ? "right" : "left");
 
 type CompareViewProps = {
@@ -75,7 +88,8 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
     right: null,
   });
   const [picking, setPicking] = useState<PaneSide | null>(scene === "picking" ? "right" : null);
-  const [linked, setLinked] = useState(true);
+  const [link, setLink] = useState(() => createLinkedViews(sides));
+  const linked = link.linked;
   const [cursor, setCursor] = useState(true);
   const [layout, setLayout] = useState("side");
   const [layers, setLayers] = useState([
@@ -83,10 +97,6 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
     { key: "measurements", name: "Measurements", left: true, right: false },
     { key: "comments", name: "Comments", left: true, right: true },
   ]);
-  const [cameras, setCameras] = useState<Record<PaneSide, Camera | null>>({
-    left: null,
-    right: null,
-  });
   const fallbackRight = caseSlides.find((slide) => slide.ihc) ?? caseSlides[1];
   const ids: Record<PaneSide, string | undefined> = {
     left: chosen.left ?? session.slideId,
@@ -104,13 +114,23 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
     setLayers(layers.map((row) => ({ ...row, left: row.right, right: row.left })));
     setPicking(null);
   };
+  const cameraOn = (side: PaneSide) => cameraOfView(link.views[side]);
   const moveCamera = (side: PaneSide, camera: Camera | null) =>
-    setCameras(linked ? { left: camera, right: camera } : { ...cameras, [side]: camera });
+    setLink((state) => moveView(state, side, viewOfCamera(camera)));
+  const setLinked = (on: boolean) =>
+    setLink((state) => (on ? relinkViews(state, linkReference) : unlinkViews(state)));
+
+  const bindings = useMemo(
+    () => keyRegistry.bindings({ scopes: ["compare"], only: ["linkviews"] }),
+    [],
+  );
+  useHotkeys(bindings, ({ action }) => {
+    if (action === "linkviews") setLink((state) => toggleLinked(state, linkReference));
+  });
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setPicking(null);
-      if (event.shiftKey && (event.key === "L" || event.key === "l")) setLinked(!linked);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -135,7 +155,7 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
             view={{ kind: "whole" }}
             look="mid"
             homeOf={coverHome(midSize, [760, 520])}
-            camera={cameras[side]}
+            camera={cameraOn(side)}
             onCameraChange={(camera) => moveCamera(side, camera)}
             regionDecisions={{}}
             bare

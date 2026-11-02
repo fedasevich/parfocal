@@ -1,6 +1,6 @@
 import { type Binding, parseKeys } from "./registry.ts";
 
-export type Scope = "global" | "viewer" | "review" | "annotate" | "worklist";
+export type Scope = "global" | "viewer" | "review" | "compare" | "annotate" | "worklist";
 
 export type Preset = "default" | "qupath" | "figma";
 
@@ -26,6 +26,7 @@ export const scopeRank: Record<Scope, number> = {
   worklist: 2,
   viewer: 2,
   review: 3,
+  compare: 3,
   annotate: 4,
 };
 

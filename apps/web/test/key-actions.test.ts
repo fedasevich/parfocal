@@ -214,3 +214,13 @@ test("the shipped catalogue lets Esc and the palette key through a text field", 
   ]);
   assert.deepEqual(run(bindings, [{ key: "z", code: "KeyZ", at: 0, typing: true }]), []);
 });
+
+test("Shift+L links the compare panes in compare and draws an arrow in Annotate", () => {
+  const press = { key: "L", code: "KeyL", shiftKey: true, at: 0 };
+  const compare = keyRegistry.bindings({ scopes: ["viewer", "compare"] });
+  assert.deepEqual(run(compare, [press]), [{ action: "linkviews", phase: "press" }]);
+  const annotate = keyRegistry.bindings({ scopes: ["viewer", "annotate"] });
+  assert.deepEqual(run(annotate, [press]), [{ action: "tarrow", phase: "press" }]);
+  const both = keyRegistry.bindings({ scopes: ["compare", "annotate"] });
+  assert.deepEqual(run(both, [press]), [{ action: "tarrow", phase: "press" }]);
+});
