@@ -31,7 +31,7 @@ Inside a project the narrower of the workspace grant and the project grant appli
 | Action | Key | owner | reviewer | viewer |
 |---|---|---|---|---|
 | See projects, cases and slides | `see-slides` | Yes | In their tasks | Yes |
-| See slide label and macro images, only in clinical projects | `see-labels` | Yes |  | Yes |
+| See slide label and macro images, only in clinical projects | `see-labels` | Yes | In their tasks | Yes |
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |

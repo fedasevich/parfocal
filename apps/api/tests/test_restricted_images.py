@@ -52,7 +52,7 @@ EXPECTED: dict[tuple[str, str], tuple[int, str | None]] = {
     ("viewer", CLINICAL): SHOWN,
     ("reader", CLINICAL): SHOWN,
     ("emergency", CLINICAL): SHOWN,
-    ("assigned", CLINICAL): (403, "restricted-images-for-readers"),
+    ("assigned", CLINICAL): SHOWN,
     ("unassigned", CLINICAL): NO_SLIDE,
     ("admin", CLINICAL): (403, "emergency-access-needed"),
     ("outsider", CLINICAL): NO_SLIDE,
@@ -198,7 +198,7 @@ def problem_of(response: Any) -> tuple[int, str | None]:
 
 @pytest.mark.parametrize("image", list(RestrictedImage))
 @pytest.mark.parametrize(("who", "mode"), sorted(EXPECTED))
-def test_each_role_sees_labels_and_macros_only_in_clinical_projects_it_reads_whole(
+def test_each_role_sees_labels_and_macros_only_in_clinical_projects_on_slides_it_reads(
     api: ApiAs, database: str, lab: Lab, who: str, mode: str, image: RestrictedImage
 ) -> None:
     before = len(viewed(database, lab))
@@ -233,7 +233,7 @@ def test_a_service_account_never_reads_labels(api: ApiAs, lab: Lab) -> None:
         ("viewer", CLINICAL, ["label", "macro"]),
         ("reader", CLINICAL, ["label", "macro"]),
         ("emergency", CLINICAL, ["label", "macro"]),
-        ("assigned", CLINICAL, []),
+        ("assigned", CLINICAL, ["label", "macro"]),
         ("owner", DE_IDENTIFIED, []),
         ("assigned", DE_IDENTIFIED, []),
     ],

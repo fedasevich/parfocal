@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import ForbiddenError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole, require_slide_reading
@@ -41,7 +41,7 @@ class RestrictedImageNotFoundError(NotFoundError):
 
 class RestrictedImagesForReadersError(ForbiddenError):
     code = "restricted-images-for-readers"
-    title = "Only the project's owners and viewers see label and macro images"
+    title = "Only the project's owners, viewers and this slide's reviewers see labels and macros"
 
 
 router = APIRouter(prefix="/api/slides/{slide_id}/restricted-images", tags=["slides"])
@@ -55,9 +55,8 @@ async def sees_restricted(
 ) -> bool:
     if privacy_mode is not PrivacyMode.CLINICAL:
         return False
-    return reads_whole(
-        await project_grant(connection, principal, project_id, Permission.SEE_LABELS)
-    )
+    grant = await project_grant(connection, principal, project_id, Permission.SEE_LABELS)
+    return reads_whole(grant) or grant is Grant.ASSIGNED
 
 
 def shown(stored: Sequence[str], visible: bool) -> list[RestrictedImage]:
