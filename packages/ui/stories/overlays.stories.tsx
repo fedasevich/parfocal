@@ -1,13 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import { type AccountEntry, AccountMenu } from "../src/components/account-menu.tsx";
+import { BrightnessPopover } from "../src/components/brightness-popover.tsx";
 import { Button } from "../src/components/button.tsx";
+import { CommandPaletteView, type PaletteCommand } from "../src/components/command-palette.tsx";
 import { DrawerPanel } from "../src/components/drawer-panel.tsx";
+import { DropOverlay } from "../src/components/drop-overlay.tsx";
 import { FormField, TextFieldInput } from "../src/components/form-field.tsx";
 import {
   type NotificationItem,
   NotificationsPanel,
 } from "../src/components/notifications-panel.tsx";
+import { PreviewOverlay } from "../src/components/preview-overlay.tsx";
 import { SlideSubmittedDialog } from "../src/components/slide-submitted-dialog.tsx";
-import { mockAssets } from "./fixtures.ts";
+import { mockAssets, people } from "./fixtures.ts";
 
 const meta = {
   title: "Components/Overlays",
@@ -231,4 +237,165 @@ export const SlideSubmittedLast: Story = {
       />
     </SubmittedStage>
   ),
+};
+
+const commands: PaletteCommand[] = [
+  { id: "new", group: "Actions", icon: "plus", label: "New task", keys: "N", run: none },
+  { id: "run", group: "Actions", icon: "smart", label: "Run a model on a slide", run: none },
+  { id: "my", group: "Go to", icon: "folder", label: "My work", run: none },
+  {
+    id: "long",
+    group: "Go to",
+    icon: "slides",
+    label: "Sentinel lymph node 2, left axilla, level 3 · H&E · P07",
+    run: none,
+  },
+  {
+    id: "keys",
+    group: "Settings",
+    icon: "keyboard",
+    label: "Keyboard shortcuts",
+    keys: "?",
+    run: none,
+  },
+];
+
+const paletteGroups = ["Actions", "Go to", "Settings"];
+
+function PaletteStage({
+  query,
+  list,
+  current,
+}: {
+  query: string;
+  list: PaletteCommand[];
+  current: number;
+}) {
+  const [text, setText] = useState(query);
+  const [at, setAt] = useState(current);
+  return (
+    <div className="w-160 overflow-hidden rounded-zone border border-line bg-chrome shadow-pop">
+      <CommandPaletteView
+        query={text}
+        onQueryChange={setText}
+        commands={list}
+        groups={paletteGroups}
+        current={at}
+        onCurrentChange={setAt}
+        onKeyDown={none}
+      />
+    </div>
+  );
+}
+
+export const CommandPaletteAll: Story = {
+  render: () => <PaletteStage query="" list={commands} current={0} />,
+};
+
+export const CommandPaletteFiltered: Story = {
+  render: () => (
+    <PaletteStage query="node" list={commands.filter((item) => item.id === "long")} current={0} />
+  ),
+};
+
+export const CommandPaletteNothingMatches: Story = {
+  render: () => <PaletteStage query="zzz" list={[]} current={0} />,
+};
+
+const accountEntries: AccountEntry[] = [
+  { icon: "gear", label: "Settings", keys: "⌘," },
+  { icon: "keyboard", label: "Keyboard shortcuts", keys: "?" },
+  { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
+];
+
+function AccountStage({ initialsOnly, jobTitle }: { initialsOnly: boolean; jobTitle: string }) {
+  const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
+  const [only, setOnly] = useState(initialsOnly);
+  return (
+    <div className="h-110 w-90 text-right">
+      <AccountMenu
+        defaultOpen
+        person={{ ...people.LM, role: jobTitle }}
+        organisation="Institute of Pathology, University Hospital"
+        presence={{
+          key: "available",
+          label: "Available",
+          hint: "Researchers can give you review tasks",
+          tone: "bg-ok",
+        }}
+        onNextPresence={none}
+        theme={theme}
+        onThemeChange={setTheme}
+        initialsOnly={only}
+        onInitialsOnlyChange={setOnly}
+        entries={accountEntries}
+      />
+    </div>
+  );
+}
+
+export const AccountMenuOpen: Story = {
+  render: () => <AccountStage initialsOnly={false} jobTitle="Consultant · breast, nodes" />,
+};
+
+export const AccountMenuLongRoleInitialsOnly: Story = {
+  render: () => (
+    <AccountStage
+      initialsOnly
+      jobTitle="Consultant pathologist, breast and lymph node diagnostics, second reader for the lab"
+    />
+  ),
+};
+
+export const DropOverlayWithFiles: Story = {
+  render: () => (
+    <div className="relative h-90 w-190 bg-page">
+      <DropOverlay projectCode="P07" slides={12} results={3} onDrop={none} />
+    </div>
+  ),
+};
+
+export const DropOverlayOnlyResults: Story = {
+  render: () => (
+    <div className="relative h-90 w-190 bg-page">
+      <DropOverlay projectCode="P07" slides={0} results={2} onDrop={none} />
+    </div>
+  ),
+};
+
+export const PreviewOverlayOpen: Story = {
+  render: () => (
+    <div className="relative h-100 w-190 overflow-hidden" style={{ transform: "translateZ(0)" }}>
+      <PreviewOverlay
+        label="Preview of the report"
+        title="S26-04812_draft.pdf"
+        meta="A4 · draft, from what you typed"
+        closeLabel="Close the preview"
+        onClose={none}
+      >
+        <div className="h-130 w-100 bg-white p-6 text-black">A4 page</div>
+      </PreviewOverlay>
+    </div>
+  ),
+};
+
+function BrightnessStage({ start }: { start: number }) {
+  const [value, setValue] = useState(start);
+  return (
+    <div className="flex h-60 w-90 justify-end">
+      <BrightnessPopover defaultOpen value={value} onValueChange={setValue} />
+    </div>
+  );
+}
+
+export const BrightnessDefault: Story = {
+  render: () => <BrightnessStage start={100} />,
+};
+
+export const BrightnessChanged: Story = {
+  render: () => <BrightnessStage start={65} />,
+};
+
+export const BrightnessAtLimit: Story = {
+  render: () => <BrightnessStage start={140} />,
 };

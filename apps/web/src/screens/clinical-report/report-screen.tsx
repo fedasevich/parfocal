@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { ReportDocument } from "@parfocal/ui/components/clinical-report";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
+import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
@@ -520,29 +521,15 @@ function ReportFlow({
         {!done && !sent && page === "sign" ? <SignStep {...stepProps} /> : null}
       </FlowPage>
       {report.preview && !done ? (
-        <div
-          role="dialog"
-          aria-label="Preview of the report"
-          className="fixed inset-0 z-40 grid grid-rows-[auto_minmax(0,1fr)] bg-scrim"
+        <PreviewOverlay
+          label="Preview of the report"
+          title={`${data.case.label}_draft.pdf`}
+          meta="A4 · draft, from what you typed"
+          closeLabel="Close the preview"
+          onClose={() => update((current) => ({ ...current, preview: false }))}
         >
-          <div className="flex items-center gap-3 border-b border-line bg-chrome px-5 py-2.5 text-body-sm">
-            <Icon name="file" />
-            <b>{data.case.label}_draft.pdf</b>
-            <span className="text-fg-dim">A4 · draft, from what you typed</span>
-            <span className="flex-1" />
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Close the preview"
-              onClick={() => update((current) => ({ ...current, preview: false }))}
-            >
-              <Icon name="close" />
-            </Button>
-          </div>
-          <div className="grid justify-center overflow-auto p-8">
-            <ReportDocument model={documentOf(data, report, "draft", nameOf)} />
-          </div>
-        </div>
+          <ReportDocument model={documentOf(data, report, "draft", nameOf)} />
+        </PreviewOverlay>
       ) : null}
       {openModal === "deposit" && !done && !sent ? (
         <DepositModal

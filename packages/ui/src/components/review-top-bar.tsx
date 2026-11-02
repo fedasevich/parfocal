@@ -145,7 +145,6 @@ function ReviewTopBar({
         <Popover>
           <PopoverTrigger
             aria-haspopup="dialog"
-            aria-label="Review progress"
             title="Progress on this slide and in the whole task"
             className="inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border-0 bg-transparent p-1 text-left text-fg outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-accent aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]"
           >

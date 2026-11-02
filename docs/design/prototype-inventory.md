@@ -157,6 +157,11 @@ The mock builds every screen from a few shared helpers. Each maps to one owner. 
 | Side drawer with header, scrolling body and footer, with or without a scrim | `.nx-drawer`, `.fmh` | DS-011 (popover, dialog, menu, tooltip, toast), built as `DrawerPanel` by PROTO-011 | Sheet |
 | Slide submitted dialog with the next slide and a countdown | `.nx-sub-card` in the `next` scene | GUIDE-007 (Slide done card with the opinion form), built as `SlideSubmittedDialog` by PROTO-011 | Dialog |
 | Slides on screen panel of compare view | the `h-sec` Slides on screen section of `compare` | CMP-004 (pane slide picker), built as `SlidesOnScreenPanel` by PROTO-011 | None, custom |
+| Command palette | `.palette` in the `palette` screen | DS-011 (popover, dialog, menu, tooltip, toast), built as `CommandPaletteView` by PROTO-011 | Command in Dialog |
+| Account menu with presence, theme and entries | `userPop` | SHELL-002 (global top bar and sidebar), built as `AccountMenu` by PROTO-011 | Dropdown menu |
+| Drop overlay for files dragged onto a project | the upload drop state | DS-011 (popover, dialog, menu, tooltip, toast), built as `DropOverlay` by PROTO-011 | None, custom |
+| Full-screen preview with a title bar and a close button | `.pdfv`, the report preview | EVAL-010 (PDF preview), built as `PreviewOverlay` by PROTO-011 | None, custom |
+| Slide brightness popover | `.bright-pop` | VIZ-007 (Display panel), built as `BrightnessPopover` by PROTO-011 | Popover and Slider |
 | Fact list of icon, key and value | `kvList` | DS-012 (inspector primitives) | None, custom |
 | Cell crop tile in the cells panel | `.cg` tiles | DS-013 (gallery tile) | None, custom |
 | Avatar with name | `person` | DS-014 (avatar, avatar stack, presence dot) | None, custom |

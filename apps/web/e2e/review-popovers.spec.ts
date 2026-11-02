@@ -15,7 +15,7 @@ test("the progress ring in the guided top bar opens the review progress popover"
   page,
 }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
-  await page.getByRole("button", { name: "Review progress" }).click();
+  await page.getByRole("button", { name: /% done/ }).click();
   const popover = page.getByRole("dialog", { name: "Review progress" });
   await expect(popover).toContainText("This slide");
   await expect(popover).toContainText("Whole task");
@@ -30,7 +30,7 @@ test("the full viewer ring shows Next slide and the slide chip lists the case", 
 }) => {
   test.setTimeout(90_000);
   await page.goto(await fullViewerUrl(page));
-  await page.getByRole("button", { name: "Review progress" }).click();
+  await page.getByRole("button", { name: /% done/ }).click();
   const progress = page.getByRole("dialog", { name: "Review progress" });
   await progress.getByRole("button", { name: /Next slide/ }).click();
   await expect(page).not.toHaveURL(new RegExp(`slides/${a1}`));

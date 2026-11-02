@@ -134,9 +134,9 @@ test("the account menu shows the person and switches the theme", async ({ page }
   const menu = page.getByRole("menu");
   await expect(menu).toContainText("Lenka Malá");
   await expect(menu).toContainText("Consultant · breast, nodes");
-  await menu.getByRole("radio", { name: "Light" }).click();
+  await menu.getByRole("menuitemradio", { name: "Light" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await menu.getByRole("radio", { name: "Dark" }).click();
+  await menu.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 

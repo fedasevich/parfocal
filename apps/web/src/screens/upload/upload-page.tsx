@@ -6,6 +6,7 @@ import {
   useListMySlides,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
+import { DropOverlay } from "@parfocal/ui/components/drop-overlay";
 import {
   FlowBar,
   FlowPage,
@@ -22,7 +23,7 @@ import { useMockToast } from "../project/mock-toast.tsx";
 import { ProjectPage } from "../project/project-page.tsx";
 import { CheckStep } from "./check-step.tsx";
 import { FilesStep } from "./files-step.tsx";
-import { DropOverlay, FormatsDrawer, ImportsModal } from "./overlays.tsx";
+import { FormatsDrawer, ImportsModal } from "./overlays.tsx";
 import { useCrumbLink } from "./parts.tsx";
 import { DoneStep, ProgressStep } from "./progress-step.tsx";
 import {

@@ -1,17 +1,11 @@
 import { type Me, useListTenantMembers } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@parfocal/ui/components/dropdown-menu";
+  AccountMenu as AccountMenuView,
+  type AccountPresence,
+} from "@parfocal/ui/components/account-menu";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@parfocal/ui/components/dropdown-menu";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
-import { Keycap } from "@parfocal/ui/components/keycap";
-import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
-import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { Switch } from "@parfocal/ui/components/switch";
+import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toPersonInfo } from "../screens/people.ts";
@@ -21,7 +15,7 @@ import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 import { applyTheme, readTheme, type ThemeChoice } from "./theme.ts";
 
-const presences: { key: Presence; label: string; hint: string; tone: string }[] = [
+const presences: AccountPresence[] = [
   {
     key: "available",
     label: "Available",
@@ -37,9 +31,7 @@ const presences: { key: Presence; label: string; hint: string; tone: string }[] 
   },
 ];
 
-type MenuEntry = { icon: IconName; label: string; href?: string; keys?: string };
-
-const entries: MenuEntry[] = [
+const entries = [
   { icon: "gear", label: "Settings", href: destinations.settings("display"), keys: "⌘," },
   {
     icon: "keyboard",
@@ -50,7 +42,7 @@ const entries: MenuEntry[] = [
   { icon: "pen", label: "Profile and signature", href: destinations.settings("account") },
   { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
   { icon: "help", label: "Help and what's new" },
-];
+] satisfies { icon: IconName; label: string; href?: string; keys?: string }[];
 
 const viewAs: PersonaKey[] = ["DH", "LM", "AK", "TB"];
 
@@ -101,86 +93,22 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
     setTheme(choice);
     applyTheme(choice);
   };
+  if (!current) return null;
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            title={`${person.name}: theme, settings, log out`}
-          />
-        }
-      >
-        <PersonAvatar person={person} size={28} presence={current?.key} />
-        <span className="sr-only">Account menu</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[310px] p-1.5">
-        <div className="grid grid-cols-[40px_1fr] items-center gap-3 px-2.5 pt-2.5 pb-2">
-          <PersonAvatar person={person} size={40} />
-          <div className="min-w-0">
-            <b data-testid="account-name" className="block text-body font-semibold text-fg">
-              {person.name}
-            </b>
-            <small className="block text-caption text-fg-faint">{person.role}</small>
-            <small className="block text-caption text-fg-faint">
-              {workspace?.organisation_name ?? workspace?.name}
-            </small>
-          </div>
-        </div>
-        <DropdownMenuItem
-          closeOnClick={false}
-          onClick={() => setPresence((presence + 1) % presences.length)}
-          className="mx-1 mb-1 grid grid-cols-[18px_1fr_14px] items-center gap-2.5 border border-line"
-        >
-          <i className={`size-2.25 justify-self-center rounded-full ${current?.tone ?? ""}`} />
-          <span>
-            {current?.label}
-            <small className="block text-caption text-fg-faint">{current?.hint}</small>
-          </span>
-          <Icon name="next" />
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <div className="flex items-center justify-between gap-2.5 px-2.5 py-1.5 text-fg-dim">
-          <span>Theme</span>
-          <SegmentedControl
-            fill
-            aria-label="Theme"
-            className="w-[172px]"
-            value={theme}
-            onValueChange={(value) => chooseTheme(value as ThemeChoice)}
-            options={[
-              { value: "dark", label: "Dark" },
-              { value: "light", label: "Light" },
-              { value: "system", label: "System" },
-            ]}
-          />
-        </div>
-        <label className="flex cursor-pointer items-center justify-between gap-2.5 px-2.5 py-1.5 text-fg-dim">
-          <span>Initials only, for screen sharing</span>
-          <Switch size="sm" checked={initialsOnly} onCheckedChange={setInitialsOnly} />
-        </label>
-        <DropdownMenuSeparator />
-        {entries.map((entry) => (
-          <DropdownMenuItem
-            key={entry.label}
-            onClick={() => (entry.href ? void goTo(entry.href) : undefined)}
-            className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5"
-          >
-            <Icon name={entry.icon} />
-            <span>{entry.label}</span>
-            {entry.keys ? <Keycap keys={entry.keys} /> : <span />}
-          </DropdownMenuItem>
-        ))}
-        {import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5">
-          <Icon name="logout" />
-          <span>Log out</span>
-          <span />
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <AccountMenuView
+      person={person}
+      organisation={workspace?.organisation_name ?? workspace?.name}
+      presence={current}
+      onNextPresence={() => setPresence((presence + 1) % presences.length)}
+      theme={theme}
+      onThemeChange={chooseTheme}
+      initialsOnly={initialsOnly}
+      onInitialsOnlyChange={setInitialsOnly}
+      entries={entries.map(({ href, ...entry }) => ({
+        ...entry,
+        ...(href ? { onSelect: () => void goTo(href) } : {}),
+      }))}
+      extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
+    />
   );
 }
