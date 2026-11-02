@@ -26,20 +26,9 @@ To take every recommendation at once, write "all recommended" here:
 | 27a, palette and hotkeys | ADR 0149 (command palette, drag and drop and hotkey registry) is accepted and STACK-014 (hotkeys) is ticked |
 | 28a, lock card | IAM-021 (lock screen that returns to the same view) drops the password field and keeps one Unlock button plus the passkey button |
 | 29, usability study | PILOT-005 (moderated usability study) is on hold, because the thesis topic does not require it and the POC already ran a usability study and a UI review |
+| 30, device traces | You will record later when you have a mouse. VIEW-056 (guided trace recorder) builds a page that walks you through each gesture with a timer, and VIEW-021 waits for it |
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
-
-## 30. Device traces for VIEW-021 (wheel, trackpad and pinch handling)
-
-VIEW-021 is built and only waits for recorded wheel and pinch events from real devices, which its "Done when" names as a mouse, a Mac trackpad and a Windows precision touchpad. An agent builds a small recorder page next, and you would scroll and pinch on it for about two minutes on your Mac.
-
-Which devices should the traces come from?
-
-- a. A mouse and the Mac trackpad only, and drop the Windows touchpad from "Done when" until someone has one. (recommended, because it needs only your Mac)
-- b. All three, and you borrow a Windows laptop once.
-- c. Something else, say what.
-
-Your choice:
 
 ## The review column, what each task waits for
 
@@ -51,7 +40,7 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | INGEST-001 (resumable upload) | INGEST-028 (upload check on the R2 dev bucket), which ADR 0151 now allows | The next Opus agent |
 | CASES-009 (search API) | The latency test, which missed 100 ms only on the shared CI runner | An agent reruns it on your Mac with `PARFOCAL_PERF=1` |
 | IAM-021 (lock screen) | Your answer 28a | The session already working on it |
-| VIEW-021 (wheel and pinch) | Decision 30 and two minutes of your scrolling | You, once the recorder page exists |
+| VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed
