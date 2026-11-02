@@ -55,6 +55,18 @@ Do you accept ADR 0149?
 
 Your choice:
 
+## 28. The lock screen's password field, from IAM-021 (lock screen that returns to the same view)
+
+The kit's lock card asks for a password, but ADR 0031 (idle lock unlocked by signing in again) unlocks through Zitadel with `prompt=login`, and Zitadel asks for the password on its own page. Today the card's Unlock button opens that page and whatever was typed in the card is thrown away, so a person types the password twice.
+
+What should the lock card show?
+
+- a. Drop the password field and keep one Unlock button that opens the sign-in page, with the passkey button kept for IAM-023 (sign in and unlock with a passkey). (recommended, because Parfocal never sees passwords)
+- b. Keep the field as drawn and accept the second password prompt.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.

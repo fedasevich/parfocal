@@ -18,11 +18,12 @@ import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
 import {
@@ -46,7 +47,7 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
-import { SlideStill, type StillView } from "../review/slide-still.tsx";
+import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
 import {
   AiSays,
   type ListFilter,
@@ -77,7 +78,7 @@ import {
   viewerSetup,
 } from "./viewer-scenes.ts";
 
-export type ViewerSearch = {
+export type ViewerSearch = CameraSearch & {
   task?: string | undefined;
   object?: string | undefined;
   scene?: ViewerScene | undefined;
@@ -134,6 +135,8 @@ type BodyProps = FullViewerProps & {
 function addedSize(note: string | null) {
   return note?.match(/(\d+(?:\.\d+)?) mm/)?.[0] ?? "";
 }
+
+const cameraWriteDelayMs = 250;
 
 function ViewerBody({
   projectId,
@@ -197,7 +200,7 @@ function ViewerBody({
   const [cellsOpen, setCellsOpen] = useState(setup.cells);
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
-  const [camera, setCamera] = useState<{ x: number; y: number; scale: number } | null>(null);
+  const [camera, setCamera] = useState<Camera | null>(null);
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
@@ -260,7 +263,7 @@ function ViewerBody({
     setNote({ open: false, reasons: [], text: "" });
     setConfirmRest(false);
     if (object?.includes("·")) setCellsOpen(true);
-    onSearch({ object });
+    onSearch({ object, x: undefined, y: undefined, z: undefined });
   };
   const goView = (next: string) => onSearch({ scene: next as LayerView, tab: "display" });
   const put = (object: string, value: Answer | null) => {
@@ -365,6 +368,18 @@ function ViewerBody({
     : addedCurrent
       ? { kind: "region", object: addedCurrent.object }
       : { kind: "whole" };
+  const cameraImage = imageOf(stillView);
+  const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
+  const writeSearch = useRef(onSearch);
+  writeSearch.current = onSearch;
+  useEffect(() => {
+    if (camera === null) return;
+    const timer = setTimeout(
+      () => writeSearch.current(cameraToSearch(cameraImage, camera)),
+      cameraWriteDelayMs,
+    );
+    return () => clearTimeout(timer);
+  }, [camera, cameraImage]);
   const drawing = layerDrawing({
     view,
     objects,
@@ -897,7 +912,7 @@ function ViewerBody({
         ) : (
           <SlideStill
             view={stillView}
-            camera={camera}
+            camera={shownCamera}
             onCameraChange={setCamera}
             regionDecisions={regionDecisions}
             cellDecisions={cellDecisions}

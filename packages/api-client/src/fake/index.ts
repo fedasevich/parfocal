@@ -8,6 +8,7 @@ import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
+import { sessionLockHandlers } from "./session-lock.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
@@ -21,6 +22,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   if (scope === "drafts") return draftHandlers();
   faker.seed(fakeDataSeed);
   return [
+    ...sessionLockHandlers(),
     ...draftHandlers(),
     ...scenarioHandlers(),
     ...reviewHandlers(),

@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { SessionLock } from "../session/session-lock.tsx";
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { GlobalShell } from "../shell/global-shell.tsx";
 import { overlaySearch } from "../shell/overlays.ts";
@@ -15,7 +16,7 @@ function Root() {
     select: (matches) => matches.some(inGlobalShell),
   });
   return (
-    <>
+    <SessionLock>
       {inShell ? (
         <GlobalShell>
           <Outlet />
@@ -24,7 +25,7 @@ function Root() {
         <Outlet />
       )}
       <CommandPalette />
-    </>
+    </SessionLock>
   );
 }
 
