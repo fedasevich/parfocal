@@ -947,7 +947,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs docs 03, 09, [`poc/src/slide/ndpi-directory.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ndpi-directory.ts), [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts).
   Size: M.
 
-- [ ] INGEST-008 · Sparse tile and absent chunk map
+- [x] INGEST-008 · Sparse tile and absent chunk map
   Resolve absent tiles once at ingest (TileByteCounts 0, missing Zarr chunks) so the viewer never paints fill colour or solid green.
   Done when fixture tests on the Philips and sparse Zarr samples show the absence map, and the viewer golden test shows background, not green or black.
   Refs doc 06.
