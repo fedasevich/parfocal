@@ -56,6 +56,8 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 
 An image costs a lot and stays in context for every later turn. Take few screenshots and open fewer.
 
+The mock comparison below is temporary. FOUND-022 (remove the mock comparison tooling) deletes it once PROTO-010 (make the React app the design source) is done.
+
 - Read the mock's HTML and the code to know what a screen should show. Don't screenshot to find out.
 - Compare by number: `pnpm --filter @parfocal/web shot APP_URL out.png --mock SCREEN/SCENE` shoots the app and the same mock scene at 720 by 450 in the same theme, then prints the share of pixels that differ and writes a diff image. Scene keys are in [design/prototype-inventory.md](../design/prototype-inventory.md), and a wrong key prints the valid ones. `--theme dark` compares the dark theme. `--against URL_OR_PNG` compares with any other page or image.
 - Expect some difference, because fake data and fonts never match exactly (Home in the light theme differs on about 17%). Look at a screen only when its number is far above the others or jumps after a change.

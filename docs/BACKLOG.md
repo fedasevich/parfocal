@@ -492,6 +492,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Cut tokens per task: `board.py` commands so nobody reads the backlog or log whole, a hook that blocks those reads, a short `AGENTS.md` with the procedures in `docs/knowledge/agent-workflow.md`, an output budget, `/start`, `/finish` and `/consolidate` commands, `task-runner` and `ui-porter` agents, `pnpm verify` and a small screenshot compare script ([ADR 0136](adr/0136-lean-agent-workflow.md)).
   Done when `scripts/test_board.py` and `scripts/test_guard_big_docs.py` pass and `pnpm verify` is green.
 
+- [ ] FOUND-022 · Remove the mock comparison tooling
+  Temporary tooling from FOUND-021 (lean agent workflow) exists only while screens are ported from the frozen mock. Once the React app is the design source, remove the `--mock` option from `apps/web/e2e/shot.ts`, the mock lines in `docs/knowledge/agent-workflow.md`, `AGENTS.md`, the root README and `.claude/agents/task-runner.md`, and decide whether the per-agent image limit hook (`scripts/guard_images.py`) and the rest of the shot script still earn their place.
+  Done when no doc or script tells agents to compare against the mock and `pnpm verify` is green.
+  Depends on PROTO-010.
+
 ---
 
 ## 02 SKEL · Walking skeleton (milestone M1)
