@@ -5,8 +5,8 @@ from types import SimpleNamespace
 from typing import Any, Literal
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel, model_validator
-from sqlalchemy import delete, func, select
+from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -49,7 +49,15 @@ from parfocal_api.tables import (
     review_tasks,
     slide_counters,
 )
-from parfocal_common.object_ids import Letter, ObjectId, ObjectIdError, parse
+from parfocal_common.object_ids import (
+    Letter,
+    ObjectId,
+    ObjectIdError,
+    merge_keeper,
+    parse,
+    split_into,
+)
+from parfocal_common.object_lineage import Fate, Key, Retired, descendants, resolve
 
 KINDS = {Letter.REGION: AnnotationKind.REGION, Letter.CELL: AnnotationKind.CELL}
 
@@ -68,6 +76,29 @@ class EditDraft(BaseModel):
         return self
 
 
+class SplitPart(BaseModel):
+    geometry: Geometry
+    class_id: uuid.UUID | None = None
+
+
+class SplitDraft(BaseModel):
+    parts: list[SplitPart] = Field(min_length=2, max_length=26)
+
+
+class MergeDraft(BaseModel):
+    objects: list[str] = Field(min_length=2, max_length=100)
+    geometry: Geometry
+    class_id: uuid.UUID | None = None
+
+
+class ObjectResolution(BaseModel):
+    task_id: uuid.UUID
+    slide_id: uuid.UUID
+    reviewer_id: uuid.UUID
+    object: str
+    current: list[str]
+
+
 class AddedDraft(BaseModel):
     kind: Literal[AnnotationKind.REGION, AnnotationKind.CELL]
     geometry: Geometry
@@ -78,9 +109,12 @@ class ReviewEdit(BaseModel):
     object: str
     kind: AnnotationKind
     number: int
+    split: str
     class_id: uuid.UUID | None
     geometry: dict[str, Any] | None
     deleted: bool
+    retired: Retired | None
+    merged_into: str | None
     updated_at: datetime
 
 
@@ -90,6 +124,8 @@ class LayerSummary(BaseModel):
     retyped: int
     reshaped: int
     deleted: int
+    split: int
+    merged: int
     added: int
 
 
@@ -111,6 +147,21 @@ class NotAssignedError(ForbiddenError):
 class NotAnAiObjectError(BadRequestError):
     code = "not-an-ai-object"
     title = "Only AI regions and cells are edited in a review"
+
+
+class NotARegionError(BadRequestError):
+    code = "not-a-region"
+    title = "Only regions are split or merged in a review"
+
+
+class RetiredObjectError(ConflictError):
+    code = "retired-object"
+    title = "The object was split or merged and is kept only in the history"
+
+
+class SplitPartError(ConflictError):
+    code = "split-part"
+    title = "A part of a split is undone by undoing the split"
 
 
 class UnknownObjectError(NotFoundError):
@@ -188,9 +239,92 @@ def ai_object(text: str) -> ObjectId:
         found = parse(text)
     except ObjectIdError as error:
         raise NotAnAiObjectError(str(error)) from error
-    if found.letter not in KINDS or found.person or found.split:
+    if found.letter not in KINDS or found.person:
         raise NotAnAiObjectError
+    return ObjectId(found.letter, found.number, found.split)
+
+
+def region(text: str) -> ObjectId:
+    found = ai_object(text)
+    if found.letter is not Letter.REGION:
+        raise NotARegionError
     return found
+
+
+def key_of(found: ObjectId) -> Key:
+    return found.number, found.split
+
+
+def text_of(letter: Letter, key: Key) -> str:
+    return ObjectId(letter, *key).text(ascii=True)
+
+
+async def fates_of(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    user_id: uuid.UUID | None,
+    letter: Letter,
+) -> dict[Key, Any]:
+    rows = await connection.execute(
+        select(
+            review_edits.c.number,
+            review_edits.c.split,
+            review_edits.c.class_id,
+            review_edits.c.deleted,
+            review_edits.c.retired,
+            review_edits.c.merged_into_number,
+            review_edits.c.merged_into_split,
+        ).where(*mine(task_id, slide_id, user_id), review_edits.c.kind == KINDS[letter])
+    )
+    return {(row.number, row.split): row for row in rows}
+
+
+def lineage(rows: dict[Key, Any]) -> dict[Key, Fate]:
+    return {
+        key: Fate(
+            deleted=row.deleted,
+            retired=Retired(row.retired) if row.retired else None,
+            merged_into=(
+                (row.merged_into_number, row.merged_into_split)
+                if row.merged_into_number is not None
+                else None
+            ),
+        )
+        for key, row in rows.items()
+    }
+
+
+async def require_known(
+    connection: AsyncConnection, row: Any, rows: dict[Key, Any], found: ObjectId
+) -> None:
+    if found.split:
+        if key_of(found) not in rows:
+            raise UnknownObjectError(f"{found.text(ascii=True)} is not in this review")
+        return
+    await check_exists(connection, row, found)
+
+
+async def require_live(
+    connection: AsyncConnection,
+    row: Any,
+    rows: dict[Key, Any],
+    found: ObjectId,
+    *,
+    deleted_too: bool = True,
+) -> None:
+    await require_known(connection, row, rows, found)
+    fate = rows.get(key_of(found))
+    if fate is None:
+        return
+    name = found.text(ascii=True)
+    if fate.retired == Retired.SPLIT:
+        raise RetiredObjectError(f"{name} was split")
+    if fate.retired == Retired.MERGED:
+        into = text_of(found.letter, (fate.merged_into_number, fate.merged_into_split))
+        raise RetiredObjectError(f"{name} was merged into {into}")
+    if fate.deleted and not deleted_too:
+        raise RetiredObjectError(f"{name} is deleted")
 
 
 async def check_exists(connection: AsyncConnection, row: Any, found: ObjectId) -> None:
@@ -216,13 +350,21 @@ async def check_exists(connection: AsyncConnection, row: Any, found: ObjectId) -
 def edit_of(row: Any) -> ReviewEdit:
     kind = AnnotationKind(row.kind)
     letter = Letter.REGION if kind is AnnotationKind.REGION else Letter.CELL
+    merged_into = (
+        text_of(letter, (row.merged_into_number, row.merged_into_split))
+        if row.merged_into_number is not None
+        else None
+    )
     return ReviewEdit(
-        object=ObjectId(letter, row.number).text(ascii=True),
+        object=ObjectId(letter, row.number, row.split).text(ascii=True),
         kind=kind,
         number=row.number,
+        split=row.split,
         class_id=row.class_id,
         geometry=json.loads(row.geojson) if row.geojson else None,
         deleted=row.deleted,
+        retired=Retired(row.retired) if row.retired else None,
+        merged_into=merged_into,
         updated_at=row.updated_at,
     )
 
@@ -230,11 +372,56 @@ def edit_of(row: Any) -> ReviewEdit:
 EDIT_COLUMNS = (
     review_edits.c.kind,
     review_edits.c.number,
+    review_edits.c.split,
     review_edits.c.class_id,
     func.ST_AsGeoJSON(review_edits.c.geometry).label("geojson"),
     review_edits.c.deleted,
+    review_edits.c.retired,
+    review_edits.c.merged_into_number,
+    review_edits.c.merged_into_split,
     review_edits.c.updated_at,
 )
+
+KEY_COLUMNS = [
+    review_edits.c.task_id,
+    review_edits.c.slide_id,
+    review_edits.c.user_id,
+    review_edits.c.kind,
+    review_edits.c.number,
+    review_edits.c.split,
+]
+
+
+def same(kind: AnnotationKind, key: Key) -> list[Any]:
+    return [
+        review_edits.c.kind == kind,
+        review_edits.c.number == key[0],
+        review_edits.c.split == key[1],
+    ]
+
+
+async def saved_edit(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    user_id: uuid.UUID | None,
+    kind: AnnotationKind,
+    key: Key,
+) -> ReviewEdit:
+    saved = (
+        await connection.execute(
+            select(*EDIT_COLUMNS).where(*mine(task_id, slide_id, user_id), *same(kind, key))
+        )
+    ).one()
+    return edit_of(saved)
+
+
+async def outline(connection: AsyncConnection, kind: AnnotationKind, geometry: Geometry) -> Any:
+    if geometry.type not in SHAPES[kind]:
+        raise InvalidShapeError(f"A {kind} cannot be a {geometry.type}")
+    shape = geometry.model_dump_json()
+    await check_shapes(connection, [shape])
+    return func.ST_SetSRID(func.ST_GeomFromGeoJSON(shape), 0)
 
 
 def mine(task_id: uuid.UUID, slide_id: uuid.UUID, user_id: uuid.UUID | None) -> list[Any]:
@@ -279,18 +466,16 @@ async def save_review_edit(
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
-    await check_exists(connection, row, found)
+    user_id = user_of(principal)
+    rows = await fates_of(connection, task_id, slide_id, user_id, found.letter)
+    await require_live(connection, row, rows, found)
     kind = KINDS[found.letter]
-    geometry = None
-    if draft.geometry is not None:
-        if draft.geometry.type not in SHAPES[kind]:
-            raise InvalidShapeError(f"A {kind} cannot be a {draft.geometry.type}")
-        shape = draft.geometry.model_dump_json()
-        await check_shapes(connection, [shape])
-        geometry = func.ST_SetSRID(func.ST_GeomFromGeoJSON(shape), 0)
+    geometry = None if draft.geometry is None else await outline(connection, kind, draft.geometry)
     if draft.class_id is not None:
         await check_classes(connection, row.project_id, {draft.class_id})
-    values = {"class_id": draft.class_id, "geometry": geometry, "deleted": draft.deleted}
+    values: dict[str, Any] = {"class_id": draft.class_id, "deleted": draft.deleted}
+    if geometry is not None or not found.split:
+        values["geometry"] = geometry
     await connection.execute(
         upsert(review_edits)
         .values(
@@ -298,21 +483,13 @@ async def save_review_edit(
             project_id=row.project_id,
             task_id=task_id,
             slide_id=slide_id,
-            user_id=user_of(principal),
+            user_id=user_id,
             kind=kind,
             number=found.number,
+            split=found.split,
             **values,
         )
-        .on_conflict_do_update(
-            index_elements=[
-                review_edits.c.task_id,
-                review_edits.c.slide_id,
-                review_edits.c.user_id,
-                review_edits.c.kind,
-                review_edits.c.number,
-            ],
-            set_=values,
-        )
+        .on_conflict_do_update(index_elements=KEY_COLUMNS, set_=values)
     )
     changes = [
         name
@@ -330,16 +507,27 @@ async def save_review_edit(
         row,
         {"object": found.text(ascii=True), "changes": changes},
     )
-    saved = (
-        await connection.execute(
-            select(*EDIT_COLUMNS).where(
-                *mine(task_id, slide_id, user_of(principal)),
-                review_edits.c.kind == kind,
-                review_edits.c.number == found.number,
+    return await saved_edit(connection, task_id, slide_id, user_id, kind, key_of(found))
+
+
+async def restore(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    user_id: uuid.UUID | None,
+    kind: AnnotationKind,
+    keys: list[Key],
+) -> None:
+    for number, split in keys:
+        where = [*mine(task_id, slide_id, user_id), *same(kind, (number, split))]
+        if split:
+            await connection.execute(
+                update(review_edits)
+                .where(*where)
+                .values(retired=None, merged_into_number=None, merged_into_split=None)
             )
-        )
-    ).one()
-    return edit_of(saved)
+        else:
+            await connection.execute(delete(review_edits).where(*where))
 
 
 @router.delete(
@@ -358,22 +546,219 @@ async def clear_review_edit(
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
-    cleared = await connection.execute(
-        delete(review_edits).where(
-            *mine(task_id, slide_id, user_of(principal)),
-            review_edits.c.kind == KINDS[found.letter],
-            review_edits.c.number == found.number,
+    user_id = user_of(principal)
+    kind = KINDS[found.letter]
+    rows = await fates_of(connection, task_id, slide_id, user_id, found.letter)
+    key = key_of(found)
+    fate = rows.get(key)
+    if fate is None:
+        return Response(status_code=204)
+    if found.split and fate.retired is None:
+        raise SplitPartError(f"Undo the split of {text_of(found.letter, (found.number, ''))}")
+    fates = lineage(rows)
+    gone = descendants(fates, key) if fate.retired == Retired.SPLIT else []
+    if not found.split:
+        gone.append(key)
+    aliases = [
+        alias
+        for alias, other in fates.items()
+        if other.merged_into is not None and other.merged_into in gone
+    ]
+    for number, split in gone:
+        await connection.execute(
+            delete(review_edits).where(
+                *mine(task_id, slide_id, user_id), *same(kind, (number, split))
+            )
         )
+    await restore(
+        connection,
+        task_id,
+        slide_id,
+        user_id,
+        kind,
+        [alias for alias in aliases if alias not in gone] + ([key] if found.split else []),
     )
-    if cleared.rowcount:
-        await audit(
-            connection,
-            principal,
-            AuditAction.REVIEW_OBJECT_RESTORED,
-            row,
-            {"object": found.text(ascii=True)},
-        )
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_OBJECT_RESTORED,
+        row,
+        {"object": found.text(ascii=True)},
+    )
     return Response(status_code=204)
+
+
+@router.post(
+    "/edits/{object_id}/split",
+    operation_id="splitReviewObject",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def split_review_object(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    draft: SplitDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> list[ReviewEdit]:
+    row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
+    found = region(object_id)
+    user_id = user_of(principal)
+    rows = await fates_of(connection, task_id, slide_id, user_id, found.letter)
+    await require_live(connection, row, rows, found, deleted_too=False)
+    try:
+        parts = split_into(found, len(draft.parts))
+    except ObjectIdError as error:
+        raise BadRequestError(str(error)) from error
+    await check_classes(
+        connection, row.project_id, {part.class_id for part in draft.parts if part.class_id}
+    )
+    kind = AnnotationKind.REGION
+    parent = rows.get(key_of(found))
+    inherited = parent.class_id if parent is not None else None
+    await connection.execute(
+        upsert(review_edits)
+        .values(
+            tenant_id=row.tenant_id,
+            project_id=row.project_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            user_id=user_id,
+            kind=kind,
+            number=found.number,
+            split=found.split,
+            retired=Retired.SPLIT,
+        )
+        .on_conflict_do_update(index_elements=KEY_COLUMNS, set_={"retired": Retired.SPLIT})
+    )
+    for part, made in zip(draft.parts, parts, strict=True):
+        await connection.execute(
+            upsert(review_edits).values(
+                tenant_id=row.tenant_id,
+                project_id=row.project_id,
+                task_id=task_id,
+                slide_id=slide_id,
+                user_id=user_id,
+                kind=kind,
+                number=made.number,
+                split=made.split,
+                class_id=part.class_id or inherited,
+                geometry=await outline(connection, kind, part.geometry),
+            )
+        )
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_OBJECT_SPLIT,
+        row,
+        {"object": found.text(ascii=True), "parts": [made.text(ascii=True) for made in parts]},
+    )
+    return [
+        await saved_edit(connection, task_id, slide_id, user_id, kind, key_of(made))
+        for made in parts
+    ]
+
+
+@router.post(
+    "/merges",
+    operation_id="mergeReviewObjects",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def merge_review_objects(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    draft: MergeDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ReviewEdit:
+    row = await assigned_slide(connection, principal, task_id, slide_id)
+    await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
+    merged = [region(text) for text in draft.objects]
+    try:
+        keeper = merge_keeper(merged)
+    except ObjectIdError as error:
+        raise BadRequestError(str(error)) from error
+    user_id = user_of(principal)
+    rows = await fates_of(connection, task_id, slide_id, user_id, Letter.REGION)
+    for found in merged:
+        await require_live(connection, row, rows, found, deleted_too=False)
+    if draft.class_id is not None:
+        await check_classes(connection, row.project_id, {draft.class_id})
+    kind = AnnotationKind.REGION
+    base = {
+        "tenant_id": row.tenant_id,
+        "project_id": row.project_id,
+        "task_id": task_id,
+        "slide_id": slide_id,
+        "user_id": user_id,
+        "kind": kind,
+    }
+    kept: dict[str, Any] = {"geometry": await outline(connection, kind, draft.geometry)}
+    if draft.class_id is not None:
+        kept["class_id"] = draft.class_id
+    await connection.execute(
+        upsert(review_edits)
+        .values(**base, number=keeper.number, split=keeper.split, **kept)
+        .on_conflict_do_update(index_elements=KEY_COLUMNS, set_=kept)
+    )
+    alias = {
+        "retired": Retired.MERGED,
+        "merged_into_number": keeper.number,
+        "merged_into_split": keeper.split,
+    }
+    others = [found for found in merged if found != keeper]
+    for found in others:
+        await connection.execute(
+            upsert(review_edits)
+            .values(**base, number=found.number, split=found.split, **alias)
+            .on_conflict_do_update(index_elements=KEY_COLUMNS, set_=alias)
+        )
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_OBJECT_MERGED,
+        row,
+        {
+            "object": keeper.text(ascii=True),
+            "aliases": [found.text(ascii=True) for found in others],
+        },
+    )
+    return await saved_edit(connection, task_id, slide_id, user_id, kind, key_of(keeper))
+
+
+@router.get(
+    "/objects/{object_id}",
+    operation_id="resolveReviewObject",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def resolve_review_object(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    reviewer_id: uuid.UUID | None = None,
+) -> ObjectResolution:
+    row = await task_slide(connection, principal, task_id, slide_id)
+    reviewer = reviewer_id or user_of(principal)
+    if reviewer is None:
+        raise BadRequestError("Name the reviewer")
+    await require_seeing_reviewer(
+        connection, principal, row.project_id, task_id, slide_id, reviewer
+    )
+    found = ai_object(object_id)
+    rows = await fates_of(connection, task_id, slide_id, reviewer, found.letter)
+    await require_known(connection, row, rows, found)
+    return ObjectResolution(
+        task_id=task_id,
+        slide_id=slide_id,
+        reviewer_id=reviewer,
+        object=found.text(ascii=True),
+        current=[item.text(ascii=True) for item in resolve(found.letter, lineage(rows), found)],
+    )
 
 
 @router.post(
@@ -423,7 +808,7 @@ async def get_reviewed_layer(
         for edit in await connection.execute(
             select(*EDIT_COLUMNS)
             .where(*mine(task_id, slide_id, reviewer))
-            .order_by(review_edits.c.kind, review_edits.c.number)
+            .order_by(review_edits.c.kind, review_edits.c.number, review_edits.c.split)
         )
     ]
     added = [
@@ -447,7 +832,7 @@ async def get_reviewed_layer(
             )
         )
     ).one()
-    live = [edit for edit in edits if not edit.deleted]
+    live = [edit for edit in edits if not edit.deleted and edit.retired is None]
     hidden = await ai_hidden_on(connection, principal, row.project_id, slide_id)
     return ReviewedLayer(
         task_id=task_id,
@@ -460,8 +845,10 @@ async def get_reviewed_layer(
             regions=None if hidden else counts.region_count,
             cells=None if hidden else counts.cell_count,
             retyped=sum(edit.class_id is not None for edit in live),
-            reshaped=sum(edit.geometry is not None for edit in live),
-            deleted=sum(edit.deleted for edit in edits),
+            reshaped=sum(edit.geometry is not None and not edit.split for edit in live),
+            deleted=sum(edit.deleted and edit.retired is None for edit in edits),
+            split=sum(edit.retired is Retired.SPLIT for edit in edits),
+            merged=sum(edit.retired is Retired.MERGED for edit in edits),
             added=len(added),
         ),
     )

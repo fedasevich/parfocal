@@ -3311,7 +3311,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when tests on two fixture sets cover inherited, new and missing objects.
   Depends on OBJ-001.
 
-- [ ] OBJ-003 · Split, merge and added objects
+- [x] OBJ-003 · Split, merge and added objects
   Splitting T2 gives T2a and T2b and keeps T2 in the history. Merging T2 and T3 keeps T2 and retires T3 as an alias. Objects a reviewer adds get a plus, as in T6⁺.
   Done when unit tests cover each rule and an alias that still resolves.
   Depends on OBJ-001, RSET-007.

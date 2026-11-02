@@ -1635,9 +1635,13 @@ review_edits = Table(
     Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column("split", String(26), primary_key=True, server_default=text("''"), info=OPERATIONAL),
     Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column[object]("geometry", Geometry(spatial_index=False), nullable=True, info=OPERATIONAL),
     Column("deleted", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    Column("retired", String(10), nullable=True, info=OPERATIONAL),
+    Column("merged_into_number", Integer, nullable=True, info=OPERATIONAL),
+    Column("merged_into_split", String(26), nullable=True, info=OPERATIONAL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],
@@ -1650,9 +1654,16 @@ review_edits = Table(
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
     CheckConstraint(
-        "deleted OR class_id IS NOT NULL OR geometry IS NOT NULL", name="changes_something"
+        "deleted OR retired IS NOT NULL OR class_id IS NOT NULL OR geometry IS NOT NULL",
+        name="changes_something",
     ),
     CheckConstraint("geometry IS NULL OR ST_IsValid(geometry)", name="geometry_valid"),
+    CheckConstraint("split ~ '^[a-z]*$'", name="split"),
+    CheckConstraint("retired IN ('split', 'merged')", name="retired"),
+    CheckConstraint(
+        "(retired = 'merged') = (merged_into_number IS NOT NULL AND merged_into_split IS NOT NULL)",
+        name="merged_into",
+    ),
 )
 
 

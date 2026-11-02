@@ -219,6 +219,7 @@ async def retype(
                 review_edits.c.user_id,
                 review_edits.c.kind,
                 review_edits.c.number,
+                review_edits.c.split,
             ],
             set_={"class_id": class_id},
         )
@@ -236,6 +237,7 @@ async def undo_retype(
     where = [
         *same_object(review_edits, row.task_id, row.slide_id, user_id, kind, number),
         review_edits.c.class_id == class_id,
+        review_edits.c.split == "",
     ]
     await connection.execute(
         delete(review_edits).where(

@@ -59,6 +59,7 @@ import type {
   MySettingLayers,
   MyTask,
   Neighbours,
+  ObjectResolution,
   OpenUpload,
   Opinion,
   OpinionAnswers,
@@ -162,6 +163,7 @@ import {
   ResultFormat,
   ResultSource,
   ResultStatus,
+  Retired,
   Role,
   Rule,
   ServiceScope,
@@ -2691,10 +2693,65 @@ export const getSaveReviewEditResponseMock = (
   object: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
   number: faker.number.int(),
+  split: faker.string.alpha({ length: { min: 10, max: 20 } }),
   class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   geometry: faker.helpers.arrayElement([null]),
   deleted: faker.datatype.boolean(),
+  retired: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Retired)), null]),
+  merged_into: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getSplitReviewObjectResponseMock = (): ReviewEdit[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+    number: faker.number.int(),
+    split: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    geometry: faker.helpers.arrayElement([null]),
+    deleted: faker.datatype.boolean(),
+    retired: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Retired)), null]),
+    merged_into: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getMergeReviewObjectsResponseMock = (
+  overrideResponse: Partial<Extract<ReviewEdit, object>> = {},
+): ReviewEdit => ({
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  split: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  geometry: faker.helpers.arrayElement([null]),
+  deleted: faker.datatype.boolean(),
+  retired: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Retired)), null]),
+  merged_into: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getResolveReviewObjectResponseMock = (
+  overrideResponse: Partial<Extract<ObjectResolution, object>> = {},
+): ObjectResolution => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  reviewer_id: faker.string.uuid(),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  current: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
   ...overrideResponse,
 });
 
@@ -2731,9 +2788,15 @@ export const getGetReviewedLayerResponseMock = (
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
     kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
     number: faker.number.int(),
+    split: faker.string.alpha({ length: { min: 10, max: 20 } }),
     class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     geometry: faker.helpers.arrayElement([null]),
     deleted: faker.datatype.boolean(),
+    retired: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Retired)), null]),
+    merged_into: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
     updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   })),
   added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -2760,6 +2823,8 @@ export const getGetReviewedLayerResponseMock = (
     retyped: faker.number.int(),
     reshaped: faker.number.int(),
     deleted: faker.number.int(),
+    split: faker.number.int(),
+    merged: faker.number.int(),
     added: faker.number.int(),
   },
   ...overrideResponse,
@@ -8555,6 +8620,76 @@ export const getClearReviewEditMockHandler = (
   );
 };
 
+export const getSplitReviewObjectMockHandler = (
+  overrideResponse?:
+    | ReviewEdit[]
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReviewEdit[]> | ReviewEdit[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/edits/:objectId/split",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSplitReviewObjectResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getMergeReviewObjectsMockHandler = (
+  overrideResponse?:
+    | ReviewEdit
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ReviewEdit> | ReviewEdit),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/merges",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMergeReviewObjectsResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResolveReviewObjectMockHandler = (
+  overrideResponse?:
+    | ObjectResolution
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ObjectResolution> | ObjectResolution),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/objects/:objectId",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResolveReviewObjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getAddReviewObjectMockHandler = (
   overrideResponse?:
     | Annotation
@@ -10860,6 +10995,9 @@ export const getParfocalAPIMock = () => [
   getChangeReviewTaskMockHandler(),
   getSaveReviewEditMockHandler(),
   getClearReviewEditMockHandler(),
+  getSplitReviewObjectMockHandler(),
+  getMergeReviewObjectsMockHandler(),
+  getResolveReviewObjectMockHandler(),
   getAddReviewObjectMockHandler(),
   getGetReviewedLayerMockHandler(),
   getGetReviewOrderMockHandler(),

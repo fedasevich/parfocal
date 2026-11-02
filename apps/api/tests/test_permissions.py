@@ -208,6 +208,8 @@ NEEDS_A_TASK = frozenset(
         "restoreAnnotation",
         "saveReviewEdit",
         "clearReviewEdit",
+        "splitReviewObject",
+        "mergeReviewObjects",
         "addReviewObject",
         "submitSlideReview",
         "reopenSlideReview",
@@ -403,6 +405,19 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "clearReviewEdit": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T1"
     ),
+    "splitReviewObject": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T2/split",
+        {"parts": [{"geometry": SQUARE}, {"geometry": SQUARE}]},
+    ),
+    "mergeReviewObjects": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/merges",
+        {"objects": ["T2", "T3"], "geometry": SQUARE},
+    ),
+    "resolveReviewObject": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/objects/T1"
+    ),
     "addReviewObject": lambda w: Call(
         "POST",
         f"/api/review-tasks/{w.task}/slides/{w.slide}/added",
@@ -579,7 +594,9 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "listNotificationPreferences": lambda _: Call("GET", "/api/me/notification-preferences"),
     "getMySettingLayers": lambda _: Call("GET", "/api/me/setting-layers"),
-    "setMySettingLayers": lambda _: Call("PUT", "/api/me/setting-layers", {"values": {"density": "compact"}}),
+    "setMySettingLayers": lambda _: Call(
+        "PUT", "/api/me/setting-layers", {"values": {"density": "compact"}}
+    ),
     "setNotificationPreferences": lambda _: Call(
         "PUT",
         "/api/me/notification-preferences",
@@ -888,13 +905,17 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 for name in ("Matrix set", "Doomed set")
             ]
             await connection.execute(
-                insert(result_objects).values(
-                    tenant_id=tenant_id,
-                    result_set_id=result_set,
-                    kind="region",
-                    number=1,
-                    geometry="SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
-                )
+                insert(result_objects),
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "result_set_id": result_set,
+                        "kind": "region",
+                        "number": number,
+                        "geometry": "SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
+                    }
+                    for number in (1, 2, 3)
+                ],
             )
             await connection.execute(
                 update(result_sets).where(result_sets.c.id == result_set).values(cell_count=1)

@@ -7,8 +7,10 @@ from parfocal_common.object_ids import (
     ObjectPath,
     by_area,
     in_reading_order,
+    merge_keeper,
     parse,
     parse_path,
+    split_into,
 )
 
 FORMS = [
@@ -91,3 +93,30 @@ def test_cells_are_numbered_top_to_bottom_then_left_to_right() -> None:
     centroids = [(50.0, 10.0), (10.0, 10.0), (30.0, 5.0), (0.0, 40.0), (10.0, 10.0)]
     assert in_reading_order(centroids, first=1) == [4, 2, 1, 5, 3]
     assert in_reading_order(centroids, first=101) == [104, 102, 101, 105, 103]
+
+
+def test_a_split_appends_letters_and_a_split_part_splits_again() -> None:
+    assert [str(part) for part in split_into(parse("T2"), 2)] == ["T2a", "T2b"]
+    assert [str(part) for part in split_into(parse("T2a"), 3)] == ["T2aa", "T2ab", "T2ac"]
+
+
+@pytest.mark.parametrize("parts", [0, 1, 27])
+def test_a_split_makes_two_to_twenty_six_parts(parts: int) -> None:
+    with pytest.raises(ObjectIdError):
+        split_into(parse("T2"), parts)
+
+
+def test_an_added_object_is_not_split() -> None:
+    with pytest.raises(ObjectIdError):
+        split_into(parse("T6+"), 2)
+
+
+def test_a_merge_keeps_the_lowest_number_then_the_earliest_part() -> None:
+    assert str(merge_keeper([parse("T3"), parse("T2")])) == "T2"
+    assert str(merge_keeper([parse("T4b"), parse("T4a"), parse("T9")])) == "T4a"
+
+
+@pytest.mark.parametrize("texts", [["T2"], ["T2", "C3"], ["T2", "T2"], ["T2", "T6+"]])
+def test_malformed_merges_are_refused(texts: list[str]) -> None:
+    with pytest.raises(ObjectIdError):
+        merge_keeper([parse(text) for text in texts])

@@ -1571,6 +1571,8 @@ export interface LayerSummary {
   retyped: number;
   reshaped: number;
   deleted: number;
+  split: number;
+  merged: number;
   added: number;
 }
 
@@ -1692,6 +1694,16 @@ export interface MembershipDraft {
   role: Role;
   admin_rights?: boolean;
   user_id: string;
+}
+
+export interface MergeDraft {
+  /**
+   * @minItems 2
+   * @maxItems 100
+   */
+  objects: string[];
+  geometry: Geometry;
+  class_id?: string | null;
 }
 
 /**
@@ -1900,6 +1912,14 @@ export interface Neighbours {
  * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
  */
 export type ObjectId = string;
+
+export interface ObjectResolution {
+  task_id: string;
+  slide_id: string;
+  reviewer_id: string;
+  object: string;
+  current: string[];
+}
 
 export interface OpenUpload {
   key: string;
@@ -2710,15 +2730,25 @@ export interface RetentionPolicy {
   audit_after_days?: number | null;
 }
 
+export type Retired = (typeof Retired)[keyof typeof Retired];
+
+export const Retired = {
+  split: "split",
+  merged: "merged",
+} as const;
+
 export type ReviewEditGeometry = { [key: string]: unknown } | null;
 
 export interface ReviewEdit {
   object: string;
   kind: AnnotationKind;
   number: number;
+  split: string;
   class_id: string | null;
   geometry: ReviewEditGeometry;
   deleted: boolean;
+  retired: Retired | null;
+  merged_into: string | null;
   updated_at: string;
 }
 
@@ -2999,6 +3029,19 @@ export interface SlideState {
   slide_id: string;
   state: State;
   reviewers: ReviewerState[];
+}
+
+export interface SplitPart {
+  geometry: Geometry;
+  class_id?: string | null;
+}
+
+export interface SplitDraft {
+  /**
+   * @minItems 2
+   * @maxItems 26
+   */
+  parts: SplitPart[];
 }
 
 export type StudyKind = (typeof StudyKind)[keyof typeof StudyKind];
@@ -3398,6 +3441,10 @@ export type CompleteUploadParams = {
    * @maxLength 512
    */
   key: string;
+};
+
+export type ResolveReviewObjectParams = {
+  reviewer_id?: string | null;
 };
 
 export type GetReviewedLayerParams = {
@@ -16041,6 +16088,622 @@ export const useClearReviewEdit = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getClearReviewEditMutationOptions(options), queryClient);
 };
+
+export type splitReviewObjectResponse201 = {
+  data: ReviewEdit[];
+  status: 201;
+};
+
+export type splitReviewObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type splitReviewObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type splitReviewObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type splitReviewObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type splitReviewObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type splitReviewObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type splitReviewObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type splitReviewObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type splitReviewObjectResponseSuccess = splitReviewObjectResponse201 & {
+  headers: Headers;
+};
+export type splitReviewObjectResponseError = (
+  | splitReviewObjectResponse400
+  | splitReviewObjectResponse401
+  | splitReviewObjectResponse403
+  | splitReviewObjectResponse404
+  | splitReviewObjectResponse409
+  | splitReviewObjectResponse422
+  | splitReviewObjectResponse429
+  | splitReviewObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type splitReviewObjectResponse =
+  | splitReviewObjectResponseSuccess
+  | splitReviewObjectResponseError;
+
+export const getSplitReviewObjectUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}/split`;
+};
+
+/**
+ * @summary Split Review Object
+ */
+export const splitReviewObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  splitDraft: SplitDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<splitReviewObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<splitReviewObjectResponse>(getSplitReviewObjectUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(splitDraft),
+  });
+};
+
+export const getSplitReviewObjectMutationKey = () => ["splitReviewObject"] as const;
+
+export const getSplitReviewObjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof splitReviewObject>>,
+    TError,
+    SplitReviewObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof splitReviewObject>>,
+  TError,
+  SplitReviewObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSplitReviewObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof splitReviewObject>>,
+    SplitReviewObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return splitReviewObject(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SplitReviewObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof splitReviewObject>>
+>;
+export type SplitReviewObjectMutationBody = SplitDraft;
+export type SplitReviewObjectMutationError = Problem;
+export type SplitReviewObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: SplitDraft;
+};
+
+/**
+ * @summary Split Review Object
+ */
+export const useSplitReviewObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof splitReviewObject>>,
+      TError,
+      SplitReviewObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof splitReviewObject>>,
+  TError,
+  SplitReviewObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getSplitReviewObjectMutationOptions(options), queryClient);
+};
+
+export type mergeReviewObjectsResponse201 = {
+  data: ReviewEdit;
+  status: 201;
+};
+
+export type mergeReviewObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type mergeReviewObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type mergeReviewObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type mergeReviewObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type mergeReviewObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type mergeReviewObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type mergeReviewObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type mergeReviewObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type mergeReviewObjectsResponseSuccess = mergeReviewObjectsResponse201 & {
+  headers: Headers;
+};
+export type mergeReviewObjectsResponseError = (
+  | mergeReviewObjectsResponse400
+  | mergeReviewObjectsResponse401
+  | mergeReviewObjectsResponse403
+  | mergeReviewObjectsResponse404
+  | mergeReviewObjectsResponse409
+  | mergeReviewObjectsResponse422
+  | mergeReviewObjectsResponse429
+  | mergeReviewObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type mergeReviewObjectsResponse =
+  | mergeReviewObjectsResponseSuccess
+  | mergeReviewObjectsResponseError;
+
+export const getMergeReviewObjectsUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/merges`;
+};
+
+/**
+ * @summary Merge Review Objects
+ */
+export const mergeReviewObjects = async (
+  taskId: string,
+  slideId: string,
+  mergeDraft: MergeDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<mergeReviewObjectsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<mergeReviewObjectsResponse>(getMergeReviewObjectsUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(mergeDraft),
+  });
+};
+
+export const getMergeReviewObjectsMutationKey = () => ["mergeReviewObjects"] as const;
+
+export const getMergeReviewObjectsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof mergeReviewObjects>>,
+    TError,
+    MergeReviewObjectsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof mergeReviewObjects>>,
+  TError,
+  MergeReviewObjectsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMergeReviewObjectsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof mergeReviewObjects>>,
+    MergeReviewObjectsMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return mergeReviewObjects(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MergeReviewObjectsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof mergeReviewObjects>>
+>;
+export type MergeReviewObjectsMutationBody = MergeDraft;
+export type MergeReviewObjectsMutationError = Problem;
+export type MergeReviewObjectsMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: MergeDraft;
+};
+
+/**
+ * @summary Merge Review Objects
+ */
+export const useMergeReviewObjects = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof mergeReviewObjects>>,
+      TError,
+      MergeReviewObjectsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof mergeReviewObjects>>,
+  TError,
+  MergeReviewObjectsMutationVariables,
+  TContext
+> => {
+  return useMutation(getMergeReviewObjectsMutationOptions(options), queryClient);
+};
+
+export type resolveReviewObjectResponse200 = {
+  data: ObjectResolution;
+  status: 200;
+};
+
+export type resolveReviewObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resolveReviewObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resolveReviewObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resolveReviewObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resolveReviewObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resolveReviewObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resolveReviewObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resolveReviewObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resolveReviewObjectResponseSuccess = resolveReviewObjectResponse200 & {
+  headers: Headers;
+};
+export type resolveReviewObjectResponseError = (
+  | resolveReviewObjectResponse400
+  | resolveReviewObjectResponse401
+  | resolveReviewObjectResponse403
+  | resolveReviewObjectResponse404
+  | resolveReviewObjectResponse409
+  | resolveReviewObjectResponse422
+  | resolveReviewObjectResponse429
+  | resolveReviewObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type resolveReviewObjectResponse =
+  | resolveReviewObjectResponseSuccess
+  | resolveReviewObjectResponseError;
+
+export const getResolveReviewObjectUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/objects/${objectId}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/objects/${objectId}`;
+};
+
+/**
+ * @summary Resolve Review Object
+ */
+export const resolveReviewObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resolveReviewObjectResponse> => {
+  return apiFetch<resolveReviewObjectResponse>(
+    getResolveReviewObjectUrl(taskId, slideId, objectId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getResolveReviewObjectQueryKey = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/objects/${objectId}`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getResolveReviewObjectQueryOptions = <
+  TData = Awaited<ReturnType<typeof resolveReviewObject>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getResolveReviewObjectQueryKey(taskId, slideId, objectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof resolveReviewObject>>> = ({ signal }) =>
+    resolveReviewObject(taskId, slideId, objectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      taskId !== null &&
+      taskId !== undefined &&
+      slideId !== null &&
+      slideId !== undefined &&
+      objectId !== null &&
+      objectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ResolveReviewObjectQueryResult = NonNullable<
+  Awaited<ReturnType<typeof resolveReviewObject>>
+>;
+export type ResolveReviewObjectQueryError = Problem;
+
+export function useResolveReviewObject<
+  TData = Awaited<ReturnType<typeof resolveReviewObject>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params: undefined | ResolveReviewObjectParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveReviewObject>>,
+          TError,
+          Awaited<ReturnType<typeof resolveReviewObject>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useResolveReviewObject<
+  TData = Awaited<ReturnType<typeof resolveReviewObject>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveReviewObject>>,
+          TError,
+          Awaited<ReturnType<typeof resolveReviewObject>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useResolveReviewObject<
+  TData = Awaited<ReturnType<typeof resolveReviewObject>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Resolve Review Object
+ */
+
+export function useResolveReviewObject<
+  TData = Awaited<ReturnType<typeof resolveReviewObject>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ResolveReviewObjectParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof resolveReviewObject>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getResolveReviewObjectQueryOptions(
+    taskId,
+    slideId,
+    objectId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type addReviewObjectResponse201 = {
   data: Annotation;

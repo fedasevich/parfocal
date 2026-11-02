@@ -18,6 +18,7 @@ ASCII_SEPARATOR = "."
 DISPLAY_MARK = "⁺"
 ASCII_MARK = "+"
 LOOSE_CASE = "~"
+SPLIT_LETTERS = "abcdefghijklmnopqrstuvwxyz"
 PATTERN = re.compile(
     r"^(?:T(?P<region>[1-9]\d*)[·.])?"
     r"(?P<letter>[TCRZM])(?P<number>[1-9]\d*)(?P<split>[a-z]*)(?P<mark>[+⁺]?)$",
@@ -106,6 +107,29 @@ def parse_path(text: str) -> ObjectPath:
         slide=unquote(slide),
         object=parse(unquote(item)),
     )
+
+
+def split_into(parent: ObjectId, parts: int) -> list[ObjectId]:
+    if parent.person:
+        raise ObjectIdError("Only AI objects are split in a review")
+    if not 2 <= parts <= len(SPLIT_LETTERS):
+        raise ObjectIdError(f"A split makes 2 to {len(SPLIT_LETTERS)} parts")
+    return [
+        ObjectId(parent.letter, parent.number, parent.split + letter)
+        for letter in SPLIT_LETTERS[:parts]
+    ]
+
+
+def merge_keeper(merged: Sequence[ObjectId]) -> ObjectId:
+    if len(merged) < 2:
+        raise ObjectIdError("A merge needs at least two objects")
+    if len({item.letter for item in merged}) > 1:
+        raise ObjectIdError("Only objects of one kind merge")
+    if len({item.key for item in merged}) < len(merged):
+        raise ObjectIdError("An object merges only once")
+    if any(item.person for item in merged):
+        raise ObjectIdError("Only AI objects are merged in a review")
+    return min(merged, key=lambda item: (item.number, item.split))
 
 
 def by_area(areas: Sequence[float], first: int) -> list[int]:

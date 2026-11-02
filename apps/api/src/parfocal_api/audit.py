@@ -79,6 +79,8 @@ class AuditAction(StrEnum):
     TASK_REOPENED = "task.reopened"
     REVIEW_OBJECT_EDITED = "review.object-edited"
     REVIEW_OBJECT_RESTORED = "review.object-restored"
+    REVIEW_OBJECT_SPLIT = "review.object-split"
+    REVIEW_OBJECT_MERGED = "review.object-merged"
     REVIEW_VERDICT_SET = "review.verdict-set"
     REVIEW_VERDICT_CLEARED = "review.verdict-cleared"
     REVIEW_DECISION_SET = "review.decision-set"

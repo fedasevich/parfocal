@@ -257,6 +257,7 @@ AREAS = text(
     "agreed AS (SELECT COALESCE(edit.geometry, o.geometry) AS g FROM result_objects o "
     "LEFT JOIN LATERAL (SELECT e.geometry FROM review_edits e WHERE e.task_id = :task_id "
     "AND e.slide_id = :slide_id AND e.kind = 'region' AND e.number = o.number "
+    "AND e.split = '' AND e.retired IS NULL "
     "AND e.geometry IS NOT NULL AND NOT e.deleted ORDER BY e.created_at, e.user_id LIMIT 1) edit "
     "ON true WHERE o.result_set_id = :set_id AND o.kind = 'region' "
     "AND o.number = ANY(:agreed_numbers)), "

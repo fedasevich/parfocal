@@ -142,6 +142,8 @@ def test_each_edit_lands_in_the_layer_and_the_ai_set_never_changes(
         "retyped": 2,
         "reshaped": 2,
         "deleted": 1,
+        "split": 0,
+        "merged": 0,
         "added": 2,
     }
     assert [a["code"] for a in layer["added"]] == ["C6+", "T3+"]
@@ -189,7 +191,7 @@ def test_only_the_assigned_reviewer_edits_the_layer(api: ApiAs, database: str) -
     [
         ("R1", {"deleted": True}, 400, "not-an-ai-object"),
         ("T1+", {"deleted": True}, 400, "not-an-ai-object"),
-        ("T1a", {"deleted": True}, 400, "not-an-ai-object"),
+        ("T1a", {"deleted": True}, 404, "unknown-object"),
         ("nonsense", {"deleted": True}, 400, "not-an-ai-object"),
         ("T9", {"deleted": True}, 404, "unknown-object"),
         ("C6", {"deleted": True}, 404, "unknown-object"),
@@ -231,3 +233,144 @@ def test_added_objects_stay_in_the_layer_and_belong_to_their_author(
     )
     assert api(r.people["owner"]).delete(one, params={"version": 2}).status_code == 204
     assert api(r.people["first"]).get(f"{r.base}/layer").json()["added"] == []
+
+
+LEFT = {"type": "Polygon", "coordinates": [[[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]]]}
+RIGHT = {"type": "Polygon", "coordinates": [[[50, 0], [100, 0], [100, 50], [50, 50], [50, 0]]]}
+BOTH = {"type": "Polygon", "coordinates": [[[0, 0], [200, 0], [200, 50], [0, 50], [0, 0]]]}
+
+
+def split(api: ApiAs, r: Review, object_id: str, *shapes: dict[str, Any]) -> Any:
+    parts = [{"geometry": shape} for shape in shapes]
+    return api(r.people["first"]).post(f"{r.base}/edits/{object_id}/split", json={"parts": parts})
+
+
+def merge(api: ApiAs, r: Review, *objects: str) -> Any:
+    body = {"objects": list(objects), "geometry": BOTH}
+    return api(r.people["first"]).post(f"{r.base}/merges", json=body)
+
+
+def current(api: ApiAs, r: Review, object_id: str) -> Any:
+    return api(r.people["first"]).get(f"{r.base}/objects/{object_id}").json()["current"]
+
+
+def test_a_split_makes_lettered_parts_and_keeps_the_object_in_the_history(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    before = ai_snapshot(database, r)
+    edit(api, r, "first", "T1", {"class_id": str(r.tumor)})
+    made = split(api, r, "T1", LEFT, RIGHT)
+    assert made.status_code == 201, made.text
+    assert [(p["object"], p["class_id"]) for p in made.json()] == [
+        ("T1a", str(r.tumor)),
+        ("T1b", str(r.tumor)),
+    ]
+    again = split(api, r, "T1b", LEFT, RIGHT)
+    assert [p["object"] for p in again.json()] == ["T1ba", "T1bb"]
+    assert current(api, r, "T1") == ["T1a", "T1ba", "T1bb"]
+    refused = edit(api, r, "first", "T1", {"deleted": True})
+    assert (refused.status_code, refused.json()["code"]) == (409, "retired-object")
+    assert edit(api, r, "first", "T1a", {"deleted": True}).json()["geometry"] == LEFT
+    layer = api(r.people["first"]).get(f"{r.base}/layer").json()
+    assert [(e["object"], e["retired"]) for e in layer["edits"]] == [
+        ("T1", "split"),
+        ("T1a", None),
+        ("T1b", "split"),
+        ("T1ba", None),
+        ("T1bb", None),
+    ]
+    assert (layer["summary"]["split"], layer["summary"]["deleted"]) == (2, 1)
+    assert ai_snapshot(database, r) == before
+
+
+def test_a_merge_keeps_the_lower_number_and_the_alias_still_resolves(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    kept = merge(api, r, "T2", "T1")
+    assert kept.status_code == 201, kept.text
+    assert (kept.json()["object"], kept.json()["geometry"]) == ("T1", BOTH)
+    assert current(api, r, "T2") == ["T1"]
+    refused = edit(api, r, "first", "T2", {"deleted": True})
+    assert refused.json()["detail"] == "T2 was merged into T1"
+    split(api, r, "T1", LEFT, RIGHT)
+    assert current(api, r, "T2") == ["T1a", "T1b"]
+    layer = api(r.people["first"]).get(f"{r.base}/layer").json()
+    assert [(e["object"], e["merged_into"]) for e in layer["edits"]] == [
+        ("T1", None),
+        ("T1a", None),
+        ("T1b", None),
+        ("T2", "T1"),
+    ]
+    assert layer["summary"]["merged"] == 1
+    exported = api(r.people["first"]).get(f"{r.base}/export").json()["features"]
+    assert [(f["id"], f["properties"]["parfocal"]["aliases"]) for f in exported] == [
+        ("T1a", []),
+        ("T1b", []),
+    ]
+    actions = owner(
+        database,
+        f"SELECT action, details::jsonb->>'object' FROM audit_events WHERE target_id = '{r.task}' "
+        "ORDER BY seq",
+    )
+    assert actions[1:] == [("review.object-merged", "T1"), ("review.object-split", "T1")]
+
+
+def test_undoing_a_split_or_a_merge_brings_the_ai_objects_back(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    merge(api, r, "T1", "T2")
+    split(api, r, "T1", LEFT, RIGHT)
+    split(api, r, "T1a", LEFT, RIGHT)
+    part = api(r.people["first"]).delete(f"{r.base}/edits/T1aa")
+    assert (part.status_code, part.json()["code"]) == (409, "split-part")
+    assert api(r.people["first"]).delete(f"{r.base}/edits/T1a").status_code == 204
+    assert current(api, r, "T1") == ["T1a", "T1b"]
+    assert api(r.people["first"]).delete(f"{r.base}/edits/T1").status_code == 204
+    assert api(r.people["first"]).get(f"{r.base}/layer").json()["edits"] == []
+    assert current(api, r, "T2") == ["T2"]
+
+
+def test_a_merged_part_comes_back_when_its_keeper_is_undone(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    split(api, r, "T2", LEFT, RIGHT)
+    merge(api, r, "T1", "T2b")
+    assert current(api, r, "T2") == ["T2a", "T1"]
+    exported = api(r.people["first"]).get(f"{r.base}/export").json()["features"]
+    assert [(f["id"], f["properties"]["parfocal"]["aliases"]) for f in exported] == [
+        ("T1", ["T2b"]),
+        ("T2a", []),
+    ]
+    assert api(r.people["first"]).delete(f"{r.base}/edits/T1").status_code == 204
+    assert current(api, r, "T2") == ["T2a", "T2b"]
+
+
+@pytest.mark.parametrize(
+    ("objects", "status", "code"),
+    [
+        (["T1", "C2"], 400, "not-a-region"),
+        (["T1", "T1"], 400, "bad-request"),
+        (["T1", "T9"], 404, "unknown-object"),
+        (["T1", "T1a"], 404, "unknown-object"),
+        (["T1"], 422, "validation"),
+    ],
+)
+def test_bad_merges_are_refused(
+    api: ApiAs, database: str, objects: list[str], status: int, code: str
+) -> None:
+    r = review(api, database)
+    response = merge(api, r, *objects)
+    assert (response.status_code, response.json()["code"]) == (status, code), response.text
+
+
+def test_bad_splits_are_refused(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    cell = split(api, r, "C1", LEFT, RIGHT)
+    assert (cell.status_code, cell.json()["code"]) == (400, "not-a-region")
+    assert split(api, r, "T1", LEFT).status_code == 422
+    edit(api, r, "first", "T2", {"deleted": True})
+    deleted = split(api, r, "T2", LEFT, RIGHT)
+    assert (deleted.status_code, deleted.json()["detail"]) == (409, "T2 is deleted")
+    split(api, r, "T1", LEFT, RIGHT)
+    twice = split(api, r, "T1", LEFT, RIGHT)
+    assert (twice.status_code, twice.json()["detail"]) == (409, "T1 was split")

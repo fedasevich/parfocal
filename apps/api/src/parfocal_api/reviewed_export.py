@@ -79,8 +79,9 @@ def item(
     details: dict[str, Any],
     *,
     person: bool = False,
+    split: str = "",
 ) -> dict[str, Any]:
-    object_id = ObjectId(LETTERS[kind], number, person=person)
+    object_id = ObjectId(LETTERS[kind], number, split, person=person)
     path = ObjectPath(where[0], where[1], where[2], object_id)
     return {
         "kind": kind,
@@ -111,22 +112,34 @@ async def layer_items(
 ) -> list[dict[str, Any]]:
     where = await path_parts(connection, row.slide_id)
     classes = await region_classes(connection, row.task_id, names)
-    edits = {
-        (edit.kind, edit.number): edit
-        for edit in await connection.execute(
+    rows = (
+        await connection.execute(
             select(
                 review_edits.c.kind,
                 review_edits.c.number,
+                review_edits.c.split,
                 review_edits.c.class_id,
                 review_edits.c.deleted,
+                review_edits.c.retired,
+                review_edits.c.merged_into_number,
+                review_edits.c.merged_into_split,
                 func.ST_AsGeoJSON(review_edits.c.geometry).label("geojson"),
-            ).where(
+            )
+            .where(
                 review_edits.c.task_id == row.task_id,
                 review_edits.c.slide_id == row.slide_id,
                 review_edits.c.user_id == reviewer,
             )
+            .order_by(review_edits.c.number, review_edits.c.split)
         )
-    }
+    ).all()
+    edits = {(edit.kind, edit.number): edit for edit in rows if not edit.split}
+    aliases: dict[tuple[int, str], list[str]] = {}
+    for edit in rows:
+        if edit.merged_into_number is not None:
+            into = (edit.merged_into_number, edit.merged_into_split)
+            alias = ObjectId(LETTERS[edit.kind], edit.number, edit.split).text(ascii=True)
+            aliases.setdefault(into, []).append(alias)
     given = {
         (verdict.kind, verdict.number): verdict
         for verdict in await connection.execute(
@@ -140,7 +153,7 @@ async def layer_items(
     out: list[dict[str, Any]] = []
     for region in await ai_regions(connection, row.result_set_id):
         edit = edits.get(("region", region.number))
-        if edit is not None and edit.deleted:
+        if edit is not None and (edit.deleted or edit.retired):
             continue
         ai_class = classes.get((row.slide_id, region.number))
         changed: list[str] = []
@@ -161,9 +174,23 @@ async def layer_items(
                     "changed": changed,
                     "verdict": verdict.value if verdict else None,
                     "reasons": list(verdict.reasons) if verdict else [],
+                    "aliases": aliases.get((region.number, ""), []),
                 },
             )
         )
+    for part in rows:
+        if part.kind == "region" and part.split and not part.retired and not part.deleted:
+            out.append(
+                item(
+                    "region",
+                    part.number,
+                    shape(part.geojson),
+                    names.get(part.class_id) if part.class_id else None,
+                    where,
+                    {"changed": ["split"], "aliases": aliases.get((part.number, part.split), [])},
+                    split=part.split,
+                )
+            )
     for (kind, number), edit in sorted(edits.items()):
         if kind == "cell" and edit.geojson and not edit.deleted:
             out.append(
