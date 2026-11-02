@@ -1,11 +1,5 @@
-import { type Me, useGetMe, useListMyJobs, useListProjects } from "@parfocal/api-client";
-import {
-  AppShell,
-  Sidebar,
-  type SidebarSection,
-  TopBar,
-  type WorkspaceBrand,
-} from "@parfocal/ui/components/app-shell";
+import { useGetMe, useListMyJobs, useListProjects } from "@parfocal/api-client";
+import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/components/app-shell";
 import type { ReactNode } from "react";
 import { AccountMenu } from "../../shell/account-menu.tsx";
 import { Bell } from "../../shell/bell.tsx";
@@ -13,6 +7,7 @@ import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo, useRouterLink } from "../../shell/router-link.tsx";
+import { ShellWorkspaceSwitcher, workspaceBrand } from "../../shell/workspace-switcher.tsx";
 import type { AdminSection } from "../onboarding/scenes.ts";
 import { okData } from "../placeholder.tsx";
 
@@ -68,25 +63,6 @@ export const adminSectionList: {
   },
 ];
 
-const brandColours = ["#0f766e", "#7c3aed"];
-
-function brandOf(me: Me | undefined): WorkspaceBrand | undefined {
-  const index = me?.workspaces.findIndex((item) => item.tenant_id === me.active_tenant_id) ?? -1;
-  const workspace = me?.workspaces[index];
-  if (workspace === undefined) return undefined;
-  return {
-    name: workspace.name,
-    subtitle: workspace.kind === "research" ? "Pathology and AI research" : "Diagnostic workspace",
-    logo: workspace.name
-      .split(/\s+/)
-      .filter((word) => /^\p{Lu}/u.test(word))
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 2),
-    color: brandColours[index % brandColours.length] ?? "#0f766e",
-  };
-}
-
 export const adminHref = (section: AdminSection) => `/admin?section=${section}`;
 
 export function AdminShell({
@@ -105,7 +81,7 @@ export function AdminShell({
   const goTo = useGoTo();
   const renderLink = useRouterLink();
   const person = personOf(me);
-  const workspace = brandOf(me);
+  const workspace = workspaceBrand(me);
   const sections: SidebarSection[] = [
     { items: [{ id: "back", href: destinations.home(), label: "Back to Parfocal", icon: "back" }] },
     {
@@ -125,6 +101,7 @@ export function AdminShell({
         <TopBar
           user={person}
           workspace={workspace}
+          workspaceSlot={<ShellWorkspaceSwitcher me={me} />}
           homeHref={destinations.home()}
           renderLink={renderLink}
           jobs={jobs.filter((job) => job.status !== "done").length}
