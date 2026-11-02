@@ -123,6 +123,7 @@ import type {
   TextQuestion,
   Thread,
   ThreadDetail,
+  TierMapping,
   TileAccess,
   UploadedPart,
   UploadState,
@@ -163,6 +164,7 @@ import {
   Metric,
   ModelHost,
   ModelMakes,
+  ModelTier,
   MuteSubject,
   MyStatus,
   NotificationKind,
@@ -199,6 +201,7 @@ import {
   TaxonomyTemplate,
   TenantKind,
   TenantStatus,
+  TierTask,
   UploadKind,
   UploadStatus,
   VerdictReason,
@@ -1026,6 +1029,10 @@ export const getStartModelRunsResponseMock = (): ModelRun[] =>
       ]),
       test_time_views: faker.helpers.arrayElement([1, 8] as const),
       ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+      tier: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(ModelTier)),
+        null,
+      ]),
     },
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1170,6 +1177,10 @@ export const getListModelRunsResponseMock = (): ModelRun[] =>
       ]),
       test_time_views: faker.helpers.arrayElement([1, 8] as const),
       ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+      tier: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(ModelTier)),
+        null,
+      ]),
     },
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1315,6 +1326,7 @@ export const getGetModelRunResponseMock = (
     ]),
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+    tier: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(ModelTier)), null]),
   },
   result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1461,6 +1473,7 @@ export const getCancelModelRunResponseMock = (
     ]),
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+    tier: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(ModelTier)), null]),
   },
   result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1607,6 +1620,7 @@ export const getResumeModelRunResponseMock = (
     ]),
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+    tier: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(ModelTier)), null]),
   },
   result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1753,6 +1767,7 @@ export const getRetryModelRunResponseMock = (
     ]),
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+    tier: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(ModelTier)), null]),
   },
   result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1803,6 +1818,61 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     queue_minutes: faker.number.int(),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
   }));
+
+export const getListModelTiersResponseMock = (): TierMapping[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    task: faker.helpers.arrayElement(Object.values(TierTask)),
+    tier: faker.helpers.arrayElement(Object.values(ModelTier)),
+    model: faker.helpers.arrayElement([
+      {
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        description: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      null,
+    ]),
+    set_by_lab: faker.datatype.boolean(),
+  }));
+
+export const getSetModelTierResponseMock = (
+  overrideResponse: Partial<Extract<TierMapping, object>> = {},
+): TierMapping => ({
+  task: faker.helpers.arrayElement(Object.values(TierTask)),
+  tier: faker.helpers.arrayElement(Object.values(ModelTier)),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      description: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  set_by_lab: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getResetModelTierResponseMock = (
+  overrideResponse: Partial<Extract<TierMapping, object>> = {},
+): TierMapping => ({
+  task: faker.helpers.arrayElement(Object.values(TierTask)),
+  tier: faker.helpers.arrayElement(Object.values(ModelTier)),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      description: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  set_by_lab: faker.datatype.boolean(),
+  ...overrideResponse,
+});
 
 export const getListModelRunAreasResponseMock = (
   overrideResponse: Partial<Extract<RunAreas, object>> = {},
@@ -8899,6 +8969,76 @@ export const getListProjectModelsMockHandler = (
   );
 };
 
+export const getListModelTiersMockHandler = (
+  overrideResponse?:
+    | TierMapping[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TierMapping[]> | TierMapping[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/model-tiers",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListModelTiersResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetModelTierMockHandler = (
+  overrideResponse?:
+    | TierMapping
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<TierMapping> | TierMapping),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/model-tiers/:task/:tier",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetModelTierResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResetModelTierMockHandler = (
+  overrideResponse?:
+    | TierMapping
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<TierMapping> | TierMapping),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/model-tiers/:task/:tier",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResetModelTierResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelRunAreasMockHandler = (
   overrideResponse?:
     | RunAreas
@@ -12622,6 +12762,9 @@ export const getParfocalAPIMock = () => [
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
   getListProjectModelsMockHandler(),
+  getListModelTiersMockHandler(),
+  getSetModelTierMockHandler(),
+  getResetModelTierMockHandler(),
   getListModelRunAreasMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),

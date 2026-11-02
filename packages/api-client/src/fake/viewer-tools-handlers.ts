@@ -1,6 +1,6 @@
-import { HttpResponse, http } from "msw";
+import { HttpResponse, http, type RequestHandler } from "msw";
 import { type AnnotationLayers, annotationLayersSchema } from "../draft/list-annotation-layers.ts";
-import { type ModelTiers, modelTiersSchema } from "../draft/list-model-tiers.ts";
+import type { TierMapping } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { slideByIndex } from "./scenario.ts";
 import { layersOnA1, modelTiers } from "./scenario-viewer-tools.ts";
@@ -12,14 +12,14 @@ export const toAnnotationLayers = (slideId: string): AnnotationLayers =>
     new_shapes_go_to: slideId === slideByIndex(1).id ? "area2-tumor" : "",
   });
 
-export const toModelTiers = (): ModelTiers => modelTiersSchema.parse({ tiers: modelTiers });
+export const toModelTiers = (): TierMapping[] => modelTiers.map((mapping) => ({ ...mapping }));
 
 export const getListAnnotationLayersMockHandler = (overrideResponse?: AnnotationLayers) =>
   http.get<{ slideId: string }>("*/api/slides/:slideId/annotation-layers", ({ params }) =>
     HttpResponse.json(overrideResponse ?? toAnnotationLayers(params.slideId)),
   );
 
-export const getListModelTiersMockHandler = (overrideResponse?: ModelTiers) =>
+export const getListModelTiersMockHandler = (overrideResponse?: TierMapping[]) =>
   http.get("*/api/tenant/model-tiers", () => HttpResponse.json(overrideResponse ?? toModelTiers()));
 
 export const viewerToolsDraftOperations: DraftOperation[] = [
@@ -29,10 +29,6 @@ export const viewerToolsDraftOperations: DraftOperation[] = [
     path: "/api/slides/{slide_id}/annotation-layers",
     handler: () => getListAnnotationLayersMockHandler(),
   },
-  {
-    operationId: "listModelTiers",
-    method: "get",
-    path: "/api/tenant/model-tiers",
-    handler: () => getListModelTiersMockHandler(),
-  },
 ];
+
+export const viewerToolsHandlers = (): RequestHandler[] => [getListModelTiersMockHandler()];

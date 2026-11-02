@@ -1,4 +1,4 @@
-import { type ModelTier, useListAnnotationLayers, useListModelTiers } from "@parfocal/api-client";
+import { useListAnnotationLayers, useListModelTiers } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
@@ -16,7 +16,6 @@ import {
   ContextPill,
   LayerList,
   type LayerRow,
-  type Tier,
   TierPicker,
   TierPill,
 } from "@parfocal/ui/components/viewer-tools";
@@ -30,6 +29,7 @@ import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { type HotSpot, placeMinimap } from "./minimap-placement.ts";
+import { tiersFor } from "./model-tiers.ts";
 import { annotateRail, toolHints } from "./rails.ts";
 import { areaExtent, toScreen, viewportOf } from "./slide-maps.tsx";
 import { autoRegionProposals, cellsUnderReview } from "./tool-geometry.ts";
@@ -37,12 +37,6 @@ import { coverHome } from "./tool-maths.ts";
 import type { ToolSession } from "./tool-session.tsx";
 
 const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
-
-const tierColour: Record<ModelTier["tier"], string> = {
-  Best: "var(--ok)",
-  Good: "var(--accent)",
-  Fast: "var(--warn)",
-};
 
 const centre = cellsUnderReview[2] ?? { x: 676, y: 834 };
 
@@ -67,9 +61,7 @@ type AnnotateViewProps = {
 export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewProps) {
   const { session, counts } = tools;
   const layers = okData(useListAnnotationLayers(session.slideId).data);
-  const tiers = (okData(useListModelTiers().data)?.tiers ?? []).filter(
-    (tier) => tier.job === "outline",
-  );
+  const tierList = tiersFor(okData(useListModelTiers().data) ?? [], "outline");
   const [tool, setTool] = useState("auto");
   const [tierName, setTierName] = useState("Best");
   const [proposals, setProposals] = useState(autoRegionProposals.length);
@@ -79,13 +71,6 @@ export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewPro
   const [camera, setCamera] = useState<Camera | null>(null);
   const [toast, setToast] = useState<{ text: string; undo?: () => void; id: number } | null>(null);
   const pickerOpen = scene === "models" && tool === "auto";
-  const tierList: Tier[] = tiers.map((tier) => ({
-    name: tier.tier,
-    description: tier.description,
-    model: tier.model,
-    speed: tier.speed as Tier["speed"],
-    colour: tierColour[tier.tier],
-  }));
   const tier = tierList.find((item) => item.name === tierName) ?? tierList[0];
   const target = layers?.layers.find((layer) => layer.key === layers.new_shapes_go_to);
 

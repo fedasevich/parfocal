@@ -33,6 +33,7 @@ from parfocal_api.tables import (
     jobs,
     legal_holds,
     memberships,
+    model_tiers,
     notification_mutes,
     notification_preferences,
     notifications,
@@ -786,6 +787,20 @@ async def seed_site_validations(connection: AsyncConnection, seeded: Seeded) -> 
     seeded.markers.add(specimen)
 
 
+async def seed_model_tiers(connection: AsyncConnection, seeded: Seeded) -> None:
+    version = f"iso-{uuid.uuid4().hex[:8]}"
+    await connection.execute(
+        insert(model_tiers).values(
+            tenant_id=seeded.tenant_id,
+            task="outline",
+            tier="fast",
+            model_name="hovernet",
+            model_version=version,
+        )
+    )
+    seeded.markers.add(version)
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -804,6 +819,7 @@ SEEDERS: dict[str, Seeder] = {
     "uploads": seed_uploads,
     "model_runs": seed_model_runs,
     "site_validations": seed_site_validations,
+    "model_tiers": seed_model_tiers,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1004,6 +1020,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/result-sets"
     ),
     "listSiteValidations": Route(Exposure.TENANT, lambda _: "/api/site-validations"),
+    "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
     ),

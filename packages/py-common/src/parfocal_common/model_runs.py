@@ -59,6 +59,12 @@ class Ordering(StrEnum):
     TUMOR_FIRST = "tumor-first"
 
 
+class ModelTier(StrEnum):
+    BEST = "best"
+    GOOD = "good"
+    FAST = "fast"
+
+
 def one_of(column: str, values: tuple[object, ...]) -> CheckConstraint:
     allowed = ", ".join(f"'{value}'" if isinstance(value, str) else str(value) for value in values)
     return CheckConstraint(f"{column} IN ({allowed})", name=column)
@@ -81,6 +87,7 @@ model_runs = Table(
     Column("typer_version", String(40), nullable=True, info=OPERATIONAL),
     Column("test_time_views", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("ordering", String(12), nullable=False, info=OPERATIONAL),
+    Column("tier", String(10), nullable=True, info=OPERATIONAL),
     Column(
         "started_by_user_id",
         Uuid[uuid.UUID](),
@@ -95,6 +102,7 @@ model_runs = Table(
     ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
     one_of("scope_kind", tuple(RunScopeKind)),
     one_of("ordering", tuple(Ordering)),
+    one_of("tier", tuple(ModelTier)),
     one_of("test_time_views", TEST_TIME_VIEWS),
     CheckConstraint("(scope_kind = 'slide') = (scope IS NULL)", name="scope"),
     CheckConstraint("(typer IS NULL) = (typer_version IS NULL)", name="typer_version"),
@@ -113,6 +121,7 @@ class RunSettings:
     typer_version: str | None = None
     test_time_views: int = 1
     ordering: Ordering = Ordering.RASTER
+    tier: ModelTier | None = None
 
 
 @dataclass(frozen=True)
@@ -141,7 +150,7 @@ def labels_of(claimed: ClaimedRun, tier: str | None, machine: str | None) -> Run
     return RunLabels(
         model=claimed.settings.detector,
         model_version=claimed.settings.detector_version,
-        tier=tier,
+        tier=tier or claimed.settings.tier,
         machine=machine or this_machine(),
     )
 
@@ -217,6 +226,7 @@ def settings_of(row: Any) -> RunSettings:
         typer_version=row.typer_version,
         test_time_views=row.test_time_views,
         ordering=Ordering(row.ordering),
+        tier=ModelTier(row.tier) if row.tier is not None else None,
     )
 
 

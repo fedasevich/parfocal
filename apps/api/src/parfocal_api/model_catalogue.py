@@ -3,6 +3,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
+
+from pydantic import StringConstraints
 
 
 class ModelMakes(StrEnum):
@@ -15,6 +18,15 @@ class ModelHost(StrEnum):
     PARFOCAL = "parfocal"
     LAB = "lab"
 
+
+type ModelName = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
+]
+type ModelVersion = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+]
 
 PARFOCAL_SERVER = "Parfocal GPU"
 MIN_SAMPLES = 3

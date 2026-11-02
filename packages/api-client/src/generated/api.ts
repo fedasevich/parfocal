@@ -1918,11 +1918,20 @@ export const Ordering = {
   "tumor-first": "tumor-first",
 } as const;
 
+export type ModelTier = (typeof ModelTier)[keyof typeof ModelTier];
+
+export const ModelTier = {
+  best: "best",
+  good: "good",
+  fast: "fast",
+} as const;
+
 export interface RunParameters {
   detector: ModelReference;
   typer?: ModelReference | null;
   test_time_views?: TestTimeViews;
   ordering?: Ordering;
+  tier?: ModelTier | null;
 }
 
 export interface RunStage {
@@ -1956,8 +1965,22 @@ export interface ModelRun {
   actions: JobControl[];
 }
 
+export type TierTask = (typeof TierTask)[keyof typeof TierTask];
+
+export const TierTask = {
+  tumor: "tumor",
+  outline: "outline",
+  typer: "typer",
+} as const;
+
+export interface TierPick {
+  task: TierTask;
+  tier: ModelTier;
+}
+
 export interface RunChoices {
-  detector: ModelChoice;
+  detector?: ModelChoice | null;
+  tier?: TierPick | null;
   typer?: ModelChoice | null;
   test_time_views?: TestTimeViews;
   ordering?: Ordering;
@@ -3521,6 +3544,26 @@ export interface ThreadDetail {
   message_count: number;
   last_message_at: string;
   messages: Message[];
+}
+
+export interface TierChoice {
+  name: ModelName;
+  version?: ModelVersion | null;
+}
+
+export interface TierModel {
+  name: string;
+  version: string;
+  title: string;
+  description: string;
+  label: string;
+}
+
+export interface TierMapping {
+  task: TierTask;
+  tier: ModelTier;
+  model: TierModel | null;
+  set_by_lab: boolean;
 }
 
 export interface TileAccess {
@@ -9822,6 +9865,492 @@ export function useListProjectModels<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listModelTiersResponse200 = {
+  data: TierMapping[];
+  status: 200;
+};
+
+export type listModelTiersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listModelTiersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listModelTiersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listModelTiersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listModelTiersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listModelTiersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listModelTiersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listModelTiersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listModelTiersResponseSuccess = listModelTiersResponse200 & {
+  headers: Headers;
+};
+export type listModelTiersResponseError = (
+  | listModelTiersResponse400
+  | listModelTiersResponse401
+  | listModelTiersResponse403
+  | listModelTiersResponse404
+  | listModelTiersResponse409
+  | listModelTiersResponse422
+  | listModelTiersResponse429
+  | listModelTiersResponse500
+) & {
+  headers: Headers;
+};
+
+export type listModelTiersResponse = listModelTiersResponseSuccess | listModelTiersResponseError;
+
+export const getListModelTiersUrl = () => {
+  return `/api/tenant/model-tiers`;
+};
+
+/**
+ * @summary List Model Tiers
+ */
+export const listModelTiers = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listModelTiersResponse> => {
+  return apiFetch<listModelTiersResponse>(getListModelTiersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListModelTiersQueryKey = () => {
+  return [`/api/tenant/model-tiers`] as const;
+};
+
+export const getListModelTiersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listModelTiers>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelTiers>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListModelTiersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listModelTiers>>> = ({ signal }) =>
+    listModelTiers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listModelTiers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListModelTiersQueryResult = NonNullable<Awaited<ReturnType<typeof listModelTiers>>>;
+export type ListModelTiersQueryError = Problem;
+
+export function useListModelTiers<
+  TData = Awaited<ReturnType<typeof listModelTiers>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelTiers>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelTiers>>,
+          TError,
+          Awaited<ReturnType<typeof listModelTiers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelTiers<
+  TData = Awaited<ReturnType<typeof listModelTiers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelTiers>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelTiers>>,
+          TError,
+          Awaited<ReturnType<typeof listModelTiers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelTiers<
+  TData = Awaited<ReturnType<typeof listModelTiers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelTiers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Model Tiers
+ */
+
+export function useListModelTiers<
+  TData = Awaited<ReturnType<typeof listModelTiers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelTiers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListModelTiersQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setModelTierResponse200 = {
+  data: TierMapping;
+  status: 200;
+};
+
+export type setModelTierResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setModelTierResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setModelTierResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setModelTierResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setModelTierResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setModelTierResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setModelTierResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setModelTierResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setModelTierResponseSuccess = setModelTierResponse200 & {
+  headers: Headers;
+};
+export type setModelTierResponseError = (
+  | setModelTierResponse400
+  | setModelTierResponse401
+  | setModelTierResponse403
+  | setModelTierResponse404
+  | setModelTierResponse409
+  | setModelTierResponse422
+  | setModelTierResponse429
+  | setModelTierResponse500
+) & {
+  headers: Headers;
+};
+
+export type setModelTierResponse = setModelTierResponseSuccess | setModelTierResponseError;
+
+export const getSetModelTierUrl = (task: TierTask, tier: ModelTier) => {
+  return `/api/tenant/model-tiers/${task}/${tier}`;
+};
+
+/**
+ * @summary Set Model Tier
+ */
+export const setModelTier = async (
+  task: TierTask,
+  tier: ModelTier,
+  tierChoice: TierChoice,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setModelTierResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setModelTierResponse>(getSetModelTierUrl(task, tier), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(tierChoice),
+  });
+};
+
+export const getSetModelTierMutationKey = () => ["setModelTier"] as const;
+
+export const getSetModelTierMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setModelTier>>,
+    TError,
+    SetModelTierMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setModelTier>>,
+  TError,
+  SetModelTierMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetModelTierMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setModelTier>>,
+    SetModelTierMutationVariables
+  > = (props) => {
+    const { task, tier, data } = props ?? {};
+
+    return setModelTier(task, tier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetModelTierMutationResult = NonNullable<Awaited<ReturnType<typeof setModelTier>>>;
+export type SetModelTierMutationBody = TierChoice;
+export type SetModelTierMutationError = Problem;
+export type SetModelTierMutationVariables = { task: TierTask; tier: ModelTier; data: TierChoice };
+
+/**
+ * @summary Set Model Tier
+ */
+export const useSetModelTier = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setModelTier>>,
+      TError,
+      SetModelTierMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setModelTier>>,
+  TError,
+  SetModelTierMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetModelTierMutationOptions(options), queryClient);
+};
+
+export type resetModelTierResponse200 = {
+  data: TierMapping;
+  status: 200;
+};
+
+export type resetModelTierResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resetModelTierResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resetModelTierResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resetModelTierResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resetModelTierResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resetModelTierResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resetModelTierResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resetModelTierResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resetModelTierResponseSuccess = resetModelTierResponse200 & {
+  headers: Headers;
+};
+export type resetModelTierResponseError = (
+  | resetModelTierResponse400
+  | resetModelTierResponse401
+  | resetModelTierResponse403
+  | resetModelTierResponse404
+  | resetModelTierResponse409
+  | resetModelTierResponse422
+  | resetModelTierResponse429
+  | resetModelTierResponse500
+) & {
+  headers: Headers;
+};
+
+export type resetModelTierResponse = resetModelTierResponseSuccess | resetModelTierResponseError;
+
+export const getResetModelTierUrl = (task: TierTask, tier: ModelTier) => {
+  return `/api/tenant/model-tiers/${task}/${tier}`;
+};
+
+/**
+ * @summary Reset Model Tier
+ */
+export const resetModelTier = async (
+  task: TierTask,
+  tier: ModelTier,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resetModelTierResponse> => {
+  return apiFetch<resetModelTierResponse>(getResetModelTierUrl(task, tier), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getResetModelTierMutationKey = () => ["resetModelTier"] as const;
+
+export const getResetModelTierMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetModelTier>>,
+    TError,
+    ResetModelTierMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetModelTier>>,
+  TError,
+  ResetModelTierMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResetModelTierMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetModelTier>>,
+    ResetModelTierMutationVariables
+  > = (props) => {
+    const { task, tier } = props ?? {};
+
+    return resetModelTier(task, tier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetModelTierMutationResult = NonNullable<Awaited<ReturnType<typeof resetModelTier>>>;
+
+export type ResetModelTierMutationError = Problem;
+export type ResetModelTierMutationVariables = { task: TierTask; tier: ModelTier };
+
+/**
+ * @summary Reset Model Tier
+ */
+export const useResetModelTier = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetModelTier>>,
+      TError,
+      ResetModelTierMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resetModelTier>>,
+  TError,
+  ResetModelTierMutationVariables,
+  TContext
+> => {
+  return useMutation(getResetModelTierMutationOptions(options), queryClient);
+};
 
 export type listModelRunAreasResponse200 = {
   data: RunAreas;

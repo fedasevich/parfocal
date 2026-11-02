@@ -31,11 +31,14 @@ from parfocal_api.model_catalogue import (
     CatalogueModel,
     ModelHost,
     ModelMakes,
+    ModelName,
+    ModelVersion,
     QueuedRun,
     latest_version,
     queue_minutes,
     throughput,
 )
+from parfocal_api.model_tiers import TierPick, mapped
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -58,7 +61,13 @@ from parfocal_api.tables import (
 )
 from parfocal_common.jobs import ALLOWED_FROM, JobControl, JobStatus, StepStatus, move
 from parfocal_common.model_runs import KIND as MODEL_RUN
-from parfocal_common.model_runs import Ordering, RunScopeKind, RunSettings, enqueue_model_run
+from parfocal_common.model_runs import (
+    ModelTier,
+    Ordering,
+    RunScopeKind,
+    RunSettings,
+    enqueue_model_run,
+)
 from parfocal_common.object_ids import Letter, ObjectIdError, parse
 
 MAX_SLIDES = 200
@@ -67,14 +76,6 @@ MAX_PIXELS = 10_000_000
 MAX_LISTED = 200
 SELECTABLE = frozenset({Letter.REGION, Letter.CELL, Letter.ROI, Letter.ZONE})
 
-type ModelName = Annotated[
-    str,
-    StringConstraints(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
-]
-type ModelVersion = Annotated[
-    str,
-    StringConstraints(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
-]
 type PixelOffset = Annotated[StrictInt, Field(ge=0, le=MAX_PIXELS)]
 type PixelLength = Annotated[StrictInt, Field(ge=1, le=MAX_PIXELS)]
 type SelectionGeometry = Annotated[
@@ -113,13 +114,21 @@ class RunParameters(Closed):
     typer: ModelReference | None = None
     test_time_views: TestTimeViews = 1
     ordering: Ordering = Ordering.RASTER
+    tier: ModelTier | None = None
 
 
 class RunChoices(Closed):
-    detector: ModelChoice
+    detector: ModelChoice | None = None
+    tier: TierPick | None = None
     typer: ModelChoice | None = None
     test_time_views: TestTimeViews = 1
     ordering: Ordering = Ordering.RASTER
+
+    @model_validator(mode="after")
+    def one_detector(self) -> Self:
+        if (self.detector is None) == (self.tier is None):
+            raise ValueError("Give either a detector or a tier")
+        return self
 
     @model_validator(mode="after")
     def views_need_a_typer(self) -> Self:
@@ -314,12 +323,21 @@ def resolved(choice: ModelChoice) -> ModelReference:
     return ModelReference(name=choice.name, version=version)
 
 
-def parameters_from(choices: RunChoices) -> RunParameters:
+async def detector_of(connection: AsyncConnection, choices: RunChoices) -> ModelReference:
+    if choices.tier is not None:
+        model = await mapped(connection, choices.tier)
+        return ModelReference(name=model.name, version=model.version)
+    assert choices.detector is not None
+    return resolved(choices.detector)
+
+
+async def parameters_from(connection: AsyncConnection, choices: RunChoices) -> RunParameters:
     return RunParameters(
-        detector=resolved(choices.detector),
+        detector=await detector_of(connection, choices),
         typer=resolved(choices.typer) if choices.typer is not None else None,
         test_time_views=choices.test_time_views,
         ordering=choices.ordering,
+        tier=choices.tier.tier if choices.tier is not None else None,
     )
 
 
@@ -334,6 +352,7 @@ def settings_from(draft: ModelRunDraft, parameters: RunParameters) -> RunSetting
         typer_version=parameters.typer.version if parameters.typer else None,
         test_time_views=parameters.test_time_views,
         ordering=parameters.ordering,
+        tier=parameters.tier,
     )
 
 
@@ -346,6 +365,7 @@ def parameters_of(row: Any) -> RunParameters:
         typer=typer,
         test_time_views=row.test_time_views,
         ordering=Ordering(row.ordering),
+        tier=ModelTier(row.tier) if row.tier is not None else None,
     )
 
 
@@ -570,7 +590,7 @@ async def start_model_runs(
     await check_slides(connection, project_id, draft)
     if isinstance(draft.scope, SelectionScope):
         await check_selection(connection, draft.scope)
-    parameters = parameters_from(draft.parameters)
+    parameters = await parameters_from(connection, draft.parameters)
     settings = settings_from(draft, parameters)
     batch_id = uuid.uuid4()
     actor = actor_of(principal)
@@ -615,6 +635,7 @@ async def start_model_runs(
                 "typer": (f"{settings.typer}@{settings.typer_version}" if settings.typer else None),
                 "test_time_views": settings.test_time_views,
                 "ordering": settings.ordering.value,
+                "tier": settings.tier.value if settings.tier else None,
             },
         )
     rows = (
