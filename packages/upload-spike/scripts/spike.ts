@@ -353,7 +353,7 @@ async function uploadWithInterruptions(
         page,
         (state) => {
           if (state.status === "error") {
-            throw new Error(`the upload failed before the link was cut: ${state.error}`);
+            throw new Error(`the upload failed in phase "${name}": ${state.error}`);
           }
           return state.status === "done" || stop(network.uploaded() - proxyAtStart);
         },
@@ -1000,7 +1000,9 @@ async function main(): Promise<void> {
         (bytes, index) => (bytes ?? 0) > partBytes * (index < upload.phases.length - 1 ? 1 : 0),
       ) && "more than one part was resent at an interruption",
       checks.nonUniform.apiStatus !== 400 && "the API completed an upload with uneven parts",
-      Math.max(0, ...listPages) < 2 && "ListParts never needed a second page",
+      plan.partCount > listPageSize &&
+        Math.max(0, ...listPages) < 2 &&
+        "ListParts never needed a second page",
       !checks.copy.sizeMatches && "the ranged copy has another size than the source",
       !checks.copy.partEtagsAreRangeMd5 && "a copied part ETag is not the MD5 of its range",
       r2 &&
