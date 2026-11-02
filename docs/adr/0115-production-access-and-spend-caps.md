@@ -1,7 +1,7 @@
 # 0115. Agents may touch real infrastructure, read-only by default, with every production write approved by the owner and every billing service capped or alerted
 
 - Date: 2026-10-31
-- Status: Accepted, the per-action yes changed by [ADR 0151](0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month)
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: OPS-009 (storage lifecycle and cost controls). Touches OPS-001 (base infrastructure as code), OPS-005 (continuous deployment), STACK-019 (the web framework), STACK-020 (database hosting) and IAM-001 (login provider setup)
 
@@ -34,3 +34,5 @@ Production means Modal environment `main`, the Neon main branch, the R2 buckets 
 ## Consequences
 
 Agents can now measure Modal cold starts (STACK-019) and the Neon region (STACK-020) in dev, and set up Zitadel from code (IAM-001), without asking for each read. Production deploys still need the owner. The rule is in `AGENTS.md` under "Real infrastructure and production". OPS-009 keeps its budgets per environment and cost dashboards, and this record covers the account-level caps.
+
+On 2026-11-02 [ADR 0151](0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month) replaced the per-action yes with one standing yes for additive production writes. Everything destructive or that raises spend is still asked per action.
