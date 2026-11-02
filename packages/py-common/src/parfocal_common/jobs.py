@@ -312,7 +312,7 @@ async def claim(
             )
             .values(status=JobStatus.CANCELLED, lease_until=None, finished_at=func.now())
         )
-        await fail_abandoned(connection, mine)
+        abandoned = await fail_abandoned(connection, mine)
         claimable = (
             select(jobs.c.id)
             .where(
@@ -344,44 +344,45 @@ async def claim(
                 )
             )
         ).one_or_none()
+    await fail_running_steps(engine, abandoned)
     if row is None:
         return None
     workflow = kinds[row.kind]
     return Claimed(row.id, row.tenant_id, row.project_id, row.kind, row.input), workflow
 
 
-async def fail_abandoned(connection: AsyncConnection, mine: ColumnElement[bool]) -> None:
-    abandoned = (
-        (
-            await connection.execute(
-                update(jobs)
-                .where(
-                    mine,
-                    jobs.c.status == JobStatus.RUNNING,
-                    jobs.c.lease_until < func.clock_timestamp(),
-                    jobs.c.tries >= MAX_TRIES,
-                )
-                .values(
-                    status=JobStatus.FAILED,
-                    error_code=TOO_MANY_CLAIMS,
-                    lease_until=None,
-                    finished_at=func.now(),
-                )
-                .returning(jobs.c.id)
-            )
+async def fail_abandoned(
+    connection: AsyncConnection, mine: ColumnElement[bool]
+) -> list[tuple[uuid.UUID, uuid.UUID]]:
+    rows = await connection.execute(
+        update(jobs)
+        .where(
+            mine,
+            jobs.c.status == JobStatus.RUNNING,
+            jobs.c.lease_until < func.clock_timestamp(),
+            jobs.c.tries >= MAX_TRIES,
         )
-        .scalars()
-        .all()
+        .values(
+            status=JobStatus.FAILED,
+            error_code=TOO_MANY_CLAIMS,
+            lease_until=None,
+            finished_at=func.now(),
+        )
+        .returning(jobs.c.id, jobs.c.tenant_id)
     )
-    if abandoned:
-        await connection.execute(
-            update(job_steps)
-            .where(
-                job_steps.c.job_id.in_(abandoned),
-                job_steps.c.status == StepStatus.RUNNING,
+    return [(row.id, row.tenant_id) for row in rows]
+
+
+async def fail_running_steps(
+    engine: AsyncEngine, abandoned: Sequence[tuple[uuid.UUID, uuid.UUID]]
+) -> None:
+    for job_id, tenant_id in abandoned:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
+            await connection.execute(
+                update(job_steps)
+                .where(job_steps.c.job_id == job_id, job_steps.c.status == StepStatus.RUNNING)
+                .values(status=StepStatus.FAILED, finished_at=func.now())
             )
-            .values(status=StepStatus.FAILED, finished_at=func.now())
-        )
 
 
 def kinds_lease(kinds: Mapping[str, Workflow]) -> float:

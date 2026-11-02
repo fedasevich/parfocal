@@ -48,6 +48,7 @@ Several built tasks wait for a green CI run on `main` or for an owner decision. 
 | [project/roadmap.md](project/roadmap.md) | Milestones M0 to M6 and their status |
 | [project/risks.md](project/risks.md) | Risk register |
 | [project/poc-reference.md](project/poc-reference.md) | Where the POC lives, with full links to every POC doc |
+| [project/standing-approval-records.md](project/standing-approval-records.md) | One page on the records accepted under standing approval, ADR 0054 to ADR 0091 |
 | [design/](design/README.md) | The frozen round 6 hi-fi mock and UX kit, with their artifact versions and what was left out |
 | [design/prototype-inventory.md](design/prototype-inventory.md) | Every mock screen and scene and every kit page, with the PROTO task that builds it, its owner and the API it reads |
 | [adr/](adr/README.md) | Decision records |

@@ -176,6 +176,7 @@ class Tiles:
     fail_at: int | None = None
     pause_at: int | None = None
     cancel_at: int | None = None
+    crash_at: int | None = None
     processed: list[int] = field(default_factory=list[int])
 
     def plan(self) -> Any:
@@ -199,6 +200,8 @@ class Tiles:
                         await move(connection, step.job_id, JobControl.CANCEL)
                 if await step.should_stop():
                     raise JobStoppedError
+                if unit == self.crash_at:
+                    raise RuntimeError("worker died")
                 if unit == self.fail_at:
                     self.fail_at = None
                     raise StepFailedError("gpu-lost")
@@ -507,10 +510,13 @@ def test_a_run_whose_worker_dies_three_times_fails_on_the_next_claim(
     api: ApiAs, database: str, lab: Lab
 ) -> None:
     run = one_run(api, lab)
-    plan = Tiles().plan()
+    tiles = Tiles(crash_at=1)
+    plan = tiles.plan()
     for worker in ("worker-1", "worker-2", "worker-3"):
-        claim(database, lab, plan, worker)
+        with pytest.raises(RuntimeError, match="worker died"):
+            execute(database, claim(database, lab, plan, worker), worker)
         expire_lease(database, run)
+    assert stage(ok(read(api, lab, run)), "model-running")["status"] == "running"
 
     async def go(engine: Any) -> ClaimedRun | None:
         return await claim_model_run(engine, "worker-4", plan, lab.tenant)
@@ -523,8 +529,10 @@ def test_a_run_whose_worker_dies_three_times_fails_on_the_next_claim(
         3,
         ["retry"],
     )
+    assert stage(failed, "model-running")["status"] == "failed"
     assert "running" not in {item["status"] for item in failed["stages"]}
     assert ok(control(api, lab, run, "retry"))["status"] == "queued"
+    tiles.crash_at = None
     execute(database, claim(database, lab, plan, "worker-5"), "worker-5")
     assert ok(read(api, lab, run))["status"] == "done"
 
