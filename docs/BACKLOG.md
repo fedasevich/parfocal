@@ -721,7 +721,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   A de-identified project never holds a direct identifier. Upload strips names and record numbers from file metadata and hides label and macro images. Copying slides from a clinical project into a de-identified one replaces case IDs with stable pseudonyms and removes label images.
   Done when tests prove no direct identifier, label image or macro image with a barcode reaches a de-identified project, through upload, link import, webhook and copy.
   Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
-  The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and decision 10d (labels in a de-identified project at ingest) in [decisions.md](decisions.md) asks whether this task stops that.
+  The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and this task stops that, so they are never stored and a later switch to clinical shows none, as the owner chose on 2026-11-02.
 
 - [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
@@ -923,7 +923,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Built as [ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md) (the slide row appears only when it is ready) says, with the polled `getUploadStatus` route as the live status until STACK-024 (realtime transport). Paired result files wait for RSET-004 (pairing results with slides), because the upload metadata cannot mark a result file yet.
 
 - [ ] INGEST-018 · Ingest failure UX
-  Readable errors per failure class, retry for transient failures, support contact for permanent ones.
+  Readable errors per failure class, retry for transient failures, support contact for permanent ones. A refused file sends the uploader an in-app notification of a new kind, upload refused, with its own line, as the owner chose on 2026-11-02.
   Done when component tests cover each failure class.
 
 - [ ] INGEST-019 · Slide metadata editing
@@ -978,6 +978,11 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ---
 
+- [ ] INGEST-029 · Shared test slides bucket
+  The owner's public test slides, such as the OpenSlide and Camelyon sets, sit once in their own R2 bucket `parfocal-fixtures`, which dev, CI and production read with read-only keys and only the owner's key writes, so nothing copies them around and a mistake in dev cannot delete them. No slide with patient data goes there. The bucket and its keys go through `infra/tofu`, and creating them needs the owner's yes in chat with the plan and cost.
+  Done when the bucket holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, a read-only key is refused a write, and the R2 storage cost is logged.
+  Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
+
 ## 06 TILES · Tile delivery
 
 - [ ] TILES-000 · Research check for tile delivery
@@ -986,7 +991,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 - [ ] TILES-001 · Signed access to slide bytes
   Short-lived capability tokens minted by the API, scoped to tenant and slide, verified by the edge Worker without a database call ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and refreshed before expiry without interrupting the viewer.
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
-  The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, and decision 10e, how the original keeps its label pages out of reach, in [decisions.md](decisions.md)).
+  The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, ). Ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload, as the owner chose on 2026-11-02.
 
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
@@ -2402,6 +2407,11 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when API tests cover the lifecycle and permissions.
   Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).
 
+- [ ] AIP-018 · Claim cap for failing jobs
+  A job that has been claimed 3 times and is claimed again fails for good instead, with the reason `too-many-claims`, so a job that crashes its worker cannot loop and run up a bill. The person retries it by hand, which starts the count again. The owner chose the cap of 3 on 2026-11-02 for AIP-008 (job model and API), decision 8d.
+  Done when engine tests show a job that loses its lease three times fails on the fourth claim, a manual retry claims it again, and a job that succeeds within three claims is unchanged.
+  Depends on AIP-008. Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).
+
 - [ ] AIP-009 · Resumable whole-slide jobs
   Tissue-masked core tiles with context halo, centroid ownership, tumour-first ordering, chunk per tile, resume by skipping tiles already written.
   Done when a test kills a job halfway and the resumed run produces the same chunks as an uninterrupted run.
@@ -3271,7 +3281,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Decided in [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region): cells match older sets by the vertex-mean centres of their summary files within 4 µm, each cell takes the innermost region of its own set, and a file of only cells imports.
 
 - [x] RSET-012 · Large result files in bounded memory
-  A result file of 1.6 million cells imports through the real worker within a memory ceiling of 2 GiB for the Modal worker (`INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, decision 14a in [decisions.md](decisions.md) asks the owner to confirm it), with the GeoJSON features read in batches instead of one decoded tree, and the job's lease never lapses during the import step. The [cell import result](results/2026-11-01-cell-import.md) measured about two minutes and 6 GB of memory for a 900 MB GeoJSON outside the worker.
+  A result file of 1.6 million cells imports through the real worker within the 2 GiB memory request of the Modal worker (`INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, with a 4 GiB hard limit in `INGEST_MEMORY_LIMIT_MIB`, as the owner chose on 2026-11-02), with the GeoJSON features read in batches instead of one decoded tree, and the job's lease never lapses during the import step. The [cell import result](results/2026-11-01-cell-import.md) measured about two minutes and 6 GB of memory for a 900 MB GeoJSON outside the worker.
   Done when a benchmark imports the synthetic 1.6 million cell GeoJSON through `python -m parfocal_ingest` against MinIO, records the peak memory and the step time in a result file, and the job is claimed once.
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
   Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
@@ -3383,6 +3393,11 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 
 ---
 
+- [ ] TASK-012 · A task scope as a list of kinds
+  A review task's scope becomes a list, such as all regions plus a random sample of 200 cells, as the mock's sentinel node template shows. The review order, the counts and the evaluation take every part of the list. The owner chose this on 2026-11-02, decision 4b for EVAL-007 (study template model and API).
+  Done when API tests create a task with two scope parts, show both kinds in the review order and the counts, and an old single-kind task reads as a list of one.
+  Depends on EVAL-007, GUIDE-012. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows).
+
 ## 44 GUIDE · Decisions, guided review and the opinion form
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
@@ -3422,6 +3437,11 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover each question kind and a new version leaving old answers intact.
   Depends on PROJ-001.
   The question asked of every object is not an opinion form question. It is the task's decision style, preset by the study template (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
+
+- [ ] GUIDE-016 · First read questions in the opinion form
+  Each question of an opinion form says when it is asked: in the first read, after the AI is shown, or both. The first read asks only its questions, and the default form's "Is the AI result acceptable for this slide?" is asked only after the AI is shown. The owner asked on 2026-11-02 that forms be very customizable everywhere, so the builder sets this per question, a study template's form carries it, and a task can override it. Old forms keep every question after the AI. Decision 2c, for TASK-004 (blinding and first read).
+  Done when API tests show a first read asks and stores only its questions, the aided read asks the rest, an old form behaves as before, and a component test covers the builder's per-question setting.
+  Depends on GUIDE-006, TASK-004. Refs [ADR 0118](adr/0118-blinding-and-a-kept-first-read.md) (blinding and a kept first read).
 
 - [ ] GUIDE-007 · Slide done card with the opinion form
   One card in one column ends a slide. It replaces the question card in guided review and is the Opinion tab of the full viewer at panel width. It shows the counts in one line, as in "55 objects checked: 48 agree, 5 disagree, 2 not sure. 1 added.", then the opinion form's questions with "Required" next to the required ones, the submit blockers of TASK-008 and the submit button. Answers save at once as a draft and can change until sign-off. There is no separate opinion screen ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
@@ -3569,6 +3589,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover create, edit as a new version, retire, the seeded five, a task pinning a version, a refused unknown block kind or setting, isolation and the audit entry.
   Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
   Since 2026-11-01 the task presets also hold the decision style with its Counts as mapping, which GUIDE-015 (decision styles with the raw answer and Counts as) adds ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), and the display defaults with their locks, which TASK-011 (display defaults, locks and presets) adds ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
+
+- [ ] EVAL-011 · Reader study and outline quality forms
+  Draft the questions of the "Reader study form" and the "Outline quality form" that the mock names but never defines, from the POC and the mock, for the owner to review, and seed them into the reader study and segmentation built-in templates once the owner agrees. The owner chose this on 2026-11-02, decision 4c.
+  Done when the drafts sit in `docs/decisions.md` for the owner and, after the owner's answer, the built-ins carry the forms with API tests.
+  Depends on EVAL-007, GUIDE-006.
 
 - [ ] EVAL-008 · Report from template blocks
   The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.

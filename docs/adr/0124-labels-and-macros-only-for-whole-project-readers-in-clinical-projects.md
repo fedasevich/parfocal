@@ -1,7 +1,7 @@
-# 0124. Label and macro images are shown only in clinical projects, to the people who read the whole project, and every read is audited
+# 0124. Label and macro images are shown only in clinical projects, to the people who read the whole project and to reviewers on their task slides, and every read is audited
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: SEC-009 (slide label and macro image handling). Touches SEC-008 (de-identified projects), PROJ-002 (privacy modes), TILES-001 (signed access to slide bytes), SEC-006 (retention policies) and SEC-007 (right to access and erasure workflows)
 
@@ -24,7 +24,7 @@ Looking at the fixtures showed that the macro is no safer than the label. The ma
 ### How the rule is written
 
 1. Keep `see-slides` and add a check in the route. Nothing changes in the matrix, but the permission page would not show the rule, and a service account with the `see-slides` scope would read labels.
-2. A new permission `see-labels` in both matrices. The researcher has it, a workspace reviewer has it view only, and in a project the owner and viewer have it and the reviewer does not. The page shows the rule, emergency access opens it like `see-slides`, and service accounts never get it, because no scope names it.
+2. A new permission `see-labels` in both matrices. The researcher has it, a workspace reviewer has it view only, and in a project the owner and viewer have it and the reviewer has it in their tasks. The page shows the rule, emergency access opens it like `see-slides`, and service accounts never get it, because no scope names it.
 
 ### How the bytes reach the browser
 
@@ -33,12 +33,12 @@ Looking at the fixtures showed that the macro is no safer than the label. The ma
 
 ## Decision
 
-Option 2 for who sees them (the people who read the whole project), option 2 for the rule (a new permission `see-labels`) and option 1 for the bytes (read through the API).
+Option 2 for who sees them (the people who read the whole project), widened by the owner on 2026-11-02 so a project reviewer also sees them on the slides of their tasks, option 2 for the rule (a new permission `see-labels`) and option 1 for the bytes (read through the API).
 
 | Concern | Rule |
 |---|---|
 | Route | `GET /api/slides/{slide_id}/restricted-images/{image}` (`getRestrictedImage`), with `image` `label` or `macro`, returns `image/png` or `image/jpeg` with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` |
-| Order of checks | The workspace gate `see-labels` (403 `forbidden` for a service account). A slide that is missing, deleted or in another workspace is 404 `not-found`. A slide the caller cannot read follows `require_slide_reading`: 404, or 403 `emergency-access-needed` for a researcher outside a clinical project. A de-identified project is 404 `restricted-image-not-found` for everyone. A reader who does not read the whole project, which is an assigned reviewer, is 403 `restricted-images-for-readers`. An image the slide does not have, or that storage no longer holds, is 404 `restricted-image-not-found` |
+| Order of checks | The workspace gate `see-labels` (403 `forbidden` for a service account). A slide that is missing, deleted or in another workspace is 404 `not-found`. A slide the caller cannot read follows `require_slide_reading`: 404, or 403 `emergency-access-needed` for a researcher outside a clinical project. A de-identified project is 404 `restricted-image-not-found` for everyone. A project reviewer reads them on the slides of their tasks, because `see-labels` is "In their tasks" for that role and `require_slide_reading` has already refused every other slide. A caller who reads the slide without `see-labels` is 403 `restricted-images-for-readers`, which no role reaches today. An image the slide does not have, or that storage no longer holds, is 404 `restricted-image-not-found` |
 | De-identified projects | Never shown to anyone, the owner included, by any route |
 | Audit | Every served image records `slide.restricted-image-viewed` on the slide with `{"image": "label"}` or `{"image": "macro"}` and nothing else. Refusals record nothing. The audit query for a patient includes these entries for the slides of their cases |
 | Case view | `getCase` lists `restricted_images` per slide, the kinds the caller may open, and an empty list for everyone else |
@@ -52,7 +52,7 @@ Option 2 for who sees them (the people who read the whole project), option 2 for
 - The workspace reviewer seat of the permission matrix test is a project viewer and reads the seeded label, the tenant isolation suite and the project role test call the route, and `test_restricted_images.py` holds the table of roles in a clinical and a de-identified project.
 - The generated client returns a `Blob` for image answers. A screen can also use the route as an `<img>` source, because the session cookie is same-origin.
 - The retention workflow takes the storage location from the API settings, so the purge needs storage to be reachable. This settles the TODO in [ADR 0089](0089-retention-purge-and-audit-re-anchor.md) (retention purge and audit re-anchor) for slide files. Result set files are still not deleted.
-- SEC-008 (de-identified projects) decides whether ingest stops extracting them in a de-identified project at all, and what a switch from de-identified to clinical shows. Decision 10d (labels in a de-identified project at ingest) in [decisions.md](../decisions.md) asks the owner.
-- TILES-001 (signed access to slide bytes) must keep the label and macro pages of the original file out of reach, or a reviewer could read the label from the original. Decision 10e (how the original keeps its label pages out of reach) asks the owner how. Its backlog entry now says so.
-- A project cannot switch labels off yet. Decision 10c (a switch per clinical project) asks whether it should, with PROJ-008 (project settings).
+- SEC-008 (de-identified projects) makes ingest stop extracting them in a de-identified project, so they are never stored and a later switch to clinical shows none, as the owner chose on 2026-11-02.
+- TILES-001 (signed access to slide bytes) must keep the label and macro pages of the original file out of reach, or a reviewer could read the label from the original. The owner chose on 2026-11-02 that ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload. Its backlog entry says so.
+- A project cannot switch labels off. The owner chose on 2026-11-02 to add that switch to PROJ-008 (project settings) only if a lab asks.
 - TODO: the number 0124 was free on `origin/main` on 2026-10-31. If another branch takes it first, renumber this record.

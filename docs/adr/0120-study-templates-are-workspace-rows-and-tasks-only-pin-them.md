@@ -1,7 +1,7 @@
 # 0120. Study templates are versioned rows in each workspace, and a review task only records the version it pins
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm), proposed by the agent building EVAL-007 (study template model and API)
 - Backlog: EVAL-007 (study template model and API), changes TASK-009 (study template in a new review task), touches TASK-004 (blinding and first read), EVAL-008 (report from template blocks) and ADMIN-008 (report template library)
 

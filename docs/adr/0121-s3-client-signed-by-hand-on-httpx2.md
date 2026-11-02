@@ -1,7 +1,7 @@
 # 0121. An S3 client signed by hand on httpx2, tested against MinIO
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: INGEST-001 (upload API with presigned multipart). Touches INGEST-028 (upload protocol check on the R2 dev bucket), INGEST-025 (import slides from a link), STACK-025 (object storage, CDN and signed access) and the ingest steps that read uploads
 

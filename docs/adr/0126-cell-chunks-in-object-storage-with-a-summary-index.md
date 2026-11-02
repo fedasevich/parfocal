@@ -1,7 +1,7 @@
 # 0126. Cell chunks are written per result set under the slide's prefix, version 1 grows by optional fields, and the summary file indexes the chunks
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AIP-013, RSET-011, AINUC-004, AINUC-005, TILES-001, GUIDE-012
 

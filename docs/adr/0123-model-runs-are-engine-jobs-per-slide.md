@@ -1,7 +1,7 @@
 # 0123. A model run is one job per slide in the shared job engine, with cancel, pause, resume and retry in the engine
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm), proposed by the agent building AIP-008 (job model and API)
 - Backlog: AIP-008 (job model and API), shapes JOBS-001 (model run API), JOBS-003 (jobs tray), JOBS-004 (job window with steps per slide), AIP-009 (resumable whole-slide jobs), AIP-011 (job progress streaming), AIP-013 (result chunk store) and AIP-014 (AI cost and usage metering), leaves JOBS-000 (research check for the model run contract) open
 

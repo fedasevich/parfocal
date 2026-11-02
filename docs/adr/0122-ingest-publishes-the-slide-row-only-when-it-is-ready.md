@@ -1,7 +1,7 @@
 # 0122. The ingest job creates the slide row only when the slide is ready, and the upload carries the status until then
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: INGEST-017 (publish step and slide status). Touches SEC-009 (slide label and macro image handling), INGEST-018 (ingest failure UX), INGEST-022 (per-file problems in the Check step), RSET-004 (pairing results with slides) and CASES-024 (sorting dropped files into cases)
 

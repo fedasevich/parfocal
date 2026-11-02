@@ -1,7 +1,7 @@
 # 0118. Reviewers see each other's work after they submit, and a first read without the AI is a stored step that is kept unchanged
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: TASK-004, TASK-010, TASK-008, TASK-007, PROJ-008, EVAL-007, COLLAB-002, GUIDE-006, ADJ-001
 

@@ -1,7 +1,7 @@
 # 0127. Imported cells keep their numbers by centre distance read from older summaries, and each cell takes the innermost region its centre lies in
 
 - Date: 2026-11-01
-- Status: Proposed
+- Status: Accepted
 - Deciders: agent (RSET-011), waiting for the owner
 - Backlog: RSET-011 (cells from imported files), touches RSET-012 (large result files in bounded memory), OBJ-002 (IDs across result sets) and GUIDE-012 (least sure first order)
 

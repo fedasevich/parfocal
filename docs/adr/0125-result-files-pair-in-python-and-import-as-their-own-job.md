@@ -1,7 +1,7 @@
 # 0125. Result files pair with slides through pure rules in py-common, and a paired result upload imports as its own job once its slide is ready
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: RSET-004, INGEST-021, CASES-024, CASES-016, RSET-005, RSET-011, AIP-013
 

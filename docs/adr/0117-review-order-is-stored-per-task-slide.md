@@ -1,7 +1,7 @@
 # 0117. The least sure first order is stored per task slide when the task is made
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Claude, waiting for the owner
 - Backlog: GUIDE-012 (least sure first order), GUIDE-013 (review order as a background job), GUIDE-002 (guided review), TASK-003 (scope and progress), AINUC-006 (calibration), AILEARN-005 (recalibration after each round), STACK-025 (object storage, CDN and signed access), AIP-013 (result chunk store)
 
