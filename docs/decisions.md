@@ -39,6 +39,16 @@ ADR 0144 (charts are hand-made SVG with visx) is Proposed. Charts are React SVG 
 
 Your choice:
 
+## 23. Charts, from STACK-011 (charts for dashboards and confidence visuals)
+
+ADR 0144 (charts are hand-made SVG with visx) is Proposed. Charts are React SVG components in `packages/ui`, with visx scales and axes only when a chart needs an axis or many series, coloured only by token variables and always readable as a table or a stated label. It leaves Observable Plot out of the app, against the backlog default, because no planned in-app chart needs it. In a scratch build visx added 16 to 25 KB gzipped over React and Plot 98 KB. No package is installed yet.
+
+- a. Accept ADR 0144 as written, with Plot reconsidered only if an in-app dashboard such as HOME-004 (department dashboard) is planned. (recommended)
+- b. Add Observable Plot now for dashboard charts, as the backlog default said.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
