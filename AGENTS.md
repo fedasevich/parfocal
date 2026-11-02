@@ -48,9 +48,8 @@ The owner pays for every service personally, and production will hold real data.
 
 ## Style
 
-- No comments of any kind in code unless the owner asks. Make the code self-explanatory.
+The code and writing rules (no code comments, no dashes, plain sentences, every ID followed by plain words) live once, in the owner's `~/.claude/CLAUDE.md`, which Claude Code loads in every session. Other agents read that file before writing.
+
 - English and Markdown with relative links. File names in lowercase kebab-case, dates as `YYYY-MM-DD`.
-- No em or en dashes. Use a hyphen, comma or period.
-- Plain sentences. Don't open a list item with a bold label and a colon. No tacked-on ", enabling X" clauses. No semicolons between clauses.
-- Never name anything by an ID alone. Follow it with a few plain words, such as "ADR 0109 (an idle viewer asks for no frames)". Write lists of IDs out one by one, or name the group instead.
+- Name a group of tasks by its purpose instead of listing every ID.
 - Short over long. Respect the output budget in [agent-workflow.md](docs/knowledge/agent-workflow.md). Mark open questions with `TODO`.

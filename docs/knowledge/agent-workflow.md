@@ -35,7 +35,7 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 
 ## Subagents
 
-- One task per fresh subagent. Use `.claude/agents/task-runner.md` or `.claude/agents/ui-porter.md`. Never fork the main session for task work, because a fork carries its whole context.
+- One task per fresh subagent, using `.claude/agents/task-runner.md`. Pass a different model when the table below says so. Never fork the main session for task work, because a fork carries its whole context.
 - At most two alive at once.
 - Budget about 120 turns. When a run passes it, or the work is plainly bigger than one task, the agent commits what is green, leaves a claim `note:` with the next step and hands back.
 - The main session only picks tasks, spawns, relays questions and merges. End it after one epic or about three tasks and start fresh.
