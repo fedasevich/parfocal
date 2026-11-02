@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-const port = 5183;
+const port = Number(process.env["PARFOCAL_E2E_PORT"] ?? 5183);
 
 export default defineConfig({
   testDir: "e2e",
@@ -19,7 +19,11 @@ export default defineConfig({
   },
   webServer: {
     command: `vite --port ${port} --strictPort`,
-    env: { PARFOCAL_PUBLIC_APP_ENV: "dev", PARFOCAL_PUBLIC_FAKE_API: "all" },
+    env: {
+      PARFOCAL_PUBLIC_APP_ENV: "dev",
+      PARFOCAL_PUBLIC_FAKE_API: "all",
+      PARFOCAL_PUBLIC_API_BASE_URL: "http://127.0.0.1:9161/e2e",
+    },
     url: `http://localhost:${port}/`,
     reuseExistingServer: !process.env.CI,
   },

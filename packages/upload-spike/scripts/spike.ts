@@ -1,9 +1,8 @@
-import { execFile } from "node:child_process";
 import { mkdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { parseArgs, promisify } from "node:util";
+import { parseArgs } from "node:util";
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
@@ -23,18 +22,15 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { type LatencyProxy, startLatencyProxy } from "@parfocal/latency-proxy";
 import { chromium, type Page } from "@playwright/test";
 import { digestFile, type FileDigest, sha256OfStream, writeRandomFile } from "../src/digest.ts";
+import { MINIO_CREDENTIALS, MINIO_IMAGE, startMinio, stopMinio } from "../src/minio.ts";
 import { MIB, partSizeFor, planParts } from "../src/part-size.ts";
 import { type ApiEvent, startUploadApi, type UploadApi } from "../src/upload-api.ts";
 
-const run = promisify(execFile);
-
-const MINIO_IMAGE =
-  "pgsty/minio@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372";
 const CONTAINER = "parfocal-stack039-minio";
 const BUCKET = "parfocal-spike";
 const KEY_PREFIX = "t/spike-tenant/quarantine/";
 const SETTLE_MS = 1000;
-const CREDENTIALS = { accessKeyId: "spike-access", secretAccessKey: "spike-secret-key-0000" };
+const CREDENTIALS = MINIO_CREDENTIALS;
 
 const { values: args } = parseArgs({
   args: process.argv.slice(2).filter((arg) => arg !== "--"),
@@ -83,45 +79,12 @@ function log(message: string): void {
   console.log(`[${new Date().toISOString().slice(11, 19)}] ${message}`);
 }
 
-async function docker(...command: string[]): Promise<string> {
-  const { stdout } = await run("docker", command);
-  return stdout.trim();
+function startSpikeMinio(): Promise<string> {
+  return startMinio({ container: CONTAINER, port: minioPort, corsOrigin: appOrigin });
 }
 
-async function startMinio(): Promise<string> {
-  await docker("rm", "-f", "-v", CONTAINER).catch(() => "");
-  await docker(
-    "run",
-    "-d",
-    "--rm",
-    "--name",
-    CONTAINER,
-    "-p",
-    `127.0.0.1:${minioPort}:9000`,
-    "-e",
-    `MINIO_ROOT_USER=${CREDENTIALS.accessKeyId}`,
-    "-e",
-    `MINIO_ROOT_PASSWORD=${CREDENTIALS.secretAccessKey}`,
-    "-e",
-    `MINIO_API_CORS_ALLOW_ORIGIN=${appOrigin}`,
-    MINIO_IMAGE,
-    "server",
-    "/data",
-  );
-  for (let attempt = 0; attempt < 100; attempt++) {
-    try {
-      const response = await fetch(`${minioUrl}/minio/health/live`);
-      if (response.ok) {
-        return (await docker("exec", CONTAINER, "minio", "--version")).split("\n")[0] ?? "";
-      }
-    } catch {}
-    await sleep(200);
-  }
-  throw new Error("MinIO did not become healthy");
-}
-
-async function stopMinio(): Promise<void> {
-  await docker("rm", "-f", "-v", CONTAINER).catch(() => "");
+function stopSpikeMinio(): Promise<void> {
+  return stopMinio(CONTAINER);
 }
 
 interface PageState {
@@ -590,7 +553,7 @@ async function main(): Promise<void> {
   let api: UploadApi | null = null;
   let network: Network | null = null;
   try {
-    const minioVersion = await startMinio();
+    const minioVersion = await startSpikeMinio();
     log(`MinIO ${minioVersion} on ${minioUrl}`);
     await s3.send(new CreateBucketCommand({ Bucket: BUCKET }));
     if (synthetic) {
@@ -697,7 +660,7 @@ async function main(): Promise<void> {
   } finally {
     await network?.down();
     await api?.close();
-    await stopMinio();
+    await stopSpikeMinio();
     if (synthetic && !args["keep-file"]) {
       await rm(file, { force: true });
     }
