@@ -1,5 +1,7 @@
 import type { OverlayLayer } from "../engine/types.ts";
+import { nearBlack, proposalDash, white } from "./outline-style.ts";
 import type {
+  LineCasing,
   OverlayDescription,
   OverlayState,
   PinBatch,
@@ -16,11 +18,41 @@ import { isOverlayKind, overlayOrder } from "./z-order.ts";
 
 export const defaultOverlayState: OverlayState = { visible: true, opacity: 1 };
 
+const darkCasing: LineCasing = { widthPx: 1, color: nearBlack };
+
 export const defaultVectorStyles: Readonly<Record<VectorKind, VectorStyle>> = {
-  "human-annotations": { fillOpacity: 0.18, lineWidthPx: 2, pointRadiusPx: 5 },
-  "ai-proposals": { fillOpacity: 0.12, lineWidthPx: 2, pointRadiusPx: 5 },
-  nuclei: { fillOpacity: 0.3, lineWidthPx: 1, pointRadiusPx: 2 },
-  measurements: { fillOpacity: 0, lineWidthPx: 2, pointRadiusPx: 4 },
+  "human-annotations": {
+    fillOpacity: 0.18,
+    lineWidthPx: 2,
+    pointRadiusPx: 5,
+    casing: darkCasing,
+    lineColor: null,
+    dash: null,
+  },
+  "ai-proposals": {
+    fillOpacity: 0.12,
+    lineWidthPx: 2,
+    pointRadiusPx: 5,
+    casing: { widthPx: 1, color: white },
+    lineColor: nearBlack,
+    dash: proposalDash,
+  },
+  nuclei: {
+    fillOpacity: 0.3,
+    lineWidthPx: 1,
+    pointRadiusPx: 2,
+    casing: { widthPx: 0.5, color: nearBlack },
+    lineColor: null,
+    dash: null,
+  },
+  measurements: {
+    fillOpacity: 0,
+    lineWidthPx: 2,
+    pointRadiusPx: 4,
+    casing: darkCasing,
+    lineColor: null,
+    dash: null,
+  },
 };
 
 export const defaultRasterSmoothing: Readonly<Record<RasterKind, boolean>> = {

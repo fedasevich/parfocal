@@ -279,6 +279,13 @@ export {
   type OverlayHost,
 } from "./overlay/controller.ts";
 export {
+  type ClassName,
+  classColors,
+  nearBlack,
+  proposalDash,
+  white,
+} from "./overlay/outline-style.ts";
+export {
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
@@ -303,6 +310,7 @@ export {
   pinIconSize,
 } from "./overlay/pin-icons.ts";
 export type {
+  LineCasing,
   OverlayDescription,
   OverlayState,
   PathBatch,

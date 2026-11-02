@@ -82,11 +82,13 @@ function ids(layers: readonly { id: string }[]): string[] {
   return layers.map((layer) => layer.id);
 }
 
-test("a vector layer becomes fills, outlines, paths and points", () => {
+test("a vector layer becomes fills, casings under the outlines, paths and points", () => {
   const builder = createOverlayLayerBuilder();
   const layers = builder.build([vectors("a")]);
   assert.deepEqual(ids(layers), [
     "overlay:a:fills",
+    "overlay:a:outline-casings",
+    "overlay:a:path-casings",
     "overlay:a:outlines",
     "overlay:a:paths",
     "overlay:a:points",
@@ -96,6 +98,8 @@ test("a vector layer becomes fills, outlines, paths and points", () => {
 test("a layer without fills, such as a measurement, draws no fill layer", () => {
   const builder = createOverlayLayerBuilder();
   assert.deepEqual(ids(builder.build([vectors("m", "measurements")])), [
+    "overlay:m:outline-casings",
+    "overlay:m:path-casings",
     "overlay:m:outlines",
     "overlay:m:paths",
     "overlay:m:points",
@@ -114,7 +118,7 @@ test("fills hand deck the precomputed triangle indices and skip its own triangul
 test("outlines close each ring with its first two vertices", () => {
   const builder = createOverlayLayerBuilder();
   const layers = builder.build([vectors("a")]);
-  const outlines = propsOf(layers[1]);
+  const outlines = propsOf(layers[3]);
   const data = outlines.data as {
     startIndices: Uint32Array;
     attributes: { getPath: { value: Float32Array } };
@@ -139,7 +143,7 @@ test("hiding a layer and changing its opacity reuse every data object", () => {
     assert.equal(propsOf(hidden[index]).visible, false);
     assert.equal(propsOf(built).visible, true);
   });
-  assert.equal(propsOf(faded[1]).opacity, 0.25);
+  assert.equal(propsOf(faded[3]).opacity, 0.25);
   assert.equal(propsOf(faded[0]).opacity, 0.25 * layer.style.fillOpacity);
 });
 
@@ -162,7 +166,7 @@ test("replacing the geometry of a layer rebuilds its data", () => {
   const builder = createOverlayLayerBuilder();
   const first = builder.build([vectors("a")]);
   const second = builder.build([vectors("a")]);
-  assert.notEqual(propsOf(second[1]).data, propsOf(first[1]).data);
+  assert.notEqual(propsOf(second[3]).data, propsOf(first[3]).data);
 });
 
 test("a layer that leaves the list takes its layers and cache with it", () => {
@@ -184,6 +188,8 @@ test("layers come out in the order they were given, so the engine's sort decides
   assert.deepEqual(ids(layers), [
     "overlay:h:raster",
     "overlay:a:fills",
+    "overlay:a:outline-casings",
+    "overlay:a:path-casings",
     "overlay:a:outlines",
     "overlay:a:paths",
     "overlay:a:points",

@@ -31,10 +31,18 @@ export interface ShapeData {
   readonly points?: PointBatch;
 }
 
+export interface LineCasing {
+  readonly widthPx: number;
+  readonly color: Rgba;
+}
+
 export interface VectorStyle {
   readonly fillOpacity: number;
   readonly lineWidthPx: number;
   readonly pointRadiusPx: number;
+  readonly casing: LineCasing | null;
+  readonly lineColor: Rgba | null;
+  readonly dash: readonly [on: number, off: number] | null;
 }
 
 export interface RasterData {
