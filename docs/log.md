@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-03
 
+- CASES-009 (search API) meets its 100 ms p95 on 100,000 cases: migration 0077 stores lowercase copies of project, case and slide labels and search matches them with LIKE, because row-level security keeps the planner from indexing ILIKE. p95 fell from 48 to 59 ms to 24 to 25 ms over three runs on the Mac, and the test is unchanged.
 - NAV-001 (magnification bar) is a folding bar on the live slide, driven by the engine camera, with presets on Alt+1 to Alt+6 through the key registry and a shared blocked-rect function for overlays. Brightness is a CSS stand-in until VIZ-007, and the zoom-percent label exists on the component but the magnification_label setting has no such value yet.
 - AIP-003 (tiers Best, Good, Fast) maps tumor, outline and typer to an exact model and version per tier in each workspace (migration 0076, model_tiers), lists it at /api/tenant/model-tiers with hover labels, lets admins set or reset a tier with audit, and lets a model run start by tier and record it, which fills the tier field job progress left empty. The annotate view reads the real route instead of the draft, and Fast stays empty on the server while the web shows the in-browser model.
 - WL-017 (filter popover) added Project, Status, Result set and Reviewer chips to the All slides tab with a new kit FilterChip, kept in the URL and applied by the fake slides endpoint, with unit, Storybook and web E2E tests including reload. The Remote chip waits for REMOTE-001.

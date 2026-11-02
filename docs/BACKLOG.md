@@ -2590,7 +2590,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when tests run the file-drop adapter end to end.
   Size: M.
 
-- [ ] CASES-009 · Search API
+- [x] CASES-009 · Search API
   Projects, cases, slides, object IDs by any part of the full path (OBJ-004) and people, with scopes, and patients only in clinical projects, tenant-scoped, PHI-safe ranking.
   Done when tests meet the STACK-034 latency on seeded data.
   The owner decided on 2026-10-31 that the 100 ms budget is measured on one fixed reference machine, not on hosted CI runners, and that small timing differences on shared machines are not failures.
