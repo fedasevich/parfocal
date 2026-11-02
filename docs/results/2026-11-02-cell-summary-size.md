@@ -19,6 +19,8 @@ Does the gzip summary file that `GET /api/result-sets/{id}/cell-summary` serves 
 
 | Classes | Probabilities | Chunks | Summary bytes sent | Build seconds |
 |---|---|---|---|---|
+| 9 | yes | 399 | 27,161,961 | 3.7 |
+| 9 | no | 399 | 15,640,807 | 3.0 |
 | 5 | yes | 399 | 22,636,641 | 3.3 |
 | 5 | no | 399 | 15,454,315 | 2.9 |
 | 2 | yes | 399 | 17,943,046 | 3.1 |
@@ -26,7 +28,7 @@ Does the gzip summary file that `GET /api/result-sets/{id}/cell-summary` serves 
 
 ## Interpretation
 
-Every case fits 25 MB, and five classes with probabilities, the largest, uses 91 % of it. Random jitter, scores and probabilities compress worse than real cells, whose neighbours share classes and scores, so a real set is likely smaller. That is an assumption, not measured. Each further class adds about 1.6 MB, so about seven classes with probabilities would pass the budget.
+Up to five classes every case fits 25 MB, and five classes with probabilities uses 91 % of it. Nine classes, the most a project allows, send 27.2 MB with probabilities, 9 % over, and 15.6 MB without. The 25 MB is a loading target of AINUC-004, not a limit: the route serves a summary of any size, and the owner asked on 2026-11-02 for no hard limit. Random jitter, scores and probabilities compress worse than real cells, whose neighbours share classes and scores, so a real set is likely smaller. That is an assumption, not measured. The test checks the target at five classes.
 
 ## Follow-ups
 
