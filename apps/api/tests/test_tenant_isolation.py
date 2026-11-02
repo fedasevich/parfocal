@@ -54,6 +54,7 @@ from parfocal_api.tables import (
     review_tasks,
     service_accounts,
     session_policies,
+    site_validations,
     slide_counters,
     slides,
     study_template_versions,
@@ -685,6 +686,30 @@ async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({str(job_id), detector})
 
 
+async def seed_site_validations(connection: AsyncConnection, seeded: Seeded) -> None:
+    specimen = f"Specimen {uuid.uuid4().hex[:8]}"
+    announcement_id = await connection.scalar(
+        insert(announcements)
+        .values(tenant_id=seeded.tenant_id, kind="model", text=f"Validated on {specimen}")
+        .returning(announcements.c.id)
+    )
+    await connection.execute(
+        insert(site_validations).values(
+            tenant_id=seeded.tenant_id,
+            model_name="isolation-model",
+            model_version="1",
+            specimen_type=specimen,
+            threshold=0.5,
+            true_positives=1,
+            false_positives=0,
+            true_negatives=1,
+            false_negatives=0,
+            announcement_id=announcement_id,
+        )
+    )
+    seeded.markers.add(specimen)
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -702,6 +727,7 @@ SEEDERS: dict[str, Seeder] = {
     "study_template_versions": seed_study_template_versions,
     "uploads": seed_uploads,
     "model_runs": seed_model_runs,
+    "site_validations": seed_site_validations,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -879,6 +905,10 @@ GET_ROUTES = {
     ),
     "listProjectResultSets": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/result-sets"
+    ),
+    "listSiteValidations": Route(Exposure.TENANT, lambda _: "/api/site-validations"),
+    "listProjectModels": Route(
+        Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
     ),
     "getResultSet": Route(Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}"),
     "getCellSummary": Route(
