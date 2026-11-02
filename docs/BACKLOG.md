@@ -2413,7 +2413,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Authenticated connections to Durable Object rooms per slide, per task and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Room tokens expire within minutes, a reconnect rechecks the grant, and removing someone from a project or workspace closes their sockets ([threat model](security/threat-model.md) R2).
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
-- [ ] COLLAB-002 · Threads API
+- [x] COLLAB-002 · Threads API
   Threads anchored to an object ID (OBJ-001), an ROI, a point or a shape, with title, messages, resolve and reopen, delete with confirmation when replies exist. Mention and reply notifications resolve to their thread through `GET /api/me/notifications/{id}/target` ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)). `notifications.context_of` gives thread notifications their project, task and case, so a mute catches replies ([ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md), inbox mutes).
   Done when API tests cover anchors, permissions and audit.
   During blind review a reviewer sees only their own threads and the researcher's (TASK-004), through `parfocal_api.blinding.sees_reviewer` ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Depends on OBJ-001, TASK-004.
