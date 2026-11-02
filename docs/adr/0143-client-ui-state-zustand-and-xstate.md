@@ -38,7 +38,7 @@ Each kind of state has exactly one home, and no value is copied into a second on
 | Preferences kept between visits | The settings layers ([ADR 0138](0138-settings-catalogue-in-python-resolved-in-the-browser.md)) | Theme, inspector width and other device or personal values. Zustand's `persist` is not used, so a stored value always has a schema and a scope |
 | State of one component or one subtree | `useState` or `useReducer` | Open menus, input drafts and hover, kept local while one subtree owns it |
 
-Zustand stores are created with `create` in `apps/web` and read only through selectors that return a primitive or go through `useShallow`. Stores the engine must also see are vanilla stores from `zustand/vanilla`. Machines run with `useActor` or `createActor` and keep frame values out of their context.
+Zustand stores are created with `create` in `apps/web` and read only through selectors that return a primitive or go through `useShallow`. The engine never imports Zustand. When the engine must follow a store value such as the active tool, `apps/web` subscribes to the store and calls the engine's own setter. Machines run with `useActor` or `createActor` and keep frame values out of their context.
 
 Zustand wins over Jotai and Redux Toolkit because it gives one readable store per feature with the least code and no overlap with Query. XState wins over hand-written reducers only where NAV-006 (smart minimap state machine) asks for model-based tests that drive every transition.
 
