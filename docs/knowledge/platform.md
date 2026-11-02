@@ -63,3 +63,7 @@ How to check spend quickly: Modal at `modal.com/settings/fedasevich/usage`, Clou
 On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its spend limit" before building anything. Deploys and runs in every environment stop until the owner raises the limit or the billing period resets, so CI deploys to Modal would fail the same way. Source: STACK-019 log entry.
 
 Since 2026-10-31 the spend limit is $0 on purpose, so compute stops when the $30 of free credits is used. See the table above.
+
+## Modal replies over 2 MB cost about 1 s more
+
+A warm Modal call returning 1.9 MB took a median 0.35 to 0.39 s from a home connection in Europe, and one returning 2.2 MB took 1.33 s, with the empty call at 0.24 s. Keep interactive replies under 2 MB, or write large ones to R2 and return a key. A T4 GPU function cold-starts in 12 to 16 s, with one sample at 40 s, and `modal billing report --for today` reads spend from the CLI. Source: [the GPU serving spike](../results/2026-11-02-gpu-serving-spike.md).

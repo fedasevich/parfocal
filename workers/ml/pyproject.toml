@@ -21,3 +21,4 @@ parfocal-common = { workspace = true }
 [tool.basedpyright]
 typeCheckingMode = "standard"
 pythonVersion = "3.14"
+exclude = ["spike"]

@@ -323,7 +323,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Refs docs 08, 12, 17, 20 §5.
   Decided in [ADR 0043](adr/0043-server-slide-reading.md): OpenSlide first, tiffslide for OME-TIFF, tifffile for validation and wsidicom for DICOM. The automated fixture tests belong to INGEST-003 (ingest workflow skeleton).
 
-- [ ] STACK-027 · GPU inference serving
+- [x] STACK-027 · GPU inference serving
   Candidates: plain PyTorch workers pulling from the workflow engine, NVIDIA Triton, Ray Serve, BentoML. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PyTorch in Modal GPU functions per model family. Batch work starts cold. Interactive embeddings run in a separate function that the API pre-warms when a slow device activates the segmentation tool, and it scales down after about 5 idle minutes. Separate containers replace the priority gate. Triton is reconsidered when the model count grows.
   Done when a spike shows an interactive embedding request served within 1 s from a pre-warmed container while a whole-slide job runs, and records the cold-start time.
   Refs doc 19 (GPU gate), doc 26 (job ops).
