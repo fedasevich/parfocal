@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 import { after, before, describe, test } from "node:test";
 import { latencyToleranceMs, measureAddedLatency } from "#measure.ts";
 import { type OriginServer, startOriginServer } from "#origin.ts";
 import {
   CONTROL_PATH,
+  forwarderFor,
   type LatencyProxy,
   RTT_MATRIX_MS,
   startLatencyProxy,
@@ -137,7 +140,7 @@ test("the control endpoint changes conditions and resets counters", async () => 
   proxy.setConditions({ rttMs: 0, bandwidthBytesPerSecond: null });
   proxy.resetStats();
   assert.equal(await (await fetch(`${proxy.url}/hello`)).text(), "hello");
-  assert.deepEqual(proxy.stats(), { requests: 1, bytes: 5, uploadedBytes: 0 });
+  assert.deepEqual(proxy.stats(), { requests: 1, bytes: 5, uploadedBytes: 0, methods: { GET: 1 } });
   const state: unknown = await (
     await fetch(`${proxy.url}${CONTROL_PATH}?rtt=50&bandwidth=1000000&uplink=500000`)
   ).json();
@@ -150,7 +153,7 @@ test("the control endpoint changes conditions and resets counters", async () => 
     uploadedBytes: 0,
   });
   await fetch(`${proxy.url}${CONTROL_PATH}?reset&bandwidth=unlimited&uplink=unlimited`);
-  assert.deepEqual(proxy.stats(), { requests: 0, bytes: 0, uploadedBytes: 0 });
+  assert.deepEqual(proxy.stats(), { requests: 0, bytes: 0, uploadedBytes: 0, methods: {} });
   assert.deepEqual(proxy.conditions(), {
     rttMs: 50,
     bandwidthBytesPerSecond: null,
@@ -189,4 +192,17 @@ test("an unreachable target answers 502", async () => {
   } finally {
     await orphan.close();
   }
+});
+
+test("an https target is forwarded over TLS and other schemes are refused", () => {
+  assert.equal(forwarderFor(new URL("https://storage.example")), httpsRequest);
+  assert.equal(forwarderFor(new URL("http://127.0.0.1:9000")), httpRequest);
+  assert.throws(() => forwarderFor(new URL("ftp://storage.example")), RangeError);
+});
+
+test("requests are counted by method", async () => {
+  proxy.resetStats();
+  await (await fetch(`${proxy.url}/hello`)).text();
+  await (await fetch(`${proxy.url}/hello`, { method: "HEAD" })).text();
+  assert.deepEqual(proxy.stats().methods, { GET: 1, HEAD: 1 });
 });
