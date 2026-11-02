@@ -24,6 +24,7 @@ import { Zone } from "@parfocal/ui/components/zone";
 import { type ReactNode, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { formatClock, formatDayMonth } from "../format.ts";
 import { FieldNote } from "../new-task/parts.tsx";
 import { usePeople } from "../people.ts";
 import { QueryState } from "../placeholder.tsx";
@@ -400,7 +401,7 @@ function CosignFlow({
           : `No changes yet. Co-signing keeps ${senderFirst}'s values.`;
 
   const sent = new Date(request.sent_at);
-  const sentText = `${sent.getDate()} Oct ${String(sent.getHours()).padStart(2, "0")}:${String(sent.getMinutes()).padStart(2, "0")}`;
+  const sentText = `${formatDayMonth(sent)} ${formatClock(sent)}`;
 
   return (
     <>

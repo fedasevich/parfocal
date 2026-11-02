@@ -13,6 +13,8 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     channel: "chrome",
     headless: true,
+    timezoneId: "Europe/Prague",
+    locale: "en-GB",
     trace: process.env.CI ? "off" : "retain-on-failure",
   },
   webServer: {
