@@ -164,3 +164,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0156](0156-security-headers-in-the-edge-worker.md) | The edge Worker runs before static assets and sets a nonce CSP, COOP, COEP credentialless, CORP, Referrer-Policy, Permissions-Policy and HSTS with subdomains | Accepted | 2026-11-02 |
 | [0157](0157-outline-casings-and-overlay-style-sources.md) | Every vector overlay draws over a near-black casing, AI proposals are dashes on a white casing, and each style value names its source | Accepted | 2026-11-02 |
 | [0158](0158-heatmap-colormaps-and-threshold.md) | A heatmap is a probability grid coloured in the engine, with fixed colormap tables and a hide-below threshold | Accepted | 2026-11-03 |
+| [0159](0159-tier-mapping-per-workspace.md) | Each workspace maps Best, Good and Fast to an exact model per task in its own table | Accepted | 2026-11-03 |
