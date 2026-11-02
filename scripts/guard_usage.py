@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -14,6 +15,7 @@ OVERRIDE = PROJECT_DIR / ".claude" / "usage-override.json"
 BANDS = (80, 90, 95)
 STALE_SECONDS = 15 * 60
 DEFAULT_OVERRIDE_HOURS = 5.0
+OVERRIDE_PATTERN = re.compile(r"guard_usage\.py\W+override|usage-override")
 WINDOWS = {"five_hour": "5-hour session", "seven_day": "weekly"}
 
 Reading = tuple[str, float, float | None]
@@ -75,8 +77,8 @@ def instruction(band: int) -> str:
         return (
             "Stop now. Start no new work and spawn no agents. Leave the repo clean, record "
             "where you stopped and the exact next step with scripts/board.py note, commit and "
-            "push only work that passes checks, tell the owner and end the turn. The owner can "
-            "allow running to 100% with `python3 scripts/guard_usage.py override`."
+            "push only work that passes checks, tell the owner and end the turn. Only the owner "
+            "can allow running to 100%."
         )
     if band >= 90:
         return (
@@ -107,6 +109,22 @@ def warning(
         return None
     warned[reader] = band
     return f"Claude plan usage: {summary(rows, age)}. {instruction(band)}"
+
+
+def touches_override(event: dict[str, object]) -> bool:
+    tool_input = cast("dict[str, object]", event.get("tool_input") or {})
+    return any(OVERRIDE_PATTERN.search(str(value)) for value in tool_input.values())
+
+
+def block_override() -> int:
+    if not touches_override(cast("dict[str, object]", json.load(sys.stdin))):
+        return 0
+    print(
+        "Only the owner can turn on the usage override, by typing "
+        "`! python3 scripts/guard_usage.py override` in the prompt. Stop as the usage hook asks.",
+        file=sys.stderr,
+    )
+    return 2
 
 
 def hook() -> int:
@@ -169,6 +187,8 @@ def main(argv: list[str]) -> int:
     command = argv[0] if argv else "status"
     if command == "hook":
         return hook()
+    if command == "guard":
+        return block_override()
     if command == "override":
         return override(argv[1:])
     if command == "off":
