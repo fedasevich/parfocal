@@ -10,9 +10,9 @@ Turborepo 2.11 detects AI agents and writes a managed "turborepo-agent-rules" bl
 
 Turborepo hashes every file in a package that git does not ignore. `__pycache__/`, `.pytest_cache/`, `.venv/` and `.turbo/` must stay in `.gitignore`, or Python tasks miss the cache on every run. Source: [tooling spike](../results/2026-10-06-tooling-spike.md).
 
-## TypeScript smoke tests run on Node directly
+## TypeScript unit tests run on Node directly
 
-Until STACK-012 picks the test stack, TypeScript packages test with `node --test "test/**/*.test.ts"`. Node 26 strips types itself, so `tsconfig.base.json` sets `erasableSyntaxOnly` and `allowImportingTsExtensions`, and imports name the `.ts` file. Enums, namespaces and parameter properties are not allowed under this setting.
+TypeScript packages test with `node --test "test/**/*.test.ts"`, kept by [ADR 0146](../adr/0146-frontend-testing-stack.md) (frontend testing stack). Component tests are Storybook stories driven by Playwright, not a simulated DOM. Node 26 strips types itself, so `tsconfig.base.json` sets `erasableSyntaxOnly` and `allowImportingTsExtensions`, and imports name the `.ts` file. Enums, namespaces and parameter properties are not allowed under this setting.
 
 ## Biome config migrations
 
@@ -125,3 +125,7 @@ Under `pnpm test`, Turborepo runs the Python suites next to the Node ones, and t
 ## Parallel sessions share one working tree
 
 Several agent sessions often edit the same checkout at once. Staging a file by name stages every edit in it, including another session's unfinished work. On 2026-10-31 a commit for OPS-009 (cost controls) carried another session's backlog tasks and ADR index row to `origin` without that session's ADR file, and two sessions picked the same ADR number. Before every commit, read `git diff --cached` and make sure each hunk is yours. If a file holds someone else's edits, change only your lines in a fresh copy of the file from `HEAD`, or wait for the other session to commit first. Check `ls docs/adr` and `git status` for an untracked ADR right before choosing a number.
+
+## WebGPU in headless Chrome needs two flags and a secure origin
+
+SwiftShader offers a WebGPU fallback adapter only when Chrome starts with `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader` on top of the SwiftShader WebGL flags, and `navigator.gpu` exists only on `https` or `localhost`, not on `about:blank` or `setContent` pages. Without the flags `requestAdapter()` returns null, so a WebGPU spec asserts the adapter architecture is `swiftshader`. `packages/golden-images/render/webgpu-swiftshader.spec.ts` serves a stub `https` page with `page.route`. Source: [STACK-012 spike](../results/2026-11-02-frontend-testing-stack-spike.md).

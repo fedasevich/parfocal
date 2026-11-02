@@ -51,10 +51,9 @@ A deliberate regression was also tried: the shader was edited to always swap R a
 - SwiftShader is deterministic on this machine, so any nonzero delta in CI means the renderer or the browser changed.
 - Metal and SwiftShader differ by at most 1 level and only where linear filtering interpolates, which is why goldens are always rendered on SwiftShader.
 - The lossless tolerance of 2 levels and 0.25 mean error leaves room for a one-level backend difference and fails a swapped channel by a factor of more than 100 in mean error.
-- Assumption: SwiftShader on the x86 CI runner behaves like SwiftShader on Apple silicon within 1 level. Not measured yet.
+- SwiftShader on the x86 CI runner stays inside the lossless row against goldens written on Apple silicon. Checked on 2026-11-02: the goldens written on the M4 pass on hosted x86 SwiftShader in CI run 41485331959, see [the STACK-012 spike](2026-11-02-frontend-testing-stack-spike.md). The specs print pass or fail, not the delta.
 
 ## Follow-ups
 
 - [ADR 0101](../adr/0101-golden-image-comparison.md) records the method.
-- TODO: confirm on the first `browser` CI run that the Mac-written goldens pass on hosted Linux, and record the result here.
 - TODO: measure the JPEG and JPEG 2000 rows against real fixtures once the Viv route decodes them.

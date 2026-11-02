@@ -244,7 +244,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR covers theming through tokens and accessibility of charts.
   Decided in [ADR 0144](adr/0144-charts-hand-made-svg-with-visx.md): hand-made React SVG in `packages/ui` with visx scales and axes when needed, colours only as token variables, every chart readable as a table or a stated label. Observable Plot is left out of the app.
 
-- [ ] STACK-012 · Frontend testing stack
+- [x] STACK-012 · Frontend testing stack
   Candidates: Vitest with React Testing Library, Playwright (E2E and component tests), Storybook 9 with interaction and visual tests, MSW for API mocks, Chromatic or Playwright snapshots for visual regression. Default: Vitest, RTL, MSW, Playwright for E2E and visual, Storybook as the component catalogue.
   Done when the ADR covers how WebGPU and WebGL tests run in CI (SwiftShader software rendering on hosted runners, [ADR 0011](adr/0011-hosted-ci-only.md)) with a spike that renders one Viv tile in CI and compares it to a golden image.
 

@@ -64,6 +64,6 @@ Production build of the harness (`vite build harness/viv`): main chunk 1,210,005
 ## Follow-ups
 
 - [ADR 0102](../adr/0102-viv-route-feeds-a-virtual-rgb-ladder.md) records how the route feeds Viv.
-- TODO: the first `browser` CI run on hosted x86 SwiftShader must match these goldens written on the M4.
+- The CMU-1.svs goldens written on the M4 pass on hosted x86 SwiftShader. Checked on 2026-11-02: the goldens written on the M4 pass on hosted x86 SwiftShader in CI run 41485331959, see [the STACK-012 spike](2026-11-02-frontend-testing-stack-spike.md). The specs print pass or fail, not the delta.
 - TODO: find where the second geotiff decoder set comes from and drop it from the web app bundle (ADR 0098 asked VIEW-002 to check, and the answer so far is "probably yes").
 - TODO: open to idle is main-thread decoding and averaging. VIEW-004 (decode worker pool) owns the speed.

@@ -49,6 +49,16 @@ ADR 0145 (tables are TanStack Table plus Virtual) is Proposed. Tables and long l
 
 Your choice:
 
+## 25. Frontend testing stack, from STACK-012 (frontend testing stack)
+
+ADR 0146 (frontend testing stack) is Proposed. It keeps unit tests on `node --test`, which 10 TypeScript packages already use, instead of the backlog's default of Vitest with React Testing Library, because no current test needs a DOM and component tests already run as Storybook stories in real Chrome under Playwright with axe. MSW stays the one fake API and Playwright stays the E2E runner. Viv tiles written as goldens on your Mac already pass on the hosted x86 runner, and a new spec shows WebGPU on SwiftShader draws the synthetic tile identically to the WebGL golden on the Mac. The Linux WebGPU number is still `TODO` until the next CI run finishes. No dependency was added.
+
+- a. Accept ADR 0146 as written. (recommended)
+- b. Adopt Vitest with React Testing Library anyway, in `apps/web` first.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
