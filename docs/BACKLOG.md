@@ -234,9 +234,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR covers report forms with conditional fields, which are the hardest case.
   Decided in [ADR 0045](adr/0045-forms-and-validation.md): TanStack Form with Zod 4, and report forms driven by template data with conditional fields.
 
-- [ ] STACK-010 · Tables, lists and virtualisation
+- [x] STACK-010 · Tables, lists and virtualisation
   Candidates: TanStack Table plus TanStack Virtual, AG Grid. Default: TanStack Table and Virtual for worklist, layers and audit views.
   Done when a spike renders 10,000 worklist rows with keyboard J/K navigation at 60 fps.
+  Decided in [ADR 0145](adr/0145-tables-tanstack-table-and-virtual.md): TanStack Table 9 with TanStack Virtual 3. The spike kept 60 fps over 10,000 rows with J/K, also at a 4x CPU throttle ([result](results/2026-11-02-worklist-virtualisation-spike.md)).
 
 - [x] STACK-011 · Charts for dashboards and confidence visuals
   Candidates: visx, Recharts, Observable Plot, ECharts. Default: visx for the custom tumor share range bars and sparklines, Observable Plot for dashboard charts.

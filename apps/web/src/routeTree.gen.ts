@@ -24,6 +24,7 @@ import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
+import { Route as SpikesWorklistRouteImport } from "./routes/spikes.worklist.tsx";
 import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
 import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map.walkthrough.$chapter.tsx";
 import { Route as ProjectsProjectIdIndexRouteImport } from "./routes/projects.$projectId.index.tsx";
@@ -117,6 +118,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
 const SettingsSectionRoute = SettingsSectionRouteImport.update({
   id: "/settings/$section",
   path: "/settings/$section",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SpikesWorklistRoute = SpikesWorklistRouteImport.update({
+  id: "/spikes/worklist",
+  path: "/spikes/worklist",
   getParentRoute: () => rootRouteImport,
 } as any);
 const FlowMapWalkthroughIndexRoute = FlowMapWalkthroughIndexRouteImport.update({
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map": typeof FlowMapIndexRoute;
   "/settings": typeof SettingsIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   "/team": typeof TeamRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | "/team"
     | "/projects/new"
     | "/settings/$section"
+    | "/spikes/worklist"
     | "/flow-map/"
     | "/settings/"
     | "/flow-map/walkthrough/$chapter"
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | "/team"
     | "/projects/new"
     | "/settings/$section"
+    | "/spikes/worklist"
     | "/flow-map"
     | "/settings"
     | "/flow-map/walkthrough/$chapter"
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | "/team"
     | "/projects/new"
     | "/settings/$section"
+    | "/spikes/worklist"
     | "/flow-map/"
     | "/settings/"
     | "/flow-map/walkthrough/$chapter"
@@ -459,6 +471,7 @@ export interface RootRouteChildren {
   TeamRoute: typeof TeamRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
+  SpikesWorklistRoute: typeof SpikesWorklistRoute;
   FlowMapIndexRoute: typeof FlowMapIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
   FlowMapWalkthroughChapterRoute: typeof FlowMapWalkthroughChapterRoute;
@@ -587,6 +600,13 @@ declare module "@tanstack/react-router" {
       path: "/settings/$section";
       fullPath: "/settings/$section";
       preLoaderRoute: typeof SettingsSectionRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/spikes/worklist": {
+      id: "/spikes/worklist";
+      path: "/spikes/worklist";
+      fullPath: "/spikes/worklist";
+      preLoaderRoute: typeof SpikesWorklistRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/flow-map/walkthrough/": {
@@ -739,6 +759,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamRoute: TeamRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
+  SpikesWorklistRoute: SpikesWorklistRoute,
   FlowMapIndexRoute: FlowMapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   FlowMapWalkthroughChapterRoute: FlowMapWalkthroughChapterRoute,
