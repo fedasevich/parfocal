@@ -115,6 +115,27 @@ def test_a_new_workspace_gets_the_five_built_in_templates(api: ApiAs, database: 
         "score": None,
     }
     assert by_key["segmentation"]["presets"]["split"] == "even"
+    forms = {
+        key: [
+            (q["key"], q["kind"], q["asked"])
+            for q in by_key[key]["presets"]["opinion_form"]["questions"]
+        ]
+        for key in ("reader-study", "segmentation")
+    }
+    assert forms == {
+        "reader-study": [
+            ("diagnosis", "choice", "both"),
+            ("confidence", "scale", "both"),
+            ("ai_changed_mind", "yesno", "aided"),
+            ("comment", "text", "both"),
+        ],
+        "segmentation": [
+            ("usable", "scale", "aided"),
+            ("worst_where", "choice", "aided"),
+            ("comment", "text", "both"),
+        ],
+    }
+    assert by_key["detection"]["presets"]["opinion_form"] is None
     assert by_key["detection"]["format"]["paper"] == "a4"
 
 

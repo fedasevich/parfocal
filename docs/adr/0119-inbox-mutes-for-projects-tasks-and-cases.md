@@ -1,7 +1,7 @@
 # 0119. A person mutes a project, a review task or a case, muted events stay in the inbox without a push or an email, and mentions, emergency access and work handed to the person still get through
 
 - Date: 2026-10-31
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: NOTIF-007 (inbox API), touches NOTIF-002 (the bell), NOTIF-005 (digest and quiet hours), NOTIF-008 (hold notifications while reading), COLLAB-002 (threads API) and SET-008 (notifications section)
 

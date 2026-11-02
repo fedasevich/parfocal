@@ -107,6 +107,69 @@ DEFAULT_QUESTIONS: list[Question] = [
 ]
 
 
+READER_STUDY_QUESTIONS: list[Question] = [
+    ChoiceQuestion(
+        kind="choice",
+        key="diagnosis",
+        label="Your diagnosis for this slide",
+        required=True,
+        quick=True,
+        options=[
+            "No tumour",
+            "Isolated tumour cells",
+            "Micrometastasis",
+            "Macrometastasis",
+            "Cannot assess",
+        ],
+    ),
+    ScaleQuestion(
+        kind="scale",
+        key="confidence",
+        label="How sure are you?",
+        required=True,
+        quick=True,
+        min_label="guessing",
+        max_label="certain",
+    ),
+    YesNoQuestion(
+        kind="yesno",
+        key="ai_changed_mind",
+        label="Did the AI change your answer?",
+        quick=True,
+        asked="aided",
+    ),
+    TextQuestion(kind="text", key="comment", label="Comment"),
+]
+
+OUTLINE_QUALITY_QUESTIONS: list[Question] = [
+    ScaleQuestion(
+        kind="scale",
+        key="usable",
+        label="Are the outlines good enough to use?",
+        required=True,
+        quick=True,
+        asked="aided",
+        min_label="redraw all",
+        max_label="use as is",
+    ),
+    ChoiceQuestion(
+        kind="choice",
+        key="worst_where",
+        label="Where are they worst?",
+        quick=True,
+        asked="aided",
+        options=[
+            "Nowhere",
+            "Tumour edge",
+            "Small regions",
+            "Necrosis or artefact",
+            "Fat or capsule",
+            "Everywhere",
+        ],
+    ),
+    TextQuestion(kind="text", key="comment", label="Comment"),
+]
+
 type Read = Literal["single", "first-read", "aided"]
 
 

@@ -979,8 +979,8 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 ---
 
 - [ ] INGEST-029 · Shared test slides bucket
-  The owner's public test slides, such as the OpenSlide and Camelyon sets, sit once in their own R2 bucket `parfocal-fixtures`, which dev, CI and production read with read-only keys and only the owner's key writes, so nothing copies them around and a mistake in dev cannot delete them. No slide with patient data goes there. The bucket and its keys go through `infra/tofu`, and creating them needs the owner's yes in chat with the plan and cost.
-  Done when the bucket holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, a read-only key is refused a write, and the R2 storage cost is logged.
+  The owner's public test slides, such as the OpenSlide and Camelyon sets, are uploaded once under a `fixtures/` prefix of `parfocal-dev`, and CI and production read them there with a read-only R2 key limited to that bucket, so nothing copies them around. The owner chose `parfocal-dev` over a bucket of its own on 2026-11-02, knowing that a mistake with a dev write key could delete them, so no test or cleanup ever deletes under `fixtures/` and the manifest's SHA-256 shows a damaged copy. No slide with patient data goes there. The read-only key goes through `infra/tofu`, and creating it needs the owner's yes in chat with the plan and cost.
+  Done when `parfocal-dev/fixtures/` holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, the read-only key is refused a write, and the R2 storage cost is logged.
   Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
 
 ## 06 TILES · Tile delivery
@@ -3590,7 +3590,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on TASK-001, GUIDE-006, IAM-024. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows that a task only pins).
   Since 2026-11-01 the task presets also hold the decision style with its Counts as mapping, which GUIDE-015 (decision styles with the raw answer and Counts as) adds ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), and the display defaults with their locks, which TASK-011 (display defaults, locks and presets) adds ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
 
-- [ ] EVAL-011 · Reader study and outline quality forms
+- [x] EVAL-011 · Reader study and outline quality forms
   Draft the questions of the "Reader study form" and the "Outline quality form" that the mock names but never defines, from the POC and the mock, for the owner to review, and seed them into the reader study and segmentation built-in templates once the owner agrees. The owner chose this on 2026-11-02, decision 4c.
   Done when the drafts sit in `docs/decisions.md` for the owner and, after the owner's answer, the built-ins carry the forms with API tests.
   Depends on EVAL-007, GUIDE-006.

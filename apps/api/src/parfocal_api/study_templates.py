@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.opinion_questions import FormChange
+from parfocal_api.opinion_questions import (
+    OUTLINE_QUALITY_QUESTIONS,
+    READER_STUDY_QUESTIONS,
+    FormChange,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, NotFoundError
@@ -164,7 +168,11 @@ BUILT_INS: dict[BuiltInTemplate, StudyTemplateDraft] = {
                 columns=["objects", "disagreements", "time"],
             ),
         ],
-        presets=regions(start_mode=StartMode.VIEWER, split=TaskSplit.EVEN),
+        presets=regions(
+            start_mode=StartMode.VIEWER,
+            split=TaskSplit.EVEN,
+            opinion_form=FormChange(questions=OUTLINE_QUALITY_QUESTIONS),
+        ),
     ),
     BuiltInTemplate.CELL_TYPING: StudyTemplateDraft(
         name="Cell typing study",
@@ -204,7 +212,11 @@ BUILT_INS: dict[BuiltInTemplate, StudyTemplateDraft] = {
             ),
             TextBlock(kind="text", title="Methods"),
         ],
-        presets=regions(first_read=True, start_mode=StartMode.VIEWER),
+        presets=regions(
+            first_read=True,
+            start_mode=StartMode.VIEWER,
+            opinion_form=FormChange(questions=READER_STUDY_QUESTIONS),
+        ),
     ),
 }
 
