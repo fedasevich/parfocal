@@ -87,6 +87,7 @@ import type {
   ReviewOrder,
   ReviewTask,
   ReviewTaskDetail,
+  RunAreas,
   ScaleQuestion,
   SearchResults,
   SelectionScope,
@@ -1037,6 +1038,10 @@ export const getStartModelRunsResponseMock = (): ModelRun[] =>
           faker.date.past().toISOString().slice(0, 19) + "Z",
           null,
         ]),
+        waiting_reason: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
       }),
     ),
     actions: faker.helpers.arrayElements(Object.values(JobControl)),
@@ -1175,6 +1180,10 @@ export const getListModelRunsResponseMock = (): ModelRun[] =>
         ]),
         finished_at: faker.helpers.arrayElement([
           faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        waiting_reason: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
           null,
         ]),
       }),
@@ -1316,6 +1325,10 @@ export const getGetModelRunResponseMock = (
       ]),
       finished_at: faker.helpers.arrayElement([
         faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      waiting_reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
     }),
@@ -1460,6 +1473,10 @@ export const getCancelModelRunResponseMock = (
         faker.date.past().toISOString().slice(0, 19) + "Z",
         null,
       ]),
+      waiting_reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
     }),
   ),
   actions: faker.helpers.arrayElements(Object.values(JobControl)),
@@ -1600,6 +1617,10 @@ export const getResumeModelRunResponseMock = (
       ]),
       finished_at: faker.helpers.arrayElement([
         faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      waiting_reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
     }),
@@ -1744,6 +1765,10 @@ export const getRetryModelRunResponseMock = (
         faker.date.past().toISOString().slice(0, 19) + "Z",
         null,
       ]),
+      waiting_reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
     }),
   ),
   actions: faker.helpers.arrayElements(Object.values(JobControl)),
@@ -1766,6 +1791,27 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     queue_minutes: faker.number.int(),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
   }));
+
+export const getListModelRunAreasResponseMock = (
+  overrideResponse: Partial<Extract<RunAreas, object>> = {},
+): RunAreas => ({
+  run_id: faker.string.uuid(),
+  status: faker.helpers.arrayElement(Object.values(JobStatus)),
+  areas: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    seq: faker.number.int(),
+    stage: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    unit: faker.number.int(),
+    x: faker.number.int(),
+    y: faker.number.int(),
+    width: faker.number.int(),
+    height: faker.number.int(),
+    objects: faker.number.int(),
+    done_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  })),
+  after: faker.number.int(),
+  more: faker.datatype.boolean(),
+  ...overrideResponse,
+});
 
 export const getListNotificationPreferencesResponseMock = (): Preference[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -8030,6 +8076,28 @@ export const getListProjectModelsMockHandler = (
   );
 };
 
+export const getListModelRunAreasMockHandler = (
+  overrideResponse?:
+    | RunAreas
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RunAreas> | RunAreas),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/model-runs/:runId/areas",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListModelRunAreasResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListNotificationPreferencesMockHandler = (
   overrideResponse?:
     | Preference[]
@@ -11305,6 +11373,7 @@ export const getParfocalAPIMock = () => [
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
   getListProjectModelsMockHandler(),
+  getListModelRunAreasMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
   getGetOpinionFormTemplateMockHandler(),

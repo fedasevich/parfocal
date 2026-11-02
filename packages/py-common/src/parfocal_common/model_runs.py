@@ -30,8 +30,10 @@ from parfocal_common.jobs import (
     Workflow,
     claim,
     enqueue,
+    run_job,
     timestamp,
 )
+from parfocal_common.stage_throughput import RunLabels, this_machine
 
 KIND = "model-run"
 STAGES = (
@@ -120,6 +122,39 @@ class ClaimedRun:
     slide_id: uuid.UUID
     task_id: uuid.UUID | None
     settings: RunSettings
+
+
+@dataclass(frozen=True)
+class Area:
+    x: int
+    y: int
+    width: int
+    height: int
+    objects: int
+
+
+async def mark_area(step: StepRun, connection: AsyncConnection, unit: int, area: Area) -> None:
+    await step.mark_unit(connection, unit, asdict(area))
+
+
+def labels_of(claimed: ClaimedRun, tier: str | None, machine: str | None) -> RunLabels:
+    return RunLabels(
+        model=claimed.settings.detector,
+        model_version=claimed.settings.detector_version,
+        tier=tier,
+        machine=machine or this_machine(),
+    )
+
+
+async def run_model_run(
+    engine: AsyncEngine,
+    claimed: ClaimedRun,
+    worker: str,
+    *,
+    tier: str | None = None,
+    machine: str | None = None,
+) -> None:
+    await run_job(engine, claimed.job, claimed.workflow, worker, labels_of(claimed, tier, machine))
 
 
 class RunsInTheModelWorkerError(RuntimeError):

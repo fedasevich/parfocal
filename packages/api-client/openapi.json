@@ -4488,6 +4488,150 @@
         "x-permission-emergency": true
       }
     },
+    "/api/projects/{project_id}/model-runs/{run_id}/areas": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Model Run Areas",
+        "operationId": "listModelRunAreas",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunAreas"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/me/notification-preferences": {
       "get": {
         "tags": [
@@ -30855,6 +30999,96 @@
         ],
         "title": "Rule"
       },
+      "RunArea": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "unit": {
+            "type": "integer",
+            "title": "Unit"
+          },
+          "x": {
+            "type": "integer",
+            "title": "X"
+          },
+          "y": {
+            "type": "integer",
+            "title": "Y"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "objects": {
+            "type": "integer",
+            "title": "Objects"
+          },
+          "done_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Done At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "stage",
+          "unit",
+          "x",
+          "y",
+          "width",
+          "height",
+          "objects",
+          "done_at"
+        ],
+        "title": "RunArea"
+      },
+      "RunAreas": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/RunArea"
+            },
+            "type": "array",
+            "title": "Areas"
+          },
+          "after": {
+            "type": "integer",
+            "title": "After"
+          },
+          "more": {
+            "type": "boolean",
+            "title": "More"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "areas",
+          "after",
+          "more"
+        ],
+        "title": "RunAreas"
+      },
       "RunChoices": {
         "properties": {
           "detector": {
@@ -30989,6 +31223,17 @@
               }
             ],
             "title": "Finished At"
+          },
+          "waiting_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waiting Reason"
           }
         },
         "type": "object",

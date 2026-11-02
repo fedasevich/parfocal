@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 26 |
 | `personal` | 48 |
 | `secret` | 9 |
-| `operational` | 499 |
+| `operational` | 515 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -232,6 +232,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `unit` | operational |
 | `worker` | operational |
 | `done_at` | operational |
+| `seq` | operational |
+| `result` | operational |
 
 ## jobs
 
@@ -752,6 +754,25 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## stage_throughput
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `job_id` | operational |
+| `ordinal` | operational |
+| `run` | operational |
+| `kind` | operational |
+| `stage` | operational |
+| `model` | operational |
+| `model_version` | operational |
+| `tier` | operational |
+| `machine` | operational |
+| `worker` | operational |
+| `units` | operational |
+| `seconds` | operational |
+| `finished_at` | operational |
 
 ## study_template_versions
 

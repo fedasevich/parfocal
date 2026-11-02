@@ -680,7 +680,16 @@ def finish_run(database: str, run: Mapping[str, Any], minutes: int) -> None:
     owner(
         database,
         f"UPDATE job_steps SET status = 'done', started_at = now() - interval '{minutes} minutes', "
-        f"finished_at = now() WHERE job_id = '{run['id']}'",
+        f"finished_at = now(), runs = 1 WHERE job_id = '{run['id']}'",
+    )
+    detector = run["parameters"]["detector"]
+    owner(
+        database,
+        "INSERT INTO stage_throughput (tenant_id, job_id, ordinal, run, kind, stage, model, "
+        "model_version, machine, worker, units, seconds) "
+        f"SELECT tenant_id, job_id, ordinal, 1, 'model-run', name, '{detector['name']}', "
+        f"'{detector['version']}', 'test', 'test', 0, {minutes * 60} / 6.0 "
+        f"FROM job_steps WHERE job_id = '{run['id']}'",
     )
     owner(
         database,

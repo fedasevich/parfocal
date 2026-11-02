@@ -9,12 +9,14 @@ from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     Column,
     ColumnElement,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Identity,
     Index,
     Integer,
     SmallInteger,
@@ -32,6 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_common.data_classes import OPERATIONAL
 from parfocal_common.db import DatabaseScope, metadata, scoped_transaction
+from parfocal_common.stage_throughput import RunLabels, StageSample, record_throughput
 
 logger = logging.getLogger("parfocal.jobs")
 
@@ -149,9 +152,12 @@ job_units = Table(
     Column("unit", Integer, primary_key=True, info=OPERATIONAL),
     Column("worker", String(80), nullable=False, info=OPERATIONAL),
     timestamp("done_at", nullable=False),
+    Column("seq", BigInteger, Identity(always=True), nullable=False, info=OPERATIONAL),
+    Column("result", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(
         ["job_id", "ordinal"], ["job_steps.job_id", "job_steps.ordinal"], ondelete="CASCADE"
     ),
+    Index("ix_job_units_job_id_seq", "job_id", "seq"),
 )
 
 
@@ -190,7 +196,9 @@ class StepRun:
             )
             return frozenset(rows.all())
 
-    async def mark_unit(self, connection: AsyncConnection, unit: int) -> None:
+    async def mark_unit(
+        self, connection: AsyncConnection, unit: int, result: Mapping[str, Any] | None = None
+    ) -> None:
         await connection.execute(
             insert(job_units).values(
                 tenant_id=self.tenant_id,
@@ -198,6 +206,7 @@ class StepRun:
                 ordinal=self.ordinal,
                 unit=unit,
                 worker=self.worker,
+                result=dict(result) if result is not None else None,
             )
         )
 
@@ -512,8 +521,51 @@ async def still_held(engine: AsyncEngine, job: Claimed, worker: str) -> bool:
         return await holds(connection, job.job_id, worker)
 
 
+async def sample_of(
+    connection: AsyncConnection, job: Claimed, ordinal: int, worker: str
+) -> StageSample:
+    units = (
+        select(func.count())
+        .where(
+            job_units.c.job_id == job_steps.c.job_id,
+            job_units.c.ordinal == job_steps.c.ordinal,
+            job_units.c.worker == worker,
+            job_units.c.done_at >= job_steps.c.started_at,
+        )
+        .scalar_subquery()
+    )
+    row = (
+        await connection.execute(
+            select(
+                job_steps.c.name,
+                job_steps.c.runs,
+                units.label("units"),
+                func.extract("epoch", func.clock_timestamp() - job_steps.c.started_at).label(
+                    "seconds"
+                ),
+            ).where(job_steps.c.job_id == job.job_id, job_steps.c.ordinal == ordinal)
+        )
+    ).one()
+    return StageSample(
+        tenant_id=job.tenant_id,
+        job_id=job.job_id,
+        ordinal=ordinal,
+        run=row.runs,
+        kind=job.kind,
+        stage=row.name,
+        worker=worker,
+        units=row.units,
+        seconds=float(row.seconds or 0.0),
+    )
+
+
 async def run_step(
-    engine: AsyncEngine, job: Claimed, step: Step, ordinal: int, worker: str
+    engine: AsyncEngine,
+    job: Claimed,
+    step: Step,
+    ordinal: int,
+    worker: str,
+    labels: RunLabels | None = None,
 ) -> bool:
     scope = DatabaseScope(tenant_id=job.tenant_id)
     async with scoped_transaction(engine, scope) as connection:
@@ -557,6 +609,8 @@ async def run_step(
         await finish(engine, job, worker, JobStatus.CANCELLED, step=(ordinal, StepStatus.PENDING))
         return False
     async with scoped_transaction(engine, scope) as connection:
+        sample = await sample_of(connection, job, ordinal, worker)
+        await record_throughput(connection, sample, labels or RunLabels())
         await connection.execute(
             update(job_steps)
             .where(job_steps.c.job_id == job.job_id, job_steps.c.ordinal == ordinal)
@@ -569,14 +623,20 @@ async def run_step(
     return True
 
 
-async def run_job(engine: AsyncEngine, job: Claimed, workflow: Workflow, worker: str) -> None:
+async def run_job(
+    engine: AsyncEngine,
+    job: Claimed,
+    workflow: Workflow,
+    worker: str,
+    labels: RunLabels | None = None,
+) -> None:
     heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
     try:
         for ordinal, step in enumerate(workflow.steps):
             if not await still_held(engine, job, worker):
                 await finish(engine, job, worker, JobStatus.CANCELLED)
                 return
-            if not await run_step(engine, job, step, ordinal, worker):
+            if not await run_step(engine, job, step, ordinal, worker, labels):
                 return
         await finish(engine, job, worker, JobStatus.DONE)
     finally:

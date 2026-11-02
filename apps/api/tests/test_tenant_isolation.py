@@ -57,6 +57,7 @@ from parfocal_api.tables import (
     site_validations,
     slide_counters,
     slides,
+    stage_throughput,
     study_template_versions,
     study_templates,
     tenants,
@@ -124,6 +125,7 @@ CASE_TABLES = {
     "jobs",
     "job_steps",
     "job_units",
+    "stage_throughput",
     "notification_preferences",
     "personal_settings",
     "workspace_settings",
@@ -296,6 +298,20 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(job_units).values(
             tenant_id=seeded.tenant_id, job_id=job_id, ordinal=0, unit=0, worker="seed"
+        )
+    )
+    await connection.execute(
+        insert(stage_throughput).values(
+            tenant_id=seeded.tenant_id,
+            job_id=job_id,
+            ordinal=0,
+            run=1,
+            kind="isolation-seed",
+            stage="scan",
+            machine="seed",
+            worker="seed",
+            units=1,
+            seconds=1.0,
         )
     )
     seeded.ids["job"] = job_id
@@ -847,6 +863,10 @@ GET_ROUTES = {
     "getModelRun": Route(
         Exposure.TENANT,
         lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}",
+    ),
+    "listModelRunAreas": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}/areas",
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getRestrictedImage": Route(

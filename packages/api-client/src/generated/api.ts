@@ -1854,6 +1854,7 @@ export interface RunStage {
   units_total: number | null;
   started_at: string | null;
   finished_at: string | null;
+  waiting_reason?: string | null;
 }
 
 export interface ModelRun {
@@ -2890,6 +2891,26 @@ export interface RoleChange {
   role: Role;
 }
 
+export interface RunArea {
+  seq: number;
+  stage: string;
+  unit: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  objects: number;
+  done_at: string;
+}
+
+export interface RunAreas {
+  run_id: string;
+  status: JobStatus;
+  areas: RunArea[];
+  after: number;
+  more: boolean;
+}
+
 export interface SchemaProblem {
   line: number;
   path: string;
@@ -3481,6 +3502,13 @@ export type ListModelRunsParams = {
    * @maximum 200
    */
   limit?: number;
+};
+
+export type ListModelRunAreasParams = {
+  /**
+   * @minimum 0
+   */
+  after?: number;
 };
 
 export type ListCasesParams = {
@@ -9594,6 +9622,232 @@ export function useListProjectModels<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListProjectModelsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listModelRunAreasResponse200 = {
+  data: RunAreas;
+  status: 200;
+};
+
+export type listModelRunAreasResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listModelRunAreasResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listModelRunAreasResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listModelRunAreasResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listModelRunAreasResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listModelRunAreasResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listModelRunAreasResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listModelRunAreasResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listModelRunAreasResponseSuccess = listModelRunAreasResponse200 & {
+  headers: Headers;
+};
+export type listModelRunAreasResponseError = (
+  | listModelRunAreasResponse400
+  | listModelRunAreasResponse401
+  | listModelRunAreasResponse403
+  | listModelRunAreasResponse404
+  | listModelRunAreasResponse409
+  | listModelRunAreasResponse422
+  | listModelRunAreasResponse429
+  | listModelRunAreasResponse500
+) & {
+  headers: Headers;
+};
+
+export type listModelRunAreasResponse =
+  | listModelRunAreasResponseSuccess
+  | listModelRunAreasResponseError;
+
+export const getListModelRunAreasUrl = (
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/model-runs/${runId}/areas?${stringifiedParams}`
+    : `/api/projects/${projectId}/model-runs/${runId}/areas`;
+};
+
+/**
+ * @summary List Model Run Areas
+ */
+export const listModelRunAreas = async (
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listModelRunAreasResponse> => {
+  return apiFetch<listModelRunAreasResponse>(getListModelRunAreasUrl(projectId, runId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListModelRunAreasQueryKey = (
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+) => {
+  return [
+    `/api/projects/${projectId}/model-runs/${runId}/areas`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListModelRunAreasQueryOptions = <
+  TData = Awaited<ReturnType<typeof listModelRunAreas>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListModelRunAreasQueryKey(projectId, runId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listModelRunAreas>>> = ({ signal }) =>
+    listModelRunAreas(projectId, runId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined && runId !== null && runId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListModelRunAreasQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listModelRunAreas>>
+>;
+export type ListModelRunAreasQueryError = Problem;
+
+export function useListModelRunAreas<
+  TData = Awaited<ReturnType<typeof listModelRunAreas>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  params: undefined | ListModelRunAreasParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelRunAreas>>,
+          TError,
+          Awaited<ReturnType<typeof listModelRunAreas>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelRunAreas<
+  TData = Awaited<ReturnType<typeof listModelRunAreas>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelRunAreas>>,
+          TError,
+          Awaited<ReturnType<typeof listModelRunAreas>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelRunAreas<
+  TData = Awaited<ReturnType<typeof listModelRunAreas>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Model Run Areas
+ */
+
+export function useListModelRunAreas<
+  TData = Awaited<ReturnType<typeof listModelRunAreas>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  params?: ListModelRunAreasParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelRunAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListModelRunAreasQueryOptions(projectId, runId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

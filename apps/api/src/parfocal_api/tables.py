@@ -36,6 +36,7 @@ from parfocal_common.jobs import jobs as jobs
 from parfocal_common.model_runs import model_runs as model_runs
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.result_imports import ResultFormat, UploadKind
+from parfocal_common.stage_throughput import stage_throughput as stage_throughput
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
 DEFAULT_IDLE_LOCK_MINUTES = 15

@@ -2427,7 +2427,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   When a slide is published, the pipeline runs tissue, tumor map, then cells, in priority order with STAT first. Pause queue and run STAT first controls. Held jobs await a decision when no validated model applies.
   Done when E2E uploads a slide and the worklist AI cell goes from queued to ready.
 
-- [ ] AIP-011 · Job progress streaming
+- [x] AIP-011 · Job progress streaming
   Per-stage progress and partial results stream to the slide view, the jobs tray and job window (JOBS-003, JOBS-004) and the upload window (queued, tiles read, tissue found, model running, objects placed, IDs given, result set added), with a pause reason when a stage waits. Each finished stage records its throughput per model, tier and machine, so time estimates (JOBS-002) use measured values.
   Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
   Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).

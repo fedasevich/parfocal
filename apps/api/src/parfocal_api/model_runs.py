@@ -54,8 +54,10 @@ from parfocal_api.tables import (
     review_task_slides,
     review_tasks,
     slides,
+    stage_throughput,
 )
 from parfocal_common.jobs import ALLOWED_FROM, JobControl, JobStatus, StepStatus, move
+from parfocal_common.model_runs import KIND as MODEL_RUN
 from parfocal_common.model_runs import Ordering, RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_ids import Letter, ObjectIdError, parse
 
@@ -197,6 +199,7 @@ class RunStage(BaseModel):
     units_total: int | None
     started_at: datetime | None
     finished_at: datetime | None
+    waiting_reason: str | None = None
 
 
 class ModelRun(BaseModel):
@@ -421,6 +424,16 @@ def run_query() -> Any:
     )
 
 
+def mark_waiting(stages: list[RunStage], reason: str | None) -> list[RunStage]:
+    if reason is None:
+        return stages
+    waiting = next((item for item in stages if item.status is StepStatus.PENDING), None)
+    return [
+        item.model_copy(update={"waiting_reason": reason}) if item is waiting else item
+        for item in stages
+    ]
+
+
 async def runs_of(
     connection: AsyncConnection, rows: Sequence[Any], controls: bool
 ) -> list[ModelRun]:
@@ -442,7 +455,7 @@ async def runs_of(
             attempts=row.claims,
             created_at=row.created_at,
             finished_at=row.finished_at,
-            stages=stages[row.job_id],
+            stages=mark_waiting(stages[row.job_id], row.pause_reason),
             actions=actions_for(JobStatus(row.status), controls),
         )
         for row in rows
@@ -755,19 +768,18 @@ def first_start() -> Any:
 
 
 async def measured_seconds(connection: AsyncConnection, model: CatalogueModel) -> list[float]:
-    started = first_start()
-    seconds = func.extract("epoch", jobs.c.finished_at - started)
+    seconds = func.sum(stage_throughput.c.seconds)
     rows = await connection.scalars(
         select(seconds)
-        .select_from(model_runs.join(jobs, jobs.c.id == model_runs.c.job_id))
+        .select_from(stage_throughput.join(jobs, jobs.c.id == stage_throughput.c.job_id))
         .where(
             jobs.c.status == JobStatus.DONE,
-            model_runs.c.detector == model.name,
-            model_runs.c.detector_version == model.version,
-            started.is_not(None),
-            jobs.c.finished_at.is_not(None),
+            stage_throughput.c.kind == MODEL_RUN,
+            stage_throughput.c.model == model.name,
+            stage_throughput.c.model_version == model.version,
         )
-        .order_by(jobs.c.finished_at.desc())
+        .group_by(stage_throughput.c.job_id)
+        .order_by(func.max(stage_throughput.c.finished_at).desc())
         .limit(LAST_SAMPLES)
     )
     return [float(value) for value in rows if value > 0]
