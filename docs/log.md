@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-02
 
+- INGEST-027 (tissue box that ignores specks) splits the tissue mask into 8-connected regions, drops any region under 0.1% of the tissue cells and writes the box into tissue.json next to the mask. The box is 46.0% of the all-cells box on tumor_009, 89.9% on test_001 and 96.2% on CMU-1.svs, and holds 100% of the annotated tumour on both CAMELYON slides. VIEW-049 should read it from tissue.json.
 - CASE-001 (case loader) gathers the project, case, slides, result sets, task and decisions for a slide, with patient fields only in clinical projects, and opens the live slide fitted with a header showing them. The project page row and My work Open now reach the live route, and a dev-only fixture tile server lets the E2E check the fitted time against the viewer.fitted-ms limit.
 - INGEST-016 (16-bit big-endian BigTIFF) added a generated 16-bit big-endian BigTIFF fixture in the MxIF layout and proved it opens to exact pixels both by walking the file and from the ingest tile index, with no reader change, because the existing big-endian workaround and the tile index already cover it. Offsets past 4 GB in a big-endian file are still untested.
 - DS-008 (tags) was mostly built in the kit, so it added a story of every tag type and tone in both themes, a shared set of allowed tones and heights, and a Playwright scan of every story that fails on a tag outside the set, plus a unit test of the same rule.

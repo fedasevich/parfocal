@@ -1053,7 +1053,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-025, SEC-013. Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] INGEST-027 · Tissue box that ignores specks
+- [x] INGEST-027 · Tissue box that ignores specks
   The tissue mask gets a bounding box computed from its largest connected regions, so a few stray cells near the slide edge do not stretch it to the whole scan. The box is stored with the mask in level-0 pixels.
   Done when tests on CMU-1.svs and CAMELYON16 slides give a box tighter than the all-cells box and still containing more than 98% of annotated tumour.
   Depends on INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
