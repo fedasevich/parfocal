@@ -4069,7 +4069,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-000, ADJ-006.
   The engine reads each decision's agree, disagree or not sure value. Since [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md) (decision styles, raw answers and submit gating) that value is mapped from the raw answer in the task's decision style, and GUIDE-015 (decision styles with the raw answer and Counts as) adds the spread of raw answers next to the three-way counts.
 
-- [ ] EVAL-002 · Evaluation report page
+- [x] EVAL-002 · Evaluation report page
   The report shows as its pages, the same pages as the PDF (EVAL-008), under a header with the Research output tag, the version, the page count and a flag for changes after sign-off. A side panel picks the study template, opens the PDF preview (EVAL-010), starts Arrange (EVAL-009) and offers the downloads the template allows. The blocks of the sentinel node template are the headline numbers, the confusion matrix with axis titles, the disagreement reasons sorted by size, the opinion answers, and the objects that went worst with a column header per reviewer.
   Done when component tests render a seeded report and axe passes.
   Depends on EVAL-001, EVAL-006. Refs mock: evaluation, doc 40 D8 and E1.
