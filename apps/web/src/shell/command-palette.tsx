@@ -254,8 +254,13 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
         ) : null}
       </div>
       <div className="flex gap-3.5 border-line border-t px-4 py-2 text-body-sm text-fg-dim">
-        <span>↑↓ choose</span>
-        <span>↵ run</span>
+        <span className="inline-flex items-center gap-1">
+          <Keycap keys="↑" size="sm" />
+          <Keycap keys="↓" size="sm" /> choose
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Keycap keys="↵" size="sm" /> run
+        </span>
         <span>Every action in the app is here, with its key</span>
       </div>
     </>

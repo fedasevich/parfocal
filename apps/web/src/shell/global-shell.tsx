@@ -131,7 +131,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
       title: "Workspace",
       items: [
         { id: "team", href: destinations.team(), label: "Team", icon: "users" },
-        { id: "admin", href: destinations.admin(), label: "Admin", icon: "sliders", tag: "admin" },
+        { id: "admin", href: destinations.admin(), label: "Admin", icon: "sliders" },
       ],
     },
   ];
