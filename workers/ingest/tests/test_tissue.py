@@ -12,7 +12,7 @@ from slide_support import opened
 
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
 from parfocal_ingest.thumbnail import region_for
-from parfocal_ingest.tissue import TissueMask, mask_of, tissue_mask
+from parfocal_ingest.tissue import TissueBox, TissueMask, box_of, mask_of, tissue_mask
 
 GOLDEN = Path(__file__).resolve().parent / "golden" / "tissue"
 GLASS_LEVEL = 220
@@ -46,6 +46,24 @@ def tumour_cells(name: str, cell: int, shape: tuple[int, ...]) -> NDArray[np.boo
     return np.asarray(raster)
 
 
+def all_cells_box(mask: TissueMask) -> TissueBox:
+    rows = np.flatnonzero(mask.cells.any(axis=1))
+    cols = np.flatnonzero(mask.cells.any(axis=0))
+    top, left = int(rows[0]) * mask.cell, int(cols[0]) * mask.cell
+    bottom, right = (int(rows[-1]) + 1) * mask.cell, (int(cols[-1]) + 1) * mask.cell
+    return TissueBox(left, top, right - left, bottom - top)
+
+
+def area(box: TissueBox) -> int:
+    return box.width * box.height
+
+
+def inside(box: TissueBox, cell: int, cells: NDArray[np.bool_]) -> float:
+    top, left = box.y // cell, box.x // cell
+    bottom, right = math.ceil((box.y + box.height) / cell), math.ceil((box.x + box.width) / cell)
+    return float(cells[top:bottom, left:right].sum() / cells.sum())
+
+
 def golden_for(name: str, mask: TissueMask) -> NDArray[np.bool_]:
     path = GOLDEN / f"{name}.png"
     if os.environ.get("PARFOCAL_UPDATE_GOLDEN") == "1":
@@ -68,6 +86,28 @@ def test_the_mask_covers_annotated_tumour_and_leaves_glass(name: str, tmp_path: 
     assert (golden & mask.cells).sum() / (golden | mask.cells).sum() > 0.99
 
 
+@pytest.mark.parametrize("name", ["tumor_009.tif", "test_001.tif"])
+def test_the_box_ignores_specks_and_keeps_the_tumour(name: str, tmp_path: Path) -> None:
+    _, mask, _ = masked(name, tmp_path)
+    assert mask.box is not None
+    assert area(mask.box) < area(all_cells_box(mask))
+    tumour = tumour_cells(name, mask.cell, mask.cells.shape)
+    assert inside(mask.box, mask.cell, tumour) > 0.98
+
+
+def test_the_box_of_cmu1_is_tighter_than_all_cells(tmp_path: Path) -> None:
+    pyramid, mask, _ = masked("CMU-1.svs", tmp_path)
+    base = pyramid.levels[0]
+    assert mask.box is not None
+    whole = all_cells_box(mask)
+    assert area(mask.box) < area(whole)
+    assert whole.x <= mask.box.x
+    assert whole.y <= mask.box.y
+    assert mask.box.x + mask.box.width <= min(whole.x + whole.width, base.width)
+    assert mask.box.y + mask.box.height <= min(whole.y + whole.height, base.height)
+    assert inside(mask.box, mask.cell, mask.cells) > 0.99
+
+
 def test_a_small_slide_gets_a_plausible_mask(tmp_path: Path) -> None:
     _, mask, glass = masked("CMU-1-Small-Region.svs", tmp_path)
     assert 0.05 < mask.fraction < 0.95
@@ -87,3 +127,26 @@ def test_a_stained_patch_is_found_with_a_margin() -> None:
     _, cells = mask_of(image)
     assert cells[30:50, 40:60].all()
     assert cells.sum() == 22 * 22
+
+
+def test_a_stray_speck_does_not_stretch_the_box() -> None:
+    cells = np.zeros((300, 320), dtype=np.bool_)
+    cells[50:250, 60:260] = True
+    cells[2:5, 2:5] = True
+    cells[296:299, 315:318] = True
+    assert box_of(cells, 64, 320 * 64, 300 * 64) == TissueBox(60 * 64, 50 * 64, 200 * 64, 200 * 64)
+
+
+def test_many_small_pieces_are_all_kept() -> None:
+    cells = np.zeros((100, 100), dtype=np.bool_)
+    cells[1::2, 1::2] = True
+    assert box_of(cells, 10, 1000, 1000) == TissueBox(10, 10, 990, 990)
+
+
+def test_the_box_is_clipped_to_the_slide() -> None:
+    cells = np.ones((3, 4), dtype=np.bool_)
+    assert box_of(cells, 64, 200, 150) == TissueBox(0, 0, 200, 150)
+
+
+def test_glass_has_no_box() -> None:
+    assert box_of(np.zeros((5, 5), dtype=np.bool_), 64, 320, 320) is None

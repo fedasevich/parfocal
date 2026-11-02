@@ -272,7 +272,12 @@ async def derive(context: Context) -> Mapping[str, Any]:
     if UNIT_TISSUE not in done:
         mask = await asyncio.to_thread(tissue_mask, path, identified.format, found)
         await context.store.put_object(f"{public}tissue.png", mask.png(), "image/png")
-        facts = {"cell": mask.cell, "threshold": mask.threshold, "fraction": mask.fraction}
+        facts = {
+            "cell": mask.cell,
+            "threshold": mask.threshold,
+            "fraction": mask.fraction,
+            "box": mask.box.facts() if mask.box else None,
+        }
         await context.store.put_object(
             f"{public}tissue.json", json.dumps(facts).encode(), "application/json"
         )
