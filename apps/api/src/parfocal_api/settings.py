@@ -13,7 +13,7 @@ from parfocal_common.part_plan import (
 from parfocal_common.settings import StorageSettings
 
 GIB = 1024 * MIB
-DEFAULT_UPLOAD_MAX_BYTES = 20 * GIB
+DEFAULT_UPLOAD_MAX_BYTES = 100 * GIB
 
 
 def whole_mib(value: int) -> int:
