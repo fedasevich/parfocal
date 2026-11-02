@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.opinion_questions import (
     OUTLINE_QUALITY_QUESTIONS,
     READER_STUDY_QUESTIONS,
@@ -59,6 +60,7 @@ class Presets(BaseModel):
     first_read: StrictBool = False
     start_mode: StartMode = StartMode.GUIDED
     split: TaskSplit = TaskSplit.EVERYONE
+    decision: DecisionSettings = DecisionSettings()
 
 
 class StudyTemplateDraft(BaseModel):

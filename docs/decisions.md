@@ -64,6 +64,36 @@ MLEVAL-008 (site validation reports) records a report from a model's scores and 
 
 Your choice:
 
+## 19. Decision styles, from GUIDE-015 (decision styles with the raw answer and Counts as)
+
+### 19a. Reasons on a decision whose Counts as value changes
+
+When the task owner edits Counts as after answers exist, an answer can move from disagree to not sure or to agree, and its disagree reasons no longer fit.
+
+- a. Drop the reasons that no longer fit, undo a Wrong class retype, and log how many were dropped. (recommended, built)
+- b. Keep every reason and let the report show reasons that do not match the counted value.
+- c. Refuse a Counts as change that would drop a reason.
+
+Your choice:
+
+### 19b. Yes or no when the question names another class than the AI's
+
+Yes counts as agree and No as disagree on every AI object, which reads the AI's claim as always positive. A template question such as "Is this tumor?" on an object the AI called stroma would then count the wrong way.
+
+- a. Keep it as built, with the question as plain text. (recommended for now)
+- b. Let the task name the class its question asks about, so Yes counts as agree only on objects the AI called that class.
+
+Your choice:
+
+### 19c. The style of a hidden first read
+
+ADR 0131 (decision styles, raw answers and submit gating) leaves open whether a task that hides the AI for a first read switches to Pick the class blind in the API or only on screen.
+
+- a. Only the screen switches, and the API refuses a style that shows the claim with a hidden first read once the New review task warning is built. (recommended)
+- b. The API stores the first read in Pick the class blind and the second read in the task's own style.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.

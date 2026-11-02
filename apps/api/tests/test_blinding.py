@@ -100,6 +100,7 @@ def study(api: ApiAs, database: str, *, blinded: bool, hidden: bool) -> Study:
                 "scope": {"kind": "all-regions"},
                 "blinded": blinded,
                 "ai_hidden_first_read": hidden,
+                "decision": {"style": "agree"},
             },
         )
     ).json()["id"]

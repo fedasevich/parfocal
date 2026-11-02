@@ -115,9 +115,9 @@ def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
 @pytest.mark.parametrize(
     ("object_id", "body", "status", "code"),
     [
-        ("T1", {"value": "agree", "reasons": ["artefact"]}, 422, "validation"),
-        ("T1", {"value": "agree", "reasons": ["need_ihc"]}, 422, "validation"),
-        ("T1", {"value": "unsure", "reasons": ["artefact"]}, 422, "validation"),
+        ("T1", {"value": "agree", "reasons": ["artefact"]}, 400, "reason-not-for-answer"),
+        ("T1", {"value": "agree", "reasons": ["need_ihc"]}, 400, "reason-not-for-answer"),
+        ("T1", {"value": "unsure", "reasons": ["artefact"]}, 400, "reason-not-for-answer"),
         ("T1", {"value": "unsure", "reasons": ["maybe"]}, 422, "validation"),
         ("C1", {"value": "disagree", "reasons": ["wrong_class"]}, 422, "validation"),
         ("T1", {"value": "maybe"}, 422, "validation"),

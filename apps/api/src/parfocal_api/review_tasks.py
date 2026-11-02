@@ -1,8 +1,8 @@
 import secrets
 import uuid
 from collections.abc import Mapping, Sequence
-from datetime import date, datetime
-from typing import Annotated, Any
+from datetime import UTC, date, datetime
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, StringConstraints, model_validator
@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import FirstReadStartedError, task_started
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -19,6 +20,7 @@ from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
 from parfocal_api.review_order import Results, store_order, stored_seeds
 from parfocal_api.tables import (
+    DecisionStyle,
     ProjectRole,
     ResultStatus,
     StartMode,
@@ -34,7 +36,9 @@ from parfocal_api.tables import (
     slides,
     study_template_versions,
     study_templates,
+    verdicts,
 )
+from parfocal_api.verdicts import recount
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
 
@@ -110,6 +114,7 @@ class TaskDraft(BaseModel):
     reminder_days: Reminders = []
     study_template_id: uuid.UUID | None = None
     study_template_version: Annotated[int, Field(ge=1)] | None = None
+    decision: DecisionSettings | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> TaskDraft:
@@ -136,6 +141,7 @@ class TaskChange(BaseModel):
     start_mode: StartMode | None = None
     due_on: date | None = None
     reminder_days: Reminders | None = None
+    decision: DecisionSettings | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> TaskChange:
@@ -148,6 +154,15 @@ class TaskSlide(BaseModel):
     slide_id: uuid.UUID
     result_set_id: uuid.UUID
     reviewer_ids: list[uuid.UUID]
+
+
+class CountsAsChange(BaseModel):
+    changed_at: datetime
+    changed_by_user_id: uuid.UUID | None
+    before: list[str]
+    after: list[str]
+    recounted: int
+    reasons_dropped: int
 
 
 class ReviewTask(BaseModel):
@@ -167,6 +182,8 @@ class ReviewTask(BaseModel):
     reminder_days: list[int]
     study_template_id: uuid.UUID | None
     study_template_version: int | None
+    decision: DecisionSettings
+    counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
     slide_count: int
@@ -210,6 +227,16 @@ class UnknownFormVersionError(BadRequestError):
 class UnknownStudyTemplateError(BadRequestError):
     code = "unknown-study-template"
     title = "This workspace has no such study template version"
+
+
+class StyleLockedError(ConflictError):
+    code = "decision-style-locked"
+    title = "The decision style cannot change once a decision exists"
+
+
+class CountsAsSignedOffError(ConflictError):
+    code = "counts-as-signed-off"
+    title = "Counts as cannot change after sign-off"
 
 
 class StudyTemplateRetiredError(ConflictError):
@@ -329,6 +356,14 @@ async def task_slides_of(
     ]
 
 
+def decision_of(row: Any) -> DecisionSettings:
+    return DecisionSettings.model_construct(
+        style=DecisionStyle(row.decision_style),
+        counts_as=list(row.counts_as),
+        question=row.question,
+    )
+
+
 def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
     return ReviewTask(
         id=row.id,
@@ -347,6 +382,8 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         reminder_days=list(row.reminder_days),
         study_template_id=row.study_template_id,
         study_template_version=row.study_template_version,
+        decision=decision_of(row),
+        counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
         slide_count=slide_count,
@@ -519,6 +556,34 @@ async def pinned_template(
     return wanted
 
 
+async def preset_decision(
+    connection: AsyncConnection, template_id: uuid.UUID | None, version: int | None
+) -> DecisionSettings:
+    if template_id is None or version is None:
+        return DecisionSettings()
+    presets = await connection.scalar(
+        select(study_template_versions.c.presets).where(
+            study_template_versions.c.template_id == template_id,
+            study_template_versions.c.version == version,
+        )
+    )
+    stored = cast(dict[str, Any], presets or {})
+    return DecisionSettings.model_validate(stored.get("decision", {}))
+
+
+def decision_values(decision: DecisionSettings) -> dict[str, Any]:
+    return {
+        "decision_style": decision.style,
+        "counts_as": [value.value for value in decision.counts_as],
+        "question": decision.question,
+    }
+
+
+async def has_decisions(connection: AsyncConnection, task_id: uuid.UUID) -> bool:
+    given = select(verdicts.c.task_id).where(verdicts.c.task_id == task_id)
+    return bool(await connection.scalar(select(given.exists())))
+
+
 async def audit(
     connection: AsyncConnection,
     principal: Principal,
@@ -568,6 +633,42 @@ async def readable_task(
     return row, whole
 
 
+async def decision_change(
+    connection: AsyncConnection, principal: Principal, row: Any, decision: DecisionSettings
+) -> dict[str, Any]:
+    given = await has_decisions(connection, row.id)
+    if decision.style != row.decision_style and given:
+        raise StyleLockedError
+    values = decision_values(decision)
+    before, after = list(row.counts_as), values["counts_as"]
+    if before == after:
+        return values
+    if row.signed_off_at is not None:
+        raise CountsAsSignedOffError
+    if not given or decision.style is not DecisionStyle.CERTAINTY:
+        return values
+    recounted, dropped = await recount(connection, row, after)
+    entry = {
+        "changed_at": datetime.now(UTC).isoformat(),
+        "changed_by_user_id": (
+            str(principal.user_id) if isinstance(principal, MemberPrincipal) else None
+        ),
+        "before": before,
+        "after": after,
+        "recounted": recounted,
+        "reasons_dropped": dropped,
+    }
+    await audit(
+        connection,
+        principal,
+        AuditAction.TASK_COUNTS_AS_CHANGED,
+        row.tenant_id,
+        row.id,
+        {key: value for key, value in entry.items() if key != "changed_by_user_id"},
+    )
+    return values | {"counts_as_changes": [*row.counts_as_changes, entry]}
+
+
 @project_router.post(
     "",
     operation_id="createReviewTask",
@@ -592,6 +693,9 @@ async def create_review_task(
     version = await form_version(connection, project_id, draft.opinion_form_version)
     template_version = await pinned_template(
         connection, draft.study_template_id, draft.study_template_version
+    )
+    decision = draft.decision or await preset_decision(
+        connection, draft.study_template_id, template_version
     )
     number = select(func.coalesce(func.max(review_tasks.c.number), 0) + 1).where(
         review_tasks.c.project_id == project_id
@@ -619,6 +723,7 @@ async def create_review_task(
             reminder_days=sorted(set(draft.reminder_days), reverse=True),
             study_template_id=draft.study_template_id,
             study_template_version=template_version,
+            **decision_values(decision),
             created_by_user_id=(
                 principal.user_id if isinstance(principal, MemberPrincipal) else None
             ),
@@ -668,6 +773,7 @@ async def create_review_task(
             "slides": len(slide_ids),
             "reviewers": len(draft.reviewer_ids),
             "split": draft.split.value,
+            "decision_style": decision.style.value,
         }
         | (
             {}
@@ -747,6 +853,8 @@ async def change_review_task(
     switching = values.get("ai_hidden_first_read", row.ai_hidden_first_read)
     if switching != row.ai_hidden_first_read and await task_started(connection, task_id):
         raise FirstReadStartedError
+    if change.decision is not None:
+        values |= await decision_change(connection, principal, row, change.decision)
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
     first = change.scope or scope_of(row)

@@ -84,6 +84,7 @@ def review(api: ApiAs, database: str) -> Review:
             "reviewer_ids": [str(people["first"].user_id), str(people["second"].user_id)],
             "split": "everyone",
             "scope": {"kind": "all-regions"},
+            "decision": {"style": "agree"},
         },
     )
     assert task.status_code == 201, task.text

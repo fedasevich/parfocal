@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 26 |
-| `personal` | 45 |
+| `personal` | 46 |
 | `secret` | 9 |
-| `operational` | 481 |
+| `operational` | 487 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -613,6 +613,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `signed_off_by_user_id` | personal |
 | `study_template_id` | operational |
 | `study_template_version` | operational |
+| `decision_style` | operational |
+| `counts_as` | operational |
+| `counts_as_changes` | personal |
+| `question` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -853,6 +857,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `kind` | operational |
 | `number` | operational |
 | `value` | operational |
+| `style` | operational |
+| `answer` | operational |
+| `answer_class_id` | operational |
 | `reasons` | operational |
 | `reason_class_id` | operational |
 | `note` | phi |

@@ -138,6 +138,8 @@ async def task_slide(
                 review_tasks.c.project_id,
                 review_tasks.c.tenant_id,
                 review_tasks.c.signed_off_at,
+                review_tasks.c.decision_style,
+                review_tasks.c.counts_as,
                 projects.c.privacy_mode,
                 projects.c.archived_at,
             )

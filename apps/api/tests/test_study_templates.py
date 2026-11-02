@@ -404,3 +404,32 @@ def test_the_migration_seeds_the_built_ins_into_existing_workspaces() -> None:
         assert {row[2] for row in rows} == {1}
         command.downgrade(config, "0044-1")
         assert query(url, "SELECT to_regclass('study_templates')") == [(None,)]
+
+
+def test_a_template_presets_the_decision_style_and_a_task_may_override_it(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    admin, researcher = partial(api, s.people["admin"]), partial(api, s.people["owner"])
+    detection = templates_of(api, s)["detection"]
+    assert detection["presets"]["decision"] == {
+        "style": "certainty",
+        "counts_as": ["disagree", "disagree", "unsure", "agree", "agree"],
+        "question": None,
+    }
+    body = {key: detection[key] for key in ("name", "study_kind", "blocks", "format", "presets")}
+    mapping = ["disagree", "unsure", "unsure", "agree", "agree"]
+    body["presets"] = body["presets"] | {"decision": {"style": "certainty", "counts_as": mapping}}
+    edited = admin().put(f"{TEMPLATES}/{detection['id']}", json=body)
+    assert edited.status_code == 200, edited.text
+    preset = researcher().post(s.tasks, json=task_draft(s, study_template_id=detection["id"]))
+    assert preset.json()["decision"]["counts_as"] == mapping
+    chosen = researcher().post(
+        s.tasks,
+        json=task_draft(s, study_template_id=detection["id"], decision={"style": "yes-no"}),
+    )
+    assert chosen.json()["decision"]["style"] == "yes-no"
+    no_agree = {"style": "certainty", "counts_as": ["disagree"] * 5}
+    body["presets"] = body["presets"] | {"decision": no_agree}
+    refused = admin().put(f"{TEMPLATES}/{detection['id']}", json=body)
+    assert refused.status_code == 422

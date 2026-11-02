@@ -1,5 +1,7 @@
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
+from types import SimpleNamespace
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
@@ -12,6 +14,11 @@ from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_judging_allowed, require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.decision_styles import (
+    BlindCellsUnsupportedError,
+    answer_in_style,
+    counted,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError
@@ -24,8 +31,11 @@ from parfocal_api.reviewed_layer import (
 )
 from parfocal_api.tables import (
     AnnotationKind,
+    DecisionStyle,
     VerdictReason,
     VerdictValue,
+    result_objects,
+    result_set_classes,
     review_edits,
     verdicts,
 )
@@ -56,39 +66,55 @@ UNSURE_REASONS = frozenset(
         VerdictReason.NEED_IHC,
         VerdictReason.BORDER_UNCLEAR,
         VerdictReason.OUT_OF_FOCUS,
+        VerdictReason.NEED_SECOND_LOOK,
     }
 )
 
 type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
 
 
+type Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
+
+
 class VerdictDraft(BaseModel):
-    value: VerdictValue
+    answer: Answer | None = None
+    answer_class_id: uuid.UUID | None = None
+    value: VerdictValue | None = None
     reasons: list[VerdictReason] = []
     reason_class_id: uuid.UUID | None = None
     note: Note | None = None
 
     @model_validator(mode="after")
     def reasons_fit_value(self) -> VerdictDraft:
+        if (self.answer is None) == (self.value is None):
+            raise ValueError("Give the answer as pressed, or a value on an agree task")
         self.reasons = sorted(set(self.reasons))
-        if self.value is VerdictValue.AGREE and self.reasons:
-            raise ValueError("Agree takes no reason")
-        if self.value is VerdictValue.UNSURE and not UNSURE_REASONS.issuperset(self.reasons):
-            raise ValueError("Unsure takes only the unsure reasons")
         if (VerdictReason.WRONG_CLASS in self.reasons) != (self.reason_class_id is not None):
             raise ValueError("Wrong class names the right class, and only it does")
         return self
+
+    @property
+    def pressed(self) -> str:
+        return self.answer if self.answer is not None else str(self.value)
 
 
 class Verdict(BaseModel):
     object: str
     kind: AnnotationKind
     number: int
+    style: DecisionStyle
+    answer: str
+    answer_class_id: uuid.UUID | None
     value: VerdictValue
     reasons: list[VerdictReason]
     reason_class_id: uuid.UUID | None
     note: str | None
     updated_at: datetime
+
+
+class ReasonNotForAnswerError(BadRequestError):
+    code = "reason-not-for-answer"
+    title = "This reason does not go with an answer that counts this way"
 
 
 class ReasonNotForKindError(BadRequestError):
@@ -108,12 +134,45 @@ def verdict_of(row: Any) -> Verdict:
         object=ObjectId(letter, row.number).text(ascii=True),
         kind=kind,
         number=row.number,
+        style=DecisionStyle(row.style),
+        answer=row.answer,
+        answer_class_id=row.answer_class_id,
         value=VerdictValue(row.value),
         reasons=[VerdictReason(code) for code in row.reasons],
         reason_class_id=row.reason_class_id,
         note=row.note,
         updated_at=row.updated_at,
     )
+
+
+def check_reasons(value: VerdictValue, kind: AnnotationKind, reasons: list[VerdictReason]) -> None:
+    if value is VerdictValue.AGREE and reasons:
+        raise ReasonNotForAnswerError("An answer that counts as agree takes no reason")
+    if value is VerdictValue.UNSURE and not UNSURE_REASONS.issuperset(reasons):
+        raise ReasonNotForAnswerError("An answer that counts as not sure takes only those reasons")
+    if value is VerdictValue.DISAGREE:
+        for reason in reasons:
+            if reason not in REASONS[kind]:
+                raise ReasonNotForKindError(f"{reason} is not a reason for a {kind}")
+
+
+async def ai_region_class(
+    connection: AsyncConnection, result_set_id: uuid.UUID, number: int
+) -> uuid.UUID | None:
+    found = await connection.scalar(
+        select(result_set_classes.c.class_id)
+        .join(
+            result_objects,
+            (result_objects.c.result_set_id == result_set_classes.c.result_set_id)
+            & (result_objects.c.class_index == result_set_classes.c.position),
+        )
+        .where(
+            result_objects.c.result_set_id == result_set_id,
+            result_objects.c.kind == "region",
+            result_objects.c.number == number,
+        )
+    )
+    return found if isinstance(found, uuid.UUID) else None
 
 
 def same_object(
@@ -204,6 +263,51 @@ async def audit(
     )
 
 
+def fitting(value: VerdictValue, kind: AnnotationKind, reasons: list[str]) -> list[str]:
+    allowed = {
+        VerdictValue.AGREE: frozenset[VerdictReason](),
+        VerdictValue.UNSURE: UNSURE_REASONS,
+        VerdictValue.DISAGREE: REASONS[kind],
+    }[value]
+    return [reason for reason in reasons if reason in allowed]
+
+
+async def recount(
+    connection: AsyncConnection, task: Any, counts_as: Sequence[str]
+) -> tuple[int, int]:
+    rows = (
+        await connection.execute(
+            select(verdicts).where(
+                verdicts.c.task_id == task.id, verdicts.c.style == DecisionStyle.CERTAINTY
+            )
+        )
+    ).all()
+    changed = dropped = 0
+    for row in rows:
+        value = counted(DecisionStyle.CERTAINTY, row.answer, counts_as)
+        if value == row.value:
+            continue
+        changed += 1
+        kind = AnnotationKind(row.kind)
+        reasons = fitting(value, kind, list(row.reasons))
+        class_id = row.reason_class_id if VerdictReason.WRONG_CLASS in reasons else None
+        dropped += len(row.reasons) - len(reasons)
+        await connection.execute(
+            update(verdicts)
+            .where(*same_object(verdicts, task.id, row.slide_id, row.user_id, kind, row.number))
+            .values(value=value, reasons=reasons, reason_class_id=class_id)
+        )
+        if row.reason_class_id is not None and class_id is None:
+            layer = SimpleNamespace(
+                tenant_id=row.tenant_id,
+                project_id=row.project_id,
+                task_id=task.id,
+                slide_id=row.slide_id,
+            )
+            await undo_retype(connection, layer, row.user_id, kind, row.number, row.reason_class_id)
+    return changed, dropped
+
+
 @router.put("/{object_id}", operation_id="saveVerdict", **require(Permission.REVIEW, write=True))
 async def save_verdict(
     task_id: uuid.UUID,
@@ -217,11 +321,18 @@ async def save_verdict(
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
-    if draft.value is VerdictValue.DISAGREE:
-        for reason in draft.reasons:
-            if reason not in REASONS[kind]:
-                raise ReasonNotForKindError(f"{reason} is not a reason for a {kind}")
+    style = DecisionStyle(row.decision_style)
+    answer = draft.pressed
+    answer_in_style(style, answer, draft.answer_class_id)
     await check_exists(connection, row, found)
+    ai_class = None
+    if draft.answer_class_id is not None:
+        if kind is not AnnotationKind.REGION:
+            raise BlindCellsUnsupportedError
+        await check_classes(connection, row.project_id, {draft.answer_class_id})
+        ai_class = await ai_region_class(connection, row.result_set_id, found.number)
+    value = counted(style, answer, row.counts_as, draft.answer_class_id, ai_class)
+    check_reasons(value, kind, draft.reasons)
     if draft.reason_class_id is not None:
         await check_classes(connection, row.project_id, {draft.reason_class_id})
     me = user_of(principal)
@@ -233,7 +344,10 @@ async def save_verdict(
         )
     ).one_or_none()
     values = {
-        "value": draft.value,
+        "value": value,
+        "style": style,
+        "answer": answer,
+        "answer_class_id": draft.answer_class_id,
         "reasons": [reason.value for reason in draft.reasons],
         "reason_class_id": draft.reason_class_id,
         "note": draft.note or None,
@@ -272,7 +386,9 @@ async def save_verdict(
         row,
         {
             "object": found.text(ascii=True),
-            "value": draft.value.value,
+            "style": style.value,
+            "answer": answer,
+            "value": value.value,
             "reasons": [reason.value for reason in draft.reasons],
         },
     )

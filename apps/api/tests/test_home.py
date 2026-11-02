@@ -30,8 +30,9 @@ def judge(
     owner(
         database,
         "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
-        f"value, reasons, updated_at) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
-        f"'{slide}', '{s.people[who].user_id}', 'region', {number}, '{value}', {reason}, "
+        f"value, style, answer, reasons, updated_at) VALUES ('{s.tenant_id}', '{s.project}', "
+        f"'{task_id}', '{slide}', '{s.people[who].user_id}', 'region', {number}, '{value}', "
+        f"'agree', '{value}', {reason}, "
         f"now() - interval '{ago}')",
     )
 

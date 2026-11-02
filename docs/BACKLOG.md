@@ -3495,6 +3495,11 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover each style's answers with their mapped values, a refused answer outside the style, the default and an edited mapping, a refused mapping with no agree or no disagree answer, a mapping change that recomputes every value and writes both log entries, and a refused style change after the first decision, and EVAL tests return the three-way counts and the raw spread for a seeded 5-point certainty task.
   Depends on GUIDE-001, EVAL-006, EVAL-007. Refs mock: task/decision, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: admin (the template editor), kit: decision styles, doc 44.
 
+- [ ] GUIDE-017 · Pick the class blind on cells
+  GUIDE-015 (decision styles with the raw answer and Counts as) counts a blind class answer against the AI's class for regions, whose class sits in a database row. A cell's class lives in its result chunk in object storage, so a blind answer on a cell is refused with `blind-cells-unsupported` for now. Look up the cell's class from its chunk, or store it with the review order when the task is scoped, and count the answer the same way.
+  Done when API tests count a blind answer on a cell from a chunked result set as agree for the AI's class and disagree for another, and the refusal is gone.
+  Depends on GUIDE-015. Refs mock: guided/blind, mock: gallery/blind.
+
 
 ---
 

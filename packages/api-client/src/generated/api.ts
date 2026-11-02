@@ -258,6 +258,12 @@ export interface AnnouncementDraft {
   ends_at?: string | null;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 10
+ */
+export type Answer = string;
+
 export interface ApiToken {
   id: string;
   expires_at: string;
@@ -822,6 +828,29 @@ export interface ConfusionMatrix {
   values?: ConfusionMatrixValues;
 }
 
+export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
+
+export const VerdictValue = {
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "unsure",
+} as const;
+
+/**
+ * @minItems 5
+ * @maxItems 5
+ */
+export type CountsAs = VerdictValue[];
+
+export interface CountsAsChange {
+  changed_at: string;
+  changed_by_user_id: string | null;
+  before: string[];
+  after: string[];
+  recounted: number;
+  reasons_dropped: number;
+}
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -865,9 +894,39 @@ export const Decision = {
   "go-with-reviewers": "go-with-reviewers",
 } as const;
 
+export type DecisionCountsAnswers = { [key: string]: number };
+
+export type DecisionStyle = (typeof DecisionStyle)[keyof typeof DecisionStyle];
+
+export const DecisionStyle = {
+  certainty: "certainty",
+  agree: "agree",
+  "yes-no": "yes-no",
+  blind: "blind",
+} as const;
+
+export interface DecisionCounts {
+  style: DecisionStyle;
+  counts_as: VerdictValue[];
+  counted: Partial<Record<VerdictValue, number>>;
+  answers: DecisionCountsAnswers;
+}
+
 export interface DecisionDraft {
   decision: Decision;
   note?: string | null;
+}
+
+/**
+ * @minLength 2
+ * @maxLength 200
+ */
+export type DecisionQuestion = string;
+
+export interface DecisionSettings {
+  style?: DecisionStyle;
+  counts_as?: CountsAs;
+  question?: DecisionQuestion | null;
 }
 
 export type DisagreementReasonsWidth =
@@ -1024,6 +1083,7 @@ export interface OpinionOut {
 
 export interface Evaluation {
   task_id: string;
+  decisions: DecisionCounts;
   classes: ClassMetrics[];
   overall: ClassMetrics[];
   dice: EvaluationDice;
@@ -2057,6 +2117,7 @@ export interface Presets {
   first_read?: boolean;
   start_mode?: StartMode;
   split?: TaskSplit;
+  decision?: DecisionSettings;
 }
 
 export interface PrivacyChange {
@@ -2163,14 +2224,6 @@ export const Why = {
   "against-the-ai": "against-the-ai",
 } as const;
 
-export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
-
-export const VerdictValue = {
-  agree: "agree",
-  disagree: "disagree",
-  unsure: "unsure",
-} as const;
-
 export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
 
 export const VerdictReason = {
@@ -2184,6 +2237,7 @@ export const VerdictReason = {
   need_ihc: "need_ihc",
   border_unclear: "border_unclear",
   out_of_focus: "out_of_focus",
+  need_second_look: "need_second_look",
 } as const;
 
 export interface ReviewerVerdict {
@@ -2627,6 +2681,8 @@ export interface ReviewTask {
   reminder_days: number[];
   study_template_id: string | null;
   study_template_version: number | null;
+  decision: DecisionSettings;
+  counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
   slide_count: number;
@@ -2656,6 +2712,8 @@ export interface ReviewTaskDetail {
   reminder_days: number[];
   study_template_id: string | null;
   study_template_version: number | null;
+  decision: DecisionSettings;
+  counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
   slide_count: number;
@@ -2962,6 +3020,7 @@ export interface TaskChange {
   start_mode?: StartMode | null;
   due_on?: string | null;
   reminder_days?: Reminders | null;
+  decision?: DecisionSettings | null;
 }
 
 export interface TaskDraft {
@@ -2991,6 +3050,7 @@ export interface TaskDraft {
   reminder_days?: Reminders;
   study_template_id?: string | null;
   study_template_version?: number | null;
+  decision?: DecisionSettings | null;
 }
 
 export interface TaskStates {
@@ -3141,6 +3201,9 @@ export interface Verdict {
   object: string;
   kind: AnnotationKind;
   number: number;
+  style: DecisionStyle;
+  answer: string;
+  answer_class_id: string | null;
   value: VerdictValue;
   reasons: VerdictReason[];
   reason_class_id: string | null;
@@ -3154,7 +3217,9 @@ export interface Verdict {
 export type ParfocalApiVerdictsNote = string;
 
 export interface VerdictDraft {
-  value: VerdictValue;
+  answer?: Answer | null;
+  answer_class_id?: string | null;
+  value?: VerdictValue | null;
   reasons?: VerdictReason[];
   reason_class_id?: string | null;
   note?: ParfocalApiVerdictsNote | null;

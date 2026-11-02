@@ -1394,6 +1394,16 @@ class StartMode(StrEnum):
     VIEWER = "viewer"
 
 
+class DecisionStyle(StrEnum):
+    CERTAINTY = "certainty"
+    AGREE = "agree"
+    YES_NO = "yes-no"
+    BLIND = "blind"
+
+
+DEFAULT_COUNTS_AS = ("disagree", "disagree", "unsure", "agree", "agree")
+
+
 review_tasks = Table(
     "review_tasks",
     metadata,
@@ -1445,6 +1455,28 @@ review_tasks = Table(
     ),
     Column("study_template_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("study_template_version", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column(
+        "decision_style",
+        String(10),
+        nullable=False,
+        server_default=DecisionStyle.CERTAINTY.value,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "counts_as",
+        ARRAY(String(10)),
+        nullable=False,
+        server_default=text("'{" + ",".join(DEFAULT_COUNTS_AS) + "}'"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "counts_as_changes",
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+        info=PERSONAL,
+    ),
+    Column("question", String(200), nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -1468,6 +1500,13 @@ review_tasks = Table(
     one_of("split", TaskSplit),
     one_of("scope", TaskScope),
     one_of("start_mode", StartMode),
+    one_of("decision_style", DecisionStyle),
+    CheckConstraint(
+        "cardinality(counts_as) = 5 AND "
+        "counts_as <@ ARRAY['agree', 'disagree', 'unsure']::varchar[] AND "
+        "'agree' = ANY(counts_as) AND 'disagree' = ANY(counts_as)",
+        name="counts_as",
+    ),
     CheckConstraint("number > 0", name="number"),
     CheckConstraint(
         "(scope = 'random-cells') = (scope_count IS NOT NULL AND scope_seed IS NOT NULL)",
@@ -1598,6 +1637,7 @@ class VerdictReason(StrEnum):
     NEED_IHC = "need_ihc"
     BORDER_UNCLEAR = "border_unclear"
     OUT_OF_FOCUS = "out_of_focus"
+    NEED_SECOND_LOOK = "need_second_look"
 
 
 verdicts = Table(
@@ -1611,6 +1651,9 @@ verdicts = Table(
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
     Column("value", String(10), nullable=False, info=OPERATIONAL),
+    Column("style", String(10), nullable=False, info=OPERATIONAL),
+    Column("answer", String(10), nullable=False, info=OPERATIONAL),
+    Column("answer_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("reasons", ARRAY(String(20)), nullable=False, server_default="{}", info=OPERATIONAL),
     Column("reason_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("note", String(500), nullable=True, info=PHI),
@@ -1622,14 +1665,30 @@ verdicts = Table(
     ForeignKeyConstraint(
         ["reason_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
     ),
+    ForeignKeyConstraint(
+        ["answer_class_id", "project_id"],
+        ["project_classes.id", "project_classes.project_id"],
+        name="fk_verdicts_answer_class_id_project_id_project_classes",
+    ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
     one_of("value", VerdictValue),
+    one_of("style", DecisionStyle),
+    CheckConstraint(
+        "(style = 'certainty' AND answer IN ('1', '2', '3', '4', '5', 'unsure')) OR "
+        "(style = 'agree' AND answer IN ('agree', 'disagree', 'unsure')) OR "
+        "(style = 'yes-no' AND answer IN ('yes', 'no', 'unsure')) OR "
+        "(style = 'blind' AND answer IN ('class', 'unsure'))",
+        name="answer_fits_style",
+    ),
+    CheckConstraint(
+        "(answer = 'class') = (answer_class_id IS NOT NULL)", name="answer_names_class"
+    ),
     CheckConstraint(
         "(value = 'agree' AND cardinality(reasons) = 0) OR "
         "(value = 'unsure' AND reasons <@ ARRAY['need_deeper_level', 'need_ihc', "
-        "'border_unclear', 'out_of_focus']::varchar[]) OR "
+        "'border_unclear', 'out_of_focus', 'need_second_look']::varchar[]) OR "
         "(value = 'disagree' AND kind = 'region' AND reasons <@ ARRAY['not_class', "
         "'boundary_off', 'two_regions', 'artefact']::varchar[]) OR "
         "(value = 'disagree' AND kind = 'cell' AND reasons <@ ARRAY['not_a_cell', "

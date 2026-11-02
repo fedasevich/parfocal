@@ -132,6 +132,7 @@ import {
   ChartStyle,
   Code,
   Decision,
+  DecisionStyle,
   Download,
   EmailDigest,
   HitKind,
@@ -2396,6 +2397,29 @@ export const getCreateReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  decision: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+    question: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 2, max: 200 } }),
+      null,
+    ]),
+  },
+  counts_as_changes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    recounted: faker.number.int(),
+    reasons_dropped: faker.number.int(),
+  })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   slide_count: faker.number.int(),
@@ -2450,6 +2474,29 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
     ).map(() => faker.number.int()),
     study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
+    counts_as_changes: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+      ),
+      after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+      ),
+      recounted: faker.number.int(),
+      reasons_dropped: faker.number.int(),
+    })),
     created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     slide_count: faker.number.int(),
@@ -2493,6 +2540,29 @@ export const getGetReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  decision: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+    question: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 2, max: 200 } }),
+      null,
+    ]),
+  },
+  counts_as_changes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    recounted: faker.number.int(),
+    reasons_dropped: faker.number.int(),
+  })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   slide_count: faker.number.int(),
@@ -2547,6 +2617,29 @@ export const getChangeReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  decision: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+    question: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 2, max: 200 } }),
+      null,
+    ]),
+  },
+  counts_as_changes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    recounted: faker.number.int(),
+    reasons_dropped: faker.number.int(),
+  })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   slide_count: faker.number.int(),
@@ -3347,6 +3440,9 @@ export const getSaveVerdictResponseMock = (
   object: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
   number: faker.number.int(),
+  style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+  answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   value: faker.helpers.arrayElement(Object.values(VerdictValue)),
   reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
   reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -3360,6 +3456,9 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
     kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
     number: faker.number.int(),
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     value: faker.helpers.arrayElement(Object.values(VerdictValue)),
     reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
     reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -3656,6 +3755,16 @@ export const getGetTaskEvaluationResponseMock = (
   overrideResponse: Partial<Extract<Evaluation, object>> = {},
 ): Evaluation => ({
   task_id: faker.string.uuid(),
+  decisions: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+    counted: {
+      [faker.string.alphanumeric(5)]: faker.number.int(),
+    },
+    answers: {
+      [faker.string.alphanumeric(5)]: faker.number.int(),
+    },
+  },
   classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -4056,6 +4165,14 @@ export const getListStudyTemplatesResponseMock = (): StudyTemplateSummary[] =>
       first_read: faker.datatype.boolean(),
       start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
       split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+      decision: {
+        style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+        counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+        question: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 2, max: 200 } }),
+          null,
+        ]),
+      },
     },
     id: faker.string.uuid(),
     version: faker.number.int(),
@@ -4386,6 +4503,14 @@ export const getCreateStudyTemplateResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -4716,6 +4841,14 @@ export const getGetStudyTemplateResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -5046,6 +5179,14 @@ export const getEditStudyTemplateResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -5384,6 +5525,14 @@ export const getGetStudyTemplateVersionResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -5714,6 +5863,14 @@ export const getRetireStudyTemplateResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -6044,6 +6201,14 @@ export const getRestoreStudyTemplateResponseMock = (
     first_read: faker.datatype.boolean(),
     start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+    decision: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      question: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 2, max: 200 } }),
+        null,
+      ]),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),

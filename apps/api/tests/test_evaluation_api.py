@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from test_decision_styles import answer, task_of
 from test_reviewed_layer import Review, review
 
 pytestmark = pytest.mark.db
@@ -103,3 +104,24 @@ def test_reviewers_and_other_workspaces_do_not_see_the_evaluation(
     assert api(r.people["viewer"]).get(path).status_code == 200
     other = review(api, database)
     assert api(other.people["owner"]).get(path).status_code == 404
+
+
+def test_a_certainty_task_counts_three_ways_and_keeps_the_raw_spread(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    task = task_of(api, r, None)
+    given = {"first": {"T1": "5", "T2": "3", "C1": "1"}, "second": {"T1": "4", "T2": "2"}}
+    for who, answers in given.items():
+        for object_id, key in answers.items():
+            saved = answer(api, r, task, object_id, {"answer": key}, who)
+            assert saved.status_code == 200, saved.text
+    found = api(r.people["owner"]).get(f"/api/review-tasks/{task}/evaluation").json()
+    assert found["decisions"] == {
+        "style": "certainty",
+        "counts_as": ["disagree", "disagree", "unsure", "agree", "agree"],
+        "counted": {"agree": 2, "disagree": 2, "unsure": 1},
+        "answers": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1},
+    }
+    regions = next(item for item in found["overall"] if item["kind"] == "region")
+    assert (regions["true_positives"], regions["unsure"], regions["undecided"]) == (1, 0, 1)

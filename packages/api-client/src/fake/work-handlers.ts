@@ -208,6 +208,12 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
     reminder_days: [2, 1],
     study_template_id: null,
     study_template_version: null,
+    decision: {
+      style: "agree",
+      counts_as: ["disagree", "disagree", "unsure", "agree", "agree"],
+      question: null,
+    },
+    counts_as_changes: [],
     created_by_user_id: people[project.owner].id,
     created_at: `${task.sentOn}T09:00:00+02:00`,
     slide_count: task.slides,

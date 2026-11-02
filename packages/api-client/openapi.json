@@ -22020,6 +22020,11 @@
         ],
         "title": "AnnouncementKind"
       },
+      "Answer": {
+        "type": "string",
+        "maxLength": 10,
+        "minLength": 1
+      },
       "ApiToken": {
         "properties": {
           "id": {
@@ -23083,6 +23088,67 @@
         "maximum": 10000000.0,
         "minimum": -10000000.0
       },
+      "CountsAs": {
+        "items": {
+          "$ref": "#/components/schemas/VerdictValue"
+        },
+        "type": "array",
+        "maxItems": 5,
+        "minItems": 5
+      },
+      "CountsAsChange": {
+        "properties": {
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Changed At"
+          },
+          "changed_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By User Id"
+          },
+          "before": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Before"
+          },
+          "after": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "After"
+          },
+          "recounted": {
+            "type": "integer",
+            "title": "Recounted"
+          },
+          "reasons_dropped": {
+            "type": "integer",
+            "title": "Reasons Dropped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changed_at",
+          "changed_by_user_id",
+          "before",
+          "after",
+          "recounted",
+          "reasons_dropped"
+        ],
+        "title": "CountsAsChange"
+      },
       "CreatedServiceAccount": {
         "properties": {
           "account": {
@@ -23136,6 +23202,45 @@
         ],
         "title": "Decision"
       },
+      "DecisionCounts": {
+        "properties": {
+          "style": {
+            "$ref": "#/components/schemas/DecisionStyle"
+          },
+          "counts_as": {
+            "items": {
+              "$ref": "#/components/schemas/VerdictValue"
+            },
+            "type": "array",
+            "title": "Counts As"
+          },
+          "counted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/VerdictValue"
+            },
+            "type": "object",
+            "title": "Counted"
+          },
+          "answers": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "style",
+          "counts_as",
+          "counted",
+          "answers"
+        ],
+        "title": "DecisionCounts"
+      },
       "DecisionDraft": {
         "properties": {
           "decision": {
@@ -23159,6 +23264,52 @@
           "decision"
         ],
         "title": "DecisionDraft"
+      },
+      "DecisionQuestion": {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 2
+      },
+      "DecisionSettings": {
+        "properties": {
+          "style": {
+            "$ref": "#/components/schemas/DecisionStyle",
+            "default": "certainty"
+          },
+          "counts_as": {
+            "$ref": "#/components/schemas/CountsAs",
+            "default": [
+              "disagree",
+              "disagree",
+              "unsure",
+              "agree",
+              "agree"
+            ]
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DecisionSettings"
+      },
+      "DecisionStyle": {
+        "type": "string",
+        "enum": [
+          "certainty",
+          "agree",
+          "yes-no",
+          "blind"
+        ],
+        "title": "DecisionStyle"
       },
       "DisagreementReasons": {
         "properties": {
@@ -23469,6 +23620,9 @@
             "format": "uuid",
             "title": "Task Id"
           },
+          "decisions": {
+            "$ref": "#/components/schemas/DecisionCounts"
+          },
           "classes": {
             "items": {
               "$ref": "#/components/schemas/ClassMetrics"
@@ -23553,6 +23707,7 @@
         "type": "object",
         "required": [
           "task_id",
+          "decisions",
           "classes",
           "overall",
           "dice",
@@ -26623,6 +26778,19 @@
           "split": {
             "$ref": "#/components/schemas/TaskSplit",
             "default": "everyone"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionSettings",
+            "default": {
+              "style": "certainty",
+              "counts_as": [
+                "disagree",
+                "disagree",
+                "unsure",
+                "agree",
+                "agree"
+              ]
+            }
           }
         },
         "additionalProperties": false,
@@ -28255,6 +28423,16 @@
             ],
             "title": "Study Template Version"
           },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionSettings"
+          },
+          "counts_as_changes": {
+            "items": {
+              "$ref": "#/components/schemas/CountsAsChange"
+            },
+            "type": "array",
+            "title": "Counts As Changes"
+          },
           "created_by_user_id": {
             "anyOf": [
               {
@@ -28299,6 +28477,8 @@
           "reminder_days",
           "study_template_id",
           "study_template_version",
+          "decision",
+          "counts_as_changes",
           "created_by_user_id",
           "created_at",
           "slide_count",
@@ -28400,6 +28580,16 @@
             ],
             "title": "Study Template Version"
           },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionSettings"
+          },
+          "counts_as_changes": {
+            "items": {
+              "$ref": "#/components/schemas/CountsAsChange"
+            },
+            "type": "array",
+            "title": "Counts As Changes"
+          },
           "created_by_user_id": {
             "anyOf": [
               {
@@ -28451,6 +28641,8 @@
           "reminder_days",
           "study_template_id",
           "study_template_version",
+          "decision",
+          "counts_as_changes",
           "created_by_user_id",
           "created_at",
           "slide_count",
@@ -30749,6 +30941,16 @@
                 "type": "null"
               }
             ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -30895,6 +31097,16 @@
               }
             ],
             "title": "Study Template Version"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -31792,6 +32004,25 @@
             "type": "integer",
             "title": "Number"
           },
+          "style": {
+            "$ref": "#/components/schemas/DecisionStyle"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "answer_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Class Id"
+          },
           "value": {
             "$ref": "#/components/schemas/VerdictValue"
           },
@@ -31836,6 +32067,9 @@
           "object",
           "kind",
           "number",
+          "style",
+          "answer",
+          "answer_class_id",
           "value",
           "reasons",
           "reason_class_id",
@@ -31846,8 +32080,37 @@
       },
       "VerdictDraft": {
         "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Answer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "answer_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Class Id"
+          },
           "value": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerdictValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reasons": {
             "items": {
@@ -31881,9 +32144,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "value"
-        ],
         "title": "VerdictDraft"
       },
       "VerdictReason": {
@@ -31898,7 +32158,8 @@
           "need_deeper_level",
           "need_ihc",
           "border_unclear",
-          "out_of_focus"
+          "out_of_focus",
+          "need_second_look"
         ],
         "title": "VerdictReason"
       },

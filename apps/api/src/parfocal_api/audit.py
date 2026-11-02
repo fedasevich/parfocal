@@ -103,6 +103,7 @@ class AuditAction(StrEnum):
     PERSON_ERASED = "person.erased"
     PATIENT_DATA_EXPORTED = "patient.data-exported"
     PATIENT_ERASED = "patient.erased"
+    TASK_COUNTS_AS_CHANGED = "task.counts-as-changed"
 
 
 class AuditTarget(StrEnum):

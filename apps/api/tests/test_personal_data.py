@@ -27,8 +27,9 @@ def judge(database: str, s: Study, task_id: str, who: str, number: int) -> None:
     owner(
         database,
         "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
-        f"value) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', '{s.slides[0]}', "
-        f"'{s.people[who].user_id}', 'region', {number}, 'agree')",
+        f"value, style, answer) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
+        f"'{s.slides[0]}', '{s.people[who].user_id}', 'region', {number}, 'agree', 'agree', "
+        "'agree')",
     )
 
 

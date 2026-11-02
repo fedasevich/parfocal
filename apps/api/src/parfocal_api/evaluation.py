@@ -1,9 +1,10 @@
 import statistics
 import uuid
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import bindparam, select, text
+from sqlalchemy import bindparam, func, select, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.types import Integer, Uuid
@@ -14,6 +15,8 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
+    DecisionStyle,
+    VerdictValue,
     annotations,
     disagreement_decisions,
     opinions,
@@ -63,8 +66,16 @@ class OpinionOut(BaseModel):
     texts: list[str]
 
 
+class DecisionCounts(BaseModel):
+    style: DecisionStyle
+    counts_as: list[VerdictValue]
+    counted: dict[VerdictValue, int]
+    answers: dict[str, int]
+
+
 class Evaluation(BaseModel):
     task_id: uuid.UUID
+    decisions: DecisionCounts
     classes: list[ClassMetrics]
     overall: list[ClassMetrics]
     dice: dict[str, RateOut]
@@ -331,6 +342,28 @@ async def opinion_summaries(connection: AsyncConnection, task_id: uuid.UUID) -> 
     return out
 
 
+async def decision_counts(
+    connection: AsyncConnection, task: Any, names: dict[uuid.UUID, str]
+) -> DecisionCounts:
+    counted = dict.fromkeys(VerdictValue, 0)
+    answers: dict[str, int] = {}
+    rows = await connection.execute(
+        select(verdicts.c.value, verdicts.c.answer, verdicts.c.answer_class_id, func.count())
+        .where(verdicts.c.task_id == task.id)
+        .group_by(verdicts.c.value, verdicts.c.answer, verdicts.c.answer_class_id)
+    )
+    for value, answer, class_id, count in rows:
+        counted[VerdictValue(value)] += count
+        key = names.get(class_id, UNCLASSIFIED) if class_id is not None else answer
+        answers[key] = answers.get(key, 0) + count
+    return DecisionCounts(
+        style=DecisionStyle(task.decision_style),
+        counts_as=[VerdictValue(value) for value in task.counts_as],
+        counted=counted,
+        answers=dict(sorted(answers.items())),
+    )
+
+
 def fleiss_of(objects: list[engine.AiObject]) -> float | None:
     reviewers = {person for item in objects for person in item.verdicts}
     if len(reviewers) < 3:
@@ -363,6 +396,7 @@ async def get_task_evaluation(
     areas = await region_areas(connection, task_id, objects, added_regions, names)
     return Evaluation(
         task_id=task_id,
+        decisions=await decision_counts(connection, task, names),
         classes=[metrics(kind, name, counts) for (kind, name), counts in sorted(table.items())],
         overall=[metrics(kind, "all", engine.overall(table, kind)) for kind in ("region", "cell")],
         dice={name: rate(found) for name, found in engine.mean_dice(areas).items()},

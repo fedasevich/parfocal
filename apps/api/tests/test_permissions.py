@@ -459,7 +459,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listVerdicts": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts"),
     "getReviewOrder": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/order"),
     "saveVerdict": lambda w: Call(
-        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1", {"value": "agree"}
+        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1", {"answer": "4"}
     ),
     "clearVerdict": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1"
@@ -978,6 +978,8 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                     kind="region",
                     number=1,
                     value="disagree",
+                    style="agree",
+                    answer="disagree",
                     reasons=["not_class"],
                 )
             )

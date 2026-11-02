@@ -264,6 +264,12 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
     Math.max(total, 1);
   return {
     task_id: taskId,
+    decisions: {
+      style: "agree",
+      counts_as: ["disagree", "disagree", "unsure", "agree", "agree"],
+      counted: { agree: 0, disagree: 0, unsure: 2 },
+      answers: { unsure: 2 },
+    },
     classes: [tumor],
     overall: [tumor],
     dice: { Tumor: numbers.dice },

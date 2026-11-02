@@ -27,8 +27,9 @@ def seed_verdict(database: str, s: Study, task_id: str, who: str, value: str) ->
     owner(
         database,
         "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
-        f"value, reasons) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', '{s.slides[0]}', "
-        f"'{s.people[who].user_id}', 'cell', 1, '{value}', {reason})",
+        f"value, style, answer, reasons) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
+        f"'{s.slides[0]}', '{s.people[who].user_id}', 'cell', 1, '{value}', 'agree', '{value}', "
+        f"{reason})",
     )
 
 

@@ -178,6 +178,12 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   reminder_days: draft.reminder_days ?? [],
   study_template_id: draft.study_template_id ?? null,
   study_template_version: draft.study_template_version ?? null,
+  decision: {
+    style: draft.decision?.style ?? "certainty",
+    counts_as: draft.decision?.counts_as ?? ["disagree", "disagree", "unsure", "agree", "agree"],
+    question: draft.decision?.question ?? null,
+  },
+  counts_as_changes: [],
   created_by_user_id: people.DH.id,
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
   slide_count: draft.result_sets?.length ?? draft.slide_ids?.length ?? 0,
