@@ -2717,7 +2717,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
   Size: M.
 
-- [ ] AIP-003 · Tiers Best, Good, Fast
+- [x] AIP-003 · Tiers Best, Good, Fast
   Tier mapping per task and per site, set by the lab, with the exact model visible on hover.
   Done when API and component tests cover mapping and hover details.
   Refs mock §2.14, kit decision D5.

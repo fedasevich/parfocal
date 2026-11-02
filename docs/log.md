@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-03
 
+- AIP-003 (tiers Best, Good, Fast) maps tumor, outline and typer to an exact model and version per tier in each workspace (migration 0076, model_tiers), lists it at /api/tenant/model-tiers with hover labels, lets admins set or reset a tier with audit, and lets a model run start by tier and record it, which fills the tier field job progress left empty. The annotate view reads the real route instead of the draft, and Fast stays empty on the server while the web shows the in-browser model.
 - WL-017 (filter popover) added Project, Status, Result set and Reviewer chips to the All slides tab with a new kit FilterChip, kept in the URL and applied by the fake slides endpoint, with unit, Storybook and web E2E tests including reload. The Remote chip waits for REMOTE-001.
 - AITUM-002 (heatmap layer) colours a probability grid on the CPU with viridis, inferno and turbo tables, leaves cells under the threshold transparent and defaults to viridis, threshold 0.08 and opacity 0.7 from the mock. The model source is data for now, and VIZ-003 and VIZ-007 draw the chip in the layers legend. New goldens cover inferno, turbo and a raised threshold, with 17 unit tests.
 
