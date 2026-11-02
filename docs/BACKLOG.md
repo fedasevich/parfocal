@@ -989,7 +989,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 32, [`poc/scripts/tiff-to-zarr.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tiff-to-zarr.mjs), [`poc/server/tools/ome_tiff_to_zarr16.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/ome_tiff_to_zarr16.py).
   Size: L.
 
-- [ ] INGEST-016 · 16-bit big-endian BigTIFF handling
+- [x] INGEST-016 · 16-bit big-endian BigTIFF handling
   The browser reader misreads 64-bit offsets on big-endian BigTIFF. Detect at ingest and fix it with the sidecar index or the conversion trigger.
   Done when the MxIF fixture opens correctly.
   Refs doc 32.
