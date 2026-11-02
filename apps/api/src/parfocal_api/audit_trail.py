@@ -201,7 +201,9 @@ async def filtered(connection: AsyncConnection, filters: AuditFilters) -> Select
                 ),
                 and_(
                     audit_events.c.target_type == AuditTarget.SLIDE,
-                    audit_events.c.action == AuditAction.SLIDE_RESTRICTED_IMAGE_VIEWED,
+                    audit_events.c.action.in_(
+                        [AuditAction.SLIDE_RESTRICTED_IMAGE_VIEWED, AuditAction.SLIDE_OPENED]
+                    ),
                     audit_events.c.target_id.in_(
                         select(slides.c.id).where(slides.c.case_id.in_(their_cases))
                     ),

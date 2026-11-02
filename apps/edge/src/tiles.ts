@@ -7,6 +7,14 @@ export type TileEnv = {
 
 export type Clock = () => number;
 
+export type TileRead = { readonly tenant: string; readonly slide: string };
+
+export type TileLog = (read: TileRead) => void;
+
+export const consoleTileLog: TileLog = ({ tenant, slide }) => {
+  console.log(JSON.stringify({ tenant, slide }));
+};
+
 type Span = { readonly offset: number; readonly length?: number } | { readonly suffix: number };
 
 const TILES_PREFIX = "/tiles/";
@@ -128,7 +136,12 @@ async function serve(request: Request, env: TileEnv, key: string, span: Span | n
   return new Response(object.body, { status: 206, headers });
 }
 
-export async function handleTiles(request: Request, env: TileEnv, now: Clock): Promise<Response> {
+export async function handleTiles(
+  request: Request,
+  env: TileEnv,
+  now: Clock,
+  log: TileLog = consoleTileLog,
+): Promise<Response> {
   const url = new URL(request.url);
   const [slide = "", name = "", ...rest] = url.pathname.slice(TILES_PREFIX.length).split("/");
   if (rest.length > 0 || !FILE_NAME.test(name)) {
@@ -151,6 +164,7 @@ export async function handleTiles(request: Request, env: TileEnv, now: Clock): P
   if (capability.slide !== slide) {
     return problem(403, "tile-token-other-slide", "The capability token is for another slide");
   }
+  log({ tenant: capability.tenant, slide: capability.slide });
   const span = spanOf(request.headers.get("Range"));
   if (span === "invalid") {
     return problem(416, "range-not-satisfiable", "Only one byte range is served per request");

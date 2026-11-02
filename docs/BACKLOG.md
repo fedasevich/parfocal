@@ -1021,7 +1021,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when perf suites can run at 0, 50, 100 and 200 ms RTT.
   Refs [`poc/scripts/latency-proxy.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/latency-proxy.mjs).
 
-- [ ] TILES-007 · Access logging for tiles without PHI
+- [x] TILES-007 · Access logging for tiles without PHI
   Done when a test confirms tile access logs carry slide id and tenant id only, and aggregate slide-open events go to the audit log once per open, not per tile.
 
 ---

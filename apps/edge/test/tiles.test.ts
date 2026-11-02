@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { describe, test } from "node:test";
+import { describe, mock, test } from "node:test";
 import {
   type Capability,
   overlapsRestricted,
@@ -8,7 +8,7 @@ import {
   signingKey,
   verifyCapability,
 } from "../src/capability.ts";
-import { handleTiles, type TileEnv } from "../src/tiles.ts";
+import { consoleTileLog, handleTiles, type TileEnv, type TileRead } from "../src/tiles.ts";
 
 type Vector = {
   secret: string;
@@ -28,6 +28,7 @@ const OTHER_SLIDE = "44444444-4444-4444-8444-444444444444";
 const NOW = 1_800_000_000;
 const SIZE = 10_000;
 const LABEL: [number, number] = [4000, 5000];
+const logged: TileRead[] = [];
 
 function bytesOf(size: number, seed: number): Uint8Array {
   return Uint8Array.from({ length: size }, (_, index) => (index * 7 + seed) % 251);
@@ -117,6 +118,7 @@ async function request(
     new Request(`https://parfocal.test${path}`, { method, headers }),
     env,
     () => now,
+    (read) => logged.push(read),
   );
 }
 
@@ -277,5 +279,40 @@ describe("the tile gateway", () => {
       assert.equal((await request(bucket, path, token)).status, 404, path);
     }
     assert.deepEqual(bucket.reads, []);
+  });
+});
+
+describe("tile access logs", () => {
+  test("every served tile request logs the tenant id and slide id and nothing else", async () => {
+    const bucket = lab();
+    const token = await tokenFor();
+    logged.length = 0;
+    await request(bucket, ORIGINAL, token, "bytes=0-99");
+    await request(bucket, ORIGINAL, token, "bytes=6000-6999");
+    await request(bucket, `/tiles/${SLIDE}/levels.json`, token, undefined, NOW, "HEAD");
+    await request(bucket, ORIGINAL, token, `bytes=${LABEL[0]}-${LABEL[1]}`);
+    assert.deepEqual(logged, Array(4).fill({ tenant: TENANT, slide: SLIDE }));
+    assert.ok(logged.every((read) => Object.keys(read).join() === "tenant,slide"));
+  });
+
+  test("a request without a valid token for the slide logs nothing", async () => {
+    const bucket = lab();
+    logged.length = 0;
+    await request(bucket, ORIGINAL, null);
+    await request(bucket, ORIGINAL, await tokenFor({}, OTHER_SECRET));
+    await request(bucket, ORIGINAL, await tokenFor(), undefined, NOW + 601);
+    await request(bucket, `/tiles/${OTHER_SLIDE}/original.svs`, await tokenFor());
+    assert.deepEqual(logged, []);
+  });
+
+  test("the Worker writes one JSON line with only the two ids", () => {
+    const lines: unknown[][] = [];
+    const spy = mock.method(console, "log", (...line: unknown[]) => lines.push(line));
+    try {
+      consoleTileLog({ tenant: TENANT, slide: SLIDE, token: "secret" } as TileRead);
+    } finally {
+      spy.mock.restore();
+    }
+    assert.deepEqual(lines, [[JSON.stringify({ tenant: TENANT, slide: SLIDE })]]);
   });
 });

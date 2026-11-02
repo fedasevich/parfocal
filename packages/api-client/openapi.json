@@ -12019,6 +12019,22 @@
               "format": "uuid",
               "title": "Slide Id"
             }
+          },
+          {
+            "name": "previous-tile-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Previous-Tile-Token"
+            }
           }
         ],
         "responses": {

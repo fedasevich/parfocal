@@ -6,12 +6,13 @@ import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
-from typing import Any
+from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Header, Response
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
@@ -23,6 +24,7 @@ from parfocal_common.object_store import ObjectStore, StorageError
 
 TOKEN_VERSION = 1
 TOKEN_SECONDS = 10 * 60
+REFRESH_GRACE_SECONDS = 60
 
 type ByteRange = tuple[int, int]
 
@@ -53,11 +55,49 @@ def base64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
+def key_of(secret: str) -> bytes:
+    return base64.urlsafe_b64decode(secret.replace("+", "-").replace("/", "_"))
+
+
 def sign_capability(secret: str, claims: dict[str, Any]) -> str:
     payload = base64url(json.dumps(claims, separators=(",", ":"), sort_keys=True).encode())
-    key = base64.urlsafe_b64decode(secret.replace("+", "-").replace("/", "_"))
-    signature = hmac.new(key, payload.encode(), hashlib.sha256).digest()
+    signature = hmac.new(key_of(secret), payload.encode(), hashlib.sha256).digest()
     return f"{payload}.{base64url(signature)}"
+
+
+def unbase64url(text: str) -> bytes:
+    return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+
+
+def verified_claims(secret: str, token: str) -> dict[str, Any] | None:
+    payload, _, signature = token.partition(".")
+    expected = hmac.new(key_of(secret), payload.encode(), hashlib.sha256).digest()
+    try:
+        if not hmac.compare_digest(unbase64url(signature), expected):
+            return None
+        claims: object = json.loads(unbase64url(payload))
+    except ValueError:
+        return None
+    if not isinstance(claims, dict):
+        return None
+    return {str(name): value for name, value in cast("dict[object, Any]", claims).items()}
+
+
+def viewer_of(actor: Actor) -> str:
+    identity = f"{actor.kind}:{actor.subject or actor.service_id}"
+    return base64url(hashlib.sha256(identity.encode()).digest()[:12])
+
+
+def continues_an_open(
+    secret: str, previous: str | None, expected: dict[str, Any], now: int
+) -> bool:
+    if previous is None:
+        return False
+    claims = verified_claims(secret, previous)
+    if claims is None or not isinstance(claims.get("e"), int):
+        return False
+    same = all(claims.get(name) == value for name, value in expected.items())
+    return same and claims["e"] + REFRESH_GRACE_SECONDS >= now
 
 
 def parsed_ranges(body: bytes) -> list[ByteRange]:
@@ -84,6 +124,7 @@ async def get_tile_access(
     connection: TenantConnection,
     store: Store,
     settings: Settings,
+    previous_tile_token: Annotated[str | None, Header()] = None,
 ) -> TileAccess:
     row = (
         await connection.execute(
@@ -113,20 +154,36 @@ async def get_tile_access(
     if settings.tile_token_key is None:
         raise TileAccessNotConfiguredError
     response.headers["Cache-Control"] = "private, no-store"
-    ranges = await restricted_ranges(store, row.tenant_id, slide_id, row.file_bytes)
-    expires = int(datetime.now(UTC).timestamp()) + TOKEN_SECONDS
-    original = PurePosixPath(row.original_key).name
-    claims = {
+    secret = settings.tile_token_key.get_secret_value()
+    actor = actor_of(principal)
+    now = int(datetime.now(UTC).timestamp())
+    viewer = {
         "v": TOKEN_VERSION,
         "t": str(row.tenant_id),
         "s": str(slide_id),
+        "a": viewer_of(actor),
+    }
+    if not continues_an_open(secret, previous_tile_token, viewer, now):
+        await record(
+            connection,
+            actor,
+            AuditAction.SLIDE_OPENED,
+            AuditTarget.SLIDE,
+            slide_id,
+            tenant_id=row.tenant_id,
+        )
+    ranges = await restricted_ranges(store, row.tenant_id, slide_id, row.file_bytes)
+    expires = now + TOKEN_SECONDS
+    original = PurePosixPath(row.original_key).name
+    claims = {
+        **viewer,
         "o": original,
         "n": row.file_bytes,
         "d": [list(span) for span in ranges],
         "e": expires,
     }
     return TileAccess(
-        token=sign_capability(settings.tile_token_key.get_secret_value(), claims),
+        token=sign_capability(secret, claims),
         expires_at=datetime.fromtimestamp(expires, UTC),
         lifetime_seconds=TOKEN_SECONDS,
         base_path=f"/tiles/{slide_id}/",

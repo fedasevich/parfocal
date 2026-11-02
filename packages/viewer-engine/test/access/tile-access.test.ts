@@ -13,13 +13,16 @@ const URL = "/tiles/slide/original.svs";
 class Lab {
   nowMs = START_MS;
   mints = 0;
+  readonly previous: (string | null)[] = [];
+  readonly issued: string[] = [];
   secret = SECRET;
   readonly refusals: string[] = [];
 
   readonly clock = () => this.nowMs;
 
-  readonly mint = async () => {
+  readonly mint = async (previous: string | null) => {
     this.mints += 1;
+    this.previous.push(previous);
     const token = await signCapability(
       {
         tenant: "tenant",
@@ -31,6 +34,7 @@ class Lab {
       },
       await signingKey(this.secret),
     );
+    this.issued.push(token);
     return { token, lifetimeSeconds: LIFETIME_SECONDS };
   };
 
@@ -92,6 +96,15 @@ describe("tile access", () => {
     );
     assert.ok(statuses.every((response) => response.status === 206));
     assert.equal(lab.mints, 2);
+  });
+
+  test("each renewal hands back the token it replaces, so the API audits one open", async () => {
+    const lab = new Lab();
+    const access = new TileAccess(lab.mint, lab.clock);
+    await viewFor(lab, access, TWO_HOURS_MS, 7_000);
+    await access.token();
+    assert.ok(lab.mints > 2);
+    assert.deepEqual(lab.previous, [null, ...lab.issued.slice(0, -1)]);
   });
 
   test("a refused token is replaced and the tile asked again once", async () => {

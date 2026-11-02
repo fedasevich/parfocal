@@ -3,7 +3,7 @@ export type MintedAccess = {
   readonly lifetimeSeconds: number;
 };
 
-export type Mint = () => Promise<MintedAccess>;
+export type Mint = (previous: string | null) => Promise<MintedAccess>;
 export type Clock = () => number;
 export type Fetcher = (input: string, init: RequestInit) => Promise<Response>;
 
@@ -59,7 +59,7 @@ export class TileAccess {
 
   private async minted(): Promise<Held> {
     const issuedAt = this.now();
-    const access = await this.mint();
+    const access = await this.mint(this.held?.token ?? null);
     const lifetimeMs = access.lifetimeSeconds * 1000;
     const held = {
       token: access.token,

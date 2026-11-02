@@ -15,8 +15,14 @@ from pydantic import SecretStr
 from storage_support import with_store
 from workspace_support import join_project, make_project, make_slide, make_workspace, owner
 
+from parfocal_api.audit import actor_of
 from parfocal_api.tables import Role
-from parfocal_api.tile_access import TOKEN_SECONDS, sign_capability
+from parfocal_api.tile_access import (
+    REFRESH_GRACE_SECONDS,
+    TOKEN_SECONDS,
+    sign_capability,
+    viewer_of,
+)
 from parfocal_common.ingest import original_key, restricted_ranges_key
 from parfocal_common.object_store import StorageLocation
 
@@ -50,13 +56,21 @@ class Lab:
     slide: uuid.UUID
     bare: uuid.UUID
     unstored: uuid.UUID
+    patient: str
+    patients_slide: uuid.UUID
 
     def path(self, slide: uuid.UUID) -> str:
         return f"/api/slides/{slide}/tile-access"
 
 
-def stored_slide(database: str, tenant_id: uuid.UUID, project: uuid.UUID, label: str) -> uuid.UUID:
-    slide = make_slide(database, tenant_id, project, label)
+def stored_slide(
+    database: str,
+    tenant_id: uuid.UUID,
+    project: uuid.UUID,
+    label: str,
+    case_id: uuid.UUID | None = None,
+) -> uuid.UUID:
+    slide = make_slide(database, tenant_id, project, label, case_id)
     key = original_key(tenant_id, slide, "upload.svs")
     owner(
         database,
@@ -68,11 +82,21 @@ def stored_slide(database: str, tenant_id: uuid.UUID, project: uuid.UUID, label:
 @pytest.fixture(scope="module")
 def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
     assert storage.bucket
-    workspace = make_workspace(database, {"owner": Role.RESEARCHER, "unassigned": Role.REVIEWER})
+    workspace = make_workspace(
+        database,
+        {
+            "owner": Role.RESEARCHER,
+            "colleague": Role.RESEARCHER,
+            "admin": Role.RESEARCHER,
+            "unassigned": Role.REVIEWER,
+        },
+        admins={"admin"},
+    )
     people: dict[str, Any] = dict(workspace.people)
     people["outsider"] = make_workspace(database, {"outsider": Role.RESEARCHER}).people["outsider"]
     project = make_project(database, workspace.tenant_id)
     join_project(database, project, people["owner"], "owner")
+    join_project(database, project, people["colleague"], "owner")
     join_project(database, project, people["unassigned"], "reviewer")
     slide = stored_slide(database, workspace.tenant_id, project, "A1")
     bare = stored_slide(database, workspace.tenant_id, project, "A2")
@@ -82,7 +106,24 @@ def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
     with_store(lambda store: store.put_object(key, body, "application/json"))
     with api_as(database) as api:
         api.app.settings = api.app.settings.model_copy(update={"tile_token_key": SecretStr(SECRET)})
-        yield Lab(api, workspace.tenant_id, people, slide, bare, unstored)
+        case = api(people["owner"]).post(
+            "/api/cases",
+            json={"project_id": str(project), "label": "C-1", "patient": {"name": "Jana Nováková"}},
+        )
+        assert case.status_code == 201, case.text
+        patients_slide = stored_slide(
+            database, workspace.tenant_id, project, "B1", uuid.UUID(case.json()["id"])
+        )
+        yield Lab(
+            api,
+            workspace.tenant_id,
+            people,
+            slide,
+            bare,
+            unstored,
+            case.json()["patient"]["id"],
+            patients_slide,
+        )
 
 
 @pytest.mark.db
@@ -137,3 +178,81 @@ def test_no_token_is_signed_without_a_key(lab: Lab) -> None:
         lab.api.app.settings = configured
     assert response.status_code == 503
     assert response.json()["code"] == "tile-access-not-configured"
+
+
+def opens(database: str, lab: Lab, slide: uuid.UUID) -> list[tuple[Any, ...]]:
+    return owner(
+        database,
+        "SELECT target_type, actor_id, details FROM audit_events "
+        f"WHERE tenant_id = '{lab.tenant_id}' AND action = 'slide.opened' "
+        f"AND target_id = '{slide}' ORDER BY seq",
+    )
+
+
+def mint(lab: Lab, who: str, slide: uuid.UUID, previous: str | None = None) -> str:
+    headers = {} if previous is None else {"Previous-Tile-Token": previous}
+    response = lab.api(lab.people[who]).get(lab.path(slide), headers=headers)
+    assert response.status_code == 200, response.text
+    token: str = response.json()["token"]
+    return token
+
+
+def resigned(token: str, **changes: Any) -> str:
+    return sign_capability(SECRET, claims_of(token) | changes)
+
+
+@pytest.mark.db
+def test_opening_a_slide_records_one_audit_entry_and_refreshing_records_none(
+    database: str, lab: Lab
+) -> None:
+    before = len(opens(database, lab, lab.bare))
+    first = mint(lab, "owner", lab.bare)
+    second = mint(lab, "owner", lab.bare, previous=first)
+    mint(lab, "owner", lab.bare, previous=second)
+    entries = opens(database, lab, lab.bare)[before:]
+    assert len(entries) == 1
+    assert entries[0][0] == "slide"
+    assert json.loads(entries[0][2]) == {}
+    assert claims_of(first)["a"] == viewer_of(actor_of(lab.people["owner"]))
+
+
+@pytest.mark.db
+def test_a_previous_token_that_does_not_continue_the_open_records_a_new_one(
+    database: str, lab: Lab
+) -> None:
+    held = mint(lab, "owner", lab.bare)
+    stale = int(time.time()) - REFRESH_GRACE_SECONDS - 5
+    payload, signature = held.split(".")
+    forged = f"{payload}.{signature[::-1]}"
+    other_slide = mint(lab, "owner", lab.slide)
+    for previous in [
+        resigned(held, e=stale),
+        forged,
+        other_slide,
+        "not-a-token",
+        sign_capability(base64.b64encode(b"y" * 32).decode(), claims_of(held)),
+    ]:
+        before = len(opens(database, lab, lab.bare))
+        mint(lab, "owner", lab.bare, previous=previous)
+        assert len(opens(database, lab, lab.bare)) == before + 1
+    before = len(opens(database, lab, lab.bare))
+    mint(lab, "colleague", lab.bare, previous=held)
+    assert len(opens(database, lab, lab.bare)) == before + 1
+
+
+@pytest.mark.db
+def test_a_refused_token_records_no_open(database: str, lab: Lab) -> None:
+    before = len(opens(database, lab, lab.slide))
+    assert lab.api(lab.people["unassigned"]).get(lab.path(lab.slide)).status_code == 404
+    assert len(opens(database, lab, lab.slide)) == before
+
+
+@pytest.mark.db
+def test_a_slide_open_shows_in_the_patients_audit_trail(lab: Lab) -> None:
+    mint(lab, "colleague", lab.patients_slide)
+    response = lab.api(lab.people["admin"]).get(
+        "/api/tenant/audit-events", params={"patient_id": lab.patient}
+    )
+    assert response.status_code == 200, response.text
+    opened = [event for event in response.json() if event["action"] == "slide.opened"]
+    assert [event["target_id"] for event in opened] == [str(lab.patients_slide)]

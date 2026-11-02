@@ -68,6 +68,7 @@ class AuditAction(StrEnum):
     UPLOAD_PAIRED = "upload.paired"
     SLIDE_PUBLISHED = "slide.published"
     SLIDE_RESTRICTED_IMAGE_VIEWED = "slide.restricted-image-viewed"
+    SLIDE_OPENED = "slide.opened"
     TASK_CREATED = "task.created"
     TASK_CHANGED = "task.changed"
     TASK_REVIEW_SUBMITTED = "task.review-submitted"
