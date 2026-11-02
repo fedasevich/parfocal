@@ -308,7 +308,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR shows how a guest from organisation B reads one view of one case in organisation A without any other access, with the test plan for it.
   Decided in [ADR 0020](adr/0020-authorization-rls-scopes-and-rbac.md).
 
-- [ ] STACK-024 · Realtime transport
+- [x] STACK-024 · Realtime transport
   Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare Durable Objects with WebSocket Hibernation, one room per case and one per user. Durable Objects carry ephemeral events only and Postgres stays the system of record. FastAPI posts events to a room over an authenticated internal route, and clients refetch on reconnect.
   Done when the spike shows presence and a thread update reaching two browsers under 300 ms on staging.
 

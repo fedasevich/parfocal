@@ -1,6 +1,6 @@
 {
   "extends": "@parfocal/typescript-config/cloudflare.json",
-  "include": ["test"],
+  "include": ["test", "spike"],
   "compilerOptions": {
     "types": ["@cloudflare/workers-types", "node"]
   }
