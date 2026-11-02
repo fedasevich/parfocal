@@ -1115,7 +1115,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a test confirms tile access logs carry slide id and tenant id only, and aggregate slide-open events go to the audit log once per open, not per tile.
 
 
-- [ ] TILES-008 · Refuse a malformed capability token with 401
+- [x] TILES-008 · Refuse a malformed capability token with 401
   `verifyCapability` in `apps/edge/src/capability.ts` throws on a token such as `a.b` whose parts are not valid base64, so the edge answers 500 instead of 401. Found by SKEL-006 (open the slide in Viv) on 2026-11-02.
   Done when edge tests send tokens with bad base64, a missing part and a wrong signature, and each gets 401 with reason `malformed` or `bad-signature`, never 500.
   Size: S.

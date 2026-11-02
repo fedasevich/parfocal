@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-03
 
+- TILES-008 (malformed capability token) makes verifyCapability answer 401 with reason malformed for bad base64 or an empty part instead of a 500, and a wrong signature now has the reason bad-signature. Edge tests cover all three and check the security headers stay on the 401.
 - ANN-001 (annotation document model in the client) adds apps/web/src/annotations, an immutable document with nine shape kinds and groups that keeps columnar model runs apart from editable shapes. promoteRunPiece copies a piece into a polygon with model, version and run as provenance, and deleting it brings the piece back. Shape ids are local until SKEL-007 maps them to server object ids.
 - CASES-009 (search API) meets its 100 ms p95 on 100,000 cases: migration 0077 stores lowercase copies of project, case and slide labels and search matches them with LIKE, because row-level security keeps the planner from indexing ILIKE. p95 fell from 48 to 59 ms to 24 to 25 ms over three runs on the Mac, and the test is unchanged.
 - NAV-001 (magnification bar) is a folding bar on the live slide, driven by the engine camera, with presets on Alt+1 to Alt+6 through the key registry and a shared blocked-rect function for overlays. Brightness is a CSS stand-in until VIZ-007, and the zoom-percent label exists on the component but the magnification_label setting has no such value yet.
