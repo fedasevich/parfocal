@@ -56,6 +56,8 @@ test("every Run a model scene opens from the prototype index on fake data", asyn
 test("Run starts the job, the tray shows it and its row opens the job window", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto(`/projects/${p07}/run-model?scene=pick`);
+  await runModel(page).getByRole("heading", { name: "Slides", exact: true }).click();
+  await expect(page.getByRole("listbox", { name: "Slides matches" })).toBeHidden();
   await page.getByRole("button", { name: /PathoSAM \+ HoVer-NeXt/ }).click();
   await page.getByRole("option", { name: /CAMELYON tumor model/ }).click();
   await expect(runModel(page)).toContainText("About 8 min, done around");

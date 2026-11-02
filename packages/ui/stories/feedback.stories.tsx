@@ -206,6 +206,9 @@ export const ProgressBars: Story = {
       <ProgressBar label="Lenka Malá" valueText="7 of 12" value={58} tone="ok" />
       <ProgressBar label="Jan Růžička" valueText="2 of 12" value={17} tone="warn" />
       <ProgressBar label="Upload" valueText="Failed" value={64} tone="bad" />
+      <ProgressBar label="Waiting in the queue" valueText="Not started" value={0} />
+      <ProgressBar label="Reading the file" valueText="Starting" value={null} />
+      <ProgressBar label="Report" valueText="Done" value={100} tone="ok" />
     </div>
   ),
 };
@@ -216,6 +219,8 @@ export const ProgressRings: Story = {
       <ProgressRing split={{ agree: 0, disagree: 0, unsure: 0, open: 55 }} />
       <ProgressRing split={{ agree: 20, disagree: 6, unsure: 4, open: 25 }} />
       <ProgressRing split={{ agree: 38, disagree: 11, unsure: 6, open: 0 }} size={56} />
+      <ProgressRing split={{ agree: 12, disagree: 0, unsure: 0, open: 3 }} size={56} />
+      <ProgressRing split={{ agree: 0, disagree: 9, unsure: 0, open: 1 }} size={24} />
     </div>
   ),
 };
@@ -225,6 +230,8 @@ export const StackedBars: Story = {
     <div className="grid w-96 gap-4">
       <StackedBar split={{ agree: 0, unsure: 0, disagree: 0 }} />
       <StackedBar split={{ agree: 38, unsure: 6, disagree: 11 }} />
+      <StackedBar split={{ agree: 7, unsure: 0, disagree: 0 }} />
+      <StackedBar split={{ agree: 1, unsure: 1, disagree: 12 }} />
     </div>
   ),
 };
