@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, BackgroundTasks, Request, status
 from fastapi.encoders import jsonable_encoder
 from geoalchemy2 import Geometry
 from pydantic import BaseModel
@@ -35,6 +35,7 @@ from parfocal_api.identifiers import load_keys, read_patient
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
+from parfocal_api.realtime import RealtimeClient
 from parfocal_api.restricted_images import delete_restricted_images, shown
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
@@ -443,6 +444,8 @@ async def erase_person(
     request: Request,
     principal: CurrentPrincipal,
     connection: PlatformConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> ErasedPerson:
     subject = await connection.scalar(select(users.c.subject).where(users.c.id == user_id))
     if subject is None:
@@ -463,11 +466,13 @@ async def erase_person(
         update(memberships).where(memberships.c.user_id == user_id).values(availability_note=None)
     )
     removed = kept = 0
-    for tenant_id in list(
+    workspaces = list(
         await connection.scalars(
             select(memberships.c.tenant_id).where(memberships.c.user_id == user_id)
         )
-    ):
+    )
+    for tenant_id in workspaces:
+        background.add_task(live.revoke, tenant_id, user_id, None)
         try:
             async with connection.begin_nested():
                 await connection.execute(

@@ -1,0 +1,17 @@
+{
+  "secret": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "claims": {
+    "v": 1,
+    "t": "7d3f1c2e-0000-4000-8000-000000000001",
+    "r": "slide:7d3f1c2e-0000-4000-8000-000000000002",
+    "u": "7d3f1c2e-0000-4000-8000-000000000003",
+    "p": "7d3f1c2e-0000-4000-8000-000000000004",
+    "e": 1800000000
+  },
+  "token": "eyJlIjoxODAwMDAwMDAwLCJwIjoiN2QzZjFjMmUtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDA0IiwiciI6InNsaWRlOjdkM2YxYzJlLTAwMDAtNDAwMC04MDAwLTAwMDAwMDAwMDAwMiIsInQiOiI3ZDNmMWMyZS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJ1IjoiN2QzZjFjMmUtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAzIiwidiI6MX0.tt8QXn1AxDoHe6c0XWmzwHLyQEIMPOQvcuGTxA2NqqY",
+  "publish": {
+    "stamp": 1800000000,
+    "body": "{\"event\":{\"ids\":{\"slide\":\"7d3f1c2e-0000-4000-8000-000000000002\"},\"kind\":\"slide.changed\"},\"rooms\":[\"slide:7d3f1c2e-0000-4000-8000-000000000002\"],\"tenant\":\"7d3f1c2e-0000-4000-8000-000000000001\"}",
+    "signature": "1800000000.PvAtZptYUKMuy3qv9sfJfw60nzLbv03RgiaBz7T1JiU"
+  }
+}

@@ -100,10 +100,10 @@ Durable Object rooms per slide, per task and per user carry ephemeral events, an
 
 | ID | STRIDE | Threat | Rating | Mitigation | Task |
 |---|---|---|---|---|---|
-| R1 | S, E | A client joins another tenant's room | High | Room tokens signed by the API and scoped to tenant and room, with a test that a user never receives another tenant's events | COLLAB-001 (realtime infrastructure) |
-| R2 | E | A socket stays open after its owner leaves the project or the workspace | Medium | Room tokens expire within minutes and a reconnect rechecks the grant, and a removal closes the person's sockets | COLLAB-001 |
-| R3 | I | An event carries patient data to everyone in a room | Medium | Events carry ids and kinds only, and clients refetch through the API | COLLAB-001 |
-| R4 | T | A client sends forged events to a room | Medium | Rooms accept events only from the API, and client frames are limited to presence | COLLAB-001 |
+| R1 | S, E | A client joins another tenant's room | High | Room tokens signed by the API and scoped to tenant and room, with a test that a user never receives another tenant's events. Built and tested in COLLAB-001: the Durable Object is named by the token's tenant and room ([ADR 0140](../adr/0140-realtime-rooms-and-room-tokens.md), realtime rooms and room tokens) | COLLAB-001 (realtime infrastructure) |
+| R2 | E | A socket stays open after its owner leaves the project or the workspace | Medium | Room tokens expire within minutes and a reconnect rechecks the grant, and a removal closes the person's sockets. Built and tested in COLLAB-001 with five-minute tokens renewed through the API and revokes from `removeProjectMember` and `erasePerson` (ADR 0140) | COLLAB-001 |
+| R3 | I | An event carries patient data to everyone in a room | Medium | Events carry ids and kinds only, and clients refetch through the API. Checked by the API model and again at the edge (ADR 0140) | COLLAB-001 |
+| R4 | T | A client sends forged events to a room | Medium | Rooms accept events only from the API through a signed internal call, and client frames are limited to ping and token renewal, never passed on (ADR 0140) | COLLAB-001 |
 | R5 | D | Floods of connections or frames | Low | Per user connection limits and frame size limits | SEC-012 |
 
 ## Changes made with this model

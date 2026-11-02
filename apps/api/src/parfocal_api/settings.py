@@ -31,6 +31,8 @@ class ApiSettings(StorageSettings):
     zitadel_client_id: str
     zitadel_client_secret: SecretStr
     tile_token_key: SecretStr | None = None
+    room_token_key: SecretStr | None = None
+    realtime_internal_url: AnyHttpUrl | None = None
     rate_limit_person_per_minute: PositiveInt = 600
     rate_limit_tenant_per_minute: PositiveInt = 3000
     upload_max_bytes: Annotated[int, Field(ge=1, le=MAX_PARTS * MAX_PART_BYTES)] = (

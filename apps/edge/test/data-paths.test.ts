@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { signCapability, signingKey } from "../src/capability.ts";
-import worker from "../src/index.ts";
-import type { TileEnv } from "../src/tiles.ts";
+import worker, { type EdgeEnv } from "../src/index.ts";
 
 const SECRET = btoa("k".repeat(32));
 const TENANT = "11111111-1111-4111-8111-111111111111";
@@ -13,7 +12,12 @@ const emptyBucket = {
   head: () => Promise.resolve(null),
 } as unknown as R2Bucket;
 
-const env = { SLIDES: emptyBucket, TILE_TOKEN_KEY: SECRET } satisfies TileEnv;
+const env = {
+  SLIDES: emptyBucket,
+  TILE_TOKEN_KEY: SECRET,
+  ROOMS: {} as DurableObjectNamespace,
+  ROOM_TOKEN_KEY: SECRET,
+} satisfies EdgeEnv;
 
 async function token(): Promise<string> {
   return signCapability(
@@ -30,7 +34,11 @@ async function token(): Promise<string> {
 }
 
 async function fetchPath(path: string, headers: HeadersInit = {}): Promise<Response> {
-  return worker.fetch(new Request(`https://parfocal.test${path}`, { headers }), env);
+  return worker.fetch(
+    new Request(`https://parfocal.test${path}`, { headers }),
+    env,
+    {} as ExecutionContext,
+  );
 }
 
 async function assertRealNotFound(response: Response, path: string): Promise<void> {

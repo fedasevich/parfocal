@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, BackgroundTasks, Response
 from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import delete, func, insert, literal_column, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -16,6 +16,7 @@ from parfocal_api.permissions import Permission, require, sign_out_right
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import emergency_open, require_reading, role_in
+from parfocal_api.realtime import RealtimeClient
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -497,6 +498,8 @@ async def remove_project_member(
     user_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> None:
     row = await owned(connection, principal, project_id)
     if row.archived_at is not None:
@@ -521,3 +524,4 @@ async def remove_project_member(
         tenant_id=row.tenant_id,
         details={"project_id": str(project_id), "from": before},
     )
+    background.add_task(live.revoke, row.tenant_id, user_id, project_id)

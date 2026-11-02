@@ -2891,6 +2891,14 @@ export interface RoleChange {
   role: Role;
 }
 
+export interface RoomAccess {
+  token: string;
+  expires_at: string;
+  lifetime_seconds: number;
+  path: string;
+  protocol: string;
+}
+
 export interface RunArea {
   seq: number;
   stage: string;
@@ -21874,6 +21882,193 @@ export function useGetTileAccess<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTileAccessQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getRoomAccessResponse200 = {
+  data: RoomAccess;
+  status: 200;
+};
+
+export type getRoomAccessResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRoomAccessResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRoomAccessResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRoomAccessResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRoomAccessResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRoomAccessResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRoomAccessResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRoomAccessResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRoomAccessResponseSuccess = getRoomAccessResponse200 & {
+  headers: Headers;
+};
+export type getRoomAccessResponseError = (
+  | getRoomAccessResponse400
+  | getRoomAccessResponse401
+  | getRoomAccessResponse403
+  | getRoomAccessResponse404
+  | getRoomAccessResponse409
+  | getRoomAccessResponse422
+  | getRoomAccessResponse429
+  | getRoomAccessResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRoomAccessResponse = getRoomAccessResponseSuccess | getRoomAccessResponseError;
+
+export const getGetRoomAccessUrl = (room: string) => {
+  return `/api/rooms/${room}/access`;
+};
+
+/**
+ * @summary Get Room Access
+ */
+export const getRoomAccess = async (
+  room: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRoomAccessResponse> => {
+  return apiFetch<getRoomAccessResponse>(getGetRoomAccessUrl(room), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRoomAccessQueryKey = (room: string) => {
+  return [`/api/rooms/${room}/access`] as const;
+};
+
+export const getGetRoomAccessQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRoomAccess>>,
+  TError = Problem,
+>(
+  room: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRoomAccessQueryKey(room);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomAccess>>> = ({ signal }) =>
+    getRoomAccess(room, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: room !== null && room !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRoomAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomAccess>>>;
+export type GetRoomAccessQueryError = Problem;
+
+export function useGetRoomAccess<
+  TData = Awaited<ReturnType<typeof getRoomAccess>>,
+  TError = Problem,
+>(
+  room: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRoomAccess<
+  TData = Awaited<ReturnType<typeof getRoomAccess>>,
+  TError = Problem,
+>(
+  room: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRoomAccess<
+  TData = Awaited<ReturnType<typeof getRoomAccess>>,
+  TError = Problem,
+>(
+  room: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Room Access
+ */
+
+export function useGetRoomAccess<
+  TData = Awaited<ReturnType<typeof getRoomAccess>>,
+  TError = Problem,
+>(
+  room: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRoomAccessQueryOptions(room, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

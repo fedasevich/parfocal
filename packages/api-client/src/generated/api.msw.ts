@@ -87,6 +87,7 @@ import type {
   ReviewOrder,
   ReviewTask,
   ReviewTaskDetail,
+  RoomAccess,
   RunAreas,
   ScaleQuestion,
   SearchResults,
@@ -3523,6 +3524,17 @@ export const getGetTileAccessResponseMock = (
   lifetime_seconds: faker.number.int(),
   base_path: faker.string.alpha({ length: { min: 10, max: 20 } }),
   original: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getGetRoomAccessResponseMock = (
+  overrideResponse: Partial<Extract<RoomAccess, object>> = {},
+): RoomAccess => ({
+  token: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  lifetime_seconds: faker.number.int(),
+  path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  protocol: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ...overrideResponse,
 });
 
@@ -9614,6 +9626,28 @@ export const getGetTileAccessMockHandler = (
   );
 };
 
+export const getGetRoomAccessMockHandler = (
+  overrideResponse?:
+    | RoomAccess
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RoomAccess> | RoomAccess),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/rooms/:room/access",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetRoomAccessResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListNotificationsMockHandler = (
   overrideResponse?:
     | InboxPage
@@ -11440,6 +11474,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideNeighboursMockHandler(),
   getGetRestrictedImageMockHandler(),
   getGetTileAccessMockHandler(),
+  getGetRoomAccessMockHandler(),
   getListNotificationsMockHandler(),
   getGetNotificationCountsMockHandler(),
   getMarkNotificationsReadMockHandler(),

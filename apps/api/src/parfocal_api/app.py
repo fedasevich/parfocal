@@ -43,6 +43,7 @@ from parfocal_api import (
     review_tasks,
     reviewed_export,
     reviewed_layer,
+    room_access,
     sample_project,
     search,
     service_accounts,
@@ -62,6 +63,7 @@ from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
 from parfocal_api.rate_limits import RateLimits
+from parfocal_api.realtime import realtime_for
 from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
@@ -100,6 +102,7 @@ async def close_clients(app: FastAPI) -> AsyncGenerator[None]:
     await state.identity.http.aclose()
     storage: ObjectStore = app.state.storage
     await storage.http.aclose()
+    await app.state.realtime_http.aclose()
     await state.engine.dispose()
 
 
@@ -117,6 +120,8 @@ class ParfocalApi(FastAPI):
         self.results: ResultStore = ObjectResultStore(self.state.storage)
         self.keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
         self.state.engine = create_engine(str(settings.database_url))
+        self.state.realtime_http = httpx2.AsyncClient(timeout=5)
+        self.state.realtime = realtime_for(settings, self.state.realtime_http)
         self.state.auth = auth.AuthState(
             engine=self.state.engine,
             identity=identity,
@@ -183,6 +188,7 @@ def create_app(
     app.include_router(neighbours.router)
     app.include_router(restricted_images.router)
     app.include_router(tile_access.router)
+    app.include_router(room_access.router)
     app.include_router(inbox.router)
     app.include_router(notification_targets.router)
     app.include_router(notifications.schedule_router)

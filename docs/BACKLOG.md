@@ -2120,7 +2120,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] COLLAB-000 · Research check
   Done when STACK-024 is confirmed and the event model (topics per tenant, case and user) is written as an ADR.
 
-- [ ] COLLAB-001 · Realtime infrastructure
+- [x] COLLAB-001 · Realtime infrastructure
   Authenticated connections to Durable Object rooms per slide, per task and per user, fan-out from API events, refetch on reconnect ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Room tokens expire within minutes, a reconnect rechecks the grant, and removing someone from a project or workspace closes their sockets ([threat model](security/threat-model.md) R2).
   Done when tests confirm a user never receives another tenant's events and a reconnecting client refetches and converges on the current state.
 
