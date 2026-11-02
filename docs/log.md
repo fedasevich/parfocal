@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-02
 
+- PROTO-008 Adjudicator top bar: slide chip opens the Slides with objects queued for you popover (done in 1d1471f), e2e in review-popovers.spec.ts
 - PROTO-018 Review top bar: slide chip opens the Slides popover (kit SlidesPopover with Open the case, Add slides, pick a slide), More menu in the annotate bar, adjudicator slide chip lists queued slides; Compare, Share and Focus mode are no-ops with titles
 - PROTO-007 Review top bar: progress ring opens the Review progress popover (kit ReviewProgressPopover), Previous and Next slide wired to routes, Whole slide in guided; e2e review-popovers.spec.ts
 - PROTO-001, PROTO-004, PROTO-005, PROTO-008, PROTO-009, PROTO-012, PROTO-013, PROTO-014, PROTO-015, PROTO-016, PROTO-017 and PROTO-019 (the PROTO screen groups the owner accepted on 2026-11-02, with the inventory) ticked after the owner's review against the mock. The viewer tools stay click-through scenes, as the owner chose, until the navigation, measurement, annotation and compare tasks build them on Viv. Shell, kit, new task, guided review and full viewer stay in review for the owner's fixes.
