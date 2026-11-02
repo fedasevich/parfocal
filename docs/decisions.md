@@ -119,8 +119,60 @@ Your choice:
 
 Your choice:
 
+## 21. Questions from the parallel backend tasks of 2026-11-02
+
+### 21a. Case numbers in file names, from CASES-024 (sorting dropped files into cases)
+
+A dropped slide gets its case from its folder or from a file name that starts with a case number. A case number is matched as letters, up to four digits, a dash and digits, such as `S26-04812`, so TCGA-style names stay loose.
+
+- a. Keep this rule. (recommended, built)
+- b. Make the pattern a project setting.
+- c. Also take the part of any name before `_` as the case.
+
+Your choice:
+
+### 21b. Missing scores in an imported result file, from RSET-005 (import checks and fixes)
+
+When rows of a result file have no score, the uploader chooses what they count as, and "no score" is preselected. The open question is the default.
+
+- a. No score. (recommended, built, because it invents no numbers)
+- b. 1.0.
+- c. Always ask, with nothing preselected.
+
+Your choice:
+
+### 21c. Decisions of a reviewer whose slides were reassigned, from TASK-007 (nudge, reassign and change a task)
+
+Reassigning "every slide" keeps the first reviewer's decisions under their name on slides they had started, so such a slide then holds both reviewers' decisions. ADR 0142 (a reassign releases started assignments) records how.
+
+- a. Keep counting the released reviewer's decisions in the evaluation. (recommended, built, because the work stays under their name)
+- b. Leave released reviewers out of the evaluation.
+- c. Count them only when they had submitted the slide.
+
+Your choice:
+
+### 21d. Tumor maps for the CAMELYON16 test slides, from AITUM-003 (areas from the tumor map)
+
+The area code matches the POC on tumor_009, a training slide, with 7 areas and 8.05 mm against 8.06 mm. The test slides are in the dev bucket, but none has a tumor map, and making them needs a paid GPU run. The task is in review until then.
+
+- a. Make the maps on Modal dev with a cost cap when MLEVAL-005 (tumor map evaluation) runs, and evaluate both tasks then. (recommended)
+- b. Run them now just for AITUM-003.
+- c. Accept the tumor_009 check and tick AITUM-003.
+
+Your choice:
+
+### 21e. Pushes to main skip the required `ci-ok` check
+
+Agent pushes to `main` print "Required status check ci-ok is expected" and still land, so the ruleset lets this account bypass CI. Agents run `pnpm -s verify` before each push, but nothing stops a red commit, and one SET-001 (settings storage) commit did land red today and was fixed within the hour.
+
+- a. Keep the bypass, because agents push directly and verify locally. (recommended for now)
+- b. Remove the bypass so agents push to task branches and merge through pull requests once CI passes. This changes a GitHub ruleset, which you do yourself.
+
+Your choice:
+
 ## Notes, no decision needed
 
+- Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
 - The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides), and `0049` (job tries) from AIP-018 (claim cap for failing jobs).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
