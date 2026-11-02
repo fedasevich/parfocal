@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 import {
   magnificationAtZoom,
+  openOmeZarrSource,
   openTiffSource,
   type PixelLevel,
   type PixelSource,
+  readTileIndex,
   zoomForMagnification,
 } from "../../src/index.ts";
 import {
@@ -19,11 +21,22 @@ import {
 import { vivSignalAborted } from "../../src/viv/viv-levels.ts";
 import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
+import { writeZarrFixture } from "../pixel-source/zarr-fixture.ts";
 
-const served = await serve({ "/synthetic": syntheticDir });
+const sparseZarr = await writeZarrFixture({
+  version: 2,
+  dtype: "uint8",
+  channels: 3,
+  width: 512,
+  height: 256,
+  chunk: 256,
+  levels: 1,
+  missing: [[0, 0, 1]],
+});
+const served = await serve({ "/synthetic": syntheticDir, "/sparse.zarr": sparseZarr.root });
 
 after(async () => {
-  await served.close();
+  await Promise.all([served.close(), sparseZarr.remove()]);
 });
 
 const open = (file: string, formatId: "generic-tiff" | "ome-tiff") =>
@@ -152,6 +165,30 @@ describe("Viv levels over a PixelSource", () => {
       const tile = await createVivLevels(source).levels[0]?.getTile({ x: 1, y: 0 });
       assert.ok(tile);
       assert.ok(tile.data.every((value) => value === 255));
+    } finally {
+      source.close();
+    }
+  });
+
+  it("paints a chunk the ingest absence map marks absent as white glass, not black (generated sparse OME-Zarr 0.4)", async () => {
+    const source = await openOmeZarrSource({
+      formatId: "ome-zarr",
+      url: served.url("/sparse.zarr"),
+      index: readTileIndex({
+        version: 1,
+        formatId: "ome-zarr",
+        zarrVersion: 2,
+        levels: [{ downsample: 1, width: 512, height: 256, absentTiles: [[1, 1]] }],
+      }),
+    });
+    try {
+      const levels = createVivLevels(source).levels;
+      const absent = await levels[0]?.getTile({ x: 1, y: 0 });
+      assert.ok(absent);
+      assert.ok(absent.data.every((value) => value === 255));
+      const stored = await levels[0]?.getTile({ x: 0, y: 0 });
+      assert.ok(stored);
+      assert.equal(stored.data[3], sparseZarr.value(0, 0, 1, 0));
     } finally {
       source.close();
     }

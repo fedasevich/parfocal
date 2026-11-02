@@ -3,6 +3,7 @@ import {
   type SlideIndexLevel,
   type SlideIndexPage,
   slideFormatIds,
+  type TileRun,
 } from "./types.ts";
 
 export const TILE_INDEX_FILE = "tile-index.json";
@@ -37,6 +38,18 @@ function checkPage(page: unknown, where: string): void {
     );
 }
 
+function isRunList(value: unknown): value is TileRun[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (run: unknown) =>
+        Array.isArray(run) &&
+        run.length === 2 &&
+        run.every((part: unknown) => Number.isInteger(part) && (part as number) >= 0),
+    )
+  );
+}
+
 export function readTileIndex(document: unknown): SlideIndex {
   if (!isRecord(document)) throw new TileIndexError("not an object");
   if (document.version !== TILE_INDEX_VERSION)
@@ -47,7 +60,10 @@ export function readTileIndex(document: unknown): SlideIndex {
   const levels = document.levels;
   if (!Array.isArray(levels) || levels.length === 0) throw new TileIndexError("no levels");
   levels.forEach((level: unknown, index) => {
-    checkPage(level, `level ${index}`);
+    if (formatId !== "ome-zarr") checkPage(level, `level ${index}`);
+    const absent = isRecord(level) ? level.absentTiles : undefined;
+    if (absent !== undefined && !isRunList(absent))
+      throw new TileIndexError(`level ${index} has a malformed absence map`);
     const sizes = isRecord(level) ? [level.downsample, level.width, level.height] : [];
     if (!sizes.every((size) => typeof size === "number" && size > 0))
       throw new TileIndexError(`level ${index} has no size`);
@@ -83,4 +99,18 @@ export function locatesEveryDirectory(levels: readonly SlideIndexLevel[] | undef
         (level.siblings ?? []).every((sibling) => sibling.ifdOffset !== undefined),
     )
   );
+}
+
+export function isAbsentTile(runs: readonly TileRun[] | undefined, tile: number): boolean {
+  if (runs === undefined) return false;
+  let low = 0;
+  let high = runs.length - 1;
+  while (low <= high) {
+    const middle = (low + high) >> 1;
+    const [start, length] = runs[middle] ?? [0, 0];
+    if (tile < start) high = middle - 1;
+    else if (tile >= start + length) low = middle + 1;
+    else return true;
+  }
+  return false;
 }

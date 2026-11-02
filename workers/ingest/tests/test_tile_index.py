@@ -108,6 +108,13 @@ def test_an_absent_tile_keeps_a_zero_byte_count() -> None:
     assert [index for index, count in enumerate(counts) if count == 0] == [1, 6, 7]
 
 
+def test_philips_sparse_tiles_keep_a_zero_byte_count() -> None:
+    _, document = indexed("Philips-4.tiff")
+    levels = document["levels"][:3]
+    zero = [sum(1 for count in level["tileByteCounts"] if count == 0) for level in levels]
+    assert zero == [12710, 3135, 774]
+
+
 def test_offsets_round_trip_through_gaps() -> None:
     offsets = [100, 150, 0, 400, 300]
     counts = [50, 200, 0, 10, 20]
