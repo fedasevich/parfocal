@@ -3521,7 +3521,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs doc 23 (empty frames looked fast).
   Size: M.
 
-- [ ] TEST-006 · Performance budget suite
+- [x] TEST-006 · Performance budget suite
   Time to fitted image, time to sharp after a jump, frame p95 while panning, overlay GPU time at 81k and 1.6M nuclei, hover preview latency, bundle sizes. Budgets stored in a file with ADR links, runs at several RTTs through the latency proxy.
   Done when a regression of 20% on any CPU-side budget fails CI. Frame-rate and overlay GPU-time budgets are checked by manual runs recorded as result files ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Depends on TILES-006.
