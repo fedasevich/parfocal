@@ -34,6 +34,14 @@ test("a failed mutation toasts unless its caller handles it or it is a field err
   assert.equal(toastsMutationError(forbidden, true), false);
   assert.equal(toastsMutationError(new ApiError("validation", 422), false), false);
   assert.equal(toastsMutationError(new Error("boom"), false), false);
+  const locked = new ApiError("unauthenticated", 401, {
+    type: "about:blank",
+    title: "Session locked",
+    status: 401,
+    code: "session-locked",
+  });
+  assert.equal(toastsMutationError(locked, false), false);
+  assert.equal(toastsMutationError(new ApiError("unauthenticated", 401), false), true);
 });
 
 test("the query client hands an unhandled mutation failure to the toast", async () => {

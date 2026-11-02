@@ -1,5 +1,6 @@
 import { ApiError } from "@parfocal/api-client";
 import { MutationCache, QueryClient } from "@tanstack/react-query";
+import { isSessionLocked } from "./session/lock-rules.ts";
 
 const maxRetries = 3;
 const firstRetryDelayMs = 250;
@@ -15,7 +16,12 @@ export function retryDelay(attempt: number): number {
 }
 
 export function toastsMutationError(error: unknown, handledByCaller: boolean): error is ApiError {
-  return !handledByCaller && error instanceof ApiError && error.kind !== "validation";
+  return (
+    !handledByCaller &&
+    error instanceof ApiError &&
+    error.kind !== "validation" &&
+    !isSessionLocked(error)
+  );
 }
 
 export function createQueryClient(onMutationError?: (error: ApiError) => void): QueryClient {
