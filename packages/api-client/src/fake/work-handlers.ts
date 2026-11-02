@@ -420,11 +420,21 @@ export function workHandlers(): RequestHandler[] {
   return [
     getListTasksAssignedByMeMockHandler(() => tasksAssignedBy(fakeView().viewer)),
     getListMySlidesMockHandler(({ request }) => {
-      const query = fold(new URL(request.url).searchParams.get("q") ?? "");
+      const params = new URL(request.url).searchParams;
+      const query = fold(params.get("q") ?? "");
+      const project = params.get("project_id");
+      const status = params.get("status");
+      const resultSet = params.get("result_set");
+      const reviewer = params.get("reviewer_id");
       const rows = myWorkSlideIds.map(toSlideRow);
       return {
-        slides: rows.filter((row) =>
-          fold(`${row.case_label ?? ""} ${row.label}`).includes(query.trim()),
+        slides: rows.filter(
+          (row) =>
+            fold(`${row.case_label ?? ""} ${row.label}`).includes(query.trim()) &&
+            (project === null || row.project.id === project) &&
+            (status === null || row.status === status) &&
+            (resultSet === null || row.result_sets.some((set) => set.name === resultSet)) &&
+            (reviewer === null || row.reviews.some((review) => review.user_id === reviewer)),
         ),
         next_cursor: null,
       };

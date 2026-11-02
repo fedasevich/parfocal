@@ -1,3 +1,5 @@
+import type { SlideFilterValues } from "./slide-filters.ts";
+
 export type MyWorkTab = "review" | "assigned" | "all";
 
 export type MyWorkScene = "review" | "preview" | "anna" | "assigned" | "all" | "allpreview";
@@ -6,6 +8,7 @@ export type MyWorkState = {
   tab: MyWorkTab;
   sel: string | undefined;
   q: string;
+  filters: SlideFilterValues;
   scene: MyWorkScene | undefined;
 };
 
