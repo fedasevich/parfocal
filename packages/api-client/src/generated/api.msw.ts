@@ -102,6 +102,7 @@ import type {
   SlidePage,
   SlideScope,
   SlideTable,
+  Sorting,
   StudyTemplate,
   StudyTemplateSummary,
   StudyTemplateVersion,
@@ -132,6 +133,7 @@ import {
   Asked,
   Availability,
   BuiltInTemplate,
+  CaseRule,
   CaseSource,
   Certainty,
   ChartStyle,
@@ -172,6 +174,7 @@ import {
   SignOutRight,
   SignOutWarning,
   SlideColumn,
+  SlideOutcome,
   StartMode,
   State,
   StepStatus,
@@ -2502,6 +2505,122 @@ export const getPairUploadWithSlideResponseMock = (
     null,
   ]),
   result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getSortDroppedFilesResponseMock = (
+  overrideResponse: Partial<Extract<Sorting, object>> = {},
+): Sorting => ({
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      outcome: faker.helpers.arrayElement(Object.values(SlideOutcome)),
+      case: faker.helpers.arrayElement([
+        {
+          label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        },
+        null,
+      ]),
+      rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(CaseRule)), null]),
+      duplicate_of: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  results: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      outcome: faker.helpers.arrayElement(Object.values(Outcome)),
+      slide: faker.helpers.arrayElement([
+        {
+          path: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+          slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        },
+        null,
+      ]),
+      rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Rule)), null]),
+      certainty: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Certainty)),
+        null,
+      ]),
+      candidates: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => ({
+        path: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      })),
+    }),
+  ),
+  others: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  new_cases: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getApplyDroppedFilesResponseMock = (
+  overrideResponse: Partial<Extract<Sorting, object>> = {},
+): Sorting => ({
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      outcome: faker.helpers.arrayElement(Object.values(SlideOutcome)),
+      case: faker.helpers.arrayElement([
+        {
+          label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        },
+        null,
+      ]),
+      rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(CaseRule)), null]),
+      duplicate_of: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  results: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      path: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      outcome: faker.helpers.arrayElement(Object.values(Outcome)),
+      slide: faker.helpers.arrayElement([
+        {
+          path: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+          slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        },
+        null,
+      ]),
+      rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Rule)), null]),
+      certainty: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Certainty)),
+        null,
+      ]),
+      candidates: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => ({
+        path: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      })),
+    }),
+  ),
+  others: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  new_cases: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
   ...overrideResponse,
 });
 
@@ -8666,6 +8785,50 @@ export const getPairUploadWithSlideMockHandler = (
   );
 };
 
+export const getSortDroppedFilesMockHandler = (
+  overrideResponse?:
+    | Sorting
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Sorting> | Sorting),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/uploads/sorting",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSortDroppedFilesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getApplyDroppedFilesMockHandler = (
+  overrideResponse?:
+    | Sorting
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Sorting> | Sorting),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/uploads/sorting/apply",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getApplyDroppedFilesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -11175,6 +11338,8 @@ export const getParfocalAPIMock = () => [
   getCompleteUploadMockHandler(),
   getPairResultFilesMockHandler(),
   getPairUploadWithSlideMockHandler(),
+  getSortDroppedFilesMockHandler(),
+  getApplyDroppedFilesMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),

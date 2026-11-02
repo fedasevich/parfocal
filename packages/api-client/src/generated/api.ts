@@ -610,12 +610,33 @@ export interface CaseImport {
   dry_run?: boolean;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 100
+ */
+export type CaseLabel = string;
+
+export type CaseRule = (typeof CaseRule)[keyof typeof CaseRule];
+
+export const CaseRule = {
+  folder: "folder",
+  "file-name": "file-name",
+  picked: "picked",
+} as const;
+
 export interface CaseSummary {
   id: string;
   project_id: string;
   label: string;
   created_at: string;
 }
+
+export type CasesFrom = (typeof CasesFrom)[keyof typeof CasesFrom];
+
+export const CasesFrom = {
+  names: "names",
+  loose: "loose",
+} as const;
 
 export type Certainty = (typeof Certainty)[keyof typeof Certainty];
 
@@ -2644,6 +2665,12 @@ export interface Resolved {
   class_id: string | null;
 }
 
+export interface ResultDecision {
+  path: string;
+  slide_path?: string | null;
+  slide_id?: string | null;
+}
+
 export type ResultFormat = (typeof ResultFormat)[keyof typeof ResultFormat];
 
 export const ResultFormat = {
@@ -3022,6 +3049,21 @@ export interface SlideChoice {
   slide_upload_id?: string | null;
 }
 
+export interface SlideDecision {
+  path: string;
+  case?: CaseLabel | null;
+  loose?: boolean;
+  keep?: boolean | null;
+}
+
+export type SlideOutcome = (typeof SlideOutcome)[keyof typeof SlideOutcome];
+
+export const SlideOutcome = {
+  "in-case": "in-case",
+  loose: "loose",
+  "left-out": "left-out",
+} as const;
+
 export interface SlideReview {
   task_id: string;
   task_code: string;
@@ -3055,6 +3097,48 @@ export interface SlideState {
   slide_id: string;
   state: State;
   reviewers: ReviewerState[];
+}
+
+export interface SortedCase {
+  label: string;
+  case_id: string | null;
+}
+
+export interface SortedFile {
+  path: DroppedPath;
+  kind?: FileKind | null;
+  head?: string | null;
+  size?: number | null;
+}
+
+export interface SortedSlide {
+  path: string;
+  outcome: SlideOutcome;
+  case: SortedCase | null;
+  rule: CaseRule | null;
+  duplicate_of: string | null;
+}
+
+export interface Sorting {
+  slides: SortedSlide[];
+  results: ResultPairing[];
+  others: string[];
+  new_cases: string[];
+}
+
+export interface SortingRequest {
+  project_id: string;
+  cases?: CasesFrom;
+  by?: PairBy;
+  /**
+   * @minItems 1
+   * @maxItems 5000
+   */
+  files: SortedFile[];
+  /** @maxItems 5000 */
+  slide_decisions?: SlideDecision[];
+  /** @maxItems 5000 */
+  result_decisions?: ResultDecision[];
 }
 
 export interface SplitPart {
@@ -15545,6 +15629,345 @@ export const usePairUploadWithSlide = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getPairUploadWithSlideMutationOptions(options), queryClient);
+};
+
+export type sortDroppedFilesResponse200 = {
+  data: Sorting;
+  status: 200;
+};
+
+export type sortDroppedFilesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type sortDroppedFilesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type sortDroppedFilesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type sortDroppedFilesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type sortDroppedFilesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type sortDroppedFilesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type sortDroppedFilesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type sortDroppedFilesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type sortDroppedFilesResponseSuccess = sortDroppedFilesResponse200 & {
+  headers: Headers;
+};
+export type sortDroppedFilesResponseError = (
+  | sortDroppedFilesResponse400
+  | sortDroppedFilesResponse401
+  | sortDroppedFilesResponse403
+  | sortDroppedFilesResponse404
+  | sortDroppedFilesResponse409
+  | sortDroppedFilesResponse422
+  | sortDroppedFilesResponse429
+  | sortDroppedFilesResponse500
+) & {
+  headers: Headers;
+};
+
+export type sortDroppedFilesResponse =
+  | sortDroppedFilesResponseSuccess
+  | sortDroppedFilesResponseError;
+
+export const getSortDroppedFilesUrl = () => {
+  return `/api/uploads/sorting`;
+};
+
+/**
+ * @summary Sort Dropped Files
+ */
+export const sortDroppedFiles = async (
+  sortingRequest: SortingRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<sortDroppedFilesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<sortDroppedFilesResponse>(getSortDroppedFilesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(sortingRequest),
+  });
+};
+
+export const getSortDroppedFilesMutationKey = () => ["sortDroppedFiles"] as const;
+
+export const getSortDroppedFilesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sortDroppedFiles>>,
+    TError,
+    SortDroppedFilesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sortDroppedFiles>>,
+  TError,
+  SortDroppedFilesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSortDroppedFilesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sortDroppedFiles>>,
+    SortDroppedFilesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return sortDroppedFiles(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SortDroppedFilesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sortDroppedFiles>>
+>;
+export type SortDroppedFilesMutationBody = SortingRequest;
+export type SortDroppedFilesMutationError = Problem;
+export type SortDroppedFilesMutationVariables = { data: SortingRequest };
+
+/**
+ * @summary Sort Dropped Files
+ */
+export const useSortDroppedFiles = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sortDroppedFiles>>,
+      TError,
+      SortDroppedFilesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof sortDroppedFiles>>,
+  TError,
+  SortDroppedFilesMutationVariables,
+  TContext
+> => {
+  return useMutation(getSortDroppedFilesMutationOptions(options), queryClient);
+};
+
+export type applyDroppedFilesResponse200 = {
+  data: Sorting;
+  status: 200;
+};
+
+export type applyDroppedFilesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type applyDroppedFilesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type applyDroppedFilesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type applyDroppedFilesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type applyDroppedFilesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type applyDroppedFilesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type applyDroppedFilesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type applyDroppedFilesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type applyDroppedFilesResponseSuccess = applyDroppedFilesResponse200 & {
+  headers: Headers;
+};
+export type applyDroppedFilesResponseError = (
+  | applyDroppedFilesResponse400
+  | applyDroppedFilesResponse401
+  | applyDroppedFilesResponse403
+  | applyDroppedFilesResponse404
+  | applyDroppedFilesResponse409
+  | applyDroppedFilesResponse422
+  | applyDroppedFilesResponse429
+  | applyDroppedFilesResponse500
+) & {
+  headers: Headers;
+};
+
+export type applyDroppedFilesResponse =
+  | applyDroppedFilesResponseSuccess
+  | applyDroppedFilesResponseError;
+
+export const getApplyDroppedFilesUrl = () => {
+  return `/api/uploads/sorting/apply`;
+};
+
+/**
+ * @summary Apply Dropped Files
+ */
+export const applyDroppedFiles = async (
+  sortingRequest: SortingRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<applyDroppedFilesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<applyDroppedFilesResponse>(getApplyDroppedFilesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(sortingRequest),
+  });
+};
+
+export const getApplyDroppedFilesMutationKey = () => ["applyDroppedFiles"] as const;
+
+export const getApplyDroppedFilesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof applyDroppedFiles>>,
+    TError,
+    ApplyDroppedFilesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof applyDroppedFiles>>,
+  TError,
+  ApplyDroppedFilesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getApplyDroppedFilesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof applyDroppedFiles>>,
+    ApplyDroppedFilesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return applyDroppedFiles(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApplyDroppedFilesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof applyDroppedFiles>>
+>;
+export type ApplyDroppedFilesMutationBody = SortingRequest;
+export type ApplyDroppedFilesMutationError = Problem;
+export type ApplyDroppedFilesMutationVariables = { data: SortingRequest };
+
+/**
+ * @summary Apply Dropped Files
+ */
+export const useApplyDroppedFiles = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof applyDroppedFiles>>,
+      TError,
+      ApplyDroppedFilesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof applyDroppedFiles>>,
+  TError,
+  ApplyDroppedFilesMutationVariables,
+  TContext
+> => {
+  return useMutation(getApplyDroppedFilesMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

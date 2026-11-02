@@ -274,6 +274,16 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "/api/uploads/pairings",
         {"project_id": str(w.project), "files": [{"path": "A1.svs"}, {"path": "A1.geojson"}]},
     ),
+    "sortDroppedFiles": lambda w: Call(
+        "POST",
+        "/api/uploads/sorting",
+        {"project_id": str(w.project), "files": [{"path": "S26-1/A1.svs"}]},
+    ),
+    "applyDroppedFiles": lambda w: Call(
+        "POST",
+        "/api/uploads/sorting/apply",
+        {"project_id": str(w.project), "files": [{"path": "A1.svs"}, {"path": "A1.geojson"}]},
+    ),
     "pairUploadWithSlide": lambda w: Call(
         "PUT", f"/api/uploads/{w.result_upload.id}/slide", {"slide_id": str(w.slide)}
     ),

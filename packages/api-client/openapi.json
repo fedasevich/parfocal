@@ -8781,6 +8781,248 @@
         "x-permission-write": true
       }
     },
+    "/api/uploads/sorting": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Sort Dropped Files",
+        "operationId": "sortDroppedFiles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SortingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sorting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "upload-slides",
+        "x-permission-write": true
+      }
+    },
+    "/api/uploads/sorting/apply": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Apply Dropped Files",
+        "operationId": "applyDroppedFiles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SortingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sorting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "upload-slides",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/review-tasks": {
       "post": {
         "tags": [
@@ -23947,6 +24189,20 @@
         ],
         "title": "CaseImport"
       },
+      "CaseLabel": {
+        "type": "string",
+        "maxLength": 100,
+        "minLength": 1
+      },
+      "CaseRule": {
+        "type": "string",
+        "enum": [
+          "folder",
+          "file-name",
+          "picked"
+        ],
+        "title": "CaseRule"
+      },
       "CaseSource": {
         "type": "string",
         "enum": [
@@ -23986,6 +24242,14 @@
           "created_at"
         ],
         "title": "CaseSummary"
+      },
+      "CasesFrom": {
+        "type": "string",
+        "enum": [
+          "names",
+          "loose"
+        ],
+        "title": "CasesFrom"
       },
       "Certainty": {
         "type": "string",
@@ -29240,6 +29504,42 @@
         ],
         "title": "RestrictedImage"
       },
+      "ResultDecision": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "slide_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Path"
+          },
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "ResultDecision"
+      },
       "ResultFormat": {
         "type": "string",
         "enum": [
@@ -31544,6 +31844,45 @@
           "time"
         ]
       },
+      "SlideDecision": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseLabel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "loose": {
+            "type": "boolean",
+            "title": "Loose",
+            "default": false
+          },
+          "keep": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "SlideDecision"
+      },
       "SlideDetail": {
         "properties": {
           "id": {
@@ -31691,6 +32030,15 @@
           "kind"
         ],
         "title": "SlideFigure"
+      },
+      "SlideOutcome": {
+        "type": "string",
+        "enum": [
+          "in-case",
+          "loose",
+          "left-out"
+        ],
+        "title": "SlideOutcome"
       },
       "SlidePage": {
         "properties": {
@@ -31970,6 +32318,220 @@
       "Slug": {
         "type": "string",
         "pattern": "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
+      },
+      "SortedCase": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "case_id"
+        ],
+        "title": "SortedCase"
+      },
+      "SortedFile": {
+        "properties": {
+          "path": {
+            "$ref": "#/components/schemas/DroppedPath"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "head": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 65536
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "SortedFile"
+      },
+      "SortedSlide": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/SlideOutcome"
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SortedCase"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseRule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "outcome",
+          "case",
+          "rule",
+          "duplicate_of"
+        ],
+        "title": "SortedSlide"
+      },
+      "Sorting": {
+        "properties": {
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/SortedSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ResultPairing"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "others": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Others"
+          },
+          "new_cases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "New Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slides",
+          "results",
+          "others",
+          "new_cases"
+        ],
+        "title": "Sorting"
+      },
+      "SortingRequest": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "cases": {
+            "$ref": "#/components/schemas/CasesFrom",
+            "default": "names"
+          },
+          "by": {
+            "$ref": "#/components/schemas/PairBy",
+            "default": "auto"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SortedFile"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "slide_decisions": {
+            "items": {
+              "$ref": "#/components/schemas/SlideDecision"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "title": "Slide Decisions",
+            "default": []
+          },
+          "result_decisions": {
+            "items": {
+              "$ref": "#/components/schemas/ResultDecision"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "title": "Result Decisions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "files"
+        ],
+        "title": "SortingRequest"
       },
       "SourceName": {
         "type": "string",

@@ -13,6 +13,7 @@ from parfocal_api import (
     availability,
     case_creation,
     case_imports,
+    case_sorting,
     cases,
     disagreements,
     emergency,
@@ -164,6 +165,7 @@ def create_app(
     app.include_router(result_formats.router)
     app.include_router(uploads.router)
     app.include_router(result_pairing.router)
+    app.include_router(case_sorting.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(reviewed_layer.router)

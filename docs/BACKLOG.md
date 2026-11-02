@@ -2347,7 +2347,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when unit tests cover ordering, each target, absences and the pool fallback, and an API test runs a rule set over a seeded week.
   Depends on CASES-011, TEAM-003. Refs kit W50, kit Flow 24, [ADR 0023](adr/0023-gap-review-backend-first.md).
 
-- [ ] CASES-024 · Sorting dropped files into cases
+- [x] CASES-024 · Sorting dropped files into cases
   Given a set of dropped files (slides and AI result files), decide for each slide its case from the file name or keep it loose, leave out slides the project already has, and hand result files to pairing (RSET-004). Every decision can be changed before anything is applied. Applying is one transaction: cases are created, slides go to their cases, and result sets are created for the paired files.
   Done when API tests cover each decision, an override, a duplicate, a file with no case and a failure that leaves nothing half applied.
   Depends on CASES-013, INGEST-011, PROJ-001. Refs mock: upload/files, doc 37 "AI results and import".
