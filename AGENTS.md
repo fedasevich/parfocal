@@ -29,6 +29,7 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 - Viv is the primary renderer and must work perfectly. Alternates sit behind the renderer interface and pass the same golden-image tests.
 - Read every POC-supported format natively. Convert only when an ADR-recorded trigger fires.
 - No PHI in logs, analytics, committed fixtures or docs.
+- Never use the word "verdict" anywhere in the app: screen text, exports, audit names, API paths, code, tests and fakes. Say "decision" (agree, disagree or unsure), as [ADR 0072](docs/adr/0072-decisions-reasons-and-opinion-forms.md) does. FOUND-024 renames what already exists.
 - When a task is finished, commit and push everything that belongs to it in the same turn without being asked. Stage by name. Never push failing work, never force-push, never rewrite pushed history.
 - Commit messages are Conventional Commits with the task ID as scope, such as `feat(FOUND-017): Add release versioning` ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)). No attribution lines.
 - Keep tokens low. One task per fresh subagent, at most two alive, about 120 turns each. Run checks two or three times per task and pipe long output through `tail`. Take few screenshots, compare them with the mock by number (`shot --mock`) and open an image only when the number looks wrong. A hook allows 5 images per agent. Details are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
