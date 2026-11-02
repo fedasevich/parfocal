@@ -1,13 +1,18 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type MyJob, myJobSchema } from "../draft/list-my-jobs.ts";
+import { type ModelRunDefaults, modelRunDefaultsSchema } from "../draft/model-runs.ts";
 import {
-  type ModelRunDefaults,
-  modelRunDefaultsSchema,
-  type ProjectModel,
-  projectModelSchema,
-} from "../draft/model-runs.ts";
-import { getListModelRunsMockHandler, getStartModelRunsMockHandler } from "../generated/api.msw.ts";
-import type { JobStatus, ModelRun, ModelRunDraft, RunStage } from "../generated/api.ts";
+  getListModelRunsMockHandler,
+  getListProjectModelsMockHandler,
+  getStartModelRunsMockHandler,
+} from "../generated/api.msw.ts";
+import type {
+  JobStatus,
+  ModelRun,
+  ModelRunDraft,
+  ProjectModel,
+  RunStage,
+} from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { fakeJobsState, updateJobsState } from "./jobs-scene.ts";
 import { people, projectByCode, projects } from "./scenario.ts";
@@ -87,6 +92,7 @@ export function toModelRun(batch: RunBatchSeed, slide: RunSlideSeed): ModelRun {
     pause_reason: status === "paused" ? "server-not-answering" : null,
     scope: { kind: "slide" },
     parameters: { detector: { name: model.name, version: model.version } },
+    result_set_id: null,
     started_by_user_id: people[batch.by].id,
     attempts: 1,
     created_at: batch.createdAt,
@@ -132,8 +138,8 @@ const allRunsById = (runId: string) => {
 };
 
 export const toProjectModels = (): ProjectModel[] =>
-  models.map((model) =>
-    projectModelSchema.parse({
+  models.map(
+    (model): ProjectModel => ({
       id: model.id,
       name: model.name,
       version: model.version,
@@ -141,6 +147,7 @@ export const toProjectModels = (): ProjectModel[] =>
       description: model.description,
       makes: model.makes,
       minutes_per_slide: model.minutesPerSlide,
+      measured: false,
       host: model.host,
       server: model.server,
       runs_ahead: model.runsAhead,
@@ -179,11 +186,6 @@ const notFound = () =>
     { status: 404, headers: { "content-type": "application/problem+json" } },
   );
 
-export const getListProjectModelsMockHandler = (overrideResponse?: ProjectModel[]) =>
-  http.get("*/api/projects/:projectId/models", () =>
-    HttpResponse.json(overrideResponse ?? toProjectModels()),
-  );
-
 export const getGetModelRunDefaultsMockHandler = (overrideResponse?: ModelRunDefaults) =>
   http.get("*/api/projects/:projectId/model-runs/defaults", () =>
     HttpResponse.json(overrideResponse ?? toModelRunDefaults()),
@@ -207,12 +209,6 @@ export const jobDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/me/jobs",
     handler: () => getListMyJobsMockHandler(),
-  },
-  {
-    operationId: "listProjectModels",
-    method: "get",
-    path: "/api/projects/{project_id}/models",
-    handler: () => getListProjectModelsMockHandler(),
   },
   {
     operationId: "getModelRunDefaults",
@@ -243,6 +239,7 @@ export function jobHandlers(): RequestHandler[] {
       const found = runById(params.runId);
       return found ? HttpResponse.json(toModelRun(found.batch, found.slide)) : notFound();
     }),
+    getListProjectModelsMockHandler(() => toProjectModels()),
     getStartModelRunsMockHandler(async ({ request }) =>
       startRuns((await request.json()) as ModelRunDraft),
     ),

@@ -3629,7 +3629,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when an ADR records the model run contract with Parfocal and lab endpoints, building on AIP-008.
   Depends on AIP-000.
 
-- [ ] JOBS-001 · Model run API
+- [x] JOBS-001 · Model run API
   Run a Parfocal or lab model on chosen slides. The latest version is used and recorded. Each slide gets a new result set. The estimate uses measured throughput (AIP-011) and the queue ahead.
   Done when API tests cover a run, its result sets and the estimate.
   Depends on AIP-008, RSET-001.

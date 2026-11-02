@@ -78,7 +78,7 @@ function modelGroups(models: ProjectModel[]): ModelGroup[] {
 export function RunModelWindow({ projectId, scene, onClose, onStarted }: RunModelWindowProps) {
   const project = okData(useGetProject(projectId).data);
   const slides = useListProjectSlides(projectId).data?.data;
-  const models = useListProjectModels(projectId).data?.data;
+  const models = okData(useListProjectModels(projectId).data);
   const defaults = useGetModelRunDefaults(projectId).data?.data;
   const sets = okData(useListProjectResultSets(projectId).data) ?? [];
   if (!project || !slides || !models || !defaults) return null;

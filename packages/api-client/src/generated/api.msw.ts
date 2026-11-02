@@ -69,6 +69,7 @@ import type {
   Preference,
   Project,
   ProjectClass,
+  ProjectModel,
   Question,
   QueuedObject,
   RegionMetrics,
@@ -142,6 +143,8 @@ import {
   Laterality,
   Layer,
   Metric,
+  ModelHost,
+  ModelMakes,
   MuteSubject,
   MyStatus,
   NotificationKind,
@@ -889,6 +892,7 @@ export const getStartModelRunsResponseMock = (): ModelRun[] =>
       test_time_views: faker.helpers.arrayElement([1, 8] as const),
       ordering: faker.helpers.arrayElement(Object.values(Ordering)),
     },
+    result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     attempts: faker.number.int(),
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1028,6 +1032,7 @@ export const getListModelRunsResponseMock = (): ModelRun[] =>
       test_time_views: faker.helpers.arrayElement([1, 8] as const),
       ordering: faker.helpers.arrayElement(Object.values(Ordering)),
     },
+    result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     attempts: faker.number.int(),
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1168,6 +1173,7 @@ export const getGetModelRunResponseMock = (
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
   },
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   attempts: faker.number.int(),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1309,6 +1315,7 @@ export const getCancelModelRunResponseMock = (
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
   },
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   attempts: faker.number.int(),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1450,6 +1457,7 @@ export const getResumeModelRunResponseMock = (
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
   },
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   attempts: faker.number.int(),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1591,6 +1599,7 @@ export const getRetryModelRunResponseMock = (
     test_time_views: faker.helpers.arrayElement([1, 8] as const),
     ordering: faker.helpers.arrayElement(Object.values(Ordering)),
   },
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   attempts: faker.number.int(),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
@@ -1618,6 +1627,23 @@ export const getRetryModelRunResponseMock = (
   actions: faker.helpers.arrayElements(Object.values(JobControl)),
   ...overrideResponse,
 });
+
+export const getListProjectModelsResponseMock = (): ProjectModel[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    description: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+    minutes_per_slide: faker.number.int(),
+    measured: faker.datatype.boolean(),
+    host: faker.helpers.arrayElement(Object.values(ModelHost)),
+    server: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    runs_ahead: faker.number.int(),
+    queue_minutes: faker.number.int(),
+    latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
+  }));
 
 export const getListNotificationPreferencesResponseMock = (): Preference[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -7575,6 +7601,30 @@ export const getRetryModelRunMockHandler = (
   );
 };
 
+export const getListProjectModelsMockHandler = (
+  overrideResponse?:
+    | ProjectModel[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectModel[]> | ProjectModel[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/models",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListProjectModelsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListNotificationPreferencesMockHandler = (
   overrideResponse?:
     | Preference[]
@@ -10662,6 +10712,7 @@ export const getParfocalAPIMock = () => [
   getCancelModelRunMockHandler(),
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
+  getListProjectModelsMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
   getGetOpinionFormTemplateMockHandler(),

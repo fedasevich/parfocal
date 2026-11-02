@@ -4,58 +4,6 @@ import type { ModelRun, Problem } from "../generated/api.ts";
 import { type DraftQueryOptions, type DraftRequest, defineDraftQuery } from "./define.ts";
 import { type DraftMutationOptions, defineDraftMutation } from "./define-mutation.ts";
 
-export const ModelMakes = { regions: "regions", cells: "cells", heatmap: "heatmap" } as const;
-
-export const ModelHost = { parfocal: "parfocal", lab: "lab" } as const;
-
-export const projectModelSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  version: z.string(),
-  title: z.string(),
-  description: z.string(),
-  makes: z.array(z.enum(ModelMakes)),
-  minutes_per_slide: z.number().int().positive(),
-  host: z.enum(ModelHost),
-  server: z.string(),
-  runs_ahead: z.number().int().nonnegative(),
-  queue_minutes: z.number().int().nonnegative(),
-  latency_ms: z.number().int().nonnegative().nullable(),
-});
-
-export type ProjectModel = z.infer<typeof projectModelSchema>;
-
-export const getListProjectModelsUrl = (projectId: string) => `/api/projects/${projectId}/models`;
-
-const modelsDraft = defineDraftQuery(
-  "listProjectModels",
-  getListProjectModelsUrl,
-  z.array(projectModelSchema),
-);
-
-export type listProjectModelsResponse = Awaited<ReturnType<typeof modelsDraft.fetcher>>;
-export type ListProjectModelsQueryResult = listProjectModelsResponse;
-export type ListProjectModelsQueryError = Problem;
-
-export const listProjectModels = (projectId: string, options?: DraftRequest) =>
-  modelsDraft.fetcher([projectId], options);
-
-export const getListProjectModelsQueryKey = (projectId: string) => modelsDraft.queryKey(projectId);
-
-export const getListProjectModelsQueryOptions = <
-  TData = listProjectModelsResponse,
-  TError = Problem,
->(
-  projectId: string,
-  options?: DraftQueryOptions<listProjectModelsResponse, TData, TError>,
-) => modelsDraft.queryOptions<TData, TError>([projectId], options);
-
-export const useListProjectModels = <TData = listProjectModelsResponse, TError = Problem>(
-  projectId: string,
-  options?: DraftQueryOptions<listProjectModelsResponse, TData, TError>,
-  queryClient?: QueryClient,
-) => modelsDraft.useDraftQuery<TData, TError>([projectId], options, queryClient);
-
 export const modelRunDefaultsSchema = z.object({
   slide_ids: z.array(z.string()),
   model_id: z.string(),

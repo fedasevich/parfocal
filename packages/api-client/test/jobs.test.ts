@@ -64,7 +64,9 @@ test("the tray before a run shows the upload and the paused CAMELYON run", async
 
 test("the defaults pick tumor_052 and tumor_060 with PathoSAM", async () => {
   const defaults = (await getModelRunDefaults(p07)).data;
-  const models = (await listProjectModels(p07)).data;
+  const listed = await listProjectModels(p07);
+  assert.ok(listed.status === 200);
+  const models = listed.data;
   assert.equal(
     models.find((model) => model.id === defaults.model_id)?.title,
     "PathoSAM + HoVer-NeXt",

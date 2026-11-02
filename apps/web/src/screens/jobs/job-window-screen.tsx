@@ -72,7 +72,7 @@ function JobWindowBody({
   const resume = useResumeJob();
   const move = useMoveModelRun();
   const personOf = usePeople();
-  const models = useListProjectModels(projectId).data?.data ?? [];
+  const models = okData(useListProjectModels(projectId).data) ?? [];
   const today = now();
   const summary = runSummary(job);
   const detector = runs[0]?.parameters.detector;

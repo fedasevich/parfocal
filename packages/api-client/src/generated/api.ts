@@ -1701,6 +1701,26 @@ export type ModelName = string;
  */
 export type ModelVersion = string;
 
+export interface ModelChoice {
+  name: ModelName;
+  version?: ModelVersion | null;
+}
+
+export type ModelHost = (typeof ModelHost)[keyof typeof ModelHost];
+
+export const ModelHost = {
+  parfocal: "parfocal",
+  lab: "lab",
+} as const;
+
+export type ModelMakes = (typeof ModelMakes)[keyof typeof ModelMakes];
+
+export const ModelMakes = {
+  regions: "regions",
+  cells: "cells",
+  heatmap: "heatmap",
+} as const;
+
 export interface ModelReference {
   name: ModelName;
   version: ModelVersion;
@@ -1806,12 +1826,20 @@ export interface ModelRun {
   pause_reason: string | null;
   scope: RunScope;
   parameters: RunParameters;
+  result_set_id: string | null;
   started_by_user_id: string | null;
   attempts: number;
   created_at: string;
   finished_at: string | null;
   stages: RunStage[];
   actions: JobControl[];
+}
+
+export interface RunChoices {
+  detector: ModelChoice;
+  typer?: ModelChoice | null;
+  test_time_views?: TestTimeViews;
+  ordering?: Ordering;
 }
 
 export interface ModelRunDraft {
@@ -1822,7 +1850,7 @@ export interface ModelRunDraft {
   slide_ids: string[];
   task_id?: string | null;
   scope: RunScope;
-  parameters: RunParameters;
+  parameters: RunChoices;
 }
 
 export type MuteSubject = (typeof MuteSubject)[keyof typeof MuteSubject];
@@ -2207,6 +2235,22 @@ export interface ProjectDraft {
   privacy_mode?: PrivacyMode;
   template?: AnalysisTemplate;
   taxonomy?: TaxonomyTemplate | null;
+}
+
+export interface ProjectModel {
+  id: string;
+  name: string;
+  version: string;
+  title: string;
+  description: string;
+  makes: ModelMakes[];
+  minutes_per_slide: number;
+  measured: boolean;
+  host: ModelHost;
+  server: string;
+  runs_ahead: number;
+  queue_minutes: number;
+  latency_ms: number | null;
 }
 
 export interface Proportion {
@@ -8714,6 +8758,197 @@ export const useRetryModelRun = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getRetryModelRunMutationOptions(options), queryClient);
 };
+
+export type listProjectModelsResponse200 = {
+  data: ProjectModel[];
+  status: 200;
+};
+
+export type listProjectModelsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectModelsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectModelsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectModelsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectModelsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectModelsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectModelsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listProjectModelsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectModelsResponseSuccess = listProjectModelsResponse200 & {
+  headers: Headers;
+};
+export type listProjectModelsResponseError = (
+  | listProjectModelsResponse400
+  | listProjectModelsResponse401
+  | listProjectModelsResponse403
+  | listProjectModelsResponse404
+  | listProjectModelsResponse409
+  | listProjectModelsResponse422
+  | listProjectModelsResponse429
+  | listProjectModelsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectModelsResponse =
+  | listProjectModelsResponseSuccess
+  | listProjectModelsResponseError;
+
+export const getListProjectModelsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/models`;
+};
+
+/**
+ * @summary List Project Models
+ */
+export const listProjectModels = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectModelsResponse> => {
+  return apiFetch<listProjectModelsResponse>(getListProjectModelsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectModelsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/models`] as const;
+};
+
+export const getListProjectModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectModelsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectModels>>> = ({ signal }) =>
+    listProjectModels(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListProjectModelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectModels>>
+>;
+export type ListProjectModelsQueryError = Problem;
+
+export function useListProjectModels<
+  TData = Awaited<ReturnType<typeof listProjectModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectModels>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectModels<
+  TData = Awaited<ReturnType<typeof listProjectModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectModels>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectModels<
+  TData = Awaited<ReturnType<typeof listProjectModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Models
+ */
+
+export function useListProjectModels<
+  TData = Awaited<ReturnType<typeof listProjectModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectModels>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectModelsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listNotificationPreferencesResponse200 = {
   data: Preference[];

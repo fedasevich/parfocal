@@ -1,7 +1,8 @@
 import json
 import uuid
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import Annotated, Any, Literal, Self
 
 from fastapi import APIRouter, Query
@@ -22,18 +23,34 @@ from parfocal_api.annotations import MultiPolygonGeometry, PolygonGeometry, chec
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.model_catalogue import (
+    BY_NAME,
+    CATALOGUE,
+    LAST_SAMPLES,
+    PARFOCAL_SERVER,
+    CatalogueModel,
+    ModelHost,
+    ModelMakes,
+    QueuedRun,
+    latest_version,
+    queue_minutes,
+    throughput,
+)
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import project_grant, readable_slide, require_slide_reading
 from parfocal_api.projects import ProjectArchivedError, visible
+from parfocal_api.result_sets import ResultSetDraft, insert_result_set
 from parfocal_api.tables import (
     PrivacyMode,
+    ResultSource,
     job_steps,
     job_units,
     jobs,
     model_runs,
     projects,
+    result_sets,
     review_task_slides,
     review_tasks,
     slides,
@@ -84,9 +101,21 @@ class ModelReference(Closed):
     version: ModelVersion
 
 
+class ModelChoice(Closed):
+    name: ModelName
+    version: ModelVersion | None = None
+
+
 class RunParameters(Closed):
     detector: ModelReference
     typer: ModelReference | None = None
+    test_time_views: TestTimeViews = 1
+    ordering: Ordering = Ordering.RASTER
+
+
+class RunChoices(Closed):
+    detector: ModelChoice
+    typer: ModelChoice | None = None
     test_time_views: TestTimeViews = 1
     ordering: Ordering = Ordering.RASTER
 
@@ -149,7 +178,7 @@ class ModelRunDraft(Closed):
     slide_ids: Annotated[list[uuid.UUID], Field(min_length=1, max_length=MAX_SLIDES)]
     task_id: uuid.UUID | None = None
     scope: RunScope
-    parameters: RunParameters
+    parameters: RunChoices
 
     @model_validator(mode="after")
     def slides_fit_the_scope(self) -> Self:
@@ -181,12 +210,34 @@ class ModelRun(BaseModel):
     pause_reason: str | None
     scope: RunScope
     parameters: RunParameters
+    result_set_id: uuid.UUID | None
     started_by_user_id: uuid.UUID | None
     attempts: int
     created_at: datetime
     finished_at: datetime | None
     stages: list[RunStage]
     actions: list[JobControl]
+
+
+class ProjectModel(BaseModel):
+    id: str
+    name: str
+    version: str
+    title: str
+    description: str
+    makes: list[ModelMakes]
+    minutes_per_slide: int
+    measured: bool
+    host: ModelHost
+    server: str
+    runs_ahead: int
+    queue_minutes: int
+    latency_ms: int | None
+
+
+class ModelNotFoundError(BadRequestError):
+    code = "model-not-found"
+    title = "No model has this name. Give its version or pick a listed model"
 
 
 class SlideNotInProjectError(BadRequestError):
@@ -253,8 +304,23 @@ ACTIONS = {
 router = APIRouter(prefix="/api/projects", tags=["model-runs"])
 
 
-def settings_from(draft: ModelRunDraft) -> RunSettings:
-    parameters = draft.parameters
+def resolved(choice: ModelChoice) -> ModelReference:
+    version = choice.version or latest_version(choice.name)
+    if version is None:
+        raise ModelNotFoundError(f"{choice.name!r} is not a Parfocal model")
+    return ModelReference(name=choice.name, version=version)
+
+
+def parameters_from(choices: RunChoices) -> RunParameters:
+    return RunParameters(
+        detector=resolved(choices.detector),
+        typer=resolved(choices.typer) if choices.typer is not None else None,
+        test_time_views=choices.test_time_views,
+        ordering=choices.ordering,
+    )
+
+
+def settings_from(draft: ModelRunDraft, parameters: RunParameters) -> RunSettings:
     scope = draft.scope.model_dump(mode="json", exclude={"kind"}, exclude_none=True)
     return RunSettings(
         scope_kind=RunScopeKind(draft.scope.kind),
@@ -337,14 +403,22 @@ async def stages_of(
 
 
 def run_query() -> Any:
-    return select(
-        model_runs,
-        jobs.c.status,
-        jobs.c.error_code,
-        jobs.c.pause_reason,
-        jobs.c.claims,
-        jobs.c.finished_at,
-    ).join(jobs, jobs.c.id == model_runs.c.job_id)
+    return (
+        select(
+            model_runs,
+            jobs.c.status,
+            jobs.c.error_code,
+            jobs.c.pause_reason,
+            jobs.c.claims,
+            jobs.c.finished_at,
+            result_sets.c.id.label("result_set_id"),
+        )
+        .join(jobs, jobs.c.id == model_runs.c.job_id)
+        .outerjoin(
+            result_sets,
+            (result_sets.c.job_id == model_runs.c.job_id) & result_sets.c.deleted_at.is_(None),
+        )
+    )
 
 
 async def runs_of(
@@ -363,6 +437,7 @@ async def runs_of(
             pause_reason=row.pause_reason,
             scope=scope_of(row),
             parameters=parameters_of(row),
+            result_set_id=row.result_set_id,
             started_by_user_id=row.started_by_user_id,
             attempts=row.claims,
             created_at=row.created_at,
@@ -454,6 +529,13 @@ async def check_selection(connection: AsyncConnection, scope: SelectionScope) ->
         raise SelectionInvalidError
 
 
+def result_set_draft(parameters: RunParameters) -> ResultSetDraft:
+    detector = parameters.detector
+    known = BY_NAME.get(detector.name)
+    title = known.title if known is not None else detector.name
+    return ResultSetDraft(name=f"{title} {detector.version}"[:120], model_version=detector.version)
+
+
 def started_by(principal: Principal) -> uuid.UUID | None:
     return principal.user_id if isinstance(principal, MemberPrincipal) else None
 
@@ -475,10 +557,13 @@ async def start_model_runs(
     await check_slides(connection, project_id, draft)
     if isinstance(draft.scope, SelectionScope):
         await check_selection(connection, draft.scope)
-    settings = settings_from(draft)
+    parameters = parameters_from(draft.parameters)
+    settings = settings_from(draft, parameters)
     batch_id = uuid.uuid4()
-    job_ids = [
-        await enqueue_model_run(
+    actor = actor_of(principal)
+    job_ids: list[uuid.UUID] = []
+    for slide_id in draft.slide_ids:
+        job_id = await enqueue_model_run(
             connection,
             project.tenant_id,
             project_id,
@@ -488,9 +573,17 @@ async def start_model_runs(
             task_id=draft.task_id,
             started_by=started_by(principal),
         )
-        for slide_id in draft.slide_ids
-    ]
-    for job_id, slide_id in zip(job_ids, draft.slide_ids, strict=True):
+        result_set_id = await insert_result_set(
+            connection,
+            project.tenant_id,
+            SimpleNamespace(id=slide_id, project_id=project_id),
+            result_set_draft(parameters),
+            ResultSource.RUN,
+            actor,
+            started_by(principal),
+            job_id,
+        )
+        job_ids.append(job_id)
         await record(
             connection,
             actor_of(principal),
@@ -501,6 +594,7 @@ async def start_model_runs(
             details={
                 "project_id": str(project_id),
                 "slide_id": str(slide_id),
+                "result_set_id": str(result_set_id),
                 "batch_id": str(batch_id),
                 "task_id": str(draft.task_id) if draft.task_id else None,
                 "scope": draft.scope.kind,
@@ -650,3 +744,79 @@ async def retry_model_run(
     connection: TenantConnection,
 ) -> ModelRun:
     return await control_run(connection, principal, project_id, run_id, JobControl.RETRY)
+
+
+def first_start() -> Any:
+    return (
+        select(func.min(job_steps.c.started_at))
+        .where(job_steps.c.job_id == jobs.c.id)
+        .scalar_subquery()
+    )
+
+
+async def measured_seconds(connection: AsyncConnection, model: CatalogueModel) -> list[float]:
+    started = first_start()
+    seconds = func.extract("epoch", jobs.c.finished_at - started)
+    rows = await connection.scalars(
+        select(seconds)
+        .select_from(model_runs.join(jobs, jobs.c.id == model_runs.c.job_id))
+        .where(
+            jobs.c.status == JobStatus.DONE,
+            model_runs.c.detector == model.name,
+            model_runs.c.detector_version == model.version,
+            started.is_not(None),
+            jobs.c.finished_at.is_not(None),
+        )
+        .order_by(jobs.c.finished_at.desc())
+        .limit(LAST_SAMPLES)
+    )
+    return [float(value) for value in rows if value > 0]
+
+
+async def runs_ahead(connection: AsyncConnection) -> list[QueuedRun]:
+    started = first_start()
+    rows = await connection.execute(
+        select(model_runs.c.detector, jobs.c.status, started.label("started_at"))
+        .join(jobs, jobs.c.id == model_runs.c.job_id)
+        .where(jobs.c.status.in_([JobStatus.QUEUED, JobStatus.RUNNING]))
+    )
+    return [
+        QueuedRun(row.detector, row.started_at if row.status == JobStatus.RUNNING else None)
+        for row in rows
+    ]
+
+
+@router.get(
+    "/{project_id}/models",
+    operation_id="listProjectModels",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_project_models(
+    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> list[ProjectModel]:
+    await visible(connection, principal, project_id)
+    rates = {
+        model.name: throughput(await measured_seconds(connection, model), model.nominal_minutes)
+        for model in CATALOGUE
+    }
+    minutes = {name: rate.minutes_per_slide for name, rate in rates.items()}
+    ahead = await runs_ahead(connection)
+    now = datetime.now(UTC)
+    return [
+        ProjectModel(
+            id=model.name,
+            name=model.name,
+            version=model.version,
+            title=model.title,
+            description=model.description,
+            makes=list(model.makes),
+            minutes_per_slide=rates[model.name].minutes_per_slide,
+            measured=rates[model.name].measured,
+            host=ModelHost.PARFOCAL,
+            server=PARFOCAL_SERVER,
+            runs_ahead=len(ahead),
+            queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now),
+            latency_ms=None,
+        )
+        for model in CATALOGUE
+    ]

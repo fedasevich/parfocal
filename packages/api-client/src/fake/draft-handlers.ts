@@ -69,7 +69,6 @@ export {
 export {
   getGetModelRunDefaultsMockHandler,
   getListMyJobsMockHandler,
-  getListProjectModelsMockHandler,
   getMoveModelRunMockHandler,
 } from "./job-handlers.ts";
 export {

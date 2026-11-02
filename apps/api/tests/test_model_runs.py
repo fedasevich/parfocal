@@ -295,7 +295,6 @@ def test_a_view_and_a_selection_are_stored_as_given(api: ApiAs, lab: Lab) -> Non
         {"parameters": {"detector": DETECTOR, "typer": TYPER, "test_time_views": 4}},
         {"parameters": {"detector": DETECTOR, "typer": TYPER, "test_time_views": True}},
         {"parameters": {"detector": DETECTOR, "ordering": "random"}},
-        {"parameters": {"detector": {"name": "hovernet"}}},
         {"parameters": {"detector": {"name": " ", "version": "1"}}},
         {"scope": {"kind": "slide", "x": 1}},
         {"scope": {"kind": "view", "x": 0, "y": 0, "width": 0, "height": 10}},
@@ -626,3 +625,118 @@ def test_another_workspace_sees_and_controls_nothing(api: ApiAs, database: str, 
     assert api(stranger).get(f"{other.runs}/{run['id']}").status_code == 404
     assert api(stranger).post(f"{other.runs}/{run['id']}/cancel").status_code == 404
     assert ok(read(api, lab, run))["status"] == "queued"
+
+
+def test_each_slide_gets_a_new_result_set_from_its_run(api: ApiAs, database: str, lab: Lab) -> None:
+    runs = started(api, lab, lab.slides[:2])
+    sets = {run["result_set_id"] for run in runs}
+    assert len(sets) == 2
+    assert None not in sets
+    for run in runs:
+        listed = ok(api(lab.people["owner"]).get(f"/api/slides/{run['slide_id']}/result-sets"))
+        mine = next(item for item in listed if item["id"] == run["result_set_id"])
+        assert (mine["source"], mine["status"], mine["model_version"]) == (
+            "run",
+            "importing",
+            "1.0.0",
+        )
+        assert mine["name"] == "hovernet-pannuke 1.0.0"
+    rows = owner(
+        database,
+        "SELECT r.job_id FROM result_sets r "
+        f"WHERE r.id IN ('{runs[0]['result_set_id']}', '{runs[1]['result_set_id']}')",
+    )
+    assert {str(row[0]) for row in rows} == {run["id"] for run in runs}
+    again = started(api, lab, lab.slides[:1])[0]
+    assert again["result_set_id"] not in sets
+    assert ok(read(api, lab, runs[0]))["result_set_id"] == runs[0]["result_set_id"]
+
+
+def test_a_model_without_a_version_runs_its_latest_version(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    models = ok(api(lab.people["owner"]).get(f"/api/projects/{lab.project}/models"))
+    latest = next(model for model in models if model["name"] == "hovernet")
+    run = one_run(api, lab, parameters={"detector": {"name": "hovernet"}})
+    assert run["parameters"]["detector"] == {"name": "hovernet", "version": latest["version"]}
+    listed = ok(api(lab.people["owner"]).get(f"/api/slides/{lab.slides[0]}/result-sets"))
+    mine = next(item for item in listed if item["id"] == run["result_set_id"])
+    assert (mine["name"], mine["model_version"]) == (
+        f"HoVer-Net {latest['version']}",
+        latest["version"],
+    )
+    actions = owner(
+        database,
+        f"SELECT details FROM audit_events WHERE target_id = '{run['id']}'",
+    )
+    assert f'"detector":"hovernet@{latest["version"]}"' in str(actions[0][0])
+    assert problem(start(api, lab, parameters={"detector": {"name": "no-such-model"}})) == (
+        400,
+        "model-not-found",
+    )
+
+
+def finish_run(database: str, run: Mapping[str, Any], minutes: int) -> None:
+    owner(
+        database,
+        f"UPDATE job_steps SET status = 'done', started_at = now() - interval '{minutes} minutes', "
+        f"finished_at = now() WHERE job_id = '{run['id']}'",
+    )
+    owner(
+        database,
+        f"UPDATE jobs SET status = 'done', finished_at = now() WHERE id = '{run['id']}'",
+    )
+
+
+def models_of(api: ApiAs, lab: Lab, who: str = "owner") -> dict[str, dict[str, Any]]:
+    listed = ok(api(lab.people[who]).get(f"/api/projects/{lab.project}/models"))
+    return {model["name"]: model for model in listed}
+
+
+def test_the_estimate_is_nominal_until_runs_are_measured(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    empty = models_of(api, lab)
+    assert {name: model["measured"] for name, model in empty.items()} == {
+        "camelyon-tumor": False,
+        "pathosam-hovernext": False,
+        "hovernet": False,
+    }
+    assert empty["hovernet"]["minutes_per_slide"] == 9
+    assert (empty["hovernet"]["runs_ahead"], empty["hovernet"]["queue_minutes"]) == (0, 0)
+    assert (empty["hovernet"]["host"], empty["hovernet"]["latency_ms"]) == ("parfocal", None)
+    version = empty["hovernet"]["version"]
+    detector = {"name": "hovernet", "version": version}
+    runs = started(api, lab, lab.slides, parameters={"detector": detector})
+    for run, minutes in zip(runs[:2], (2, 3), strict=True):
+        finish_run(database, run, minutes)
+    assert models_of(api, lab)["hovernet"]["measured"] is False
+    finish_run(database, runs[2], 4)
+    measured = models_of(api, lab)
+    assert (measured["hovernet"]["measured"], measured["hovernet"]["minutes_per_slide"]) == (
+        True,
+        3,
+    )
+    assert measured["camelyon-tumor"]["measured"] is False
+    assert models_of(api, lab, "viewer")["hovernet"]["minutes_per_slide"] == 3
+
+
+def test_the_estimate_adds_the_runs_queued_ahead(api: ApiAs, database: str, lab: Lab) -> None:
+    started(api, lab, lab.slides[:2], parameters={"detector": {"name": "pathosam-hovernext"}})
+    running = started(api, lab, lab.slides[2:], parameters={"detector": {"name": "hovernet"}})[0]
+    owner(
+        database,
+        f"UPDATE jobs SET status = 'running', lease_until = now() + interval '1 minute' "
+        f"WHERE id = '{running['id']}'",
+    )
+    owner(
+        database,
+        "UPDATE job_steps SET status = 'running', started_at = now() - interval '5 minutes' "
+        f"WHERE job_id = '{running['id']}' AND ordinal = 0",
+    )
+    models = models_of(api, lab)
+    assert {model["runs_ahead"] for model in models.values()} == {3}
+    assert models["camelyon-tumor"]["queue_minutes"] == 17 + 17 + (9 - 5)
+    control(api, lab, running, "cancel")
+    owner(database, f"UPDATE jobs SET status = 'cancelled' WHERE id = '{running['id']}'")
+    assert models_of(api, lab)["hovernet"]["runs_ahead"] == 2
