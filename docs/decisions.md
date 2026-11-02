@@ -30,6 +30,15 @@ To take every recommendation at once, write "all recommended" here:
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
 
+## 31. Where comment threads live, from COLLAB-002 (threads API)
+
+Threads are built on a task slide only, and at sign-off new threads stop while replies and resolving go on. ADR 0152 (threads on task slides) records both, and either is cheap to change now.
+
+- a. Keep both as built. (recommended, because every review conversation belongs to a task)
+- b. Allow threads on any slide with the task optional, or freeze all thread activity at sign-off. Say which.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

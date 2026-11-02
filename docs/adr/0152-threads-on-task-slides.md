@@ -1,4 +1,4 @@
-# XXXX. Comment threads live on a task slide and show a reviewer only their own and the researcher's
+# 0152. Comment threads live on a task slide and show a reviewer only their own and the researcher's
 
 - Date: 2026-11-02
 - Status: Accepted
