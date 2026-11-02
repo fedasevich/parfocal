@@ -916,7 +916,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Built in `parfocal_api.uploads` with the S3 client of [ADR 0121](adr/0121-s3-client-signed-by-hand-on-httpx2.md) (S3 client signed by hand on httpx2) and tested against MinIO ([knowledge/uploads.md](knowledge/uploads.md)). The lifecycle rule sits on the prefix `t/`, because a prefix cannot skip the tenant in `t/{tenant}/quarantine/`. The tick waits for INGEST-028 (upload protocol check on the R2 dev bucket).
   Size: L.
 
-- [ ] INGEST-002 · Upload UI with resume
+- [x] INGEST-002 · Upload UI with resume
   Drag and drop or file picker on a case, per-file progress, pause, resume after reload, retry on failure, multiple files. The window and its states are INGEST-021.
   Done when an E2E test interrupts a throttled 1 GB upload, reloads the page, and the upload resumes to completion.
   Uses `@uppy/core` and `@uppy/aws-s3` in Companion mode against the INGEST-001 routes, and the throttle is the latency proxy's uplink limit ([ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md)). The spike in `packages/upload-spike` already does this headless.
