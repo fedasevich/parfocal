@@ -123,7 +123,8 @@ export async function indexedPages(
   const entries = new Map<number, SlideIndexPage>();
   for (const level of levels) {
     for (const entry of [level, ...(level.siblings ?? [])]) {
-      if (entry.ifdOffset !== undefined) entries.set(entry.ifdOffset, entry);
+      const { page, ifdOffset } = entry;
+      if (ifdOffset !== undefined && page !== undefined) entries.set(ifdOffset, { ...entry, page });
     }
   }
   return Promise.all(
