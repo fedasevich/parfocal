@@ -1,6 +1,7 @@
 import {
   fakeApiHandlers,
   scenario,
+  sessionLockHandlers,
   setFakeConnectModelScene,
   setFakeJobsScene,
   setFakeQueueScene,
@@ -44,7 +45,8 @@ export async function startFakeApi(
   if (scope === "all") fixClock(new Date(scenario.scenarioNow));
   const search = Object.fromEntries(new URLSearchParams(window.location.search));
   applyFakeState(window.location.pathname, search);
-  await startFakeWorker(fakeApiHandlers(scope));
+  const sessionLock = scope === "all" ? sessionLockHandlers() : [];
+  await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);
   mountFakeDataBadge(scope, queryClient);
   router.subscribe("onBeforeNavigate", ({ toLocation }) => {
     if (applyFakeState(toLocation.pathname, toLocation.search)) {
