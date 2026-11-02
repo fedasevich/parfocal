@@ -54,6 +54,11 @@ export {
   pixelSlide,
 } from "./pixel-slide.ts";
 export {
+  mountSlideViewport,
+  type SlideViewport,
+  type SlideViewportOptions,
+} from "./slide-viewport.ts";
+export {
   boxDownsamplePlane,
   type ChannelDisplay,
   createVivChannelLevels,
