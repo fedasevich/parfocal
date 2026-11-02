@@ -44,6 +44,7 @@ from parfocal_api import (
     search,
     service_accounts,
     sessions_api,
+    site_validations,
     study_templates,
     taxonomy,
     tenants,
@@ -164,6 +165,7 @@ def create_app(
     app.include_router(review_order.router)
     app.include_router(reviewed_export.router)
     app.include_router(announcements.router)
+    app.include_router(site_validations.router)
     app.include_router(home.router)
     app.include_router(retention.router)
     app.include_router(personal_data.me_router)

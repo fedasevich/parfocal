@@ -10055,6 +10055,238 @@
         "x-permission-write": true
       }
     },
+    "/api/site-validations": {
+      "get": {
+        "tags": [
+          "site-validations"
+        ],
+        "summary": "List Site Validations",
+        "operationId": "listSiteValidations",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SiteValidation"
+                  },
+                  "type": "array",
+                  "title": "Response Listsitevalidations"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "site-validations"
+        ],
+        "summary": "Record Site Validation",
+        "operationId": "recordSiteValidation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationRun"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteValidation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "workspace-settings",
+        "x-permission-write": true
+      }
+    },
     "/api/me/home": {
       "get": {
         "tags": [
@@ -22106,6 +22338,7 @@
           "service-account",
           "invitation",
           "announcement",
+          "site-validation",
           "annotation",
           "slide",
           "legal-hold",
@@ -26763,6 +26996,39 @@
         ],
         "title": "ProjectRole"
       },
+      "Proportion": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "numerator": {
+            "type": "integer",
+            "title": "Numerator"
+          },
+          "denominator": {
+            "type": "integer",
+            "title": "Denominator"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "numerator",
+          "denominator",
+          "low",
+          "high"
+        ],
+        "title": "Proportion"
+      },
       "Question": {
         "oneOf": [
           {
@@ -29228,6 +29494,98 @@
         ],
         "title": "SigningKey"
       },
+      "SiteValidation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "specimen_type": {
+            "type": "string",
+            "title": "Specimen Type"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "true_positives": {
+            "type": "integer",
+            "title": "True Positives"
+          },
+          "false_positives": {
+            "type": "integer",
+            "title": "False Positives"
+          },
+          "true_negatives": {
+            "type": "integer",
+            "title": "True Negatives"
+          },
+          "false_negatives": {
+            "type": "integer",
+            "title": "False Negatives"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/Proportion"
+          },
+          "specificity": {
+            "$ref": "#/components/schemas/Proportion"
+          },
+          "announcement_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Announcement Id"
+          },
+          "created_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By User Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "model_name",
+          "model_version",
+          "specimen_type",
+          "threshold",
+          "cases",
+          "true_positives",
+          "false_positives",
+          "true_negatives",
+          "false_negatives",
+          "sensitivity",
+          "specificity",
+          "announcement_id",
+          "created_by_user_id",
+          "created_at"
+        ],
+        "title": "SiteValidation"
+      },
       "SlideChoice": {
         "properties": {
           "slide_id": {
@@ -31360,6 +31718,66 @@
           "problems"
         ],
         "title": "Validation"
+      },
+      "ValidationItem": {
+        "properties": {
+          "positive": {
+            "type": "boolean",
+            "title": "Positive"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "positive",
+          "score"
+        ],
+        "title": "ValidationItem"
+      },
+      "ValidationRun": {
+        "properties": {
+          "model_name": {
+            "$ref": "#/components/schemas/ModelName"
+          },
+          "model_version": {
+            "$ref": "#/components/schemas/ModelVersion"
+          },
+          "specimen_type": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Specimen Type"
+          },
+          "threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Threshold",
+            "default": 0.5
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationItem"
+            },
+            "type": "array",
+            "maxItems": 10000,
+            "minItems": 2,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "model_version",
+          "specimen_type",
+          "items"
+        ],
+        "title": "ValidationRun"
       },
       "Verdict": {
         "properties": {

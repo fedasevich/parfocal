@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 26 |
-| `personal` | 44 |
+| `personal` | 45 |
 | `secret` | 9 |
-| `operational` | 468 |
+| `operational` | 481 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -654,6 +654,25 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `active_tenant_id` | operational |
 | `active_at` | operational |
 | `user_agent` | personal |
+
+## site_validations
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `model_name` | operational |
+| `model_version` | operational |
+| `specimen_type` | operational |
+| `threshold` | operational |
+| `true_positives` | operational |
+| `false_positives` | operational |
+| `true_negatives` | operational |
+| `false_negatives` | operational |
+| `announcement_id` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## slide_counters
 

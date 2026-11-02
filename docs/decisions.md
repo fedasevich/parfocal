@@ -54,6 +54,16 @@ TILES-001 (signed access to slide bytes) closes the label and macro pages of the
 
 Your choice:
 
+## 18. Site validation sets
+
+MLEVAL-008 (site validation reports) records a report from a model's scores and the known outcome of each case in the site's local validation set, sent with the request, because no paid model run is allowed yet. The report counts true and false positives and negatives at a threshold, gives sensitivity and specificity with 95% Wilson intervals, and posts a model announcement to every member's home feed.
+
+- a. (recommended) Keep it this way, so a site or a pipeline sends the scores and outcomes it already has, and AIP-005 (validation mapping per site and specimen) reads the stored reports.
+- b. Derive the validation set from the workspace's own reviewed cases, with the truth from reviewers' decisions and the scores from a model run on those slides, which needs a model run queued on real compute.
+- c. Both, with b added once model runs execute on GPUs.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.

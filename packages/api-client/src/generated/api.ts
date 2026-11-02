@@ -401,6 +401,7 @@ export const AuditTarget = {
   "service-account": "service-account",
   invitation: "invitation",
   announcement: "announcement",
+  "site-validation": "site-validation",
   annotation: "annotation",
   slide: "slide",
   "legal-hold": "legal-hold",
@@ -2147,6 +2148,14 @@ export interface ProjectDraft {
   taxonomy?: TaxonomyTemplate | null;
 }
 
+export interface Proportion {
+  value: number;
+  numerator: number;
+  denominator: number;
+  low: number;
+  high: number;
+}
+
 export type Why = (typeof Why)[keyof typeof Why];
 
 export const Why = {
@@ -2810,6 +2819,24 @@ export interface SigningKey {
   current: boolean;
 }
 
+export interface SiteValidation {
+  id: string;
+  model_name: string;
+  model_version: string;
+  specimen_type: string;
+  threshold: number;
+  cases: number;
+  true_positives: number;
+  false_positives: number;
+  true_negatives: number;
+  false_negatives: number;
+  sensitivity: Proportion;
+  specificity: Proportion;
+  announcement_id: string;
+  created_by_user_id: string | null;
+  created_at: string;
+}
+
 export interface SlideChoice {
   slide_id?: string | null;
   slide_upload_id?: string | null;
@@ -3079,6 +3106,35 @@ export interface UploadedPart {
 export interface Validation {
   valid: boolean;
   problems: SchemaProblem[];
+}
+
+export interface ValidationItem {
+  positive: boolean;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  score: number;
+}
+
+export interface ValidationRun {
+  model_name: ModelName;
+  model_version: ModelVersion;
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  specimen_type: string;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  threshold?: number;
+  /**
+   * @minItems 2
+   * @maxItems 10000
+   */
+  items: ValidationItem[];
 }
 
 export interface Verdict {
@@ -17007,6 +17063,365 @@ export const useEndAnnouncement = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getEndAnnouncementMutationOptions(options), queryClient);
+};
+
+export type listSiteValidationsResponse200 = {
+  data: SiteValidation[];
+  status: 200;
+};
+
+export type listSiteValidationsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSiteValidationsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSiteValidationsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSiteValidationsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSiteValidationsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSiteValidationsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSiteValidationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSiteValidationsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSiteValidationsResponseSuccess = listSiteValidationsResponse200 & {
+  headers: Headers;
+};
+export type listSiteValidationsResponseError = (
+  | listSiteValidationsResponse400
+  | listSiteValidationsResponse401
+  | listSiteValidationsResponse403
+  | listSiteValidationsResponse404
+  | listSiteValidationsResponse409
+  | listSiteValidationsResponse422
+  | listSiteValidationsResponse429
+  | listSiteValidationsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSiteValidationsResponse =
+  | listSiteValidationsResponseSuccess
+  | listSiteValidationsResponseError;
+
+export const getListSiteValidationsUrl = () => {
+  return `/api/site-validations`;
+};
+
+/**
+ * @summary List Site Validations
+ */
+export const listSiteValidations = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSiteValidationsResponse> => {
+  return apiFetch<listSiteValidationsResponse>(getListSiteValidationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSiteValidationsQueryKey = () => {
+  return [`/api/site-validations`] as const;
+};
+
+export const getListSiteValidationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSiteValidations>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSiteValidations>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSiteValidationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSiteValidations>>> = ({ signal }) =>
+    listSiteValidations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteValidations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListSiteValidationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSiteValidations>>
+>;
+export type ListSiteValidationsQueryError = Problem;
+
+export function useListSiteValidations<
+  TData = Awaited<ReturnType<typeof listSiteValidations>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSiteValidations>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSiteValidations>>,
+          TError,
+          Awaited<ReturnType<typeof listSiteValidations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSiteValidations<
+  TData = Awaited<ReturnType<typeof listSiteValidations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSiteValidations>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSiteValidations>>,
+          TError,
+          Awaited<ReturnType<typeof listSiteValidations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSiteValidations<
+  TData = Awaited<ReturnType<typeof listSiteValidations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSiteValidations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Site Validations
+ */
+
+export function useListSiteValidations<
+  TData = Awaited<ReturnType<typeof listSiteValidations>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSiteValidations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSiteValidationsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type recordSiteValidationResponse201 = {
+  data: SiteValidation;
+  status: 201;
+};
+
+export type recordSiteValidationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type recordSiteValidationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type recordSiteValidationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type recordSiteValidationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type recordSiteValidationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type recordSiteValidationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type recordSiteValidationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type recordSiteValidationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type recordSiteValidationResponseSuccess = recordSiteValidationResponse201 & {
+  headers: Headers;
+};
+export type recordSiteValidationResponseError = (
+  | recordSiteValidationResponse400
+  | recordSiteValidationResponse401
+  | recordSiteValidationResponse403
+  | recordSiteValidationResponse404
+  | recordSiteValidationResponse409
+  | recordSiteValidationResponse422
+  | recordSiteValidationResponse429
+  | recordSiteValidationResponse500
+) & {
+  headers: Headers;
+};
+
+export type recordSiteValidationResponse =
+  | recordSiteValidationResponseSuccess
+  | recordSiteValidationResponseError;
+
+export const getRecordSiteValidationUrl = () => {
+  return `/api/site-validations`;
+};
+
+/**
+ * @summary Record Site Validation
+ */
+export const recordSiteValidation = async (
+  validationRun: ValidationRun,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<recordSiteValidationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<recordSiteValidationResponse>(getRecordSiteValidationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(validationRun),
+  });
+};
+
+export const getRecordSiteValidationMutationKey = () => ["recordSiteValidation"] as const;
+
+export const getRecordSiteValidationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordSiteValidation>>,
+    TError,
+    RecordSiteValidationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordSiteValidation>>,
+  TError,
+  RecordSiteValidationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordSiteValidationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordSiteValidation>>,
+    RecordSiteValidationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordSiteValidation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordSiteValidationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordSiteValidation>>
+>;
+export type RecordSiteValidationMutationBody = ValidationRun;
+export type RecordSiteValidationMutationError = Problem;
+export type RecordSiteValidationMutationVariables = { data: ValidationRun };
+
+/**
+ * @summary Record Site Validation
+ */
+export const useRecordSiteValidation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordSiteValidation>>,
+      TError,
+      RecordSiteValidationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordSiteValidation>>,
+  TError,
+  RecordSiteValidationMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordSiteValidationMutationOptions(options), queryClient);
 };
 
 export type getMyHomeResponse200 = {

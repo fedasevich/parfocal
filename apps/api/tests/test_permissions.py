@@ -97,6 +97,7 @@ OPEN_OPERATIONS = {
     "endOtherSessions": "signed-in",
     "getSessionPolicy": "member",
     "listAnnouncements": "member",
+    "listSiteValidations": "member",
     "getMyHome": "member",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
@@ -405,6 +406,16 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", "/api/announcements", {"kind": "change", "text": "Matrix announcement"}
     ),
     "endAnnouncement": lambda w: Call("POST", f"/api/announcements/{w.announcement}/end"),
+    "recordSiteValidation": lambda _: Call(
+        "POST",
+        "/api/site-validations",
+        {
+            "model_name": "matrix-model",
+            "model_version": "1",
+            "specimen_type": "biopsy",
+            "items": [{"positive": True, "score": 0.9}, {"positive": False, "score": 0.1}],
+        },
+    ),
     "getRetentionPolicy": lambda _: Call("GET", "/api/tenant/retention"),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
@@ -550,6 +561,7 @@ PLACEHOLDER = Workspace(
 )
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
+    "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),

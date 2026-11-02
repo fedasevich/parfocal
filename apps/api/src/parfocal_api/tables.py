@@ -1724,6 +1724,42 @@ announcements = Table(
 )
 
 
+site_validations = Table(
+    "site_validations",
+    metadata,
+    *owned_ids(),
+    Column("model_name", String(80), nullable=False, info=OPERATIONAL),
+    Column("model_version", String(40), nullable=False, info=OPERATIONAL),
+    Column("specimen_type", String(80), nullable=False, info=OPERATIONAL),
+    Column("threshold", Float[float](), nullable=False, info=OPERATIONAL),
+    Column("true_positives", Integer, nullable=False, info=OPERATIONAL),
+    Column("false_positives", Integer, nullable=False, info=OPERATIONAL),
+    Column("true_negatives", Integer, nullable=False, info=OPERATIONAL),
+    Column("false_negatives", Integer, nullable=False, info=OPERATIONAL),
+    Column(
+        "announcement_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("announcements.id"),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    Index("ix_site_validations_tenant_id_created_at", "tenant_id", "created_at"),
+    CheckConstraint(
+        "least(true_positives, false_positives, true_negatives, false_negatives) >= 0",
+        name="counts",
+    ),
+    CheckConstraint("threshold >= 0 AND threshold <= 1", name="threshold"),
+)
+
+
 rate_counters = Table(
     "rate_counters",
     metadata,

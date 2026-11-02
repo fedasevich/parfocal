@@ -92,6 +92,7 @@ import type {
   SessionSummary,
   SignedPart,
   SigningKey,
+  SiteValidation,
   SlideFigure,
   SlidePage,
   SlideScope,
@@ -2691,6 +2692,70 @@ export const getEndAnnouncementResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(AnnouncementKind)),
   text: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ends_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListSiteValidationsResponseMock = (): SiteValidation[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    model_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    model_version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    specimen_type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    threshold: faker.number.float({ fractionDigits: 2 }),
+    cases: faker.number.int(),
+    true_positives: faker.number.int(),
+    false_positives: faker.number.int(),
+    true_negatives: faker.number.int(),
+    false_negatives: faker.number.int(),
+    sensitivity: {
+      value: faker.number.float({ fractionDigits: 2 }),
+      numerator: faker.number.int(),
+      denominator: faker.number.int(),
+      low: faker.number.float({ fractionDigits: 2 }),
+      high: faker.number.float({ fractionDigits: 2 }),
+    },
+    specificity: {
+      value: faker.number.float({ fractionDigits: 2 }),
+      numerator: faker.number.int(),
+      denominator: faker.number.int(),
+      low: faker.number.float({ fractionDigits: 2 }),
+      high: faker.number.float({ fractionDigits: 2 }),
+    },
+    announcement_id: faker.string.uuid(),
+    created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getRecordSiteValidationResponseMock = (
+  overrideResponse: Partial<Extract<SiteValidation, object>> = {},
+): SiteValidation => ({
+  id: faker.string.uuid(),
+  model_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  model_version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  specimen_type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  threshold: faker.number.float({ fractionDigits: 2 }),
+  cases: faker.number.int(),
+  true_positives: faker.number.int(),
+  false_positives: faker.number.int(),
+  true_negatives: faker.number.int(),
+  false_negatives: faker.number.int(),
+  sensitivity: {
+    value: faker.number.float({ fractionDigits: 2 }),
+    numerator: faker.number.int(),
+    denominator: faker.number.int(),
+    low: faker.number.float({ fractionDigits: 2 }),
+    high: faker.number.float({ fractionDigits: 2 }),
+  },
+  specificity: {
+    value: faker.number.float({ fractionDigits: 2 }),
+    numerator: faker.number.int(),
+    denominator: faker.number.int(),
+    low: faker.number.float({ fractionDigits: 2 }),
+    high: faker.number.float({ fractionDigits: 2 }),
+  },
+  announcement_id: faker.string.uuid(),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
@@ -8401,6 +8466,54 @@ export const getEndAnnouncementMockHandler = (
   );
 };
 
+export const getListSiteValidationsMockHandler = (
+  overrideResponse?:
+    | SiteValidation[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SiteValidation[]> | SiteValidation[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/site-validations",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSiteValidationsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRecordSiteValidationMockHandler = (
+  overrideResponse?:
+    | SiteValidation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SiteValidation> | SiteValidation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/site-validations",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRecordSiteValidationResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetMyHomeMockHandler = (
   overrideResponse?:
     | Home
@@ -10430,6 +10543,8 @@ export const getParfocalAPIMock = () => [
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getEndAnnouncementMockHandler(),
+  getListSiteValidationsMockHandler(),
+  getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),
   getGetRetentionPolicyMockHandler(),
   getSetRetentionPolicyMockHandler(),

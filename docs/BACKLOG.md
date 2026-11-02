@@ -2717,7 +2717,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Quantised browser graphs must match server outputs within tolerance.
   Done when CI compares ONNX outputs to PyTorch on a fixed patch set.
 
-- [ ] MLEVAL-008 · Site validation reports
+- [x] MLEVAL-008 · Site validation reports
   Run a model on a site's local validation set and produce a report with sensitivity and specificity, which feeds AIP-005.
   Done when a test produces the report for seeded data and the announcement of a validation reaches the home feed.
 
