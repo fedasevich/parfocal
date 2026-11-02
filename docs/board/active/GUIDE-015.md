@@ -1,3 +1,3 @@
-status: review
+status: in-progress
 since: 2026-11-02
-note: Backend done. UI wiring of styles and Counts as and the Methods sentence are left
+note: UI half running in the parallel run of 2026-11-02
