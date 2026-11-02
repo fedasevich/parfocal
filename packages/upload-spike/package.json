@@ -3,6 +3,11 @@
   "description": "STACK-039 spike: resumable S3 multipart uploads with Uppy over a throttled link that is cut mid-upload",
   "private": true,
   "type": "module",
+  "exports": {
+    "./harness": "./src/harness.ts",
+    "./digest": "./src/digest.ts",
+    "./minio": "./src/minio.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
     "test": "node --test \"test/**/*.test.ts\"",

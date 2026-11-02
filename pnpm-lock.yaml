@@ -250,6 +250,12 @@ importers:
       '@tanstack/react-virtual':
         specifier: 3.14.25
         version: 3.14.25(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@uppy/aws-s3':
+        specifier: 6.3.0
+        version: 6.3.0(@uppy/core@6.3.0)
+      '@uppy/core':
+        specifier: 6.3.0
+        version: 6.3.0
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -269,6 +275,9 @@ importers:
       '@parfocal/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+      '@parfocal/upload-spike':
+        specifier: workspace:*
+        version: link:../../packages/upload-spike
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0

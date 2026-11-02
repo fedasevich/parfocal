@@ -57,6 +57,8 @@ export interface UploadApiOptions {
   readonly preferredPartBytes: number;
   readonly listPageSize: number;
   readonly port?: number;
+  readonly basePath?: string;
+  readonly corsOrigin?: string;
 }
 
 export interface UploadApi {
@@ -201,7 +203,12 @@ export async function startUploadApi(options: UploadApiOptions): Promise<UploadA
       };
       uploads.set(record.uploadId, record);
       log({ at: performance.now(), kind: "create", key: record.key, uploadId: record.uploadId });
-      send(response, 200, { key: record.key, uploadId: record.uploadId });
+      send(response, options.basePath === undefined ? 200 : 201, {
+        key: record.key,
+        uploadId: record.uploadId,
+        part_size: plan.partBytes,
+        part_count: plan.partCount,
+      });
       return;
     }
     if (uploadId === undefined) {
@@ -265,6 +272,23 @@ export async function startUploadApi(options: UploadApiOptions): Promise<UploadA
 
   const route = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     const url = new URL(request.url ?? "/", "http://api");
+    const base = options.basePath ?? "";
+    if (options.corsOrigin !== undefined) {
+      response.setHeader("access-control-allow-origin", options.corsOrigin);
+      response.setHeader("access-control-allow-methods", "GET, POST, DELETE, OPTIONS");
+      response.setHeader(
+        "access-control-allow-headers",
+        request.headers["access-control-request-headers"] ?? "content-type",
+      );
+      if (request.method === "OPTIONS") {
+        response.writeHead(204);
+        response.end();
+        return;
+      }
+    }
+    if (base !== "" && url.pathname.startsWith(`${base}/`)) {
+      url.pathname = url.pathname.slice(base.length);
+    }
     if (url.pathname === "/") {
       response.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
       response.end(PAGE_HTML);
@@ -275,13 +299,24 @@ export async function startUploadApi(options: UploadApiOptions): Promise<UploadA
       response.end(uppyBundle);
       return;
     }
-    if (url.pathname === "/uploads/open") {
+    if (url.pathname === "/uploads/open" || url.pathname === "/open") {
       const name = url.searchParams.get("name");
       const fileBytes = Number(url.searchParams.get("size"));
       const open = [...uploads.values()].find(
         (record) => record.name === name && record.fileBytes === fileBytes,
       );
-      send(response, open ? 200 : 404, open ? { key: open.key, uploadId: open.uploadId } : {});
+      send(
+        response,
+        open ? 200 : 404,
+        open
+          ? {
+              key: open.key,
+              uploadId: open.uploadId,
+              part_size: open.plan.partBytes,
+              part_count: open.plan.partCount,
+            }
+          : {},
+      );
       return;
     }
     const match = MULTIPART.exec(url.pathname);
