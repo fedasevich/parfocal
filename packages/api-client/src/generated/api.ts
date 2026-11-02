@@ -1083,6 +1083,7 @@ export interface OpinionOut {
 
 export interface Evaluation {
   task_id: string;
+  sample: boolean;
   decisions: DecisionCounts;
   classes: ClassMetrics[];
   overall: ClassMetrics[];
@@ -2235,6 +2236,7 @@ export interface Project {
   template: AnalysisTemplate;
   archived_at: string | null;
   created_at: string;
+  sample: boolean;
   my_role: ProjectRole | null;
   members: ProjectMember[];
 }
@@ -5149,6 +5151,149 @@ export const useUpdateProject = <TError = Problem, TContext = unknown>(
   return useMutation(getUpdateProjectMutationOptions(options), queryClient);
 };
 
+export type deleteProjectResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteProjectResponseSuccess = deleteProjectResponse204 & {
+  headers: Headers;
+};
+export type deleteProjectResponseError = (
+  | deleteProjectResponse400
+  | deleteProjectResponse401
+  | deleteProjectResponse403
+  | deleteProjectResponse404
+  | deleteProjectResponse409
+  | deleteProjectResponse422
+  | deleteProjectResponse429
+  | deleteProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteProjectResponse = deleteProjectResponseSuccess | deleteProjectResponseError;
+
+export const getDeleteProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}`;
+};
+
+/**
+ * @summary Delete Project
+ */
+export const deleteProject = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteProjectResponse> => {
+  return apiFetch<deleteProjectResponse>(getDeleteProjectUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteProjectMutationKey = () => ["deleteProject"] as const;
+
+export const getDeleteProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProject>>,
+    TError,
+    DeleteProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProject>>,
+  TError,
+  DeleteProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProject>>,
+    DeleteProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return deleteProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProjectMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProject>>>;
+
+export type DeleteProjectMutationError = Problem;
+export type DeleteProjectMutationVariables = { projectId: string };
+
+/**
+ * @summary Delete Project
+ */
+export const useDeleteProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteProject>>,
+      TError,
+      DeleteProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProject>>,
+  TError,
+  DeleteProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteProjectMutationOptions(options), queryClient);
+};
+
 export type changeProjectPrivacyResponse200 = {
   data: Project;
   status: 200;
@@ -5930,6 +6075,150 @@ export const useRemoveProjectMember = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRemoveProjectMemberMutationOptions(options), queryClient);
+};
+
+export type createSampleProjectResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type createSampleProjectResponse201 = {
+  data: Project;
+  status: 201;
+};
+
+export type createSampleProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createSampleProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createSampleProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createSampleProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createSampleProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createSampleProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createSampleProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createSampleProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createSampleProjectResponseSuccess = (
+  | createSampleProjectResponse200
+  | createSampleProjectResponse201
+) & {
+  headers: Headers;
+};
+export type createSampleProjectResponseError = (
+  | createSampleProjectResponse400
+  | createSampleProjectResponse401
+  | createSampleProjectResponse403
+  | createSampleProjectResponse404
+  | createSampleProjectResponse409
+  | createSampleProjectResponse422
+  | createSampleProjectResponse429
+  | createSampleProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type createSampleProjectResponse =
+  | createSampleProjectResponseSuccess
+  | createSampleProjectResponseError;
+
+export const getCreateSampleProjectUrl = () => {
+  return `/api/projects/sample`;
+};
+
+/**
+ * @summary Create Sample Project
+ */
+export const createSampleProject = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createSampleProjectResponse> => {
+  return apiFetch<createSampleProjectResponse>(getCreateSampleProjectUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateSampleProjectMutationKey = () => ["createSampleProject"] as const;
+
+export const getCreateSampleProjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSampleProject>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof createSampleProject>>, TError, void, TContext> => {
+  const mutationKey = getCreateSampleProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSampleProject>>,
+    void
+  > = () => {
+    return createSampleProject(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSampleProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSampleProject>>
+>;
+
+export type CreateSampleProjectMutationError = Problem;
+
+/**
+ * @summary Create Sample Project
+ */
+export const useCreateSampleProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createSampleProject>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof createSampleProject>>, TError, void, TContext> => {
+  return useMutation(getCreateSampleProjectMutationOptions(options), queryClient);
 };
 
 export type listProjectClassesResponse200 = {

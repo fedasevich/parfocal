@@ -15,6 +15,7 @@ from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Grant, Permission, grant_of, in_project
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.project_access import assigned_slides, reads_whole
+from parfocal_api.projects import LIVE, NOT_SAMPLE
 from parfocal_api.projects import code_of as project_code
 from parfocal_api.reviewed_export import LETTERS
 from parfocal_api.tables import (
@@ -232,6 +233,7 @@ async def projects_of(
             .where(
                 project_members.c.user_id == principal.user_id,
                 projects.c.archived_at.is_(None),
+                LIVE,
             )
             .order_by(projects.c.number)
         )
@@ -300,9 +302,9 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
     since = (await connection.execute(select(func.now() - WEEK))).scalar_one()
     checked, agreed = (
         await connection.execute(
-            select(func.count(), func.count().filter(verdicts.c.value == VerdictValue.AGREE)).where(
-                verdicts.c.user_id == me, verdicts.c.updated_at >= since
-            )
+            select(func.count(), func.count().filter(verdicts.c.value == VerdictValue.AGREE))
+            .join(projects, projects.c.id == verdicts.c.project_id)
+            .where(verdicts.c.user_id == me, verdicts.c.updated_at >= since, NOT_SAMPLE)
         )
     ).one()
     open_disagreements: int | None = None

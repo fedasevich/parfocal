@@ -94,6 +94,31 @@ ADR 0131 (decision styles, raw answers and submit gating) leaves open whether a 
 
 Your choice:
 
+## 20. Sample project, from ONB-005 (sample project)
+
+### 20a. What two result sets means
+
+The sample seeds two result sets on every one of its four slides, one from the CAMELYON tumor model and one from PathoSAM + HoVer-NeXt, so the same slides can be compared side by side as EVAL-004 (compare two evaluations) plans. The setup screen says "4 slides, 2 result sets".
+
+- a. Two models, each with a set on every slide, eight sets in all. (recommended, built)
+- b. Two result sets in total, on two of the four slides, and the review task covers only those two.
+
+Your choice:
+
+### 20b. Who may delete a project
+
+- a. Only the sample can be deleted, by its owner. Real projects are archived. (recommended, built)
+- b. Any owner may delete any project, behind a typed confirmation.
+
+Your choice:
+
+### 20c. Who may add the sample
+
+- a. Anyone who may create projects, so researchers and admins. A reviewer who picks the sample in setup gets nothing until ONB-004 (first-run setup) decides. (built)
+- b. Every member, so a reviewer can try a review on the sample too, as setup recommends for that role.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.

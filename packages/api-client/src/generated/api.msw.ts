@@ -238,6 +238,7 @@ export const getCreateProjectResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -265,6 +266,7 @@ export const getListProjectsResponseMock = (): Project[] =>
       null,
     ]),
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    sample: faker.datatype.boolean(),
     my_role: faker.helpers.arrayElement([
       faker.helpers.arrayElement(Object.values(ProjectRole)),
       null,
@@ -292,6 +294,7 @@ export const getGetProjectResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -320,6 +323,7 @@ export const getUpdateProjectResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -348,6 +352,7 @@ export const getChangeProjectPrivacyResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -376,6 +381,7 @@ export const getArchiveProjectResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -404,6 +410,7 @@ export const getRestoreProjectResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -432,6 +439,36 @@ export const getSetProjectMemberResponseMock = (
     null,
   ]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
+  my_role: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ProjectRole)),
+    null,
+  ]),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getCreateSampleProjectResponseMock = (
+  overrideResponse: Partial<Extract<Project, object>> = {},
+): Project => ({
+  id: faker.string.uuid(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  number: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  colour: faker.number.int(),
+  privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
+  template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  archived_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
   my_role: faker.helpers.arrayElement([
     faker.helpers.arrayElement(Object.values(ProjectRole)),
     null,
@@ -3848,6 +3885,7 @@ export const getGetTaskEvaluationResponseMock = (
   overrideResponse: Partial<Extract<Evaluation, object>> = {},
 ): Evaluation => ({
   task_id: faker.string.uuid(),
+  sample: faker.datatype.boolean(),
   decisions: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
@@ -7235,6 +7273,25 @@ export const getUpdateProjectMockHandler = (
   );
 };
 
+export const getDeleteProjectMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getChangeProjectPrivacyMockHandler = (
   overrideResponse?:
     | Project
@@ -7337,6 +7394,32 @@ export const getRemoveProjectMemberMockHandler = (
       }
 
       return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getCreateSampleProjectMockHandler = (
+  overrideResponse?:
+    | void
+    | Project
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<void | Project> | void | Project),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/sample",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      const resolvedBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateSampleProjectResponseMock();
+      return resolvedBody === undefined
+        ? new HttpResponse(null, { status: 200 })
+        : HttpResponse.json(resolvedBody, { status: 200 });
     },
     options,
   );
@@ -10934,11 +11017,13 @@ export const getParfocalAPIMock = () => [
   getListProjectsMockHandler(),
   getGetProjectMockHandler(),
   getUpdateProjectMockHandler(),
+  getDeleteProjectMockHandler(),
   getChangeProjectPrivacyMockHandler(),
   getArchiveProjectMockHandler(),
   getRestoreProjectMockHandler(),
   getSetProjectMemberMockHandler(),
   getRemoveProjectMemberMockHandler(),
+  getCreateSampleProjectMockHandler(),
   getListProjectClassesMockHandler(),
   getSetProjectClassesMockHandler(),
   getListClassMappingsMockHandler(),

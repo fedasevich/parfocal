@@ -41,6 +41,7 @@ from parfocal_api import (
     review_tasks,
     reviewed_export,
     reviewed_layer,
+    sample_project,
     search,
     service_accounts,
     sessions_api,
@@ -145,6 +146,7 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
+    app.include_router(sample_project.router)
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)

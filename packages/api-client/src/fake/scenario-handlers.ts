@@ -90,6 +90,7 @@ export const toProject = (project: ScenarioProject): Project => ({
   code: project.code,
   number: Number(project.code.slice(1)),
   name: project.name,
+  sample: false,
   colour: project.colour,
   privacy_mode: project.privacy,
   template: project.template,

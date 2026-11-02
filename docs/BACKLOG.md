@@ -3715,7 +3715,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
 
-- [ ] ONB-005 · Sample project
+- [x] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.
   Done when API tests seed and delete it, and an evaluation test proves it is excluded.
   Depends on PROJ-001, RSET-001, TASK-001.
@@ -3724,6 +3724,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   On Home until each item has been tried once, and hideable.
   Done when component tests tick items from real events.
   Depends on ONB-004, HOME-002. Refs mock: home/new.
+
+- [ ] ONB-007 · Sample slide files
+  The four CAMELYON16 slides of the sample project open in the viewer: their originals sit once in storage, each sample slide row points at them with size and checksum, and the edge serves them under the tile token ([ADR 0139](adr/0139-sample-project-flag-and-soft-delete.md), the sample project).
+  Done when an API test shows a seeded sample slide gets a tile token and an E2E test opens one.
+  Depends on ONB-005, TILES-001.
 
 ---
 

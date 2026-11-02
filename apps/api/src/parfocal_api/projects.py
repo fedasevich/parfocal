@@ -68,6 +68,7 @@ class Project(BaseModel):
     template: AnalysisTemplate
     archived_at: datetime | None
     created_at: datetime
+    sample: bool
     my_role: ProjectRole | None
     members: list[ProjectMember]
 
@@ -114,6 +115,7 @@ class ReviewersCannotOwnError(BadRequestError):
 
 IN_THIS_TENANT = projects.c.tenant_id == literal_column(CURRENT_TENANT)
 LIVE = projects.c.deleted_at.is_(None)
+NOT_SAMPLE = projects.c.sample.is_(False)
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -174,6 +176,7 @@ async def project_of(
         template=AnalysisTemplate(row.template),
         archived_at=row.archived_at,
         created_at=row.created_at,
+        sample=row.sample,
         my_role=await role_in(connection, principal, project_id),
         members=[ProjectMember(user_id=m.user_id, role=ProjectRole(m.role)) for m in members],
     )

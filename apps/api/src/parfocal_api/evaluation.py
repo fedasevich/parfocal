@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     disagreement_decisions,
     opinions,
     project_classes,
+    projects,
     result_objects,
     result_set_classes,
     review_task_slides,
@@ -75,6 +76,7 @@ class DecisionCounts(BaseModel):
 
 class Evaluation(BaseModel):
     task_id: uuid.UUID
+    sample: bool
     decisions: DecisionCounts
     classes: list[ClassMetrics]
     overall: list[ClassMetrics]
@@ -395,8 +397,12 @@ async def get_task_evaluation(
     known = [pair.value for pair in pairs if pair.value is not None]
     with_ai, between = engine.cell_agreement(objects)
     areas = await region_areas(connection, task_id, objects, added_regions, names)
+    sample = await connection.scalar(
+        select(projects.c.sample).where(projects.c.id == task.project_id)
+    )
     return Evaluation(
         task_id=task_id,
+        sample=bool(sample),
         decisions=await decision_counts(connection, task, names),
         classes=[metrics(kind, name, counts) for (kind, name), counts in sorted(table.items())],
         overall=[metrics(kind, "all", engine.overall(table, kind)) for kind in ("region", "cell")],

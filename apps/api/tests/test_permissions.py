@@ -39,6 +39,7 @@ from parfocal_api.tables import (
     organisations,
     project_classes,
     project_members,
+    projects,
     result_objects,
     result_sets,
     review_assignments,
@@ -156,6 +157,7 @@ class Workspace:
     case: uuid.UUID
     project: uuid.UUID
     spare_project: uuid.UUID
+    sample_project: uuid.UUID
     outside_project: uuid.UUID
     project_class: uuid.UUID
     job: uuid.UUID
@@ -338,6 +340,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "archiveProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/archive"),
     "restoreProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/restore"),
+    "createSampleProject": lambda _: Call("POST", "/api/projects/sample"),
+    "deleteProject": lambda w: Call("DELETE", f"/api/projects/{w.sample_project}"),
     "setProjectMember": lambda w: Call(
         "PUT", f"/api/projects/{w.project}/members/{w.colleague}", {"role": "viewer"}
     ),
@@ -551,6 +555,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -870,6 +875,10 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 PatientIdentity("Doomed Patient"),
             )
             spare_project = await seed_project(connection, tenant_id)
+            sample_project = await seed_project(connection, tenant_id)
+            await connection.execute(
+                update(projects).where(projects.c.id == sample_project).values(sample=True)
+            )
             outside_project = await seed_project(connection, tenant_id)
             project_class = await connection.scalar(
                 insert(project_classes)
@@ -1042,7 +1051,7 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                         "user_id": people[lead],
                         "role": "owner",
                     }
-                    for project in (case.project_id, spare_project)
+                    for project in (case.project_id, spare_project, sample_project)
                 ]
                 + [
                     {
@@ -1121,6 +1130,7 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             case.case_id,
             case.project_id,
             spare_project,
+            sample_project,
             outside_project,
             project_class,
             job,

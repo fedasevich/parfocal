@@ -47,6 +47,8 @@ class AuditAction(StrEnum):
     PROJECT_PRIVACY_CHANGED = "project.privacy-changed"
     PROJECT_ARCHIVED = "project.archived"
     PROJECT_RESTORED = "project.restored"
+    PROJECT_DELETED = "project.deleted"
+    SAMPLE_PROJECT_CREATED = "project.sample-created"
     PROJECT_MEMBER_SET = "project.member-set"
     PROJECT_MEMBER_REMOVED = "project.member-removed"
     PROJECT_TAXONOMY_CHANGED = "project.taxonomy-changed"

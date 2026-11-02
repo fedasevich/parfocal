@@ -264,6 +264,7 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
     Math.max(total, 1);
   return {
     task_id: taskId,
+    sample: false,
     decisions: {
       style: "agree",
       counts_as: ["disagree", "disagree", "unsure", "agree", "agree"],
