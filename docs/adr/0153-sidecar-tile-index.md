@@ -1,4 +1,4 @@
-# XXXX. Ingest writes a gzipped JSON tile index next to each TIFF-family slide, and the browser opens the directories it names in parallel instead of walking the IFD chain
+# 0153. Ingest writes a gzipped JSON tile index next to each TIFF-family slide, and the browser opens the directories it names in parallel instead of walking the IFD chain
 
 - Date: 2026-11-02
 - Status: Accepted

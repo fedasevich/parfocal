@@ -941,7 +941,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when fixture tests assert the level table for every supported format, including the SCN case that has a 1616×4668 decoy and the 36832×38432 real slide.
   Refs docs 03, 06 (confident wrong answers).
 
-- [ ] INGEST-007 · Sidecar tile index
+- [x] INGEST-007 · Sidecar tile index
   For TIFF-family files, write a compact sidecar with every IFD's tile offsets and byte counts, so the browser never walks the IFD chain over the network. NDPI gets its restart-marker tile index. BIF gets its stitching layout.
   Done when browser open time on a cross-region BigTIFF drops below 1 s (POC: 4.2 s walk) in a latency-proxy test at 100 ms RTT.
   Refs docs 03, 09, [`poc/src/slide/ndpi-directory.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ndpi-directory.ts), [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts).
