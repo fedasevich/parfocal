@@ -6,6 +6,7 @@ import httpx2
 import pytest
 from chunk_support import ring
 from db_support import ApiAs
+from order_support import run_orders
 from storage_support import TEST_STORAGE, with_store
 from test_result_sets import DRAFT, Lab, in_tenant, lab
 from workspace_support import owner
@@ -115,6 +116,7 @@ def test_a_cell_scope_task_orders_the_cells_read_from_storage(api: ApiAs, databa
         },
     )
     assert task.status_code == 201, task.text
+    run_orders(database, lb.tenant_id)
     order = api(lb.people["reviewer"]).get(
         f"/api/review-tasks/{task.json()['id']}/slides/{lb.slide}/order"
     )

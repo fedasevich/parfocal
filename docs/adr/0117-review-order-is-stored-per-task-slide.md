@@ -45,3 +45,13 @@ Computing the order inside task creation is accepted for now, because local and 
 - Tasks made before migration `0040` (review order) have no order rows and the endpoint returns an empty page for them, which is acceptable because no shared database holds running tasks.
 - Until something writes chunk files into the store, only tests put files there. AIP-013 (result chunk store) and STACK-025 (object storage, CDN and signed access) decide where real files go, and the reader follows.
 - GUIDE-002 (guided review) shows the objects in this order, page by page.
+
+## Amendment 2026-11-02, the order of a cell scope is worked out by a job
+
+GUIDE-013 (review order as a background job) moves the reading of chunk files out of the request. The options were a job per slide, a job per task with one unit per slide, or an inline path with a size threshold. A job per task with one unit per slide was chosen, because a task is created and rescoped as a whole, one job row per task keeps the jobs table small, and the units give the per-slide checkpoint that [ADR 0044](0044-background-jobs-and-workflows.md) (background jobs and workflows) asks for.
+
+- A task whose every scope part is all regions still stores its order inside the request, because it reads no chunk files.
+- Any other scope enqueues one `review-order` job with the task ID and each slide's seed in its input, and stores no order rows. The step reads the task's scope parts from the task row at run time. Each slide is ordered, written and marked done in one transaction that first takes the job row `FOR SHARE` and checks the job is still this worker's, so a retry or a second claim skips finished slides and the primary key of `review_order` keeps one row per task slide.
+- A rescope cancels any live `review-order` job of the task before it deletes the rows and enqueues a new one, and the seeds come from the stored rows, then from the latest job's input.
+- `getReviewOrder` answers 409 `review-order-not-ready` while the latest job of the task is queued, running, paused or cancelling and the slide has no row. After a failed job it answers 409 with the job's error code, `result-files-missing` or `result-files-unreadable` as task creation did before, or `review-order-failed` for anything else. Task creation no longer refuses a missing or unreadable cell file.
+- `python -m parfocal_ingest` runs `parfocal_api.review_order_job:REVIEW_ORDER` by default. There is no route to retry a failed order job yet. A rescope starts a new one.

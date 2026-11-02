@@ -3480,7 +3480,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on TASK-003, GUIDE-001. Refs doc 33 (showing type confidence to a doctor), doc 28 (calibrated type confidence).
   The order covers the regions and cells in the task's scope and is stored as one packed array per task slide in `review_order` when the task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). Cells are read from their chunk files through the result store. A cell's certainty is its chunk's probability for its AI class, and a chunk without probabilities gives unscored cells rather than falling back to the detection score, because the chunk format cannot mark a score as missing.
 
-- [ ] GUIDE-013 · Review order as a background job
+- [x] GUIDE-013 · Review order as a background job
   Storing the least sure first order reads every chunk file of a cell scope inside the request that creates or rescopes a task ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide). For real slides this moves onto the Postgres job engine ([ADR 0044](adr/0044-background-jobs-and-workflows.md), background jobs and workflows): the task is created at once, a job computes each slide's order, and the order route answers that the order is not ready until it is.
   Done when API tests create a cell scope task, see the order reported as not ready, run the job and read the same order the inline path gives, and a test shows a failed job retried without a duplicate order.
   Depends on GUIDE-012, INGEST-003.

@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from order_support import run_orders
 from storage_support import with_store
 from test_result_uploads import RESULTS, result_set, upload_result
 from upload_support import Lab, keys_under, run_worker, single, status_of
@@ -155,6 +156,7 @@ def reviewer_of(database: str, lab: Lab) -> MemberPrincipal:
 
 def ordered(
     api: ApiAs,
+    database: str,
     lab: Lab,
     reviewer: MemberPrincipal,
     slide_id: uuid.UUID,
@@ -173,6 +175,7 @@ def ordered(
         },
     )
     assert task.status_code == 201, task.text
+    run_orders(database, lab.tenant_id)
     order = api(reviewer).get(
         f"/api/review-tasks/{task.json()['id']}/slides/{slide_id}/order",
         params={"limit": 1000},
@@ -191,6 +194,7 @@ def test_review_tasks_with_a_cell_scope_order_the_imported_cells_from_storage(
 
     below = ordered(
         api,
+        database,
         lab,
         reviewer,
         slide_id,
@@ -200,7 +204,13 @@ def test_review_tasks_with_a_cell_scope_order_the_imported_cells_from_storage(
     assert sorted(below) == sorted(every_cell)
 
     sample = ordered(
-        api, lab, reviewer, slide_id, state["result_set_id"], {"kind": "random-cells", "count": 10}
+        api,
+        database,
+        lab,
+        reviewer,
+        slide_id,
+        state["result_set_id"],
+        {"kind": "random-cells", "count": 10},
     )
     assert len(sample) == len(set(sample)) == 10
     assert set(sample) <= every_cell

@@ -5,15 +5,19 @@ from typing import Any
 import pytest
 from chunk_support import CellRow, chunk_bytes, delete_chunk, put_chunk
 from db_support import ApiAs
+from order_support import retry_order, run_orders
 from test_annotations import make_slide
 from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.review_order import ORDER_PLAN
+from parfocal_api.review_order_job import REVIEW_ORDER
 from parfocal_api.tables import Role
 from parfocal_common.cell_chunks import encode
 from parfocal_common.chunk_store import chunk_key
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.scope import sample
+from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -205,6 +209,7 @@ def test_two_reviewers_get_the_same_least_sure_first_order(api: ApiAs, database:
 def test_random_cells_order_only_the_sample(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     task = made(api, o, {"kind": "random-cells", "count": 3})
+    run_orders(database, o.tenant)
     seed = int(
         str(owner(database, f"SELECT scope_seed FROM review_tasks WHERE id = '{task}'")[0][0])
     )
@@ -219,12 +224,14 @@ def test_random_cells_order_only_the_sample(api: ApiAs, database: str) -> None:
 def test_cells_below_a_score_filter_on_the_detection_score(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     task = made(api, o, {"kind": "cells-below-score", "score": 0.1})
+    run_orders(database, o.tenant)
     assert shared(api, o, task) == ["C2", "C3", "C5"]
 
 
 def test_inside_rois_mixes_regions_and_cells(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     task = made(api, o, {"kind": "inside-rois"})
+    run_orders(database, o.tenant)
     order = shared(api, o, task)
     assert order[:4] == ["C1", "C2", "T3", "T5"]
     assert sorted(order[4:]) == ["T4", "T6"]
@@ -233,6 +240,7 @@ def test_inside_rois_mixes_regions_and_cells(api: ApiAs, database: str) -> None:
 def test_unsure_zones_order_the_cells_inside_zones(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     task = made(api, o, {"kind": "unsure-zones"})
+    run_orders(database, o.tenant)
     assert shared(api, o, task) == ["C3", "C4"]
 
 
@@ -259,16 +267,19 @@ def test_a_scope_change_rebuilds_the_order(api: ApiAs, database: str) -> None:
         f"/api/review-tasks/{o.task}", json={"scope": {"kind": "unsure-zones"}}
     )
     assert changed.status_code == 200, changed.text
+    run_orders(database, o.tenant)
     assert shared(api, o, o.task) == ["C3", "C4"]
     renamed = api(o.people["owner"]).patch(f"/api/review-tasks/{o.task}", json={"name": "Again"})
     assert renamed.status_code == 200
     assert shared(api, o, o.task) == ["C3", "C4"]
 
 
-def test_a_missing_cell_file_refuses_the_task(api: ApiAs, database: str) -> None:
+def test_a_missing_cell_file_fails_the_order(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     delete_chunk(o.key(1))
-    refused = create_task(api, o, {"kind": "cells-below-score", "score": 0.1})
+    task = made(api, o, {"kind": "cells-below-score", "score": 0.1})
+    run_orders(database, o.tenant)
+    refused = order_of(api, o, "first", o.slides[0], task)
     assert (refused.status_code, refused.json()["code"]) == (409, "result-files-missing")
     assert create_task(api, o).status_code == 201
 
@@ -277,18 +288,21 @@ def test_a_missing_cell_file_refuses_the_task(api: ApiAs, database: str) -> None
     "data",
     [b"not a chunk", encode({"version": 2, "kind": "cells", "count": 0}, [])],
 )
-def test_an_unreadable_or_later_cell_file_refuses_the_task(
+def test_an_unreadable_or_later_cell_file_fails_the_order(
     api: ApiAs, database: str, data: bytes
 ) -> None:
     o = ordered(database, api)
     put_chunk(o.key(1), data)
-    refused = create_task(api, o, {"kind": "cells-below-score", "score": 0.1})
+    task = made(api, o, {"kind": "cells-below-score", "score": 0.1})
+    run_orders(database, o.tenant)
+    refused = order_of(api, o, "first", o.slides[0], task)
     assert (refused.status_code, refused.json()["code"]) == (409, "result-files-unreadable")
 
 
 def test_a_recalibration_leaves_a_running_task_unchanged(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
     task = made(api, o, {"kind": "inside-rois"})
+    run_orders(database, o.tenant)
     regions, mixed = shared(api, o, o.task), shared(api, o, task)
     owner(
         database,
@@ -310,7 +324,9 @@ def test_a_recalibration_leaves_a_running_task_unchanged(api: ApiAs, database: s
     assert same.status_code == 200, same.text
     assert shared(api, o, task) == mixed
     assert shared(api, o, made(api, o))[:4] == ["T1", "T3", "T5", "T2"]
-    later = shared(api, o, made(api, o, {"kind": "inside-rois"}))
+    later_task = made(api, o, {"kind": "inside-rois"})
+    run_orders(database, o.tenant)
+    later = shared(api, o, later_task)
     assert later[:4] == ["C2", "T3", "T5", "C1"]
 
 
@@ -324,6 +340,7 @@ def test_a_scope_of_two_kinds_orders_both_and_counts_both(api: ApiAs, database: 
         {"kind": "unsure-zones", "count": None, "score": None},
     ]
     task = uuid.UUID(created.json()["id"])
+    run_orders(database, o.tenant)
     both = shared(api, o, task)
     assert sorted(both) == ["C3", "C4", "T1", "T2", "T3", "T4", "T5", "T6"]
     assert order_of(api, o, "first", o.slides[0], task).json()["total"] == 8
@@ -353,6 +370,7 @@ def test_adding_a_scope_part_rebuilds_the_order(api: ApiAs, database: str) -> No
         f"/api/review-tasks/{o.task}", json={"extra_scopes": [sample]}
     )
     assert changed.status_code == 200, changed.text
+    run_orders(database, o.tenant)
     after = shared(api, o, o.task)
     assert len(after) == 8
     assert sum(item.startswith("C") for item in after) == 2
@@ -361,3 +379,77 @@ def test_adding_a_scope_part_rebuilds_the_order(api: ApiAs, database: str) -> No
     )
     assert again.status_code == 200
     assert shared(api, o, o.task) == after
+
+
+def order_jobs_of(database: str, task: uuid.UUID) -> list[tuple[Any, ...]]:
+    return owner(
+        database,
+        "SELECT id, status, error_code FROM jobs "
+        f"WHERE kind = 'review-order' AND input->>'task_id' = '{task}' ORDER BY created_at",
+    )
+
+
+def test_a_cell_scope_order_is_not_ready_until_its_job_runs(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = made(api, o, {"kind": "inside-rois"})
+    waiting = order_of(api, o, "first", o.slides[0], task)
+    assert (waiting.status_code, waiting.json()["code"]) == (409, "review-order-not-ready")
+    assert [status for _, status, _ in order_jobs_of(database, task)] == ["queued"]
+    run_orders(database, o.tenant)
+    order = shared(api, o, task)
+    assert order[:4] == ["C1", "C2", "T3", "T5"]
+    assert sorted(order[4:]) == ["T4", "T6"]
+    assert shared(api, o, task, slide=1) == []
+    assert [status for _, status, _ in order_jobs_of(database, task)] == ["done"]
+
+
+def test_a_failed_order_job_retried_leaves_one_order_per_slide(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    delete_chunk(o.key(1))
+    flipped = Ordered(o.people, o.project, o.slides[::-1], o.sets[::-1], o.tenant, o.task)
+    task = made(api, flipped, {"kind": "cells-below-score", "score": 0.1})
+    run_orders(database, o.tenant)
+    [(job_id, status, code)] = order_jobs_of(database, task)
+    assert (status, code) == ("failed", "result-files-missing")
+    assert objects(api, o, "first", task, slide=1) == []
+    put_chunk(o.key(1), chunk_bytes(IMPORTED, None))
+    retry_order(database, o.tenant, uuid.UUID(str(job_id)))
+    run_orders(database, o.tenant)
+    assert [status for _, status, _ in order_jobs_of(database, task)] == ["done"]
+    assert shared(api, o, task) == ["C2", "C3", "C5"]
+    assert (
+        owner(
+            database,
+            f"SELECT slide_id, count(*) FROM review_order WHERE task_id = '{task}' "
+            "GROUP BY slide_id HAVING count(*) > 1",
+        )
+        == []
+    )
+    assert owner(
+        database, f"SELECT count(*), count(DISTINCT unit) FROM job_units WHERE job_id = '{job_id}'"
+    ) == [(2, 2)]
+
+
+def test_a_rescope_cancels_a_waiting_order_job(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = made(api, o, {"kind": "inside-rois"})
+    changed = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{task}", json={"scope": {"kind": "unsure-zones"}}
+    )
+    assert changed.status_code == 200, changed.text
+    assert [status for _, status, _ in order_jobs_of(database, task)] == ["cancelled", "queued"]
+    run_orders(database, o.tenant)
+    assert shared(api, o, task) == ["C3", "C4"]
+    back = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{task}", json={"scope": {"kind": "all-regions"}}
+    )
+    assert back.status_code == 200, back.text
+    assert shared(api, o, task)[:4] == ["T2", "T3", "T5", "T1"]
+
+
+def test_the_queued_plan_matches_the_worker_workflow() -> None:
+    assert (ORDER_PLAN.kind, [step.name for step in ORDER_PLAN.steps]) == (
+        REVIEW_ORDER.kind,
+        [step.name for step in REVIEW_ORDER.steps],
+    )
+    assert "parfocal_api.review_order_job:REVIEW_ORDER" in DEFAULT_WORKFLOWS

@@ -33,6 +33,16 @@ from parfocal_api.tables import (
 )
 from parfocal_common.cell_chunks import ChunkError
 from parfocal_common.chunk_store import chunk_of
+from parfocal_common.jobs import (
+    JobControl,
+    JobStatus,
+    Step,
+    StepRun,
+    Workflow,
+    enqueue,
+    jobs,
+    move,
+)
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import MissingObjectError, ResultStore
 from parfocal_common.review_order import (
@@ -50,6 +60,11 @@ from parfocal_common.scope import Candidate, ObjectKey, Scope, ScopeKind, in_sco
 PAGE = 200
 MAX_PAGE = 1000
 BYTES_PER_OBJECT = 5
+ORDER_KIND = "review-order"
+ORDER_STEP = "order"
+ORDER_LEASE_SECONDS = 120.0
+WAITING = frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED, JobStatus.CANCELLING})
+CANCELLABLE = frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED})
 
 
 class OrderedObject(BaseModel):
@@ -74,6 +89,44 @@ class ResultFilesMissingError(ConflictError):
 class ResultFilesUnreadableError(ConflictError):
     code = "result-files-unreadable"
     title = "A cell file of this result set cannot be read"
+
+
+class ReviewOrderNotReadyError(ConflictError):
+    code = "review-order-not-ready"
+    title = "The review order of this slide is still being worked out"
+
+
+class ReviewOrderFailedError(ConflictError):
+    code = "review-order-failed"
+    title = "The review order of this slide could not be worked out"
+
+
+FAILURES: dict[str, type[ConflictError]] = {
+    error.code: error for error in (ResultFilesMissingError, ResultFilesUnreadableError)
+}
+
+
+class OrderRunsInAWorkerError(RuntimeError):
+    pass
+
+
+async def runs_in_a_worker(step: StepRun) -> Mapping[str, Any]:
+    raise OrderRunsInAWorkerError(step.job_id)
+
+
+ORDER_PLAN = Workflow(
+    kind=ORDER_KIND,
+    steps=[Step(ORDER_STEP, runs_in_a_worker)],
+    lease_seconds=ORDER_LEASE_SECONDS,
+)
+
+
+def reads_cells(scopes: Sequence[Scope]) -> bool:
+    return any(scope.kind is not ScopeKind.ALL_REGIONS for scope in scopes)
+
+
+def order_jobs(task_id: uuid.UUID) -> ColumnElement[bool]:
+    return and_(jobs.c.kind == ORDER_KIND, jobs.c.input["task_id"].astext == str(task_id))
 
 
 def result_store(request: Request) -> ResultStore:
@@ -255,6 +308,41 @@ async def order_of_slide(
     return least_sure_first(list(rated.values()), seed, str(slide_id))
 
 
+async def write_order(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    seed: int,
+    keys: Sequence[ObjectKey],
+) -> None:
+    await connection.execute(
+        delete(review_order).where(
+            review_order.c.task_id == task_id, review_order.c.slide_id == slide_id
+        )
+    )
+    await connection.execute(
+        insert(review_order).values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            seed=seed,
+            count=len(keys),
+            objects=pack(keys),
+        )
+    )
+
+
+async def cancel_order_jobs(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+    live = await connection.scalars(
+        select(jobs.c.id).where(order_jobs(task_id), jobs.c.status.in_(list(CANCELLABLE)))
+    )
+    for job_id in live.all():
+        await move(connection, job_id, JobControl.CANCEL)
+
+
 async def store_order(
     connection: AsyncConnection,
     store: ResultStore,
@@ -264,39 +352,65 @@ async def store_order(
     scopes: Sequence[Scope],
     sets: Mapping[uuid.UUID, uuid.UUID],
     seeds: Mapping[uuid.UUID, int],
-) -> None:
-    rows: list[dict[str, Any]] = []
+) -> uuid.UUID | None:
+    await cancel_order_jobs(connection, task_id)
+    if reads_cells(scopes):
+        await connection.execute(
+            delete(review_order).where(
+                review_order.c.task_id == task_id, review_order.c.slide_id.in_(list(sets))
+            )
+        )
+        return await enqueue(
+            connection,
+            ORDER_PLAN,
+            tenant_id,
+            project_id,
+            {
+                "task_id": str(task_id),
+                "slides": [[str(slide_id), seeds[slide_id]] for slide_id in sets],
+            },
+        )
     for slide_id, set_id in sets.items():
         keys = await order_of_slide(connection, store, scopes, slide_id, set_id, seeds[slide_id])
-        rows.append(
-            {
-                "tenant_id": tenant_id,
-                "project_id": project_id,
-                "task_id": task_id,
-                "slide_id": slide_id,
-                "seed": seeds[slide_id],
-                "count": len(keys),
-                "objects": pack(keys),
-            }
+        await write_order(
+            connection, tenant_id, project_id, task_id, slide_id, seeds[slide_id], keys
         )
-    await connection.execute(
-        delete(review_order).where(
-            review_order.c.task_id == task_id, review_order.c.slide_id.in_(list(sets))
+    return None
+
+
+async def order_state(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+    latest = (
+        await connection.execute(
+            select(jobs.c.status, jobs.c.error_code)
+            .where(order_jobs(task_id))
+            .order_by(jobs.c.created_at.desc())
+            .limit(1)
         )
-    )
-    if rows:
-        await connection.execute(insert(review_order), rows)
+    ).one_or_none()
+    if latest is None:
+        return
+    if latest.status in WAITING:
+        raise ReviewOrderNotReadyError
+    if latest.status == JobStatus.FAILED:
+        raise FAILURES.get(latest.error_code or "", ReviewOrderFailedError)
 
 
 async def stored_seeds(
     connection: AsyncConnection, task_id: uuid.UUID, slide_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, int]:
+    queued = await connection.scalar(
+        select(jobs.c.input).where(order_jobs(task_id)).order_by(jobs.c.created_at.desc()).limit(1)
+    )
+    job_input = cast("dict[str, list[tuple[str, int]]]", queued or {})
+    slides = job_input.get("slides", [])
+    seeds = {uuid.UUID(slide): int(seed) for slide, seed in slides}
     rows = await connection.execute(
         select(review_order.c.slide_id, review_order.c.seed).where(
-            review_order.c.task_id == task_id, review_order.c.slide_id.in_(list(slide_ids))
+            review_order.c.task_id == task_id
         )
     )
-    return {row[0]: row[1] for row in rows}
+    seeds |= {row[0]: row[1] for row in rows}
+    return {slide_id: seeds[slide_id] for slide_id in slide_ids if slide_id in seeds}
 
 
 @router.get(
@@ -321,6 +435,8 @@ async def get_review_order(
             ).where(review_order.c.task_id == task_id, review_order.c.slide_id == slide_id)
         )
     ).one_or_none()
+    if row is None:
+        await order_state(connection, task_id)
     keys = unpack(bytes(row.page)) if row is not None else []
     return ReviewOrder(
         task_id=task_id,
