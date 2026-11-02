@@ -2,6 +2,7 @@ import {
   type EvaluationReport,
   useGetDisagreementQueue,
   useGetEvaluationReport,
+  useGetReviewTask,
   useGetTaskEvaluation,
   useListStudyTemplates,
 } from "@parfocal/api-client";
@@ -77,6 +78,7 @@ function EvaluationBody({
   onScene: (scene: EvaluationScene) => void;
 }) {
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
+  const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
   const templates = okData(useListStudyTemplates().data) ?? [];
   const person = usePeople();
@@ -103,6 +105,7 @@ function EvaluationBody({
     blocks,
     templateVersion: version,
     nameOf,
+    countsAsChanges,
   };
 
   const change = (next: PageBlock[]) => {

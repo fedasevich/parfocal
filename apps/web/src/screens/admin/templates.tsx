@@ -52,7 +52,9 @@ import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useState } from "react";
 import { okData } from "../placeholder.tsx";
+import { decisionSettings, toReviewStyle } from "../review/decision-style.ts";
 import { InfoLine, type Notify, tableClass } from "./common.tsx";
+import { type DecisionPreset, DecisionPresetPicker } from "./decision-preset.tsx";
 
 type BlockKind = StudyTemplateSummary["blocks"][number]["kind"];
 
@@ -494,6 +496,7 @@ export function TemplateEditor({
   const [watermark, setWatermark] = useState(true);
   const [signature, setSignature] = useState(true);
   const [blind, setBlind] = useState(base?.presets.blinding ?? true);
+  const [decision, setDecision] = useState<DecisionPreset | null>(null);
   const [showPdf, setShowPdf] = useState(false);
   if (chosen === null) return null;
   const shownBlocks: EditorBlock[] =
@@ -506,6 +509,12 @@ export function TemplateEditor({
         }))
       : []);
   const shownName = name ?? startName;
+  const baseStyle = toReviewStyle(base?.presets.decision);
+  const shownDecision: DecisionPreset = decision ?? {
+    style: baseStyle.kind,
+    agreeFrom: baseStyle.agreeFrom,
+    disagreeTo: baseStyle.disagreeTo,
+  };
   const current = shownBlocks.find((block) => block.id === selected) ?? null;
   const add = (kind: BlockKind) => {
     const block = { id: `${kind}-${Date.now()}`, kind, title: blockCopy[kind].name };
@@ -546,7 +555,11 @@ export function TemplateEditor({
             title: block.title,
           }) as StudyTemplateSummary["blocks"][number],
       ),
-      presets: { ...presets, blinding: blind },
+      presets: {
+        ...presets,
+        blinding: blind,
+        decision: decisionSettings(shownDecision.style, shownDecision),
+      },
     };
     const done = () => {
       notify(
@@ -675,6 +688,7 @@ export function TemplateEditor({
                 Blind review
                 <Switch checked={blind} onCheckedChange={setBlind} />
               </label>
+              <DecisionPresetPicker value={shownDecision} onChange={setDecision} />
             </TabsContent>
           </Tabs>
         </aside>

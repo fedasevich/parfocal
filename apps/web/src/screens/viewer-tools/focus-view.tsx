@@ -10,7 +10,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
-import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
+import { answersOf, countsAs, countWord, decisionBody } from "../review/decision-style.ts";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
@@ -69,7 +69,7 @@ export function FocusView({
       taskId: session.taskId,
       slideId: session.slideId,
       objectId: current.object,
-      data: { value },
+      data: decisionBody(session.style, raw, session.classes, value),
     });
   };
 

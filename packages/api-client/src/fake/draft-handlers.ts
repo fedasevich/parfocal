@@ -78,7 +78,6 @@ export {
   getListSourceFilesMockHandler,
 } from "./project-handlers.ts";
 export {
-  getGetDecisionStyleMockHandler,
   getGetSlideAgreementMockHandler,
   getGetTaskDisplayMockHandler,
   getListReviewObjectsMockHandler,

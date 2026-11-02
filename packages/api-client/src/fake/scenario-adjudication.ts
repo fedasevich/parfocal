@@ -235,6 +235,7 @@ export const reportTemplate = {
     { kind: "disagreement-reasons", title: "Why reviewers disagreed", width: "half" },
     { kind: "opinion-answers", title: "Opinion answers", width: "half" },
     { kind: "worst-objects", title: "Objects, worst first", width: "full" },
+    { kind: "text", title: "Methods", width: "full" },
   ] as const,
 };
 

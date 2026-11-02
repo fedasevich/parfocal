@@ -24,6 +24,7 @@ import type {
   StudyTemplateSummary,
   TaskDraft,
 } from "../generated/api.ts";
+import { toDecisionSettings } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { people, projects } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
@@ -144,6 +145,12 @@ export const toStudyTemplates = (): StudyTemplateSummary[] =>
       first_read: template.hide,
       start_mode: template.start,
       split: template.split,
+      decision: toDecisionSettings({
+        kind: template.decision === "certainty5" ? "certainty" : template.decision,
+        question: null,
+        agreeFrom: 4,
+        disagreeTo: 2,
+      }),
     },
     version: template.version,
     built_in: template.builtIn,

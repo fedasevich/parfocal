@@ -5,7 +5,6 @@ import {
   type ReviewTaskDetail,
   type SlideThread,
   type TaskDisplay,
-  useGetDecisionStyle,
   useGetMe,
   useGetOpinion,
   useGetReviewTask,
@@ -50,7 +49,6 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const objectsQuery = useListReviewObjects(taskId, slideId);
   const reviewObjects = objectsQuery.data?.data;
   const verdicts = okData(useListVerdicts(taskId, slideId).data) ?? [];
-  const style = useGetDecisionStyle(taskId).data?.data;
   const display = useGetTaskDisplay(taskId).data?.data;
   const opinion = okData(useGetOpinion(taskId, slideId).data);
   const neighbours = okData(useGetSlideNeighbours(slideId, { from: "task", task_id: taskId }).data);
@@ -73,8 +71,8 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     objects: reviewObjects?.objects ?? [],
     added: reviewObjects?.added ?? [],
     verdicts: new Map(verdicts.map((verdict) => [verdict.object, verdict])),
-    style: toReviewStyle(style),
-    classes: (classes ?? []).map((item) => ({ name: item.name, color: item.colour })),
+    style: toReviewStyle(task?.decision),
+    classes: (classes ?? []).map((item) => ({ id: item.id, name: item.name, color: item.colour })),
     display,
     opinion,
     neighbours,

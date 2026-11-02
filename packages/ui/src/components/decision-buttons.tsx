@@ -15,7 +15,7 @@ type DecisionAnswer = {
   color?: string | undefined;
 };
 
-type ProjectClass = { name: string; color: string };
+type ProjectClass = { name: string; color: string; id?: string | undefined };
 
 const certaintyLabels = ["Certainly not", "Probably not", "Can't tell", "Probably", "Certainly"];
 

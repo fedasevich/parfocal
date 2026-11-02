@@ -31,6 +31,7 @@ import {
   type Confidence,
   cardText,
   countsAs,
+  decisionBody,
   rawFor,
   showsClaim,
 } from "../review/decision-style.ts";
@@ -175,6 +176,7 @@ function ViewerBody({
     style,
     setup.submitFail ? "done" : "review",
     finishingAnswers,
+    session.classes,
   );
   const [overrides, setOverrides] = useState<Answers>(new Map());
   const answer = (object: string) => answerOf(base, overrides, object);
@@ -287,7 +289,7 @@ function ViewerBody({
       taskId: session.taskId,
       slideId: session.slideId,
       objectId: current.object,
-      data: { value },
+      data: decisionBody(style, raw, session.classes, value),
     });
     setToast({
       id: Date.now(),

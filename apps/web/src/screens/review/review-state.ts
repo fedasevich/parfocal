@@ -1,5 +1,12 @@
 import type { ReviewObject, Verdict } from "@parfocal/api-client";
-import { type Count, type ReviewStyle, rawFor, reasonText } from "./decision-style.ts";
+import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
+import {
+  type Count,
+  type ReviewStyle,
+  rawFor,
+  rawOfDecision,
+  reasonText,
+} from "./decision-style.ts";
 import type { SlideCounts } from "./review-top.tsx";
 
 export type Answer = {
@@ -15,10 +22,11 @@ export function answerFromVerdict(
   verdict: Verdict,
   style: ReviewStyle,
   object: ReviewObject | undefined,
+  classes: ProjectClass[],
 ): Answer {
   return {
     value: verdict.value,
-    raw: rawFor(style, verdict.value, object),
+    raw: rawOfDecision(style, verdict, classes, object),
     reasons: verdict.reasons.map((code) => reasonText[code] ?? code),
     note: verdict.note,
   };
@@ -30,13 +38,14 @@ export function baseAnswers(
   style: ReviewStyle,
   stage: "empty" | "review" | "done",
   finishing: Record<string, Count>,
+  classes: ProjectClass[],
 ): Map<string, Answer> {
   const answers = new Map<string, Answer>();
   if (stage === "empty") return answers;
   for (const object of objects) {
     const verdict = verdicts.get(object.object);
     if (verdict) {
-      answers.set(object.object, answerFromVerdict(verdict, style, object));
+      answers.set(object.object, answerFromVerdict(verdict, style, object, classes));
     } else if (stage === "done") {
       const value = finishing[object.object] ?? "agree";
       answers.set(object.object, {

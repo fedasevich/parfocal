@@ -10,7 +10,6 @@ import {
   setFakeView,
 } from "../src/fake/index.ts";
 import {
-  getDecisionStyle,
   getOpinion,
   getReviewOrder,
   getReviewTask,
@@ -21,6 +20,7 @@ import {
   listSlideThreads,
   listThreadComments,
   listVerdicts,
+  saveVerdict,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -100,13 +100,31 @@ test("finishing A1 the way the scenario does gives 48 agree, 5 disagree and 2 no
 
 test("RT-14 asks Agree with the AI and RT-16 asks 5-point certainty", async () => {
   assert.ok(rt14);
-  assert.equal((await getDecisionStyle(rt14.id)).data.kind, "agree");
+  const decision14 = body(await getReviewTask(rt14.id)).decision;
+  assert.equal(decision14.style, "agree");
   const rt16 = scenarioReview.rt16;
-  assert.equal(body(await getReviewTask(rt16.id)).name, "Round 3 · CAMELYON v1.0");
-  const style = (await getDecisionStyle(rt16.id)).data;
-  assert.equal(style.kind, "certainty");
-  assert.deepEqual([style.agree_from, style.disagree_to], [4, 2]);
+  const task16 = body(await getReviewTask(rt16.id));
+  assert.equal(task16.name, "Round 3 · CAMELYON v1.0");
+  assert.equal(task16.decision.style, "certainty");
+  assert.deepEqual(task16.decision.counts_as, ["disagree", "disagree", "unsure", "agree", "agree"]);
   assert.equal(body(await getReviewTask(rt14.id)).code, "RT-14");
+});
+
+test("saving a 5-point certainty answer on RT-16 counts it through the task's mapping", async () => {
+  const rt16 = scenarioReview.rt16;
+  const first = scenarioReview.reviewObjects[0];
+  assert.ok(first);
+  const save = async (answer: string) =>
+    body(await saveVerdict(rt16.id, a1.id, first.object, { answer }));
+  assert.deepEqual(
+    [await save("5"), await save("3"), await save("2")].map((item) => [item.answer, item.value]),
+    [
+      ["5", "agree"],
+      ["3", "unsure"],
+      ["2", "disagree"],
+    ],
+  );
+  assert.equal((await save("unsure")).style, "certainty");
 });
 
 test("a blind reviewer sees only their own comments and the researcher's", async () => {

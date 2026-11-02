@@ -1,5 +1,4 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type DecisionStyle, decisionStyleSchema } from "../draft/get-decision-style.ts";
 import { type SlideAgreement, slideAgreementSchema } from "../draft/get-slide-agreement.ts";
 import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.ts";
 import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
@@ -18,13 +17,13 @@ import type {
   TaskStates,
   VerdictDraft,
 } from "../generated/api.ts";
+import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { objectsOn, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
 import { people, projectByCode, reviewTasks, slides, threads } from "./scenario.ts";
 import {
   addedByLenka,
   agreementWithSimona,
-  decisionStyles,
   lenkaOpinion,
   opinionQuestions,
   reviewObjects,
@@ -60,17 +59,6 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
     })),
     added: reviewsA1(taskId, slideId) ? addedByLenka : [],
   });
-
-export const toDecisionStyle = (taskId: string): DecisionStyle => {
-  const style = decisionStyles[taskById(taskId)?.code ?? "RT-14"] ?? decisionStyles["RT-14"];
-  return decisionStyleSchema.parse({
-    task_id: taskId,
-    kind: style?.kind ?? "agree",
-    question: style?.question ?? null,
-    agree_from: style?.agreeFrom ?? 4,
-    disagree_to: style?.disagreeTo ?? 2,
-  });
-};
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {
   const task = taskById(taskId);
@@ -177,11 +165,6 @@ export const getListReviewObjectsMockHandler = (overrideResponse?: ReviewObjects
       HttpResponse.json(overrideResponse ?? toReviewObjects(params.taskId, params.slideId)),
   );
 
-export const getGetDecisionStyleMockHandler = (overrideResponse?: DecisionStyle) =>
-  http.get<{ taskId: string }>("*/api/review-tasks/:taskId/decision-style", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toDecisionStyle(params.taskId)),
-  );
-
 export const getGetTaskDisplayMockHandler = (overrideResponse?: TaskDisplay) =>
   http.get<{ taskId: string }>("*/api/review-tasks/:taskId/display", ({ params }) =>
     HttpResponse.json(overrideResponse ?? toTaskDisplay(params.taskId)),
@@ -205,12 +188,6 @@ export const reviewDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/review-tasks/{task_id}/slides/{slide_id}/objects",
     handler: () => getListReviewObjectsMockHandler(),
-  },
-  {
-    operationId: "getDecisionStyle",
-    method: "get",
-    path: "/api/review-tasks/{task_id}/decision-style",
-    handler: () => getGetDecisionStyleMockHandler(),
   },
   {
     operationId: "getTaskDisplay",
@@ -244,14 +221,17 @@ export function reviewHandlers(): RequestHandler[] {
       const body = (await request.json()) as VerdictDraft;
       const objectId = String(params["objectId"]);
       const index = reviewObjects.findIndex((item) => item.object === objectId);
+      const settings = decisionSettingsFor(taskById(String(params["taskId"]))?.code ?? "RT-14");
+      const answer = body.answer ?? body.value ?? "unsure";
+      const aiClass = sentinelClasses.find((item) => item.name === reviewObjects[index]?.className);
       return {
         object: objectId,
         kind: reviewObjects[index]?.kind === "cell" ? "cell" : "region",
         number: index + 1,
-        style: "agree",
-        answer: body.answer ?? body.value ?? "unsure",
+        style: settings.style,
+        answer,
         answer_class_id: body.answer_class_id ?? null,
-        value: body.value ?? "unsure",
+        value: countedAs(settings, answer, body.answer_class_id, aiClass?.key),
         reasons: body.reasons ?? [],
         reason_class_id: body.reason_class_id ?? null,
         note: body.note ?? null,

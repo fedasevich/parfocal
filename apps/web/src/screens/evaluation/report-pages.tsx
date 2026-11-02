@@ -1,4 +1,4 @@
-import type { Evaluation, EvaluationReport, QueueRow } from "@parfocal/api-client";
+import type { CountsAsChange, Evaluation, EvaluationReport, QueueRow } from "@parfocal/api-client";
 import {
   ConfusionMatrix,
   CountBars,
@@ -13,7 +13,7 @@ import {
 import { blockCopy } from "../admin/templates.tsx";
 import { answerWord } from "../disagreements/text.ts";
 import { lookUrl } from "../thumbnails.ts";
-import { headlineTiles, opinionRows, reasonRows } from "./numbers.ts";
+import { headlineTiles, methodsLines, opinionRows, reasonRows } from "./numbers.ts";
 
 export type PageBlock = {
   id: string;
@@ -31,6 +31,7 @@ type PagesProps = {
   blocks: PageBlock[];
   templateVersion: number;
   nameOf: (userId: string) => string;
+  countsAsChanges?: CountsAsChange[] | undefined;
   selected?: string | null | undefined;
   onSelect?: ((id: string) => void) | undefined;
 };
@@ -46,12 +47,25 @@ function BlockBody({
   report,
   evaluation,
   nameOf,
+  countsAsChanges = [],
 }: {
   block: PageBlock;
   report: EvaluationReport;
   evaluation: Evaluation | undefined;
   nameOf: (userId: string) => string;
+  countsAsChanges?: CountsAsChange[] | undefined;
 }) {
+  if (block.kind === "text" && block.title === "Methods" && evaluation) {
+    return (
+      <div className="grid gap-1" data-methods="">
+        {methodsLines(evaluation, countsAsChanges, nameOf).map((line) => (
+          <p key={line} className="m-0">
+            {line}
+          </p>
+        ))}
+      </div>
+    );
+  }
   if (block.kind === "headline-numbers") {
     return <MetricTiles tiles={evaluation ? headlineTiles(evaluation) : []} />;
   }
@@ -104,7 +118,17 @@ function BlockBody({
 }
 
 export function ReportPage({ page, ...props }: PagesProps & { page: number }) {
-  const { report, evaluation, queue, blocks, templateVersion, nameOf, selected, onSelect } = props;
+  const {
+    report,
+    evaluation,
+    queue,
+    blocks,
+    templateVersion,
+    nameOf,
+    countsAsChanges,
+    selected,
+    onSelect,
+  } = props;
   const footer = `${report.task_code} · Evaluation v${report.version}${report.signed_at ? ` · signed ${dayMonth(report.signed_at)}` : " · draft"}`;
   if (page === 1) {
     return (
@@ -140,7 +164,13 @@ export function ReportPage({ page, ...props }: PagesProps & { page: number }) {
               selected={selected === block.id}
               {...(onSelect ? { onSelect: () => onSelect(block.id) } : {})}
             >
-              <BlockBody block={block} report={report} evaluation={evaluation} nameOf={nameOf} />
+              <BlockBody
+                block={block}
+                report={report}
+                evaluation={evaluation}
+                nameOf={nameOf}
+                countsAsChanges={countsAsChanges}
+              />
             </ReportBlock>
           ))}
         </ReportBlocks>
