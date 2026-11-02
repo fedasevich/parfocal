@@ -43,6 +43,18 @@ What Modal spend limit should the pilot run under, once real pilot work starts?
 
 Your choice:
 
+## 27. Palette, drag and drop and hotkeys, from STACK-014 (command palette, drag and drop, hotkeys)
+
+ADR 0149 (command palette, drag and drop and hotkey registry) keeps the palette the prototype screens already built instead of switching to cmdk, picks Pragmatic drag and drop for the first in-app drag and installs nothing yet, and adds a custom hotkey registry. The registry handles chords such as G then 2 with a 1,000 ms wait, a tap on Z against a hold at the kit's 350 ms, and stays quiet while you type in a field except for keys marked for fields. The dev page `/spikes/hotkeys` shows it working, and the existing screens move onto it one at a time.
+
+Do you accept ADR 0149?
+
+- a. Yes, accept it as written. (recommended, because the spike passes and nothing new is installed)
+- b. Accept it, but switch the palette to cmdk now for fuzzy matching.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
