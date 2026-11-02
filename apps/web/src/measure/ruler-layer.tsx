@@ -1,0 +1,158 @@
+import { RulerLine } from "@parfocal/ui/components/viewer-tools";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type AnnotationDocument, addShape } from "../annotations/document.ts";
+import type { ViewerEngine } from "../viewer/viewer-engine.ts";
+import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import {
+  formatRulerLength,
+  minimumDragScreenPixels,
+  type Point,
+  rulerPoints,
+  type Segment,
+  segmentOfRuler,
+  snapToAngle,
+  snapToAreaAxis,
+} from "./ruler-maths.ts";
+
+type RulerLayerProps = {
+  engine: ViewerEngine;
+  stage: HTMLElement;
+  active: boolean;
+  document: AnnotationDocument;
+  onDocumentChange: (next: AnnotationDocument) => void;
+  onLeave: () => void;
+};
+
+type Size = { width: number; height: number };
+
+function useStageSize(stage: HTMLElement): Size {
+  const [size, setSize] = useState<Size>({ width: stage.clientWidth, height: stage.clientHeight });
+  useEffect(() => {
+    const observer = new ResizeObserver(() =>
+      setSize({ width: stage.clientWidth, height: stage.clientHeight }),
+    );
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [stage]);
+  return size;
+}
+
+export function RulerLayer({
+  engine,
+  stage,
+  active,
+  document: doc,
+  onDocumentChange,
+  onLeave,
+}: RulerLayerProps) {
+  const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const size = useStageSize(stage);
+  const [draft, setDraft] = useState<Segment | null>(null);
+  const latest = useRef({ doc, onDocumentChange, onLeave, engine });
+  latest.current = { doc, onDocumentChange, onLeave, engine };
+  const spacing = engine.getSlide()?.micronsPerPixel ?? null;
+
+  useEffect(() => {
+    if (!active) {
+      setDraft(null);
+      return;
+    }
+    let anchor: Point | null = null;
+    let pointerId: number | null = null;
+    let screenStart: Point | null = null;
+
+    const slidePoint = (event: MouseEvent): Point => {
+      const bounds = stage.getBoundingClientRect();
+      return screenToSlide(latest.current.engine.getCamera(), bounds, event.clientX, event.clientY);
+    };
+    const endPoint = (event: MouseEvent, from: Point): Point => {
+      const raw = slidePoint(event);
+      return event.shiftKey ? snapToAngle(from, raw) : raw;
+    };
+    const commit = (segment: Segment) => {
+      const { document: next } = addShape(latest.current.doc, {
+        kind: "ruler",
+        points: rulerPoints(segment),
+      });
+      latest.current.onDocumentChange(next);
+    };
+    const cancel = () => {
+      anchor = null;
+      pointerId = null;
+      screenStart = null;
+      setDraft(null);
+    };
+
+    const down = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      stage.setPointerCapture(event.pointerId);
+      pointerId = event.pointerId;
+      anchor = slidePoint(event);
+      screenStart = { x: event.clientX, y: event.clientY };
+      setDraft({ from: anchor, to: anchor });
+    };
+    const move = (event: PointerEvent) => {
+      if (anchor === null || event.pointerId !== pointerId) return;
+      event.stopImmediatePropagation();
+      setDraft({ from: anchor, to: endPoint(event, anchor) });
+    };
+    const up = (event: PointerEvent) => {
+      if (anchor === null || screenStart === null || event.pointerId !== pointerId) return;
+      event.stopImmediatePropagation();
+      const moved = Math.hypot(event.clientX - screenStart.x, event.clientY - screenStart.y);
+      if (moved >= minimumDragScreenPixels) commit({ from: anchor, to: endPoint(event, anchor) });
+      stage.releasePointerCapture(event.pointerId);
+      cancel();
+    };
+    const doubleClick = (event: MouseEvent) => {
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      const axis = snapToAreaAxis(latest.current.doc, slidePoint(event));
+      if (axis !== null) commit(axis);
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (anchor !== null) cancel();
+      else latest.current.onLeave();
+    };
+
+    stage.addEventListener("pointerdown", down, true);
+    stage.addEventListener("pointermove", move, true);
+    stage.addEventListener("pointerup", up, true);
+    stage.addEventListener("dblclick", doubleClick, true);
+    window.addEventListener("keydown", key);
+    return () => {
+      stage.removeEventListener("pointerdown", down, true);
+      stage.removeEventListener("pointermove", move, true);
+      stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("dblclick", doubleClick, true);
+      window.removeEventListener("keydown", key);
+      cancel();
+    };
+  }, [active, stage]);
+
+  const rect = { left: 0, top: 0, width: size.width, height: size.height };
+  const drawn: { key: string; segment: Segment; dashed: boolean }[] = [];
+  for (const shape of doc.shapes.values()) {
+    if (shape.kind === "ruler") {
+      drawn.push({ key: String(shape.id), segment: segmentOfRuler(shape), dashed: false });
+    }
+  }
+  if (draft !== null) drawn.push({ key: "draft", segment: draft, dashed: true });
+
+  return (
+    <div data-testid="ruler-layer" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {drawn.map(({ key, segment, dashed }) => (
+        <RulerLine
+          key={key}
+          dashed={dashed}
+          from={slideToScreen(camera, rect, segment.from)}
+          to={slideToScreen(camera, rect, segment.to)}
+          label={formatRulerLength(segment, spacing)}
+        />
+      ))}
+    </div>
+  );
+}

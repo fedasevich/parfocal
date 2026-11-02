@@ -89,7 +89,7 @@ function RulerLine({
       ) : null}
       {[from, to].map((point) => (
         <circle
-          key={`${point.x},${point.y}`}
+          key={point === from ? "from" : "to"}
           cx={point.x}
           cy={point.y}
           r={dashed ? 6 : 4}

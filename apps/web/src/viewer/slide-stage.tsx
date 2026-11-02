@@ -1,7 +1,12 @@
 import { getTileAccess } from "@parfocal/api-client";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
-import { useEffect, useRef, useState } from "react";
+import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createDocument } from "../annotations/document.ts";
+import { keyRegistry } from "../keys/catalogue.ts";
+import { useHotkeys } from "../keys/use-hotkeys.ts";
+import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
@@ -45,7 +50,22 @@ export function SlideStage({ slideId }: { slideId: string }) {
 }
 
 function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => void }) {
-  const host = useRef<HTMLDivElement>(null);
+  const host = useRef<HTMLDivElement | null>(null);
+  const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
+  const hostRef = useCallback((node: HTMLDivElement | null) => {
+    host.current = node;
+    setHostNode(node);
+  }, []);
+  const [measuring, setMeasuring] = useState(false);
+  const [annotations, setAnnotations] = useState(createDocument);
+  const rulerBindings = useMemo(
+    () => keyRegistry.bindings({ scopes: ["annotate"], only: ["truler"] }),
+    [],
+  );
+  const onToolKey = useCallback(({ phase }: { phase: string }) => {
+    if (phase === "press") setMeasuring((on) => !on);
+  }, []);
+  useHotkeys(rulerBindings, onToolKey);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
@@ -96,13 +116,35 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       data-testid="slide-stage"
       data-state={phase.state}
       data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
-      className="relative size-full min-h-0 bg-chrome"
+      data-tool={measuring ? "ruler" : "hand"}
+      className="relative size-full min-h-0 bg-chrome data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div
-        ref={host}
+        ref={hostRef}
         className="absolute inset-0"
         style={brightness === 100 ? undefined : { filter: `brightness(${brightness / 100})` }}
       />
+      {session && hostNode ? (
+        <>
+          <RulerLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={measuring}
+            document={annotations}
+            onDocumentChange={setAnnotations}
+            onLeave={() => setMeasuring(false)}
+          />
+          <div className="absolute top-4 left-4 rounded-ctl border border-line bg-chrome">
+            <ToolRailButton
+              icon="ruler"
+              label="Ruler"
+              keyHint="L"
+              pressed={measuring}
+              onPressedChange={setMeasuring}
+            />
+          </div>
+        </>
+      ) : null}
       {session ? (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           <MagnificationControl
