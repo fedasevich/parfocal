@@ -1585,7 +1585,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 40 G2 and R1, doc 41.
   Size: M.
 
-- [ ] DS-022 · Small modal
+- [x] DS-022 · Small modal
   One small modal anatomy for every short form, at 480 px for one group of fields or 560 px for two or three zones and no other width. A title at 18/600 with the close cross, a 13 px subtitle in the dim text colour, zones as plain groups on the modal background 20 px apart with 12 px between rows, and a footer with a hint on the left, then Cancel and one primary, never two primaries. With one blocker the primary is off and the hint says why, and with two or more the Before you can list (DS-027) sits above the footer. Esc and the cross close without saving, Enter runs the primary when it is on, focus starts on the first field, and the scrim is 62% black in dark. Every form longer than three zones is a flow page (DS-023), so the round 6 mock has no full-width wizard.
   Done when stories cover both widths, one blocker and a blocker list, a test checks the width never changes with the content, and focus trapping, Esc, Enter and axe pass.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: team/nudge, mock: disagree/sendadj, mock: signoff/ready, POC doc 44 (the round 6 working mock) section 1.
