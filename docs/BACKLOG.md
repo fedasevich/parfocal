@@ -334,7 +334,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ### Platform and operations
 
-- [ ] STACK-029 · Cloud provider, regions and GPU availability
+- [x] STACK-029 · Cloud provider, regions and GPU availability
   Candidates: AWS, Google Cloud, Azure, plus an EU sovereign option. Criteria: EU region with GPU instances (L4, L40S, A100 or H100), HIPAA BAA, ISO 27001 certified regions, managed Postgres with PostGIS, managed Kubernetes. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): no single cloud. Cloudflare (Workers, Durable Objects, R2, Pages), Modal (Python and GPUs) and Neon (Postgres), with no region pinning during the pilot.
   Done when the ADR includes a monthly cost estimate for the pilot (three tenants, 5,000 slides per month).
 

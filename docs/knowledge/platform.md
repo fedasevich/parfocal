@@ -30,9 +30,9 @@ The free plan allows 100,000 requests a day, and one pan can fetch hundreds of t
 
 Resend's free plan allows 100 emails a day and sending pauses at the limit. Only production sends ([ADR 0005](../adr/0005-external-sends-only-in-production.md)), so that cap is the pilot's real email budget. Neon's free plan gives 100 CU-hours per project a month, which does not cover a compute that never suspends, so production on the free plan scale-to-zeroes and the first query after 5 idle minutes waits for a cold start. Modal Starter limits crons and web endpoints, which may stop every pull request from getting its own Modal environment. Source: [ADR 0004](../adr/0004-cloud-dev-resources.md).
 
-## Modal region pinning needs the Team plan
+## Modal region pinning costs 1.15 to 1.75 times
 
-Setting `region=` on a Modal function needs the Team plan ($250 a month) and adds a 1.5x multiplier for broad regions and 1.75x for narrow ones. On lower plans Modal chooses where containers run, so latency from the API to Neon must be measured, not assumed. Source: https://modal.com/docs/guide/region-selection and ADR 0003.
+Modal's pricing page, read on 2026-11-02, lists region selection on every plan, Starter included, at 1.15 times base prices for a broad region such as `eu` and 1.75 times for a narrow one such as `eu-west`. Earlier notes said it needed the Team plan ($250 a month) at 1.5 times. Without `region=` Modal chooses where containers run, so latency from the API to Neon must be measured, not assumed. Source: https://modal.com/pricing, https://modal.com/docs/guide/region-selection and [ADR 0147](../adr/0147-cloud-provider-regions-and-pilot-cost.md) (cloud provider, regions and pilot cost).
 
 ## The cloud is open again, at the lowest possible cost
 

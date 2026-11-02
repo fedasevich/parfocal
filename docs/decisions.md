@@ -23,6 +23,26 @@ To take every recommendation at once, write "all recommended" here:
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
 
+## 26. Pilot spend, from STACK-029 (cloud provider, regions and GPU availability)
+
+ADR 0147 (cloud provider, regions and pilot cost) keeps ADR 0003 (pilot platform architecture) and estimates three tenants with 5,000 slides a month at about $140 in the first month when every AI result is imported. Two lines decide the real bill. Keeping every 1 GB original adds $75 of R2 storage each month, so $450 by month 6. Running a built-in model on every slide adds $372 a month for `camelyon-tumor` or $1,581 for `pathosam-hovernext` on an L4. The model minutes are the mock's, not measured. Today Modal stops at its $30 of free credits, which the API container alone uses up within the month, so nothing changes until you choose.
+
+How long are uploaded originals kept?
+
+- a. Keep them while the project exists, and alert at a monthly budget. (recommended, because reviews need the slide)
+- b. Delete originals 90 days after upload, which caps storage near $225 a month.
+- c. Something else, say what.
+
+Your choice:
+
+What Modal spend limit should the pilot run under, once real pilot work starts?
+
+- d. Keep $0 until the first lab is ready, then raise it to cover the API and ingest only, about $60 of compute a month (the $30 of credits plus a $30 spend limit), with GPU runs off. (recommended)
+- e. Raise it to about $500 a month so a few model runs can happen.
+- f. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.

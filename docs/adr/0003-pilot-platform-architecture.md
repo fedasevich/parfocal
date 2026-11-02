@@ -2,7 +2,7 @@
 
 - Date: 2026-10-06
 - Status: Accepted
-- Amended by: [ADR 0050](0050-deploy-pipeline-and-previews.md), which replaces its Pages part
+- Amended by: [ADR 0050](0050-deploy-pipeline-and-previews.md), which replaces its Pages part, and by [ADR 0147](0147-cloud-provider-regions-and-pilot-cost.md), which adds the monthly cost estimate
 - Deciders: Yurii Fedas
 - Backlog: sets the defaults of STACK-019, STACK-020, STACK-022, STACK-024, STACK-025, STACK-027, STACK-028, STACK-029, STACK-030, STACK-032, STACK-033, STACK-036, STACK-037 and STACK-039. Edits FOUND-001, FOUND-009, FOUND-015, IAM-001, IAM-002, TILES-001, TILES-002, COLLAB-001, AIP-006, AIP-007, SEC-005, SEC-014, OPS-001 to OPS-004 and TEST-013.
 
@@ -77,7 +77,7 @@ Rules that every task inherits:
 
 ### Known costs
 
-Workers Paid ($5 a month) is needed from day one. Every tile read passes through the Worker, so the free plan's 100,000 requests a day would run out with a few active viewers. Everything else starts on a free plan or pure usage billing. The monthly estimate for the pilot is still TODO and stays part of STACK-029.
+Workers Paid ($5 a month) is needed from day one. Every tile read passes through the Worker, so the free plan's 100,000 requests a day would run out with a few active viewers. Everything else starts on a free plan or pure usage billing. The monthly estimate for the pilot is in [ADR 0147](0147-cloud-provider-regions-and-pilot-cost.md) (cloud provider, regions and pilot cost).
 
 ## Consequences
 
@@ -87,7 +87,7 @@ Workers Paid ($5 a month) is needed from day one. Every tile read passes through
 - `staging` stays as a scale-to-zero environment, because the M1 gate, the drills and the rollback tests in OPS and SEC run there.
 - Vendor lock-in rises at the edge (Workers, Durable Objects) and for GPU work (Modal). This is tracked as risk R8 in [risks.md](../project/risks.md).
 - Gotchas found while deciding are in [knowledge/platform.md](../knowledge/platform.md). Local equivalents for every service are in [knowledge/local-dev.md](../knowledge/local-dev.md), and the MCP servers that let agents manage each service are in [knowledge/agent-tooling.md](../knowledge/agent-tooling.md).
-- Open items, all TODO: the monthly cost estimate (STACK-029), API latency and Modal cold-start budgets (STACK-019), Neon region and pooled-connection behaviour with asyncpg (STACK-020), and whether R2 supports object versioning for SEC-014.
+- Open items, all TODO: API latency and Modal cold-start budgets (STACK-019), Neon region and pooled-connection behaviour with asyncpg (STACK-020), and whether R2 supports object versioning for SEC-014.
 
 ## Sources
 
