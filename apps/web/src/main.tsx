@@ -15,7 +15,11 @@ export const clients = selectWebClients(config, {});
 
 const queryClient = createQueryClient(showErrorToast);
 
-const router = createAppRouter();
+const prototypeFrame = import.meta.env.DEV
+  ? (await import("./flow-map/prototype-bar.tsx")).PrototypeFrame
+  : undefined;
+
+const router = createAppRouter(prototypeFrame);
 
 if (import.meta.env.DEV && config.fakeApi !== "off") {
   const { startFakeApi } = await import("./fake-api/start.tsx");

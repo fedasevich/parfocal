@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { GuidedReview } from "../screens/review/guided-review.tsx";
 import { mockScenes } from "../screens/scenes.ts";
+import { loadViewerEngine } from "../viewer/load-engine.ts";
 
 const guidedSearch = z.object({
   slide: z.string().optional(),
@@ -13,6 +14,7 @@ const guidedSearch = z.object({
 
 export const Route = createFileRoute("/tasks/$taskId/guided")({
   validateSearch: guidedSearch,
+  loader: loadViewerEngine,
   component: GuidedRoute,
 });
 
