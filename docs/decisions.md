@@ -36,9 +36,34 @@ Your choice:
 
 ### 4c. Questions of the "Reader study form" and the "Outline quality form"
 
-You asked for drafts. EVAL-011 (reader study and outline quality forms) writes them here for your review.
+You asked for drafts. The mock names each form's questions and their kinds, and the drafts below add the options, the scale ends and when each question is asked, which GUIDE-016 (first read questions in the opinion form) made possible. Every part stays editable per project, and a project can still pick any form. After your answer EVAL-011 (reader study and outline quality forms) puts them into the reader study and segmentation built-in templates.
+
+**Reader study form**, for the reader study template, which hides the AI for a first read.
+
+| Key | Question | Kind | Asked | Required |
+|---|---|---|---|---|
+| `diagnosis` | Your diagnosis for this slide | Choice of No tumour, Isolated tumour cells, Micrometastasis, Macrometastasis, Cannot assess | Both reads, so the report compares the blind and the aided answer | Yes, quick |
+| `confidence` | How sure are you? | Scale 1 to 5, from "guessing" to "certain" | Both reads | Yes, quick |
+| `ai_changed_mind` | Did the AI change your answer? | Yes or no | After the AI only. Not in the mock, added because the report's kappa block needs it | No, quick |
+| `comment` | Comment | Text | Both reads | No |
+
+The diagnosis options follow the sentinel node categories of the CAMELYON data. A study of another organ edits them.
+
+**Outline quality form**, for the segmentation template, which shows the AI from the start.
+
+| Key | Question | Kind | Asked | Required |
+|---|---|---|---|---|
+| `usable` | Are the outlines good enough to use? | Scale 1 to 5, from "redraw all" to "use as is" | After the AI | Yes, quick |
+| `worst_where` | Where are they worst? | Choice of Nowhere, Tumour edge, Small regions, Necrosis or artefact, Fat or capsule, Everywhere | After the AI | No, quick |
+| `comment` | Comment | Text | Both reads | No |
+
+- A. Use both forms as drafted. **Recommended**, because they keep the mock's questions and only fill in what it left open
+- B. Use them without `ai_changed_mind`
+- C. Other, write your changes below
 
 Your choice:
+
+Changes:
 
 ## 6. Real infrastructure
 
