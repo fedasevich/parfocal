@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-03
+
+- AITUM-002 (heatmap layer) colours a probability grid on the CPU with viridis, inferno and turbo tables, leaves cells under the threshold transparent and defaults to viridis, threshold 0.08 and opacity 0.7 from the mock. The model source is data for now, and VIZ-003 and VIZ-007 draw the chip in the layers legend. New goldens cover inferno, turbo and a raised threshold, with 17 unit tests.
+
 ## 2026-11-02
 
 - VIEW-027 (outline rendering with casings) draws a near-black casing under every vector overlay and AI proposals as dashes on a white casing, with the mock's four class colours and five goldens regenerated (ADR 0157). On three H&E goldens of CMU-1 a tumor outline misses 3:1 contrast on about 6% of pixels and immune on about 5%, the rest on none. Overlay colour under the brightness dial is left for NAV-003's golden.

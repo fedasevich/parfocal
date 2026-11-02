@@ -2993,7 +2993,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a CAMELYON16 test slide scores within the expected FROC range in MLEVAL.
   Size: L.
 
-- [ ] AITUM-002 · Heatmap layer
+- [x] AITUM-002 · Heatmap layer
   Colormaps (viridis, inferno, turbo), opacity, threshold, source chip naming the model.
   Done when golden tests cover colormaps and threshold.
   Size: S.
