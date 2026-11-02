@@ -1,5 +1,7 @@
 import { MapTrail, PeekHere, WholeSlidePeek } from "@parfocal/ui/components/smart-minimap";
-import { useEffect, useRef } from "react";
+import { useMemo, useRef } from "react";
+import { keyRegistry } from "../../keys/catalogue.ts";
+import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { type AreaMark, PeekAreas } from "./slide-maps.tsx";
 import { cropCentre, midViewport, seenPercent, seenTrail } from "./tool-geometry.ts";
@@ -41,40 +43,28 @@ export function SlidePeek({
   );
 }
 
-const tapMs = 350;
-
 export function usePeekKey(open: boolean, onOpen: (held: boolean) => void, onClose: () => void) {
-  const pressed = useRef<number | null>(null);
-  useEffect(() => {
-    const typing = (target: EventTarget | null) =>
-      Boolean((target as HTMLElement | null)?.closest?.("input, textarea, [contenteditable]"));
-    const down = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) return;
-      if (event.key === "Escape" && open) {
-        onClose();
-        return;
-      }
-      if (event.key !== "z" && event.key !== "Z") return;
-      if (event.repeat) return;
-      if (open) {
-        onClose();
-        return;
-      }
-      pressed.current = Date.now();
-      onOpen(true);
-    };
-    const up = (event: KeyboardEvent) => {
-      if ((event.key !== "z" && event.key !== "Z") || pressed.current === null) return;
-      const held = Date.now() - pressed.current;
-      pressed.current = null;
-      if (held >= tapMs) onClose();
-      else onOpen(false);
-    };
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
+  const closing = useRef(false);
+  const bindings = useMemo(
+    () => keyRegistry.bindings({ scopes: ["viewer"], only: open ? ["peek", "esc"] : ["peek"] }),
+    [open],
+  );
+  useHotkeys(bindings, ({ action, phase }) => {
+    if (action === "esc") {
+      if (open) onClose();
+      return;
+    }
+    if (phase === "hold-start") {
+      closing.current = open;
+      if (open) onClose();
+      else onOpen(true);
+      return;
+    }
+    if (closing.current) {
+      closing.current = false;
+      return;
+    }
+    if (phase === "tap") onOpen(false);
+    else if (phase === "hold-end") onClose();
   });
 }

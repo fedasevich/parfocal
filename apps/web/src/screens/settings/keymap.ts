@@ -1,4 +1,5 @@
 import type { ShortcutSource } from "@parfocal/ui/components/shortcut-editor";
+import type { ActionDef, Scope } from "../../keys/actions.ts";
 
 export type KeyContext = "all" | "review";
 
@@ -9,6 +10,10 @@ export type KeyAction = {
   source: ShortcutSource;
   group: string;
   context: KeyContext;
+  scope: Scope;
+  presets?: NonNullable<ActionDef["presets"]>;
+  holdMs?: number;
+  inInputs?: boolean;
   range?: boolean;
   direction?: boolean;
   hold?: boolean;
@@ -20,10 +25,11 @@ export type KeyAction = {
 
 type Row = [string, string, string[], ShortcutSource, Partial<KeyAction>?];
 
-const keymap: [string, KeyContext, Row[]][] = [
+const keymap: [string, KeyContext, Scope, Row[]][] = [
   [
     "Move around",
     "all",
+    "viewer",
     [
       ["zoomin", "Zoom in", ["="], "clin"],
       ["zoomout", "Zoom out", ["-"], "clin"],
@@ -40,12 +46,13 @@ const keymap: [string, KeyContext, Row[]][] = [
         { note: "full viewer only. Guided review opens the next slide after Submit" },
       ],
       ["area", "Go to AI area n", ["G then 1 … 9"], "new", { sequence: true }],
-      ["brightup", "Slide brighter", ["⌥↑"], "new"],
-      ["brightdown", "Slide dimmer", ["⌥↓"], "new"],
+      ["brightup", "Slide brighter", ["⌥↑"], "new", { inInputs: true }],
+      ["brightdown", "Slide dimmer", ["⌥↓"], "new", { inInputs: true }],
     ],
   ],
   [
     "Deciding",
+    "review",
     "review",
     [
       ["dagree", "Agree", ["K"], "new", { note: "in the style Agree with the AI" }],
@@ -90,6 +97,7 @@ const keymap: [string, KeyContext, Row[]][] = [
   [
     "Tools",
     "all",
+    "annotate",
     [
       ["tselect", "Select", ["V"], "fig"],
       ["thand", "Hand", ["H"], "fig"],
@@ -110,26 +118,33 @@ const keymap: [string, KeyContext, Row[]][] = [
   [
     "Panels and the slide",
     "all",
+    "viewer",
     [
       ["panel", "Show or hide the panel", ["I"], "new"],
       ["preset", "Display preset 1 to 4", ["⇧1 … ⇧4"], "new", { range: true }],
       ["overlays", "Show or hide overlays", ["A"], "qp"],
       ["fill", "Fill outlines", ["F"], "qp"],
       ["tumormap", "Tumor map", ["⇧H"], "new"],
-      ["search", "Find any action", ["⌘K"], "fig"],
-      ["sheet", "Shortcut sheet", ["?"], "fig"],
-      ["settings", "Settings", ["⌘,"], "fig"],
-      ["hideui", "Hide all UI", ["⌘\\"], "fig"],
-      ["signout", "Sign out the case", ["⌘↵"], "new", { safe: true }],
-      ["undo", "Undo", ["⌘Z"], "fig", { fixed: true }],
-      ["esc", "Close or go back", ["Esc"], "fig", { fixed: true }],
+      ["search", "Find any action", ["⌘K"], "fig", { scope: "global", inInputs: true }],
+      ["sheet", "Shortcut sheet", ["?"], "fig", { scope: "global" }],
+      ["settings", "Settings", ["⌘,"], "fig", { scope: "global", inInputs: true }],
+      ["hideui", "Hide all UI", ["⌘\\"], "fig", { inInputs: true }],
+      [
+        "signout",
+        "Sign out the case",
+        ["⌘↵"],
+        "new",
+        { safe: true, scope: "review", inInputs: true },
+      ],
+      ["undo", "Undo", ["⌘Z"], "fig", { fixed: true, scope: "global" }],
+      ["esc", "Close or go back", ["Esc"], "fig", { fixed: true, scope: "global", inInputs: true }],
     ],
   ],
 ];
 
 export const keyGroups = keymap.map(([group, context]) => ({ group, context }));
 
-export const keyActions: KeyAction[] = keymap.flatMap(([group, context, rows]) =>
+export const keyActions: KeyAction[] = keymap.flatMap(([group, context, scope, rows]) =>
   rows.map(([id, name, keys, source, extra]) => ({
     id,
     name,
@@ -137,6 +152,7 @@ export const keyActions: KeyAction[] = keymap.flatMap(([group, context, rows]) =
     source,
     group,
     context,
+    scope,
     ...extra,
   })),
 );
