@@ -1,7 +1,8 @@
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import type { CategoryTone, ResultSetSource, StatusTone } from "@parfocal/ui/lib/tag-sets";
 import { cn } from "@parfocal/ui/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import type * as React from "react";
 
 const tagBase =
@@ -21,8 +22,6 @@ const statusTagVariants = cva(`${tagBase} rounded-full px-2 font-semibold`, {
   defaultVariants: { tone: "neutral" },
 });
 
-type StatusTone = NonNullable<VariantProps<typeof statusTagVariants>["tone"]>;
-
 type StatusTagProps = React.ComponentProps<"span"> & { tone?: StatusTone };
 
 function StatusTag({ tone, className, children, ...props }: StatusTagProps) {
@@ -41,7 +40,7 @@ function StatusTag({ tone, className, children, ...props }: StatusTagProps) {
 
 type CategoryTagProps = React.ComponentProps<"span"> & {
   icon?: IconName;
-  tone?: "neutral" | "info";
+  tone?: CategoryTone;
 };
 
 function CategoryTag({ icon, tone = "neutral", className, children, ...props }: CategoryTagProps) {
@@ -69,6 +68,7 @@ function ObjectIdTag({ size = "md", className, ...props }: ObjectIdTagProps) {
   return (
     <span
       data-slot="object-id-tag"
+      data-size={size}
       className={cn(
         "inline-flex shrink-0 items-center whitespace-nowrap border border-line-strong bg-chrome-3 font-mono font-semibold leading-none text-fg",
         size === "lg" ? "h-7 rounded-md px-2.25 text-body" : "h-5 rounded-sm px-1.5 text-label",
@@ -78,8 +78,6 @@ function ObjectIdTag({ size = "md", className, ...props }: ObjectIdTagProps) {
     />
   );
 }
-
-type ResultSetSource = "imported" | "run" | "reviewed";
 
 type ResultSetTagProps = React.ComponentProps<"span"> & { source?: ResultSetSource };
 
