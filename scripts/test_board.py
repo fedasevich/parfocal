@@ -6,12 +6,15 @@ from pathlib import Path
 from board import (
     ROOT,
     Active,
+    add_log_entry,
     check,
+    find_tasks,
     load,
     parse_active,
     parse_depends,
     readable_path,
     render_static,
+    tick_backlog,
     tree_lines,
     write_active,
 )
@@ -223,6 +226,29 @@ class BoardTest(unittest.TestCase):
         self.assertIn("docs/board/active/NOPE-001.md: no task NOPE-001 in the backlog", problems)
         self.assertIn("docs/board/active/SKEL-003.md: unknown status 'started'", problems)
         self.assertTrue(any(problem.startswith("dependency cycle") for problem in problems))
+
+    def test_log_entries_go_on_top_under_their_day(self) -> None:
+        same_day = add_log_entry(LOG, "2026-10-15", "STACK-003 (licensing) held.")
+        self.assertEqual(
+            same_day.splitlines()[2:5], ["## 2026-10-15", "", "- STACK-003 (licensing) held."]
+        )
+        self.assertIn("- STACK-002 (routing) started.", same_day)
+        new_day = add_log_entry(LOG, "2026-10-16", "SKEL-003 (retro) written.")
+        self.assertEqual(
+            new_day.splitlines()[2:6], ["## 2026-10-16", "", "- SKEL-003 (retro) written.", ""]
+        )
+        self.assertEqual(new_day.count("## 2026-10-15"), 1)
+
+    def test_tick_flips_only_the_named_open_task(self) -> None:
+        ticked = tick_backlog(BACKLOG, "STACK-002") or ""
+        self.assertIn("- [x] STACK-002 · Routing", ticked)
+        self.assertIn("- [ ] STACK-003 · Licensing", ticked)
+        self.assertIsNone(tick_backlog(ticked, "STACK-002"))
+
+    def test_find_matches_every_word_in_id_or_title(self) -> None:
+        board = load(self.root)
+        self.assertEqual([task.id for task in find_tasks(board.tasks, "skel scre")], ["SKEL-002"])
+        self.assertEqual(find_tasks(board.tasks, "nothing here"), [])
 
     def test_file_reads_stay_inside_docs(self) -> None:
         (self.root / "secret.md").write_text("no")

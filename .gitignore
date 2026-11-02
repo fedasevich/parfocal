@@ -91,3 +91,5 @@ bench-out/
 /apps/e2e/playwright-report/
 .outbox/
 /.claude/worktrees/
+/.claude/scheduled_tasks.lock
+/.claude/settings.local.json

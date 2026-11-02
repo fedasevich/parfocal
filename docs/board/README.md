@@ -51,6 +51,11 @@ Optional longer notes in Markdown.
 | `python3 scripts/board.py claim IAM-009 --by NAME [--branch B] [--note N]` | Take a task. Refuses a done or taken task, and one whose dependencies are open unless `--force` |
 | `python3 scripts/board.py move IAM-009 review --note "..."` | Change the column of a claimed task |
 | `python3 scripts/board.py release IAM-009` | Delete the claim file, when the task is ticked or given up |
+| `python3 scripts/board.py brief` | The "In progress" note from `docs/README.md`, every claimed task and how many are ready |
+| `python3 scripts/board.py find viewer tools` | Tasks whose ID or title holds every word |
+| `python3 scripts/board.py recent [N]` | The newest log entries, cut to 200 characters |
+| `python3 scripts/board.py note "PROTO-019 (viewer tools) ..."` | Adds a log entry on top under today's date. It must name a task ID |
+| `python3 scripts/board.py tick IAM-009` | Ticks the task in the backlog and deletes its claim file |
 | `python3 scripts/board.py check` | Fails on claims for ticked or unknown tasks, unknown statuses, unknown dependencies and cycles. The docs workflow runs it |
 
 Commit the claim file with the first change of the task, and delete it in the change that ticks the box.

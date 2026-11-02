@@ -488,6 +488,10 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   A kanban page and a command-line tool that read `docs/BACKLOG.md` live, so the owner can follow every task and agents can pick, claim and hand over tasks in parallel. Ticks stay in the backlog and claims live in one small file per task under `docs/board/active/` ([ADR 0052](adr/0052-task-board-from-backlog-and-claim-files.md)). The page links each task to its dependencies both ways with a tree view, and to the ADRs, results, knowledge files and log entries that name it.
   Done when `scripts/test_board.py` covers parsing tasks, dependencies, claim files, status resolution, the trees and `board.py check`, and the docs workflow runs the check.
 
+- [x] FOUND-021 · Lean agent workflow
+  Cut tokens per task: `board.py` commands so nobody reads the backlog or log whole, a hook that blocks those reads, a short `AGENTS.md` with the procedures in `docs/knowledge/agent-workflow.md`, an output budget, `/start`, `/finish` and `/consolidate` commands, `task-runner` and `ui-porter` agents, `pnpm verify` and a small screenshot compare script ([ADR 0136](adr/0136-lean-agent-workflow.md)).
+  Done when `scripts/test_board.py` and `scripts/test_guard_big_docs.py` pass and `pnpm verify` is green.
+
 ---
 
 ## 02 SKEL · Walking skeleton (milestone M1)

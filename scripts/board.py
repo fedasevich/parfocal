@@ -221,6 +221,33 @@ def parse_log(text: str) -> list[LogEntry]:
     return entries
 
 
+def add_log_entry(text: str, day: str, entry: str) -> str:
+    lines = text.splitlines()
+    bullet = f"- {entry.strip()}"
+    first = next((i for i, line in enumerate(lines) if LOG_DATE.match(line)), len(lines))
+    if first < len(lines) and lines[first] == f"## {day}":
+        lines[first + 1 : first + 2] = ["", bullet]
+    else:
+        lines[first:first] = [f"## {day}", "", bullet, ""]
+    return "\n".join(lines) + "\n"
+
+
+def tick_backlog(text: str, task_id: str) -> str | None:
+    pattern = re.compile(rf"^- \[ \] {re.escape(task_id)} · ", re.MULTILINE)
+    if not pattern.search(text):
+        return None
+    return pattern.sub(f"- [x] {task_id} · ", text, count=1)
+
+
+def find_tasks(tasks: dict[str, Task], query: str) -> list[Task]:
+    words = query.lower().split()
+    return [
+        task
+        for task in tasks.values()
+        if all(word in f"{task.id} {task.title}".lower() for word in words)
+    ]
+
+
 def doc_kind(relative: Path) -> str:
     parts = relative.parts
     return parts[1] if len(parts) > 2 else "docs"
@@ -560,6 +587,59 @@ def command_check(_: argparse.Namespace) -> int:
     return 1 if problems else 0
 
 
+def command_find(args: argparse.Namespace) -> int:
+    board = load(ROOT)
+    found = find_tasks(board.tasks, " ".join(args.words))
+    for task in found[: args.limit]:
+        print(f"{task.id}  [{task.status}]  {task.title}")
+    return 0 if found else 1
+
+
+def command_recent(args: argparse.Namespace) -> int:
+    for entry in load(ROOT).log[: args.count]:
+        print(f"{entry.date} {entry.text[: args.width]}")
+    return 0
+
+
+def command_brief(_: argparse.Namespace) -> int:
+    board = load(ROOT)
+    print(board.overview.get("In progress", "") or "Nothing in progress.")
+    active = [task for task in board.tasks.values() if task.active is not None]
+    if active:
+        print("\nBoard:")
+        for task in active:
+            print(f"  {task.id}  {task.active.status if task.active else ''}  {task.title}")
+    ready = sum(task.status == "ready" for task in board.tasks.values())
+    print(f"\n{ready} tasks are ready. Run board.py ready to list them.")
+    return 0
+
+
+def command_note(args: argparse.Namespace) -> int:
+    path = ROOT / "docs/log.md"
+    entry = " ".join(args.text)
+    if not TASK_ID.search(entry):
+        print("A log entry must name a task ID", file=sys.stderr)
+        return 1
+    path.write_text(add_log_entry(path.read_text(), args.date or date.today().isoformat(), entry))
+    print(f"Logged under {args.date or date.today().isoformat()}")
+    return 0
+
+
+def command_tick(args: argparse.Namespace) -> int:
+    task_id = args.id.upper()
+    path = ROOT / "docs/BACKLOG.md"
+    ticked = tick_backlog(path.read_text(), task_id)
+    if ticked is None:
+        print(f"{task_id} is not an open task", file=sys.stderr)
+        return 1
+    path.write_text(ticked)
+    claim = ROOT / ACTIVE_DIR / f"{task_id}.md"
+    if claim.exists():
+        claim.unlink()
+    print(f"Ticked {task_id} and released its claim")
+    return 0
+
+
 def command_json(_: argparse.Namespace) -> int:
     print(json.dumps(to_json(load(ROOT)), indent=2))
     return 0
@@ -610,6 +690,29 @@ def parser() -> argparse.ArgumentParser:
     release = commands.add_parser("release", help="delete the board file of a task")
     release.add_argument("id")
     release.set_defaults(run=command_release)
+
+    find = commands.add_parser("find", help="list tasks whose ID or title has every word")
+    find.add_argument("words", nargs="+")
+    find.add_argument("--limit", type=int, default=20)
+    find.set_defaults(run=command_find)
+
+    recent = commands.add_parser("recent", help="print the newest log entries, shortened")
+    recent.add_argument("count", type=int, nargs="?", default=8)
+    recent.add_argument("--width", type=int, default=200)
+    recent.set_defaults(run=command_recent)
+
+    commands.add_parser("brief", help="print what is in progress and on the board").set_defaults(
+        run=command_brief
+    )
+
+    note = commands.add_parser("note", help="add a dated entry to the top of docs/log.md")
+    note.add_argument("text", nargs="+")
+    note.add_argument("--date")
+    note.set_defaults(run=command_note)
+
+    tick = commands.add_parser("tick", help="tick a task in the backlog and release its claim")
+    tick.add_argument("id")
+    tick.set_defaults(run=command_tick)
 
     commands.add_parser("check", help="validate the board files").set_defaults(run=command_check)
     commands.add_parser("json", help="print the board as JSON").set_defaults(run=command_json)

@@ -12,7 +12,8 @@
     "build": "vite build",
     "dev": "vite",
     "dev:fake": "PARFOCAL_PUBLIC_APP_ENV=dev PARFOCAL_PUBLIC_FAKE_API=all vite",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "shot": "node e2e/shot.ts"
   },
   "imports": {
     "#*": "./src/*"
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@babel/core": "8.0.10",
+    "@parfocal/golden-images": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.64.0",
     "@rolldown/plugin-babel": "0.2.4",
