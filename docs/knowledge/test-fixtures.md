@@ -41,3 +41,7 @@ Chrome requests `/favicon.ico` after loading a page, and through the latency pro
 ## The small group feeds the db CI job
 
 The `db` job caches `small` under `fixtures-small-<hash of fixtures.json>` and runs `uv run pytest -m db` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).
+
+## Every remote fixture also sits in R2
+
+Since 2026-11-02 the 28 remote fixtures of `fixtures.json` (26.1 GB: small, formats, viewer, big, huge and camelyon) are uploaded once under `fixtures/<file>` in `parfocal-dev`, each checked against its SHA-256 before upload and its size after. The owner chose `parfocal-dev` over a bucket of its own (decision 6c), so never delete or overwrite anything under `fixtures/`, and no test cleanup may touch that prefix. `pnpm fixtures` does not read from there yet. INGEST-029 (shared test slides bucket) adds that and the read-only key for CI and production. Synthetic fixtures stay in git.

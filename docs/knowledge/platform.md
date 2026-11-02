@@ -45,7 +45,7 @@ Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the
 | Service | Plan | Card on file | What protects the owner | Spend this cycle |
 |---|---|---|---|---|
 | Modal | Starter, $30 of compute included a month | Yes | Hard cap. Usage limit $30 and spend limit $0, so workloads stop when the free credits are used. Volume storage is not capped, so never keep a volume | $0.00 |
-| Cloudflare R2 | R2 Paid, pay as you go past the free tier (10 GB storage, 1 million writes and 10 million reads a month) | Yes | Alert only. Cloudflare has no hard cap. The account budget alert "Default budget alert (auto-created)" emails at $1, lowered from $10 on 2026-10-31 | $0.00, all inside the free tier |
+| Cloudflare R2 | R2 Paid, pay as you go past the free tier (10 GB storage, 1 million writes and 10 million reads a month) | Yes | Alert only. Cloudflare has no hard cap. The account budget alert "Default budget alert (auto-created)" emails at $1, lowered from $10 on 2026-10-31 | About $0.24 a month from 2026-11-02: 26.1 GB of public test slides under `parfocal-dev/fixtures/`, 16.1 GB past the free 10 GB at $0.015 per GB, which the owner accepted. Reads stay free |
 | Cloudflare Workers | Workers Free | Yes | Hard cap by plan. Requests past the daily free limit fail instead of billing | $0.00 |
 | Cloudflare zone `parfocal.eu` | Free | Yes | Capped by plan | $0.00 |
 | Neon | Free (`free_v3`), billed through the Vercel Marketplace | No | Hard cap by plan: 1 GB storage and 100 CU-hours per project a month, then the compute stops | $0.00 |
