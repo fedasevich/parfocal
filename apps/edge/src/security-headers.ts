@@ -92,7 +92,7 @@ export async function withSecurityHeaders(
   document.headers.set("Cache-Control", "no-store");
   document.headers.set(
     "Content-Security-Policy",
-    contentSecurityPolicy({ nonce, uploadOrigin: options.uploadOrigin }),
+    contentSecurityPolicy({ nonce, uploadOrigin: uploadOriginOf(options.uploadOrigin) }),
   );
   return document;
 }

@@ -109,3 +109,17 @@ test("the header check reports a missing COEP and a cacheable document", () => {
   assert.ok(problems.some((line) => line.startsWith("cross-origin-embedder-policy is missing")));
   assert.ok(problems.includes("document is cacheable"));
 });
+
+test("a wrong upload origin breaks documents only, never tile bytes", async () => {
+  const broken = { ...env, UPLOAD_ORIGIN: "http://r2.example" };
+  const tiles = await worker.fetch(
+    new Request("https://parfocal.example/tiles/x/y"),
+    broken,
+    context,
+  );
+  assert.equal(tiles.headers.get("Cross-Origin-Embedder-Policy"), "credentialless");
+  await assert.rejects(
+    worker.fetch(new Request("https://parfocal.example/"), broken, context),
+    /https/,
+  );
+});

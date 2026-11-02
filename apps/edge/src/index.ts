@@ -1,6 +1,6 @@
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
-import { uploadOriginOf, withSecurityHeaders } from "#security-headers.ts";
+import { withSecurityHeaders } from "#security-headers.ts";
 import { handleTiles, isTilesPath, problem, type TileEnv } from "#tiles.ts";
 
 export const packageName = "@parfocal/edge";
@@ -28,7 +28,7 @@ export default {
   async fetch(request: Request, env: EdgeEnv, context: ExecutionContext): Promise<Response> {
     const response = await route(request, env, context);
     return withSecurityHeaders(request, response, {
-      uploadOrigin: uploadOriginOf(env.UPLOAD_ORIGIN),
+      uploadOrigin: env.UPLOAD_ORIGIN,
     });
   },
 } satisfies ExportedHandler<EdgeEnv>;

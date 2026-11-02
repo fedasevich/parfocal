@@ -10,8 +10,9 @@ test("a deployed environment serves the security headers", {
   skip: !base && "PARFOCAL_HEADERS_URL is not set",
 }, async () => {
   const root = new URL("/", base);
-  const first = await fetch(root);
-  const second = await fetch(root);
+  const navigate = { headers: { "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "document" } };
+  const first = await fetch(root, navigate);
+  const second = await fetch(root, navigate);
   assert.deepEqual(headerProblems(first.headers, "document"), []);
   const nonce = nonceOf(first.headers);
   assert.ok(nonce);
@@ -22,6 +23,10 @@ test("a deployed environment serves the security headers", {
   assert.ok(entry, "the document loads a module script");
   const script = await fetch(new URL(entry, root));
   assert.deepEqual(headerProblems(script.headers, "resource"), []);
+  const deep = await fetch(new URL("/projects/missing/review", root), navigate);
+  assert.match(deep.headers.get("content-type") ?? "", /^text\/html/);
+  assert.deepEqual(headerProblems(deep.headers, "document"), []);
+  assert.ok((await deep.text()).includes(`nonce="${nonceOf(deep.headers)}"`));
   for (const path of ["/tiles/missing", "/assets/missing.js"]) {
     const response = await fetch(new URL(path, root));
     assert.equal(response.headers.get("cross-origin-embedder-policy"), "credentialless", path);
