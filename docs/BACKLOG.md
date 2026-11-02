@@ -476,7 +476,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when conventional commits are enforced and a changelog is generated per release tag.
   Conventional Commits with the backlog ID as scope, commitlint and a local git-cliff release ([ADR 0014](adr/0014-conventional-commits-and-releases.md)).
 
-- [ ] FOUND-019 · User-facing error toasts
+- [x] FOUND-019 · User-facing error toasts
   Split from FOUND-012. Show `ApiError` kinds from `@parfocal/api-client` as toasts or inline field errors in the kit's style, never with stack traces or server detail meant for logs.
   Done when component tests cover each error kind and an axe check passes.
   Depends on FOUND-012 and the final UI shell.

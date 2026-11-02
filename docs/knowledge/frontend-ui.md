@@ -213,3 +213,7 @@ The full viewer route takes the scenes of several mock screens on one `scene` ke
 ## A button around an SVG with text fails axe's name check
 
 A button whose aria-label is "Open the whole slide" but which holds an SVG with `<text>` badges fails `label-content-name-mismatch`, even when the SVG is `aria-hidden`. The smart minimap draws the map beside the button and lays the button over it with `absolute inset-0`. Source: PROTO-019.
+
+## Showing an ApiError to the user
+
+Turn an `ApiError` into words with `describeApiError` from `@parfocal/ui/lib/api-error` and show it in `ErrorToast` from `@parfocal/ui/components/error-toast`. Each kind has fixed copy, a tone and an action (`retry`, `sign-in`, `reload` or none). The server's `detail` replaces the message only for `bad-request`, `forbidden`, `not-found` and `conflict`, because the API sends a detail only when it is safe to show ([knowledge/api.md](api.md)). The problem's `title`, the error's message and its stack are never shown. For a 422, `fieldErrorsByName` maps each location onto a name without its `body`, `query` or `path` part, so `["body", "reviewers", 0, "email"]` becomes `reviewers.0.email`, and its message goes into `FormField`'s `error`. The module imports only types from `@parfocal/api-client`, which is a dev dependency of the kit. Source: FOUND-019.
