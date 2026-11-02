@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
+    Computed,
     Date,
     DateTime,
     Float,
@@ -668,6 +669,13 @@ projects = Table(
     Column("number", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("name", String(120), nullable=False, info=OPERATIONAL),
     Column(
+        "name_lower",
+        Text,
+        Computed("lower(name)", persisted=True),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column(
         "privacy_mode",
         String(20),
         nullable=False,
@@ -732,6 +740,7 @@ cases = Table(
     Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("patient_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("label", String(100), nullable=False, info=PHI),
+    Column("label_lower", Text, Computed("lower(label)", persisted=True), nullable=False, info=PHI),
     Column("source", String(10), nullable=False, info=OPERATIONAL),
     Column(
         "created_by_user_id",
@@ -804,6 +813,7 @@ slides = Table(
     Column("case_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("block_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("label", String(200), nullable=False, info=PHI),
+    Column("label_lower", Text, Computed("lower(label)", persisted=True), nullable=False, info=PHI),
     Column("barcode", String(100), nullable=True, info=PHI),
     Column("stain", String(60), nullable=False, server_default="H&E", info=OPERATIONAL),
     Column("level", SmallInteger, nullable=True, info=OPERATIONAL),
