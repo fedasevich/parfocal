@@ -68,6 +68,7 @@ export default defineConfig({
     proxy: { "/api": "http://localhost:8000" },
   },
   preview: { headers: crossOriginIsolation },
+  html: { cspNonce: "PARFOCAL_CSP_NONCE" },
   worker: { format: "es" },
   build: { target: "es2024" },
 });

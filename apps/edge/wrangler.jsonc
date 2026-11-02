@@ -6,6 +6,12 @@
   "workers_dev": true,
   "preview_urls": false,
   "dependencies_instrumentation": { "enabled": false },
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
   "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-dev" }],
   "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }]
