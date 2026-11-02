@@ -5,6 +5,7 @@ import type * as React from "react";
 
 type FormFieldProps = Omit<FieldPrimitive.Root.Props, "children"> & {
   label: React.ReactNode;
+  labelId?: string;
   help?: React.ReactNode;
   error?: React.ReactNode;
   warning?: React.ReactNode;
@@ -16,6 +17,7 @@ type FormFieldProps = Omit<FieldPrimitive.Root.Props, "children"> & {
 
 function FormField({
   label,
+  labelId,
   help,
   error,
   warning,
@@ -34,7 +36,10 @@ function FormField({
       className={cn("group/field grid min-w-0 gap-1.5", className)}
       {...props}
     >
-      <FieldPrimitive.Label className="flex items-baseline justify-between gap-3 text-body-sm font-semibold text-fg">
+      <FieldPrimitive.Label
+        id={labelId}
+        className="flex items-baseline justify-between gap-3 text-body-sm font-semibold text-fg"
+      >
         <span>
           {label}
           {optional ? <span className="ml-1.5 font-normal text-fg-dim">Optional</span> : null}

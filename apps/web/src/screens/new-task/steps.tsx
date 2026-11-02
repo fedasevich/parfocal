@@ -1184,8 +1184,9 @@ export function HowStep(props: StepProps) {
       <DisplayZone {...props} />
       <Zone title="When">
         <div className="grid grid-cols-2 gap-4">
-          <FormField id={fieldId("due")} label="Due" error={errors.get("due")}>
+          <FormField id={fieldId("due")} labelId="due-label" label="Due" error={errors.get("due")}>
             <DatePicker
+              aria-labelledby="due-label"
               value={draft.due}
               today={data.today}
               invalid={errors.has("due")}

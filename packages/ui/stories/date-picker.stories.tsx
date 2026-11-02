@@ -50,3 +50,14 @@ export const WithMinDate: Story = {
 export const Invalid: Story = {
   render: (args) => <Controlled {...args} value="2026-10-14" invalid />,
 };
+
+export const WithLabel: Story = {
+  render: (args) => (
+    <div className="grid gap-1.5">
+      <span id="due-label" className="text-body-sm font-semibold text-fg">
+        Due
+      </span>
+      <Controlled {...args} value="2026-10-23" aria-labelledby="due-label" />
+    </div>
+  ),
+};

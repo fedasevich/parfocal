@@ -2,7 +2,7 @@ import { Calendar } from "@parfocal/ui/components/calendar";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { cn } from "@parfocal/ui/lib/utils";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 type DatePickerProps = {
   value?: string;
@@ -16,6 +16,7 @@ type DatePickerProps = {
   defaultOpen?: boolean;
   id?: string;
   "aria-label"?: string;
+  "aria-labelledby"?: string;
   className?: string;
 };
 
@@ -53,6 +54,9 @@ function DatePicker({
   ...props
 }: DatePickerProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const generatedId = useId();
+  const triggerId = id ?? generatedId;
+  const labelledBy = props["aria-labelledby"];
   const selected = parseDay(value);
   const minDay = parseDay(min);
   const maxDay = parseDay(max);
@@ -61,10 +65,11 @@ function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        id={id}
+        id={triggerId}
         disabled={disabled}
         aria-invalid={invalid || undefined}
         aria-label={props["aria-label"]}
+        aria-labelledby={labelledBy ? `${labelledBy} ${triggerId}` : undefined}
         data-slot="date-picker"
         data-empty={selected ? undefined : true}
         className={cn(
