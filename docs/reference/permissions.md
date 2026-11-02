@@ -14,7 +14,7 @@ Platform operators sit outside the matrix and only reach `/api/platform/*`.
 
 ## Admin rights
 
-Admin rights are the `admin_rights` flag on a researcher's membership or invitation. They are a right and not a role, and a reviewer never holds them. A holder sets up the workspace: invites people and sets their role and admin rights, changes workspace and session settings, connects storage, sources, API tokens and webhooks, keeps the report template library, and reads and exports the audit log. Admin rights add no access to project data, and a workspace always keeps at least one holder.
+Admin rights are the `admin_rights` flag on a researcher's membership or invitation. They are a right and not a role, and a reviewer never holds them. A holder sets up the workspace: invites people and sets their role and admin rights, changes workspace and session settings, connects storage, sources, API tokens and webhooks, keeps the report template library, reads and exports the audit log, and changes the privacy mode of a project they own, with a reason. Admin rights add no access to project data, and a workspace always keeps at least one holder.
 
 ## Project roles
 
@@ -48,6 +48,7 @@ An empty cell means no. A researcher with admin rights gets the researcher's col
 | See slide label and macro images, only in clinical projects | `see-labels` | Yes | View only |  |
 | Open a clinical project they are not in | `emergency-access` | Emergency, with reason |  |  |
 | Create projects and cases, edit their details | `create-cases` | Yes |  |  |
+| Change the privacy mode of a project they own, with a reason | `privacy-mode` |  |  | Yes |
 | Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
 | Move a slide between cases | `move-slides` | Yes |  |  |
 | Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |

@@ -322,6 +322,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjects": lambda _: Call("GET", "/api/projects"),
     "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
+    "changeProjectPrivacy": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.spare_project}/privacy-mode",
+        {"privacy_mode": "clinical", "reason": "Matrix check"},
+    ),
     "archiveProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/archive"),
     "restoreProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/restore"),
     "setProjectMember": lambda w: Call(
@@ -608,6 +613,7 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
 
 def test_admin_rights_add_only_the_setup_permissions() -> None:
     assert {
+        Permission.PRIVACY_MODE,
         Permission.MANAGE_PEOPLE,
         Permission.WORKSPACE_SETTINGS,
         Permission.INTEGRATIONS,

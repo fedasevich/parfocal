@@ -34,7 +34,8 @@ ADMIN_RIGHTS_NAME = "Added by admin rights"
 ADMIN_RIGHTS_DUTIES = (
     "A holder sets up the workspace: invites people and sets their role and admin rights, "
     "changes workspace and session settings, connects storage, sources, API tokens and "
-    "webhooks, keeps the report template library, and reads and exports the audit log. "
+    "webhooks, keeps the report template library, reads and exports the audit log, and "
+    "changes the privacy mode of a project they own, with a reason. "
     "Admin rights add no access to project data, and a workspace always keeps at least one "
     "holder"
 )
@@ -68,6 +69,7 @@ class Permission(StrEnum):
     SEE_LABELS = "see-labels"
     EMERGENCY_ACCESS = "emergency-access"
     CREATE_CASES = "create-cases"
+    PRIVACY_MODE = "privacy-mode"
     UPLOAD_SLIDES = "upload-slides"
     MOVE_SLIDES = "move-slides"
     RUN_MODELS = "run-models"
@@ -87,6 +89,7 @@ PERMISSION_NAMES = {
     Permission.SEE_LABELS: "See slide label and macro images, only in clinical projects",
     Permission.EMERGENCY_ACCESS: "Open a clinical project they are not in",
     Permission.CREATE_CASES: "Create projects and cases, edit their details",
+    Permission.PRIVACY_MODE: "Change the privacy mode of a project they own, with a reason",
     Permission.UPLOAD_SLIDES: "Upload slides and AI results, fix unmatched files",
     Permission.MOVE_SLIDES: "Move a slide between cases",
     Permission.RUN_MODELS: "Run AI models on slides, cancel, resume and retry the runs",
@@ -108,6 +111,7 @@ ROWS = {
     Permission.SEE_LABELS: "yr",
     Permission.EMERGENCY_ACCESS: "bn",
     Permission.CREATE_CASES: "yn",
+    Permission.PRIVACY_MODE: "nn",
     Permission.UPLOAD_SLIDES: "yn",
     Permission.MOVE_SLIDES: "yn",
     Permission.RUN_MODELS: "yn",
@@ -124,6 +128,7 @@ ROWS = {
 
 ADMIN_RIGHTS = frozenset(
     {
+        Permission.PRIVACY_MODE,
         Permission.MANAGE_PEOPLE,
         Permission.WORKSPACE_SETTINGS,
         Permission.INTEGRATIONS,

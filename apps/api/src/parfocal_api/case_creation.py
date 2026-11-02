@@ -270,7 +270,7 @@ async def create_case(
     repeated = await existing_case(connection, creator, idempotency_key)
     if repeated is not None:
         response.status_code = 200
-        return await case_detail(connection, keyring, principal, repeated)
+        return await case_detail(connection, keyring, principal, repeated, patient_viewed=False)
     mode = await privacy_of(connection, draft.project_id)
     await require_owner(connection, principal, draft.project_id)
     with_patient = draft.patient_id is not None or draft.patient is not None
@@ -316,4 +316,4 @@ async def create_case(
             "specimens": len(draft.specimens),
         },
     )
-    return await case_detail(connection, keyring, principal, case_id)
+    return await case_detail(connection, keyring, principal, case_id, patient_viewed=False)

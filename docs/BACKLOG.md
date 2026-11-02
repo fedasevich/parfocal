@@ -723,6 +723,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
   The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and this task stops that, so they are never stored and a later switch to clinical shows none, as the owner chose on 2026-11-02.
 
+- [ ] SEC-028 · Identifying text in de-identified originals
+  A slide file's own text tags can name the patient or the case, such as the `Filename` and user fields of an SVS ImageDescription, NDPI and Philips text tags and DICOM attributes. In a de-identified project none of that text may reach a reader. Ingest finds the identifying tags of each format, and how the original keeps them out of reach is decision 16a in [decisions.md](decisions.md).
+  Done when an upload fixture with a name in its SVS ImageDescription is read through the slide byte route of a de-identified project without the name, the viewer still opens it, and the stored original keeps its SHA-256 unless the owner picks a cleaned copy.
+  Depends on PROJ-002, TILES-001. Split from PROJ-002 (privacy modes) on 2026-11-02. Refs [ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md).
+
 - [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
@@ -3171,9 +3176,9 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Builds on the minimal `projects` table from ADAPT-004 and adds the API and the remaining fields ([ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md)). The contract is in [ADR 0064](adr/0064-project-api.md), and the taxonomy table comes with PROJ-004.
   Depends on IAM-004, ADAPT-004. Refs mock: project, kit: Information architecture.
 
-- [ ] PROJ-002 · Privacy modes
+- [x] PROJ-002 · Privacy modes
   De-identified, the default, has no patient fields in any response or screen, strips names from file metadata on upload and hides label and macro images. Clinical allows patient fields, every one optional, with hidden names and logged access. Changing a project from de-identified to clinical needs a researcher with admin rights and a reason.
-  Done when API tests prove no patient field leaves a de-identified project, an upload fixture with a name in its SVS metadata arrives without it, clinical reads are audited, and the mode change needs a researcher with admin rights and a reason.
+  Done when API tests prove no patient field leaves a de-identified project, clinical reads are audited, and the mode change needs a researcher with admin rights and a reason. Names in the original file's own metadata moved to SEC-028 (identifying text in de-identified originals), because stripping them changes the stored bytes that decision 10e keeps.
   Depends on PROJ-001, SEC-004, SEC-009. Refs doc 37 "Data model", mock: newcase.
 
 - [x] PROJ-003 · Project roles

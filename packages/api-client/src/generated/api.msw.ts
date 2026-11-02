@@ -323,6 +323,34 @@ export const getUpdateProjectResponseMock = (
   ...overrideResponse,
 });
 
+export const getChangeProjectPrivacyResponseMock = (
+  overrideResponse: Partial<Extract<Project, object>> = {},
+): Project => ({
+  id: faker.string.uuid(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  number: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  colour: faker.number.int(),
+  privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
+  template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  archived_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  my_role: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ProjectRole)),
+    null,
+  ]),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getArchiveProjectResponseMock = (
   overrideResponse: Partial<Extract<Project, object>> = {},
 ): Project => ({
@@ -6796,6 +6824,28 @@ export const getUpdateProjectMockHandler = (
   );
 };
 
+export const getChangeProjectPrivacyMockHandler = (
+  overrideResponse?:
+    | Project
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Project> | Project),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/privacy-mode",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeProjectPrivacyResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getArchiveProjectMockHandler = (
   overrideResponse?:
     | Project
@@ -10239,6 +10289,7 @@ export const getParfocalAPIMock = () => [
   getListProjectsMockHandler(),
   getGetProjectMockHandler(),
   getUpdateProjectMockHandler(),
+  getChangeProjectPrivacyMockHandler(),
   getArchiveProjectMockHandler(),
   getRestoreProjectMockHandler(),
   getSetProjectMemberMockHandler(),

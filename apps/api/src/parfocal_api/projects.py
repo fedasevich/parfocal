@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
     Role,
+    cases,
     memberships,
     project_members,
     projects,
@@ -84,6 +85,16 @@ class OwnersOnlyError(ForbiddenError):
 class ProjectArchivedError(ConflictError):
     code = "project-archived"
     title = "This project is archived. Restore it first"
+
+
+class PrivacyChange(BaseModel):
+    privacy_mode: PrivacyMode
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=5, max_length=500)]
+
+
+class ProjectHoldsPatientsError(ConflictError):
+    code = "project-holds-patients"
+    title = "A project with patient data cannot become de-identified"
 
 
 class LastOwnerError(ConflictError):
@@ -312,6 +323,42 @@ async def update_project(
             project_id,
             {"fields": sorted(values)},
         )
+    return await project_of(connection, principal, project_id)
+
+
+@router.post(
+    "/{project_id}/privacy-mode",
+    operation_id="changeProjectPrivacy",
+    **require(Permission.PRIVACY_MODE, write=True),
+)
+async def change_project_privacy(
+    project_id: uuid.UUID,
+    change: PrivacyChange,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Project:
+    row = await owned(connection, principal, project_id)
+    before = PrivacyMode(row.privacy_mode)
+    if before is change.privacy_mode:
+        return await project_of(connection, principal, project_id)
+    if row.archived_at is not None:
+        raise ProjectArchivedError
+    if change.privacy_mode is PrivacyMode.DE_IDENTIFIED:
+        holds = select(cases.c.id).where(
+            cases.c.project_id == project_id, cases.c.patient_id.is_not(None)
+        )
+        if await connection.scalar(select(holds.exists())):
+            raise ProjectHoldsPatientsError
+    await connection.execute(
+        update(projects).where(projects.c.id == project_id).values(privacy_mode=change.privacy_mode)
+    )
+    await audit(
+        connection,
+        principal,
+        AuditAction.PROJECT_PRIVACY_CHANGED,
+        project_id,
+        {"from": before.value, "to": change.privacy_mode.value, "reason": change.reason},
+    )
     return await project_of(connection, principal, project_id)
 
 

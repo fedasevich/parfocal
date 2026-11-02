@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
 from parfocal_api.permissions import Grant, Permission, grant_of, require
@@ -169,6 +170,8 @@ async def case_detail(
     keyring: MasterKeyring,
     principal: Principal,
     case_id: uuid.UUID,
+    *,
+    patient_viewed: bool = True,
 ) -> CaseDetail:
     row = (
         await connection.execute(
@@ -201,6 +204,16 @@ async def case_detail(
         assert tenant_id is not None
         keys = await load_keys(connection, keyring, tenant_id)
         patient = await patient_detail(connection, keys, row.patient_id)
+    if patient is not None and patient_viewed:
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.CASE_PATIENT_VIEWED,
+            AuditTarget.CASE,
+            case_id,
+            tenant_id=database_scope(principal).tenant_id,
+            details={},
+        )
     return CaseDetail(
         id=row.id,
         project_id=row.project_id,

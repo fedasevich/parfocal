@@ -2053,6 +2053,15 @@ export interface Presets {
   split?: TaskSplit;
 }
 
+export interface PrivacyChange {
+  privacy_mode: PrivacyMode;
+  /**
+   * @minLength 5
+   * @maxLength 500
+   */
+  reason: string;
+}
+
 export interface Problem {
   type: string;
   title: string;
@@ -4881,6 +4890,178 @@ export const useUpdateProject = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getUpdateProjectMutationOptions(options), queryClient);
+};
+
+export type changeProjectPrivacyResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type changeProjectPrivacyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeProjectPrivacyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeProjectPrivacyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeProjectPrivacyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeProjectPrivacyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeProjectPrivacyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeProjectPrivacyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeProjectPrivacyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeProjectPrivacyResponseSuccess = changeProjectPrivacyResponse200 & {
+  headers: Headers;
+};
+export type changeProjectPrivacyResponseError = (
+  | changeProjectPrivacyResponse400
+  | changeProjectPrivacyResponse401
+  | changeProjectPrivacyResponse403
+  | changeProjectPrivacyResponse404
+  | changeProjectPrivacyResponse409
+  | changeProjectPrivacyResponse422
+  | changeProjectPrivacyResponse429
+  | changeProjectPrivacyResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeProjectPrivacyResponse =
+  | changeProjectPrivacyResponseSuccess
+  | changeProjectPrivacyResponseError;
+
+export const getChangeProjectPrivacyUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/privacy-mode`;
+};
+
+/**
+ * @summary Change Project Privacy
+ */
+export const changeProjectPrivacy = async (
+  projectId: string,
+  privacyChange: PrivacyChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeProjectPrivacyResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeProjectPrivacyResponse>(getChangeProjectPrivacyUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyChange),
+  });
+};
+
+export const getChangeProjectPrivacyMutationKey = () => ["changeProjectPrivacy"] as const;
+
+export const getChangeProjectPrivacyMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeProjectPrivacy>>,
+    TError,
+    ChangeProjectPrivacyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeProjectPrivacy>>,
+  TError,
+  ChangeProjectPrivacyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeProjectPrivacyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeProjectPrivacy>>,
+    ChangeProjectPrivacyMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return changeProjectPrivacy(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeProjectPrivacyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeProjectPrivacy>>
+>;
+export type ChangeProjectPrivacyMutationBody = PrivacyChange;
+export type ChangeProjectPrivacyMutationError = Problem;
+export type ChangeProjectPrivacyMutationVariables = { projectId: string; data: PrivacyChange };
+
+/**
+ * @summary Change Project Privacy
+ */
+export const useChangeProjectPrivacy = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeProjectPrivacy>>,
+      TError,
+      ChangeProjectPrivacyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeProjectPrivacy>>,
+  TError,
+  ChangeProjectPrivacyMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeProjectPrivacyMutationOptions(options), queryClient);
 };
 
 export type archiveProjectResponse200 = {

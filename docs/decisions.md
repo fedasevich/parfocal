@@ -29,6 +29,19 @@ Every other answer took the recommended option, and ADR 0117 (review order), 011
 
 You wrote yes here. The rules count only a yes in chat for the exact plan, so the plan diff and its cost will be shown in chat first and applied after your yes there.
 
+## 16. Names inside slide files, SEC-028 (identifying text in de-identified originals)
+
+### 16a. How a de-identified project keeps a slide file's own text out of reach
+
+PROJ-002 (privacy modes) asked that an upload arrives without the names in its file metadata, such as the `Filename` field of an SVS ImageDescription. Parfocal stores nothing from that text, but the viewer will read the original file by byte ranges through TILES-001 (signed access to slide bytes), and you chose in 10e that the stored original keeps the bytes and SHA-256 of the upload.
+
+- A. Ingest records the byte ranges of the identifying text tags, and in a de-identified project the edge serves those ranges with the text replaced by spaces of the same length. **Recommended**, because it matches 10e, the stored file stays as uploaded, and the viewer still finds every tag it needs, such as the pixel size, which sits outside the blanked fields
+- B. Ingest writes a cleaned copy of the original for de-identified projects and serves only that, which doubles the storage of those slides
+- C. Refuse an upload to a de-identified project when its metadata holds a name-like field
+- D. Other
+
+Your choice:
+
 ## Notes, no decision needed
 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
