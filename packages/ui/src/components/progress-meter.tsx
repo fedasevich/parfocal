@@ -1,5 +1,12 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { Icon } from "@parfocal/ui/components/icon";
+import {
+  type Decision,
+  type DecisionSplit,
+  donePercent,
+  ringArcs,
+  stackedParts,
+} from "@parfocal/ui/lib/decision-split";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -34,6 +41,9 @@ function ProgressBar({
       data-slot="progress-bar"
       value={value}
       max={max}
+      getAriaValueText={
+        typeof valueText === "string" && value !== null ? () => valueText : undefined
+      }
       className={cn("grid min-w-0 gap-1.5", className)}
       {...props}
     >
@@ -54,32 +64,12 @@ function ProgressBar({
   );
 }
 
-type DecisionSplit = { agree: number; disagree: number; unsure: number; open: number };
-
-const decisionOrder = ["agree", "disagree", "unsure", "open"] as const;
-
-const decisionStroke: Record<(typeof decisionOrder)[number], string> = {
+const decisionStroke: Record<Decision, string> = {
   agree: "var(--v-agree)",
   disagree: "var(--v-disagree)",
   unsure: "var(--v-unsure)",
   open: "var(--v-open)",
 };
-
-type RingArc = { decision: (typeof decisionOrder)[number]; length: number; offset: number };
-
-function ringArcs(split: DecisionSplit, circumference: number): RingArc[] {
-  const total = decisionOrder.reduce((sum, key) => sum + split[key], 0);
-  if (total === 0) return [];
-  let offset = 0;
-  return decisionOrder
-    .filter((decision) => split[decision] > 0)
-    .map((decision) => {
-      const length = (split[decision] / total) * circumference;
-      const arc = { decision, length, offset };
-      offset += length;
-      return arc;
-    });
-}
 
 type ProgressRingProps = Omit<React.ComponentProps<"span">, "children"> & {
   split: DecisionSplit;
@@ -91,9 +81,7 @@ function ProgressRing({ split, size = 40, label, className, ...props }: Progress
   const stroke = Math.max(3, Math.round(size / 10));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const total = decisionOrder.reduce((sum, key) => sum + split[key], 0);
-  const done = total - split.open;
-  const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+  const percent = donePercent(split);
   const arcs = ringArcs(split, circumference);
   return (
     <span
@@ -155,15 +143,6 @@ type StackedBarProps = Omit<React.ComponentProps<"div">, "children"> & {
   emptyText?: string;
 };
 
-function stackedParts(split: Omit<DecisionSplit, "open">) {
-  const total = split.agree + split.unsure + split.disagree;
-  return (["agree", "unsure", "disagree"] as const).map((decision) => ({
-    decision,
-    count: split[decision],
-    share: total === 0 ? 0 : split[decision] / total,
-  }));
-}
-
 const stackedFill = { agree: "bg-v-agree", unsure: "bg-v-unsure", disagree: "bg-v-disagree" };
 
 const stackedWords = { agree: "agree", unsure: "not sure", disagree: "disagree" };
@@ -209,8 +188,6 @@ export {
   ProgressRing,
   type ProgressRingProps,
   type ProgressTone,
-  ringArcs,
   StackedBar,
   type StackedBarProps,
-  stackedParts,
 };
