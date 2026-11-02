@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-02
 
+- PROTO-003, PROTO-006, PROTO-007, PROTO-011 and PROTO-018 (shell, new task, guided review, kit and full viewer over fake data) ticked after the owner's fixes landed with CI green on d5f6a22: keycaps in every hint strip, no repeated Admin tag, token chips without the mail icon, a kit date picker, padded Storybook, the review top bar popovers, and nine overlays moved into the kit with state stories. PROTO-010 (make the React app the design source) is now unblocked.
 - PROTO-011: Overlay audit part two. Command palette, account menu, drop overlay, preview overlay and brightness popover moved into the kit with stories. Fixed the review top bar progress button name for axe. Account menu theme and initials rows are now real menu radio and checkbox items.
 - PROTO-011: DatePicker takes aria-labelledby and names itself from the FormField label plus its own date, FormField takes labelId. The new-task spec failure was a cold dev server after the new dependency and passes 17 of 17.
 - PROTO-011: Overlay audit. Extracted SlidesOnScreenPanel, NotificationsPanel, DrawerPanel and SlideSubmittedDialog into the kit with stories (Components/Overlays), added state stories for the slides popover and the dropdown menu, DS-011 now owns moving the remaining inline overlays.
