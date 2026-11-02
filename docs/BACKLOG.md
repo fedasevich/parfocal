@@ -1883,7 +1883,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on COLLAB-001.
   Size: M.
 
-- [ ] WL-017 · Filter popover
+- [x] WL-017 · Filter popover
   Project, status, result set and reviewer, for the All slides tab, kept in the URL. Storage joins with REMOTE-001 ([ADR 0082](adr/0082-my-work-query-api.md)).
   Done when component tests cover combined filters and URL persistence.
   Size: S.
