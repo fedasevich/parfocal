@@ -1,7 +1,7 @@
 # 0147. The pilot stays on Cloudflare, Modal and Neon with no hyperscaler, and costs about $140 a month before GPU work and slide storage growth
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted, with originals kept while the project exists and the budget set to $30 a month by [ADR 0151](0151-standing-approval-for-production-within-30-dollars.md)
 - Deciders: Yurii Fedas
 - Backlog: STACK-029 (cloud provider, regions and GPU availability). Amends [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture), whose "Known costs" left the monthly estimate as TODO. Touches OPS-009 (storage lifecycle and cost controls), AIP-007 (priority gate) and SEC-005 (data residency)
 

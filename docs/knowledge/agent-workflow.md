@@ -36,7 +36,7 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 ## Subagents
 
 - One task per fresh subagent, using `.claude/agents/task-runner.md`. Pass a different model when the table below says so. Never fork the main session for task work, because a fork carries its whole context.
-- At most two alive at once.
+- At most two task agents alive at once. Short read-only Haiku reviews may run about six.
 - Budget about 120 turns. When a run passes it, or the work is plainly bigger than one task, the agent commits what is green, leaves a claim `note:` with the next step and hands back.
 - The main session only picks tasks, spawns, relays questions and merges. End it after one epic or about three tasks and start fresh.
 
@@ -46,6 +46,28 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 | ADRs, research checks, backend design, security, tricky bugs | Opus |
 | Board moves, index rows, log lines, simple doc edits | Haiku |
 | Second opinion | Fable, once before starting and once before hand-back, never per turn |
+
+## Picking the next task
+
+Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready task that passes, in this order:
+
+1. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).
+2. An open task that a slice task depends on.
+3. Else the highest "unblocks" count from `board.py ready --agent-only`, the smaller `Size` winning a tie.
+
+`Idea:` tasks stay in the backlog but come last. At most one task that adds a migration runs at a time.
+
+## Two agents in parallel
+
+- Each agent works in its own worktree, `git worktree add ../parfocal-wt/ID -b task/ID`, never in the main checkout.
+- Lanes keep them apart. Opus takes `apps/api`, `workers`, `infra` and migrations, Sonnet takes `apps/web` and `packages/ui`. A task that touches both runs alone.
+- The main session claims both tasks in one commit before spawning. Agents commit only on their branch and never run `note`, `tick` or push, because `docs/log.md` and `docs/BACKLOG.md` are where commits collide.
+- When an agent hands back, the main session rebases its branch on `main`, runs `pnpm -s verify`, `note` and `tick`, and pushes. One merge at a time.
+- Web Playwright runs use `CI=1` in a worktree so two runs do not share port 5183.
+
+## Tasks in review
+
+Review is for what only the owner can give. A task "waiting for a green CI run on `main`" is ticked by the next session that sees a green `ci` run on `main` after the task's commit, with no owner step. A task waiting on another task goes back to waiting with a claim note naming it. Only a real choice goes to `docs/decisions.md`.
 
 ## Checks and output
 

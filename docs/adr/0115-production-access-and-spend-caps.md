@@ -1,7 +1,7 @@
 # 0115. Agents may touch real infrastructure, read-only by default, with every production write approved by the owner and every billing service capped or alerted
 
 - Date: 2026-10-31
-- Status: Accepted
+- Status: Accepted, the per-action yes changed by [ADR 0151](0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month)
 - Deciders: Yurii Fedas
 - Backlog: OPS-009 (storage lifecycle and cost controls). Touches OPS-001 (base infrastructure as code), OPS-005 (continuous deployment), STACK-019 (the web framework), STACK-020 (database hosting) and IAM-001 (login provider setup)
 

@@ -1,7 +1,7 @@
 # 0149. The command palette stays hand-written, drag and drop will be Pragmatic drag and drop, and hotkeys go through one custom registry with chords and hold versus tap
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-014 (command palette, drag and drop, hotkeys). Touches [ADR 0143](0143-client-ui-state-zustand-and-xstate.md) (client UI state with Zustand and XState) and [ADR 0145](0145-tables-tanstack-table-and-virtual.md) (tables driven by J/K from a window key listener)
 

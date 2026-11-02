@@ -40,6 +40,9 @@ From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cl
 
 ## Spend caps and alerts on every service
 
+The whole project runs on $30 a month, the compute Modal includes ([ADR 0151](../adr/0151-standing-approval-for-production-within-30-dollars.md)). Check spend before any run that costs money and pick the cheapest way.
+
+
 Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the work itself. An alert only sends an email and spending goes on.
 
 | Service | Plan | Card on file | What protects the owner | Spend this cycle |

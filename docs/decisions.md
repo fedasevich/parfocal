@@ -20,64 +20,39 @@ To take every recommendation at once, write "all recommended" here:
 | 24, tables | ADR 0145 (TanStack Table plus Virtual) is accepted |
 | 25, frontend testing | ADR 0146 (frontend testing stack on node:test, Storybook and Playwright) is accepted |
 | 21d, CAMELYON16 tumor maps | AITUM-003 (areas from the tumor map) stays in review until MLEVAL-005 (tumor map evaluation) makes the maps on Modal dev with a cost cap |
+| 26a, keeping originals | Originals stay while their project exists, under the R2 budget alert. ADR 0147 (cloud provider, regions and pilot cost) is accepted with that |
+| 26, Modal spend | Your note set the whole project to $30 a month, the compute Modal includes, with nothing running all the time in production. ADR 0151 (standing approval within $30 a month) records it, and Modal keeps its $0 spend limit |
+| Your chat note on production | ADR 0151 is your one standing yes for every session and subagent. Additive production writes such as a `tofu apply` with no destroy, deploys and new settings go ahead and get logged. Anything destructive or anything that raises spend is still asked one action at a time |
+| 27a, palette and hotkeys | ADR 0149 (command palette, drag and drop and hotkey registry) is accepted and STACK-014 (hotkeys) is ticked |
+| 28a, lock card | IAM-021 (lock screen that returns to the same view) drops the password field and keeps one Unlock button plus the passkey button |
+| 29, usability study | PILOT-005 (moderated usability study) is on hold, because the thesis topic does not require it and the POC already ran a usability study and a UI review |
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
 
-## 26. Pilot spend, from STACK-029 (cloud provider, regions and GPU availability)
+## 30. Device traces for VIEW-021 (wheel, trackpad and pinch handling)
 
-ADR 0147 (cloud provider, regions and pilot cost) keeps ADR 0003 (pilot platform architecture) and estimates three tenants with 5,000 slides a month at about $140 in the first month when every AI result is imported. Two lines decide the real bill. Keeping every 1 GB original adds $75 of R2 storage each month, so $450 by month 6. Running a built-in model on every slide adds $372 a month for `camelyon-tumor` or $1,581 for `pathosam-hovernext` on an L4. The model minutes are the mock's, not measured. Today Modal stops at its $30 of free credits, which the API container alone uses up within the month, so nothing changes until you choose.
+VIEW-021 is built and only waits for recorded wheel and pinch events from real devices, which its "Done when" names as a mouse, a Mac trackpad and a Windows precision touchpad. An agent builds a small recorder page next, and you would scroll and pinch on it for about two minutes on your Mac.
 
-How long are uploaded originals kept?
+Which devices should the traces come from?
 
-- a. Keep them while the project exists, and alert at a monthly budget. (recommended, because reviews need the slide)
-- b. Delete originals 90 days after upload, which caps storage near $225 a month.
+- a. A mouse and the Mac trackpad only, and drop the Windows touchpad from "Done when" until someone has one. (recommended, because it needs only your Mac)
+- b. All three, and you borrow a Windows laptop once.
 - c. Something else, say what.
 
 Your choice:
 
-What Modal spend limit should the pilot run under, once real pilot work starts?
+## The review column, what each task waits for
 
-- d. Keep $0 until the first lab is ready, then raise it to cover the API and ingest only, about $60 of compute a month (the $30 of credits plus a $30 spend limit), with GPU runs off. (recommended)
-- e. Raise it to about $500 a month so a few model runs can happen.
-- f. Something else, say what.
+Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
 
-Your choice:
-
-## 27. Palette, drag and drop and hotkeys, from STACK-014 (command palette, drag and drop, hotkeys)
-
-ADR 0149 (command palette, drag and drop and hotkey registry) keeps the palette the prototype screens already built instead of switching to cmdk, picks Pragmatic drag and drop for the first in-app drag and installs nothing yet, and adds a custom hotkey registry. The registry handles chords such as G then 2 with a 1,000 ms wait, a tap on Z against a hold at the kit's 350 ms, and stays quiet while you type in a field except for keys marked for fields. The dev page `/spikes/hotkeys` shows it working, and the existing screens move onto it one at a time.
-
-Do you accept ADR 0149?
-
-- a. Yes, accept it as written. (recommended, because the spike passes and nothing new is installed)
-- b. Accept it, but switch the palette to cmdk now for fuzzy matching.
-- c. Something else, say what.
-
-Your choice:
-
-## 28. The lock screen's password field, from IAM-021 (lock screen that returns to the same view)
-
-The kit's lock card asks for a password, but ADR 0031 (idle lock unlocked by signing in again) unlocks through Zitadel with `prompt=login`, and Zitadel asks for the password on its own page. Today the card's Unlock button opens that page and whatever was typed in the card is thrown away, so a person types the password twice.
-
-What should the lock card show?
-
-- a. Drop the password field and keep one Unlock button that opens the sign-in page, with the passkey button kept for IAM-023 (sign in and unlock with a passkey). (recommended, because Parfocal never sees passwords)
-- b. Keep the field as drawn and accept the second password prompt.
-- c. Something else, say what.
-
-Your choice:
-
-## 29. The usability study without pathologists, from PILOT-005 (moderated usability study)
-
-PILOT-005 plans a moderated study with 3 to 5 pathologists, and no pathologist is available now or later. MEAS-000 (measurement categories) now checks the published AJCC and CAP texts instead, AINUC-012 (tumor cell count) and REVIEW-020 (firm staging answers) compare against expert labels that come with public datasets, and FOUND-023 (task sizes and quick wins on the board) makes `board.py check` refuse a pathologist marker.
-
-How should PILOT-005 run?
-
-- a. Run it with 3 to 5 non-expert participants, such as students or colleagues, on scripted tasks that need no diagnosis, and score the AI-review flows by task time, errors and the wording check, with an expert study named as future work in the thesis. (recommended, because it needs nobody you cannot reach)
-- b. Replace the study with an expert review by heuristics plus scripted Playwright walkthroughs that time each flow, with no participants.
-- c. Something else, say what.
-
-Your choice:
+| Task | Waits for | Who does it |
+|---|---|---|
+| GUIDE-015 (decision styles in task screens) | The UI half | The next Sonnet agent, first in the queue |
+| INGEST-001 (resumable upload) | INGEST-028 (upload check on the R2 dev bucket), which ADR 0151 now allows | The next Opus agent |
+| CASES-009 (search API) | The latency test, which missed 100 ms only on the shared CI runner | An agent reruns it on your Mac with `PARFOCAL_PERF=1` |
+| IAM-021 (lock screen) | Your answer 28a | The session already working on it |
+| VIEW-021 (wheel and pinch) | Decision 30 and two minutes of your scrolling | You, once the recorder page exists |
+| AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed
 

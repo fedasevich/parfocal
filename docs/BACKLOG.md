@@ -252,7 +252,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: pnpm workspaces with Turborepo, Nx, Moon. Lint and format: Biome, ESLint flat config with typescript-eslint plus Prettier, Oxlint. Default: pnpm and Turborepo, Biome for format and lint plus typescript-eslint for type-aware rules that Biome lacks. Decided in [ADR 0006](adr/0006-monorepo-tooling.md): TypeScript 7 with type-aware Oxlint instead of typescript-eslint, which does not support TypeScript 7.
   Done when the ADR records cache strategy for CI and how Python tasks join the same task graph.
 
-- [ ] STACK-014 · Command palette, drag and drop, hotkeys
+- [x] STACK-014 · Command palette, drag and drop, hotkeys
   Candidates: cmdk, kbar, a custom React Aria combobox. Drag and drop: dnd-kit, Pragmatic drag and drop. Hotkeys: tinykeys, react-hotkeys-hook, a custom registry. Default: cmdk, Pragmatic drag and drop, and a custom key registry. The registry has to support presets, rebinding, chords like G then n, and hold versus tap on Z, which the libraries do not cover well.
   Done when the ADR records the choices and a spike shows a G then 2 chord and a Z hold-versus-tap working with focus in and out of text inputs.
   Refs mock 18, mock 21, kit Interaction spec.
@@ -497,7 +497,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-007, FOUND-008, FOUND-015.
   Size: M.
 
-- [ ] FOUND-020 · Task board over the backlog
+- [x] FOUND-020 · Task board over the backlog
   A kanban page and a command-line tool that read `docs/BACKLOG.md` live, so the owner can follow every task and agents can pick, claim and hand over tasks in parallel. Ticks stay in the backlog and claims live in one small file per task under `docs/board/active/` ([ADR 0052](adr/0052-task-board-from-backlog-and-claim-files.md)). The page links each task to its dependencies both ways with a tree view, and to the ADRs, results, knowledge files and log entries that name it.
   Done when `scripts/test_board.py` covers parsing tasks, dependencies, claim files, status resolution, the trees and `board.py check`, and the docs workflow runs the check.
   Size: L.
@@ -1100,7 +1100,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when the request count for a viewport drops as in doc 32 (194 to 39) in the latency-proxy test.
   Size: S.
 
-- [ ] TILES-006 · Latency proxy test harness
+- [x] TILES-006 · Latency proxy test harness
   A configurable RTT and bandwidth proxy used by perf tests.
   Done when perf suites can run at 0, 50, 100 and 200 ms RTT.
   Refs [`poc/scripts/latency-proxy.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/latency-proxy.mjs).
@@ -1148,7 +1148,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a test counts one decode per tile, not three.
   Refs doc 06, [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
 
-- [ ] VIEW-007 · Interpolation rule
+- [x] VIEW-007 · Interpolation rule
   Nearest at the finest level, linear at coarser levels, half-texel inset to avoid bleeding across tiles.
   Done when golden tests at 40× and above (digital zoom) show crisp pixels and no seams at tile borders.
   Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
@@ -1157,19 +1157,19 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ### Format readers (each is a PixelSource)
 
-- [ ] VIEW-010 · Generic tiled TIFF and SVS JPEG
+- [x] VIEW-010 · Generic tiled TIFF and SVS JPEG
   Done when CMU-1.svs and generic TIFF fixtures pass the conformance suite and golden images.
   Refs [`poc/src/slide/tiffsource.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/tiffsource.ts), [`poc/src/viv/tiff-source.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/viv/tiff-source.ts).
   Size: M.
 
-- [ ] VIEW-011 · SVS JPEG 2000 through OpenJPEG WASM
+- [x] VIEW-011 · SVS JPEG 2000 through OpenJPEG WASM
   Lazy-loaded codec, damaged tile detection with a grey placeholder, no main-thread fallback.
   Done when J2K fixtures pass, a corrupted tile renders grey, and the codec is not downloaded for non-J2K slides.
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 24, [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   The owner kept the grey placeholder on 2026-10-31 and suggested a grey checkerboard instead of flat grey. TODO: decide at the screens stage, because VIEW-041 (how a slide loads) already uses a quiet checker for places where no level has loaded, so the two must not look alike.
   Size: M.
 
-- [ ] VIEW-012 · OME-TIFF 8-bit and 16-bit
+- [x] VIEW-012 · OME-TIFF 8-bit and 16-bit
   Done when the 8-bit and 16-bit multichannel fixtures pass, with 16-bit going through Viv's channel contrast path. Mounting the channel levels in the route belongs to VIEW-018 (multichannel fluorescence display).
   Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   Size: M.
@@ -1289,7 +1289,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a test hides and shows the tab mid-load and the view is complete within 1 s of becoming visible. Headless Chrome cannot be hidden, so the test emulates a hidden tab and a one-off check in headed Chrome is recorded as a result file.
   Refs docs 01, 06, [ADR 0109](adr/0109-idle-means-zero-frames-and-hidden-tabs-keep-loading.md).
 
-- [ ] VIEW-034 · GPU error handling
+- [x] VIEW-034 · GPU error handling
   Error scopes and uncaptured error listeners on WebGPU routes, context loss recovery on WebGL, user-facing message on unrecoverable loss.
   Done when tests force a context loss and the viewer recovers to the same view.
   Refs doc 06, [ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md).
@@ -3500,7 +3500,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the skeleton suite runs locally and in CI.
   Size: M.
 
-- [ ] TEST-005 · Golden-image rendering tests
+- [x] TEST-005 · Golden-image rendering tests
   Rendered slide views compared against stored images with per-format tolerances, in headless Chromium with SwiftShader on hosted runners ([ADR 0011](adr/0011-hosted-ci-only.md)). Includes assertions that frames are not empty.
   Done when a golden test catches a deliberately swapped colour channel.
   Refs doc 23 (empty frames looked fast).
@@ -3606,7 +3606,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a dry run on staging imports the pilot sample.
   Size: M.
 
-- [ ] PILOT-005 · Moderated usability study
+- [ ] PILOT-005 · Moderated usability study (on hold)
+  On hold since 2026-11-02 (decision 29). The thesis topic does not require a new study, and the POC already ran a usability study and a UI review ([poc/study](https://github.com/fedasevich/pathlogy-poc/tree/master/study)). Run it only if the thesis later needs one.
   Run the kit test plan with 3 to 5 pathologists in study mode. Close decisions D6 and D8 and the wording comprehension check.
   Done when the results are written up and follow-up tasks are added to this backlog.
   Size: L.
