@@ -11,6 +11,7 @@ import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
+import { tileAccessHandlers } from "./tile-access-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 
 export type FakeApiScope = "all" | "drafts";
@@ -32,6 +33,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adjudicationHandlers(),
     ...settingsHandlers(),
     ...teamActionHandlers(),
+    ...tileAccessHandlers(),
     ...getParfocalAPIMock(),
   ];
 }
@@ -95,6 +97,11 @@ export {
   resetTeamActions,
   setFakeTeamScene,
 } from "./team-scene.ts";
+export {
+  fakeTileLifetimeSeconds,
+  tileAccessHandlers,
+  toTileAccess,
+} from "./tile-access-handlers.ts";
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
 export { toSlideAiProgress, toSlideResultStats } from "./viewer-handlers.ts";
 export { type FakeViewerScene, fakeViewerScene, setFakeViewerScene } from "./viewer-scene.ts";

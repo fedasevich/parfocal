@@ -10,6 +10,7 @@ import {
   getMe,
   getMyHome,
   getProject,
+  getTileAccess,
   listMyJobs,
   listMyReviewTasks,
   listProjects,
@@ -114,4 +115,13 @@ test("an override replaces the generated fake body", async () => {
   server.use(getGetHealthMockHandler({ status: "fake" }));
   assert.deepEqual(body(await getHealth()), { status: "fake" });
   server.resetHandlers();
+});
+
+test("tile access names the slide's own path and a ten-minute lifetime", async () => {
+  const access = body(
+    await getTileAccess("slide-1", { headers: { "Previous-Tile-Token": "old" } }),
+  );
+  assert.equal(access.base_path, "/tiles/slide-1/");
+  assert.equal(access.lifetime_seconds, 600);
+  assert.equal(access.original, "slide.svs");
 });
