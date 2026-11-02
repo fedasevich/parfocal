@@ -49,6 +49,6 @@ The edge refuses the closed ranges for every reader, the owners included, becaus
 - A person removed from a project keeps reading for at most ten minutes, as threat model T3 (removed reader keeps reading) allows.
 - Rotating the key fails each open viewer's next tile once, after which `TileAccess` renews and retries. A key id for overlapping keys is a later change if rotation becomes routine.
 - A multi-plane AVS file shows only its main plane through the edge, because the other planes sit outside the main series, as the level table already assumes.
-- The Leica SCN header XML in the first IFD carries the slide barcode, which any token holder can read. Decision 17a (barcodes in file headers) in [decisions.md](../decisions.md) asks what to do.
+- The Leica SCN header XML in the first IFD carries the slide barcode, which any token holder can read. The owner chose on 2026-11-02 (decision 17a) that ingest closes header fields holding a barcode for readers without label rights, through the byte-range blanking of SEC-028 (identifying text in de-identified originals), and the viewer reads those slides' geometry from `levels.json` in SKEL-006 (open the slide in Viv).
 - Deploying needs a wrangler config with the R2 binding and the secret set in Cloudflare and Modal, which are production writes for the owner.
 - TODO: the number 0137 was free on `origin/main` on 2026-11-02. If another branch takes it first, renumber this record.

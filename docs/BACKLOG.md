@@ -238,7 +238,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Candidates: TanStack Table plus TanStack Virtual, AG Grid. Default: TanStack Table and Virtual for worklist, layers and audit views.
   Done when a spike renders 10,000 worklist rows with keyboard J/K navigation at 60 fps.
 
-- [ ] STACK-011 · Charts for dashboards and confidence visuals
+- [x] STACK-011 · Charts for dashboards and confidence visuals
   Candidates: visx, Recharts, Observable Plot, ECharts. Default: visx for the custom tumor share range bars and sparklines, Observable Plot for dashboard charts.
   Done when the ADR covers theming through tokens and accessibility of charts.
 
@@ -527,7 +527,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on INGEST-004, INGEST-010.
 
 - [ ] SKEL-006 · Open the slide in Viv
-  Signed tile access, one Viv layer, wheel zoom and drag pan.
+  Signed tile access, one Viv layer, wheel zoom and drag pan. For formats whose header holds a barcode, such as Leica SCN, the viewer reads the slide's geometry from `levels.json` instead of the file header, because SEC-028 (identifying text in de-identified originals) blanks those header fields (decision 17a, 2026-11-02).
   Done when a golden-image test of the fitted view matches within tolerance in CI with software rendering.
   Depends on VIEW-002, TILES-001.
 
@@ -724,8 +724,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The label route already refuses every de-identified project ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects). Ingest still extracts labels and macros in a de-identified project, and this task stops that, so they are never stored and a later switch to clinical shows none, as the owner chose on 2026-11-02.
 
 - [ ] SEC-028 · Identifying text in de-identified originals
-  A slide file's own text tags can name the patient or the case, such as the `Filename` and user fields of an SVS ImageDescription, NDPI and Philips text tags and DICOM attributes. In a de-identified project none of that text may reach a reader. Ingest finds the identifying tags of each format, and how the original keeps them out of reach is decision 16a in [decisions.md](decisions.md).
-  Done when an upload fixture with a name in its SVS ImageDescription is read through the slide byte route of a de-identified project without the name, the viewer still opens it, and the stored original keeps its SHA-256 unless the owner picks a cleaned copy.
+  A slide file's own text tags can name the patient or the case, such as the `Filename` and user fields of an SVS ImageDescription, NDPI and Philips text tags and DICOM attributes. In a de-identified project none of that text may reach a reader. Ingest finds the identifying tags of each format and records their byte ranges, and in a de-identified project the slide byte route serves those ranges with the text replaced by spaces of the same length, so the stored original keeps its bytes and SHA-256 (the owner's answer to decision 16a on 2026-11-02). The same blanking closes header fields that hold a barcode, such as `<barcode>` in the Leica SCN header XML, for every reader who may not see labels, in any privacy mode (decision 17a, [ADR 0137](adr/0137-capability-tokens-for-slide-bytes.md), capability tokens for slide bytes).
+  Done when an upload fixture with a name in its SVS ImageDescription is read through the slide byte route of a de-identified project without the name, the viewer still opens it, the stored original keeps its SHA-256, and a Leica SCN fixture read by a task reviewer without label rights shows no barcode.
   Depends on PROJ-002, TILES-001. Split from PROJ-002 (privacy modes) on 2026-11-02. Refs [ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md).
 
 - [x] SEC-009 · Slide label and macro image handling
@@ -3216,6 +3216,11 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Each member of a project in Clinical privacy mode holds Can sign out as Own cases, Any case or Never. Own cases is the default for the owner and for project reviewers, and covers a case when the member holds an assignment on one of its slides. Viewers are fixed at Never. Only the project owner changes the value, every change is audited, and setting Never for the last member who could sign out is allowed and answered with a warning. The right does not exist in a de-identified project. The permission page is regenerated with the right ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md) (researcher and reviewer with admin rights), [ADR 0134](adr/0134-clinical-report-per-case-with-sign-out-and-co-sign.md), clinical report per case with sign-out and co-sign).
   Done when the table-driven permission test gains rows for Own cases on an own and another case, Any case and Never, API tests cover the defaults, a refused change by a non-owner, a refused value for a viewer, the last-member warning and a de-identified project without the right, and the audit entry is checked.
   Depends on PROJ-003, PROJ-002, IAM-024. Refs mock: project/settings, doc 43, doc 44.
+
+- [ ] PROJ-010 · Delete a project
+  Any project owner may delete any project behind a typed confirmation of its name, the owner's answer to decision 20b on 2026-11-02. Delete is a soft delete through the existing `deleted_at`: the project leaves every list and route, and its slides, stored originals, result sets, review tasks, decisions, evaluations and audit entries stay in storage and can be restored. Rows and bytes are erased for real only through the GDPR erasure path of SEC-021 (GDPR documentation), never from this action ([ADR 0064](adr/0064-project-api.md), the project API, gains this rule). The Settings danger zone of PROJ-008 (project settings) gains the action.
+  Done when API tests cover delete by an owner, refusal for a viewer and reviewer, the typed confirmation, the audit entry, isolation, hidden routes after delete, a restore, and a check that no row or stored byte was removed, and a component test covers the confirmation dialog.
+  Depends on PROJ-003, ONB-005.
 
 ---
 
