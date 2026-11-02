@@ -53,6 +53,7 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-jp2k-damaged.tiff` | `synthetic-jp2k-33005.tiff` with tile 1 stripped of its codestream marker and the body of tile 6 overwritten |
 | `synthetic-channels-uint8.ome.tiff` | OME-TIFF with three 8-bit channels (DAPI, FITC, TRITC) as separate zlib pages, two SubIFD levels each |
 | `synthetic-channels-uint16.ome.tiff` | The same with 16-bit samples |
+| `synthetic-mxif-uint16-be.ome.tiff` | Big-endian BigTIFF OME with four 16-bit channels named like the Vanderbilt kidney MxIF scan (Hoechst, Laminin, Synaptopodin, THP), two SubIFD levels each in 32 px zlib tiles, so the tile offset arrays lie outside the first directory read. The first three channels equal `synthetic-channels-uint16.ome.tiff` |
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 

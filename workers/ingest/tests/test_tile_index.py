@@ -28,6 +28,7 @@ CONTRACT_FIXTURES = (
     "synthetic-zlib.ome.tiff",
     "synthetic-big-endian.tiff",
     "synthetic-channels-uint8.ome.tiff",
+    "synthetic-mxif-uint16-be.ome.tiff",
 )
 CACHED = ("CMU-1.svs", "tumor_009.tif", "Leica-1.scn", "Huron-1-40x.tif", "CMU-1.ndpi", "OS-1.bif")
 JPEG_END = b"\xff\xd9"

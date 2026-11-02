@@ -26,6 +26,7 @@ const contract: ReadonlyArray<readonly [string, SlideFormatId]> = [
   ["synthetic-zlib.ome.tiff", "ome-tiff"],
   ["synthetic-big-endian.tiff", "generic-tiff"],
   ["synthetic-channels-uint8.ome.tiff", "ome-tiff"],
+  ["synthetic-mxif-uint16-be.ome.tiff", "ome-tiff"],
 ];
 const rttMs = 100;
 const sidecarOpen = await budget("viewer.sidecar-open-ms");
