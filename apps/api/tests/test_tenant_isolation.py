@@ -38,6 +38,7 @@ from parfocal_api.tables import (
     notifications,
     opinions,
     organisations,
+    personal_settings,
     platform_operators,
     project_classes,
     project_members,
@@ -61,11 +62,14 @@ from parfocal_api.tables import (
     uploads,
     users,
     verdicts,
+    workspace_settings,
 )
+from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.ingest import RestrictedImage
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.result_store import ObjectResultStore
 
 pytestmark = pytest.mark.db
 
@@ -120,6 +124,8 @@ CASE_TABLES = {
     "job_steps",
     "job_units",
     "notification_preferences",
+    "personal_settings",
+    "workspace_settings",
     "projects",
     "project_members",
     "opinion_forms",
@@ -255,6 +261,18 @@ async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> Non
             in_app=True,
             email=False,
             realtime=True,
+        )
+    )
+    await connection.execute(
+        insert(personal_settings).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            values={"tools": "dock", "marker": str(target)},
+        )
+    )
+    await connection.execute(
+        insert(workspace_settings).values(
+            tenant_id=seeded.tenant_id, values={"lock_after_minutes": 5}, locked=[]
         )
     )
     seeded.markers.add(str(target))
@@ -437,6 +455,34 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["result_set"] = set_id
+    summary_set = await connection.scalar(
+        insert(result_sets)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            name=f"Cells {uuid.uuid4().hex[:8]}",
+            source="import",
+            cell_count=1,
+        )
+        .returning(result_sets.c.id)
+    )
+    assert isinstance(summary_set, uuid.UUID)
+    await connection.execute(
+        update(result_sets).where(result_sets.c.id == summary_set).values(status="ready")
+    )
+    cell_number = 100_000_000 + uuid.uuid4().int % 800_000_000
+    seeded.markers.add(str(cell_number))
+    summary = build_cells(
+        seeded.tenant_id,
+        case.loose_slide_id,
+        summary_set,
+        [Cell(cell_number, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
+        1,
+    ).summary
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await ObjectResultStore(ObjectStore(TEST_STORAGE, http)).put(summary.key, summary.data)
+    seeded.ids["summary_set"] = summary_set
     task_name = f"Task {uuid.uuid4().hex[:8]}"
     first_read = f"First read {uuid.uuid4().hex[:8]}"
     task_id = await connection.scalar(
@@ -746,6 +792,7 @@ GET_ROUTES = {
     "listNotificationPreferences": Route(
         Exposure.PUBLIC, lambda _: "/api/me/notification-preferences"
     ),
+    "getMySettingLayers": Route(Exposure.PUBLIC, lambda _: "/api/me/setting-layers"),
     "getOpinionForm": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
     ),
@@ -830,6 +877,9 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/result-sets"
     ),
     "getResultSet": Route(Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}"),
+    "getCellSummary": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/cell-summary"
+    ),
     "listAnnotations": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"
     ),

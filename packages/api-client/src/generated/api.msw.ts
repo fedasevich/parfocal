@@ -46,6 +46,7 @@ import type {
   Invitation,
   IssuedToken,
   Job,
+  LabSettings,
   LegalHold,
   Marked,
   Me,
@@ -55,6 +56,7 @@ import type {
   ModelRun,
   MultiPolygonGeometry,
   Mute,
+  MySettingLayers,
   MyTask,
   Neighbours,
   OpenUpload,
@@ -6914,6 +6916,42 @@ export const getAcceptInvitationResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetMySettingLayersResponseMock = (
+  overrideResponse: Partial<Extract<MySettingLayers, object>> = {},
+): MySettingLayers => ({
+  lab: {
+    values: {},
+    locked: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+  },
+  personal: {},
+  ...overrideResponse,
+});
+
+export const getSetMySettingLayersResponseMock = (
+  overrideResponse: Partial<Extract<MySettingLayers, object>> = {},
+): MySettingLayers => ({
+  lab: {
+    values: {},
+    locked: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+  },
+  personal: {},
+  ...overrideResponse,
+});
+
+export const getSetWorkspaceSettingsResponseMock = (
+  overrideResponse: Partial<Extract<LabSettings, object>> = {},
+): LabSettings => ({
+  values: {},
+  locked: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
 export const getGetHealthMockHandler = (
   overrideResponse?:
     | Health
@@ -10680,6 +10718,76 @@ export const getAcceptInvitationMockHandler = (
     options,
   );
 };
+
+export const getGetMySettingLayersMockHandler = (
+  overrideResponse?:
+    | MySettingLayers
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MySettingLayers> | MySettingLayers),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/setting-layers",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMySettingLayersResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetMySettingLayersMockHandler = (
+  overrideResponse?:
+    | MySettingLayers
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<MySettingLayers> | MySettingLayers),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/me/setting-layers",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetMySettingLayersResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetWorkspaceSettingsMockHandler = (
+  overrideResponse?:
+    | LabSettings
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LabSettings> | LabSettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/settings",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetWorkspaceSettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
@@ -10847,4 +10955,7 @@ export const getParfocalAPIMock = () => [
   getRevokeInvitationMockHandler(),
   getInvitePlatformMemberMockHandler(),
   getAcceptInvitationMockHandler(),
+  getGetMySettingLayersMockHandler(),
+  getSetMySettingLayersMockHandler(),
+  getSetWorkspaceSettingsMockHandler(),
 ];

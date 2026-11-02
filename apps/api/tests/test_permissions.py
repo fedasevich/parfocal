@@ -75,6 +75,8 @@ OPEN_OPERATIONS = {
     "validateResultsFile": "member",
     "listNotificationPreferences": "member",
     "setNotificationPreferences": "member",
+    "getMySettingLayers": "member",
+    "setMySettingLayers": "member",
     "listNotifications": "member",
     "getNotificationCounts": "member",
     "markNotificationsRead": "member",
@@ -324,6 +326,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjects": lambda _: Call("GET", "/api/projects"),
     "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
+    "setWorkspaceSettings": lambda _: Call(
+        "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
+    ),
     "changeProjectPrivacy": lambda w: Call(
         "POST",
         f"/api/projects/{w.spare_project}/privacy-mode",
@@ -573,6 +578,8 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", "/api/result-formats/parfocal-json/validate", {"content": "{}"}
     ),
     "listNotificationPreferences": lambda _: Call("GET", "/api/me/notification-preferences"),
+    "getMySettingLayers": lambda _: Call("GET", "/api/me/setting-layers"),
+    "setMySettingLayers": lambda _: Call("PUT", "/api/me/setting-layers", {"values": {"density": "compact"}}),
     "setNotificationPreferences": lambda _: Call(
         "PUT",
         "/api/me/notification-preferences",

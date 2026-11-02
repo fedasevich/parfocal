@@ -1551,6 +1551,13 @@ export const JobControl = {
   retry: "retry",
 } as const;
 
+export type LabSettingsValues = { [key: string]: unknown };
+
+export interface LabSettings {
+  values: LabSettingsValues;
+  locked: string[];
+}
+
 export type Layer = (typeof Layer)[keyof typeof Layer];
 
 export const Layer = {
@@ -1867,6 +1874,13 @@ export interface Mute {
   created_at: string;
 }
 
+export type MySettingLayersPersonal = { [key: string]: unknown };
+
+export interface MySettingLayers {
+  lab: LabSettings;
+  personal: MySettingLayersPersonal;
+}
+
 export interface SlideRef {
   id: string;
   label: string;
@@ -2099,6 +2113,14 @@ export interface PersonalData {
   profile: PersonalDataProfile;
   sessions: PersonalDataSessionsItem[];
   workspaces: WorkspaceData[];
+}
+
+export interface Values {
+  [key: string]: unknown;
+}
+
+export interface PersonalSettingsChange {
+  values: Values;
 }
 
 export type Plan = (typeof Plan)[keyof typeof Plan];
@@ -3276,6 +3298,12 @@ export interface VersionCheck {
 
 export interface WorkspaceChoice {
   tenant_id: string;
+}
+
+export interface WorkspaceSettingsChange {
+  values: Values;
+  /** @maxItems 21 */
+  locked?: string[];
 }
 
 export type ListProjectsParams = {
@@ -32715,4 +32743,528 @@ export const useAcceptInvitation = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getAcceptInvitationMutationOptions(options), queryClient);
+};
+
+export type getMySettingLayersResponse200 = {
+  data: MySettingLayers;
+  status: 200;
+};
+
+export type getMySettingLayersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMySettingLayersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMySettingLayersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMySettingLayersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMySettingLayersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMySettingLayersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMySettingLayersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMySettingLayersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMySettingLayersResponseSuccess = getMySettingLayersResponse200 & {
+  headers: Headers;
+};
+export type getMySettingLayersResponseError = (
+  | getMySettingLayersResponse400
+  | getMySettingLayersResponse401
+  | getMySettingLayersResponse403
+  | getMySettingLayersResponse404
+  | getMySettingLayersResponse409
+  | getMySettingLayersResponse422
+  | getMySettingLayersResponse429
+  | getMySettingLayersResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMySettingLayersResponse =
+  | getMySettingLayersResponseSuccess
+  | getMySettingLayersResponseError;
+
+export const getGetMySettingLayersUrl = () => {
+  return `/api/me/setting-layers`;
+};
+
+/**
+ * @summary Get My Settings
+ */
+export const getMySettingLayers = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMySettingLayersResponse> => {
+  return apiFetch<getMySettingLayersResponse>(getGetMySettingLayersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMySettingLayersQueryKey = () => {
+  return [`/api/me/setting-layers`] as const;
+};
+
+export const getGetMySettingLayersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMySettingLayers>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMySettingLayers>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMySettingLayersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMySettingLayers>>> = ({ signal }) =>
+    getMySettingLayers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMySettingLayers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMySettingLayersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMySettingLayers>>
+>;
+export type GetMySettingLayersQueryError = Problem;
+
+export function useGetMySettingLayers<
+  TData = Awaited<ReturnType<typeof getMySettingLayers>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMySettingLayers>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMySettingLayers>>,
+          TError,
+          Awaited<ReturnType<typeof getMySettingLayers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMySettingLayers<
+  TData = Awaited<ReturnType<typeof getMySettingLayers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMySettingLayers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMySettingLayers>>,
+          TError,
+          Awaited<ReturnType<typeof getMySettingLayers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMySettingLayers<
+  TData = Awaited<ReturnType<typeof getMySettingLayers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMySettingLayers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Settings
+ */
+
+export function useGetMySettingLayers<
+  TData = Awaited<ReturnType<typeof getMySettingLayers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMySettingLayers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMySettingLayersQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setMySettingLayersResponse200 = {
+  data: MySettingLayers;
+  status: 200;
+};
+
+export type setMySettingLayersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setMySettingLayersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setMySettingLayersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setMySettingLayersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setMySettingLayersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setMySettingLayersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setMySettingLayersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setMySettingLayersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setMySettingLayersResponseSuccess = setMySettingLayersResponse200 & {
+  headers: Headers;
+};
+export type setMySettingLayersResponseError = (
+  | setMySettingLayersResponse400
+  | setMySettingLayersResponse401
+  | setMySettingLayersResponse403
+  | setMySettingLayersResponse404
+  | setMySettingLayersResponse409
+  | setMySettingLayersResponse422
+  | setMySettingLayersResponse429
+  | setMySettingLayersResponse500
+) & {
+  headers: Headers;
+};
+
+export type setMySettingLayersResponse =
+  | setMySettingLayersResponseSuccess
+  | setMySettingLayersResponseError;
+
+export const getSetMySettingLayersUrl = () => {
+  return `/api/me/setting-layers`;
+};
+
+/**
+ * @summary Set My Settings
+ */
+export const setMySettingLayers = async (
+  personalSettingsChange: PersonalSettingsChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setMySettingLayersResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setMySettingLayersResponse>(getSetMySettingLayersUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(personalSettingsChange),
+  });
+};
+
+export const getSetMySettingLayersMutationKey = () => ["setMySettingLayers"] as const;
+
+export const getSetMySettingLayersMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setMySettingLayers>>,
+    TError,
+    SetMySettingLayersMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setMySettingLayers>>,
+  TError,
+  SetMySettingLayersMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetMySettingLayersMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setMySettingLayers>>,
+    SetMySettingLayersMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setMySettingLayers(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetMySettingLayersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setMySettingLayers>>
+>;
+export type SetMySettingLayersMutationBody = PersonalSettingsChange;
+export type SetMySettingLayersMutationError = Problem;
+export type SetMySettingLayersMutationVariables = { data: PersonalSettingsChange };
+
+/**
+ * @summary Set My Settings
+ */
+export const useSetMySettingLayers = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setMySettingLayers>>,
+      TError,
+      SetMySettingLayersMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setMySettingLayers>>,
+  TError,
+  SetMySettingLayersMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetMySettingLayersMutationOptions(options), queryClient);
+};
+
+export type setWorkspaceSettingsResponse200 = {
+  data: LabSettings;
+  status: 200;
+};
+
+export type setWorkspaceSettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setWorkspaceSettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setWorkspaceSettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setWorkspaceSettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setWorkspaceSettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setWorkspaceSettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setWorkspaceSettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setWorkspaceSettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setWorkspaceSettingsResponseSuccess = setWorkspaceSettingsResponse200 & {
+  headers: Headers;
+};
+export type setWorkspaceSettingsResponseError = (
+  | setWorkspaceSettingsResponse400
+  | setWorkspaceSettingsResponse401
+  | setWorkspaceSettingsResponse403
+  | setWorkspaceSettingsResponse404
+  | setWorkspaceSettingsResponse409
+  | setWorkspaceSettingsResponse422
+  | setWorkspaceSettingsResponse429
+  | setWorkspaceSettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type setWorkspaceSettingsResponse =
+  | setWorkspaceSettingsResponseSuccess
+  | setWorkspaceSettingsResponseError;
+
+export const getSetWorkspaceSettingsUrl = () => {
+  return `/api/tenant/settings`;
+};
+
+/**
+ * @summary Set Workspace Settings
+ */
+export const setWorkspaceSettings = async (
+  workspaceSettingsChange: WorkspaceSettingsChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setWorkspaceSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setWorkspaceSettingsResponse>(getSetWorkspaceSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(workspaceSettingsChange),
+  });
+};
+
+export const getSetWorkspaceSettingsMutationKey = () => ["setWorkspaceSettings"] as const;
+
+export const getSetWorkspaceSettingsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setWorkspaceSettings>>,
+    TError,
+    SetWorkspaceSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setWorkspaceSettings>>,
+  TError,
+  SetWorkspaceSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetWorkspaceSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setWorkspaceSettings>>,
+    SetWorkspaceSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setWorkspaceSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetWorkspaceSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setWorkspaceSettings>>
+>;
+export type SetWorkspaceSettingsMutationBody = WorkspaceSettingsChange;
+export type SetWorkspaceSettingsMutationError = Problem;
+export type SetWorkspaceSettingsMutationVariables = { data: WorkspaceSettingsChange };
+
+/**
+ * @summary Set Workspace Settings
+ */
+export const useSetWorkspaceSettings = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setWorkspaceSettings>>,
+      TError,
+      SetWorkspaceSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setWorkspaceSettings>>,
+  TError,
+  SetWorkspaceSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetWorkspaceSettingsMutationOptions(options), queryClient);
 };

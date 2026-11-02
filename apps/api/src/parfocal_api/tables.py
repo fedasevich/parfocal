@@ -1003,6 +1003,42 @@ notification_mutes = Table(
     one_of("subject", MuteSubject),
 )
 
+personal_settings = Table(
+    "personal_settings",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("values", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=PERSONAL),
+    Column(
+        "updated_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+)
+
+workspace_settings = Table(
+    "workspace_settings",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("values", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
+    Column("locked", ARRAY(String(40)), nullable=False, server_default="{}", info=OPERATIONAL),
+    Column(
+        "updated_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
+)
+
 notification_preferences = Table(
     "notification_preferences",
     metadata,

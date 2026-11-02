@@ -29,6 +29,7 @@ class AuditAction(StrEnum):
     TENANT_CREATED = "tenant.created"
     TENANT_SUSPENDED = "tenant.suspended"
     TENANT_REACTIVATED = "tenant.reactivated"
+    WORKSPACE_SETTINGS_CHANGED = "tenant.settings-changed"
     MEMBER_ADDED = "member.added"
     MEMBER_ROLE_CHANGED = "member.role-changed"
     MEMBER_ADMIN_RIGHTS_GIVEN = "member.admin-rights-given"

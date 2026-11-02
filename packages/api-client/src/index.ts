@@ -15,3 +15,18 @@ export {
   problemMediaType,
   toApiError,
 } from "./problem.ts";
+export {
+  catalogue as settingsCatalogue,
+  type Layer as SettingLayer,
+  type SettingEntry,
+  type SettingKey,
+  type SettingValues,
+} from "./settings/catalogue.generated.ts";
+export {
+  type Resolved as ResolvedSetting,
+  resolveSetting,
+  resolveSettings,
+  type SettingLayers,
+  type Source as SettingSource,
+  type StoredValues as StoredSettingValues,
+} from "./settings/resolve.ts";

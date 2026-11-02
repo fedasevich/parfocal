@@ -32,6 +32,10 @@ Guard a tenant route with `**require(Permission.X)` from `parfocal_api.permissio
 
 A project's privacy mode changes only through `POST /api/projects/{id}/privacy-mode` (`changeProjectPrivacy`), gated by `privacy-mode`, which only admin rights grant, and by project ownership. The body needs a reason of 5 to 500 characters, which the `project.privacy-changed` audit entry keeps with the old and new mode. A same-mode request changes nothing and records nothing, and a project with any patient cannot become de-identified (409 `project-holds-patients`). Every `getCase` that returns a patient records `case.patient-viewed` on the case, so it shows in the patient's audit trail. Creating a case returns the patient without that entry, because the creator typed it. Source: PROJ-002 (privacy modes).
 
+## Settings come from one catalogue
+
+`parfocal_api.settings_catalogue` is the only list of settings ([ADR 0138](../adr/0138-settings-catalogue-in-python-resolved-in-the-browser.md), settings catalogue in Python and resolved in the browser). After changing it, run `uv run python -m parfocal_api.settings_catalogue`, which rewrites `packages/api-client/src/settings/catalogue.generated.ts`, or `test_settings.py` fails. `resolveSetting` and `resolveSettings` in the API client do the resolution, and the server only stores and checks the personal and workspace layers. The routes are `getMySettingLayers` and `setMySettingLayers` at `/api/me/setting-layers`, named apart from the settings prototype's draft `getMySettings` at `/api/me/settings`, until SET-002 (settings modal shell) replaces the draft. The isolation suite seeds a ready one-cell summary set under `summary_set`, and the seeded cell number is its marker. Source: SET-001 (settings storage and resolution).
+
 ## Database dependencies close before the response
 
 `TenantConnection` and `PlatformConnection` use `Depends(..., scope="function")`, so the transaction commits or rolls back before FastAPI sends the response. With the default scope the commit runs after the response is sent, and a failed commit would follow a 200. Source: IAM-004 log entry.
