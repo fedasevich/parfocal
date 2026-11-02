@@ -1453,6 +1453,9 @@ export const NotificationKind = {
   "task-signed-off": "task-signed-off",
   "emergency-access": "emergency-access",
   "task-due-soon": "task-due-soon",
+  "task-nudged": "task-nudged",
+  "task-reassigned": "task-reassigned",
+  "task-due-changed": "task-due-changed",
   "result-set-added": "result-set-added",
   "integration-down": "integration-down",
 } as const;
@@ -1966,6 +1969,24 @@ export interface Neighbours {
   at_end: boolean;
 }
 
+export interface Nudge {
+  id: string;
+  task_id: string;
+  user_id: string;
+  sent_at: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 500
+ */
+export type NudgeMessage = string;
+
+export interface NudgeCreate {
+  user_id: string;
+  message: NudgeMessage;
+}
+
 /**
  * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
  */
@@ -2409,6 +2430,36 @@ export interface QueuedObject {
   verdicts: ReviewerVerdict[];
   decision?: Decision | null;
   note?: string | null;
+}
+
+export type ReassignWhat = (typeof ReassignWhat)[keyof typeof ReassignWhat];
+
+export const ReassignWhat = {
+  "not-started": "not-started",
+  all: "all",
+} as const;
+
+export interface Reassignment {
+  id: string;
+  task_id: string;
+  from_user_id: string;
+  to_user_id: string;
+  what: ReassignWhat;
+  slides_moved: number;
+  moved_slide_ids: string[];
+  kept_slide_ids: string[];
+}
+
+/**
+ * @maxLength 300
+ */
+export type ReassignmentNote = string;
+
+export interface ReassignmentCreate {
+  from_user_id: string;
+  to_user_id: string;
+  what?: ReassignWhat;
+  note?: ReassignmentNote | null;
 }
 
 export type Region = (typeof Region)[keyof typeof Region];
@@ -3335,6 +3386,11 @@ export interface TaskDraft {
   study_template_id?: string | null;
   study_template_version?: number | null;
   decision?: DecisionSettings | null;
+}
+
+export interface TaskReviewerCreate {
+  user_id: string;
+  slide_ids?: string[] | null;
 }
 
 export interface TaskStates {
@@ -17685,6 +17741,795 @@ export const useChangeReviewTask = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getChangeReviewTaskMutationOptions(options), queryClient);
+};
+
+export type nudgeReviewerResponse201 = {
+  data: Nudge;
+  status: 201;
+};
+
+export type nudgeReviewerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type nudgeReviewerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type nudgeReviewerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type nudgeReviewerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type nudgeReviewerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type nudgeReviewerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type nudgeReviewerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type nudgeReviewerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type nudgeReviewerResponseSuccess = nudgeReviewerResponse201 & {
+  headers: Headers;
+};
+export type nudgeReviewerResponseError = (
+  | nudgeReviewerResponse400
+  | nudgeReviewerResponse401
+  | nudgeReviewerResponse403
+  | nudgeReviewerResponse404
+  | nudgeReviewerResponse409
+  | nudgeReviewerResponse422
+  | nudgeReviewerResponse429
+  | nudgeReviewerResponse500
+) & {
+  headers: Headers;
+};
+
+export type nudgeReviewerResponse = nudgeReviewerResponseSuccess | nudgeReviewerResponseError;
+
+export const getNudgeReviewerUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/nudges`;
+};
+
+/**
+ * @summary Nudge Reviewer
+ */
+export const nudgeReviewer = async (
+  taskId: string,
+  nudgeCreate: NudgeCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<nudgeReviewerResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<nudgeReviewerResponse>(getNudgeReviewerUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(nudgeCreate),
+  });
+};
+
+export const getNudgeReviewerMutationKey = () => ["nudgeReviewer"] as const;
+
+export const getNudgeReviewerMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof nudgeReviewer>>,
+    TError,
+    NudgeReviewerMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof nudgeReviewer>>,
+  TError,
+  NudgeReviewerMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNudgeReviewerMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof nudgeReviewer>>,
+    NudgeReviewerMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return nudgeReviewer(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NudgeReviewerMutationResult = NonNullable<Awaited<ReturnType<typeof nudgeReviewer>>>;
+export type NudgeReviewerMutationBody = NudgeCreate;
+export type NudgeReviewerMutationError = Problem;
+export type NudgeReviewerMutationVariables = { taskId: string; data: NudgeCreate };
+
+/**
+ * @summary Nudge Reviewer
+ */
+export const useNudgeReviewer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof nudgeReviewer>>,
+      TError,
+      NudgeReviewerMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof nudgeReviewer>>,
+  TError,
+  NudgeReviewerMutationVariables,
+  TContext
+> => {
+  return useMutation(getNudgeReviewerMutationOptions(options), queryClient);
+};
+
+export type cancelNudgeResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type cancelNudgeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type cancelNudgeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type cancelNudgeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type cancelNudgeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type cancelNudgeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type cancelNudgeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type cancelNudgeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type cancelNudgeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type cancelNudgeResponseSuccess = cancelNudgeResponse204 & {
+  headers: Headers;
+};
+export type cancelNudgeResponseError = (
+  | cancelNudgeResponse400
+  | cancelNudgeResponse401
+  | cancelNudgeResponse403
+  | cancelNudgeResponse404
+  | cancelNudgeResponse409
+  | cancelNudgeResponse422
+  | cancelNudgeResponse429
+  | cancelNudgeResponse500
+) & {
+  headers: Headers;
+};
+
+export type cancelNudgeResponse = cancelNudgeResponseSuccess | cancelNudgeResponseError;
+
+export const getCancelNudgeUrl = (taskId: string, nudgeId: string) => {
+  return `/api/review-tasks/${taskId}/nudges/${nudgeId}`;
+};
+
+/**
+ * @summary Cancel Nudge
+ */
+export const cancelNudge = async (
+  taskId: string,
+  nudgeId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<cancelNudgeResponse> => {
+  return apiFetch<cancelNudgeResponse>(getCancelNudgeUrl(taskId, nudgeId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelNudgeMutationKey = () => ["cancelNudge"] as const;
+
+export const getCancelNudgeMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelNudge>>,
+    TError,
+    CancelNudgeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelNudge>>,
+  TError,
+  CancelNudgeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCancelNudgeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelNudge>>,
+    CancelNudgeMutationVariables
+  > = (props) => {
+    const { taskId, nudgeId } = props ?? {};
+
+    return cancelNudge(taskId, nudgeId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelNudgeMutationResult = NonNullable<Awaited<ReturnType<typeof cancelNudge>>>;
+
+export type CancelNudgeMutationError = Problem;
+export type CancelNudgeMutationVariables = { taskId: string; nudgeId: string };
+
+/**
+ * @summary Cancel Nudge
+ */
+export const useCancelNudge = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelNudge>>,
+      TError,
+      CancelNudgeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelNudge>>,
+  TError,
+  CancelNudgeMutationVariables,
+  TContext
+> => {
+  return useMutation(getCancelNudgeMutationOptions(options), queryClient);
+};
+
+export type reassignSlidesResponse201 = {
+  data: Reassignment;
+  status: 201;
+};
+
+export type reassignSlidesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reassignSlidesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reassignSlidesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reassignSlidesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reassignSlidesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reassignSlidesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reassignSlidesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reassignSlidesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reassignSlidesResponseSuccess = reassignSlidesResponse201 & {
+  headers: Headers;
+};
+export type reassignSlidesResponseError = (
+  | reassignSlidesResponse400
+  | reassignSlidesResponse401
+  | reassignSlidesResponse403
+  | reassignSlidesResponse404
+  | reassignSlidesResponse409
+  | reassignSlidesResponse422
+  | reassignSlidesResponse429
+  | reassignSlidesResponse500
+) & {
+  headers: Headers;
+};
+
+export type reassignSlidesResponse = reassignSlidesResponseSuccess | reassignSlidesResponseError;
+
+export const getReassignSlidesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/reassignments`;
+};
+
+/**
+ * @summary Reassign Slides
+ */
+export const reassignSlides = async (
+  taskId: string,
+  reassignmentCreate: ReassignmentCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reassignSlidesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<reassignSlidesResponse>(getReassignSlidesUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(reassignmentCreate),
+  });
+};
+
+export const getReassignSlidesMutationKey = () => ["reassignSlides"] as const;
+
+export const getReassignSlidesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reassignSlides>>,
+    TError,
+    ReassignSlidesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reassignSlides>>,
+  TError,
+  ReassignSlidesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReassignSlidesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reassignSlides>>,
+    ReassignSlidesMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return reassignSlides(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReassignSlidesMutationResult = NonNullable<Awaited<ReturnType<typeof reassignSlides>>>;
+export type ReassignSlidesMutationBody = ReassignmentCreate;
+export type ReassignSlidesMutationError = Problem;
+export type ReassignSlidesMutationVariables = { taskId: string; data: ReassignmentCreate };
+
+/**
+ * @summary Reassign Slides
+ */
+export const useReassignSlides = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reassignSlides>>,
+      TError,
+      ReassignSlidesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reassignSlides>>,
+  TError,
+  ReassignSlidesMutationVariables,
+  TContext
+> => {
+  return useMutation(getReassignSlidesMutationOptions(options), queryClient);
+};
+
+export type undoReassignmentResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type undoReassignmentResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type undoReassignmentResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type undoReassignmentResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type undoReassignmentResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type undoReassignmentResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type undoReassignmentResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type undoReassignmentResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type undoReassignmentResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type undoReassignmentResponseSuccess = undoReassignmentResponse204 & {
+  headers: Headers;
+};
+export type undoReassignmentResponseError = (
+  | undoReassignmentResponse400
+  | undoReassignmentResponse401
+  | undoReassignmentResponse403
+  | undoReassignmentResponse404
+  | undoReassignmentResponse409
+  | undoReassignmentResponse422
+  | undoReassignmentResponse429
+  | undoReassignmentResponse500
+) & {
+  headers: Headers;
+};
+
+export type undoReassignmentResponse =
+  | undoReassignmentResponseSuccess
+  | undoReassignmentResponseError;
+
+export const getUndoReassignmentUrl = (taskId: string, reassignmentId: string) => {
+  return `/api/review-tasks/${taskId}/reassignments/${reassignmentId}`;
+};
+
+/**
+ * @summary Undo Reassignment
+ */
+export const undoReassignment = async (
+  taskId: string,
+  reassignmentId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<undoReassignmentResponse> => {
+  return apiFetch<undoReassignmentResponse>(getUndoReassignmentUrl(taskId, reassignmentId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getUndoReassignmentMutationKey = () => ["undoReassignment"] as const;
+
+export const getUndoReassignmentMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof undoReassignment>>,
+    TError,
+    UndoReassignmentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof undoReassignment>>,
+  TError,
+  UndoReassignmentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUndoReassignmentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof undoReassignment>>,
+    UndoReassignmentMutationVariables
+  > = (props) => {
+    const { taskId, reassignmentId } = props ?? {};
+
+    return undoReassignment(taskId, reassignmentId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UndoReassignmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof undoReassignment>>
+>;
+
+export type UndoReassignmentMutationError = Problem;
+export type UndoReassignmentMutationVariables = { taskId: string; reassignmentId: string };
+
+/**
+ * @summary Undo Reassignment
+ */
+export const useUndoReassignment = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof undoReassignment>>,
+      TError,
+      UndoReassignmentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof undoReassignment>>,
+  TError,
+  UndoReassignmentMutationVariables,
+  TContext
+> => {
+  return useMutation(getUndoReassignmentMutationOptions(options), queryClient);
+};
+
+export type addTaskReviewerResponse201 = {
+  data: ReviewTaskDetail;
+  status: 201;
+};
+
+export type addTaskReviewerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type addTaskReviewerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type addTaskReviewerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type addTaskReviewerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type addTaskReviewerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type addTaskReviewerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type addTaskReviewerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type addTaskReviewerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type addTaskReviewerResponseSuccess = addTaskReviewerResponse201 & {
+  headers: Headers;
+};
+export type addTaskReviewerResponseError = (
+  | addTaskReviewerResponse400
+  | addTaskReviewerResponse401
+  | addTaskReviewerResponse403
+  | addTaskReviewerResponse404
+  | addTaskReviewerResponse409
+  | addTaskReviewerResponse422
+  | addTaskReviewerResponse429
+  | addTaskReviewerResponse500
+) & {
+  headers: Headers;
+};
+
+export type addTaskReviewerResponse = addTaskReviewerResponseSuccess | addTaskReviewerResponseError;
+
+export const getAddTaskReviewerUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/reviewers`;
+};
+
+/**
+ * @summary Add Task Reviewer
+ */
+export const addTaskReviewer = async (
+  taskId: string,
+  taskReviewerCreate: TaskReviewerCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<addTaskReviewerResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<addTaskReviewerResponse>(getAddTaskReviewerUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskReviewerCreate),
+  });
+};
+
+export const getAddTaskReviewerMutationKey = () => ["addTaskReviewer"] as const;
+
+export const getAddTaskReviewerMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addTaskReviewer>>,
+    TError,
+    AddTaskReviewerMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addTaskReviewer>>,
+  TError,
+  AddTaskReviewerMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddTaskReviewerMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addTaskReviewer>>,
+    AddTaskReviewerMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return addTaskReviewer(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddTaskReviewerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addTaskReviewer>>
+>;
+export type AddTaskReviewerMutationBody = TaskReviewerCreate;
+export type AddTaskReviewerMutationError = Problem;
+export type AddTaskReviewerMutationVariables = { taskId: string; data: TaskReviewerCreate };
+
+/**
+ * @summary Add Task Reviewer
+ */
+export const useAddTaskReviewer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addTaskReviewer>>,
+      TError,
+      AddTaskReviewerMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addTaskReviewer>>,
+  TError,
+  AddTaskReviewerMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddTaskReviewerMutationOptions(options), queryClient);
 };
 
 export type saveReviewEditResponse200 = {

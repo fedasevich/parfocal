@@ -135,7 +135,11 @@ def assigned_slides(principal: Principal) -> Select[tuple[uuid.UUID]]:
     return (
         select(review_assignments.c.slide_id)
         .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
-        .where(review_assignments.c.user_id == user_id, review_tasks.c.archived_at.is_(None))
+        .where(
+            review_assignments.c.user_id == user_id,
+            review_assignments.c.released_at.is_(None),
+            review_tasks.c.archived_at.is_(None),
+        )
     )
 
 

@@ -173,7 +173,10 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
             .where(
                 review_tasks.c.archived_at.is_(None),
                 review_tasks.c.id.in_(
-                    select(review_assignments.c.task_id).where(review_assignments.c.user_id == me)
+                    select(review_assignments.c.task_id).where(
+                        review_assignments.c.user_id == me,
+                        review_assignments.c.released_at.is_(None),
+                    )
                 ),
             )
         )
@@ -429,6 +432,7 @@ async def list_my_slides(
             exists().where(
                 review_assignments.c.slide_id == slides.c.id,
                 review_assignments.c.user_id == reviewer_id,
+                review_assignments.c.released_at.is_(None),
             )
         )
     if q:

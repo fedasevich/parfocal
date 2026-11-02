@@ -48,6 +48,8 @@ from parfocal_api.tables import (
     service_accounts,
     slide_counters,
     slides,
+    task_nudges,
+    task_reassignments,
     tenants,
     uploads,
     users,
@@ -175,6 +177,11 @@ class Workspace:
     queued_task: uuid.UUID
     hidden_task: uuid.UUID
     first_read_task: uuid.UUID
+    nudge: uuid.UUID
+    reassign_task: uuid.UUID
+    undo_task: uuid.UUID
+    reassignment: uuid.UUID
+    add_task: uuid.UUID
     announcement: uuid.UUID
     legal_hold: uuid.UUID
     patient: uuid.UUID
@@ -526,6 +533,23 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "signOffReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.ready_task}/sign-off"),
     "reopenReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.signed_task}/reopen"),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
+    "addTaskReviewer": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.add_task}/reviewers", {"user_id": str(w.lead)}
+    ),
+    "nudgeReviewer": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/nudges",
+        {"user_id": str(w.lead), "message": "Could you fit this in?"},
+    ),
+    "cancelNudge": lambda w: Call("DELETE", f"/api/review-tasks/{w.task}/nudges/{w.nudge}"),
+    "reassignSlides": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.reassign_task}/reassignments",
+        {"from_user_id": str(w.colleague), "to_user_id": str(w.lead)},
+    ),
+    "undoReassignment": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.undo_task}/reassignments/{w.reassignment}"
+    ),
     "createCase": lambda w: Call(
         "POST",
         "/api/cases",
@@ -582,6 +606,11 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -1033,6 +1062,40 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 )
                 for number in (6, 7)
             ]
+            reassign_task, undo_task, add_task = [
+                await seed_task(
+                    connection,
+                    tenant_id,
+                    case.project_id,
+                    case.loose_slide_id,
+                    result_set,
+                    people[lead] if number == 9 else colleague,
+                    number,
+                    signed=False,
+                    submitted=False,
+                )
+                for number in (8, 9, 10)
+            ]
+            reassignment = await connection.scalar(
+                insert(task_reassignments)
+                .values(
+                    tenant_id=tenant_id,
+                    task_id=undo_task,
+                    from_user_id=colleague,
+                    to_user_id=people[lead],
+                    what="not-started",
+                    slide_ids=[case.loose_slide_id],
+                    kept_slide_ids=[],
+                )
+                .returning(task_reassignments.c.id)
+            )
+            nudge = await connection.scalar(
+                insert(task_nudges)
+                .values(tenant_id=tenant_id, task_id=task, user_id=people[lead])
+                .returning(task_nudges.c.id)
+            )
+            assert isinstance(reassignment, uuid.UUID)
+            assert isinstance(nudge, uuid.UUID)
             await connection.execute(
                 insert(verdicts).values(
                     tenant_id=tenant_id,
@@ -1183,6 +1246,11 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             queued_task,
             hidden_task,
             first_read_task,
+            nudge,
+            reassign_task,
+            undo_task,
+            reassignment,
+            add_task,
             announcement,
             legal_hold,
             case.patient_id,

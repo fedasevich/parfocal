@@ -71,7 +71,9 @@ async def task_order(
         row.slide_id: row.submitted_at is not None
         for row in await connection.execute(
             select(review_assignments.c.slide_id, review_assignments.c.submitted_at).where(
-                review_assignments.c.task_id == task_id, review_assignments.c.user_id == me
+                review_assignments.c.task_id == task_id,
+                review_assignments.c.user_id == me,
+                review_assignments.c.released_at.is_(None),
             )
         )
     }

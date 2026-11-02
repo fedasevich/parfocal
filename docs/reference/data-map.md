@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 26 |
-| `personal` | 48 |
+| `personal` | 52 |
 | `secret` | 9 |
-| `operational` | 517 |
+| `operational` | 530 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -557,6 +557,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `assigned_at` | operational |
 | `first_read_at` | operational |
 | `first_read` | phi |
+| `released_at` | operational |
 
 ## review_edits
 
@@ -802,6 +803,32 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## task_nudges
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `user_id` | personal |
+| `sent_by_user_id` | personal |
+| `sent_at` | operational |
+
+## task_reassignments
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `from_user_id` | personal |
+| `to_user_id` | personal |
+| `what` | operational |
+| `slide_ids` | operational |
+| `kept_slide_ids` | operational |
+| `created_at` | operational |
+| `undone_at` | operational |
 
 ## tenant_keys
 

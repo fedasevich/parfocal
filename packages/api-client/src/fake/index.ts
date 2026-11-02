@@ -10,6 +10,7 @@ import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
+import { teamActionHandlers } from "./team-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 
 export type FakeApiScope = "all" | "drafts";
@@ -30,6 +31,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adminHandlers(),
     ...adjudicationHandlers(),
     ...settingsHandlers(),
+    ...teamActionHandlers(),
     ...getParfocalAPIMock(),
   ];
 }

@@ -1,4 +1,4 @@
-import { HttpResponse, http } from "msw";
+import { HttpResponse, http, type RequestHandler } from "msw";
 import {
   type TeamReviewer,
   TeamReviewerStatus,
@@ -6,7 +6,7 @@ import {
   type TeamWorkload,
   teamWorkloadSchema,
 } from "../draft/list-team-workload.ts";
-import { type Nudge, type Reassignment, ReassignWhat } from "../draft/team-actions.ts";
+import { type Nudge, type Reassignment, ReassignWhat } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   type PersonKey,
@@ -296,6 +296,8 @@ export const getReassignSlidesMockHandler = (overrideResponse?: Reassignment) =>
       to_user_id: people[to].id,
       what,
       slides_moved: slides,
+      moved_slide_ids: [],
+      kept_slide_ids: [],
     };
     return HttpResponse.json(created, { status: 201 });
   });
@@ -317,28 +319,11 @@ export const teamDraftOperations: DraftOperation[] = [
     path: "/api/me/team",
     handler: () => getListTeamWorkloadMockHandler(),
   },
-  {
-    operationId: "nudgeReviewer",
-    method: "post",
-    path: "/api/review-tasks/{task_id}/nudges",
-    handler: () => getNudgeReviewerMockHandler(),
-  },
-  {
-    operationId: "cancelNudge",
-    method: "delete",
-    path: "/api/review-tasks/{task_id}/nudges/{nudge_id}",
-    handler: () => getCancelNudgeMockHandler(),
-  },
-  {
-    operationId: "reassignSlides",
-    method: "post",
-    path: "/api/review-tasks/{task_id}/reassignments",
-    handler: () => getReassignSlidesMockHandler(),
-  },
-  {
-    operationId: "undoReassignment",
-    method: "delete",
-    path: "/api/review-tasks/{task_id}/reassignments/{reassignment_id}",
-    handler: () => getUndoReassignmentMockHandler(),
-  },
+];
+
+export const teamActionHandlers = (): RequestHandler[] => [
+  getNudgeReviewerMockHandler(),
+  getCancelNudgeMockHandler(),
+  getReassignSlidesMockHandler(),
+  getUndoReassignmentMockHandler(),
 ];

@@ -224,6 +224,7 @@ async def assigned_slide(
         review_assignments.c.task_id == task_id,
         review_assignments.c.slide_id == slide_id,
         review_assignments.c.user_id == user_of(principal),
+        review_assignments.c.released_at.is_(None),
     )
     if not await connection.scalar(select(assigned.exists())):
         raise NotAssignedError

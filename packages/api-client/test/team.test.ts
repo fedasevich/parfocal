@@ -23,6 +23,13 @@ import {
   undoReassignment,
 } from "../src/index.ts";
 
+function created<R extends { status: number; data: unknown }>(
+  response: R,
+): Extract<R, { status: 201 }>["data"] {
+  assert.equal(response.status, 201);
+  return (response as Extract<R, { status: 201 }>).data;
+}
+
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
 
@@ -129,13 +136,13 @@ test("a nudge marks the row and its undo clears it", async () => {
   let team = await asResearcher();
   const task = team.open[0] as TeamTask;
   const simona = people.SM.id;
-  const sent = await nudgeReviewer(task.id, { user_id: simona, message: "Could you?" });
+  const sent = created(await nudgeReviewer(task.id, { user_id: simona, message: "Could you?" }));
   team = await asResearcher();
   assert.equal(
     team.open[0]?.reviewers.find((row) => row.user_id === simona)?.nudged_at,
     scenario.scenarioNow,
   );
-  await cancelNudge(task.id, sent.data.id);
+  await cancelNudge(task.id, sent.id);
   team = await asResearcher();
   assert.equal(team.open[0]?.reviewers.find((row) => row.user_id === simona)?.nudged_at, null);
 });
@@ -143,31 +150,35 @@ test("a nudge marks the row and its undo clears it", async () => {
 test("reassigning moves the slides not started, or all of them, and undo puts them back", async () => {
   let team = await asResearcher();
   const task = team.open[0] as TeamTask;
-  const rest = await reassignSlides(task.id, {
-    from_user_id: people.SM.id,
-    to_user_id: people.JR.id,
-    what: "not-started",
-    note: null,
-  });
-  assert.equal(rest.data.slides_moved, 8);
+  const rest = created(
+    await reassignSlides(task.id, {
+      from_user_id: people.SM.id,
+      to_user_id: people.JR.id,
+      what: "not-started",
+      note: null,
+    }),
+  );
+  assert.equal(rest.slides_moved, 8);
   team = await asResearcher();
   assert.deepEqual(rowsOf(team.open[0]), {
     LM: "on-track 7/12",
     SM: "done 4/4",
     JR: "not-started 0/8",
   });
-  await undoReassignment(task.id, rest.data.id);
+  await undoReassignment(task.id, rest.id);
 
-  const all = await reassignSlides(task.id, {
-    from_user_id: people.SM.id,
-    to_user_id: people.JR.id,
-    what: "all",
-    note: "For both of you",
-  });
-  assert.equal(all.data.slides_moved, 12);
+  const all = created(
+    await reassignSlides(task.id, {
+      from_user_id: people.SM.id,
+      to_user_id: people.JR.id,
+      what: "all",
+      note: "For both of you",
+    }),
+  );
+  assert.equal(all.slides_moved, 12);
   team = await asResearcher();
   assert.deepEqual(rowsOf(team.open[0]), { LM: "on-track 7/12", JR: "not-started 0/12" });
-  await undoReassignment(task.id, all.data.id);
+  await undoReassignment(task.id, all.id);
   team = await asResearcher();
   assert.deepEqual(rowsOf(team.open[0]), { LM: "on-track 7/12", SM: "behind 4/12" });
 });
@@ -186,7 +197,7 @@ test("a reassign to someone who already reviews the task is refused", async () =
   );
 });
 
-test("the team drafts carry the draft marker", () => {
+test("the workload is a draft and the nudge is a shipped route", () => {
   assert.ok(isDraftMeta(getListTeamWorkloadQueryOptions().meta));
-  assert.deepEqual(getNudgeReviewerMutationOptions().meta, { draft: "nudgeReviewer" });
+  assert.ok(!isDraftMeta(getNudgeReviewerMutationOptions().meta));
 });

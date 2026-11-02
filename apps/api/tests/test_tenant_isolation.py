@@ -60,6 +60,8 @@ from parfocal_api.tables import (
     stage_throughput,
     study_template_versions,
     study_templates,
+    task_nudges,
+    task_reassignments,
     tenants,
     uploads,
     users,
@@ -115,6 +117,8 @@ CASE_TABLES = {
     "review_tasks",
     "review_task_slides",
     "review_assignments",
+    "task_nudges",
+    "task_reassignments",
     "result_sets",
     "result_set_classes",
     "result_objects",
@@ -602,6 +606,27 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             kind="region",
             number=1,
             decision="keep-ai",
+        )
+    )
+    await connection.execute(
+        insert(task_nudges).values(
+            tenant_id=seeded.tenant_id, task_id=task_id, user_id=seeded.ids["user"]
+        )
+    )
+    taker = await connection.scalar(
+        insert(users)
+        .values(subject=f"taker-{task_id}", display_name="Taker", initials="TT", avatar_colour=0)
+        .returning(users.c.id)
+    )
+    await connection.execute(
+        insert(task_reassignments).values(
+            tenant_id=seeded.tenant_id,
+            task_id=task_id,
+            from_user_id=seeded.ids["user"],
+            to_user_id=taker,
+            what="all",
+            slide_ids=[case.loose_slide_id],
+            kept_slide_ids=[],
         )
     )
     seeded.ids["task"] = task_id

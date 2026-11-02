@@ -63,6 +63,27 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         ALL,
         breaks_mute=True,
     ),
+    NotificationKind.TASK_NUDGED: Entry(
+        TargetKind.TASK,
+        "A note about your review task",
+        "The researcher sent you a note about a review task.",
+        ALL,
+        breaks_mute=True,
+    ),
+    NotificationKind.TASK_REASSIGNED: Entry(
+        TargetKind.TASK,
+        "Review slides moved",
+        "Slides of a review task moved between reviewers.",
+        ALL,
+        breaks_mute=True,
+    ),
+    NotificationKind.TASK_DUE_CHANGED: Entry(
+        TargetKind.TASK,
+        "Review task due date changed",
+        "The due date of a review task of yours changed.",
+        ALL,
+        breaks_mute=False,
+    ),
     NotificationKind.MODEL_RUN_FINISHED: Entry(
         TargetKind.JOB,
         "Model run finished",

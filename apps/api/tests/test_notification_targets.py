@@ -36,6 +36,8 @@ def test_every_kind_declares_whether_it_breaks_through_a_mute() -> None:
         NotificationKind.MENTION,
         NotificationKind.TASK_ASSIGNED,
         NotificationKind.TASK_DUE_SOON,
+        NotificationKind.TASK_NUDGED,
+        NotificationKind.TASK_REASSIGNED,
         NotificationKind.EMERGENCY_ACCESS,
     } == BREAKS_MUTES
 

@@ -53,6 +53,7 @@ from parfocal_api import (
     sign_out,
     site_validations,
     study_templates,
+    task_changes,
     taxonomy,
     tenants,
     tile_access,
@@ -177,6 +178,7 @@ def create_app(
     app.include_router(case_sorting.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
+    app.include_router(task_changes.router)
     app.include_router(reviewed_layer.router)
     app.include_router(review_order.router)
     app.include_router(reviewed_export.router)

@@ -147,7 +147,7 @@ export function TeamScreen({
 
   const sendNudge = async (task: TeamTask, userId: string, message: string) => {
     const sent = await nudgeReviewer(task.id, { user_id: userId, message });
-    return sent.data;
+    return sent.status === 201 ? sent.data : null;
   };
 
   const onSendNudge = async () => {
@@ -157,6 +157,7 @@ export function TeamScreen({
     const sent = await sendNudge(task, modal.userId, modal.message);
     setModal(null);
     await refresh();
+    if (!sent) return;
     show(`Nudge sent to ${person(modal.userId).name}`, async () => {
       await cancelNudge(task.id, sent.id);
       await refresh();
@@ -173,7 +174,9 @@ export function TeamScreen({
     await refresh();
     const names = [...new Set(list.map(({ row }) => person(row.user_id).name))];
     show(`Nudge sent to ${andJoin(names)}`, async () => {
-      await Promise.all(sent.map((nudge) => cancelNudge(nudge.task_id, nudge.id)));
+      await Promise.all(
+        sent.flatMap((nudge) => (nudge ? [cancelNudge(nudge.task_id, nudge.id)] : [])),
+      );
       await refresh();
     });
   };
@@ -191,6 +194,7 @@ export function TeamScreen({
     });
     setModal(null);
     await refresh();
+    if (moved.status !== 201) return;
     show(
       `${moved.data.slides_moved} slides of ${task.code} moved to ${person(to).name}. Both are told by email.`,
       async () => {

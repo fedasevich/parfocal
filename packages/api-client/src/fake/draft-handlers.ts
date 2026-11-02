@@ -92,13 +92,7 @@ export {
   getListReviewerWorkloadMockHandler,
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
-export {
-  getCancelNudgeMockHandler,
-  getListTeamWorkloadMockHandler,
-  getNudgeReviewerMockHandler,
-  getReassignSlidesMockHandler,
-  getUndoReassignmentMockHandler,
-} from "./team-handlers.ts";
+export { getListTeamWorkloadMockHandler } from "./team-handlers.ts";
 export {
   getGetSlideAiProgressMockHandler,
   getGetSlideResultStatsMockHandler,

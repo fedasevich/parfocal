@@ -60,6 +60,7 @@ import type {
   MySettingLayers,
   MyTask,
   Neighbours,
+  Nudge,
   ObjectResolution,
   OpenUpload,
   Opinion,
@@ -76,6 +77,7 @@ import type {
   ProjectModel,
   Question,
   QueuedObject,
+  Reassignment,
   RegionMetrics,
   Resolved,
   ResultSet,
@@ -163,6 +165,7 @@ import {
   PrivacyMode,
   ProjectRole,
   Read,
+  ReassignWhat,
   Region,
   RegionColumn,
   RestrictedImage,
@@ -2992,6 +2995,113 @@ export const getGetReviewTaskResponseMock = (
 });
 
 export const getChangeReviewTaskResponseMock = (
+  overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
+): ReviewTaskDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+  scope: {
+    kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+    count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+    score: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+  },
+  scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+      count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+      score: faker.helpers.arrayElement([
+        faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        null,
+      ]),
+    }),
+  ),
+  opinion_form_version: faker.number.int(),
+  blinded: faker.datatype.boolean(),
+  ai_hidden_first_read: faker.datatype.boolean(),
+  start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
+  due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+  reminder_days: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.number.int(),
+  ),
+  study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  decision: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+    question: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 2, max: 200 } }),
+      null,
+    ]),
+  },
+  counts_as_changes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    recounted: faker.number.int(),
+    reasons_dropped: faker.number.int(),
+  })),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  slide_count: faker.number.int(),
+  reviewer_count: faker.number.int(),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      result_set_id: faker.string.uuid(),
+      reviewer_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getNudgeReviewerResponseMock = (
+  overrideResponse: Partial<Extract<Nudge, object>> = {},
+): Nudge => ({
+  id: faker.string.uuid(),
+  task_id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getReassignSlidesResponseMock = (
+  overrideResponse: Partial<Extract<Reassignment, object>> = {},
+): Reassignment => ({
+  id: faker.string.uuid(),
+  task_id: faker.string.uuid(),
+  from_user_id: faker.string.uuid(),
+  to_user_id: faker.string.uuid(),
+  what: faker.helpers.arrayElement(Object.values(ReassignWhat)),
+  slides_moved: faker.number.int(),
+  moved_slide_ids: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.uuid()),
+  kept_slide_ids: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.uuid()),
+  ...overrideResponse,
+});
+
+export const getAddTaskReviewerResponseMock = (
   overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
 ): ReviewTaskDetail => ({
   id: faker.string.uuid(),
@@ -9196,6 +9306,114 @@ export const getChangeReviewTaskMockHandler = (
   );
 };
 
+export const getNudgeReviewerMockHandler = (
+  overrideResponse?:
+    | Nudge
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Nudge> | Nudge),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/nudges",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getNudgeReviewerResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCancelNudgeMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/nudges/:nudgeId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getReassignSlidesMockHandler = (
+  overrideResponse?:
+    | Reassignment
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<Reassignment> | Reassignment),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/reassignments",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReassignSlidesResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUndoReassignmentMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/reassignments/:reassignmentId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getAddTaskReviewerMockHandler = (
+  overrideResponse?:
+    | ReviewTaskDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReviewTaskDetail> | ReviewTaskDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/reviewers",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAddTaskReviewerResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSaveReviewEditMockHandler = (
   overrideResponse?:
     | ReviewEdit
@@ -11642,6 +11860,11 @@ export const getParfocalAPIMock = () => [
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),
   getChangeReviewTaskMockHandler(),
+  getNudgeReviewerMockHandler(),
+  getCancelNudgeMockHandler(),
+  getReassignSlidesMockHandler(),
+  getUndoReassignmentMockHandler(),
+  getAddTaskReviewerMockHandler(),
   getSaveReviewEditMockHandler(),
   getClearReviewEditMockHandler(),
   getSplitReviewObjectMockHandler(),

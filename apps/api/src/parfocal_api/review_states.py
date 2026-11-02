@@ -263,7 +263,7 @@ async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> li
             review_assignments.c.submitted_at,
             has_work.label("has_work"),
         )
-        .where(review_assignments.c.task_id == task_id)
+        .where(review_assignments.c.task_id == task_id, review_assignments.c.released_at.is_(None))
         .order_by(review_assignments.c.assigned_at, review_assignments.c.user_id)
     )
     return list(rows.all())
@@ -320,6 +320,7 @@ async def actor_for(
             review_assignments.c.task_id == task.id,
             review_assignments.c.slide_id == slide_id,
             review_assignments.c.user_id == user_of(principal),
+            review_assignments.c.released_at.is_(None),
         )
         if await connection.scalar(select(mine.exists())):
             return Actor.ASSIGNED_REVIEWER

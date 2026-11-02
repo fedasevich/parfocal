@@ -149,6 +149,7 @@ async def last_activity(connection: AsyncConnection, me: uuid.UUID) -> Any:
             .join(review_tasks, review_tasks.c.id == touched.c.task_id)
             .where(
                 review_assignments.c.submitted_at.is_(None),
+                review_assignments.c.released_at.is_(None),
                 review_tasks.c.archived_at.is_(None),
                 review_tasks.c.signed_off_at.is_(None),
             )
@@ -182,7 +183,11 @@ async def resume_of(
                 (review_assignments.c.task_id == review_task_slides.c.task_id)
                 & (review_assignments.c.slide_id == review_task_slides.c.slide_id),
             )
-            .where(review_task_slides.c.task_id == task.id, review_assignments.c.user_id == me)
+            .where(
+                review_task_slides.c.task_id == task.id,
+                review_assignments.c.user_id == me,
+                review_assignments.c.released_at.is_(None),
+            )
             .order_by(review_task_slides.c.position)
         )
     ]

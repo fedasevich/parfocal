@@ -4,7 +4,7 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, date, datetime
 from typing import Annotated, Any, cast
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import ColumnElement, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -13,6 +13,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import FirstReadStartedError, task_started
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.notifications import deliver_after_commit
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -38,6 +39,7 @@ from parfocal_api.tables import (
     study_templates,
     verdicts,
 )
+from parfocal_api.task_notices import tell_due_changed
 from parfocal_api.verdicts import recount
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
@@ -250,7 +252,7 @@ router = APIRouter(prefix="/api/review-tasks", tags=["review-tasks"])
 
 def own_assignments(principal: Principal) -> ColumnElement[bool]:
     user_id = principal.user_id if isinstance(principal, MemberPrincipal) else None
-    return review_assignments.c.user_id == user_id
+    return (review_assignments.c.user_id == user_id) & review_assignments.c.released_at.is_(None)
 
 
 def code_of(number: int) -> str:
@@ -342,7 +344,7 @@ async def task_slides_of(
     reviewers: dict[uuid.UUID, list[uuid.UUID]] = {}
     for slide_id, user_id in await connection.execute(
         select(review_assignments.c.slide_id, review_assignments.c.user_id)
-        .where(review_assignments.c.task_id == row.id)
+        .where(review_assignments.c.task_id == row.id, review_assignments.c.released_at.is_(None))
         .order_by(review_assignments.c.assigned_at, review_assignments.c.user_id)
     ):
         reviewers.setdefault(slide_id, []).append(user_id)
@@ -812,7 +814,10 @@ async def list_review_tasks(
                 func.count(func.distinct(review_assignments.c.slide_id)),
                 func.count(func.distinct(review_assignments.c.user_id)),
             )
-            .where(review_assignments.c.task_id.in_([row.id for row in rows]))
+            .where(
+                review_assignments.c.task_id.in_([row.id for row in rows]),
+                review_assignments.c.released_at.is_(None),
+            )
             .group_by(review_assignments.c.task_id)
         )
     }
@@ -838,6 +843,8 @@ async def change_review_task(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     results: Results,
+    http: Request,
+    background: BackgroundTasks,
 ) -> ReviewTaskDetail:
     row = await task_row(connection, task_id)
     project = await owned(connection, principal, row.project_id)
@@ -906,4 +913,7 @@ async def change_review_task(
         task_id,
         {"fields": sorted(change.model_fields_set)},
     )
+    if "due_on" in values and values["due_on"] != row.due_on:
+        await tell_due_changed(connection, row, values["due_on"])
+        background.add_task(deliver_after_commit, http.app, row.tenant_id)
     return await detail_of(connection, principal, await task_row(connection, task_id), True)

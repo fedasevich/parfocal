@@ -79,7 +79,7 @@ async def complete_slides(
             review_assignments.c.slide_id,
             review_assignments.c.user_id,
             review_assignments.c.submitted_at,
-        ).where(review_assignments.c.task_id == task_id)
+        ).where(review_assignments.c.task_id == task_id, review_assignments.c.released_at.is_(None))
     ):
         reviewers.setdefault(slide_id, set()).add(user_id)
         if submitted_at is None:

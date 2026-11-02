@@ -933,6 +933,9 @@ class NotificationKind(StrEnum):
     TASK_SIGNED_OFF = "task-signed-off"
     EMERGENCY_ACCESS = "emergency-access"
     TASK_DUE_SOON = "task-due-soon"
+    TASK_NUDGED = "task-nudged"
+    TASK_REASSIGNED = "task-reassigned"
+    TASK_DUE_CHANGED = "task-due-changed"
     RESULT_SET_ADDED = "result-set-added"
     INTEGRATION_DOWN = "integration-down"
 
@@ -1606,6 +1609,7 @@ review_assignments = Table(
     ),
     Column("first_read_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("first_read", JSONB(none_as_null=True), nullable=True, info=PHI),
+    Column("released_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
@@ -1613,6 +1617,68 @@ review_assignments = Table(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
     CheckConstraint("(first_read_at IS NULL) = (first_read IS NULL)", name="first_read_pair"),
+)
+
+
+class ReassignWhat(StrEnum):
+    NOT_STARTED = "not-started"
+    ALL = "all"
+
+
+task_nudges = Table(
+    "task_nudges",
+    metadata,
+    *owned_ids(),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
+    Column(
+        "sent_by_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=True, info=PERSONAL
+    ),
+    Column(
+        "sent_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)
+
+task_reassignments = Table(
+    "task_reassignments",
+    metadata,
+    *owned_ids(),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "from_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL
+    ),
+    Column("to_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
+    Column("what", String(12), nullable=False, info=OPERATIONAL),
+    Column("slide_ids", ARRAY(Uuid[uuid.UUID]()), nullable=False, info=OPERATIONAL),
+    Column("kept_slide_ids", ARRAY(Uuid[uuid.UUID]()), nullable=False, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("undone_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    one_of("what", ReassignWhat),
+    CheckConstraint("from_user_id <> to_user_id", name="two_people"),
 )
 
 review_order = Table(
