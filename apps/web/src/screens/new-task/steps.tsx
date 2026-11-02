@@ -1,7 +1,8 @@
 import { Button } from "@parfocal/ui/components/button";
 import { CountsAsLine } from "@parfocal/ui/components/counts-as";
+import { DatePicker } from "@parfocal/ui/components/date-picker";
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
-import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
+import { FormField } from "@parfocal/ui/components/form-field";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { LockableRow } from "@parfocal/ui/components/lockable-row";
@@ -336,7 +337,13 @@ function personItems(draft: Draft, data: TaskData): TokenItem[] {
           : "No open tasks",
       ...(person.awayUntil ? { endTone: "warn" as const } : {}),
     })),
-    ...draft.invites.map((email) => ({ id: email, name: email, sub: "invited", find: email })),
+    ...draft.invites.map((email) => ({
+      id: email,
+      name: email,
+      sub: "invited",
+      find: email,
+      icon: "mail" as const,
+    })),
   ];
 }
 
@@ -1123,7 +1130,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
 }
 
 export function HowStep(props: StepProps) {
-  const { draft, update, errors } = props;
+  const { draft, data, update, errors } = props;
   const claimShown =
     draft.hide && (draft.decision.kind === "certainty5" || draft.decision.kind === "agree");
   return (
@@ -1178,11 +1185,11 @@ export function HowStep(props: StepProps) {
       <Zone title="When">
         <div className="grid grid-cols-2 gap-4">
           <FormField id={fieldId("due")} label="Due" error={errors.get("due")}>
-            <TextFieldInput
-              type="date"
+            <DatePicker
               value={draft.due}
-              onChange={(event) => {
-                const due = event.target.value;
+              today={data.today}
+              invalid={errors.has("due")}
+              onValueChange={(due) => {
                 update((current) => ({
                   ...current,
                   due,
