@@ -6,6 +6,7 @@ import {
   useListTaxonomyTemplates,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
+import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -13,7 +14,6 @@ import { Person } from "@parfocal/ui/components/person";
 import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group";
 import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { toPersonInfo, usePeople } from "./people.ts";
@@ -26,45 +26,6 @@ const studyKindText: Record<string, string> = {
   "reviewers-first": "Reviewers first",
   other: "Other",
 };
-
-function Drawer({
-  label,
-  title,
-  hint,
-  width,
-  onClose,
-  footer,
-  children,
-}: {
-  label: string;
-  title: string;
-  hint: ReactNode;
-  width: number;
-  onClose: () => void;
-  footer: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      role="dialog"
-      aria-label={label}
-      data-testid="project-drawer"
-      className="absolute top-0 right-0 bottom-0 z-12 flex flex-col border-l border-line bg-chrome shadow-pop"
-      style={{ width }}
-    >
-      <div className="flex items-center gap-2.5 border-b border-line px-4.5 py-3.5">
-        <b className="text-body">{title}</b>
-        <span className="text-body-sm text-fg-dim">{hint}</span>
-        <span className="flex-1" />
-        <Button size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
-          <Icon name="close" />
-        </Button>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-4.5 py-4">{children}</div>
-      <div className="flex items-center gap-2 border-t border-line px-4.5 py-3">{footer}</div>
-    </div>
-  );
-}
 
 function RadioRow({ value, title, text }: { value: string; title: string; text?: string }) {
   return (
@@ -116,11 +77,12 @@ export function NewProjectDrawer({
   const ownTemplate = template ?? templates[0]?.id ?? "";
   const count = 1 + chosen.length;
   return (
-    <Drawer
+    <DrawerPanel
       label="New project"
       title="New project"
       hint={`${nextCode(projects)} when created`}
       width={560}
+      testId="project-drawer"
       onClose={onClose}
       footer={
         <>
@@ -201,18 +163,19 @@ export function NewProjectDrawer({
         />
         <Hint>People in the workspace, or an email to invite someone new.</Hint>
       </Zone>
-    </Drawer>
+    </DrawerPanel>
   );
 }
 
 export function NewCaseDrawer({ project, onClose }: { project: Project; onClose: () => void }) {
   const clinical = project.privacy_mode === "clinical";
   return (
-    <Drawer
+    <DrawerPanel
       label="New case"
       title="New case"
       hint={`in ${project.code} · ${project.name}`}
       width={520}
+      testId="project-drawer"
       onClose={onClose}
       footer={
         <>
@@ -276,6 +239,6 @@ export function NewCaseDrawer({ project, onClose }: { project: Project; onClose:
           <Button>Choose files</Button>
         </div>
       </Zone>
-    </Drawer>
+    </DrawerPanel>
   );
 }

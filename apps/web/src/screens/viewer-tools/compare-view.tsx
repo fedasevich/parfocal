@@ -1,5 +1,4 @@
 import { type ProjectSlide, useListProjectSlides } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -12,7 +11,7 @@ import {
   type PaneSide,
   type PaneSlide,
   SideToggles,
-  SlideSlot,
+  SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type CSSProperties, useEffect, useState } from "react";
@@ -180,30 +179,12 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
   const right = slideOn("right");
   const body = (
     <>
-      <Zone title="Slides on screen">
-        <div className="grid gap-2">
-          {left ? (
-            <SlideSlot
-              side="left"
-              slide={left}
-              note={left.note}
-              onChange={() => setPicking("left")}
-            />
-          ) : null}
-          {right ? (
-            <SlideSlot
-              side="right"
-              slide={right}
-              note={right.note}
-              onChange={() => setPicking("right")}
-            />
-          ) : null}
-          <Button className="w-full" onClick={swap}>
-            <Icon name="slides" />
-            Swap sides
-          </Button>
-        </div>
-      </Zone>
+      <SlidesOnScreenPanel
+        left={left ? { slide: left, note: left.note } : undefined}
+        right={right ? { slide: right, note: right.note } : undefined}
+        onChange={setPicking}
+        onSwap={swap}
+      />
       <Zone
         title="Layers"
         end={<span className="font-mono text-caption text-fg-dim">Left · Right</span>}

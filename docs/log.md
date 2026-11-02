@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-02
 
+- PROTO-011: DatePicker takes aria-labelledby and names itself from the FormField label plus its own date, FormField takes labelId. The new-task spec failure was a cold dev server after the new dependency and passes 17 of 17.
+- PROTO-011: Overlay audit. Extracted SlidesOnScreenPanel, NotificationsPanel, DrawerPanel and SlideSubmittedDialog into the kit with stories (Components/Overlays), added state stories for the slides popover and the dropdown menu, DS-011 now owns moving the remaining inline overlays.
 - PROTO-003: Command palette footer hints are Keycaps and the Admin nav item lost its redundant tag.
 - PROTO-006: Due on How it runs is the kit DatePicker, and invited reviewers' chips carry the mail icon.
 - PROTO-011: Token chips show an icon only when an item sets one, the invite rows use mail, developer drawer and display panel hints use Keycap, Storybook default layout is padded, and new Calendar and DatePicker (react-day-picker 10.0.2, Monday first, en-GB) with stories and a browser spec.

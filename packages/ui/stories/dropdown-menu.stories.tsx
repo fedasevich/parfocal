@@ -7,8 +7,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../src/components/dropdown-menu.tsx";
 
@@ -51,4 +56,34 @@ export const Closed: Story = {
 
 export const Open: Story = {
   render: () => <Example open />,
+};
+
+export const RadioSubmenuAndLongText: Story = {
+  render: () => (
+    <DropdownMenu defaultOpen>
+      <DropdownMenuTrigger render={<Button variant="outline" />}>Sort</DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Sort slides by</DropdownMenuLabel>
+          <DropdownMenuRadioGroup defaultValue="name">
+            <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="date">Scan date</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="locked" disabled>
+              Case, locked by the task
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>Move to a project</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem>P07 · Sentinel node AI evaluation</DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuItem>
+          A very long action name that has to wrap or truncate inside the menu width
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
 };

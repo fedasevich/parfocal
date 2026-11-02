@@ -2,6 +2,7 @@ import { type ProjectImports, type UploadBatch, useGetProjectImports } from "@pa
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
+import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import {
@@ -75,107 +76,92 @@ export function FormatsDrawer({
     ],
   ];
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Close What files work?"
-        onClick={onClose}
-        className="fixed inset-0 z-40 cursor-default border-0 bg-[rgb(0_0_0/0.25)]"
-      />
-      <aside
-        role="dialog"
-        aria-label="What files work?"
-        data-testid="formats-drawer"
-        className="fixed top-0 right-0 bottom-0 z-41 grid w-130 grid-rows-[auto_minmax(0,1fr)] border-l border-line bg-surf-panel shadow-pop"
+    <DrawerPanel
+      scrim
+      label="What files work?"
+      title="What files work?"
+      width={520}
+      testId="formats-drawer"
+      onClose={onClose}
+    >
+      <Zone title="Slides">
+        <Hint>
+          Whole-slide images as the scanner writes them, up to 20 GB each: Aperio SVS, Hamamatsu
+          NDPI, 3DHISTECH MRXS, pyramidal TIFF and OME-TIFF, Zeiss CZI, Philips iSyntax and DICOM
+          WSI.
+        </Hint>
+      </Zone>
+      <Zone
+        title={
+          <>
+            AI results <span className="ml-1.5 font-normal text-fg-dim">optional</span>
+          </>
+        }
+        sub="A result file goes with the slide that has the same name, or whose ID is inside the file."
       >
-        <div className="flex items-center gap-2.5 border-b border-line px-6 py-4">
-          <b className="text-[18px]">What files work?</b>
+        <FileList>
+          {formats.map(([name, text]) => (
+            <div key={name} className="grid gap-0.75 border-line px-3.5 py-2.5 [&+&]:border-t">
+              <b className="text-body-sm font-semibold">{name}</b>
+              <small className="text-body-sm leading-[1.4] text-fg-dim">{text}</small>
+            </div>
+          ))}
+        </FileList>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Hint>Templates</Hint>
           <span className="flex-1" />
-          <Button size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
-            <Icon name="close" />
+          <Button onClick={() => toast("Downloads parfocal-results.template.json (mock)")}>
+            <Icon name="download" />
+            Parfocal JSON
+          </Button>
+          <Button onClick={() => toast("Downloads cells.template.csv (mock)")}>
+            <Icon name="download" />
+            CSV
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => toast("Downloads the JSON Schema, draft 2020-12 (mock)")}
+          >
+            JSON Schema
           </Button>
         </div>
-        <div className="grid content-start gap-4 overflow-auto p-6">
-          <Zone title="Slides">
-            <Hint>
-              Whole-slide images as the scanner writes them, up to 20 GB each: Aperio SVS, Hamamatsu
-              NDPI, 3DHISTECH MRXS, pyramidal TIFF and OME-TIFF, Zeiss CZI, Philips iSyntax and
-              DICOM WSI.
-            </Hint>
-          </Zone>
-          <Zone
-            title={
-              <>
-                AI results <span className="ml-1.5 font-normal text-fg-dim">optional</span>
-              </>
-            }
-            sub="A result file goes with the slide that has the same name, or whose ID is inside the file."
-          >
+      </Zone>
+      <Zone title="Check a file">
+        {checking ? (
+          <>
             <FileList>
-              {formats.map(([name, text]) => (
-                <div key={name} className="grid gap-0.75 border-line px-3.5 py-2.5 [&+&]:border-t">
-                  <b className="text-body-sm font-semibold">{name}</b>
-                  <small className="text-body-sm leading-[1.4] text-fg-dim">{text}</small>
-                </div>
-              ))}
+              <FileRow
+                lead={<FileIcon />}
+                name={batch.format_check.file}
+                detail={batch.format_check.detail}
+                end={
+                  <Button size="sm" variant="ghost" onClick={onClear}>
+                    Clear
+                  </Button>
+                }
+              />
             </FileList>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Hint>Templates</Hint>
-              <span className="flex-1" />
-              <Button onClick={() => toast("Downloads parfocal-results.template.json (mock)")}>
-                <Icon name="download" />
-                Parfocal JSON
-              </Button>
-              <Button onClick={() => toast("Downloads cells.template.csv (mock)")}>
-                <Icon name="download" />
-                CSV
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => toast("Downloads the JSON Schema, draft 2020-12 (mock)")}
-              >
-                JSON Schema
-              </Button>
+            <div className="grid gap-1.5" data-testid="format-findings">
+              {batch.format_check.findings.map((finding) => (
+                <CheckRow key={finding.text} tone={finding.tone}>
+                  {finding.text}
+                </CheckRow>
+              ))}
             </div>
-          </Zone>
-          <Zone title="Check a file">
-            {checking ? (
-              <>
-                <FileList>
-                  <FileRow
-                    lead={<FileIcon />}
-                    name={batch.format_check.file}
-                    detail={batch.format_check.detail}
-                    end={
-                      <Button size="sm" variant="ghost" onClick={onClear}>
-                        Clear
-                      </Button>
-                    }
-                  />
-                </FileList>
-                <div className="grid gap-1.5" data-testid="format-findings">
-                  {batch.format_check.findings.map((finding) => (
-                    <CheckRow key={finding.text} tone={finding.tone}>
-                      {finding.text}
-                    </CheckRow>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={onCheck}
-                className="grid cursor-pointer justify-items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-line-strong bg-surf-panel p-5 text-center text-body-sm text-fg-dim hover:border-accent"
-              >
-                <Icon name="upload" size="md" />
-                <b className="text-body font-semibold text-fg">Drop a result file</b>
-                <span>See what Parfocal makes of it. Nothing is imported.</span>
-              </button>
-            )}
-          </Zone>
-        </div>
-      </aside>
-    </>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={onCheck}
+            className="grid cursor-pointer justify-items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-line-strong bg-surf-panel p-5 text-center text-body-sm text-fg-dim hover:border-accent"
+          >
+            <Icon name="upload" size="md" />
+            <b className="text-body font-semibold text-fg">Drop a result file</b>
+            <span>See what Parfocal makes of it. Nothing is imported.</span>
+          </button>
+        )}
+      </Zone>
+    </DrawerPanel>
   );
 }
 

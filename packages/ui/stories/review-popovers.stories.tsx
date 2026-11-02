@@ -112,3 +112,54 @@ export const TopBarWithPopovers: Story = {
     />
   ),
 };
+
+const manySlides = Array.from({ length: 14 }, (_, index) => index + 1).map((n) => ({
+  id: `m${n}`,
+  name: `Sentinel lymph node level ${n}, left axilla, long scanner name · H&E`,
+  sub: n === 1 ? "CAMELYON v1.0 · PathoSAM v1.2" : "Not opened yet",
+  thumb: mockAssets.overview,
+  resultSets: n % 3,
+  current: n === 1,
+  status: {
+    label: n === 1 ? "In review" : "To review",
+    tone: n === 1 ? ("accent" as const) : ("neutral" as const),
+  },
+}));
+
+export const SlidesManyWithLongNames: Story = {
+  render: () => (
+    <div className="w-fit rounded-zone border border-line-strong bg-popover shadow-pop">
+      <SlidesPopover
+        caseTitle="Case S26-04812 with a very long case label for the lab study"
+        caseSub="Lymph node · Sentinel node AI evaluation"
+        onOpenCase={() => undefined}
+        caseSlides={manySlides}
+        footer={{
+          resultSetsLabel: "Result sets of A1",
+          onResultSets: () => undefined,
+          onCompare: () => undefined,
+          onAddSlides: () => undefined,
+        }}
+      />
+    </div>
+  ),
+};
+
+export const SlidesOneSlideNoLoose: Story = {
+  render: () => (
+    <div className="w-fit rounded-zone border border-line-strong bg-popover shadow-pop">
+      <SlidesPopover
+        caseTitle="Case S26-04813"
+        caseSub="One slide"
+        onOpenCase={() => undefined}
+        caseSlides={manySlides.slice(0, 1)}
+        footer={{
+          resultSetsLabel: "Result sets of A1",
+          onResultSets: () => undefined,
+          onCompare: () => undefined,
+          onAddSlides: () => undefined,
+        }}
+      />
+    </div>
+  ),
+};

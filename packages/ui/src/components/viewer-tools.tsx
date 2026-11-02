@@ -1,5 +1,7 @@
+import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useState } from "react";
@@ -542,6 +544,45 @@ function SlideSlot({
   );
 }
 
+function SlidesOnScreenPanel({
+  left,
+  right,
+  onChange,
+  onSwap,
+}: {
+  left?: { slide: PaneSlide; note: string } | undefined;
+  right?: { slide: PaneSlide; note: string } | undefined;
+  onChange: (side: PaneSide) => void;
+  onSwap: () => void;
+}) {
+  return (
+    <Zone title="Slides on screen">
+      <div className="grid gap-2">
+        {left ? (
+          <SlideSlot
+            side="left"
+            slide={left.slide}
+            note={left.note}
+            onChange={() => onChange("left")}
+          />
+        ) : null}
+        {right ? (
+          <SlideSlot
+            side="right"
+            slide={right.slide}
+            note={right.note}
+            onChange={() => onChange("right")}
+          />
+        ) : null}
+        <Button className="w-full" onClick={onSwap}>
+          <Icon name="slides" />
+          Swap sides
+        </Button>
+      </div>
+    </Zone>
+  );
+}
+
 type SideToggleRow = { key: string; name: string; left: boolean; right: boolean };
 
 function SideToggles({
@@ -704,6 +745,7 @@ export {
   type SideToggleRow,
   SideToggles,
   SlideSlot,
+  SlidesOnScreenPanel,
   type Tier,
   TierPicker,
   TierPill,

@@ -153,6 +153,10 @@ The mock builds every screen from a few shared helpers. Each maps to one owner. 
 | Keycap | `kbd` | DS-009 (keycap component) | None, custom |
 | Tool rail button | `rail` | DS-010 (tool rail button) | Toggle |
 | Popover, menu, select menu, tooltip, toast | `dropdown`, `toast` | DS-011 (popover, dialog, menu, tooltip, toast) | Popover, Dropdown menu, Tooltip |
+| Notifications popover with tabs, unread filter and rows | `nfPanel`, `.nx-notif` | DS-011 (popover, dialog, menu, tooltip, toast), built as `NotificationsPanel` by PROTO-011 | Popover |
+| Side drawer with header, scrolling body and footer, with or without a scrim | `.nx-drawer`, `.fmh` | DS-011 (popover, dialog, menu, tooltip, toast), built as `DrawerPanel` by PROTO-011 | Sheet |
+| Slide submitted dialog with the next slide and a countdown | `.nx-sub-card` in the `next` scene | GUIDE-007 (Slide done card with the opinion form), built as `SlideSubmittedDialog` by PROTO-011 | Dialog |
+| Slides on screen panel of compare view | the `h-sec` Slides on screen section of `compare` | CMP-004 (pane slide picker), built as `SlidesOnScreenPanel` by PROTO-011 | None, custom |
 | Fact list of icon, key and value | `kvList` | DS-012 (inspector primitives) | None, custom |
 | Cell crop tile in the cells panel | `.cg` tiles | DS-013 (gallery tile) | None, custom |
 | Avatar with name | `person` | DS-014 (avatar, avatar stack, presence dot) | None, custom |

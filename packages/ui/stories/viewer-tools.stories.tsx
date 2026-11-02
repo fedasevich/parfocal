@@ -30,6 +30,7 @@ import {
   RulerLine,
   SideToggles,
   SlideSlot,
+  SlidesOnScreenPanel,
   type Tier,
   TierPicker,
   TierPill,
@@ -464,6 +465,49 @@ export const SlidesOnScreen: Story = {
       </div>
     );
   },
+};
+
+export const SlidesOnScreenPanelStates: Story = {
+  render: () => (
+    <div className="grid w-80 gap-6">
+      <SlidesOnScreenPanel
+        left={{
+          slide: { key: "a1", name: "A1 · H&E", thumb: he },
+          note: "The slide you were reading",
+        }}
+        right={{
+          slide: { key: "ck", name: "A3 · CK", thumb: ck },
+          note: "Cytokeratin, marks tumor cells brown",
+        }}
+        onChange={() => undefined}
+        onSwap={() => undefined}
+      />
+      <SlidesOnScreenPanel
+        left={{
+          slide: { key: "a1", name: "A1 · H&E", thumb: he },
+          note: "Only slide of this case",
+        }}
+        onChange={() => undefined}
+        onSwap={() => undefined}
+      />
+      <SlidesOnScreenPanel
+        left={{
+          slide: {
+            key: "long",
+            name: "Sentinel lymph node 2, left axilla, level 3 · H&E",
+            thumb: he,
+          },
+          note: "A long note that wraps: scanned on the second scanner after the rescan request",
+        }}
+        right={{
+          slide: { key: "ck", name: "A3 · CK", thumb: ck, simulated: true },
+          note: "Simulated stain",
+        }}
+        onChange={() => undefined}
+        onSwap={() => undefined}
+      />
+    </div>
+  ),
 };
 
 export const FocusMode: Story = {
