@@ -1,0 +1,4 @@
+[likely_size]
+below = 0.1
+above = 0.1
+source = "TODO: replace with the size error measured by MLEVAL-005 (tumor map evaluation) on CAMELYON16 test slides. The POC's ±10% on tumor_009, a training slide, stands in until then."
