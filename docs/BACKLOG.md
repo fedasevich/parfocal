@@ -2506,7 +2506,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when golden tests cover each layout and the memory test passes with four viewers.
   Size: M.
 
-- [ ] CMP-002 · Linked views
+- [x] CMP-002 · Linked views
   Pan, zoom and rotation move all panes by default, Shift+L unlinks for manual alignment, relink keeps the manual offset.
   Done when unit tests cover linking with an offset.
   Note that Shift+L is also the arrow tool in Annotate, so CMD-004 resolves the conflict.
