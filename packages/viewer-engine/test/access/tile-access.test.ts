@@ -114,7 +114,7 @@ describe("tile access", () => {
     await access.token();
     lab.secret = SECRET;
     assert.equal((await access.fetch(URL, {}, lab.edge)).status, 206);
-    assert.deepEqual(lab.refusals, ["signature"]);
+    assert.deepEqual(lab.refusals, ["bad-signature"]);
     assert.equal(lab.mints, 2);
   });
 });

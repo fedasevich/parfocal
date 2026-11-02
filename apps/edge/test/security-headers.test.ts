@@ -98,6 +98,18 @@ test("tile gateway errors carry the same isolation headers", async () => {
   assert.deepEqual(headerProblems(response.headers, "resource"), []);
 });
 
+test("a malformed tile token gets 401 with the same isolation headers", async () => {
+  const response = await worker.fetch(
+    new Request("https://parfocal.example/tiles/x/original.svs", {
+      headers: { Authorization: "Bearer a.b" },
+    }),
+    env,
+    context,
+  );
+  assert.equal(response.status, 401);
+  assert.deepEqual(headerProblems(response.headers, "resource"), []);
+});
+
 test("without an upload origin the CSP connects to the app origin only", () => {
   assert.match(contentSecurityPolicy({ nonce: "n" }), /connect-src 'self';/);
   assert.equal(uploadOriginOf(undefined), undefined);

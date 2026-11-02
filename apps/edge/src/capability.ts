@@ -11,7 +11,7 @@ export type Capability = {
 
 export type Verdict =
   | { readonly ok: true; readonly capability: Capability }
-  | { readonly ok: false; readonly reason: "malformed" | "signature" | "expired" };
+  | { readonly ok: false; readonly reason: "malformed" | "bad-signature" | "expired" };
 
 const TOKEN_VERSION = 1;
 const encoder = new TextEncoder();
@@ -20,9 +20,16 @@ export function fromBase64Url(text: string): Uint8Array<ArrayBuffer> | null {
   if (!/^[A-Za-z0-9_-]*$/.test(text)) {
     return null;
   }
+  if (text.length % 4 === 1) {
+    return null;
+  }
   const padded = text.replaceAll("-", "+").replaceAll("_", "/");
-  const binary = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  try {
+    const binary = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+    return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  } catch {
+    return null;
+  }
 }
 
 export function toBase64Url(bytes: Uint8Array): string {
@@ -82,7 +89,7 @@ export async function verifyCapability(
   nowSeconds: number,
 ): Promise<Verdict> {
   const parts = token.split(".");
-  if (parts.length !== 2) {
+  if (parts.length !== 2 || parts.some((part) => part === "")) {
     return { ok: false, reason: "malformed" };
   }
   const [payload = "", signature = ""] = parts;
@@ -93,7 +100,7 @@ export async function verifyCapability(
   }
   const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
   if (!valid) {
-    return { ok: false, reason: "signature" };
+    return { ok: false, reason: "bad-signature" };
   }
   let claims: unknown;
   try {
