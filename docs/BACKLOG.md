@@ -521,7 +521,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an E2E test uploads CMU-1-Small-Region.svs with a small GeoJSON and both show in the project.
   Depends on INGEST-001, INGEST-002, RSET-001.
 
-- [ ] SKEL-005 · Validate and index the slide
+- [x] SKEL-005 · Validate and index the slide
   The ingest workflow reads the pyramid, writes level metadata and a thumbnail.
   Done when the workflow test asserts level sizes, microns per pixel and the thumbnail checksum for the fixture.
   Depends on INGEST-004, INGEST-010.

@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 import os
 import signal
@@ -13,6 +14,7 @@ from pathlib import Path
 import pytest
 from db_support import APP_URL, ApiAs, with_database
 from fixture_support import fixture_path
+from PIL import Image
 from storage_support import with_store
 from test_tile_access import claims_of
 from upload_support import (
@@ -35,6 +37,9 @@ from parfocal_common.ingest import (
     restricted_ranges_key,
     slide_prefix,
 )
+from parfocal_ingest.pyramid import Pyramid, read_pyramid
+from parfocal_ingest.thumbnail import THUMBNAIL_SIDE, previews
+from parfocal_ingest.workflow import identify_file
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -48,6 +53,15 @@ PUBLIC_FILES = {
     "restricted-ranges.json",
 }
 DERIVE = STEP_NAMES.index("derive")
+
+
+def fixture_thumbnail(name: str) -> bytes:
+    path = fixture_path(name)
+    identified = identify_file(path, name)
+    pyramid = read_pyramid(path, identified)
+    assert isinstance(pyramid, Pyramid), pyramid
+    assert identified.format is not None
+    return previews(path, identified.format, pyramid).thumbnail
 
 
 def upload_done_notifications(database: str, who: MemberPrincipal) -> list[tuple[object, ...]]:
@@ -96,6 +110,12 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
         "file_bytes, sha256, original_key, restricted_images, published_at IS NOT NULL "
         f"FROM slides WHERE id = '{slide_id}'",
     )
+    mpp_x, mpp_y, objective_power = single(
+        database,
+        f"SELECT mpp_x, mpp_y, objective_power FROM slides WHERE id = '{slide_id}'",
+    )
+    assert (mpp_x, mpp_y) == (pytest.approx(0.499, abs=5e-4), pytest.approx(0.499, abs=5e-4))
+    assert objective_power == 20
     original = f"t/{lab.tenant_id}/s/{slide_id}/original.svs"
     assert row == (
         "CMU-1-Small-Region",
@@ -128,6 +148,17 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     assert keys_under(restricted_prefix(lab.tenant_id, slide_id)) == {"label.png", "macro.jpg"}
     assert keys_under(f"t/{lab.tenant_id}/quarantine/") == set()
     assert with_store(lambda store: store.get_object(original)) == data
+    table = json.loads(with_store(lambda store: store.get_object(f"{public}levels.json")))
+    sizes = [
+        (level["index"], level["downsample"], level["width"], level["height"])
+        for level in table["levels"]
+    ]
+    assert sizes == [(0, 1, 2220, 2967)]
+    assert (table["scale"]["mpp_x"], table["scale"]["mpp_y"]) == (mpp_x, mpp_y)
+    thumbnail = with_store(lambda store: store.get_object(f"{public}thumbnail.jpg"))
+    assert max(Image.open(io.BytesIO(thumbnail)).size) == THUMBNAIL_SIDE
+    expected = fixture_thumbnail("CMU-1-Small-Region.svs")
+    assert hashlib.sha256(thumbnail).hexdigest() == hashlib.sha256(expected).hexdigest()
     ranges = json.loads(
         with_store(lambda store: store.get_object(restricted_ranges_key(lab.tenant_id, slide_id)))
     )["ranges"]
