@@ -167,13 +167,45 @@ describe("capability tokens", () => {
   test("a token signed with another key or edited is refused", async () => {
     const key = await signingKey(SECRET);
     const forged = await tokenFor({}, OTHER_SECRET);
-    assert.deepEqual(await verifyCapability(forged, key, NOW), { ok: false, reason: "signature" });
+    assert.deepEqual(await verifyCapability(forged, key, NOW), {
+      ok: false,
+      reason: "bad-signature",
+    });
     const [payload = "", signature = ""] = (await tokenFor()).split(".");
     const edited = `${payload.slice(0, -2)}${payload.endsWith("A") ? "B" : "A"}${payload.slice(-1)}.${signature}`;
     assert.equal((await verifyCapability(edited, key, NOW)).ok, false);
     assert.deepEqual(await verifyCapability("nonsense", key, NOW), {
       ok: false,
       reason: "malformed",
+    });
+  });
+
+  test("a token with bad base64 or a missing part is malformed, never a thrown error", async () => {
+    const key = await signingKey(SECRET);
+    const [payload = "", signature = ""] = (await tokenFor()).split(".");
+    for (const token of [
+      "a.b",
+      "a.",
+      ".b",
+      "",
+      ".",
+      `${payload}.`,
+      `.${signature}`,
+      `${payload}`,
+    ]) {
+      assert.deepEqual(await verifyCapability(token, key, NOW), { ok: false, reason: "malformed" });
+    }
+    for (const token of [`${payload}.a`, `a.${signature}`, `${payload}.${signature}+`, "a=b.c"]) {
+      assert.deepEqual(await verifyCapability(token, key, NOW), { ok: false, reason: "malformed" });
+    }
+  });
+
+  test("a well formed token with a wrong signature is a bad signature", async () => {
+    const key = await signingKey(SECRET);
+    const [payload = ""] = (await tokenFor()).split(".");
+    assert.deepEqual(await verifyCapability(`${payload}.AAAA`, key, NOW), {
+      ok: false,
+      reason: "bad-signature",
     });
   });
 
@@ -214,6 +246,17 @@ describe("the tile gateway", () => {
     const expired = await request(bucket, ORIGINAL, await tokenFor(), "bytes=0-9", NOW + 600);
     assert.equal(expired.status, 401);
     assert.equal(await code(expired), "tile-token-expired");
+    assert.deepEqual(bucket.reads, []);
+  });
+
+  test("refuses a malformed token with 401, never 500", async () => {
+    const bucket = lab();
+    const [payload = "", signature = ""] = (await tokenFor()).split(".");
+    for (const token of ["a.b", `${payload}.a`, `a.${signature}`, payload, `${payload}.AAAA`]) {
+      const response = await request(bucket, ORIGINAL, token, "bytes=0-9");
+      assert.equal(response.status, 401, token);
+      assert.equal(await code(response), "tile-token-invalid");
+    }
     assert.deepEqual(bucket.reads, []);
   });
 
