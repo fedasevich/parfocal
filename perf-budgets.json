@@ -1,5 +1,5 @@
 {
-  "rule": "Byte and count budgets set their limit at most 20 percent above the measured baseline, so a 20 percent regression fails CI. Time budgets run on shared hosted runners with software rendering, so each declares a headroom factor of at most 3 and a reason, takes the fastest of several samples and asserts at one RTT only. Manual budgets are measured by hand and recorded as result files. See docs/adr/XXXX-performance-budget-file-and-regression-rule.md.",
+  "rule": "Byte and count budgets set their limit at most 20 percent above the measured baseline, so a 20 percent regression fails CI. Time budgets run on shared hosted runners with software rendering, so each declares a headroom factor of at most 3 and a reason, takes the fastest of several samples and asserts at one RTT only. Manual budgets are measured by hand and recorded as result files. See docs/adr/0154-performance-budget-file-and-regression-rule.md.",
   "budgets": [
     {
       "id": "web.first-page-gzip-bytes",
@@ -73,7 +73,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-performance-budget-file-and-regression-rule.md",
+      "adr": "docs/adr/0154-performance-budget-file-and-regression-rule.md",
       "result": "docs/results/2026-11-02-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -113,7 +113,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-performance-budget-file-and-regression-rule.md",
+      "adr": "docs/adr/0154-performance-budget-file-and-regression-rule.md",
       "result": "docs/results/2026-11-02-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },

@@ -124,7 +124,7 @@ Under `pnpm test`, Turborepo runs the Python suites next to the Node ones, and t
 
 ## Performance budgets live in one root file
 
-Every performance budget is a row of `perf-budgets.json` with its baseline, limit, the test that checks it, an ADR and a result file. Tests call `checkBudget(id, measured)` from `scripts/perf-budgets.ts` instead of keeping their own limit, and `scripts/perf-budgets.test.ts` refuses a byte or count limit more than 20 percent over its baseline. Both files are in `globalDependencies`, so editing a limit reruns every package's tests. The browser budgets run in `packages/viewer-engine/browser/budgets.spec.ts` at every RTT of the latency proxy matrix. Source: [ADR XXXX](../adr/XXXX-performance-budget-file-and-regression-rule.md) (one budget file, 20 percent rule) and the [baselines](../results/2026-11-02-performance-budgets.md).
+Every performance budget is a row of `perf-budgets.json` with its baseline, limit, the test that checks it, an ADR and a result file. Tests call `checkBudget(id, measured)` from `scripts/perf-budgets.ts` instead of keeping their own limit, and `scripts/perf-budgets.test.ts` refuses a byte or count limit more than 20 percent over its baseline. Both files are in `globalDependencies`, so editing a limit reruns every package's tests. The browser budgets run in `packages/viewer-engine/browser/budgets.spec.ts` at every RTT of the latency proxy matrix. Source: [ADR 0154](../adr/0154-performance-budget-file-and-regression-rule.md) (one budget file, 20 percent rule) and the [baselines](../results/2026-11-02-performance-budgets.md).
 
 ## Parallel sessions share one working tree
 

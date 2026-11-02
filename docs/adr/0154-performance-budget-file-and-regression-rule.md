@@ -1,4 +1,4 @@
-# XXXX. One budget file at the repository root, byte and count budgets fail at 20 percent, time budgets declare headroom
+# 0154. One budget file at the repository root, byte and count budgets fail at 20 percent, time budgets declare headroom
 
 - Date: 2026-11-02
 - Status: Accepted

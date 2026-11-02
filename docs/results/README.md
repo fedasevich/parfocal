@@ -56,3 +56,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-02 | [The upload protocol passes on the R2 dev bucket at 1 GiB, R2 accepts a presigned create and refuses part checksums, and 1 GiB copies in 56 s](2026-11-02-upload-protocol-check-on-r2.md) | INGEST-028 | spike |
 | 2026-11-02 | [The upload protocol passes on the R2 dev bucket at 1 GiB, R2 accepts a presigned create and refuses part checksums, and 1 GiB copies in 56 s](2026-11-02-upload-protocol-check-on-r2.md) | INGEST-028 | spike |
 | 2026-11-02 | [The sidecar tile index opens an 11-directory BigTIFF in 0.38 s instead of 1.39 s at 100 ms RTT](2026-11-02-sidecar-tile-index.md) | INGEST-007 | spike |
+| 2026-11-02 | [Performance budget baselines: first-page bytes, viewer time and requests to the fitted image and to sharp after a jump on CMU-1 per RTT](2026-11-02-performance-budgets.md) | TEST-006 | benchmark |
