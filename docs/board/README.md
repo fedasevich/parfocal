@@ -54,7 +54,7 @@ Optional longer notes in Markdown.
 | `python3 scripts/board.py brief` | The "In progress" note from `docs/README.md`, every claimed task and how many are ready |
 | `python3 scripts/board.py find viewer tools` | Tasks whose ID or title holds every word |
 | `python3 scripts/board.py recent [N]` | The newest log entries, cut to 200 characters |
-| `python3 scripts/board.py note "PROTO-019 (viewer tools) ..."` | Adds a log entry on top under today's date. It must name a task ID |
+| `python3 scripts/board.py note "PROTO-019 (viewer tools) ..."` | Adds a log entry on top under today's date. Name the task ID when there is one |
 | `python3 scripts/board.py tick IAM-009` | Ticks the task in the backlog and deletes its claim file |
 | `python3 scripts/board.py check` | Fails on claims for ticked or unknown tasks, unknown statuses, unknown dependencies and cycles. The docs workflow runs it |
 

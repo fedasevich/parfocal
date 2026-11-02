@@ -39,6 +39,8 @@ pnpm typecheck
 pnpm check
 ```
 
+`pnpm -s verify` runs lint, format, types and unit tests in one quiet pass. `pnpm --filter @parfocal/web shot URL out.png [--against URL_OR_PNG]` takes a small screenshot and reports how much it differs from another page or image ([knowledge/agent-workflow.md](docs/knowledge/agent-workflow.md)).
+
 `pnpm board` opens the live task board over the backlog, and `python3 scripts/board.py ready` lists the tasks free to start ([docs/board](docs/board/README.md)).
 
 `pnpm db:up` starts Postgres with PostGIS and a PgBouncer in Docker, `pnpm db:migrate` applies the migrations and `pnpm test:db` runs the database tests ([knowledge/database.md](docs/knowledge/database.md)).

@@ -238,6 +238,8 @@ class BoardTest(unittest.TestCase):
             new_day.splitlines()[2:6], ["## 2026-10-16", "", "- SKEL-003 (retro) written.", ""]
         )
         self.assertEqual(new_day.count("## 2026-10-15"), 1)
+        tight = add_log_entry("# Log\n\n## 2026-10-15\n- old.\n", "2026-10-15", "new.")
+        self.assertEqual(tight.splitlines()[2:5], ["## 2026-10-15", "- new.", "- old."])
 
     def test_tick_flips_only_the_named_open_task(self) -> None:
         ticked = tick_backlog(BACKLOG, "STACK-002") or ""

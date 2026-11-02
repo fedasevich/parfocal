@@ -226,7 +226,8 @@ def add_log_entry(text: str, day: str, entry: str) -> str:
     bullet = f"- {entry.strip()}"
     first = next((i for i, line in enumerate(lines) if LOG_DATE.match(line)), len(lines))
     if first < len(lines) and lines[first] == f"## {day}":
-        lines[first + 1 : first + 2] = ["", bullet]
+        blank_after_heading = lines[first + 1 : first + 2] == [""]
+        lines.insert(first + 2 if blank_after_heading else first + 1, bullet)
     else:
         lines[first:first] = [f"## {day}", "", bullet, ""]
     return "\n".join(lines) + "\n"
@@ -617,9 +618,6 @@ def command_brief(_: argparse.Namespace) -> int:
 def command_note(args: argparse.Namespace) -> int:
     path = ROOT / "docs/log.md"
     entry = " ".join(args.text)
-    if not TASK_ID.search(entry):
-        print("A log entry must name a task ID", file=sys.stderr)
-        return 1
     path.write_text(add_log_entry(path.read_text(), args.date or date.today().isoformat(), entry))
     print(f"Logged under {args.date or date.today().isoformat()}")
     return 0
@@ -705,7 +703,10 @@ def parser() -> argparse.ArgumentParser:
         run=command_brief
     )
 
-    note = commands.add_parser("note", help="add a dated entry to the top of docs/log.md")
+    note = commands.add_parser(
+        "note",
+        help="add a dated entry to the top of docs/log.md, naming the task ID when there is one",
+    )
     note.add_argument("text", nargs="+")
     note.add_argument("--date")
     note.set_defaults(run=command_note)
