@@ -63,6 +63,8 @@ from parfocal_api.tables import (
     task_nudges,
     task_reassignments,
     tenants,
+    thread_messages,
+    threads,
     uploads,
     users,
     verdicts,
@@ -119,6 +121,8 @@ CASE_TABLES = {
     "review_assignments",
     "task_nudges",
     "task_reassignments",
+    "threads",
+    "thread_messages",
     "result_sets",
     "result_set_classes",
     "result_objects",
@@ -613,6 +617,33 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             tenant_id=seeded.tenant_id, task_id=task_id, user_id=seeded.ids["user"]
         )
     )
+    thread_title = f"Thread {uuid.uuid4().hex[:8]}"
+    thread_id = await connection.scalar(
+        insert(threads)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            title=thread_title,
+            anchor_kind="point",
+            geometry={"type": "Point", "coordinates": [1, 2]},
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(threads.c.id)
+    )
+    assert isinstance(thread_id, uuid.UUID)
+    seeded.ids["thread"] = thread_id
+    message_body = f"Message {uuid.uuid4().hex[:8]}"
+    await connection.execute(
+        insert(thread_messages).values(
+            tenant_id=seeded.tenant_id,
+            thread_id=thread_id,
+            user_id=seeded.ids["user"],
+            body=message_body,
+        )
+    )
+    seeded.markers.update({thread_title, message_body})
     taker = await connection.scalar(
         insert(users)
         .values(subject=f"taker-{task_id}", display_name="Taker", initials="TT", avatar_colour=0)
@@ -933,6 +964,16 @@ GET_ROUTES = {
     "listVerdicts": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
+    ),
+    "listThreads": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/threads",
+    ),
+    "getThread": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/threads/{a.ids['thread']}"
+        ),
     ),
     "getReviewOrder": Route(
         Exposure.TENANT,

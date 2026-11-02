@@ -128,5 +128,5 @@ def test_a_target_is_refused_to_others_and_when_it_is_out_of_reach(
     gone = notification(database, s, "owner", NotificationKind.EMERGENCY_ACCESS, uuid.uuid4())
     assert target(api, s, "owner", gone).json()["code"] == "target-gone"
     thread = notification(database, s, "first", NotificationKind.MENTION, uuid.uuid4())
-    later = target(api, s, "first", thread)
-    assert (later.status_code, later.json()["code"]) == (409, "target-not-available")
+    missing = target(api, s, "first", thread)
+    assert (missing.status_code, missing.json()["code"]) == (404, "target-gone")

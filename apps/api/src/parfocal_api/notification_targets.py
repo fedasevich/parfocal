@@ -11,6 +11,7 @@ from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.project_access import reads_slide, role_in
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import NotificationKind, jobs, notifications, projects, slides
+from parfocal_api.threads import visible_thread
 
 
 class Target(BaseModel):
@@ -20,6 +21,7 @@ class Target(BaseModel):
     slide_id: uuid.UUID | None = None
     object_id: str | None = None
     job_id: uuid.UUID | None = None
+    thread_id: uuid.UUID | None = None
 
 
 class NotificationNotFoundError(NotFoundError):
@@ -104,5 +106,17 @@ async def get_notification_target(
             if await role_in(connection, principal, project_id) is None:
                 raise TargetGoneError
             return Target(kind=TargetKind.PROJECT, project_id=project_id)
-        case TargetKind.THREAD | TargetKind.DELIVERY:
+        case TargetKind.THREAD:
+            thread = await visible_thread(connection, principal, row.target_id)
+            if thread is None:
+                raise TargetGoneError
+            return Target(
+                kind=TargetKind.THREAD,
+                project_id=thread.project_id,
+                task_id=thread.task_id,
+                slide_id=thread.slide_id,
+                object_id=thread.object_id,
+                thread_id=thread.id,
+            )
+        case TargetKind.DELIVERY:
             raise TargetNotAvailableError
