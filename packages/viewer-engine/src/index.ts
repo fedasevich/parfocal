@@ -274,10 +274,28 @@ export {
   triangulatePolygons,
 } from "./overlay/batches.ts";
 export {
+  colormapColor,
+  colormapCssGradient,
+  colormapSteps,
+  heatmapColormaps,
+  isHeatmapColormap,
+} from "./overlay/colormaps.ts";
+export {
   createOverlayController,
   type OverlayController,
   type OverlayHost,
 } from "./overlay/controller.ts";
+export {
+  colorizeHeatmap,
+  createHeatmapOverlay,
+  defaultHeatmapLook,
+  defaultHeatmapOpacity,
+  type HeatmapOverlay,
+  type HeatmapOverlayOptions,
+  heatmapSourceLabel,
+  isHeatmapOverlay,
+  withHeatmapLook,
+} from "./overlay/heatmap.ts";
 export {
   type ClassName,
   classColors,
@@ -310,6 +328,11 @@ export {
   pinIconSize,
 } from "./overlay/pin-icons.ts";
 export type {
+  HeatmapColormap,
+  HeatmapData,
+  HeatmapGrid,
+  HeatmapLook,
+  HeatmapSource,
   LineCasing,
   OverlayDescription,
   OverlayState,

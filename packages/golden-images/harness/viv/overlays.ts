@@ -2,8 +2,10 @@ import {
   createDefaultPixelSourceRegistry,
   createOverlayController,
   createViewerEngine,
+  isHeatmapOverlay,
   type OverlayController,
   type ViewerEngine,
+  withHeatmapLook,
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
@@ -125,7 +127,7 @@ const render = async (request: OverlayRenderRequest): Promise<OverlayRenderResul
   };
   const ordered = request.reverse ? [...request.layers].reverse() : request.layers;
   const register = () => {
-    for (const kind of ordered) controller.set(overlayFixture(kind, geometry));
+    for (const kind of ordered) controller.set(overlayFixture(kind, geometry, request.heatmap));
   };
   if (request.registration === "before-mount") register();
   current.mount(viewer());
@@ -139,6 +141,13 @@ const change = async (operation: OverlayChange): Promise<OverlayRenderResult> =>
   if (layers === null) throw new Error("Nothing is rendered yet");
   if (operation.kind === "visible") layers.setVisible(operation.id, operation.visible);
   if (operation.kind === "opacity") layers.setOpacity(operation.id, operation.opacity);
+  if (operation.kind === "heatmap") {
+    const overlay = layers.get(operation.id);
+    if (overlay === undefined || !isHeatmapOverlay(overlay)) {
+      throw new Error(`${operation.id} is not a heatmap`);
+    }
+    layers.set(withHeatmapLook(overlay, operation.look));
+  }
   if (operation.kind === "remove") layers.remove(operation.id);
   if (operation.kind === "invalidate") layers.invalidate(operation.id);
   return settle();

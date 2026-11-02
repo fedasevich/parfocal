@@ -1,5 +1,10 @@
 import { fileURLToPath } from "node:url";
-import { type OverlayKind, overlayStack } from "@parfocal/viewer-engine";
+import {
+  defaultHeatmapOpacity,
+  type HeatmapColormap,
+  type OverlayKind,
+  overlayStack,
+} from "@parfocal/viewer-engine";
 import { expect, type Page, test } from "@playwright/test";
 import type { ViteDevServer } from "vite";
 import type {
@@ -55,9 +60,11 @@ test.beforeEach(async ({ page }) => {
   await assertSwiftShader(page);
 });
 
+type RenderOptions = Partial<Pick<OverlayRenderRequest, "registration" | "reverse" | "heatmap">>;
+
 function request(
   layers: readonly OverlayKind[],
-  options: Partial<Pick<OverlayRenderRequest, "registration" | "reverse">> = {},
+  options: RenderOptions = {},
 ): OverlayRenderRequest {
   return {
     url: fixtureUrl("CMU-1.svs"),
@@ -65,6 +72,7 @@ function request(
     layers,
     registration: options.registration ?? "before-mount",
     reverse: options.reverse ?? false,
+    ...(options.heatmap === undefined ? {} : { heatmap: options.heatmap }),
     viewport: { width: 400, height: 300 },
     centre: cmu1TissueCentre,
     magnification: 10,
@@ -79,7 +87,7 @@ async function capture(page: Page): Promise<Frame> {
 async function render(
   page: Page,
   layers: readonly OverlayKind[],
-  options: Partial<Pick<OverlayRenderRequest, "registration" | "reverse">> = {},
+  options: RenderOptions = {},
 ): Promise<{ readonly result: OverlayRenderResult; readonly frame: Frame }> {
   const result = await page.evaluate(
     async ({ name, scene }) => {
@@ -206,6 +214,94 @@ test("coverage and heatmap rasters are not flipped", async ({ page }, testInfo) 
   expect(covered(0, 200, 120, 400)).toBeLessThan(0.01);
 });
 
+const otherColormaps: readonly HeatmapColormap[] = ["inferno", "turbo"];
+
+for (const colormap of otherColormaps) {
+  test(`the ${colormap} heatmap matches its golden image over CMU-1.svs`, async ({
+    page,
+  }, testInfo) => {
+    const base = await baseFrame(page);
+    const { result, frame } = await render(page, ["heatmap"], { heatmap: { colormap } });
+    expect(result.errors).toEqual([]);
+    expect(changedFraction(frame, base)).toBeGreaterThan(minimumChangedFraction);
+    const outcome = checkGolden(frame, {
+      name: `viv-overlay-heatmap-${colormap}`,
+      format: "svs-jpeg",
+      tolerance: overlayTolerance,
+      goldenDirectory,
+      outputDirectory: testInfo.outputDir,
+    });
+    if (outcome.status === "mismatched") throw new Error(outcome.message);
+  });
+}
+
+test("the three colormaps draw three different pictures over the same cells", async ({ page }) => {
+  const frames: Frame[] = [];
+  for (const colormap of ["viridis", ...otherColormaps] as const) {
+    const { frame } = await render(page, ["heatmap"], { heatmap: { colormap } });
+    frames.push(frame);
+  }
+  const [viridis, inferno, turbo] = frames;
+  if (viridis === undefined || inferno === undefined || turbo === undefined)
+    throw new Error("no frames");
+  for (const [one, two] of [
+    [viridis, inferno],
+    [viridis, turbo],
+    [inferno, turbo],
+  ] as const) {
+    expect(changedFraction(one, two)).toBeGreaterThan(minimumChangedFraction);
+  }
+});
+
+test("a raised threshold matches its golden image and draws only the strong cells", async ({
+  page,
+}, testInfo) => {
+  const base = await baseFrame(page);
+  const { frame: low } = await render(page, ["heatmap"]);
+  const { result, frame } = await render(page, ["heatmap"], { heatmap: { threshold: 0.6 } });
+  expect(result.errors).toEqual([]);
+  expect(changedFraction(frame, base)).toBeGreaterThan(minimumChangedFraction);
+  expect(changedFraction(frame, base)).toBeLessThan(changedFraction(low, base) / 2);
+  const changedIn = (top: number, bottom: number, left: number, right: number): number => {
+    let changed = 0;
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
+        const offset = (y * frame.width + x) * 4;
+        if (frame.data[offset + 1] !== base.data[offset + 1]) changed++;
+      }
+    }
+    return changed / ((bottom - top) * (right - left));
+  };
+  expect(changedIn(60, 120, 240, 320)).toBeGreaterThan(0.9);
+  expect(changedIn(150, 300, 0, 200)).toBe(0);
+  const outcome = checkGolden(frame, {
+    name: "viv-overlay-heatmap-threshold",
+    format: "svs-jpeg",
+    tolerance: overlayTolerance,
+    goldenDirectory,
+    outputDirectory: testInfo.outputDir,
+  });
+  if (outcome.status === "mismatched") throw new Error(outcome.message);
+});
+
+test("a threshold above every cell draws the bare slide", async ({ page }) => {
+  const base = await baseFrame(page);
+  const { frame } = await render(page, ["heatmap"], { heatmap: { threshold: 1 } });
+  expectSame(frame, base, "threshold 1");
+});
+
+test("changing the colormap and the threshold on a shown heatmap draws the same frame as a fresh one", async ({
+  page,
+}) => {
+  const { frame: fresh } = await render(page, ["heatmap"], {
+    heatmap: { colormap: "turbo", threshold: 0.6 },
+  });
+  await render(page, ["heatmap"]);
+  await change(page, { kind: "heatmap", id: "heatmap", look: { colormap: "turbo" } });
+  const changed = await change(page, { kind: "heatmap", id: "heatmap", look: { threshold: 0.6 } });
+  expectSame(changed, fresh, "live change");
+});
+
 test("hiding every layer draws the bare slide and showing them again draws the stack", async ({
   page,
 }) => {
@@ -227,7 +323,11 @@ test("opacity fades a layer between the bare slide and the full layer", async ({
   const { frame: full } = await render(page, ["heatmap"]);
   const half = await change(page, { kind: "opacity", id: "heatmap", opacity: 0.5 });
   const none = await change(page, { kind: "opacity", id: "heatmap", opacity: 0 });
-  const restored = await change(page, { kind: "opacity", id: "heatmap", opacity: 1 });
+  const restored = await change(page, {
+    kind: "opacity",
+    id: "heatmap",
+    opacity: defaultHeatmapOpacity,
+  });
   const meanOf = (frame: Frame) =>
     compareFrames(frame, base, { ...EXACT, maxMeanChannelError: 255 }).meanError.reduce(
       (sum, error) => sum + error,
@@ -236,7 +336,7 @@ test("opacity fades a layer between the bare slide and the full layer", async ({
   expect(meanOf(half)).toBeGreaterThan(meanOf(none));
   expect(meanOf(half)).toBeLessThan(meanOf(full));
   expectSame(none, base, "opacity 0");
-  expectSame(restored, full, "opacity back to 1");
+  expectSame(restored, full, "opacity back to the default");
 });
 
 test("removing a layer frees it and the bare slide is drawn again", async ({ page }) => {
