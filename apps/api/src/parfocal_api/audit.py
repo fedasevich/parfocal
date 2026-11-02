@@ -112,6 +112,8 @@ class AuditAction(StrEnum):
     ANNOUNCEMENT_POSTED = "announcement.posted"
     ANNOUNCEMENT_ENDED = "announcement.ended"
     SITE_VALIDATION_RECORDED = "site-validation.recorded"
+    MODEL_TIER_SET = "model-tier.set"
+    MODEL_TIER_RESET = "model-tier.reset"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"

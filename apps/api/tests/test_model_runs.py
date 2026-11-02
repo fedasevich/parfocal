@@ -251,6 +251,7 @@ def test_starting_a_run_queues_one_job_per_slide_with_every_stage(
         "typer": TYPER,
         "test_time_views": 8,
         "ordering": "tumor-first",
+        "tier": None,
     }
     assert first["started_by_user_id"] == str(lab.people["owner"].user_id)
     assert first["actions"] == ["cancel"]

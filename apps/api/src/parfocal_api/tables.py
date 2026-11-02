@@ -33,6 +33,7 @@ from parfocal_common.db import metadata
 from parfocal_common.jobs import job_steps as job_steps
 from parfocal_common.jobs import job_units as job_units
 from parfocal_common.jobs import jobs as jobs
+from parfocal_common.model_runs import ModelTier
 from parfocal_common.model_runs import model_runs as model_runs
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.result_imports import ResultFormat, UploadKind
@@ -1945,6 +1946,34 @@ site_validations = Table(
         name="counts",
     ),
     CheckConstraint("threshold >= 0 AND threshold <= 1", name="threshold"),
+)
+
+
+class TierTask(StrEnum):
+    TUMOR = "tumor"
+    OUTLINE = "outline"
+    TYPER = "typer"
+
+
+model_tiers = Table(
+    "model_tiers",
+    metadata,
+    *owned_ids(),
+    Column("task", String(10), nullable=False, info=OPERATIONAL),
+    Column("tier", String(10), nullable=False, info=OPERATIONAL),
+    Column("model_name", String(80), nullable=False, info=OPERATIONAL),
+    Column("model_version", String(40), nullable=False, info=OPERATIONAL),
+    Column(
+        "set_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "task", "tier"),
+    one_of("task", TierTask),
+    one_of("tier", ModelTier),
 )
 
 

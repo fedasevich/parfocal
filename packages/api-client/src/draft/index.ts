@@ -117,20 +117,6 @@ export {
   useListAnnotationLayers,
 } from "./list-annotation-layers.ts";
 export {
-  getListModelTiersQueryKey,
-  getListModelTiersQueryOptions,
-  getListModelTiersUrl,
-  type ListModelTiersQueryError,
-  type ListModelTiersQueryResult,
-  listModelTiers,
-  type listModelTiersResponse,
-  type ModelTier,
-  type ModelTiers,
-  modelTierSchema,
-  modelTiersSchema,
-  useListModelTiers,
-} from "./list-model-tiers.ts";
-export {
   getListMyAdjudicationsQueryKey,
   getListMyAdjudicationsQueryOptions,
   getListMyAdjudicationsUrl,

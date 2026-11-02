@@ -169,7 +169,7 @@ export function startRuns(draft: ModelRunDraft): ModelRun[] {
   const slides = draft.slide_ids
     .map(toSlideRef)
     .filter((slide): slide is ProjectSlideRef => slide !== undefined);
-  const model = modelKeyOf(draft.parameters.detector.name);
+  const model = modelKeyOf(draft.parameters.detector?.name ?? "");
   updateJobsState((state) => ({
     ...state,
     started: { slides, model },

@@ -92,12 +92,16 @@ test("the annotate workspace's layers on A1 add the two child layers up to their
   assert.deepEqual((await listAnnotationLayers(scenario.slideByIndex(2).id)).data.layers, []);
 });
 
-test("the outline job has one model for each of Best, Good and Fast", async () => {
+test("the outline task has Best and Good mapped and Fast left to the lab", async () => {
   const { data } = await listModelTiers();
-  const outline = data.tiers.filter((tier) => tier.job === "outline");
+  assert.ok(Array.isArray(data));
+  const outline = data.filter((mapping) => mapping.task === "outline");
   assert.deepEqual(
-    outline.map((tier) => tier.tier),
-    ["Best", "Good", "Fast"],
+    outline.map((mapping) => [mapping.tier, mapping.model?.label ?? null]),
+    [
+      ["best", "PathoSAM + HoVer-NeXt · v1.2"],
+      ["good", "HoVer-Net · v0.9"],
+      ["fast", null],
+    ],
   );
-  assert.equal(outline.find((tier) => tier.tier === "Fast")?.runs_on, "browser");
 });

@@ -105,6 +105,7 @@ OPEN_OPERATIONS = {
     "getSessionPolicy": "member",
     "listAnnouncements": "member",
     "listSiteValidations": "member",
+    "listModelTiers": "member",
     "getMyHome": "member",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
@@ -373,6 +374,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "setWorkspaceSettings": lambda _: Call(
         "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
     ),
+    "setModelTier": lambda _: Call(
+        "PUT", "/api/tenant/model-tiers/outline/fast", {"name": "hovernet"}
+    ),
+    "resetModelTier": lambda _: Call("DELETE", "/api/tenant/model-tiers/outline/fast"),
     "changeProjectPrivacy": lambda w: Call(
         "POST",
         f"/api/projects/{w.spare_project}/privacy-mode",
@@ -686,6 +691,7 @@ PLACEHOLDER = Workspace(
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
     "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
+    "listModelTiers": lambda _: Call("GET", "/api/tenant/model-tiers"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),

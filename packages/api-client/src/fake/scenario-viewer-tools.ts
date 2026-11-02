@@ -1,5 +1,5 @@
 import type { AnnotationLayer } from "../draft/list-annotation-layers.ts";
-import type { ModelTier } from "../draft/list-model-tiers.ts";
+import type { ModelTier, TierMapping, TierModel, TierTask } from "../generated/api.ts";
 
 export const layersOnA1: AnnotationLayer[] = [
   {
@@ -38,61 +38,43 @@ export const layersOnA1: AnnotationLayer[] = [
   },
 ];
 
-export const modelTiers: ModelTier[] = [
-  {
-    job: "tumor",
-    tier: "Best",
-    model: "CAMELYON16 tumor model · MONAI Label · v1.0",
-    description: "The tumor model your lab validated.",
-    speed: 1,
-    runs_on: "server",
-  },
-  {
-    job: "outline",
-    tier: "Best",
-    model: "PathoSAM ViT-B · AIS decoder · v1.2",
-    description: "The most accurate outlines. Slowest, runs on the hospital server.",
-    speed: 1,
-    runs_on: "server",
-  },
-  {
-    job: "outline",
-    tier: "Good",
-    model: "HoVer-Net · MONAI Label · v0.9",
-    description: "Nearly as accurate, about three times quicker.",
-    speed: 2,
-    runs_on: "server",
-  },
-  {
-    job: "outline",
-    tier: "Fast",
-    model: "SlimSAM-77 · ONNX in the browser · v1.0",
-    description: "A quick draft that runs on this computer, also offline.",
-    speed: 3,
-    runs_on: "browser",
-  },
-  {
-    job: "typer",
-    tier: "Best",
-    model: "HoVer-NeXt · PanNuke types · v1.1",
-    description: "Types every nucleus on the hospital server.",
-    speed: 1,
-    runs_on: "server",
-  },
-  {
-    job: "typer",
-    tier: "Good",
-    model: "MONAI classifier · round 3",
-    description: "A lighter classifier trained on your lab's corrections.",
-    speed: 2,
-    runs_on: "server",
-  },
-  {
-    job: "typer",
-    tier: "Fast",
-    model: "Learned in your browser · 212 examples",
-    description: "Learns from your own examples on this computer.",
-    speed: 3,
-    runs_on: "browser",
-  },
+const tierModel = (name: string, title: string, version: string, description: string) => ({
+  name,
+  version,
+  title,
+  description,
+  label: `${title} · ${version}`,
+});
+
+const camelyon = tierModel(
+  "camelyon-tumor",
+  "CAMELYON tumor model",
+  "v1.0",
+  "Tumor regions and a heatmap",
+);
+const pathosam = tierModel(
+  "pathosam-hovernext",
+  "PathoSAM + HoVer-NeXt",
+  "v1.2",
+  "Tumor regions and every cell with a type",
+);
+const hovernet = tierModel("hovernet", "HoVer-Net", "v0.9", "Every cell with a type, no regions");
+
+const mapped = (task: TierTask, tier: ModelTier, model: TierModel | null): TierMapping => ({
+  task,
+  tier,
+  model,
+  set_by_lab: false,
+});
+
+export const modelTiers: TierMapping[] = [
+  mapped("tumor", "best", camelyon),
+  mapped("tumor", "good", null),
+  mapped("tumor", "fast", null),
+  mapped("outline", "best", pathosam),
+  mapped("outline", "good", hovernet),
+  mapped("outline", "fast", null),
+  mapped("typer", "best", pathosam),
+  mapped("typer", "good", hovernet),
+  mapped("typer", "fast", null),
 ];
