@@ -1,4 +1,4 @@
-# XXXX. Outlines carry a casing layer under them, and each overlay style value has a recorded source
+# 0157. Outlines carry a casing layer under them, and each overlay style value has a recorded source
 
 - Date: 2026-11-02
 - Status: Accepted

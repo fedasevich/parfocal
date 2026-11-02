@@ -59,3 +59,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-02 | [Performance budget baselines: first-page bytes, viewer time and requests to the fitted image and to sharp after a jump on CMU-1 per RTT](2026-11-02-performance-budgets.md) | TEST-006 | benchmark |
 | 2026-11-02 | [The tissue box that drops specks under 0.1% of tissue cells is 46.0% to 96.2% of the all-cells box and keeps all annotated tumour](2026-11-02-tissue-box.md) | INGEST-027 | benchmark |
 | 2026-11-02 | [Under the enforced CSP a local production build is cross-origin isolated and runs module workers with shared WASM memory](2026-11-02-security-headers-local-check.md) | SEC-011 | check |
+| 2026-11-02 | [Outlines with casings keep 3:1 contrast on all but 5 to 6% of H&E pixels for tumor and immune and on all pixels for the rest](2026-11-02-outline-casing-contrast.md) | VIEW-027 | benchmark |
