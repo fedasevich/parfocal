@@ -9,6 +9,7 @@ import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { QueryState } from "../placeholder.tsx";
+import { decisionSettings } from "../review/decision-style.ts";
 import { AddSlidesModal, PreviewQuestionModal } from "./modals.tsx";
 import {
   applyTemplate,
@@ -35,7 +36,15 @@ import {
   whoReviews,
 } from "./model.ts";
 import { fieldId } from "./parts.tsx";
-import { CheckStep, HowStep, ReviewersStep, SendStep, SentPanel, SlidesStep } from "./steps.tsx";
+import {
+  CheckStep,
+  HowStep,
+  ReviewersStep,
+  SendStep,
+  SentPanel,
+  SlidesStep,
+  styleOf,
+} from "./steps.tsx";
 import { useTaskData } from "./use-task-data.ts";
 
 export type TaskModal = "addslides" | "dpreview";
@@ -122,6 +131,7 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
     reminder_days: reminderChoices.find((choice) => choice.key === draft.reminders)?.days ?? [],
     study_template_id: draft.templateId,
     study_template_version: template ? Number(template.version.slice(1)) : null,
+    decision: decisionSettings(styleOf[draft.decision.kind], draft.decision),
   };
 }
 

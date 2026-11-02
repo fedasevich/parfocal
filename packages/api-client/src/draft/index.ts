@@ -3,18 +3,6 @@ export * from "./clinical-report.ts";
 export * from "./disagreements.ts";
 export * from "./evaluation-report.ts";
 export {
-  type DecisionStyle,
-  decisionStyleSchema,
-  type GetDecisionStyleQueryError,
-  type GetDecisionStyleQueryResult,
-  getDecisionStyle,
-  type getDecisionStyleResponse,
-  getGetDecisionStyleQueryKey,
-  getGetDecisionStyleQueryOptions,
-  getGetDecisionStyleUrl,
-  useGetDecisionStyle,
-} from "./get-decision-style.ts";
-export {
   type Checklist,
   ChecklistStepKey,
   checklistSchema,

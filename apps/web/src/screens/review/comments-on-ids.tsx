@@ -94,6 +94,7 @@ function CommentsBody({
           verdict,
           session.style,
           session.objects.find((item) => item.object === object),
+          session.classes,
         )
       : undefined;
   };

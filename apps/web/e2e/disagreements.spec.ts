@@ -105,6 +105,13 @@ for (const { path, persona, sees, dialog } of scenes) {
   });
 }
 
+test("the report's Methods block says how the decisions were counted", async ({ page }) => {
+  await page.goto(`${base}/evaluation?scene=report`);
+  const methods = page.locator("[data-methods]").first();
+  await expect(methods).toContainText("Reviewers answered in the Agree with the AI style.");
+  await expect(methods).toContainText("The answers as given were");
+});
+
 test("the prototype index opens every scene of the three screens", async ({ page }) => {
   await page.goto("/prototype");
   const screens = page.getByRole("list", { name: "Screens" });

@@ -236,6 +236,24 @@ test("a new template opens in the editor and blocks are added by click", async (
   await expect(page).toHaveURL(/section=templates$/);
 });
 
+test("the template editor sets the decision question and Counts as", async ({ page }) => {
+  await page.goto("/admin?scene=tpledit");
+  await page.getByRole("tab", { name: "Task presets" }).click();
+  const group = page.getByRole("radiogroup", { name: "Decision question" });
+  await group.getByRole("radio", { name: /5-point certainty/ }).click();
+  await expect(
+    page.getByText("4 and 5 count as agree with the AI, 3 as not sure, and 1 and 2 as disagree."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Raise Agree starts at" }).click();
+  await expect(
+    page.getByText("5 counts as agree with the AI, 3 and 4 as not sure, and 1 and 2 as disagree."),
+  ).toBeVisible();
+  await group.getByRole("radio", { name: /Pick the class blind/ }).click();
+  await expect(
+    page.getByText("The same class as the AI's counts as agree, another class as disagree."),
+  ).toBeVisible();
+});
+
 test("Connect your own model opens the flow page from AI models", async ({ page }) => {
   await page.goto("/admin?section=models");
   await page.getByRole("button", { name: "Connect your own model" }).click();

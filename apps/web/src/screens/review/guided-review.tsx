@@ -20,6 +20,7 @@ import {
   cardText,
   countsAs,
   countWord,
+  decisionBody,
   rawFor,
   rawLabel,
   showsClaim,
@@ -82,7 +83,14 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
   const noResults = objects.length === 0;
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
-  const base = baseAnswers(objects, session.verdicts, style, setup.stage, finishingAnswers);
+  const base = baseAnswers(
+    objects,
+    session.verdicts,
+    style,
+    setup.stage,
+    finishingAnswers,
+    session.classes,
+  );
   const [overrides, setOverrides] = useState<Answers>(
     () =>
       new Map(
@@ -215,7 +223,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
       taskId: session.taskId,
       slideId: session.slideId,
       objectId: currentId,
-      data: { value },
+      data: decisionBody(style, raw, session.classes, value),
     });
     const label = rawLabel(style, raw, session.classes);
     setToast({

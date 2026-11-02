@@ -1,6 +1,5 @@
 export const packageName = "@parfocal/api-client";
 
-export type { DecisionStyle } from "./draft/index.ts";
 export * from "./draft/index.ts";
 export { type ApiResponse, apiFetch } from "./fetcher.ts";
 export * from "./generated/api.ts";

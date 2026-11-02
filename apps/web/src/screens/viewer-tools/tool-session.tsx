@@ -68,6 +68,7 @@ function SessionLoader({
     session.style,
     "review",
     finishingAnswers,
+    session.classes,
   );
   const answer = (object: string) => answerOf(base, overrides, object);
   return children({

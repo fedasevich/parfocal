@@ -14,8 +14,10 @@ import {
 } from "@parfocal/api-client";
 import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
 import { okData } from "../placeholder.tsx";
+import { toReviewStyle } from "../review/decision-style.ts";
 import {
   andJoin,
+  type DecisionKindKey,
   type ReminderKey,
   type ResultSetChoice,
   reminderChoices,
@@ -34,6 +36,28 @@ const studyKinds: Record<string, string> = {
   "reviewers-first": "Reviewers first",
   other: "Other",
 };
+
+const kindKeys = {
+  certainty: "certainty5",
+  agree: "agree",
+  yesno: "yesno",
+  blind: "blind",
+} as const satisfies Record<ReturnType<typeof toReviewStyle>["kind"], DecisionKindKey>;
+
+function presetDecision(
+  template: StudyTemplateSummary,
+  fallback: { kind: DecisionKindKey; agree_from: number; disagree_to: number },
+): TemplateChoice["preset"]["decision"] {
+  if (template.presets.decision?.style === undefined) {
+    return {
+      kind: fallback.kind,
+      agreeFrom: fallback.agree_from,
+      disagreeTo: fallback.disagree_to,
+    };
+  }
+  const style = toReviewStyle(template.presets.decision);
+  return { kind: kindKeys[style.kind], agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo };
+}
 
 const resultSetKeys = ["cam", "sam"] as const;
 
@@ -159,11 +183,7 @@ export function useTaskData(projectId: string): {
             roi: extra.scope_options.rois,
             unsure: extra.scope_options.unsure_zones,
           },
-          decision: {
-            kind: extra.decision.kind,
-            agreeFrom: extra.decision.agree_from,
-            disagreeTo: extra.decision.disagree_to,
-          },
+          decision: presetDecision(template, extra.decision),
           display: extra.display,
           form: extra.opinion_form,
           blind: template.presets.blinding ?? true,

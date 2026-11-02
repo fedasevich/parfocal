@@ -1,38 +1,12 @@
-import type { ReviewObject, DecisionStyle as TaskDecisionStyle } from "@parfocal/api-client";
+import type { ReviewObject } from "@parfocal/api-client";
 import {
   answersFor,
   type DecisionAnswer,
   type ProjectClass,
-  type DecisionStyle as StyleKind,
 } from "@parfocal/ui/components/decision-buttons";
+import type { Confidence, Count, ReviewStyle } from "./decision-mapping.ts";
 
-export type Count = "agree" | "disagree" | "unsure";
-
-export type ReviewStyle = {
-  kind: StyleKind;
-  question: string | null;
-  agreeFrom: number;
-  disagreeTo: number;
-};
-
-export type Confidence = "number" | "word" | "color" | "hidden";
-
-export const agreeWithTheAi: ReviewStyle = {
-  kind: "agree",
-  question: null,
-  agreeFrom: 4,
-  disagreeTo: 2,
-};
-
-export const toReviewStyle = (style: TaskDecisionStyle | undefined): ReviewStyle =>
-  style
-    ? {
-        kind: style.kind,
-        question: style.question,
-        agreeFrom: style.agree_from,
-        disagreeTo: style.disagree_to,
-      }
-    : agreeWithTheAi;
+export * from "./decision-mapping.ts";
 
 export const showsClaim = (style: ReviewStyle) =>
   style.kind === "agree" || style.kind === "certainty";
@@ -46,28 +20,6 @@ export function answersOf(
     agreeFrom: style.agreeFrom,
     disagreeTo: style.disagreeTo,
   });
-}
-
-export function countsAs(style: ReviewStyle, raw: string, object: ReviewObject | undefined): Count {
-  if (raw === "unsure") return "unsure";
-  if (style.kind === "agree") return raw === "disagree" ? "disagree" : "agree";
-  if (style.kind === "yesno") return raw === "yes" ? "agree" : "disagree";
-  if (style.kind === "blind") return raw === object?.class_name ? "agree" : "disagree";
-  const value = Number(raw);
-  if (value >= style.agreeFrom) return "agree";
-  if (value <= style.disagreeTo) return "disagree";
-  return "unsure";
-}
-
-export function rawFor(style: ReviewStyle, count: Count, object: ReviewObject | undefined): string {
-  if (style.kind === "certainty") {
-    return count === "agree" ? "4" : count === "disagree" ? "2" : "3";
-  }
-  if (count === "unsure") return "unsure";
-  if (style.kind === "agree") return count;
-  if (style.kind === "yesno") return count === "agree" ? "yes" : "no";
-  const claimed = object?.class_name ?? "Tumor";
-  return count === "agree" ? claimed : claimed === "Tumor" ? "Stroma" : "Tumor";
 }
 
 export function rawLabel(style: ReviewStyle, raw: string, classes: ProjectClass[]): string {
