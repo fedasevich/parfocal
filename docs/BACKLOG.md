@@ -1910,7 +1910,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the case view state model (slide, workspace, inspector tab, area, review position) is captured in an ADR.
   Size: S.
 
-- [ ] CASE-001 · Case loader
+- [x] CASE-001 · Case loader
   Load the project, the optional case, the slides, their result sets, the review task and the person's decisions, and open the slide fitted. Patient fields load only in clinical projects.
   Done when E2E opens a slide from My work and from the project page and the slide is fitted within the TEST-006 budget.
   Size: M.
