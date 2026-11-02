@@ -9,17 +9,17 @@
 
 Slides reach 7 GB (`Hamamatsu-1.ndpi`) and NDPI files above 4 GB are in scope. Uploads come from hospital and lab networks that drop, and from tabs that get closed. [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture) puts slides in Cloudflare R2, the API in FastAPI on Modal and nothing on an always-on server, and its default for this slot is S3 multipart with presigned parts through Uppy, so that slide bytes never pass through the API. The task asks for a spike that uploads a 4 GB NDPI over a throttled link with a forced disconnect and resumes without restarting.
 
-R2 facts that shape the protocol, from the Cloudflare docs on 2026-10-31:
+R2 facts that shape the protocol, from the Cloudflare docs on 2026-10-31, with the column on the right from INGEST-028 (upload protocol check on the R2 dev bucket), which ran them against `parfocal-dev` on 2026-11-02 ([result](../results/2026-11-02-upload-protocol-check-on-r2.md)):
 
-| Fact | Source |
-|---|---|
-| Every part except the last must have the same size, or CompleteMultipartUpload fails with error 10048 (`InvalidPart`) | https://developers.cloudflare.com/r2/objects/upload-objects/ and https://developers.cloudflare.com/r2/api/error-codes/ |
-| Parts are 5 MiB to 5 GiB, at most 10,000 parts, objects up to 4.995 TiB | https://developers.cloudflare.com/r2/platform/limits/ |
-| Presigned URLs support GET, HEAD, PUT and DELETE only, so CreateMultipartUpload and CompleteMultipartUpload, which are POSTs, cannot be presigned | https://developers.cloudflare.com/r2/api/s3/presigned-urls/ |
-| Presigned URLs live from 1 second to 7 days and work only on the S3 API domain | the same page |
-| An expired presigned URL answers 403 `ExpiredRequest` without CORS headers, so browser code cannot read the error and sees a network failure | https://developers.cloudflare.com/r2/buckets/cors/ |
-| Incomplete multipart uploads are aborted after 7 days by default, and a lifecycle rule with `AbortIncompleteMultipartUpload` can shorten that per prefix | https://developers.cloudflare.com/r2/buckets/object-lifecycles/ |
-| A part's ETag is the MD5 of its bytes, and the object's ETag is the MD5 of the concatenated part MD5s followed by `-` and the part count | https://developers.cloudflare.com/r2/objects/upload-objects/ |
+| Fact | Source | On R2 |
+|---|---|---|
+| Every part except the last must have the same size, or CompleteMultipartUpload fails with error 10048 (`InvalidPart`) | https://developers.cloudflare.com/r2/objects/upload-objects/ and https://developers.cloudflare.com/r2/api/error-codes/ | Confirmed. The S3 answer is `InvalidPart` with "All non-trailing parts must have the same length.", and the number 10048 is not in it |
+| Parts are 5 MiB to 5 GiB, at most 10,000 parts, objects up to 4.995 TiB | https://developers.cloudflare.com/r2/platform/limits/ | Not tested |
+| Presigned URLs support GET, HEAD, PUT and DELETE only, so CreateMultipartUpload and CompleteMultipartUpload, which are POSTs, cannot be presigned | https://developers.cloudflare.com/r2/api/s3/presigned-urls/ | Wrong for CreateMultipartUpload. A presigned `POST ?uploads` answered 200 and created an upload. The decision does not rest on it, see below |
+| Presigned URLs live from 1 second to 7 days and work only on the S3 API domain | the same page | A 2-second URL expired as expected. The domain was not tested |
+| An expired presigned URL answers 403 `ExpiredRequest` without CORS headers, so browser code cannot read the error and sees a network failure | https://developers.cloudflare.com/r2/buckets/cors/ | Confirmed, 403 `ExpiredRequest` with no `Access-Control-Allow-Origin` |
+| Incomplete multipart uploads are aborted after 7 days by default, and a lifecycle rule with `AbortIncompleteMultipartUpload` can shorten that per prefix | https://developers.cloudflare.com/r2/buckets/object-lifecycles/ | Confirmed. The rule for `t/` after 1 day was accepted and reads back |
+| A part's ETag is the MD5 of its bytes, and the object's ETag is the MD5 of the concatenated part MD5s followed by `-` and the part count | https://developers.cloudflare.com/r2/objects/upload-objects/ | Confirmed on every uploaded and copied part and on both objects |
 
 ## Options considered
 
@@ -37,7 +37,7 @@ Option 2, S3 multipart with presigned part URLs, with Uppy 6 in Companion mode a
 
 | Concern | Rule |
 |---|---|
-| Who talks to R2 | The browser only sends `PUT` requests for parts to presigned URLs. The API creates, lists, completes and aborts with its own credentials, because R2 cannot presign the POSTs, and because the API must check the tenant and record the upload |
+| Who talks to R2 | The browser only sends `PUT` requests for parts to presigned URLs. The API creates, lists, completes and aborts with its own credentials, because the API must check the tenant, choose the key and record the upload, and must check the part sizes before it completes. The docs also say R2 cannot presign the POSTs, but R2 accepted a presigned CreateMultipartUpload on 2026-11-02, so that is no longer a reason |
 | Client | `@uppy/core` and `@uppy/aws-s3` 6 with `companionEndpoint` set to the API's upload routes and `shouldUseMultipart: true`. The `signRequest` mode is not used, because it presigns the POSTs and its ListParts reads only the first page |
 | API routes | Uppy's Companion S3 contract, five routes under the API: create (`POST /s3/multipart`), sign one part (`GET /s3/multipart/{uploadId}/{partNumber}?key=`), list parts (`GET /s3/multipart/{uploadId}?key=`), complete (`POST /s3/multipart/{uploadId}/complete?key=`) and abort (`DELETE /s3/multipart/{uploadId}?key=`). Each route checks that the upload ID and key belong to the caller's workspace, so a key in the URL never decides anything alone |
 | Key | Chosen by the API, `t/{tenant}/quarantine/{upload}/{safe name}`, never by the client |
@@ -49,11 +49,11 @@ Option 2, S3 multipart with presigned part URLs, with Uppy 6 in Companion mode a
 | Resume after a reload | The upload record in Postgres is the state. The user picks the file again, the app asks the API for the caller's open upload with the same name, size and last-modified time, sets Uppy's `s3Multipart` file state to its key and upload ID, and starts. Uppy lists the stored parts and sends only the missing ones. Uppy's Golden Retriever plugin is optional and cannot keep a multi-gigabyte file anyway |
 | Cleanup | The API aborts an upload when the user cancels. A job aborts uploads with no new part for 24 hours and marks their records. An R2 lifecycle rule on the quarantine prefix aborts incomplete uploads after 1 day as the backstop, shorter than R2's 7-day default |
 | CORS on each bucket | `AllowedOrigins` the app origin of that environment, `AllowedMethods` `["PUT"]`, `AllowedHeaders` `["Content-Type"]`, `ExposeHeaders` `["ETag"]` so Uppy can read each part's ETag, `MaxAgeSeconds` 3600. Set in `infra/tofu` |
-| Checksums | Each part's ETag is the MD5 of its bytes on R2 and on MinIO, and the API keeps the listed ETags. The ingest worker computes the SHA-256 of the whole file when it copies it to its own disk ([ADR 0043](0043-server-slide-reading.md) (server slide reading) rule 8), and that is the integrity value of record. The browser does not hash the file in v1 |
+| Checksums | Each part's ETag is the MD5 of its bytes on R2 and on MinIO, and the API keeps the listed ETags. R2 answers `NotImplemented` to `x-amz-checksum-sha256` on a part, also when the upload was created with `ChecksumAlgorithm` SHA256, so parts carry no SHA-256 and the S3 clients must not send one. The ingest worker computes the SHA-256 of the whole file when it copies it to its own disk ([ADR 0043](0043-server-slide-reading.md) (server slide reading) rule 8), and that is the integrity value of record. The browser does not hash the file in v1 |
 
 ### Follow-ups
 
-- INGEST-028 (upload protocol check on the R2 dev bucket) repeats the protocol checks against `parfocal-dev` before INGEST-001 (upload API with presigned multipart) is ticked: presigned part `PUT` with the CORS policy above and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired URL answering 403 without CORS headers, ListParts pagination, the `AbortIncompleteMultipartUpload` rule being accepted and whether parts accept `x-amz-checksum-sha256`. The CORS change goes through `infra/tofu`, and its `tofu apply` needs the owner's yes under [ADR 0115](0115-production-access-and-spend-caps.md) (production access and spend caps).
+- INGEST-028 (upload protocol check on the R2 dev bucket) repeats the protocol checks against `parfocal-dev` before INGEST-001 (upload API with presigned multipart) is ticked: presigned part `PUT` with the CORS policy above and the ETag readable, R2 refusing uneven parts with error 10048, a presigned POST being refused, an expired URL answering 403 without CORS headers, ListParts pagination, the `AbortIncompleteMultipartUpload` rule being accepted and whether parts accept `x-amz-checksum-sha256`. Done on 2026-11-02: every check passed except the two doc facts the table above corrects, and the rules of this record stand. The CORS change goes through `infra/tofu`, and its `tofu apply` needs the owner's yes under [ADR 0115](0115-production-access-and-spend-caps.md) (production access and spend caps).
 - TODO: Uppy sends one part at a time per file, and every part pays a signature, a CORS preflight for its new URL and the `PUT`. In the spike that used 77 to 80% of a 200 Mbit/s link at a 50 ms round trip, against 91 to 97% with no added round trip. If INGEST-002 (upload UI with resume) measures uploads of single large slides as too slow on real links, the options are a larger part, parallel parts within a file through a fork of the plugin, or a small client of our own on the same routes, and each is a new ADR.
 - TODO: Uppy 6 removed `retryDelays`. Whether the app should retry the file by itself after an error, with a back-off, or show a retry button belongs to INGEST-002 (upload UI with resume) and INGEST-021 (upload wizard with slides and results).
 

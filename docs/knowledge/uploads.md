@@ -1,18 +1,26 @@
 # Uploads
 
-How large slide uploads reach storage, and what the STACK-039 (resumable upload protocol) spike found. The protocol is in [ADR 0116](../adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) (resumable uploads with S3 multipart and Uppy) and the numbers are in the [result file](../results/2026-10-31-resumable-upload-spike.md). Entries marked "unverified" come from vendor docs and wait for INGEST-028 (upload protocol check on the R2 dev bucket).
+How large slide uploads reach storage, and what the STACK-039 (resumable upload protocol) spike found. The protocol is in [ADR 0116](../adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) (resumable uploads with S3 multipart and Uppy) and the numbers are in the [result file](../results/2026-10-31-resumable-upload-spike.md). INGEST-028 (upload protocol check on the R2 dev bucket) checked the R2 entries against `parfocal-dev` on 2026-11-02 ([result](../results/2026-11-02-upload-protocol-check-on-r2.md)).
 
-## R2 cannot presign POST, so the API creates and completes uploads
+## The API creates and completes uploads, whatever R2 can presign
 
-R2 presigns GET, HEAD, PUT and DELETE only. CreateMultipartUpload and CompleteMultipartUpload are POSTs, so Uppy's `signRequest` mode, which presigns every request, does not fit R2. Use Uppy's Companion mode instead: the browser sends only part `PUT` requests to R2, and the API creates, lists, completes and aborts with its own credentials. Unverified. Source: https://developers.cloudflare.com/r2/api/s3/presigned-urls/ and ADR 0116 (resumable uploads with S3 multipart and Uppy).
+The R2 docs say it presigns GET, HEAD, PUT and DELETE only, but a presigned CreateMultipartUpload `POST` answered 200 and created an upload on 2026-11-02. Use Uppy's Companion mode anyway: the browser sends only part `PUT` requests to R2, and the API creates, lists, completes and aborts with its own credentials, because it must check the tenant, choose the key, record the upload and check part sizes, and because `signRequest` mode reads only the first ListParts page. Source: https://developers.cloudflare.com/r2/api/s3/presigned-urls/ and ADR 0116 (resumable uploads with S3 multipart and Uppy).
 
 ## R2 refuses uneven parts and MinIO does not
 
-R2 requires every part except the last to have the same size and fails the completion with error 10048 otherwise (unverified). MinIO completed an upload of 16 MiB, 15 MiB and 9 MiB parts without complaint in the spike. A local test against MinIO therefore proves nothing about part sizes, and the API must check the listed part sizes against the stored part size before it completes. `partsProblem` in `packages/upload-spike/src/part-size.ts` is that check.
+R2 requires every part except the last to have the same size and fails the completion otherwise, with the S3 code `InvalidPart` and "All non-trailing parts must have the same length.". The docs call it error 10048, but that number is not in the S3 answer, so match on the code. MinIO completed an upload of 16 MiB, 15 MiB and 9 MiB parts without complaint in the spike. A local test against MinIO therefore proves nothing about part sizes, and the API must check the listed part sizes against the stored part size before it completes. `partsProblem` in `packages/upload-spike/src/part-size.ts` is that check.
 
 ## An expired R2 URL looks like a network error in the browser
 
-R2 answers an expired presigned URL with 403 `ExpiredRequest` and no CORS headers, so the browser cannot read the status (unverified). MinIO's 403 for an expired URL carried CORS headers in the spike, so a local test cannot reproduce this. Sign part URLs one at a time just before use, and treat a failed part as "list the stored parts and sign again", which Uppy already does when a file is retried.
+R2 answers an expired presigned URL with 403 `ExpiredRequest` and no CORS headers, so the browser cannot read the status (confirmed on 2026-11-02). MinIO's 403 for an expired URL carried CORS headers in the spike, so a local test cannot reproduce this. Sign part URLs one at a time just before use, and treat a failed part as "list the stored parts and sign again", which Uppy already does when a file is retried.
+
+## R2 refuses part checksums
+
+R2 answers `NotImplemented` to `x-amz-checksum-sha256` on UploadPart, also when the upload was created with `ChecksumAlgorithm` SHA256. Send no `x-amz-checksum-*` header to R2. AWS SDK v3 adds CRC32 checksums by default, so a JavaScript S3 client for R2 needs `requestChecksumCalculation` and `responseChecksumValidation` set to `WHEN_REQUIRED`. The Python client in `parfocal_common.object_store` signs by hand and sends none. Integrity rests on the part MD5 ETags and the SHA-256 the ingest worker computes.
+
+## Testing CORS in Playwright needs a real listener
+
+Playwright answers CORS preflights itself while request interception is on, so a page served by `page.route` never sees the storage's own preflight answer, and Chromium treats such a page as public and refuses requests from it to a loopback proxy. Serve the page from a server on the origin under test, as `--target r2` of the upload spike does on port 5173.
 
 ## Uppy 6 behaviour that matters
 
@@ -63,7 +71,7 @@ INGEST-001 (upload API with presigned multipart) built the routes of ADR 0116 (r
 
 The API never sees a part `PUT`, so "no new part for 24 hours" is measured by `uploads.last_activity_at`, which create, sign and list set. A part URL lives 15 minutes, so no part can arrive more than 15 minutes after the last signature. `parfocal_api.stale_uploads.abort_stale_uploads` walks every workspace, aborts open uploads idle for 24 hours in storage, marks them `expired` and audits it. `python -m parfocal_api.stale_uploads` runs it once. TODO: schedule it hourly with the cloud cron, like the retention purge.
 
-The R2 lifecycle rule in `infra/tofu/cloudflare.tf` aborts incomplete multipart uploads after 1 day on the prefix `t/`, not on the quarantine prefix. A lifecycle prefix cannot skip the tenant in `t/{tenant}/quarantine/`, and every multipart upload in the bucket is an upload in progress anyway, so the wider prefix does the same job. The bucket CORS rule of ADR 0116 (resumable uploads with S3 multipart and Uppy) is in the same file. Neither is applied: that is INGEST-028 (upload protocol check on the R2 dev bucket) and needs the owner's yes.
+The R2 lifecycle rule in `infra/tofu/cloudflare.tf` aborts incomplete multipart uploads after 1 day on the prefix `t/`, not on the quarantine prefix. A lifecycle prefix cannot skip the tenant in `t/{tenant}/quarantine/`, and every multipart upload in the bucket is an upload in progress anyway, so the wider prefix does the same job. The bucket CORS rule of ADR 0116 (resumable uploads with S3 multipart and Uppy) is in the same file. Both are applied to `parfocal-dev` only, since 2026-11-02, and staging and production still need their own `tofu apply` at the owner's yes. The object token "parfocal-dev local" cannot read bucket settings, so read them through the Cloudflare API (`/accounts/{account}/r2/buckets/{bucket}/cors` and `/lifecycle`) with the `parfocal-tofu` token.
 
 ## Local storage is MinIO in compose
 
@@ -77,7 +85,7 @@ INGEST-017 (publish step and slide status) runs the ingest job on the completed 
 - No slide row exists before the slide is ready, so case views, Home and the review task pickers needed no change. The row carries `upload_id`, the format, variant, reader, size, level count, pixel size, objective power, notices, file size, SHA-256, `original_key`, `restricted_images` and `published_at`.
 - Published keys hold no file name. The original is `t/{tenant}/s/{slide}/original{.ext}`, keeping only a known slide extension because OpenSlide needs `.ndpi` to open NDPI, and the level table, thumbnail, overview and tissue mask sit next to it. Label and macro images are under `t/{tenant}/restricted/{slide}/`, which only `getRestrictedImage` serves, as SEC-009 (slide label and macro image handling) decided in [ADR 0124](../adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md) (labels and macros only for whole-project readers in clinical projects).
 - The label is the file name without its extension, numbered "(2)", "(3)" and so on when the case, or the project for a slide without a case, already has it. Migration `0047` (slide ingest) made label uniqueness ignore deleted slides.
-- The original leaves quarantine by `UploadPartCopy` in parts of `INGEST_COPY_PART_BYTES` (1 GiB), because R2 caps one copy at 4.995 GiB and slides reach 7 GB (https://developers.cloudflare.com/r2/platform/limits/). MinIO copies this way in the tests. R2's support for `x-amz-copy-source-range` is unverified and belongs to INGEST-028 (upload protocol check on the R2 dev bucket). The quarantine object is deleted after publishing and after a refusal.
+- The original leaves quarantine by `UploadPartCopy` in parts of `INGEST_COPY_PART_BYTES` (1 GiB), because R2 caps one copy at 4.995 GiB and slides reach 7 GB (https://developers.cloudflare.com/r2/platform/limits/). MinIO copies this way in the tests. R2 copies ranges too: a 1 GiB object in four ranges of 300 MiB took 56 s inside R2 on 2026-11-02, about 19 MB/s, with each part's ETag the MD5 of its range. A 7 GB slide would take about six minutes one part at a time. The quarantine object is deleted after publishing and after a refusal.
 - A result file is marked in the upload metadata since RSET-004 (pairing results with slides), described below. A GeoJSON or CSV sent without `kind: "result"` is still checked as a slide and refused as `unknown`.
 
 ## Result files: pairing, waiting and import

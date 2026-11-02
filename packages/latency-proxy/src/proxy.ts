@@ -1,9 +1,10 @@
 import {
   createServer,
-  request as forward,
+  request as httpRequest,
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
+import { request as httpsRequest } from "node:https";
 import type { AddressInfo } from "node:net";
 import type { Writable } from "node:stream";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -25,6 +26,7 @@ export interface ProxyStats {
   readonly requests: number;
   readonly bytes: number;
   readonly uploadedBytes: number;
+  readonly methods: Readonly<Record<string, number>>;
 }
 
 export interface LatencyProxyOptions {
@@ -144,8 +146,19 @@ function writeOrDrain(target: Writable, chunk: Buffer): Promise<void> {
   });
 }
 
+export function forwarderFor(target: URL): typeof httpRequest {
+  if (target.protocol === "https:") {
+    return httpsRequest;
+  }
+  if (target.protocol === "http:") {
+    return httpRequest;
+  }
+  throw new RangeError(`the target must be http or https, got ${target.protocol}`);
+}
+
 export async function startLatencyProxy(options: LatencyProxyOptions): Promise<LatencyProxy> {
   const target = new URL(options.target);
+  const forward = forwarderFor(target);
   let conditions = validateConditions({
     rttMs: options.rttMs ?? 0,
     bandwidthBytesPerSecond: options.bandwidthBytesPerSecond ?? null,
@@ -154,6 +167,7 @@ export async function startLatencyProxy(options: LatencyProxyOptions): Promise<L
   let requests = 0;
   let bytes = 0;
   let uploadedBytes = 0;
+  let methods: Record<string, number> = {};
   const downlink = new Link();
   const uplink = new Link();
 
@@ -170,6 +184,7 @@ export async function startLatencyProxy(options: LatencyProxyOptions): Promise<L
       requests = 0;
       bytes = 0;
       uploadedBytes = 0;
+      methods = {};
     }
     response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
     response.end(JSON.stringify({ ...conditions, requests, bytes, uploadedBytes }));
@@ -177,6 +192,8 @@ export async function startLatencyProxy(options: LatencyProxyOptions): Promise<L
 
   const relay = async (incoming: IncomingMessage, response: ServerResponse) => {
     requests++;
+    const method = incoming.method ?? "GET";
+    methods[method] = (methods[method] ?? 0) + 1;
     await delay(conditions.rttMs);
     const upstream = forward({
       host: target.hostname,
@@ -255,11 +272,12 @@ export async function startLatencyProxy(options: LatencyProxyOptions): Promise<L
     setConditions: (next) => {
       conditions = validateConditions({ ...conditions, ...next });
     },
-    stats: () => ({ requests, bytes, uploadedBytes }),
+    stats: () => ({ requests, bytes, uploadedBytes, methods: { ...methods } }),
     resetStats: () => {
       requests = 0;
       bytes = 0;
       uploadedBytes = 0;
+      methods = {};
     },
     close: () =>
       new Promise<void>((resolve, reject) => {

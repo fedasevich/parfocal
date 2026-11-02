@@ -1,6 +1,7 @@
 export { type OriginServer, startOriginServer } from "#origin.ts";
 export {
   CONTROL_PATH,
+  forwarderFor,
   type LatencyProxy,
   type LatencyProxyOptions,
   type NetworkConditions,
