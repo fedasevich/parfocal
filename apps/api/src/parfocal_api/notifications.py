@@ -29,6 +29,7 @@ from parfocal_api.tables import (
     review_tasks,
     slides,
     tenants,
+    threads,
     users,
 )
 from parfocal_api.users import signed_in
@@ -144,6 +145,15 @@ async def context_of(
             return Context(
                 await connection.scalar(select(projects.c.id).where(projects.c.id == target_id))
             )
+        case TargetKind.THREAD:
+            row = (
+                await connection.execute(
+                    select(threads.c.project_id, threads.c.task_id, slides.c.case_id)
+                    .join(slides, slides.c.id == threads.c.slide_id)
+                    .where(threads.c.id == target_id)
+                )
+            ).one_or_none()
+            return Context(row.project_id, row.task_id, row.case_id) if row else Context()
         case _:
             return Context()
 

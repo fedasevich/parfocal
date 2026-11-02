@@ -94,6 +94,11 @@ class AuditAction(StrEnum):
     REVIEW_DECISION_SET = "review.decision-set"
     REVIEW_DECISION_CLEARED = "review.decision-cleared"
     REVIEW_OPINION_SAVED = "review.opinion-saved"
+    THREAD_CREATED = "thread.created"
+    THREAD_REPLIED = "thread.replied"
+    THREAD_RESOLVED = "thread.resolved"
+    THREAD_REOPENED = "thread.reopened"
+    THREAD_DELETED = "thread.deleted"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
@@ -138,6 +143,7 @@ class AuditTarget(StrEnum):
     SLIDE = "slide"
     LEGAL_HOLD = "legal-hold"
     PATIENT = "patient"
+    THREAD = "thread"
 
 
 @dataclass(frozen=True)

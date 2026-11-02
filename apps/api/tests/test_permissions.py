@@ -51,6 +51,8 @@ from parfocal_api.tables import (
     task_nudges,
     task_reassignments,
     tenants,
+    thread_messages,
+    threads,
     uploads,
     users,
     verdicts,
@@ -191,6 +193,8 @@ class Workspace:
     queued_run: uuid.UUID
     paused_run: uuid.UUID
     failed_run: uuid.UUID
+    thread: uuid.UUID
+    doomed_thread: uuid.UUID
     open_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     finished_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     doomed_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
@@ -229,6 +233,11 @@ NEEDS_A_TASK = frozenset(
         "clearVerdict",
         "saveOpinion",
         "submitFirstRead",
+        "createThread",
+        "replyToThread",
+        "resolveThread",
+        "reopenThread",
+        "deleteThread",
     }
 )
 
@@ -524,6 +533,33 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1"
     ),
     "getReviewTaskStates": lambda w: Call("GET", f"/api/review-tasks/{w.task}/states"),
+    "listThreads": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads"),
+    "getThread": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}"
+    ),
+    "createThread": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/threads",
+        {
+            "title": "Matrix",
+            "body": "Matrix",
+            "anchor": {"kind": "point", "geometry": {"type": "Point", "coordinates": [1, 2]}},
+        },
+    ),
+    "replyToThread": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/messages",
+        {"body": "Matrix reply"},
+    ),
+    "resolveThread": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/resolve"
+    ),
+    "reopenThread": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/reopen"
+    ),
+    "deleteThread": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.doomed_thread}"
+    ),
     "submitSlideReview": lambda w: Call(
         "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/submit"
     ),
@@ -610,6 +646,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -809,6 +847,37 @@ async def seed_annotation(
     )
     assert isinstance(annotation_id, uuid.UUID)
     return annotation_id
+
+
+async def seed_thread(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> uuid.UUID:
+    thread_id = await connection.scalar(
+        insert(threads)
+        .values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            title="Matrix thread",
+            anchor_kind="point",
+            geometry={"type": "Point", "coordinates": [1, 2]},
+            created_by_user_id=user_id,
+        )
+        .returning(threads.c.id)
+    )
+    assert isinstance(thread_id, uuid.UUID)
+    await connection.execute(
+        insert(thread_messages).values(
+            tenant_id=tenant_id, thread_id=thread_id, user_id=user_id, body="Matrix message"
+        )
+    )
+    return thread_id
 
 
 async def seed_task(
@@ -1102,6 +1171,17 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 .values(tenant_id=tenant_id, task_id=task, user_id=people[lead])
                 .returning(task_nudges.c.id)
             )
+            thread, doomed_thread = [
+                await seed_thread(
+                    connection,
+                    tenant_id,
+                    case.project_id,
+                    uuid.UUID(str(task)),
+                    case.loose_slide_id,
+                    people[lead],
+                )
+                for _ in range(2)
+            ]
             assert isinstance(reassignment, uuid.UUID)
             assert isinstance(nudge, uuid.UUID)
             await connection.execute(
@@ -1268,6 +1348,8 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             queued_run,
             paused_run,
             failed_run,
+            thread,
+            doomed_thread,
             *uploads_made,
         )
     finally:

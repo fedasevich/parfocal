@@ -56,6 +56,7 @@ from parfocal_api import (
     task_changes,
     taxonomy,
     tenants,
+    threads,
     tile_access,
     uploads,
     users,
@@ -199,6 +200,7 @@ def create_app(
     app.include_router(search.router)
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
+    app.include_router(threads.router)
     app.include_router(opinions.router)
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)

@@ -156,6 +156,22 @@ export const AnalysisTemplate = {
   "cell-review": "cell-review",
 } as const;
 
+export type AnchorKind = (typeof AnchorKind)[keyof typeof AnchorKind];
+
+export const AnchorKind = {
+  object: "object",
+  roi: "roi",
+  point: "point",
+  shape: "shape",
+} as const;
+
+export interface Anchor {
+  kind: AnchorKind;
+  object_id?: string | null;
+  geometry?: Geometry | null;
+  offset?: Position | null;
+}
+
 export type AnnotationGeometry = { [key: string]: unknown };
 
 export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
@@ -412,6 +428,7 @@ export const AuditTarget = {
   slide: "slide",
   "legal-hold": "legal-hold",
   patient: "patient",
+  thread: "thread",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -480,6 +497,12 @@ export interface BlockDraft {
  * @maxLength 120
  */
 export type BlockTitle = string;
+
+/**
+ * @minLength 1
+ * @maxLength 4000
+ */
+export type Body = string;
 
 export type BuiltInTemplate = (typeof BuiltInTemplate)[keyof typeof BuiltInTemplate];
 
@@ -1773,6 +1796,17 @@ export interface MergeDraft {
   class_id?: string | null;
 }
 
+export interface Message {
+  id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface MessageCreate {
+  body: Body;
+}
+
 /**
  * @minLength 1
  * @maxLength 80
@@ -2297,13 +2331,13 @@ export interface Problem {
 /**
  * @maxLength 40
  */
-export type Title = string;
+export type ParfocalApiUsersTitle = string;
 
 export interface ProfileChange {
   display_name?: DisplayName | null;
   initials?: Initials | null;
   avatar_colour?: number | null;
-  title?: Title | null;
+  title?: ParfocalApiUsersTitle | null;
 }
 
 export type SignOutRight = (typeof SignOutRight)[keyof typeof SignOutRight];
@@ -3345,6 +3379,7 @@ export interface Target {
   slide_id?: string | null;
   object_id?: string | null;
   job_id?: string | null;
+  thread_id?: string | null;
 }
 
 /**
@@ -3443,6 +3478,49 @@ export interface TenantDraft {
   kind: TenantKind;
   region: Region;
   plan?: Plan;
+}
+
+export interface Thread {
+  id: string;
+  project_id: string;
+  task_id: string;
+  slide_id: string;
+  title: string;
+  anchor: Anchor;
+  created_by: string;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  message_count: number;
+  last_message_at: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type ParfocalApiThreadsTitle = string;
+
+export interface ThreadCreate {
+  title: ParfocalApiThreadsTitle;
+  body: Body;
+  anchor: Anchor;
+}
+
+export interface ThreadDetail {
+  id: string;
+  project_id: string;
+  task_id: string;
+  slide_id: string;
+  title: string;
+  anchor: Anchor;
+  created_by: string;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  message_count: number;
+  last_message_at: string;
+  messages: Message[];
 }
 
 export interface TileAccess {
@@ -3751,6 +3829,14 @@ export type SearchParams = {
 
 export type ListVerdictsParams = {
   reviewer_id?: string | null;
+};
+
+export type ListThreadsParams = {
+  resolved?: boolean | null;
+};
+
+export type DeleteThreadParams = {
+  confirm?: boolean;
 };
 
 export type GetOpinionParams = {
@@ -26793,6 +26879,1201 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listThreadsResponse200 = {
+  data: Thread[];
+  status: 200;
+};
+
+export type listThreadsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listThreadsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listThreadsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listThreadsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listThreadsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listThreadsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listThreadsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listThreadsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listThreadsResponseSuccess = listThreadsResponse200 & {
+  headers: Headers;
+};
+export type listThreadsResponseError = (
+  | listThreadsResponse400
+  | listThreadsResponse401
+  | listThreadsResponse403
+  | listThreadsResponse404
+  | listThreadsResponse409
+  | listThreadsResponse422
+  | listThreadsResponse429
+  | listThreadsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listThreadsResponse = listThreadsResponseSuccess | listThreadsResponseError;
+
+export const getListThreadsUrl = (taskId: string, slideId: string, params?: ListThreadsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/threads?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/threads`;
+};
+
+/**
+ * @summary List Threads
+ */
+export const listThreads = async (
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listThreadsResponse> => {
+  return apiFetch<listThreadsResponse>(getListThreadsUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListThreadsQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/threads`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListThreadsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listThreads>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListThreadsQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listThreads>>> = ({ signal }) =>
+    listThreads(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof listThreads>>>;
+export type ListThreadsQueryError = Problem;
+
+export function useListThreads<TData = Awaited<ReturnType<typeof listThreads>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params: undefined | ListThreadsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreads>>,
+          TError,
+          Awaited<ReturnType<typeof listThreads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreads<TData = Awaited<ReturnType<typeof listThreads>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreads>>,
+          TError,
+          Awaited<ReturnType<typeof listThreads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreads<TData = Awaited<ReturnType<typeof listThreads>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Threads
+ */
+
+export function useListThreads<TData = Awaited<ReturnType<typeof listThreads>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListThreadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListThreadsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createThreadResponse201 = {
+  data: ThreadDetail;
+  status: 201;
+};
+
+export type createThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createThreadResponseSuccess = createThreadResponse201 & {
+  headers: Headers;
+};
+export type createThreadResponseError = (
+  | createThreadResponse400
+  | createThreadResponse401
+  | createThreadResponse403
+  | createThreadResponse404
+  | createThreadResponse409
+  | createThreadResponse422
+  | createThreadResponse429
+  | createThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type createThreadResponse = createThreadResponseSuccess | createThreadResponseError;
+
+export const getCreateThreadUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads`;
+};
+
+/**
+ * @summary Create Thread
+ */
+export const createThread = async (
+  taskId: string,
+  slideId: string,
+  threadCreate: ThreadCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createThreadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createThreadResponse>(getCreateThreadUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(threadCreate),
+  });
+};
+
+export const getCreateThreadMutationKey = () => ["createThread"] as const;
+
+export const getCreateThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createThread>>,
+    TError,
+    CreateThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createThread>>,
+  TError,
+  CreateThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createThread>>,
+    CreateThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return createThread(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateThreadMutationResult = NonNullable<Awaited<ReturnType<typeof createThread>>>;
+export type CreateThreadMutationBody = ThreadCreate;
+export type CreateThreadMutationError = Problem;
+export type CreateThreadMutationVariables = { taskId: string; slideId: string; data: ThreadCreate };
+
+/**
+ * @summary Create Thread
+ */
+export const useCreateThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createThread>>,
+      TError,
+      CreateThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createThread>>,
+  TError,
+  CreateThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateThreadMutationOptions(options), queryClient);
+};
+
+export type getThreadResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type getThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getThreadResponseSuccess = getThreadResponse200 & {
+  headers: Headers;
+};
+export type getThreadResponseError = (
+  | getThreadResponse400
+  | getThreadResponse401
+  | getThreadResponse403
+  | getThreadResponse404
+  | getThreadResponse409
+  | getThreadResponse422
+  | getThreadResponse429
+  | getThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type getThreadResponse = getThreadResponseSuccess | getThreadResponseError;
+
+export const getGetThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}`;
+};
+
+/**
+ * @summary Get Thread
+ */
+export const getThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getThreadResponse> => {
+  return apiFetch<getThreadResponse>(getGetThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetThreadQueryKey = (taskId: string, slideId: string, threadId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}`] as const;
+};
+
+export const getGetThreadQueryOptions = <
+  TData = Awaited<ReturnType<typeof getThread>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetThreadQueryKey(taskId, slideId, threadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getThread>>> = ({ signal }) =>
+    getThread(taskId, slideId, threadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      taskId !== null &&
+      taskId !== undefined &&
+      slideId !== null &&
+      slideId !== undefined &&
+      threadId !== null &&
+      threadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetThreadQueryResult = NonNullable<Awaited<ReturnType<typeof getThread>>>;
+export type GetThreadQueryError = Problem;
+
+export function useGetThread<TData = Awaited<ReturnType<typeof getThread>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getThread>>,
+          TError,
+          Awaited<ReturnType<typeof getThread>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetThread<TData = Awaited<ReturnType<typeof getThread>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getThread>>,
+          TError,
+          Awaited<ReturnType<typeof getThread>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetThread<TData = Awaited<ReturnType<typeof getThread>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Thread
+ */
+
+export function useGetThread<TData = Awaited<ReturnType<typeof getThread>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThread>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetThreadQueryOptions(taskId, slideId, threadId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type deleteThreadResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteThreadResponseSuccess = deleteThreadResponse204 & {
+  headers: Headers;
+};
+export type deleteThreadResponseError = (
+  | deleteThreadResponse400
+  | deleteThreadResponse401
+  | deleteThreadResponse403
+  | deleteThreadResponse404
+  | deleteThreadResponse409
+  | deleteThreadResponse422
+  | deleteThreadResponse429
+  | deleteThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteThreadResponse = deleteThreadResponseSuccess | deleteThreadResponseError;
+
+export const getDeleteThreadUrl = (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  params?: DeleteThreadParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}`;
+};
+
+/**
+ * @summary Delete Thread
+ */
+export const deleteThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  params?: DeleteThreadParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteThreadResponse> => {
+  return apiFetch<deleteThreadResponse>(getDeleteThreadUrl(taskId, slideId, threadId, params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteThreadMutationKey = () => ["deleteThread"] as const;
+
+export const getDeleteThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteThread>>,
+    TError,
+    DeleteThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteThread>>,
+  TError,
+  DeleteThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteThread>>,
+    DeleteThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId, params } = props ?? {};
+
+    return deleteThread(taskId, slideId, threadId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteThreadMutationResult = NonNullable<Awaited<ReturnType<typeof deleteThread>>>;
+
+export type DeleteThreadMutationError = Problem;
+export type DeleteThreadMutationVariables = {
+  taskId: string;
+  slideId: string;
+  threadId: string;
+  params?: DeleteThreadParams;
+};
+
+/**
+ * @summary Delete Thread
+ */
+export const useDeleteThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteThread>>,
+      TError,
+      DeleteThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteThread>>,
+  TError,
+  DeleteThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteThreadMutationOptions(options), queryClient);
+};
+
+export type replyToThreadResponse201 = {
+  data: Message;
+  status: 201;
+};
+
+export type replyToThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type replyToThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type replyToThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type replyToThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type replyToThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type replyToThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type replyToThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type replyToThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type replyToThreadResponseSuccess = replyToThreadResponse201 & {
+  headers: Headers;
+};
+export type replyToThreadResponseError = (
+  | replyToThreadResponse400
+  | replyToThreadResponse401
+  | replyToThreadResponse403
+  | replyToThreadResponse404
+  | replyToThreadResponse409
+  | replyToThreadResponse422
+  | replyToThreadResponse429
+  | replyToThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type replyToThreadResponse = replyToThreadResponseSuccess | replyToThreadResponseError;
+
+export const getReplyToThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}/messages`;
+};
+
+/**
+ * @summary Reply To Thread
+ */
+export const replyToThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  messageCreate: MessageCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<replyToThreadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<replyToThreadResponse>(getReplyToThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(messageCreate),
+  });
+};
+
+export const getReplyToThreadMutationKey = () => ["replyToThread"] as const;
+
+export const getReplyToThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replyToThread>>,
+    TError,
+    ReplyToThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replyToThread>>,
+  TError,
+  ReplyToThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReplyToThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replyToThread>>,
+    ReplyToThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId, data } = props ?? {};
+
+    return replyToThread(taskId, slideId, threadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplyToThreadMutationResult = NonNullable<Awaited<ReturnType<typeof replyToThread>>>;
+export type ReplyToThreadMutationBody = MessageCreate;
+export type ReplyToThreadMutationError = Problem;
+export type ReplyToThreadMutationVariables = {
+  taskId: string;
+  slideId: string;
+  threadId: string;
+  data: MessageCreate;
+};
+
+/**
+ * @summary Reply To Thread
+ */
+export const useReplyToThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replyToThread>>,
+      TError,
+      ReplyToThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replyToThread>>,
+  TError,
+  ReplyToThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getReplyToThreadMutationOptions(options), queryClient);
+};
+
+export type resolveThreadResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type resolveThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resolveThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resolveThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resolveThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resolveThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resolveThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resolveThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resolveThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resolveThreadResponseSuccess = resolveThreadResponse200 & {
+  headers: Headers;
+};
+export type resolveThreadResponseError = (
+  | resolveThreadResponse400
+  | resolveThreadResponse401
+  | resolveThreadResponse403
+  | resolveThreadResponse404
+  | resolveThreadResponse409
+  | resolveThreadResponse422
+  | resolveThreadResponse429
+  | resolveThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type resolveThreadResponse = resolveThreadResponseSuccess | resolveThreadResponseError;
+
+export const getResolveThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}/resolve`;
+};
+
+/**
+ * @summary Resolve Thread
+ */
+export const resolveThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resolveThreadResponse> => {
+  return apiFetch<resolveThreadResponse>(getResolveThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getResolveThreadMutationKey = () => ["resolveThread"] as const;
+
+export const getResolveThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resolveThread>>,
+    TError,
+    ResolveThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resolveThread>>,
+  TError,
+  ResolveThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResolveThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resolveThread>>,
+    ResolveThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId } = props ?? {};
+
+    return resolveThread(taskId, slideId, threadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResolveThreadMutationResult = NonNullable<Awaited<ReturnType<typeof resolveThread>>>;
+
+export type ResolveThreadMutationError = Problem;
+export type ResolveThreadMutationVariables = { taskId: string; slideId: string; threadId: string };
+
+/**
+ * @summary Resolve Thread
+ */
+export const useResolveThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resolveThread>>,
+      TError,
+      ResolveThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resolveThread>>,
+  TError,
+  ResolveThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getResolveThreadMutationOptions(options), queryClient);
+};
+
+export type reopenThreadResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type reopenThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reopenThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reopenThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reopenThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reopenThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reopenThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reopenThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reopenThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reopenThreadResponseSuccess = reopenThreadResponse200 & {
+  headers: Headers;
+};
+export type reopenThreadResponseError = (
+  | reopenThreadResponse400
+  | reopenThreadResponse401
+  | reopenThreadResponse403
+  | reopenThreadResponse404
+  | reopenThreadResponse409
+  | reopenThreadResponse422
+  | reopenThreadResponse429
+  | reopenThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type reopenThreadResponse = reopenThreadResponseSuccess | reopenThreadResponseError;
+
+export const getReopenThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}/reopen`;
+};
+
+/**
+ * @summary Reopen Thread
+ */
+export const reopenThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reopenThreadResponse> => {
+  return apiFetch<reopenThreadResponse>(getReopenThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReopenThreadMutationKey = () => ["reopenThread"] as const;
+
+export const getReopenThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reopenThread>>,
+    TError,
+    ReopenThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reopenThread>>,
+  TError,
+  ReopenThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReopenThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reopenThread>>,
+    ReopenThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId } = props ?? {};
+
+    return reopenThread(taskId, slideId, threadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReopenThreadMutationResult = NonNullable<Awaited<ReturnType<typeof reopenThread>>>;
+
+export type ReopenThreadMutationError = Problem;
+export type ReopenThreadMutationVariables = { taskId: string; slideId: string; threadId: string };
+
+/**
+ * @summary Reopen Thread
+ */
+export const useReopenThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reopenThread>>,
+      TError,
+      ReopenThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reopenThread>>,
+  TError,
+  ReopenThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getReopenThreadMutationOptions(options), queryClient);
+};
 
 export type saveOpinionResponse200 = {
   data: Opinion;

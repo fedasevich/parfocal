@@ -2120,3 +2120,85 @@ uploads = Table(
         postgresql_where=text("status = 'open'"),
     ),
 )
+
+
+class AnchorKind(StrEnum):
+    OBJECT = "object"
+    ROI = "roi"
+    POINT = "point"
+    SHAPE = "shape"
+
+
+threads = Table(
+    "threads",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("title", String(120), nullable=False, info=PHI),
+    Column("anchor_kind", String(10), nullable=False, info=OPERATIONAL),
+    Column("object_id", String(30), nullable=True, info=OPERATIONAL),
+    Column("geometry", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column("offset_x", Float[float](), nullable=True, info=OPERATIONAL),
+    Column("offset_y", Float[float](), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=False,
+        info=PERSONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("resolved_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "resolved_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+    ),
+    Index("ix_threads_task_id_slide_id", "task_id", "slide_id"),
+    one_of("anchor_kind", AnchorKind),
+    CheckConstraint(
+        "(anchor_kind IN ('object', 'roi')) = (object_id IS NOT NULL)", name="object_anchor"
+    ),
+    CheckConstraint(
+        "(anchor_kind IN ('point', 'shape')) = (geometry IS NOT NULL)", name="geometry_anchor"
+    ),
+    CheckConstraint("(offset_x IS NULL) = (offset_y IS NULL)", name="offset"),
+    CheckConstraint("(resolved_at IS NULL) = (resolved_by_user_id IS NULL)", name="resolved"),
+)
+
+thread_messages = Table(
+    "thread_messages",
+    metadata,
+    *owned_ids(),
+    Column(
+        "thread_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("threads.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
+    Column("body", String(4000), nullable=False, info=PHI),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)

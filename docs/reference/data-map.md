@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 26 |
-| `personal` | 52 |
+| `phi` | 28 |
+| `personal` | 55 |
 | `secret` | 9 |
-| `operational` | 530 |
+| `operational` | 546 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -856,6 +856,37 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `suspended_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## thread_messages
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `thread_id` | operational |
+| `user_id` | personal |
+| `body` | phi |
+| `created_at` | operational |
+
+## threads
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `title` | phi |
+| `anchor_kind` | operational |
+| `object_id` | operational |
+| `geometry` | operational |
+| `offset_x` | operational |
+| `offset_y` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `resolved_at` | operational |
+| `resolved_by_user_id` | personal |
 
 ## uploads
 
