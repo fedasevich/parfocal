@@ -48,6 +48,16 @@ ADR 0145 (tables are TanStack Table plus Virtual) is Proposed. The spike at the 
 
 Your choice:
 
+## 24. Tables and long lists, from STACK-010 (tables, lists and virtualisation)
+
+ADR 0145 (tables are TanStack Table plus Virtual) is Proposed. Tables and long lists use TanStack Table 9 with TanStack Virtual 3 in semantic table markup styled by the app, and J/K moves an active row. A spike at the dev-only route `/spikes/worklist` kept 60 fps over 10,000 rows with one J per frame, also with the CPU slowed 4x, while the same table without virtualisation ran at 16 fps and 3 fps. AG Grid is left out because its smallest useful bundle is about 194 KB gzipped against 19 KB, and it was not rendered. Both TanStack packages are already installed in `apps/web`.
+
+- a. Accept ADR 0145 as written. (recommended)
+- b. Measure AG Grid rendering the same 10,000 rows before deciding.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
