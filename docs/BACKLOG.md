@@ -1572,7 +1572,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
   Size: M.
 
-- [ ] DS-019 · Progress bar, ring and stacked bar
+- [x] DS-019 · Progress bar, ring and stacked bar
   One thin bar for files, jobs and tasks with the label on the left and the value or time left on the right, one ring for review progress split by decision colour (agree, disagree, not sure, open) with the percentage in the middle, and one stacked bar in the three decision colours for a split such as the one under the Counts as line, which says when no answers are in yet.
   Done when stories cover each state, a unit test checks the ring arcs and the stacked bar's parts add up, and the bar and ring expose progressbar and image roles with their values.
   Depends on PROTO-011. Refs doc 38 "One component per job".
