@@ -269,7 +269,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR lists every workaround with a test fixture for each.
   Refs docs 03, 06, 08, 32.
 
-- [ ] STACK-017 · Browser ML runtime
+- [x] STACK-017 · Browser ML runtime
   Candidates: onnxruntime-web (WebGPU and WASM EPs), Transformers.js, WebNN where available. Default: onnxruntime-web with 4-bit MatMulNBits graphs for WebGPU and uint8 for WASM.
   Done when the spike reproduces the POC numbers (encode about 1.5 s, decode about 41 ms per click on WebGPU) on the chosen version.
   Refs doc 14, [`poc/src/segment/onnx*.ts`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/segment).

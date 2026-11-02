@@ -51,3 +51,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-02 | [The tumor areas port gives the POC's 7 areas and 8.1 mm on tumor_009, a training slide](2026-11-02-tumor-areas-port-on-tumor-009.md) | AITUM-003 | baseline |
 | 2026-11-02 | [visx adds 16 to 25 KB gzipped over React, Plot 98 KB, Recharts 109 KB and ECharts 185 KB, and Plot keeps CSS variable colours](2026-11-02-chart-library-bundle-cost.md) | STACK-011 | spike |
 | 2026-11-02 | [Realtime events reach two browsers in about 60 ms through a Durable Object room on workers.dev](2026-11-02-realtime-transport-latency.md) | STACK-024 | spike |
+| 2026-11-02 | [onnxruntime-web 1.31.1 encodes a PathoSAM field in about 1.1 to 1.3 s and decodes a click in about 30 ms on WebGPU](2026-11-02-browser-ml-runtime.md) | STACK-017 | spike |
