@@ -25,6 +25,14 @@ The page has four views. Board shows the columns, filtered by milestone, epic or
 
 A dependency that is not a task ID, such as "the final UI shell", is shown on the task but does not move it. Use a `blocked` claim file for that.
 
+## Sizes and quick wins
+
+A task body may hold a line `Size: S.`, `Size: M.` or `Size: L.` S is one kind of check in one area and under an hour, M touches API and UI or needs two kinds of check, and L is a new system or needs an ADR first. Where the line is missing, `board.py` guesses the size from the "Done when" sentence and the body length, and the card shows the guess with a question mark. Write the line only where the guess is wrong.
+
+`Needs: owner.` marks a task that cannot finish without the owner's yes for a production write or for new spend ([ADR 0115](../adr/0115-production-access-and-spend-caps.md), production access and spend caps). Nothing else counts. Questions go into `docs/decisions.md` with a recommended option and the work carries on, agents use the owner's Mac for every browser and device check, and no task may wait on a pathologist.
+
+Each card shows how many open tasks wait on it all the way down. Status lists quick wins, which are ready S tasks with no `Needs` line and no `Idea:` title, sorted by that count, next to the tasks that unblock the most and a table of epics that depend on each other. `python3 scripts/board.py ready --size S --agent-only` prints the same quick wins.
+
 ## Claim files
 
 One file per active task, `active/<ID>.md`, so parallel agents never edit the same file unless they take the same task.
@@ -45,7 +53,7 @@ Optional longer notes in Markdown.
 
 | Command | What it does |
 |---|---|
-| `python3 scripts/board.py ready [--epic IAM] [--milestone M1]` | Tasks whose dependencies are done and that nobody holds |
+| `python3 scripts/board.py ready [--epic IAM] [--milestone M1] [--size S] [--agent-only]` | Tasks whose dependencies are done and that nobody holds, with size and unblock count. `--agent-only` skips `Needs` and `Idea:` tasks |
 | `python3 scripts/board.py show IAM-009` | The task, both dependency trees, its docs and its log lines |
 | `python3 scripts/board.py tree IAM-009 [--down]` | Only the tree of what it needs, or with `--down` what it unblocks |
 | `python3 scripts/board.py claim IAM-009 --by NAME [--branch B] [--note N]` | Take a task. Refuses a done or taken task, and one whose dependencies are open unless `--force` |
@@ -56,6 +64,6 @@ Optional longer notes in Markdown.
 | `python3 scripts/board.py recent [N]` | The newest log entries, cut to 200 characters |
 | `python3 scripts/board.py note "PROTO-019 (viewer tools) ..."` | Adds a log entry on top under today's date. Name the task ID when there is one |
 | `python3 scripts/board.py tick IAM-009` | Ticks the task in the backlog and deletes its claim file |
-| `python3 scripts/board.py check` | Fails on claims for ticked or unknown tasks, unknown statuses, unknown dependencies and cycles. The docs workflow runs it |
+| `python3 scripts/board.py check` | Fails on claims for ticked or unknown tasks, unknown statuses, unknown dependencies, unknown `Size` or `Needs` values and cycles. The docs workflow runs it |
 
 Commit the claim file with the first change of the task, and delete it in the change that ticks the box.

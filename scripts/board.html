@@ -125,6 +125,12 @@ main { padding: 16px; }
 .card .meta { display: flex; flex-wrap: wrap; gap: 4px; }
 .more { width: 100%; border: 1px dashed var(--line); background: transparent; border-radius: 8px; padding: 6px; color: var(--muted); }
 .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
+.pill.size-S { background: var(--ready-soft); color: var(--ready); font-weight: 600; }
+.pill.size-M { background: var(--review-soft); color: var(--review); font-weight: 600; }
+.pill.size-L { background: var(--blocked-soft); color: var(--blocked); font-weight: 600; }
+table.pairs { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.pairs th, table.pairs td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; font-family: var(--mono); color: inherit; text-decoration: underline; cursor: pointer; }
 .pill.s-ready { background: var(--ready-soft); color: var(--ready); }
 .pill.s-in-progress { background: var(--progress-soft); color: var(--progress); }
 .pill.s-review { background: var(--review-soft); color: var(--review); }
@@ -264,7 +270,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 
 function state() {
   const p = new URLSearchParams(location.hash.slice(1));
-  return { view: p.get("view") || "board", task: p.get("task"), doc: p.get("doc"), q: p.get("q") || "", epic: p.get("epic") || "", ms: p.get("ms") || "", done: p.get("done") === "1", tree: p.get("tree") || "" };
+  return { view: p.get("view") || "board", task: p.get("task"), doc: p.get("doc"), q: p.get("q") || "", epic: p.get("epic") || "", ms: p.get("ms") || "", size: p.get("size") || "", done: p.get("done") === "1", tree: p.get("tree") || "" };
 }
 function setState(patch, replace) {
   const p = new URLSearchParams(location.hash.slice(1));
@@ -336,6 +342,7 @@ function milestoneOf(t) {
 function matches(t, s) {
   if (s.epic && t.epic !== s.epic) return false;
   if (s.ms && !milestoneOf(t).includes(s.ms)) return false;
+  if (s.size && t.size !== s.size) return false;
   if (s.q) {
     const q = s.q.toLowerCase();
     const hay = `${t.id} ${t.title} ${t.body} ${t.active?.by || ""} ${t.active?.note || ""}`.toLowerCase();
@@ -348,8 +355,10 @@ function card(t) {
   const deps = t.deps.filter((d) => tasks.has(d));
   const open = openDeps(t).length;
   const meta = [`<span class="pill">${esc(t.epic)}</span>`];
+  if (!t.done) meta.push(sizePill(t));
+  if (t.needs.length) meta.push(`<span class="pill s-on-hold" title="Needs the owner's yes for a production write or spend">needs ${esc(t.needs.join(", "))}</span>`);
   if (deps.length) meta.push(`<span class="pill ${open ? "s-waiting" : "s-ready"}" title="Dependencies done">needs ${deps.length - open}/${deps.length}</span>`);
-  if (t.dependents.length) meta.push(`<span class="pill" title="Tasks that depend on this">unblocks ${t.dependents.length}</span>`);
+  if (t.unblocks_total) meta.push(`<span class="pill" title="Open tasks that wait on this, all the way down">unblocks ${t.unblocks_total}</span>`);
   if (t.dep_note) meta.push(`<span class="pill s-on-hold" title="${esc(t.dep_note)}">external dep</span>`);
   if (t.active?.by) meta.push(`<span class="pill s-${t.status}">${esc(t.active.by)}</span>`);
   if (t.status === "on-hold" && t.active?.status !== "on-hold") meta.push(statusPill("on-hold"));
@@ -359,14 +368,38 @@ function card(t) {
   return `<button type="button" class="card" data-task="${t.id}"><div class="row"><span class="id">${t.id}</span>${t.active?.since ? `<span class="small muted">${esc(t.active.since)}</span>` : ""}</div><div class="title">${esc(t.title)}</div><div class="meta">${meta.join("")}</div></button>`;
 }
 
+function sizePill(t) {
+  const how = t.size_source === "written" ? "written in the backlog" : "guessed from the task text";
+  return `<span class="pill size-${t.size}" title="Size ${t.size}, ${how}">${t.size}${t.size_source === "guess" ? "?" : ""}</span>`;
+}
+function isQuickWin(t) {
+  return t.status === "ready" && t.size === "S" && !t.needs.length && !t.title.startsWith("Idea:");
+}
+function epicPairs() {
+  const pairs = new Map();
+  for (const t of data.tasks) {
+    for (const d of t.deps) {
+      const dep = tasks.get(d);
+      if (!dep || dep.epic === t.epic) continue;
+      const key = `${t.epic} needs ${dep.epic}`;
+      const row = pairs.get(key) || { from: t.epic, to: dep.epic, total: 0, open: 0 };
+      row.total += 1;
+      if (!dep.done) row.open += 1;
+      pairs.set(key, row);
+    }
+  }
+  return [...pairs.values()].filter((r) => r.total >= 3).sort((a, b) => b.open - a.open || b.total - a.total);
+}
+
 function filterBar(s) {
   const ms = data.milestones.map((m) => `<option value="${m.id}" ${s.ms === m.id ? "selected" : ""}>${m.id} ${esc(m.name)}</option>`).join("");
   const ep = data.epics.map((e) => `<option value="${e.id}" ${s.epic === e.id ? "selected" : ""}>${e.id} · ${esc(e.name)}</option>`).join("");
   return `<div class="filters">
     <label>Milestone <select data-filter="ms"><option value="">All</option>${ms}</select></label>
     <label>Epic <select data-filter="epic"><option value="">All</option>${ep}</select></label>
+    <label>Size <select data-filter="size"><option value="">All</option>${["S", "M", "L"].map((z) => `<option value="${z}" ${s.size === z ? "selected" : ""}>${z}</option>`).join("")}</select></label>
     <label><input type="checkbox" data-filter="done" ${s.done ? "checked" : ""}> Show done</label>
-    ${s.q || s.epic || s.ms ? `<button type="button" class="chipbtn" data-clear>Clear filters</button>` : ""}
+    ${s.q || s.epic || s.ms || s.size ? `<button type="button" class="chipbtn" data-clear>Clear filters</button>` : ""}
   </div>`;
 }
 
@@ -431,12 +464,21 @@ function renderOverview() {
     return `<li><span class="grow"><b>${m.id}</b> ${esc(m.name)}<span class="small muted"> · ${mc.done || 0}/${mc.total} done</span>${bar(mc)}</span></li>`;
   }).join("");
   const ov = data.overview || {};
+  const wins = data.tasks.filter(isQuickWin).sort((a, b) => b.unblocks_total - a.unblocks_total);
+  const unblockers = data.tasks.filter((t) => !t.done && t.unblocks_total).sort((a, b) => b.unblocks_total - a.unblocks_total).slice(0, 15);
+  const pairs = epicPairs();
+  const rankRow = (t) => `<li><span class="nums">${t.unblocks_total}</span>${statusPill(t.status)}<span class="grow">${taskLink(t.id, true)}</span>${sizePill(t)}</li>`;
   return `<div class="wrap">
     <div class="stats">${stat("total", "tasks")}${stat("done", "done", "done")}${stat("in-progress", "in progress", "in-progress")}${stat("review", "in review", "review")}${stat("ready", "ready", "ready")}${stat("blocked", "blocked")}${stat("waiting", "waiting on deps")}</div>
     <div class="grid">
       <div class="panel"><h2>Active board files</h2>${active.length ? `<ul class="list">${active.map((t) => `<li>${statusPill(t.status)}<span class="grow">${taskLink(t.id, true)}<div class="small muted">${esc([t.active.by, t.active.since, t.active.note].filter(Boolean).join(" · "))}</div></span></li>`).join("")}</ul>` : `<div class="empty">No task is claimed.</div>`}</div>
       <div class="panel"><h2>Milestones</h2><p class="small muted">Tasks counted by the last milestone of their epic.</p><ul class="list">${ms}</ul></div>
     </div>
+    <div class="grid section">
+      <div class="panel"><h2>Quick wins <span class="muted small">${wins.length}</span></h2><p class="small muted">Ready, size S, no owner needed and not an idea. Sorted by how many open tasks they unblock.</p><ul class="list">${wins.slice(0, 25).map(rankRow).join("") || `<li class="empty">None right now.</li>`}</ul>${wins.length > 25 ? `<p><button type="button" class="chipbtn" data-quick>See all ${wins.length} on the board</button></p>` : ""}</div>
+      <div class="panel"><h2>Unblocks the most</h2><p class="small muted">Open tasks by how many open tasks wait on them, all the way down.</p><ul class="list">${unblockers.map(rankRow).join("")}</ul></div>
+    </div>
+    <div class="panel section"><h2>Epics that depend on each other</h2><p class="small muted">Pairs with at least three dependencies. Open counts dependencies on tasks not done yet.</p><table class="pairs"><thead><tr><th>Epic</th><th>needs</th><th>Links</th><th>Open</th></tr></thead><tbody>${pairs.map((r) => `<tr><td><button type="button" class="linkbtn" data-epic="${r.from}">${r.from}</button> ${esc(epics.get(r.from)?.name || "")}</td><td><button type="button" class="linkbtn" data-epic="${r.to}">${r.to}</button> ${esc(epics.get(r.to)?.name || "")}</td><td class="nums">${r.total}</td><td class="nums">${r.open}</td></tr>`).join("")}</tbody></table></div>
     ${ov["In progress"] ? `<div class="panel section"><h2>In progress note</h2><div class="md">${md(ov["In progress"], "docs/README.md")}</div></div>` : ""}
     <div class="grid section">
       <div class="panel"><h2>Where we are now</h2><div class="md">${md(ov["Where we are now"] || "", "docs/README.md")}</div></div>
@@ -667,7 +709,7 @@ function render(fromPoll) {
 }
 
 document.addEventListener("click", (ev) => {
-  const el = ev.target.closest("[data-task],[data-doc],[data-view],[data-epic],[data-more],[data-tree],[data-clear],[data-jump]");
+  const el = ev.target.closest("[data-task],[data-doc],[data-view],[data-epic],[data-more],[data-tree],[data-clear],[data-jump],[data-quick]");
   if (!el) return;
   if (el.tagName === "A" || el.tagName === "BUTTON") ev.preventDefault();
   const d = el.dataset;
@@ -677,7 +719,8 @@ document.addEventListener("click", (ev) => {
   else if (d.epic) { limits = {}; setState({ view: null, epic: d.epic, task: null, doc: null }); }
   else if (d.more) { limits[d.more] = (limits[d.more] || PAGE) + PAGE; render(true); }
   else if ("tree" in d) setState({ tree: d.tree || null }, true);
-  else if ("clear" in d) { limits = {}; setState({ q: null, epic: null, ms: null }); }
+  else if ("clear" in d) { limits = {}; setState({ q: null, epic: null, ms: null, size: null }); }
+  else if ("quick" in d) { limits = {}; setState({ view: null, size: "S", q: null, epic: null, ms: null }); }
   else if (d.jump) { limits = {}; setState({ view: null, done: d.jump === "done" ? true : state().done }); }
 });
 document.addEventListener("change", (ev) => {

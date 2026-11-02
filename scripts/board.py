@@ -27,10 +27,27 @@ DOC_TITLE = re.compile(r"^# (.+)$", re.MULTILINE)
 ADR_STATUS = re.compile(r"^- Status: (.+)$", re.MULTILINE)
 ADR_DATE = re.compile(r"^- Date: (.+)$", re.MULTILINE)
 ACTIVE_FIELD = re.compile(r"^([a-z]+): ?(.*)$")
+MARKER = re.compile(r"^(Size|Needs): (.+?)\.?$")
+DONE_WHEN = re.compile(r"Done when (.+?)(?:\.(?=\s|$)|$)")
+CHECK_KINDS = (
+    re.compile(r"\btests?\b|pytest|node:test|test_\w+", re.IGNORECASE),
+    re.compile(r"Playwright|\bE2E\b|end-to-end", re.IGNORECASE),
+    re.compile(r"Storybook|\bstor(?:y|ies)\b", re.IGNORECASE),
+    re.compile(r"\bADR\b"),
+    re.compile(r"measure|benchmark|result file|\bp95\b|\bfps\b", re.IGNORECASE),
+    re.compile(r"staging|production|deploy|\bCI\b"),
+    re.compile(r"golden", re.IGNORECASE),
+    re.compile(r"\bspike\b", re.IGNORECASE),
+)
+LARGE_WORDS = re.compile(
+    r"OpenTofu|\btofu\b|realtime|WebSocket|presence|residency|Kubernetes|cluster", re.IGNORECASE
+)
 
 ACTIVE_STATUSES = ("in-progress", "review", "blocked", "on-hold")
 ACTIVE_FIELDS = ("status", "by", "branch", "since", "note")
 README_SECTIONS = ("In progress", "Where we are now", "Next up")
+SIZES = ("S", "M", "L")
+NEEDS = ("owner",)
 
 
 @dataclass
@@ -58,6 +75,11 @@ class Task:
     docs: list[str] = field(default_factory=list[str])
     active: Active | None = None
     status: str = "ready"
+    size: str = ""
+    size_source: str = ""
+    needs: list[str] = field(default_factory=list[str])
+    bad_markers: list[str] = field(default_factory=list[str])
+    unblocks_total: int = 0
 
 
 @dataclass
@@ -110,6 +132,47 @@ def parse_depends(body: str) -> tuple[list[str], str]:
     return unique(deps), " ".join(notes)
 
 
+def guess_size(body: str) -> str:
+    flat = " ".join(body.split())
+    done_when = " ".join(DONE_WHEN.findall(flat))
+    kinds = sum(1 for kind in CHECK_KINDS if kind.search(done_when))
+    if len(flat) > 1000 or kinds >= 3 or LARGE_WORDS.search(flat):
+        return "L"
+    if len(flat) > 600 or kinds == 2:
+        return "M"
+    return "S"
+
+
+def apply_markers(task: Task) -> None:
+    for line in task.body.splitlines():
+        match = MARKER.match(line.strip())
+        if not match:
+            continue
+        name, value = match.groups()
+        values = [part.strip() for part in re.split(r",| and ", value) if part.strip()]
+        allowed = SIZES if name == "Size" else NEEDS
+        unknown = [v for v in values if v not in allowed]
+        if unknown or (name == "Size" and len(values) != 1):
+            task.bad_markers.append(line.strip())
+        elif name == "Size":
+            task.size, task.size_source = values[0], "written"
+        else:
+            task.needs = unique(task.needs + values)
+    if not task.size:
+        task.size, task.size_source = guess_size(task.body), "guess"
+
+
+def open_downstream(task_id: str, tasks: dict[str, Task]) -> int:
+    seen: set[str] = set()
+    stack = [task_id]
+    while stack:
+        for child in tasks[stack.pop()].dependents:
+            if child not in seen and not tasks[child].done:
+                seen.add(child)
+                stack.append(child)
+    return len(seen)
+
+
 def parse_backlog(text: str) -> tuple[list[Task], list[Epic], list[dict[str, str]]]:
     milestones_by_epic: dict[str, tuple[str, str]] = {}
     milestones: list[dict[str, str]] = []
@@ -124,6 +187,7 @@ def parse_backlog(text: str) -> tuple[list[Task], list[Epic], list[dict[str, str
         if current is not None:
             current.body = "\n".join(body).strip()
             current.deps, current.dep_note = parse_depends(current.body)
+            apply_markers(current)
             tasks.append(current)
 
     for number, raw in enumerate(text.splitlines(), start=1):
@@ -324,6 +388,7 @@ def load(root: Path = ROOT) -> Board:
                 tasks[task_id].docs.append(doc.path)
     for task in task_list:
         task.status = resolve_status(task, tasks)
+        task.unblocks_total = 0 if task.done else open_downstream(task.id, tasks)
     readme = docs_dir / "README.md"
     return Board(
         tasks=tasks,
@@ -357,6 +422,7 @@ def check(root: Path = ROOT) -> list[str]:
         )
         if task.id in task.deps:
             problems.append(f"{task.id}: depends on itself")
+        problems.extend(f"{task.id}: unknown marker '{line}'" for line in task.bad_markers)
     for task_id, active in read_active(root).items():
         name = f"{ACTIVE_DIR.as_posix()}/{task_id}.md"
         if task_id not in tasks:
@@ -483,6 +549,7 @@ def command_build(args: argparse.Namespace) -> int:
 def command_ready(args: argparse.Namespace) -> int:
     board = load(ROOT)
     epics = {epic.id: epic for epic in board.epics}
+    picked: list[Task] = []
     for task in board.tasks.values():
         milestone = epics[task.epic].milestone if task.epic in epics else ""
         if task.status != "ready":
@@ -491,7 +558,16 @@ def command_ready(args: argparse.Namespace) -> int:
             continue
         if args.milestone and args.milestone.upper() not in milestone:
             continue
-        print(f"{task.id}  {task.title}")
+        if args.size and task.size != args.size.upper():
+            continue
+        if args.agent_only and (task.needs or task.title.startswith("Idea:")):
+            continue
+        picked.append(task)
+    if args.size or args.agent_only:
+        picked.sort(key=lambda task: -task.unblocks_total)
+    for task in picked:
+        needs = f"  needs {', '.join(task.needs)}" if task.needs else ""
+        print(f"{task.id}  {task.size}  unblocks {task.unblocks_total}  {task.title}{needs}")
     return 0
 
 
@@ -659,6 +735,8 @@ def parser() -> argparse.ArgumentParser:
     ready = commands.add_parser("ready", help="list tasks whose dependencies are done")
     ready.add_argument("--epic")
     ready.add_argument("--milestone")
+    ready.add_argument("--size", choices=[*SIZES, *(s.lower() for s in SIZES)])
+    ready.add_argument("--agent-only", action="store_true", help="skip Needs and Idea tasks")
     ready.set_defaults(run=command_ready)
 
     show = commands.add_parser("show", help="print a task with its trees, docs and log")

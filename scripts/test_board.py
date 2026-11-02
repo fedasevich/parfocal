@@ -9,6 +9,7 @@ from board import (
     add_log_entry,
     check,
     find_tasks,
+    guess_size,
     load,
     parse_active,
     parse_depends,
@@ -226,6 +227,40 @@ class BoardTest(unittest.TestCase):
         self.assertIn("docs/board/active/NOPE-001.md: no task NOPE-001 in the backlog", problems)
         self.assertIn("docs/board/active/SKEL-003.md: unknown status 'started'", problems)
         self.assertTrue(any(problem.startswith("dependency cycle") for problem in problems))
+
+    def test_size_is_guessed_unless_written(self) -> None:
+        self.assertEqual(guess_size("Done when the unit tests pass."), "S")
+        self.assertEqual(guess_size("Done when API tests and a Playwright test pass."), "M")
+        self.assertEqual(guess_size("Done when tests, a Playwright test and an ADR exist."), "L")
+        self.assertEqual(guess_size("Apply the OpenTofu base. Done when typed."), "L")
+        self.assertEqual(guess_size("x " * 400 + "Done when typed."), "M")
+        backlog = self.root / "docs" / "BACKLOG.md"
+        backlog.write_text(
+            BACKLOG.replace("Done when written.", "Done when written.\n  Size: L.\n  Needs: owner.")
+        )
+        tasks = load(self.root).tasks
+        self.assertEqual((tasks["SKEL-003"].size, tasks["SKEL-003"].size_source), ("L", "written"))
+        self.assertEqual(tasks["SKEL-003"].needs, ["owner"])
+        self.assertEqual((tasks["STACK-002"].size, tasks["STACK-002"].size_source), ("S", "guess"))
+        self.assertEqual(tasks["STACK-002"].needs, [])
+
+    def test_check_rejects_unknown_markers(self) -> None:
+        backlog = self.root / "docs" / "BACKLOG.md"
+        backlog.write_text(
+            BACKLOG.replace(
+                "Done when written.", "Done when written.\n  Size: XL.\n  Needs: pathologist."
+            )
+        )
+        problems = check(self.root)
+        self.assertIn("SKEL-003: unknown marker 'Size: XL.'", problems)
+        self.assertIn("SKEL-003: unknown marker 'Needs: pathologist.'", problems)
+
+    def test_unblock_count_follows_open_tasks_down_the_chain(self) -> None:
+        tasks = load(self.root).tasks
+        self.assertEqual(tasks["STACK-002"].unblocks_total, 2)
+        self.assertEqual(tasks["STACK-003"].unblocks_total, 2)
+        self.assertEqual(tasks["SKEL-001"].unblocks_total, 1)
+        self.assertEqual(tasks["STACK-001"].unblocks_total, 0)
 
     def test_log_entries_go_on_top_under_their_day(self) -> None:
         same_day = add_log_entry(LOG, "2026-10-15", "STACK-003 (licensing) held.")
