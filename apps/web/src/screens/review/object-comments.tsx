@@ -187,39 +187,3 @@ export function ObjectComments({ object, threads, ...props }: ObjectCommentsProp
     </div>
   );
 }
-
-export function ThreadList({
-  slideLabel,
-  threads,
-  onOpen,
-}: {
-  slideLabel: string;
-  threads: SlideThread[];
-  onOpen: (anchor: string) => void;
-}) {
-  return (
-    <div className="grid gap-3">
-      <span className="text-body text-fg-dim">Threads on {slideLabel}</span>
-      {threads.length ? (
-        <ul className="m-0 grid list-none gap-1.5 p-0">
-          {threads.map((thread) => (
-            <li key={thread.id}>
-              <button
-                type="button"
-                onClick={() => onOpen(thread.anchor)}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-ctl border border-line bg-chrome-2 px-3 py-2 text-left text-body-sm text-fg"
-              >
-                <ObjectIdTag>{thread.anchor}</ObjectIdTag>
-                <span className="flex-1 text-fg-dim">
-                  {thread.replies + 1} comment{thread.replies ? "s" : ""}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="m-0 text-body-sm text-fg-dim">No comments on this slide yet.</p>
-      )}
-    </div>
-  );
-}

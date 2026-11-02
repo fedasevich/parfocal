@@ -38,7 +38,7 @@ import {
 import { type DisplayLock, DisplayTab, displaySettings } from "../review/display-tab.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
-import { ObjectComments, ThreadList } from "../review/object-comments.tsx";
+import { ObjectComments } from "../review/object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
   type Answer,
@@ -49,6 +49,7 @@ import {
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
 import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
+import { ThreadsTab } from "../review/threads-tab.tsx";
 import {
   AiSays,
   type ListFilter,
@@ -648,10 +649,13 @@ function ViewerBody({
       offReason={setup.connLost ? netOff : undefined}
     />
   ) : (
-    <ThreadList
+    <ThreadsTab
+      taskId={session.taskId}
+      slideId={session.slideId}
       slideLabel={slideLabel}
-      threads={nothing ? [] : session.threads}
+      hidden={nothing}
       onOpen={(anchor) => onSearch({ object: anchor, tab: "comments" })}
+      onGoTo={(anchor) => onSearch({ object: anchor, tab: "objects" })}
     />
   );
 
@@ -888,7 +892,7 @@ function ViewerBody({
           {
             value: "comments",
             label: "Comments",
-            ...(nothing ? {} : { count: session.threads.length }),
+            ...(nothing ? {} : { count: session.threads.filter((item) => !item.resolved).length }),
             body: commentsBody,
           },
           { value: "opinion", label: "Opinion", body: opinionBody },

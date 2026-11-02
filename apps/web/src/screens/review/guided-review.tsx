@@ -41,11 +41,12 @@ import {
   ObjectDots,
   SavedNote,
 } from "./object-card.tsx";
-import { ObjectComments, ThreadList, useThreadMessages } from "./object-comments.tsx";
+import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
 import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
+import { ThreadsTab } from "./threads-tab.tsx";
 
 type GuidedReviewProps = {
   taskId: string;
@@ -171,6 +172,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
   const otherReviewer = person(blindReviewers[0])?.name.split(" ")[0] ?? "the other reviewer";
   const threadOf = (object: string) => session.threads.find((item) => item.anchor === object);
   const messages = useThreadMessages(threadOf(currentId), session.meId);
+  const openThreads = session.threads.filter((item) => !item.resolved).length;
   const setName = useSetName(session);
 
   const goTo = (at: number) => {
@@ -565,12 +567,18 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
 
   const commentsBody =
     showDone || noResults ? (
-      <ThreadList
+      <ThreadsTab
+        taskId={session.taskId}
+        slideId={session.slideId}
         slideLabel={session.slideName.split(" ")[0] ?? ""}
-        threads={noResults ? [] : session.threads}
+        hidden={noResults}
         onOpen={(anchor) => {
           jump(anchor);
           onTabChange("comments");
+        }}
+        onGoTo={(anchor) => {
+          jump(anchor);
+          onTabChange("review");
         }}
       />
     ) : (
@@ -822,7 +830,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
               value: "comments",
               label: "Comments",
               ...(messages.length && !showDone ? { count: messages.length } : {}),
-              ...(showDone && session.threads.length ? { count: session.threads.length } : {}),
+              ...(showDone && openThreads ? { count: openThreads } : {}),
               body: commentsBody,
             },
             {

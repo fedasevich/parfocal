@@ -19,6 +19,7 @@ import {
   listReviewObjects,
   listSlideThreads,
   listThreadComments,
+  listThreads,
   listVerdicts,
   saveVerdict,
 } from "../src/index.ts";
@@ -176,4 +177,26 @@ test("RT-16 is the task the new task flow sends, and slide 9 opens with its obje
   assert.equal(next.objects.filter((item) => item.kind === "cell").length, 50);
   assert.equal(body(await listVerdicts(rt14.id, a2.id)).length, 0);
   assert.equal(next.slide.label, "A2");
+});
+
+test("the slide's threads come with titles, authors and a resolved state, filtered on request", async () => {
+  assert.ok(rt14);
+  const all = body(await listThreads(rt14.id, a1.id));
+  assert.deepEqual(
+    all.map((thread) => [thread.anchor.object_id, thread.resolved_at === null]),
+    [
+      ["T2", true],
+      ["T1·C145", true],
+      ["R2⁺", true],
+      ["T4", false],
+    ],
+  );
+  assert.equal(all[0]?.message_count, 3);
+  assert.equal(all[2]?.anchor.kind, "roi");
+  assert.deepEqual(
+    body(await listThreads(rt14.id, a1.id, { resolved: true })).map((thread) => thread.title),
+    ["Reactive sinus histiocytes, no atypia"],
+  );
+  assert.equal(body(await listThreads(rt14.id, a1.id, { resolved: false })).length, 3);
+  assert.deepEqual(body(await listThreads(rt14.id, scenario.slideByIndex(2).id)), []);
 });

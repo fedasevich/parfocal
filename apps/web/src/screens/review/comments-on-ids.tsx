@@ -1,21 +1,19 @@
-import type { SlideThread } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { MentionText } from "@parfocal/ui/components/comment-thread";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { Person, PersonAvatar } from "@parfocal/ui/components/person";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
-import { cn } from "@parfocal/ui/lib/utils";
 import { useState } from "react";
 import { usePeople } from "../people.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { countWord } from "./decision-style.ts";
 import { DisplayTab } from "./display-tab.tsx";
-import { ObjectThread, useThreadMessages } from "./object-comments.tsx";
+import { ObjectThread } from "./object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { answerFromVerdict, countAnswers } from "./review-state.ts";
+import { ThreadsTab } from "./threads-tab.tsx";
 import { AiSays, ObjectsSummary, ViewerFrame } from "./viewer-frame.tsx";
 
 const kindOf = (anchor: string) =>
@@ -38,47 +36,6 @@ export function CommentsOnIds(props: CommentsOnIdsProps) {
   return <CommentsBody session={session} {...props} />;
 }
 
-function ThreadCard({
-  thread,
-  meId,
-  selected,
-  onSelect,
-}: {
-  thread: SlideThread;
-  meId: string | undefined;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const messages = useThreadMessages(thread, meId);
-  const first = messages[0];
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        "grid w-full cursor-pointer gap-1.5 rounded-zone border border-transparent bg-transparent p-2.5 text-left text-fg hover:bg-chrome-2",
-        selected && "border-[color-mix(in_srgb,var(--accent)_45%,transparent)] bg-surf-hl",
-      )}
-    >
-      <span className="flex items-center gap-2.5">
-        <ObjectIdTag>{thread.anchor}</ObjectIdTag>
-        <b className="flex-1 text-body-sm font-semibold">{kindOf(thread.anchor)}</b>
-        <span className="inline-flex items-center gap-1 font-mono text-caption text-fg-dim">
-          <Icon name="comment" size="xs" />
-          {messages.length || thread.replies + 1}
-        </span>
-      </span>
-      {first ? <Person person={first.author} size={20} /> : null}
-      {first ? (
-        <span className="text-body-sm text-fg-dim">
-          <MentionText text={first.text} />
-        </span>
-      ) : null}
-    </button>
-  );
-}
-
 function CommentsBody({
   session,
   thread: picked,
@@ -86,6 +43,7 @@ function CommentsBody({
 }: CommentsOnIdsProps & { session: ReviewSession }) {
   const [tab, setTab] = useState("comments");
   const person = usePeople();
+  const openThreads = session.threads.filter((item) => !item.resolved).length;
   const anchor = picked ?? session.threads[0]?.anchor ?? "";
   const answers = (object: string) => {
     const verdict = session.verdicts.get(object);
@@ -138,32 +96,18 @@ function CommentsBody({
         {
           value: "comments",
           label: "Comments",
-          count: session.threads.length,
+          count: openThreads,
           body: (
             <>
-              <Zone
-                title={`Threads on ${slideLabel}`}
-                end={
-                  <span className="font-mono text-caption text-fg-dim">
-                    {session.threads.length}
-                  </span>
-                }
-              >
-                <div className="grid gap-1">
-                  {session.threads.map((thread) => (
-                    <ThreadCard
-                      key={thread.id}
-                      thread={thread}
-                      meId={session.meId}
-                      selected={thread.anchor === anchor}
-                      onSelect={() => onThreadChange(thread.anchor)}
-                    />
-                  ))}
-                </div>
-                <Button block>
-                  <Icon name="comment" />
-                  New comment on an ID <Keycap keys="C" size="sm" />
-                </Button>
+              <Zone>
+                <ThreadsTab
+                  taskId={session.taskId}
+                  slideId={session.slideId}
+                  slideLabel={slideLabel}
+                  selected={anchor}
+                  onOpen={onThreadChange}
+                  onGoTo={onThreadChange}
+                />
               </Zone>
               {notes.length ? (
                 <Zone
@@ -249,7 +193,8 @@ function CommentsBody({
         <div className="absolute right-4 bottom-4 grid w-50 gap-1.5 rounded-zone border border-line bg-chrome p-2 shadow-pop">
           <span className="flex items-center justify-between text-caption text-fg-dim">
             <span>
-              <b className="text-fg">Whole slide</b> · {session.threads.length} threads
+              <b className="text-fg">Whole slide</b> ·{" "}
+              {session.threads.filter((item) => !item.resolved).length} threads
             </span>
             <Keycap keys="Z" size="sm" />
           </span>
