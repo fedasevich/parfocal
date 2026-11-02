@@ -1,6 +1,6 @@
 import secrets
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from typing import Annotated, Any
 
@@ -63,6 +63,21 @@ class Scope(BaseModel):
         return self
 
 
+MAX_SCOPE_PARTS = 4
+type ExtraScopes = Annotated[list[Scope], Field(max_length=MAX_SCOPE_PARTS - 1)]
+
+
+def distinct_kinds(first: Scope, extra: Sequence[Scope]) -> None:
+    kinds = [first.kind, *(part.kind for part in extra)]
+    if len(set(kinds)) != len(kinds):
+        raise ValueError("Each part of the scope is a different kind")
+
+
+class ScopeKindsRepeatedError(BadRequestError):
+    code = "scope-kinds-repeated"
+    title = "Each part of the scope is a different kind"
+
+
 class SlideSet(BaseModel):
     slide_id: uuid.UUID
     result_set_id: uuid.UUID
@@ -86,6 +101,7 @@ class TaskDraft(BaseModel):
     split: TaskSplit
     pairs: Annotated[list[Pair], Field(max_length=MAX_SLIDES * MAX_REVIEWERS)] = []
     scope: Scope
+    extra_scopes: ExtraScopes = []
     opinion_form_version: Annotated[int, Field(ge=1)] | None = None
     blinded: bool = True
     ai_hidden_first_read: bool = False
@@ -107,12 +123,14 @@ class TaskDraft(BaseModel):
             raise ValueError("Only a chosen split lists slide and reviewer pairs, and it must")
         if self.study_template_version is not None and self.study_template_id is None:
             raise ValueError("A template version needs its template")
+        distinct_kinds(self.scope, self.extra_scopes)
         return self
 
 
 class TaskChange(BaseModel):
     name: TaskName | None = None
     scope: Scope | None = None
+    extra_scopes: ExtraScopes | None = None
     blinded: bool | None = None
     ai_hidden_first_read: bool | None = None
     start_mode: StartMode | None = None
@@ -140,6 +158,7 @@ class ReviewTask(BaseModel):
     name: str
     split: TaskSplit
     scope: Scope
+    scopes: list[Scope]
     opinion_form_version: int
     blinded: bool
     ai_hidden_first_read: bool
@@ -215,10 +234,36 @@ def stored_score(score: float) -> int:
     return round(score * SCORE_STEPS)
 
 
-def sampling_scope(row: Any) -> SamplingScope:
-    return SamplingScope(
+def sampling_scopes(row: Any) -> list[SamplingScope]:
+    first = SamplingScope(
         ScopeKind(row.scope), count=row.scope_count, seed=row.scope_seed, score=row.scope_score
     )
+    return [
+        first,
+        *(
+            SamplingScope(
+                ScopeKind(part["kind"]),
+                count=part.get("count"),
+                seed=part.get("seed"),
+                score=part.get("score"),
+            )
+            for part in row.extra_scopes
+        ),
+    ]
+
+
+def stored_part(part: Scope, seed: int | None) -> dict[str, Any]:
+    return {
+        "kind": part.kind.value,
+        "count": part.count,
+        "seed": (seed or secrets.randbits(62)) if part.kind is TaskScope.RANDOM_CELLS else None,
+        "score": None if part.score is None else stored_score(part.score),
+    }
+
+
+def stored_parts(extra: Sequence[Scope], kept: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    seeds = {item["kind"]: item.get("seed") for item in kept}
+    return [stored_part(part, seeds.get(part.kind.value)) for part in extra]
 
 
 async def task_sets(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uuid.UUID, uuid.UUID]:
@@ -230,9 +275,28 @@ async def task_sets(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uui
     return {row[0]: row[1] for row in rows}
 
 
+def shown_score(stored: int | None) -> float | None:
+    return None if stored is None else round(stored / SCORE_STEPS, 3)
+
+
 def scope_of(row: Any) -> Scope:
-    score = None if row.scope_score is None else round(row.scope_score / SCORE_STEPS, 3)
-    return Scope(kind=TaskScope(row.scope), count=row.scope_count, score=score)
+    return Scope(
+        kind=TaskScope(row.scope), count=row.scope_count, score=shown_score(row.scope_score)
+    )
+
+
+def scopes_of(row: Any) -> list[Scope]:
+    return [
+        scope_of(row),
+        *(
+            Scope(
+                kind=TaskScope(part["kind"]),
+                count=part.get("count"),
+                score=shown_score(part.get("score")),
+            )
+            for part in row.extra_scopes
+        ),
+    ]
 
 
 async def task_slides_of(
@@ -274,6 +338,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         name=row.name,
         split=TaskSplit(row.split),
         scope=scope_of(row),
+        scopes=scopes_of(row),
         opinion_form_version=row.opinion_form_version,
         blinded=row.blinded,
         ai_hidden_first_read=row.ai_hidden_first_read,
@@ -545,6 +610,7 @@ async def create_review_task(
             scope_count=scope.count,
             scope_seed=seed if scope.kind is TaskScope.RANDOM_CELLS else None,
             scope_score=None if scope.score is None else stored_score(scope.score),
+            extra_scopes=stored_parts(draft.extra_scopes, []),
             opinion_form_version=version,
             blinded=draft.blinded,
             ai_hidden_first_read=draft.ai_hidden_first_read,
@@ -587,7 +653,7 @@ async def create_review_task(
         project.tenant_id,
         project_id,
         task_id,
-        sampling_scope(await task_row(connection, task_id)),
+        sampling_scopes(await task_row(connection, task_id)),
         {slide_id: picked[slide_id] for slide_id in slide_ids},
         dict.fromkeys(slide_ids, seed),
     )
@@ -683,11 +749,17 @@ async def change_review_task(
         raise FirstReadStartedError
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
-    rescoped = change.scope is not None and (
-        change.scope.kind,
-        change.scope.count,
-        None if change.scope.score is None else stored_score(change.scope.score),
-    ) != (TaskScope(row.scope), row.scope_count, row.scope_score)
+    first = change.scope or scope_of(row)
+    extra = change.extra_scopes if change.extra_scopes is not None else scopes_of(row)[1:]
+    try:
+        distinct_kinds(first, extra)
+    except ValueError as error:
+        raise ScopeKindsRepeatedError(str(error)) from error
+    rescoped = (change.scope is not None or change.extra_scopes is not None) and [
+        (part.kind, part.count, part.score) for part in [first, *extra]
+    ] != [(part.kind, part.count, part.score) for part in scopes_of(row)]
+    if change.extra_scopes is not None:
+        values["extra_scopes"] = stored_parts(change.extra_scopes, row.extra_scopes)
     if change.scope is not None:
         scope = change.scope
         values |= {
@@ -714,7 +786,7 @@ async def change_review_task(
             row.tenant_id,
             row.project_id,
             task_id,
-            sampling_scope(changed),
+            sampling_scopes(changed),
             sets,
             {slide_id: known.get(slide_id, fallback) for slide_id in sets},
         )

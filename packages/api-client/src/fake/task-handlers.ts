@@ -169,6 +169,7 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   name: draft.name,
   split: draft.split,
   scope: draft.scope,
+  scopes: [draft.scope, ...(draft.extra_scopes ?? [])],
   opinion_form_version: draft.opinion_form_version ?? 1,
   blinded: draft.blinded ?? true,
   ai_hidden_first_read: draft.ai_hidden_first_read ?? false,

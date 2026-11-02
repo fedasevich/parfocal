@@ -114,7 +114,12 @@ def result_set(
     return set_id
 
 
-def create_task(api: ApiAs, o: Ordered, scope: dict[str, Any] | None = None) -> Any:
+def create_task(
+    api: ApiAs,
+    o: Ordered,
+    scope: dict[str, Any] | None = None,
+    extra: list[dict[str, Any]] | None = None,
+) -> Any:
     return api(o.people["owner"]).post(
         f"/api/projects/{o.project}/review-tasks",
         json={
@@ -127,6 +132,7 @@ def create_task(api: ApiAs, o: Ordered, scope: dict[str, Any] | None = None) -> 
             "reviewer_ids": [str(o.people[who].user_id) for who in ("first", "second")],
             "split": "everyone",
             "scope": scope or {"kind": "all-regions"},
+            "extra_scopes": extra or [],
         },
     )
 
@@ -306,3 +312,52 @@ def test_a_recalibration_leaves_a_running_task_unchanged(api: ApiAs, database: s
     assert shared(api, o, made(api, o))[:4] == ["T1", "T3", "T5", "T2"]
     later = shared(api, o, made(api, o, {"kind": "inside-rois"}))
     assert later[:4] == ["C2", "T3", "T5", "C1"]
+
+
+def test_a_scope_of_two_kinds_orders_both_and_counts_both(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    zones = {"kind": "unsure-zones"}
+    created = create_task(api, o, extra=[zones])
+    assert created.status_code == 201, created.text
+    assert created.json()["scopes"] == [
+        {"kind": "all-regions", "count": None, "score": None},
+        {"kind": "unsure-zones", "count": None, "score": None},
+    ]
+    task = uuid.UUID(created.json()["id"])
+    both = shared(api, o, task)
+    assert sorted(both) == ["C3", "C4", "T1", "T2", "T3", "T4", "T5", "T6"]
+    assert order_of(api, o, "first", o.slides[0], task).json()["total"] == 8
+    assert sorted(shared(api, o, task, slide=1)) == ["T1", "T2", "T3", "T4"]
+
+
+def test_an_old_single_kind_task_reads_as_a_list_of_one(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = api(o.people["owner"]).get(f"/api/review-tasks/{o.task}").json()
+    assert task["scopes"] == [task["scope"]]
+
+
+def test_a_scope_part_of_a_repeated_kind_is_refused(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    repeated = create_task(api, o, extra=[{"kind": "all-regions"}])
+    assert repeated.status_code == 422
+    changed = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{o.task}", json={"extra_scopes": [{"kind": "all-regions"}]}
+    )
+    assert (changed.status_code, changed.json()["code"]) == (400, "scope-kinds-repeated")
+
+
+def test_adding_a_scope_part_rebuilds_the_order(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    sample = {"kind": "random-cells", "count": 2}
+    changed = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{o.task}", json={"extra_scopes": [sample]}
+    )
+    assert changed.status_code == 200, changed.text
+    after = shared(api, o, o.task)
+    assert len(after) == 8
+    assert sum(item.startswith("C") for item in after) == 2
+    again = api(o.people["owner"]).patch(
+        f"/api/review-tasks/{o.task}", json={"extra_scopes": [sample]}
+    )
+    assert again.status_code == 200
+    assert shared(api, o, o.task) == after

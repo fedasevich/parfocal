@@ -3398,7 +3398,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 
 ---
 
-- [ ] TASK-012 · A task scope as a list of kinds
+- [x] TASK-012 · A task scope as a list of kinds
   A review task's scope becomes a list, such as all regions plus a random sample of 200 cells, as the mock's sentinel node template shows. The review order, the counts and the evaluation take every part of the list. The owner chose this on 2026-11-02, decision 4b for EVAL-007 (study template model and API).
   Done when API tests create a task with two scope parts, show both kinds in the review order and the counts, and an old single-kind task reads as a list of one.
   Depends on EVAL-007, GUIDE-012. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows).

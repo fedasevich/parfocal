@@ -2375,6 +2375,16 @@ export const getCreateReviewTaskResponseMock = (
       null,
     ]),
   },
+  scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+      count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+      score: faker.helpers.arrayElement([
+        faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        null,
+      ]),
+    }),
+  ),
   opinion_form_version: faker.number.int(),
   blinded: faker.datatype.boolean(),
   ai_hidden_first_read: faker.datatype.boolean(),
@@ -2418,6 +2428,16 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
         null,
       ]),
     },
+    scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+        count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+        score: faker.helpers.arrayElement([
+          faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+          null,
+        ]),
+      }),
+    ),
     opinion_form_version: faker.number.int(),
     blinded: faker.datatype.boolean(),
     ai_hidden_first_read: faker.datatype.boolean(),
@@ -2452,6 +2472,16 @@ export const getGetReviewTaskResponseMock = (
       null,
     ]),
   },
+  scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+      count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+      score: faker.helpers.arrayElement([
+        faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        null,
+      ]),
+    }),
+  ),
   opinion_form_version: faker.number.int(),
   blinded: faker.datatype.boolean(),
   ai_hidden_first_read: faker.datatype.boolean(),
@@ -2496,6 +2526,16 @@ export const getChangeReviewTaskResponseMock = (
       null,
     ]),
   },
+  scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+      count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+      score: faker.helpers.arrayElement([
+        faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        null,
+      ]),
+    }),
+  ),
   opinion_form_version: faker.number.int(),
   blinded: faker.datatype.boolean(),
   ai_hidden_first_read: faker.datatype.boolean(),

@@ -1406,6 +1406,9 @@ review_tasks = Table(
     Column("scope_count", Integer, nullable=True, info=OPERATIONAL),
     Column("scope_seed", BigInteger, nullable=True, info=OPERATIONAL),
     Column("scope_score", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column(
+        "extra_scopes", JSONB, nullable=False, server_default=text("'[]'::jsonb"), info=OPERATIONAL
+    ),
     Column("opinion_form_version", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("blinded", Boolean, nullable=False, server_default=text("true"), info=OPERATIONAL),
     Column(

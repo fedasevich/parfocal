@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 26 |
 | `personal` | 44 |
 | `secret` | 9 |
-| `operational` | 467 |
+| `operational` | 468 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -600,6 +600,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `scope_count` | operational |
 | `scope_seed` | operational |
 | `scope_score` | operational |
+| `extra_scopes` | operational |
 | `opinion_form_version` | operational |
 | `blinded` | operational |
 | `ai_hidden_first_read` | operational |

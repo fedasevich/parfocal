@@ -241,14 +241,18 @@ async def ordered_cells(
 async def order_of_slide(
     connection: AsyncConnection,
     store: ResultStore,
-    scope: Scope,
+    scopes: Sequence[Scope],
     slide_id: uuid.UUID,
     set_id: uuid.UUID,
     seed: int,
 ) -> list[ObjectKey]:
-    regions = await ordered_regions(connection, scope, slide_id, set_id)
-    cells = await ordered_cells(connection, store, scope, slide_id, set_id)
-    return least_sure_first([*regions, *cells], seed, str(slide_id))
+    rated: dict[ObjectKey, Rated] = {}
+    for scope in scopes:
+        regions = await ordered_regions(connection, scope, slide_id, set_id)
+        cells = await ordered_cells(connection, store, scope, slide_id, set_id)
+        for item in [*regions, *cells]:
+            rated.setdefault(item.key, item)
+    return least_sure_first(list(rated.values()), seed, str(slide_id))
 
 
 async def store_order(
@@ -257,13 +261,13 @@ async def store_order(
     tenant_id: uuid.UUID,
     project_id: uuid.UUID,
     task_id: uuid.UUID,
-    scope: Scope,
+    scopes: Sequence[Scope],
     sets: Mapping[uuid.UUID, uuid.UUID],
     seeds: Mapping[uuid.UUID, int],
 ) -> None:
     rows: list[dict[str, Any]] = []
     for slide_id, set_id in sets.items():
-        keys = await order_of_slide(connection, store, scope, slide_id, set_id, seeds[slide_id])
+        keys = await order_of_slide(connection, store, scopes, slide_id, set_id, seeds[slide_id])
         rows.append(
             {
                 "tenant_id": tenant_id,

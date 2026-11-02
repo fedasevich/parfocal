@@ -199,6 +199,7 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
     name: task.name,
     split: task.split === "even" ? "even" : "everyone",
     scope: scopeOf(task),
+    scopes: [scopeOf(task)],
     opinion_form_version: 1,
     blinded: task.blinded,
     ai_hidden_first_read: false,

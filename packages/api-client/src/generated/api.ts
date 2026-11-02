@@ -1046,6 +1046,27 @@ export const ExportFormat = {
   parfocal: "parfocal",
 } as const;
 
+export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
+
+export const TaskScope = {
+  "all-regions": "all-regions",
+  "random-cells": "random-cells",
+  "cells-below-score": "cells-below-score",
+  "inside-rois": "inside-rois",
+  "unsure-zones": "unsure-zones",
+} as const;
+
+export interface Scope {
+  kind: TaskScope;
+  count?: number | null;
+  score?: number | null;
+}
+
+/**
+ * @maxItems 3
+ */
+export type ExtraScopes = Scope[];
+
 export interface FieldError {
   location: (string | number)[];
   message: string;
@@ -1206,16 +1227,6 @@ export interface ResumeTarget {
   blinded: boolean;
   camera: ResumeTargetCamera;
 }
-
-export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
-
-export const TaskScope = {
-  "all-regions": "all-regions",
-  "random-cells": "random-cells",
-  "cells-below-score": "cells-below-score",
-  "inside-rois": "inside-rois",
-  "unsure-zones": "unsure-zones",
-} as const;
 
 export type StartMode = (typeof StartMode)[keyof typeof StartMode];
 
@@ -2030,12 +2041,6 @@ export interface PreferenceChanges {
   preferences: PreferenceChange[];
 }
 
-export interface Scope {
-  kind: TaskScope;
-  count?: number | null;
-  score?: number | null;
-}
-
 export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
 
 export const TaskSplit = {
@@ -2604,6 +2609,7 @@ export interface ReviewTask {
   name: string;
   split: TaskSplit;
   scope: Scope;
+  scopes: Scope[];
   opinion_form_version: number;
   blinded: boolean;
   ai_hidden_first_read: boolean;
@@ -2632,6 +2638,7 @@ export interface ReviewTaskDetail {
   name: string;
   split: TaskSplit;
   scope: Scope;
+  scopes: Scope[];
   opinion_form_version: number;
   blinded: boolean;
   ai_hidden_first_read: boolean;
@@ -2922,6 +2929,7 @@ export type TaskName = string;
 export interface TaskChange {
   name?: TaskName | null;
   scope?: Scope | null;
+  extra_scopes?: ExtraScopes | null;
   blinded?: boolean | null;
   ai_hidden_first_read?: boolean | null;
   start_mode?: StartMode | null;
@@ -2947,6 +2955,7 @@ export interface TaskDraft {
   /** @maxItems 25000 */
   pairs?: Pair[];
   scope: Scope;
+  extra_scopes?: ExtraScopes;
   opinion_form_version?: number | null;
   blinded?: boolean;
   ai_hidden_first_read?: boolean;
