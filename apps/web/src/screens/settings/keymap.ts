@@ -1,7 +1,7 @@
 import type { ShortcutSource } from "@parfocal/ui/components/shortcut-editor";
 import type { ActionDef, Scope } from "../../keys/actions.ts";
 
-export type KeyContext = "all" | "review";
+export type KeyContext = "all" | "review" | "compare";
 
 export type KeyAction = {
   id: string;
@@ -113,6 +113,20 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["ttext", "Text", ["T"], "fig"],
       ["tcomment", "Comment", ["C"], "fig"],
       ["tbrush", "Brush", ["B"], "qp"],
+    ],
+  ],
+  [
+    "Compare",
+    "compare",
+    "compare",
+    [
+      [
+        "linkviews",
+        "Link or unlink the panes",
+        ["⇧L"],
+        "new",
+        { note: "in compare only. In Annotate the same key draws an arrow" },
+      ],
     ],
   ],
   [
