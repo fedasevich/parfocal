@@ -277,6 +277,27 @@ export const MagnificationBars: Story = {
         micronsPerPixel={1}
         open
       />
+      <MagnificationBar
+        magnification={10}
+        scaleLabel="500 µm"
+        scalePx={80}
+        micronsPerPixel={1}
+        labelAs="zoom-percent"
+        brightness={85}
+        onBrightnessChange={() => undefined}
+        onPreset={() => undefined}
+      />
+      <MagnificationBar
+        magnification={10}
+        scaleLabel="500 µm"
+        scalePx={80}
+        micronsPerPixel={1}
+        labelAs="zoom-percent"
+        brightness={85}
+        onBrightnessChange={() => undefined}
+        onPreset={() => undefined}
+        open
+      />
     </div>
   ),
 };

@@ -11,6 +11,7 @@ import {
   SmartMinimap,
 } from "@parfocal/ui/components/smart-minimap";
 import { CellHud, DistanceCue, RulerLine } from "@parfocal/ui/components/viewer-tools";
+import { magnificationBarRect } from "@parfocal/ui/lib/magnification-bar";
 import { useState } from "react";
 import { hpfSize, regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, midSize, SlideStill, type StillLook } from "../review/slide-still.tsx";
@@ -66,8 +67,6 @@ const looks: Record<"reading" | "cells" | "focus", Look> = {
 const lookOf = (scene: NavigatorScene) =>
   scene === "cells" ? looks.cells : scene === "focus" ? looks.focus : looks.reading;
 
-const magbarRect = (size: Size): ScreenRect => [size.width / 2 - 250, size.height - 58, 500, 50];
-
 type NavigatorCanvasProps = {
   scene: Exclude<NavigatorScene, "overview">;
   areas: AreaMark[];
@@ -90,6 +89,7 @@ export function NavigatorCanvas({
   onPopOut,
 }: NavigatorCanvasProps) {
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [barOpen, setBarOpen] = useState(false);
   const setup = lookOf(scene);
   const reading = setup.look === "mid";
   const cellAt = scene === "focus" ? cellsUnderReview[5] : cellsUnderReview[4];
@@ -122,7 +122,9 @@ export function NavigatorCanvas({
       }
       overlay={({ camera: shown, size }) => {
         const viewport = viewportOf(setup.look, shown, size);
-        const blocked: ScreenRect[] = [magbarRect(size)];
+        const blocked: ScreenRect[] = [
+          magnificationBarRect(size, { open: barOpen, brightnessChanged: false }),
+        ];
         const hot: HotSpot[] = [];
         let mapSize: MinimapSize = "full";
         let extent: MapRect | undefined;
@@ -260,6 +262,7 @@ export function NavigatorCanvas({
                 scaleLabel={reading ? "100 µm" : "10 µm"}
                 scalePx={92}
                 micronsPerPixel={reading ? 1.13 : 0.14}
+                onOpenChange={setBarOpen}
               />
             </div>
           </>
