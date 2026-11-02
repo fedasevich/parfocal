@@ -7,6 +7,10 @@
 - Environment: Modal environment `dev`, Starter plan, NVIDIA T4, region not pinned (Modal placed the embedding container in `eu-west` once and `us-east` twice, all on AWS), image Debian slim with Python 3.12, torch 2.9.0+cu128 and `segment-anything` 1.0. Client was the owner's MacBook on a home connection in Europe, Modal client 1.6.3
 - Data: random tiles generated on the GPU from a seed, no slide data and no PHI
 
+## Hardware target
+
+The owner set the target on 2026-11-02: an ordinary NVIDIA server GPU such as the T4 (16 GB), L4 (24 GB) or A10G (24 GB), and no A100 or H100 class GPUs. This spike ran on the T4, the smallest card in that class, so its numbers are a floor for the target and not a stand-in. The POC ran every model on a 24 GB Apple M4 laptop (POC docs 12, 17 and 19), which is background only. [ADR 0150](../adr/0150-gpu-serving-on-t4-and-l4-class-cards.md) (GPU serving on T4 and L4 class cards) records the rule.
+
 ## Question
 
 Can a pre-warmed Modal GPU container serve an interactive embedding request within 1 s while a whole-slide job runs on another GPU, as [ADR 0003](../adr/0003-pilot-platform-architecture.md) (pilot platform architecture) assumes, and how long is the cold start?
@@ -70,4 +74,5 @@ Cost: `modal billing report --for today` shows $0.25 metered for all five runs (
 
 - AISEG-008 (server embedding service) plans a float16 embedding per tile. It should keep each reply under 2 MB, by int8 quantisation or by writing embeddings to R2 and returning a key. TODO: check that the SAM decoder's masks stay the same with int8 embeddings before choosing.
 - The cold-start budget ADR 0003 left open is now measured for GPU functions. TODO: the 40 s outlier and the 117 s wait for a T4 need more samples before a budget is set.
-- No ADR, because the measurements confirm the ADR 0003 default.
+- ADR 0150 (GPU serving on T4 and L4 class cards) confirms the ADR 0003 default and rules out A100 and H100 class GPUs.
+- TODO: the spike did not record peak GPU memory. Every model task records it on a T4 or L4, as ADR 0150 asks.
