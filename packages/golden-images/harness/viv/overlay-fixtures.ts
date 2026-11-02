@@ -1,8 +1,10 @@
 import {
   classColors,
+  createHeatmapOverlay,
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
+  type HeatmapLook,
   type OverlayDescription,
   type OverlayKind,
   pathBatchFromLines,
@@ -81,30 +83,32 @@ function coverage(geometry: OverlayGeometry): OverlayDescription {
   });
 }
 
-function heatmap(geometry: OverlayGeometry): OverlayDescription {
+export const heatmapSource = { model: "CAMELYON tumor model", version: "v1.0" } as const;
+
+function heatmap(geometry: OverlayGeometry, look: Partial<HeatmapLook> = {}): OverlayDescription {
   const width = 40;
   const height = 30;
-  const rgba = new Uint8Array(width * height * 4);
+  const values = new Float32Array(width * height);
+  const peaks = [
+    { column: 0.7, row: 0.3, spreadX: 0.22, spreadY: 0.3, height: 0.98 },
+    { column: 0.25, row: 0.65, spreadX: 0.18, spreadY: 0.22, height: 0.5 },
+  ];
   for (let row = 0; row < height; row++) {
     for (let column = 0; column < width; column++) {
-      const dx = (column - width * 0.7) / (width * 0.22);
-      const dy = (row - height * 0.3) / (height * 0.3);
-      const value = Math.exp(-(dx * dx + dy * dy));
-      rgba.set(
-        [
-          Math.round(255 * value),
-          Math.round(200 * (1 - Math.abs(2 * value - 1))),
-          Math.round(255 * (1 - value)),
-          Math.round(30 + 190 * value),
-        ],
-        (row * width + column) * 4,
-      );
+      let value = 0.03;
+      for (const peak of peaks) {
+        const dx = (column - width * peak.column) / (width * peak.spreadX);
+        const dy = (row - height * peak.row) / (height * peak.spreadY);
+        value = Math.max(value, peak.height * Math.exp(-(dx * dx + dy * dy)));
+      }
+      values[row * width + column] = value;
     }
   }
-  return createRasterOverlay({
+  return createHeatmapOverlay({
     id: "heatmap",
-    kind: "heatmap",
-    raster: { width, height, rgba, area: rasterArea(geometry) },
+    grid: { width, height, values, area: rasterArea(geometry) },
+    source: heatmapSource,
+    ...look,
   });
 }
 
@@ -250,7 +254,12 @@ function commentPins(geometry: OverlayGeometry): OverlayDescription {
   });
 }
 
-const builders: Readonly<Record<OverlayKind, (geometry: OverlayGeometry) => OverlayDescription>> = {
+const builders: Readonly<
+  Record<
+    OverlayKind,
+    (geometry: OverlayGeometry, look?: Partial<HeatmapLook>) => OverlayDescription
+  >
+> = {
   coverage,
   heatmap,
   nuclei,
@@ -260,6 +269,10 @@ const builders: Readonly<Record<OverlayKind, (geometry: OverlayGeometry) => Over
   "comment-pins": commentPins,
 };
 
-export function overlayFixture(kind: OverlayKind, geometry: OverlayGeometry): OverlayDescription {
-  return builders[kind](geometry);
+export function overlayFixture(
+  kind: OverlayKind,
+  geometry: OverlayGeometry,
+  heatmapLook?: Partial<HeatmapLook>,
+): OverlayDescription {
+  return builders[kind](geometry, heatmapLook);
 }

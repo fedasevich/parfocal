@@ -83,9 +83,35 @@ export interface VectorOverlay extends OverlayBase {
   readonly style: VectorStyle;
 }
 
+export type HeatmapColormap = "viridis" | "inferno" | "turbo";
+
+export interface HeatmapSource {
+  readonly model: string;
+  readonly version: string | null;
+}
+
+export interface HeatmapGrid {
+  readonly width: number;
+  readonly height: number;
+  readonly values: Float32Array | Uint8Array;
+  readonly area: SlideArea;
+}
+
+export interface HeatmapLook {
+  readonly colormap: HeatmapColormap;
+  readonly threshold: number;
+}
+
+export interface HeatmapData {
+  readonly grid: HeatmapGrid;
+  readonly look: HeatmapLook;
+  readonly source: HeatmapSource;
+}
+
 export interface RasterOverlay extends OverlayBase {
   readonly kind: RasterKind;
   readonly raster: RasterData;
+  readonly heatmap?: HeatmapData;
 }
 
 export interface PinOverlay extends OverlayBase {
