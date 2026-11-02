@@ -2373,7 +2373,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when the measurement categories per specimen (macro over 2 mm, micro over 0.2 mm or more than 200 cells, ITC up to 0.2 mm and up to 200 cells) and the pN wording with the (sn) suffix are confirmed from current staging guidance and checked against the published AJCC and CAP texts, with no pathologist needed, and recorded in an ADR.
   Size: M.
 
-- [ ] MEAS-001 · Ruler tool
+- [x] MEAS-001 · Ruler tool
   Drag to measure with the value on the line in mono digits, Shift snaps to 45°, double-click snaps to the long axis of the area under the pointer.
   Done when unit tests cover length in µm on slides with different microns per pixel and the long-axis snap.
   Refs mock 8.

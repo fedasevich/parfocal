@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-03
 
+- MEAS-001 (ruler tool) adds the ruler to the live slide, with length in µm or mm from the slide's microns per pixel, Shift snap to 45° and double-click snap to the maximum Feret diameter of the smallest closed shape under the pointer. Rulers are ruler shapes in the annotation document, not yet persisted, and model areas reach the snap only through MEAS-006.
 - TILES-008 (malformed capability token) makes verifyCapability answer 401 with reason malformed for bad base64 or an empty part instead of a 500, and a wrong signature now has the reason bad-signature. Edge tests cover all three and check the security headers stay on the 401.
 - ANN-001 (annotation document model in the client) adds apps/web/src/annotations, an immutable document with nine shape kinds and groups that keeps columnar model runs apart from editable shapes. promoteRunPiece copies a piece into a polygon with model, version and run as provenance, and deleting it brings the piece back. Shape ids are local until SKEL-007 maps them to server object ids.
 - CASES-009 (search API) meets its 100 ms p95 on 100,000 cases: migration 0077 stores lowercase copies of project, case and slide labels and search matches them with LIKE, because row-level security keeps the planner from indexing ILIKE. p95 fell from 48 to 59 ms to 24 to 25 ms over three runs on the Mac, and the test is unchanged.
