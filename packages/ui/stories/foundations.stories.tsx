@@ -2,14 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../src/components/button.tsx";
 import { Icon, type IconSize, iconNames } from "../src/components/icon.tsx";
 import { Keycap } from "../src/components/keycap.tsx";
-import {
-  CategoryTag,
-  CountBadge,
-  FilterChip,
-  ObjectIdTag,
-  ResultSetTag,
-  StatusTag,
-} from "../src/components/tag.tsx";
 
 const meta = {
   title: "Components/Foundations",
@@ -73,80 +65,6 @@ export const Keycaps: Story = {
         Submit
         <Keycap keys="↵" size="sm" />
       </Button>
-    </div>
-  ),
-};
-
-export const StatusTags: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <StatusTag>Not started</StatusTag>
-      <StatusTag tone="accent">In review</StatusTag>
-      <StatusTag tone="ok">Ready to sign off</StatusTag>
-      <StatusTag tone="warn">7 disagreements</StatusTag>
-      <StatusTag tone="bad">Read error</StatusTag>
-      <StatusTag tone="research">Research output</StatusTag>
-    </div>
-  ),
-};
-
-export const CategoryTags: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <CategoryTag>Regions</CategoryTag>
-      <CategoryTag>Cells</CategoryTag>
-      <CategoryTag>admin</CategoryTag>
-      <CategoryTag>Sentinel node staging</CategoryTag>
-      <CategoryTag tone="info" icon="link">
-        remote
-      </CategoryTag>
-    </div>
-  ),
-};
-
-export const ObjectIdTags: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <ObjectIdTag>T2</ObjectIdTag>
-      <ObjectIdTag>T1·C145</ObjectIdTag>
-      <ObjectIdTag>Z1</ObjectIdTag>
-      <ObjectIdTag size="lg">T2</ObjectIdTag>
-    </div>
-  ),
-};
-
-export const ResultSetTags: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <ResultSetTag source="imported">CAMELYON v1.0</ResultSetTag>
-      <ResultSetTag source="run">PathoSAM v1.2</ResultSetTag>
-      <ResultSetTag>Reviewed live</ResultSetTag>
-    </div>
-  ),
-};
-
-export const CountBadges: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <CountBadge attention title="6 unread">
-        6
-      </CountBadge>
-      <CountBadge attention title="2 open">
-        2
-      </CountBadge>
-      <CountBadge title="61 slides">61</CountBadge>
-      <CountBadge title="3 objects">3</CountBadge>
-    </div>
-  ),
-};
-
-export const FilterChips: Story = {
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <FilterChip defaultPressed>Breast</FilterChip>
-      <FilterChip defaultPressed>Lymph nodes</FilterChip>
-      <FilterChip>GI</FilterChip>
-      <FilterChip>Skin</FilterChip>
     </div>
   ),
 };
