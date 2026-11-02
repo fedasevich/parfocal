@@ -11,6 +11,14 @@ export {
 } from "./tiff/native-jpeg.ts";
 export { openTiffSource } from "./tiff/tiff-source.ts";
 export {
+  locatesEveryDirectory,
+  readTileIndex,
+  TILE_INDEX_FILE,
+  TILE_INDEX_VERSION,
+  TileIndexError,
+  tileOffsets,
+} from "./tile-index.ts";
+export {
   type AbsentRaster,
   type ChannelInfo,
   type DecodeReport,
@@ -33,6 +41,9 @@ export {
   type SlideFormatId,
   type SlideIndex,
   type SlideIndexLevel,
+  type SlideIndexPage,
+  type SlideStitching,
+  type SlideTileKind,
   SourceClosedError,
   slideFormatIds,
   type TileRequest,

@@ -21,6 +21,7 @@ import {
 import { absoluteUrl } from "../url.ts";
 import {
   assertDecodable,
+  indexedPages,
   largestPyramid,
   listPages,
   loadByteCounts,
@@ -154,8 +155,9 @@ async function chooseLevels(
   if (indexed !== undefined && indexed.length > 0) {
     return Promise.all(
       indexed.map(async (level) => {
+        const subIfd = level.subIfd ?? null;
         const page = pages.find(
-          (candidate) => candidate.ifd === level.page && candidate.subIfd === null,
+          (candidate) => candidate.ifd === level.page && candidate.subIfd === subIfd,
         );
         if (page === undefined)
           throw new Error(`The slide index names page ${level.page}, which the file lacks`);
@@ -297,7 +299,7 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     request.signal,
     request.fetch,
   );
-  const pages = await listPages(tiff);
+  const pages = (await indexedPages(tiff, request.index?.levels)) ?? (await listPages(tiff));
   const plainLevels = await chooseLevels(pages, request);
   const multichannel = await omeChannelLevels(plainLevels, pages);
   const levels = multichannel?.levels ?? plainLevels;

@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@parfocal/edge": "workspace:*",
+    "@parfocal/latency-proxy": "workspace:*",
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.64.0",

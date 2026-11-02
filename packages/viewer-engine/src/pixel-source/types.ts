@@ -128,9 +128,33 @@ export interface PixelSource {
   close(): void;
 }
 
-export interface SlideIndexLevel {
+export interface SlideIndexPage {
   readonly page: number;
+  readonly subIfd?: number | null;
+  readonly ifdOffset?: number;
+  readonly tileOffsetGaps?: readonly number[];
+  readonly tileByteCounts?: readonly number[];
+}
+
+export interface SlideIndexLevel extends SlideIndexPage {
   readonly downsample: number;
+  readonly width: number;
+  readonly height: number;
+  readonly tileWidth?: number;
+  readonly tileHeight?: number;
+  readonly jpegHeader?: string | null;
+  readonly siblings?: readonly SlideIndexPage[];
+}
+
+export type SlideTileKind = "grid" | "ndpi-restart" | "bif-frames";
+
+export interface SlideStitching {
+  readonly columns: number;
+  readonly rows: number;
+  readonly frameWidth: number;
+  readonly frameHeight: number;
+  readonly columnX: readonly number[];
+  readonly rowY: readonly number[];
   readonly width: number;
   readonly height: number;
 }
@@ -140,6 +164,11 @@ export interface SlideIndex {
   readonly levels?: readonly SlideIndexLevel[];
   readonly micronsPerPixel?: MicronsPerPixel | null;
   readonly zarrVersion?: 2 | 3;
+  readonly version?: number;
+  readonly tileKind?: SlideTileKind;
+  readonly littleEndian?: boolean;
+  readonly bigTiff?: boolean;
+  readonly stitching?: SlideStitching | null;
 }
 
 export interface OpenRequest {

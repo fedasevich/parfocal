@@ -9,7 +9,8 @@ import {
   type ImageFileDirectory,
   type RemoteSourceOptions,
 } from "geotiff";
-import { UnsupportedCodecError } from "../types.ts";
+import { locatesEveryDirectory, tileOffsets } from "../tile-index.ts";
+import { type SlideIndexLevel, type SlideIndexPage, UnsupportedCodecError } from "../types.ts";
 import { jpeg2000Compressions, registerJpeg2000Decoders } from "./jpeg2000/register.ts";
 
 export const TIFF_BLOCK_SIZE = 1024 * 1024;
@@ -98,6 +99,41 @@ export async function listPages(tiff: GeoTIFF): Promise<TiffPage[]> {
     });
   }
   return pages;
+}
+
+const tileOffsetsTag = 324;
+const tileByteCountsTag = 325;
+
+function withIndexedTiles(image: GeoTIFFImage, entry: SlideIndexPage): void {
+  const offsets = tileOffsets(entry);
+  const counts = entry.tileByteCounts;
+  if (offsets === null || counts === undefined) return;
+  const directory = image.fileDirectory;
+  directory.deferredArrays.delete(tileOffsetsTag);
+  directory.deferredArrays.delete(tileByteCountsTag);
+  directory.actualizedFields.set(tileOffsetsTag, offsets);
+  directory.actualizedFields.set(tileByteCountsTag, [...counts]);
+}
+
+export async function indexedPages(
+  tiff: GeoTIFF,
+  levels: readonly SlideIndexLevel[] | undefined,
+): Promise<TiffPage[] | null> {
+  if (levels === undefined || !locatesEveryDirectory(levels)) return null;
+  const entries = new Map<number, SlideIndexPage>();
+  for (const level of levels) {
+    for (const entry of [level, ...(level.siblings ?? [])]) {
+      if (entry.ifdOffset !== undefined) entries.set(entry.ifdOffset, entry);
+    }
+  }
+  return Promise.all(
+    Array.from(entries, async ([offset, entry]) => {
+      const directory = await tiff.parser.parseFileDirectoryAt(offset);
+      const image = new GeoTIFFImage(directory, tiff.littleEndian, tiff.cache, tiff.source);
+      withIndexedTiles(image, entry);
+      return { ifd: entry.page, subIfd: entry.subIfd ?? null, image };
+    }),
+  );
 }
 
 function area(page: TiffPage): number {
