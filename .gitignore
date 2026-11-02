@@ -93,3 +93,4 @@ bench-out/
 /.claude/worktrees/
 /.claude/scheduled_tasks.lock
 /.claude/settings.local.json
+/.claude/usage-override.json

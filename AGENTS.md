@@ -32,6 +32,7 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 - Never use the word "verdict" anywhere in the app: screen text, exports, audit names, API paths, code, tests and fakes. Say "decision" (agree, disagree or unsure), as [ADR 0072](docs/adr/0072-decisions-reasons-and-opinion-forms.md) does. FOUND-024 renames what already exists.
 - When a task is finished, commit and push everything that belongs to it in the same turn without being asked. Stage by name. Never push failing work, never force-push, never rewrite pushed history.
 - Commit messages are Conventional Commits with the task ID as scope, such as `feat(FOUND-017): Add release versioning` ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)). No attribution lines.
+- Respect the plan usage hook. Wrap up at 90% and stop cleanly at 95% of the 5-hour or weekly limit unless the owner turned on the override ([agent-workflow.md](docs/knowledge/agent-workflow.md#plan-usage-limits)).
 - Keep tokens low. One task per fresh subagent, at most two alive, about 120 turns each. Run checks two or three times per task and pipe long output through `tail`. Take few screenshots, compare them with the mock by number (`shot --mock`) and open an image only when the number looks wrong. A hook allows 5 images per agent. Details are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
 
 ## Real infrastructure and production

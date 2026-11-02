@@ -47,6 +47,14 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 | Board moves, index rows, log lines, simple doc edits | Haiku |
 | Second opinion | Fable, once before starting and once before hand-back, never per turn |
 
+## Plan usage limits
+
+The owner's Claude plan has a 5-hour and a weekly limit. The status line records both in `~/.claude/usage/latest.json`, and `scripts/guard_usage.py` runs as a hook in this project after every prompt and tool call.
+
+- Run `python3 scripts/guard_usage.py` before spawning agents or starting a long task to see both limits and any override.
+- At 80% the hook asks for cheap actions. At 90% finish the current step, start nothing new and record the next step. At 95% stop: note where you stopped with `board.py note`, commit and push only green work, tell the owner and end the turn.
+- Only the owner turns on the override, by asking in chat or running `python3 scripts/guard_usage.py override [hours]`. Without a number of hours it lasts until the 5-hour window resets. `off` ends it. Never turn it on yourself.
+
 ## Picking the next task
 
 Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready task that passes, in this order:
