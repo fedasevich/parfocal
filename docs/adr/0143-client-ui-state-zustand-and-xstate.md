@@ -1,7 +1,7 @@
 # 0143. Client state has one home per kind: Query for server data, the router for links, the engine for frames, Zustand for shared UI state and XState for real state machines
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-005 (client UI state). Touches SHELL-005 (inspector panel with resize and hide), NAV-006 (smart minimap state machine), STACK-006 (viewer hot-path state outside React) and SET-001 (settings schema and layers).
 
@@ -47,3 +47,4 @@ Zustand wins over Jotai and Redux Toolkit because it gives one readable store pe
 - No package is added by this task. The first task that needs a shared store adds `zustand`, likely SHELL-005 (inspector panel with resize and hide), and NAV-006 (smart minimap state machine) adds `xstate` and `@xstate/react`. Each checks the version again then.
 - The shell's context state in `jobs-tray.tsx` and `sidebar-toggle.tsx` moves into a Zustand store when a task next changes it, and `theme.ts` moves onto the device settings layer with SET-002 (settings modal shell). Nothing moves now.
 - A review that sees a server value in a store, a frame value in a store or a shareable view in a store asks for it to move.
+- The owner accepted this record on 2026-11-02 (decision 22) and asked that XState be used only for selected flows where a machine plainly helps.

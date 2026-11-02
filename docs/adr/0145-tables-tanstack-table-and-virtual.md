@@ -1,7 +1,7 @@
 # 0145. Tables and long lists are TanStack Table 9 with TanStack Virtual 3, styled by the app and driven by J/K from a window key listener
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: STACK-010 (tables, lists and virtualisation). Touches the My work slide list, the project slides and tasks tabs, the layers list in the viewer, the audit views and STACK-014 (command palette, drag and drop, hotkeys).
 
@@ -37,3 +37,4 @@ TanStack wins because it keeps the look and the accessibility in our hands at a 
 - The spike stays at the dev-only route `/spikes/worklist`, with `e2e/worklist-spike.spec.ts` checking the J/K behaviour on every run and measuring frame rate when `WORKLIST_FPS=1` is set. It is the template for the real worklist and is deleted when the first real view adopts the pattern.
 - Existing prototype tables are not rewritten by this decision. Each one moves to the pattern when its view gets real data.
 - A 120 Hz display and a production build were not measured (TODO in the result file).
+- The owner accepted this record on 2026-11-02 (decision 24).

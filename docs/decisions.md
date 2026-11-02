@@ -15,49 +15,13 @@ To take every recommendation at once, write "all recommended" here:
 | 19c, style of a hidden first read | Only the screen switches, and ADR 0131 (decision styles) records that the API will refuse the clashing style once the New review task warning exists |
 | 20b, who may delete a project | Any owner, behind a typed confirmation, and on your note it is a soft delete that keeps every review and evaluation and can be restored. Real erasure happens only through the GDPR path. New task PROJ-010 (delete a project) builds it |
 | 6a, tofu apply on `parfocal-dev` | Already applied at your yes in chat earlier today, dev only. Staging and production still lack the upload CORS and unfinished-upload rules, which a later plan will show you |
+| 22, client state | ADR 0143 (one home per kind of client state) is accepted, with XState only for selected flows where a machine plainly helps |
+| 23, charts | ADR 0144 (hand-made SVG charts with visx) is accepted. A chart library comes in only when our own charts break down |
+| 24, tables | ADR 0145 (TanStack Table plus Virtual) is accepted |
+| 25, frontend testing | ADR 0146 (frontend testing stack on node:test, Storybook and Playwright) is accepted |
 | 21d, CAMELYON16 tumor maps | AITUM-003 (areas from the tumor map) stays in review until MLEVAL-005 (tumor map evaluation) makes the maps on Modal dev with a cost cap |
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
-
-## 22. Client state, from STACK-005 (client UI state)
-
-ADR 0143 (one home per kind of client state) is Proposed. It keeps server data in TanStack Query, shareable views in the URL, frame values in the viewer engine, UI state shared across panels in Zustand, flows with named states and guards in XState, and anything kept between visits in the settings layers. No package is installed yet. SHELL-005 (inspector panel with resize and hide) would add Zustand and NAV-006 (smart minimap state machine) would add XState.
-
-- a. Accept ADR 0143 as written. (recommended)
-- b. Use Zustand for the machines too and skip XState.
-- c. Something else, say what.
-
-Your choice:
-
-## 23. Charts, from STACK-011 (charts for dashboards and confidence visuals)
-
-ADR 0144 (charts are hand-made SVG with visx) is Proposed. Charts are React SVG components in `packages/ui`, with visx scales and axes only when a chart needs an axis or many series, coloured only by token variables and always readable as a table or a stated label. It leaves Observable Plot out of the app, against the backlog default, because no planned in-app chart needs it. In a scratch build visx added 16 to 25 KB gzipped over React and Plot 98 KB. No package is installed yet.
-
-- a. Accept ADR 0144 as written, with Plot reconsidered only if an in-app dashboard such as HOME-004 (department dashboard) is planned. (recommended)
-- b. Add Observable Plot now for dashboard charts, as the backlog default said.
-- c. Something else, say what.
-
-Your choice:
-
-## 24. Tables and long lists, from STACK-010 (tables, lists and virtualisation)
-
-ADR 0145 (tables are TanStack Table plus Virtual) is Proposed. Tables and long lists use TanStack Table 9 with TanStack Virtual 3 in semantic table markup styled by the app, and J/K moves an active row. A spike at the dev-only route `/spikes/worklist` kept 60 fps over 10,000 rows with one J per frame, also with the CPU slowed 4x, while the same table without virtualisation ran at 16 fps and 3 fps. AG Grid is left out because its smallest useful bundle is about 194 KB gzipped against 19 KB, and it was not rendered. Both TanStack packages are already installed in `apps/web`.
-
-- a. Accept ADR 0145 as written. (recommended)
-- b. Measure AG Grid rendering the same 10,000 rows before deciding.
-- c. Something else, say what.
-
-Your choice:
-
-## 25. Frontend testing stack, from STACK-012 (frontend testing stack)
-
-ADR 0146 (frontend testing stack) is Proposed. It keeps unit tests on `node --test`, which 10 TypeScript packages already use, instead of the backlog's default of Vitest with React Testing Library, because no current test needs a DOM and component tests already run as Storybook stories in real Chrome under Playwright with axe. MSW stays the one fake API and Playwright stays the E2E runner. Viv tiles written as goldens on your Mac already pass on the hosted x86 runner, and a new spec shows WebGPU on SwiftShader draws the synthetic tile identically to the WebGL golden on the Mac. The Linux WebGPU number is still `TODO` until the next CI run finishes. No dependency was added.
-
-- a. Accept ADR 0146 as written. (recommended)
-- b. Adopt Vitest with React Testing Library anyway, in `apps/web` first.
-- c. Something else, say what.
-
-Your choice:
 
 ## Notes, no decision needed
 

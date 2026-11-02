@@ -1,7 +1,7 @@
 # 0146. Frontend tests stay on node:test and Playwright, with Storybook for components, MSW for the API and SwiftShader for WebGL and WebGPU frames
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: STACK-012 (frontend testing stack). Touches TEST-005 (golden-image rendering tests), TEST-008 (visual regression for UI) and every VIEW task whose "Done when" names a golden image or a WebGPU route.
 
@@ -58,3 +58,4 @@ Unit option 1, component option 1 and WebGPU option 1.
 - WebGPU tests use `test.use({ launchOptions: { args: [...] } })` with the two extra flags and open a page on `https` or `localhost`, because `navigator.gpu` does not exist on `about:blank`.
 - TODO: the hosted Linux numbers for the WebGPU spec come from the first completed `browser` run after commit dd81b8c and go into the result file.
 - Real-GPU frame rates and GPU timing stay manual on the owner's Mac, as ADR 0011 says.
+- The owner accepted this record on 2026-11-02 (decision 25).

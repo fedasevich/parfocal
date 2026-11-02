@@ -1,7 +1,7 @@
 # 0144. Charts are hand-made React SVG in packages/ui with visx primitives for scales and axes, coloured only by token variables and always readable as text
 
 - Date: 2026-11-02
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: STACK-011. Touches REVIEW-005, REVIEW-017, MLEVAL-009, HOME-004 and every later task that draws a chart.
 
@@ -49,3 +49,4 @@ Option 1. Charts are React components in `packages/ui/src/components/charts/`, d
 - The tumor share range bar and the split class bars of REVIEW-005 (the number line), with the cutoff chip of REVIEW-017 (tumor share result), are hand-made charts under these rules.
 - `ConfusionMatrix` still uses hex colours (`#444`, `#eef3fb` and an `rgba` of the accent) because the evaluation report is drawn as a light paper page. TODO: move it to a `data-theme="light"` scope with token colours when the report is next touched.
 - If an in-app dashboard with many chart kinds is planned, such as HOME-004, this ADR is the place to reopen the Plot option, with a new bundle measurement.
+- The owner accepted this record on 2026-11-02 (decision 23): keep our own SVG charts, and install a chart library only when hand-made charts break down.
