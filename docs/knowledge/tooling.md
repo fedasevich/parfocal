@@ -122,6 +122,10 @@ The latency proxy paces bandwidth in 16 KiB slices with `setTimeout`. Starting e
 
 Under `pnpm test`, Turborepo runs the Python suites next to the Node ones, and the latency tests saw a median 64 ms added at a 50 ms RTT. Load only adds time, so the tests assert on the fastest of several samples: it must be at least the RTT and within `max(10 ms, 10%)` above it. Use the same rule for any CPU-side timing test that shares a runner. Source: [latency proxy result](../results/2026-10-23-latency-proxy.md).
 
+## Performance budgets live in one root file
+
+Every performance budget is a row of `perf-budgets.json` with its baseline, limit, the test that checks it, an ADR and a result file. Tests call `checkBudget(id, measured)` from `scripts/perf-budgets.ts` instead of keeping their own limit, and `scripts/perf-budgets.test.ts` refuses a byte or count limit more than 20 percent over its baseline. Both files are in `globalDependencies`, so editing a limit reruns every package's tests. The browser budgets run in `packages/viewer-engine/browser/budgets.spec.ts` at every RTT of the latency proxy matrix. Source: [ADR XXXX](../adr/XXXX-performance-budget-file-and-regression-rule.md) (one budget file, 20 percent rule) and the [baselines](../results/2026-11-02-performance-budgets.md).
+
 ## Parallel sessions share one working tree
 
 Several agent sessions often edit the same checkout at once. Staging a file by name stages every edit in it, including another session's unfinished work. On 2026-10-31 a commit for OPS-009 (cost controls) carried another session's backlog tasks and ADR index row to `origin` without that session's ADR file, and two sessions picked the same ADR number. Before every commit, read `git diff --cached` and make sure each hunk is yours. If a file holds someone else's edits, change only your lines in a fresh copy of the file from `HEAD`, or wait for the other session to commit first. Check `ls docs/adr` and `git status` for an untracked ADR right before choosing a number.
