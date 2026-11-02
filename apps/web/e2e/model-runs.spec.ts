@@ -123,6 +123,24 @@ test("the paused run resumes, and a cancelled run comes back with Undo", async (
   await expect(tray(page)).toContainText("CAMELYON tumor model v1.0");
 });
 
+test("a cancelled run stays cancelled once the 4 second Undo window has passed", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openFromIndex(page, "A job · cam");
+  await page.getByRole("button", { name: "Resume now" }).click();
+  await expect(
+    page.getByRole("dialog", { name: /CAMELYON tumor model v1.0 · running/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Cancel the run" }).click();
+  await expect(
+    page.getByText("Run cancelled. Slides that finished keep their results."),
+  ).toBeVisible();
+  await page.clock.fastForward(4100);
+  await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+  await expect(tray(page)).not.toContainText("CAMELYON tumor model v1.0");
+});
+
 test("the ring in the top bar opens the tray from home", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Jobs, 2 running" }).click();

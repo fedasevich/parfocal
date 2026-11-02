@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { Banner, InlineError, InlineState } from "../src/components/banner.tsx";
 import { BeforeYouList } from "../src/components/before-you-list.tsx";
 import { Button } from "../src/components/button.tsx";
 import { AvatarStack, Person, PresenceDot } from "../src/components/person.tsx";
 import { ProgressBar, ProgressRing, StackedBar } from "../src/components/progress-meter.tsx";
 import { Toast, UndoToast } from "../src/components/undo-toast.tsx";
+import { UndoToastHost } from "../src/components/undo-toast-host.tsx";
 import { FoldingZone, Hint, SectionLabel, Surface, Zone, Zones } from "../src/components/zone.tsx";
+import { createUndoToaster } from "../src/lib/undo-toaster.ts";
 import { people } from "./fixtures.ts";
 
 const meta = {
@@ -83,6 +86,33 @@ export const Toasts: Story = {
       <UndoToast message="Run cancelled" duration={0} />
     </div>
   ),
+};
+
+const decisionToaster = createUndoToaster();
+
+function UndoableDecision() {
+  const [decision, setDecision] = useState("open");
+  const decide = (next: string) => {
+    const before = decision;
+    setDecision(next);
+    decisionToaster.show({ message: `T1 marked ${next}`, undo: () => setDecision(before) });
+  };
+  return (
+    <div className="grid h-60 w-[640px] content-start gap-3">
+      <p className="m-0" data-testid="decision">
+        T1 is {decision}
+      </p>
+      <div className="flex gap-2">
+        <Button onClick={() => decide("agree")}>Agree</Button>
+        <Button onClick={() => decide("disagree")}>Disagree</Button>
+      </div>
+      <UndoToastHost toaster={decisionToaster} />
+    </div>
+  );
+}
+
+export const UndoWindow: Story = {
+  render: () => <UndoableDecision />,
 };
 
 export const SurfaceLevels: Story = {

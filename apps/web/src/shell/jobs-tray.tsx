@@ -9,7 +9,6 @@ import {
 } from "@parfocal/api-client";
 import { JobRow, JobRowLink, JobsButton, JobsTray } from "@parfocal/ui/components/jobs";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
-import { Toast, UndoToast } from "@parfocal/ui/components/undo-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
@@ -24,8 +23,7 @@ import {
   trayTone,
   trayValueText,
 } from "../screens/jobs/model.ts";
-
-type Notice = { id: number; message: string; undo?: () => void };
+import { showUndoToast } from "./undo-toasts.tsx";
 
 export type JobsTrayControl = {
   open: boolean;
@@ -50,37 +48,9 @@ export function useOpenJobsTray(when: boolean) {
 
 export function JobsTrayProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
   const notify = (message: string, undo?: () => void) =>
-    setNotice({ id: Date.now(), message, ...(undo ? { undo } : {}) });
-  return (
-    <JobsTrayContext value={{ open, setOpen, notify }}>
-      {children}
-      {notice ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-70 flex justify-center">
-          {notice.undo ? (
-            <UndoToast
-              key={notice.id}
-              className="pointer-events-auto"
-              message={notice.message}
-              onUndo={notice.undo}
-              onExpire={() => setNotice(null)}
-            />
-          ) : (
-            <TimedToast key={notice.id} message={notice.message} onDone={() => setNotice(null)} />
-          )}
-        </div>
-      ) : null}
-    </JobsTrayContext>
-  );
-}
-
-function TimedToast({ message, onDone }: { message: string; onDone: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onDone, 4000);
-    return () => clearTimeout(timer);
-  }, [onDone]);
-  return <Toast className="pointer-events-auto">{message}</Toast>;
+    showUndoToast({ message, ...(undo ? { undo } : {}) });
+  return <JobsTrayContext value={{ open, setOpen, notify }}>{children}</JobsTrayContext>;
 }
 
 export function useResumeJob() {

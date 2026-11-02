@@ -8,6 +8,7 @@ import { readBuildConfig } from "./config.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
+import { UndoToasts } from "./shell/undo-toasts.tsx";
 
 const config = readBuildConfig();
 
@@ -34,6 +35,7 @@ createRoot(container).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <ErrorToasts />
+      <UndoToasts />
     </QueryClientProvider>
   </StrictMode>,
 );

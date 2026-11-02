@@ -7,10 +7,10 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
-import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { usePeople } from "../people.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
@@ -138,7 +138,6 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     return answers;
   });
   const [failed, setFailed] = useState(setup.submitFail);
-  const [toast, setToast] = useState<{ text: string; undo?: () => void; id: number } | null>(null);
   const tabNow: GuidedTab = setup.coach ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
   const currentId = current?.object ?? "";
@@ -226,9 +225,8 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
       data: decisionBody(style, raw, session.classes, value),
     });
     const label = rawLabel(style, raw, session.classes);
-    setToast({
-      id: Date.now(),
-      text:
+    showUndoToast({
+      message:
         style.kind === "agree"
           ? `${currentId}: ${countWord[value].toLowerCase()}`
           : `${currentId}: ${label}, counts as ${countWord[value].toLowerCase()}`,
@@ -534,18 +532,16 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
         onReason={toggleReason}
         onBackToAnswers={() => setDisagreeOpen(false)}
         onFix={(what) =>
-          setToast({
-            id: Date.now(),
-            text:
+          showUndoToast({
+            message:
               what === "outline"
                 ? "Redraw the outline in the full viewer (prototype)"
                 : "Pick the right class with 1 to 4 (prototype)",
           })
         }
         onAddMissed={() =>
-          setToast({
-            id: Date.now(),
-            text: `Draw around what the AI missed. It becomes T${regions.length + 2}⁺ (prototype)`,
+          showUndoToast({
+            message: `Draw around what the AI missed. It becomes T${regions.length + 2}⁺ (prototype)`,
           })
         }
       />
@@ -587,9 +583,8 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
         initialDraft={setup.commentDraft}
         offReason={setup.connLost ? netOff : undefined}
         onSent={(text) =>
-          setToast({
-            id: Date.now(),
-            text: `Comment added on ${currentId}. It shows in the full viewer too${text.includes("@") ? ", and the people you mention are told" : ""}.`,
+          showUndoToast({
+            message: `Comment added on ${currentId}. It shows in the full viewer too${text.includes("@") ? ", and the people you mention are told" : ""}.`,
           })
         }
       />
@@ -599,7 +594,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     <Banner
       tone="warn"
       actions={
-        <Button size="sm" onClick={() => setToast({ id: Date.now(), text: "Still offline" })}>
+        <Button size="sm" onClick={() => showUndoToast({ message: "Still offline" })}>
           Retry now
         </Button>
       }
@@ -738,9 +733,8 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
                       }
                       setOverrides(next);
                       setConfirmRest(false);
-                      setToast({
-                        id: Date.now(),
-                        text: `${openCells.length} cells marked agree`,
+                      showUndoToast({
+                        message: `${openCells.length} cells marked agree`,
                         undo: () => setOverrides(overrides),
                       });
                     }}
@@ -814,16 +808,6 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
                   </Button>
                 </div>
               )}
-              {toast ? (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                  <UndoToast
-                    key={toast.id}
-                    message={toast.text}
-                    {...(toast.undo ? { onUndo: toast.undo } : {})}
-                    onExpire={() => setToast(null)}
-                  />
-                </div>
-              ) : null}
             </>
           )}
         />

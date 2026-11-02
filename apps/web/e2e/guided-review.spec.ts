@@ -71,6 +71,43 @@ test("answering moves on, and the Slide done card gates the submit", async ({ pa
   await expect(page).toHaveURL(/\/submitted\?/);
 });
 
+const undoHost = (page: Page) => page.locator('[data-slot="undo-toast-host"]');
+
+test("Undo takes a decision back inside 4 seconds and leaves the slide centre free", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
+  await review(page).getByRole("button", { name: /Agree/ }).first().click();
+  await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
+  const toast = undoHost(page).locator('[data-slot="toast"]');
+  await expect(toast).toContainText("T5");
+  const box = await toast.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  if (box && viewport) {
+    expect(box.y).toBeGreaterThan(viewport.height * 0.85);
+  }
+  await page.clock.fastForward(2500);
+  await toast.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
+  await expect(toast).toHaveCount(0);
+});
+
+test("the decision toast is gone after 4 seconds and the decision stays", async ({ page }) => {
+  await page.clock.install();
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  await review(page).getByRole("button", { name: /Agree/ }).first().click();
+  const toast = undoHost(page).locator('[data-slot="toast"]');
+  await expect(toast).toBeVisible();
+  await page.clock.fastForward(4100);
+  await expect(toast).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+  await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
+});
+
 test("the next slide card, the cells gallery and the comments open on fake data", async ({
   page,
 }) => {
