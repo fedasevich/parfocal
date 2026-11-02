@@ -6,6 +6,7 @@ import { isCompareScene, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import { CompareView } from "../screens/viewer-tools/compare-view.tsx";
 import { FocusView } from "../screens/viewer-tools/focus-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
+import { loadViewerEngine } from "../viewer/load-engine.ts";
 
 const slideSearch = z.object({
   task: z.string().optional(),
@@ -32,6 +33,7 @@ export type SlideSearch = z.infer<typeof slideSearch>;
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId")({
   validateSearch: slideSearch,
+  loader: loadViewerEngine,
   component: SlideView,
 });
 

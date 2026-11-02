@@ -1,12 +1,14 @@
 import { createRouter } from "@tanstack/react-router";
-import { PrototypeFrame } from "./flow-map/prototype-bar.tsx";
+import type { ReactElement, ReactNode } from "react";
 import { routeTree } from "./routeTree.gen.ts";
 
-export function createAppRouter() {
+type Frame = (props: { children: ReactNode }) => ReactElement;
+
+export function createAppRouter(frame?: Frame) {
   return createRouter({
     routeTree,
     defaultPreload: "intent",
-    ...(import.meta.env.DEV ? { InnerWrap: PrototypeFrame } : {}),
+    ...(frame ? { InnerWrap: frame } : {}),
   });
 }
 

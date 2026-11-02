@@ -1,0 +1,5 @@
+{
+  "initialHomeGzipBytes": 350000,
+  "adr": "docs/adr/0048-routing.md",
+  "note": "Set by SHELL-001 from the first measured build (319,638 bytes gzip). TEST-006 takes this file over and ties it to a 20 percent regression rule."
+}
