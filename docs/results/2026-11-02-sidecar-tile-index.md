@@ -3,7 +3,7 @@
 - Date: 2026-11-02
 - Backlog: INGEST-007 (sidecar tile index)
 - Kind: comparison
-- Commit: 2758c22 plus the uncommitted INGEST-007 reader changes in `packages/viewer-engine`
+- Commit: e9d16f2
 - Environment: Apple M4, macOS, Node 26.13.0, geotiff 3.0.5. Origin and `@parfocal/latency-proxy` on 127.0.0.1, unlimited bandwidth, `fetch` limited to 6 requests in flight like a browser on HTTP/1.1. Another agent was running on the machine.
 - Data: a generated little-endian BigTIFF of 11 deflate levels from 65536 px square down to 64 px, 256 px tiles, every directory in its own 1 MiB block (25 MB on disk), and the cached public slides below for sidecar sizes. No PHI.
 

@@ -121,6 +121,7 @@ describe("reading a tile index", () => {
       { ...good, levels: [] },
       { ...good, levels: [{ ...level, ifdOffset: undefined }] },
       { ...good, levels: [{ ...level, tileByteCounts: [1, 2] }] },
+      { ...good, levels: [{ ...level, width: undefined }] },
       { ...good, levels: [{ ...level, siblings: [{ page: 1 }] }] },
     ]) {
       assert.throws(() => readTileIndex(bad), TileIndexError);

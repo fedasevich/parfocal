@@ -48,6 +48,9 @@ export function readTileIndex(document: unknown): SlideIndex {
   if (!Array.isArray(levels) || levels.length === 0) throw new TileIndexError("no levels");
   levels.forEach((level: unknown, index) => {
     checkPage(level, `level ${index}`);
+    const sizes = isRecord(level) ? [level.downsample, level.width, level.height] : [];
+    if (!sizes.every((size) => typeof size === "number" && size > 0))
+      throw new TileIndexError(`level ${index} has no size`);
     const siblings = isRecord(level) ? level.siblings : undefined;
     if (siblings !== undefined && !Array.isArray(siblings))
       throw new TileIndexError(`level ${index} has malformed siblings`);
