@@ -3,12 +3,17 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useRef, useState } from "react";
 import { loadViewerEngine } from "./load-engine.ts";
+import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
+import { useSlideBrightness } from "./slide-brightness.ts";
+import type { ViewerEngine } from "./viewer-engine.ts";
 
 type Phase =
   | { readonly state: "loading" }
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
+
+type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
 type Grant = {
   readonly token: string;
@@ -42,6 +47,8 @@ export function SlideStage({ slideId }: { slideId: string }) {
 function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => void }) {
   const host = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
+  const [session, setSession] = useState<Session | null>(null);
+  const [brightness, setBrightness] = useSlideBrightness();
 
   useEffect(() => {
     const container = host.current;
@@ -72,7 +79,9 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       viewport.ready
         .then(() => viewport.route()?.whenIdle())
         .then(() => {
-          if (!disposed) setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
+          if (disposed) return;
+          setSession({ engine: viewport.engine, module: engine });
+          setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
         })
         .catch(fail);
     }, fail);
@@ -89,7 +98,21 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
       className="relative size-full min-h-0 bg-chrome"
     >
-      <div ref={host} className="absolute inset-0" />
+      <div
+        ref={host}
+        className="absolute inset-0"
+        style={brightness === 100 ? undefined : { filter: `brightness(${brightness / 100})` }}
+      />
+      {session ? (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <MagnificationControl
+            engine={session.engine}
+            units={session.module}
+            brightness={brightness}
+            onBrightnessChange={setBrightness}
+          />
+        </div>
+      ) : null}
       {phase.state === "loading" ? (
         <p role="status" className="absolute top-4 left-4 text-body-sm text-fg-dim">
           Loading the slide
