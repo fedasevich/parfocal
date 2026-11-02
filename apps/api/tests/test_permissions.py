@@ -52,11 +52,13 @@ from parfocal_api.tables import (
     users,
     verdicts,
 )
+from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.ingest import RestrictedImage
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
@@ -355,6 +357,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listSlideResultSets": lambda w: Call("GET", f"/api/slides/{w.slide}/result-sets"),
     "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
     "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
+    "getCellSummary": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-summary"),
     "createResultSet": lambda w: Call(
         "POST", f"/api/slides/{w.slide}/result-sets", {"name": "Matrix model"}
     ),
@@ -867,6 +870,9 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 )
             )
             await connection.execute(
+                update(result_sets).where(result_sets.c.id == result_set).values(cell_count=1)
+            )
+            await connection.execute(
                 update(result_sets)
                 .where(result_sets.c.id.in_([result_set, doomed_result_set]))
                 .values(status="ready", region_count=1)
@@ -1008,6 +1014,16 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)
+                matrix_cells = build_cells(
+                    tenant_id,
+                    case.loose_slide_id,
+                    result_set,
+                    [Cell(1, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
+                    1,
+                )
+                await ObjectResultStore(store).put(
+                    matrix_cells.summary.key, matrix_cells.summary.data
+                )
                 await put_restricted_images(
                     store,
                     tenant_id,

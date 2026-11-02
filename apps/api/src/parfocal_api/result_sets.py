@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -17,6 +17,7 @@ from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import project_grant, readable_slide, require_slide_reading
 from parfocal_api.projects import ProjectArchivedError, visible
+from parfocal_api.review_order import Results
 from parfocal_api.tables import (
     PrivacyMode,
     ResultObjectKind,
@@ -32,7 +33,9 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_api.taxonomy import resolve_names
-from parfocal_common.chunk_store import ChunkEntry
+from parfocal_common.chunk_store import ChunkEntry, summary_key
+from parfocal_common.result_imports import result_set_prefix
+from parfocal_common.result_store import MissingObjectError
 
 MAX_CLASSES = 255
 
@@ -506,6 +509,54 @@ async def get_result_set(
     row = await set_row(connection, principal, result_set_id)
     await require_ai_shown(connection, principal, row.project_id, row.slide_id)
     return await detail_of(connection, row)
+
+
+CELL_SUMMARY_TYPE = "application/vnd.parfocal.cell-summary"
+SUMMARY_RESPONSE: dict[int | str, dict[str, Any]] = {
+    200: {
+        "description": "The set's cell summary, sent gzip-encoded",
+        "content": {CELL_SUMMARY_TYPE: {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
+
+
+class NoCellSummaryError(NotFoundError):
+    code = "no-cell-summary"
+    title = "This result set has no cells to summarise"
+
+
+@router.get(
+    "/{result_set_id}/cell-summary",
+    operation_id="getCellSummary",
+    response_class=Response,
+    responses=SUMMARY_RESPONSE,
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_cell_summary(
+    result_set_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> Response:
+    row = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, row.project_id, row.slide_id)
+    if row.status != ResultStatus.READY or not row.cell_count:
+        raise NoCellSummaryError
+    prefix = result_set_prefix(row.tenant_id, row.slide_id, result_set_id)
+    try:
+        body = await results.get_packed(summary_key(prefix))
+    except MissingObjectError as error:
+        raise NoCellSummaryError from error
+    return Response(
+        body,
+        media_type=CELL_SUMMARY_TYPE,
+        headers={
+            "Content-Encoding": "gzip",
+            "Cache-Control": "private, max-age=31536000, immutable",
+            "ETag": f'"{result_set_id}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 def counted(number: int, noun: str) -> str:

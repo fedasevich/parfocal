@@ -12048,6 +12048,193 @@ export const useDeleteResultSet = <TError = Problem, TContext = unknown>(
   return useMutation(getDeleteResultSetMutationOptions(options), queryClient);
 };
 
+export type getCellSummaryResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getCellSummaryResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCellSummaryResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCellSummaryResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCellSummaryResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCellSummaryResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCellSummaryResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCellSummaryResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCellSummaryResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCellSummaryResponseSuccess = getCellSummaryResponse200 & {
+  headers: Headers;
+};
+export type getCellSummaryResponseError = (
+  | getCellSummaryResponse400
+  | getCellSummaryResponse401
+  | getCellSummaryResponse403
+  | getCellSummaryResponse404
+  | getCellSummaryResponse409
+  | getCellSummaryResponse422
+  | getCellSummaryResponse429
+  | getCellSummaryResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCellSummaryResponse = getCellSummaryResponseSuccess | getCellSummaryResponseError;
+
+export const getGetCellSummaryUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}/cell-summary`;
+};
+
+/**
+ * @summary Get Cell Summary
+ */
+export const getCellSummary = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCellSummaryResponse> => {
+  return apiFetch<getCellSummaryResponse>(getGetCellSummaryUrl(resultSetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCellSummaryQueryKey = (resultSetId: string) => {
+  return [`/api/result-sets/${resultSetId}/cell-summary`] as const;
+};
+
+export const getGetCellSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCellSummary>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCellSummaryQueryKey(resultSetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCellSummary>>> = ({ signal }) =>
+    getCellSummary(resultSetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCellSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getCellSummary>>>;
+export type GetCellSummaryQueryError = Problem;
+
+export function useGetCellSummary<
+  TData = Awaited<ReturnType<typeof getCellSummary>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getCellSummary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellSummary<
+  TData = Awaited<ReturnType<typeof getCellSummary>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getCellSummary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellSummary<
+  TData = Awaited<ReturnType<typeof getCellSummary>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cell Summary
+ */
+
+export function useGetCellSummary<
+  TData = Awaited<ReturnType<typeof getCellSummary>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCellSummaryQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getResultsSchemaResponse200 = {
   data: GetResultsSchema200;
   status: 200;

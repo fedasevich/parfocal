@@ -2559,7 +2559,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a schema test fails if probabilities are missing.
   Refs docs 31, 33, [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
 
-- [ ] AINUC-004 · Summary points API
+- [x] AINUC-004 · Summary points API
   Per nucleus centroid, size, class, score, type probabilities and flags, without outlines.
   Done when a test fetches the summary for 1.6M nuclei under 25 MB.
   Refs doc 31, [ADR 0126](adr/0126-cell-chunks-in-object-storage-with-a-summary-index.md) (cell chunks in object storage with a summary index), whose summary file already holds these fields, with the bounding-box `diagonal` as the size.

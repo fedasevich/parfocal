@@ -347,6 +347,13 @@ class ObjectStore:
     async def get_object(self, key: str) -> bytes:
         return (await self.send("GET", key)).content
 
+    async def get_stored_bytes(self, key: str) -> bytes:
+        url, headers = self.signed_request("GET", key, None, b"")
+        async with self.http.stream("GET", url, headers=headers) as response:
+            if response.status_code >= 300:
+                raise error_of(response.status_code, await response.aread())
+            return b"".join([chunk async for chunk in response.aiter_raw()])
+
     async def download(self, key: str, target: Path) -> Downloaded:
         url, headers = self.signed_request("GET", key, None, b"")
         digest = hashlib.sha256()

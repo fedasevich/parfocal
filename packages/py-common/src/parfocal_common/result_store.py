@@ -14,6 +14,8 @@ class MissingObjectError(LookupError):
 class ResultStore(Protocol):
     async def get(self, object_key: str) -> bytes: ...
 
+    async def get_packed(self, object_key: str) -> bytes: ...
+
     async def put(self, object_key: str, data: bytes) -> None: ...
 
 
@@ -24,6 +26,14 @@ class ObjectResultStore:
     async def get(self, object_key: str) -> bytes:
         try:
             return await self.storage.get_object(object_key)
+        except StorageError as error:
+            if error.status == NOT_FOUND:
+                raise MissingObjectError(object_key) from error
+            raise
+
+    async def get_packed(self, object_key: str) -> bytes:
+        try:
+            return await self.storage.get_stored_bytes(object_key)
         except StorageError as error:
             if error.status == NOT_FOUND:
                 raise MissingObjectError(object_key) from error

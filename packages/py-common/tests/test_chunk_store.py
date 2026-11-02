@@ -62,6 +62,9 @@ class MemoryStore:
         except KeyError as error:
             raise MissingObjectError(object_key) from error
 
+    async def get_packed(self, object_key: str) -> bytes:
+        return await self.get(object_key)
+
     async def put(self, object_key: str, data: bytes) -> None:
         self.objects[object_key] = data
 

@@ -47,3 +47,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-01 | [Importing cells from a result file, from 81 to 1.6 million cells](2026-11-01-cell-import.md) | RSET-011 | benchmark |
 | 2026-11-01 | [A 1.6 million cell GeoJSON imports through the real worker in about 1 GiB and 45 s, claimed once with at least 40 s of lease left](2026-11-01-bounded-cell-import.md) | RSET-012 | benchmark |
 | 2026-11-01 | [Axe passes over the 30 component stories in dark and light after fixes to five controls](2026-11-01-axe-over-the-component-stories.md) | DS-000, STACK-007 | baseline |
+| 2026-11-02 | [Cell summary size for 1.6 million cells](2026-11-02-cell-summary-size.md) | AINUC-004 | baseline |

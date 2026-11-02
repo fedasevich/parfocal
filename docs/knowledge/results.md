@@ -37,6 +37,10 @@ On Python 3.14 the annotations of a class are evaluated lazily, and msgspec 0.19
 
 The chunk files are stored with `Content-Encoding: gzip`. httpx2 inflates such a body, so `ObjectStore.get_object` returns the plain `PFC1` bytes, and a test that compares stored bytes with the gzip it wrote fails. Compare decoded content, `head_object` sizes or the `content-encoding` header instead. `decode` accepts both forms.
 
+## The cell summary is served as stored
+
+`GET /api/result-sets/{id}/cell-summary` (`getCellSummary`, AINUC-004 summary points API) sends a ready set's `summary.pfc` as it sits in storage, `application/vnd.parfocal.cell-summary` with `Content-Encoding: gzip` and a private one-year immutable cache, so the browser inflates it. `ObjectStore.get_stored_bytes` and `ResultStore.get_packed` read the object without inflating it, because `get_object` returns the inflated bytes. Readers of the slide get it, nobody while the AI is hidden for their first read, and a set still importing or without cells is 404 `no-cell-summary`. 1.6 million cells with five classes and probabilities send 22.6 MB ([result](../results/2026-11-02-cell-summary-size.md)).
+
 ## Exporting a reviewed layer
 
 `GET /api/review-tasks/{task}/slides/{slide}/export` writes one reviewer's layer, or with `consensus=true` the consensus, as GeoJSON (the default) or as Parfocal JSON (`format=parfocal`). Each object keeps its full ID and path in `properties.parfocal`, with `changed` (`retyped`, `reshaped`, `added`), the AI class and the decision, so the file reads back through `read_geojson` or `read_parfocal_json` with nothing lost. A reviewer exports only their own layer. Project owners and viewers export anyone's layer and the consensus.

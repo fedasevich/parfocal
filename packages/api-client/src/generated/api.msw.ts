@@ -2138,6 +2138,9 @@ export const getDeleteResultSetResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetCellSummaryResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetResultsSchemaResponseMock = (): GetResultsSchema200 => ({});
 
 export const getGetResultsTemplateResponseMock = (): GetResultsTemplate200 => ({});
@@ -7707,6 +7710,30 @@ export const getDeleteResultSetMockHandler = (
   );
 };
 
+export const getGetCellSummaryMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/cell-summary",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCellSummaryResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetResultsSchemaMockHandler = (
   overrideResponse?:
     | GetResultsSchema200
@@ -10264,6 +10291,7 @@ export const getParfocalAPIMock = () => [
   getListProjectResultSetsMockHandler(),
   getGetResultSetMockHandler(),
   getDeleteResultSetMockHandler(),
+  getGetCellSummaryMockHandler(),
   getGetResultsSchemaMockHandler(),
   getGetResultsTemplateMockHandler(),
   getValidateResultsFileMockHandler(),
