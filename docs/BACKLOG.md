@@ -554,7 +554,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the workflow test asserts level sizes, microns per pixel and the thumbnail checksum for the fixture.
   Depends on INGEST-004, INGEST-010.
 
-- [ ] SKEL-006 · Open the slide in Viv
+- [x] SKEL-006 · Open the slide in Viv
   Signed tile access, one Viv layer, wheel zoom and drag pan. For formats whose header holds a barcode, such as Leica SCN, the viewer reads the slide's geometry from `levels.json` instead of the file header, because SEC-028 (identifying text in de-identified originals) blanks those header fields (decision 17a, 2026-11-02).
   Done when a golden-image test of the fitted view matches within tolerance in CI with software rendering.
   Depends on VIEW-002, TILES-001.
