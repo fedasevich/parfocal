@@ -14,15 +14,10 @@ To take every recommendation at once, write "all recommended" here:
 | 17a, barcodes in file headers | SEC-028 also blanks barcode header fields for readers without label rights, SKEL-006 (open the slide in Viv) reads those slides' geometry from `levels.json`, and ADR 0137 (capability tokens for slide bytes) says so |
 | 19c, style of a hidden first read | Only the screen switches, and ADR 0131 (decision styles) records that the API will refuse the clashing style once the New review task warning exists |
 | 20b, who may delete a project | Any owner, behind a typed confirmation, and on your note it is a soft delete that keeps every review and evaluation and can be restored. Real erasure happens only through the GDPR path. New task PROJ-010 (delete a project) builds it |
+| 6a, tofu apply on `parfocal-dev` | Already applied at your yes in chat earlier today, dev only. Staging and production still lack the upload CORS and unfinished-upload rules, which a later plan will show you |
 | 21d, CAMELYON16 tumor maps | AITUM-003 (areas from the tumor map) stays in review until MLEVAL-005 (tumor map evaluation) makes the maps on Modal dev with a cost cap |
 
 Every other answer took the recommended option, and what was already built stays as built. That covers 18a (site validation sets), 19a and 19b (decision styles), 20a and 20c (sample project), and 21a, 21b, 21c and 21e (case numbers, missing scores, reassigned reviewers and the CI bypass).
-
-## 6. Real infrastructure
-
-### 6a. `tofu apply` on the R2 dev bucket `parfocal-dev` for INGEST-028 (upload protocol check on R2)
-
-You wrote yes here. The rules count only a yes in chat for the exact plan, so the plan diff and its cost will be shown in chat first and applied after your yes there. You wrote yes here again on 2026-11-02, and the plan goes to chat next.
 
 ## 22. Client state, from STACK-005 (client UI state)
 
