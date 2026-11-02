@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy import (
     CheckConstraint,
     Column,
+    ColumnElement,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -61,6 +62,8 @@ class JobControl(StrEnum):
 
 
 LIVE = frozenset({JobStatus.RUNNING, JobStatus.CANCELLING})
+MAX_TRIES = 3
+TOO_MANY_CLAIMS = "too-many-claims"
 ALLOWED_FROM: Mapping[JobControl, frozenset[JobStatus]] = {
     JobControl.CANCEL: frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED}),
     JobControl.RESUME: frozenset({JobStatus.PAUSED, JobStatus.CANCELLED}),
@@ -103,6 +106,7 @@ jobs = Table(
     Column("input", JSONB, nullable=False, server_default="{}", info=OPERATIONAL),
     Column("claimed_by", String(80), nullable=True, info=OPERATIONAL),
     Column("claims", Integer, nullable=False, server_default="0", info=OPERATIONAL),
+    Column("tries", Integer, nullable=False, server_default="0", info=OPERATIONAL),
     Column("lease_until", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("error_code", String(60), nullable=True, info=OPERATIONAL),
     Column("pause_reason", String(60), nullable=True, info=OPERATIONAL),
@@ -308,6 +312,7 @@ async def claim(
             )
             .values(status=JobStatus.CANCELLED, lease_until=None, finished_at=func.now())
         )
+        await fail_abandoned(connection, mine)
         claimable = (
             select(jobs.c.id)
             .where(
@@ -331,6 +336,7 @@ async def claim(
                     status=JobStatus.RUNNING,
                     claimed_by=worker,
                     claims=jobs.c.claims + 1,
+                    tries=jobs.c.tries + 1,
                     lease_until=lease(kinds_lease(kinds)),
                 )
                 .returning(
@@ -342,6 +348,40 @@ async def claim(
         return None
     workflow = kinds[row.kind]
     return Claimed(row.id, row.tenant_id, row.project_id, row.kind, row.input), workflow
+
+
+async def fail_abandoned(connection: AsyncConnection, mine: ColumnElement[bool]) -> None:
+    abandoned = (
+        (
+            await connection.execute(
+                update(jobs)
+                .where(
+                    mine,
+                    jobs.c.status == JobStatus.RUNNING,
+                    jobs.c.lease_until < func.clock_timestamp(),
+                    jobs.c.tries >= MAX_TRIES,
+                )
+                .values(
+                    status=JobStatus.FAILED,
+                    error_code=TOO_MANY_CLAIMS,
+                    lease_until=None,
+                    finished_at=func.now(),
+                )
+                .returning(jobs.c.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if abandoned:
+        await connection.execute(
+            update(job_steps)
+            .where(
+                job_steps.c.job_id.in_(abandoned),
+                job_steps.c.status == StepStatus.RUNNING,
+            )
+            .values(status=StepStatus.FAILED, finished_at=func.now())
+        )
 
 
 def kinds_lease(kinds: Mapping[str, Workflow]) -> float:
@@ -458,6 +498,7 @@ async def move(connection: AsyncConnection, job_id: uuid.UUID, control: JobContr
             error_code=None,
             pause_reason=None,
             claimed_by=None,
+            tries=0,
             lease_until=None,
             finished_at=func.now() if after is JobStatus.CANCELLED else None,
         )

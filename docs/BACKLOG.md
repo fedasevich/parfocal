@@ -2407,7 +2407,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when API tests cover the lifecycle and permissions.
   Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).
 
-- [ ] AIP-018 · Claim cap for failing jobs
+- [x] AIP-018 · Claim cap for failing jobs
   A job that has been claimed 3 times and is claimed again fails for good instead, with the reason `too-many-claims`, so a job that crashes its worker cannot loop and run up a bill. The person retries it by hand, which starts the count again. The owner chose the cap of 3 on 2026-11-02 for AIP-008 (job model and API), decision 8d.
   Done when engine tests show a job that loses its lease three times fails on the fourth claim, a manual retry claims it again, and a job that succeeds within three claims is unchanged.
   Depends on AIP-008. Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).

@@ -503,6 +503,45 @@ def test_a_worker_that_lost_its_lease_cannot_end_the_run(
     assert ok(read(api, lab, run))["status"] == "done"
 
 
+def test_a_run_whose_worker_dies_three_times_fails_on_the_next_claim(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    plan = Tiles().plan()
+    for worker in ("worker-1", "worker-2", "worker-3"):
+        claim(database, lab, plan, worker)
+        expire_lease(database, run)
+
+    async def go(engine: Any) -> ClaimedRun | None:
+        return await claim_model_run(engine, "worker-4", plan, lab.tenant)
+
+    assert run_async(database, go) is None
+    failed = ok(read(api, lab, run))
+    assert (failed["status"], failed["error_code"], failed["attempts"], failed["actions"]) == (
+        "failed",
+        "too-many-claims",
+        3,
+        ["retry"],
+    )
+    assert "running" not in {item["status"] for item in failed["stages"]}
+    assert ok(control(api, lab, run, "retry"))["status"] == "queued"
+    execute(database, claim(database, lab, plan, "worker-5"), "worker-5")
+    assert ok(read(api, lab, run))["status"] == "done"
+
+
+def test_a_run_that_finishes_within_three_claims_is_unchanged(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    plan = Tiles().plan()
+    for worker in ("worker-1", "worker-2"):
+        claim(database, lab, plan, worker)
+        expire_lease(database, run)
+    execute(database, claim(database, lab, plan, "worker-3"), "worker-3")
+    finished = ok(read(api, lab, run))
+    assert (finished["status"], finished["error_code"], finished["attempts"]) == ("done", None, 3)
+
+
 def test_a_worker_must_give_every_stage() -> None:
     with pytest.raises(ValueError, match="stages"):
         workflow({"tiles-read": Tiles().plan().steps[0].run})

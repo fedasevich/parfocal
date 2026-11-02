@@ -16,7 +16,7 @@ A finished step is skipped on a rerun. A long step reads `done_units()` and reco
 
 ## Failing on purpose and by accident
 
-A step raises `StepFailedError("code")` to stop the job with that code. Later steps stay pending. Any other exception crashes the worker, and the job is claimed again when its lease runs out. TODO: cap the number of claims so a step that always crashes ends as failed.
+A step raises `StepFailedError("code")` to stop the job with that code. Later steps stay pending. Any other exception crashes the worker, and the job is claimed again when its lease runs out. `tries` counts claims since the last person's move, and a job whose lease ran out after `MAX_TRIES` (3) claims ends as failed with `too-many-claims` at the next `claim`, its running step failed, instead of looping. A retry, resume or cancel sets `tries` back to 0. `claims` still counts every claim and is the run's `attempts`. Source: AIP-018 (claim cap for failing jobs).
 
 ## Pausing, cancelling and the controls
 
