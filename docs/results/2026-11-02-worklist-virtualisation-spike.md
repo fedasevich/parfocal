@@ -3,7 +3,7 @@
 - Date: 2026-11-02
 - Backlog: STACK-010 (tables, lists and virtualisation)
 - Kind: spike
-- Commit: the code measured is the STACK-010 commit on top of b9e5f84 (`apps/web/src/screens/worklist-spike/`, route `/spikes/worklist`, measured by `apps/web/e2e/worklist-spike.spec.ts`)
+- Commit: 0d13200 (`apps/web/src/screens/worklist-spike/`, route `/spikes/worklist`, measured by `apps/web/e2e/worklist-spike.spec.ts`)
 - Environment: MacBook, macOS Darwin 24.6.0, Chrome 156 through Playwright 1.64, Vite 8 dev server with React 19.3 in development mode and React Compiler on. Viewport 1280 by 720. The headless and the headed runs both showed a 60 Hz frame clock, so nothing here says what happens above 60 Hz.
 - Data: 10,000 synthetic rows from a seeded generator (slide name, project and case, result set count, reviewer avatar with state, status tag, due date). No PHI.
 
@@ -31,7 +31,7 @@ Final code, headless Chrome, 60 Hz frame clock.
 | Plain | 1x | 10,000 | 2174 | 16.1 | 100.0 | 49 of 49 | 59.7 | 33.3 | 1 of 180 |
 | Plain | 4x | 10,000 | 8714 | 2.9 | 533.3 | 9 of 9 | 35.1 | 200.0 | 23 of 106 |
 
-An earlier version of the virtual row took its position as a fresh `style` object, so every visible row re-rendered on each key press. At 4x it measured 55.7 fps on keys (13 of 168 frames dropped, p95 33.3 ms) and 53.7 fps on scroll. Passing the row's offset as a number instead brought it to the 60 fps above. A headed run of that earlier version at 1x gave 60.0 fps on keys and scroll for virtual, and 15.3 fps on keys for plain.
+An earlier version of the virtual row took its position as a fresh `style` object, so every visible row re-rendered on each key press. At 4x it measured 55.7 fps on keys (13 of 168 frames dropped, p95 33.3 ms) and 53.7 fps on scroll. Passing the row's offset as a number instead brought it to the 60 fps above. That before and after rests on one 3-second run each, not repeated. A headed run of that earlier version at 1x gave 60.0 fps on keys and scroll for virtual, and 15.3 fps on keys for plain.
 
 The page-to-row-0 time includes the dev server serving modules and is not a production load time.
 
