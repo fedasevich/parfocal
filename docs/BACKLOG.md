@@ -1578,7 +1578,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 38 "One component per job".
   Size: M.
 
-- [ ] DS-020 · Type-to-find token field
+- [x] DS-020 · Type-to-find token field
   A field where a person types a name or a slide, a list shows matches with avatar, name and role or a thumbnail, and picked items sit in the field as chips with a remove cross. It also offers to invite an email that matches nobody.
   Done when component tests cover typing, picking by keyboard, removing and inviting, and axe passes.
   Depends on PROTO-011. Refs doc 39, mock: task/find.
