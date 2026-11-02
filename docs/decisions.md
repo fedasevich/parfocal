@@ -31,16 +31,6 @@ Your choice:
 
 ## 23. Charts, from STACK-011 (charts for dashboards and confidence visuals)
 
-ADR 0144 (charts are hand-made SVG with visx) is Proposed. Charts are React SVG components in `packages/ui` coloured only through tokens, with visx scales and axes only where a chart needs them. It leaves Observable Plot out, because a scratch build measured 16 to 25 KB gzipped for visx against 98 KB for Plot, and no planned app screen needs a full dashboard chart yet.
-
-- a. Accept ADR 0144 as written. (recommended)
-- b. Accept it but also keep Observable Plot for dashboard charts, as the backlog default said.
-- c. Something else, say what.
-
-Your choice:
-
-## 23. Charts, from STACK-011 (charts for dashboards and confidence visuals)
-
 ADR 0144 (charts are hand-made SVG with visx) is Proposed. Charts are React SVG components in `packages/ui`, with visx scales and axes only when a chart needs an axis or many series, coloured only by token variables and always readable as a table or a stated label. It leaves Observable Plot out of the app, against the backlog default, because no planned in-app chart needs it. In a scratch build visx added 16 to 25 KB gzipped over React and Plot 98 KB. No package is installed yet.
 
 - a. Accept ADR 0144 as written, with Plot reconsidered only if an in-app dashboard such as HOME-004 (department dashboard) is planned. (recommended)
