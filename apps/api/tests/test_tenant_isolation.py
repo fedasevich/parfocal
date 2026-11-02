@@ -862,6 +862,9 @@ GET_ROUTES = {
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
+    "listMemberActivity": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/members/activity", admin_rights=True
+    ),
     "listAuditEvents": Route(
         Exposure.TENANT, lambda _: "/api/tenant/audit-events", admin_rights=True
     ),
