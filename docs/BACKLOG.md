@@ -566,7 +566,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ANN-001, ANN-020.
   Size: M.
 
-- [ ] SKEL-008 · Stub decision and submit
+- [x] SKEL-008 · Stub decision and submit
   One Agree, Disagree or Not sure on the drawn polygon and a submit that records the reviewer and the time and moves the slide to submitted. Replaces the stub report and sign-out ([ADR 0053](adr/0053-ai-results-review-direction.md)).
   Done when an E2E test submits and the slide shows as submitted in a list, with an audit log entry.
   Depends on GUIDE-001, SEC-003.
