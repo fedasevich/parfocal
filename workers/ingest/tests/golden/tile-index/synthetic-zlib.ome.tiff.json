@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "formatId": "ome-tiff",
+  "tileKind": "grid",
+  "littleEndian": true,
+  "bigTiff": false,
+  "micronsPerPixel": { "x": 0.5, "y": 0.5 },
+  "levels": [
+    {
+      "page": 0,
+      "subIfd": null,
+      "ifdOffset": 8,
+      "tileOffsetGaps": [368, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "tileByteCounts": [1854, 1610, 1616, 1613, 1630, 1610, 1617, 1617, 1615, 1609, 1615, 1665],
+      "downsample": 1,
+      "width": 1024,
+      "height": 768,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "jpegHeader": null,
+      "siblings": []
+    },
+    {
+      "page": 0,
+      "subIfd": 0,
+      "ifdOffset": 20040,
+      "tileOffsetGaps": [20304, 0, 0, 0],
+      "tileByteCounts": [2864, 2706, 1592, 1677],
+      "downsample": 2,
+      "width": 512,
+      "height": 384,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "jpegHeader": null,
+      "siblings": []
+    },
+    {
+      "page": 0,
+      "subIfd": 1,
+      "ifdOffset": 29144,
+      "tileOffsetGaps": [29376],
+      "tileByteCounts": [6860],
+      "downsample": 4,
+      "width": 256,
+      "height": 192,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "jpegHeader": null,
+      "siblings": []
+    }
+  ]
+}

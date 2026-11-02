@@ -22,6 +22,7 @@ import {
 import { absoluteUrl } from "../url.ts";
 import {
   assertDecodable,
+  indexedPages,
   largestPyramid,
   listPages,
   loadByteCounts,
@@ -150,7 +151,7 @@ function layoutOf(image: GeoTIFFImage): Layout {
 function indexedPage(pages: readonly TiffPage[], level: SlideIndexLevel): TiffPage {
   if (level.page !== undefined) {
     const named = pages.find(
-      (candidate) => candidate.ifd === level.page && candidate.subIfd === null,
+      (candidate) => candidate.ifd === level.page && candidate.subIfd === (level.subIfd ?? null),
     );
     if (named === undefined)
       throw new Error(`The slide index names page ${level.page}, which the file lacks`);
@@ -320,7 +321,7 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     request.signal,
     request.fetch,
   );
-  const pages = await listPages(tiff);
+  const pages = (await indexedPages(tiff, request.index?.levels)) ?? (await listPages(tiff));
   const plainLevels = await chooseLevels(pages, request);
   const multichannel = await omeChannelLevels(plainLevels, pages);
   const levels = multichannel?.levels ?? plainLevels;
