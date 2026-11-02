@@ -7,7 +7,7 @@ from sqlalchemy.dialects import postgresql
 
 from parfocal_common.schema_sql import enable_tenant_isolation
 
-revision: str = "0999"
+revision: str = "0072"
 down_revision: str | None = "0071"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
