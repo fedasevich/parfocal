@@ -1584,7 +1584,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 39, mock: task/find.
   Size: S.
 
-- [ ] DS-021 · Undo toast
+- [x] DS-021 · Undo toast
   A toast that names what just happened ("T1 marked agree", "Run cancelled") with an Undo link, kept for 4 s and not covering the slide centre. Undo restores the exact state before the action.
   Done when component tests cover undo within and after the window, and E2E undoes a decision and a cancelled run.
   Depends on PROTO-011. Refs doc 40 G2 and R1, doc 41.
