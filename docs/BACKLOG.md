@@ -241,6 +241,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 - [x] STACK-011 · Charts for dashboards and confidence visuals
   Candidates: visx, Recharts, Observable Plot, ECharts. Default: visx for the custom tumor share range bars and sparklines, Observable Plot for dashboard charts.
   Done when the ADR covers theming through tokens and accessibility of charts.
+  Decided in [ADR 0144](adr/0144-charts-hand-made-svg-with-visx.md): hand-made React SVG in `packages/ui` with visx scales and axes when needed, colours only as token variables, every chart readable as a table or a stated label. Observable Plot is left out of the app.
 
 - [ ] STACK-012 · Frontend testing stack
   Candidates: Vitest with React Testing Library, Playwright (E2E and component tests), Storybook 9 with interaction and visual tests, MSW for API mocks, Chromatic or Playwright snapshots for visual regression. Default: Vitest, RTL, MSW, Playwright for E2E and visual, Storybook as the component catalogue.
