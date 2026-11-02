@@ -178,6 +178,13 @@ OPERATIONS: dict[str, Operation] = {
         lambda c, s: c.delete(f"/api/projects/{s.project}/members/{s.colleague.user_id}"),
         owner_removes,
     ),
+    "setProjectMemberSignOut": Operation(
+        lambda c, s: c.put(
+            f"/api/projects/{s.project}/members/{s.colleague.user_id}/sign-out",
+            json={"sign_out": "never"},
+        ),
+        owner_changes,
+    ),
     "createCase": Operation(
         lambda c, s: c.post(
             "/api/cases", json={"project_id": str(s.project), "label": f"N-{uuid.uuid4().hex[:6]}"}

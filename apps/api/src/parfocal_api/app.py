@@ -46,6 +46,7 @@ from parfocal_api import (
     service_accounts,
     sessions_api,
     settings_api,
+    sign_out,
     site_validations,
     study_templates,
     taxonomy,
@@ -147,6 +148,7 @@ def create_app(
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
     app.include_router(sample_project.router)
+    app.include_router(sign_out.router)
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)

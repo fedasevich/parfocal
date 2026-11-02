@@ -51,6 +51,7 @@ class AuditAction(StrEnum):
     SAMPLE_PROJECT_CREATED = "project.sample-created"
     PROJECT_MEMBER_SET = "project.member-set"
     PROJECT_MEMBER_REMOVED = "project.member-removed"
+    PROJECT_SIGN_OUT_SET = "project.sign-out-set"
     PROJECT_TAXONOMY_CHANGED = "project.taxonomy-changed"
     PROJECT_MAPPINGS_CHANGED = "project.mappings-changed"
     PROJECT_OPINION_FORM_PUBLISHED = "project.opinion-form-published"

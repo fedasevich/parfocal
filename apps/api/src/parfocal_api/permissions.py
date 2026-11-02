@@ -6,7 +6,7 @@ from fastapi import Depends
 from parfocal_api.context import CurrentPrincipal
 from parfocal_api.principals import MemberPrincipal, ServicePrincipal
 from parfocal_api.problems import ForbiddenError
-from parfocal_api.tables import ProjectRole, Role
+from parfocal_api.tables import PrivacyMode, ProjectRole, Role, SignOutRight
 
 ROLE_NAMES = {
     Role.RESEARCHER: "Researcher",
@@ -153,6 +153,49 @@ PROJECT_MATRIX: dict[Permission, dict[ProjectRole, Grant]] = {
     permission: {role: Grant(code) for role, code in zip(PROJECT_COLUMNS, codes, strict=True)}
     for permission, codes in PROJECT_ROWS.items()
 }
+
+SIGN_OUT_NAME = "Can sign out"
+
+SIGN_OUT_DUTIES = (
+    "Signs out the clinical report of a case. Exists only in a project in Clinical privacy "
+    "mode. Only the project owner changes it, and every change is audited. A member without "
+    "it sends the report for co-sign to a member whose right covers the case"
+)
+
+SIGN_OUT_NAMES = {
+    SignOutRight.OWN_CASES: "Own cases",
+    SignOutRight.ANY_CASE: "Any case",
+    SignOutRight.NEVER: "Never",
+}
+
+SIGN_OUT_MEANINGS = {
+    SignOutRight.OWN_CASES: "A case with an assignment of theirs on one of its slides",
+    SignOutRight.ANY_CASE: "Every case of the project",
+    SignOutRight.NEVER: "No case, their reports go for co-sign",
+}
+
+SIGN_OUT_DEFAULTS = {
+    ProjectRole.OWNER: SignOutRight.OWN_CASES,
+    ProjectRole.REVIEWER: SignOutRight.OWN_CASES,
+    ProjectRole.VIEWER: SignOutRight.NEVER,
+}
+
+SIGN_OUT_FIXED = frozenset({ProjectRole.VIEWER})
+
+
+def sign_out_right(
+    privacy_mode: PrivacyMode, role: ProjectRole | None, stored: str | None
+) -> SignOutRight | None:
+    if privacy_mode is not PrivacyMode.CLINICAL or role is None:
+        return None
+    if role in SIGN_OUT_FIXED or stored is None:
+        return SIGN_OUT_DEFAULTS[role]
+    return SignOutRight(stored)
+
+
+def covers_case(right: SignOutRight | None, assigned: bool) -> bool:
+    return right is SignOutRight.ANY_CASE or (right is SignOutRight.OWN_CASES and assigned)
+
 
 NARROWING = (Grant.NONE, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.ALL)
 

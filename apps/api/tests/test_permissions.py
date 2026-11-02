@@ -348,6 +348,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "removeProjectMember": lambda w: Call(
         "DELETE", f"/api/projects/{w.project}/members/{w.colleague}"
     ),
+    "setProjectMemberSignOut": lambda w: Call(
+        "PUT", f"/api/projects/{w.project}/members/{w.colleague}/sign-out", {"sign_out": "never"}
+    ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),

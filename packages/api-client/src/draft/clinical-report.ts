@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import type { Problem } from "../generated/api.ts";
+import { type Problem, SignOutRight } from "../generated/api.ts";
 import { type DraftQueryOptions, type DraftRequest, defineDraftQuery } from "./define.ts";
 import { type DraftMutationOptions, defineDraftMutation } from "./define-mutation.ts";
 
@@ -12,7 +12,6 @@ export const ClinicalStep = {
   text: "text",
   sign: "sign",
 } as const;
-export const SignOutRight = { own: "own", any: "any", never: "never" } as const;
 
 export const clinicalDepositSchema = z.object({
   id: z.string(),

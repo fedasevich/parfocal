@@ -79,6 +79,12 @@ class ProjectRole(StrEnum):
     VIEWER = "viewer"
 
 
+class SignOutRight(StrEnum):
+    OWN_CASES = "own"
+    ANY_CASE = "any"
+    NEVER = "never"
+
+
 class Availability(StrEnum):
     AVAILABLE = "available"
     AWAY = "away"
@@ -706,6 +712,7 @@ project_members = Table(
     Column("project_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("user_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=PERSONAL),
     Column("role", String(10), nullable=False, info=OPERATIONAL),
+    Column("sign_out", String(10), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"],
@@ -713,6 +720,7 @@ project_members = Table(
         ondelete="CASCADE",
     ),
     one_of("role", ProjectRole),
+    one_of("sign_out", SignOutRight),
 )
 
 cases = Table(

@@ -58,7 +58,9 @@ def test_a_researcher_creates_a_project_and_owns_it(api: ApiAs, database: str) -
         None,
         "owner",
     )
-    assert project["members"] == [{"user_id": str(people["owner"].user_id), "role": "owner"}]
+    assert project["members"] == [
+        {"user_id": str(people["owner"].user_id), "role": "owner", "sign_out": None}
+    ]
     details = owner(
         database, f"SELECT details FROM audit_events WHERE target_id = '{project['id']}'"
     )

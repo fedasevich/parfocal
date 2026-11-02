@@ -38,6 +38,20 @@ Inside a project the narrower of the workspace grant and the project grant appli
 | Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
 | Give decisions, fix results, comment | `review` | Yes | In their tasks |  |
 
+## Project rights
+
+Can sign out. Signs out the clinical report of a case. Exists only in a project in Clinical privacy mode. Only the project owner changes it, and every change is audited. A member without it sends the report for co-sign to a member whose right covers the case.
+
+| Key | Value | Covers |
+|---|---|---|
+| `own` | Own cases | A case with an assignment of theirs on one of its slides |
+| `any` | Any case | Every case of the project |
+| `never` | Never | No case, their reports go for co-sign |
+
+| Action | Key | owner | reviewer | viewer |
+|---|---|---|---|---|
+| Can sign out | `sign-out` | Own cases, by default | Own cases, by default | Never, fixed |
+
 ## Matrix
 
 An empty cell means no. A researcher with admin rights gets the researcher's column and yes wherever the admin rights column says yes.

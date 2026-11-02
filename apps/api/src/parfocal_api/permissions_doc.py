@@ -14,6 +14,12 @@ from parfocal_api.permissions import (
     PROJECT_ROLE_NAMES,
     ROLE_DUTIES,
     ROLE_NAMES,
+    SIGN_OUT_DEFAULTS,
+    SIGN_OUT_DUTIES,
+    SIGN_OUT_FIXED,
+    SIGN_OUT_MEANINGS,
+    SIGN_OUT_NAME,
+    SIGN_OUT_NAMES,
     Grant,
 )
 
@@ -44,6 +50,19 @@ def render() -> str:
         + " |"
         for permission, grants in PROJECT_MATRIX.items()
     ]
+    sign_out_values = [
+        f"| `{value.value}` | {name} | {SIGN_OUT_MEANINGS[value]} |"
+        for value, name in SIGN_OUT_NAMES.items()
+    ]
+    sign_out_defaults = (
+        f"| {SIGN_OUT_NAME} | `sign-out` | "
+        + " | ".join(
+            SIGN_OUT_NAMES[SIGN_OUT_DEFAULTS[role]]
+            + (", fixed" if role in SIGN_OUT_FIXED else ", by default")
+            for role in PROJECT_COLUMNS
+        )
+        + " |"
+    )
     return "\n".join(
         [
             "# Permissions",
@@ -82,6 +101,18 @@ def render() -> str:
             project_header,
             project_divider,
             *project_rows,
+            "",
+            "## Project rights",
+            "",
+            f"{SIGN_OUT_NAME}. {SIGN_OUT_DUTIES}.",
+            "",
+            "| Key | Value | Covers |",
+            "|---|---|---|",
+            *sign_out_values,
+            "",
+            project_header,
+            project_divider,
+            sign_out_defaults,
             "",
             "## Matrix",
             "",

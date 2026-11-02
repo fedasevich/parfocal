@@ -96,6 +96,7 @@ import type {
   SessionSummary,
   SignedPart,
   SigningKey,
+  SignOutSet,
   SiteValidation,
   SlideFigure,
   SlidePage,
@@ -168,6 +169,8 @@ import {
   Rule,
   ServiceScope,
   Sex,
+  SignOutRight,
+  SignOutWarning,
   SlideColumn,
   StartMode,
   State,
@@ -247,6 +250,10 @@ export const getCreateProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -275,6 +282,10 @@ export const getListProjectsResponseMock = (): Project[] =>
       () => ({
         user_id: faker.string.uuid(),
         role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+        sign_out: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(SignOutRight)),
+          null,
+        ]),
       }),
     ),
   }));
@@ -303,6 +314,10 @@ export const getGetProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -332,6 +347,10 @@ export const getUpdateProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -361,6 +380,10 @@ export const getChangeProjectPrivacyResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -390,6 +413,10 @@ export const getArchiveProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -419,6 +446,10 @@ export const getRestoreProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -448,6 +479,10 @@ export const getSetProjectMemberResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -477,8 +512,51 @@ export const getCreateSampleProjectResponseMock = (
     () => ({
       user_id: faker.string.uuid(),
       role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getSetProjectMemberSignOutResponseMock = (
+  overrideResponse: Partial<Extract<SignOutSet, object>> = {},
+): SignOutSet => ({
+  project: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    number: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    colour: faker.number.int(),
+    privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
+    template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+    archived_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    sample: faker.datatype.boolean(),
+    my_role: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(ProjectRole)),
+      null,
+    ]),
+    members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+        sign_out: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(SignOutRight)),
+          null,
+        ]),
+      }),
+    ),
+  },
+  warning: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(SignOutWarning)),
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -7425,6 +7503,28 @@ export const getCreateSampleProjectMockHandler = (
   );
 };
 
+export const getSetProjectMemberSignOutMockHandler = (
+  overrideResponse?:
+    | SignOutSet
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SignOutSet> | SignOutSet),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/projects/:projectId/members/:userId/sign-out",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetProjectMemberSignOutResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListProjectClassesMockHandler = (
   overrideResponse?:
     | ProjectClass[]
@@ -11024,6 +11124,7 @@ export const getParfocalAPIMock = () => [
   getSetProjectMemberMockHandler(),
   getRemoveProjectMemberMockHandler(),
   getCreateSampleProjectMockHandler(),
+  getSetProjectMemberSignOutMockHandler(),
   getListProjectClassesMockHandler(),
   getSetProjectClassesMockHandler(),
   getListClassMappingsMockHandler(),

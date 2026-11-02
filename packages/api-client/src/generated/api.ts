@@ -2221,9 +2221,18 @@ export interface ProfileChange {
   title?: Title | null;
 }
 
+export type SignOutRight = (typeof SignOutRight)[keyof typeof SignOutRight];
+
+export const SignOutRight = {
+  own: "own",
+  any: "any",
+  never: "never",
+} as const;
+
 export interface ProjectMember {
   user_id: string;
   role: ProjectRole;
+  sign_out: SignOutRight | null;
 }
 
 export interface Project {
@@ -2960,6 +2969,21 @@ export interface SetRef {
   id: string;
   name: string;
   status: ResultStatus;
+}
+
+export interface SignOutChange {
+  sign_out: SignOutRight;
+}
+
+export type SignOutWarning = (typeof SignOutWarning)[keyof typeof SignOutWarning];
+
+export const SignOutWarning = {
+  "no-one-signs-out": "no-one-signs-out",
+} as const;
+
+export interface SignOutSet {
+  project: Project;
+  warning: SignOutWarning | null;
 }
 
 export interface SignedPart {
@@ -6219,6 +6243,186 @@ export const useCreateSampleProject = <TError = Problem, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof createSampleProject>>, TError, void, TContext> => {
   return useMutation(getCreateSampleProjectMutationOptions(options), queryClient);
+};
+
+export type setProjectMemberSignOutResponse200 = {
+  data: SignOutSet;
+  status: 200;
+};
+
+export type setProjectMemberSignOutResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setProjectMemberSignOutResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setProjectMemberSignOutResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setProjectMemberSignOutResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setProjectMemberSignOutResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setProjectMemberSignOutResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setProjectMemberSignOutResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setProjectMemberSignOutResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setProjectMemberSignOutResponseSuccess = setProjectMemberSignOutResponse200 & {
+  headers: Headers;
+};
+export type setProjectMemberSignOutResponseError = (
+  | setProjectMemberSignOutResponse400
+  | setProjectMemberSignOutResponse401
+  | setProjectMemberSignOutResponse403
+  | setProjectMemberSignOutResponse404
+  | setProjectMemberSignOutResponse409
+  | setProjectMemberSignOutResponse422
+  | setProjectMemberSignOutResponse429
+  | setProjectMemberSignOutResponse500
+) & {
+  headers: Headers;
+};
+
+export type setProjectMemberSignOutResponse =
+  | setProjectMemberSignOutResponseSuccess
+  | setProjectMemberSignOutResponseError;
+
+export const getSetProjectMemberSignOutUrl = (projectId: string, userId: string) => {
+  return `/api/projects/${projectId}/members/${userId}/sign-out`;
+};
+
+/**
+ * @summary Set Project Member Sign Out
+ */
+export const setProjectMemberSignOut = async (
+  projectId: string,
+  userId: string,
+  signOutChange: SignOutChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setProjectMemberSignOutResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setProjectMemberSignOutResponse>(
+    getSetProjectMemberSignOutUrl(projectId, userId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(signOutChange),
+    },
+  );
+};
+
+export const getSetProjectMemberSignOutMutationKey = () => ["setProjectMemberSignOut"] as const;
+
+export const getSetProjectMemberSignOutMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setProjectMemberSignOut>>,
+    TError,
+    SetProjectMemberSignOutMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setProjectMemberSignOut>>,
+  TError,
+  SetProjectMemberSignOutMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetProjectMemberSignOutMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setProjectMemberSignOut>>,
+    SetProjectMemberSignOutMutationVariables
+  > = (props) => {
+    const { projectId, userId, data } = props ?? {};
+
+    return setProjectMemberSignOut(projectId, userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetProjectMemberSignOutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setProjectMemberSignOut>>
+>;
+export type SetProjectMemberSignOutMutationBody = SignOutChange;
+export type SetProjectMemberSignOutMutationError = Problem;
+export type SetProjectMemberSignOutMutationVariables = {
+  projectId: string;
+  userId: string;
+  data: SignOutChange;
+};
+
+/**
+ * @summary Set Project Member Sign Out
+ */
+export const useSetProjectMemberSignOut = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setProjectMemberSignOut>>,
+      TError,
+      SetProjectMemberSignOutMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setProjectMemberSignOut>>,
+  TError,
+  SetProjectMemberSignOutMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetProjectMemberSignOutMutationOptions(options), queryClient);
 };
 
 export type listProjectClassesResponse200 = {

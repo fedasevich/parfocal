@@ -17,7 +17,9 @@ import type {
   MyTask,
   Project,
   ProjectRef,
+  ProjectRole,
   Session,
+  SignOutRight,
   Workspace,
 } from "../generated/api.ts";
 import {
@@ -85,6 +87,11 @@ export const toSession = (): Session => ({
 const roleIn = (project: ScenarioProject, key: PersonKey) =>
   project.owner === key ? "owner" : project.members.includes(key) ? "reviewer" : null;
 
+const signOutIn = (project: ScenarioProject, role: ProjectRole): SignOutRight | null => {
+  if (project.privacy !== "clinical") return null;
+  return role === "viewer" ? "never" : "own";
+};
+
 export const toProject = (project: ScenarioProject): Project => ({
   id: project.id,
   code: project.code,
@@ -97,10 +104,14 @@ export const toProject = (project: ScenarioProject): Project => ({
   archived_at: null,
   created_at: project.createdAt,
   my_role: roleIn(project, fakeView().viewer),
-  members: project.members.map((key) => ({
-    user_id: people[key].id,
-    role: roleIn(project, key) ?? "viewer",
-  })),
+  members: project.members.map((key) => {
+    const role = roleIn(project, key) ?? "viewer";
+    return {
+      user_id: people[key].id,
+      role,
+      sign_out: signOutIn(project, role),
+    };
+  }),
 });
 
 export const toProjectRef = (

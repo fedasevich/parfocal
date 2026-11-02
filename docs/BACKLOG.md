@@ -3211,7 +3211,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when component and API tests cover each setting and its audit entry, and component tests cover the Can sign out column with a viewer and the last-member warning.
   Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006, PROJ-009, REPORT-024. Refs mock: project/settings, doc 43, doc 44.
 
-- [ ] PROJ-009 · Can sign out, a project right in clinical projects
+- [x] PROJ-009 · Can sign out, a project right in clinical projects
   Each member of a project in Clinical privacy mode holds Can sign out as Own cases, Any case or Never. Own cases is the default for the owner and for project reviewers, and covers a case when the member holds an assignment on one of its slides. Viewers are fixed at Never. Only the project owner changes the value, every change is audited, and setting Never for the last member who could sign out is allowed and answered with a warning. The right does not exist in a de-identified project. The permission page is regenerated with the right ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md) (researcher and reviewer with admin rights), [ADR 0134](adr/0134-clinical-report-per-case-with-sign-out-and-co-sign.md), clinical report per case with sign-out and co-sign).
   Done when the table-driven permission test gains rows for Own cases on an own and another case, Any case and Never, API tests cover the defaults, a refused change by a non-owner, a refused value for a viewer, the last-member warning and a de-identified project without the right, and the audit entry is checked.
   Depends on PROJ-003, PROJ-002, IAM-024. Refs mock: project/settings, doc 43, doc 44.

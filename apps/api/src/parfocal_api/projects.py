@@ -12,7 +12,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.class_templates import TaxonomyTemplate, insert_template
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, publish
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Permission, require, sign_out_right
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import emergency_open, require_reading, role_in
@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
     Role,
+    SignOutRight,
     cases,
     memberships,
     project_members,
@@ -52,6 +53,7 @@ class ProjectChange(BaseModel):
 class ProjectMember(BaseModel):
     user_id: uuid.UUID
     role: ProjectRole
+    sign_out: SignOutRight | None
 
 
 class MemberChange(BaseModel):
@@ -162,23 +164,31 @@ async def project_of(
 ) -> Project:
     row = await row_of(connection, project_id)
     members = await connection.execute(
-        select(project_members.c.user_id, project_members.c.role)
+        select(project_members.c.user_id, project_members.c.role, project_members.c.sign_out)
         .where(project_members.c.project_id == project_id)
         .order_by(project_members.c.role, project_members.c.user_id)
     )
+    privacy_mode = PrivacyMode(row.privacy_mode)
     return Project(
         id=row.id,
         code=code_of(row.number),
         number=row.number,
         name=row.name,
         colour=row.colour,
-        privacy_mode=PrivacyMode(row.privacy_mode),
+        privacy_mode=privacy_mode,
         template=AnalysisTemplate(row.template),
         archived_at=row.archived_at,
         created_at=row.created_at,
         sample=row.sample,
         my_role=await role_in(connection, principal, project_id),
-        members=[ProjectMember(user_id=m.user_id, role=ProjectRole(m.role)) for m in members],
+        members=[
+            ProjectMember(
+                user_id=m.user_id,
+                role=ProjectRole(m.role),
+                sign_out=sign_out_right(privacy_mode, ProjectRole(m.role), m.sign_out),
+            )
+            for m in members
+        ],
     )
 
 
@@ -459,7 +469,8 @@ async def set_project_member(
             )
             .on_conflict_do_update(
                 index_elements=[project_members.c.project_id, project_members.c.user_id],
-                set_={"role": change.role},
+                set_={"role": change.role}
+                | ({"sign_out": None} if change.role is ProjectRole.VIEWER else {}),
             )
         )
         await record(
