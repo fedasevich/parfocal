@@ -40,6 +40,7 @@ import type {
   HeadlineNumbers,
   Health,
   Home,
+  ImportCheck,
   ImportReport,
   InboxCounts,
   InboxPage,
@@ -2522,6 +2523,105 @@ export const getPairResultFilesResponseMock = (
 });
 
 export const getPairUploadWithSlideResponseMock = (
+  overrideResponse: Partial<Extract<UploadState, object>> = {},
+): UploadState => ({
+  upload_id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+  status: faker.helpers.arrayElement(Object.values(IngestStatus)),
+  upload_status: faker.helpers.arrayElement(Object.values(UploadStatus)),
+  job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  step: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  reason: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  message: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  notices: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  result_format: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ResultFormat)),
+    null,
+  ]),
+  slide_upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  pairing_rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Rule)), null]),
+  pairing_certainty: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Certainty)),
+    null,
+  ]),
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getGetImportProblemsResponseMock = (
+  overrideResponse: Partial<Extract<ImportCheck, object>> = {},
+): ImportCheck => ({
+  upload_id: faker.string.uuid(),
+  readable: faker.helpers.arrayElement([faker.number.int(), null]),
+  problems: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      count: faker.number.int(),
+      places: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+      ),
+      names: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+      ),
+      guess: faker.helpers.arrayElement([
+        {
+          level: faker.helpers.arrayElement([faker.number.int(), null]),
+          downsample: faker.number.float({ fractionDigits: 2 }),
+          mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        },
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getDownloadImportProblemsResponseMock = (): string => faker.word.sample();
+
+export const getChooseHowToImportResponseMock = (
+  overrideResponse: Partial<Extract<UploadState, object>> = {},
+): UploadState => ({
+  upload_id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+  status: faker.helpers.arrayElement(Object.values(IngestStatus)),
+  upload_status: faker.helpers.arrayElement(Object.values(UploadStatus)),
+  job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  step: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  reason: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  message: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  notices: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  result_format: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ResultFormat)),
+    null,
+  ]),
+  slide_upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  pairing_rule: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Rule)), null]),
+  pairing_certainty: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Certainty)),
+    null,
+  ]),
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getLeaveResultOutResponseMock = (
   overrideResponse: Partial<Extract<UploadState, object>> = {},
 ): UploadState => ({
   upload_id: faker.string.uuid(),
@@ -8865,6 +8965,97 @@ export const getPairUploadWithSlideMockHandler = (
   );
 };
 
+export const getGetImportProblemsMockHandler = (
+  overrideResponse?:
+    | ImportCheck
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ImportCheck> | ImportCheck),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/uploads/:uploadId/problems",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetImportProblemsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDownloadImportProblemsMockHandler = (
+  overrideResponse?:
+    | string
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<string> | string),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/uploads/:uploadId/problems/report",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const resolvedBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDownloadImportProblemsResponseMock();
+      const textBody =
+        typeof resolvedBody === "string" ? resolvedBody : JSON.stringify(resolvedBody ?? null);
+      return HttpResponse.text(textBody, { status: 200, headers: { "Content-Type": "text/csv" } });
+    },
+    options,
+  );
+};
+
+export const getChooseHowToImportMockHandler = (
+  overrideResponse?:
+    | UploadState
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<UploadState> | UploadState),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/uploads/:uploadId/import-choices",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChooseHowToImportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getLeaveResultOutMockHandler = (
+  overrideResponse?:
+    | UploadState
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<UploadState> | UploadState),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/uploads/:uploadId/leave-out",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLeaveResultOutResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSortDroppedFilesMockHandler = (
   overrideResponse?:
     | Sorting
@@ -11441,6 +11632,10 @@ export const getParfocalAPIMock = () => [
   getCompleteUploadMockHandler(),
   getPairResultFilesMockHandler(),
   getPairUploadWithSlideMockHandler(),
+  getGetImportProblemsMockHandler(),
+  getDownloadImportProblemsMockHandler(),
+  getChooseHowToImportMockHandler(),
+  getLeaveResultOutMockHandler(),
   getSortDroppedFilesMockHandler(),
   getApplyDroppedFilesMockHandler(),
   getCreateReviewTaskMockHandler(),

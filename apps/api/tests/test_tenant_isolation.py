@@ -682,6 +682,10 @@ async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
             storage_upload_id=storage_upload_id,
             part_bytes=TEST_PART_BYTES,
             part_count=1,
+            import_problems={
+                "readable": 1,
+                "problems": [{"code": "objects-unreadable", "count": 1, "places": ["row 2"]}],
+            },
         )
     )
     seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
@@ -762,6 +766,12 @@ GET_ROUTES = {
         lambda a: f"/api/uploads/s3/multipart/{a.ids['upload']}?key={upload_key(a)}",
     ),
     "getUploadStatus": Route(Exposure.TENANT, lambda a: f"/api/uploads/{a.ids['upload']}/status"),
+    "getImportProblems": Route(
+        Exposure.TENANT, lambda a: f"/api/uploads/{a.ids['upload']}/problems"
+    ),
+    "downloadImportProblems": Route(
+        Exposure.TENANT, lambda a: f"/api/uploads/{a.ids['upload']}/problems/report"
+    ),
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
     "getStudyTemplate": Route(

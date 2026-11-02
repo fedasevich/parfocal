@@ -593,7 +593,10 @@ def result_status(
         return waiting(Waiting.WAITING_FOR_SLIDE)
     if imported:
         return IngestStatus.READY, None, None
-    return job_status(job) or (IngestStatus.PROCESSING, None, None)
+    ended = job_status(job)
+    if ended is None and row.import_problems is not None and row.import_choices is None:
+        return waiting(Waiting.NEEDS_CHOICES)
+    return ended or (IngestStatus.PROCESSING, None, None)
 
 
 def notices_of(codes: Sequence[str]) -> list[IngestNotice]:

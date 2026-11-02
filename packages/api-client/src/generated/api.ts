@@ -1281,6 +1281,12 @@ export interface Health {
   status: string;
 }
 
+export interface HeatmapGuess {
+  level: number | null;
+  downsample: number;
+  mpp: number | null;
+}
+
 export type HitKind = (typeof HitKind)[keyof typeof HitKind];
 
 export const HitKind = {
@@ -1385,6 +1391,35 @@ export interface Home {
   slides_without_results: number;
   week: Week;
   announcements: Announcement[];
+}
+
+export interface ImportProblem {
+  code: string;
+  message: string;
+  count: number;
+  places: string[];
+  names: string[];
+  guess: HeatmapGuess | null;
+}
+
+export interface ImportCheck {
+  upload_id: string;
+  readable: number | null;
+  problems: ImportProblem[];
+}
+
+export type ScoreDefault = (typeof ScoreDefault)[keyof typeof ScoreDefault];
+
+export const ScoreDefault = {
+  none: "none",
+  one: "one",
+} as const;
+
+export interface ImportChoices {
+  score_default?: ScoreDefault;
+  unclassified_class_id?: string | null;
+  /** @maxItems 200 */
+  class_mappings?: ClassMapping[];
 }
 
 export interface RowProblem {
@@ -2678,6 +2713,7 @@ export const ResultFormat = {
   geojson: "geojson",
   "parfocal-json": "parfocal-json",
   csv: "csv",
+  heatmap: "heatmap",
 } as const;
 
 export type ResultSource = (typeof ResultSource)[keyof typeof ResultSource];
@@ -15891,6 +15927,713 @@ export const usePairUploadWithSlide = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getPairUploadWithSlideMutationOptions(options), queryClient);
+};
+
+export type getImportProblemsResponse200 = {
+  data: ImportCheck;
+  status: 200;
+};
+
+export type getImportProblemsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getImportProblemsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getImportProblemsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getImportProblemsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getImportProblemsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getImportProblemsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getImportProblemsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getImportProblemsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getImportProblemsResponseSuccess = getImportProblemsResponse200 & {
+  headers: Headers;
+};
+export type getImportProblemsResponseError = (
+  | getImportProblemsResponse400
+  | getImportProblemsResponse401
+  | getImportProblemsResponse403
+  | getImportProblemsResponse404
+  | getImportProblemsResponse409
+  | getImportProblemsResponse422
+  | getImportProblemsResponse429
+  | getImportProblemsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getImportProblemsResponse =
+  | getImportProblemsResponseSuccess
+  | getImportProblemsResponseError;
+
+export const getGetImportProblemsUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/problems`;
+};
+
+/**
+ * @summary Get Import Problems
+ */
+export const getImportProblems = async (
+  uploadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getImportProblemsResponse> => {
+  return apiFetch<getImportProblemsResponse>(getGetImportProblemsUrl(uploadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetImportProblemsQueryKey = (uploadId: string) => {
+  return [`/api/uploads/${uploadId}/problems`] as const;
+};
+
+export const getGetImportProblemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetImportProblemsQueryKey(uploadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportProblems>>> = ({ signal }) =>
+    getImportProblems(uploadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: uploadId !== null && uploadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetImportProblemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getImportProblems>>
+>;
+export type GetImportProblemsQueryError = Problem;
+
+export function useGetImportProblems<
+  TData = Awaited<ReturnType<typeof getImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getImportProblems>>,
+          TError,
+          Awaited<ReturnType<typeof getImportProblems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetImportProblems<
+  TData = Awaited<ReturnType<typeof getImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getImportProblems>>,
+          TError,
+          Awaited<ReturnType<typeof getImportProblems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetImportProblems<
+  TData = Awaited<ReturnType<typeof getImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Import Problems
+ */
+
+export function useGetImportProblems<
+  TData = Awaited<ReturnType<typeof getImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getImportProblems>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetImportProblemsQueryOptions(uploadId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type downloadImportProblemsResponse200 = {
+  data: string;
+  status: 200;
+};
+
+export type downloadImportProblemsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type downloadImportProblemsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type downloadImportProblemsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type downloadImportProblemsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type downloadImportProblemsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type downloadImportProblemsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type downloadImportProblemsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type downloadImportProblemsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type downloadImportProblemsResponseSuccess = downloadImportProblemsResponse200 & {
+  headers: Headers;
+};
+export type downloadImportProblemsResponseError = (
+  | downloadImportProblemsResponse400
+  | downloadImportProblemsResponse401
+  | downloadImportProblemsResponse403
+  | downloadImportProblemsResponse404
+  | downloadImportProblemsResponse409
+  | downloadImportProblemsResponse422
+  | downloadImportProblemsResponse429
+  | downloadImportProblemsResponse500
+) & {
+  headers: Headers;
+};
+
+export type downloadImportProblemsResponse =
+  | downloadImportProblemsResponseSuccess
+  | downloadImportProblemsResponseError;
+
+export const getDownloadImportProblemsUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/problems/report`;
+};
+
+/**
+ * @summary Download Import Problems
+ */
+export const downloadImportProblems = async (
+  uploadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<downloadImportProblemsResponse> => {
+  return apiFetch<downloadImportProblemsResponse>(getDownloadImportProblemsUrl(uploadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadImportProblemsQueryKey = (uploadId: string) => {
+  return [`/api/uploads/${uploadId}/problems/report`] as const;
+};
+
+export const getDownloadImportProblemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDownloadImportProblemsQueryKey(uploadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadImportProblems>>> = ({ signal }) =>
+    downloadImportProblems(uploadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: uploadId !== null && uploadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type DownloadImportProblemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadImportProblems>>
+>;
+export type DownloadImportProblemsQueryError = Problem;
+
+export function useDownloadImportProblems<
+  TData = Awaited<ReturnType<typeof downloadImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadImportProblems>>,
+          TError,
+          Awaited<ReturnType<typeof downloadImportProblems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadImportProblems<
+  TData = Awaited<ReturnType<typeof downloadImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadImportProblems>>,
+          TError,
+          Awaited<ReturnType<typeof downloadImportProblems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadImportProblems<
+  TData = Awaited<ReturnType<typeof downloadImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download Import Problems
+ */
+
+export function useDownloadImportProblems<
+  TData = Awaited<ReturnType<typeof downloadImportProblems>>,
+  TError = Problem,
+>(
+  uploadId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadImportProblems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadImportProblemsQueryOptions(uploadId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type chooseHowToImportResponse200 = {
+  data: UploadState;
+  status: 200;
+};
+
+export type chooseHowToImportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type chooseHowToImportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type chooseHowToImportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type chooseHowToImportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type chooseHowToImportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type chooseHowToImportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type chooseHowToImportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type chooseHowToImportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type chooseHowToImportResponseSuccess = chooseHowToImportResponse200 & {
+  headers: Headers;
+};
+export type chooseHowToImportResponseError = (
+  | chooseHowToImportResponse400
+  | chooseHowToImportResponse401
+  | chooseHowToImportResponse403
+  | chooseHowToImportResponse404
+  | chooseHowToImportResponse409
+  | chooseHowToImportResponse422
+  | chooseHowToImportResponse429
+  | chooseHowToImportResponse500
+) & {
+  headers: Headers;
+};
+
+export type chooseHowToImportResponse =
+  | chooseHowToImportResponseSuccess
+  | chooseHowToImportResponseError;
+
+export const getChooseHowToImportUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/import-choices`;
+};
+
+/**
+ * @summary Choose How To Import
+ */
+export const chooseHowToImport = async (
+  uploadId: string,
+  importChoices: ImportChoices,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<chooseHowToImportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<chooseHowToImportResponse>(getChooseHowToImportUrl(uploadId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(importChoices),
+  });
+};
+
+export const getChooseHowToImportMutationKey = () => ["chooseHowToImport"] as const;
+
+export const getChooseHowToImportMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof chooseHowToImport>>,
+    TError,
+    ChooseHowToImportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof chooseHowToImport>>,
+  TError,
+  ChooseHowToImportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChooseHowToImportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof chooseHowToImport>>,
+    ChooseHowToImportMutationVariables
+  > = (props) => {
+    const { uploadId, data } = props ?? {};
+
+    return chooseHowToImport(uploadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChooseHowToImportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof chooseHowToImport>>
+>;
+export type ChooseHowToImportMutationBody = ImportChoices;
+export type ChooseHowToImportMutationError = Problem;
+export type ChooseHowToImportMutationVariables = { uploadId: string; data: ImportChoices };
+
+/**
+ * @summary Choose How To Import
+ */
+export const useChooseHowToImport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof chooseHowToImport>>,
+      TError,
+      ChooseHowToImportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof chooseHowToImport>>,
+  TError,
+  ChooseHowToImportMutationVariables,
+  TContext
+> => {
+  return useMutation(getChooseHowToImportMutationOptions(options), queryClient);
+};
+
+export type leaveResultOutResponse200 = {
+  data: UploadState;
+  status: 200;
+};
+
+export type leaveResultOutResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type leaveResultOutResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type leaveResultOutResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type leaveResultOutResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type leaveResultOutResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type leaveResultOutResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type leaveResultOutResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type leaveResultOutResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type leaveResultOutResponseSuccess = leaveResultOutResponse200 & {
+  headers: Headers;
+};
+export type leaveResultOutResponseError = (
+  | leaveResultOutResponse400
+  | leaveResultOutResponse401
+  | leaveResultOutResponse403
+  | leaveResultOutResponse404
+  | leaveResultOutResponse409
+  | leaveResultOutResponse422
+  | leaveResultOutResponse429
+  | leaveResultOutResponse500
+) & {
+  headers: Headers;
+};
+
+export type leaveResultOutResponse = leaveResultOutResponseSuccess | leaveResultOutResponseError;
+
+export const getLeaveResultOutUrl = (uploadId: string) => {
+  return `/api/uploads/${uploadId}/leave-out`;
+};
+
+/**
+ * @summary Leave Result Out
+ */
+export const leaveResultOut = async (
+  uploadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<leaveResultOutResponse> => {
+  return apiFetch<leaveResultOutResponse>(getLeaveResultOutUrl(uploadId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getLeaveResultOutMutationKey = () => ["leaveResultOut"] as const;
+
+export const getLeaveResultOutMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof leaveResultOut>>,
+    TError,
+    LeaveResultOutMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof leaveResultOut>>,
+  TError,
+  LeaveResultOutMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLeaveResultOutMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof leaveResultOut>>,
+    LeaveResultOutMutationVariables
+  > = (props) => {
+    const { uploadId } = props ?? {};
+
+    return leaveResultOut(uploadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LeaveResultOutMutationResult = NonNullable<Awaited<ReturnType<typeof leaveResultOut>>>;
+
+export type LeaveResultOutMutationError = Problem;
+export type LeaveResultOutMutationVariables = { uploadId: string };
+
+/**
+ * @summary Leave Result Out
+ */
+export const useLeaveResultOut = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof leaveResultOut>>,
+      TError,
+      LeaveResultOutMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof leaveResultOut>>,
+  TError,
+  LeaveResultOutMutationVariables,
+  TContext
+> => {
+  return useMutation(getLeaveResultOutMutationOptions(options), queryClient);
 };
 
 export type sortDroppedFilesResponse200 = {

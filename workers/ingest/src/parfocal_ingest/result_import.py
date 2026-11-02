@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx2
 import msgspec
@@ -14,6 +14,7 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 from shapely.geometry.base import BaseGeometry
+from sqlalchemy import select, update
 
 from parfocal_api.numbering import reserve
 from parfocal_api.result_imports import (
@@ -25,7 +26,14 @@ from parfocal_api.result_imports import (
 )
 from parfocal_api.result_sets import MAX_CLASSES, RegionRow, ResultSetDraft
 from parfocal_api.slide_ingest import record_refusal, upload_of
-from parfocal_api.tables import ResultObjectKind, UploadStatus
+from parfocal_api.tables import (
+    ResultObjectKind,
+    UploadStatus,
+    class_mappings,
+    project_classes,
+    slides,
+    uploads,
+)
 from parfocal_common.cell_chunks import UNCLASSIFIED, ChunkError
 from parfocal_common.chunk_store import ChunkEntry, read_summary
 from parfocal_common.ingest import Failure
@@ -38,6 +46,7 @@ from parfocal_common.result_imports import (
     ImportFailure,
     ImportNotice,
     ResultFormat,
+    ScoreDefault,
     UploadKind,
     result_set_id_for,
     result_set_prefix,
@@ -54,6 +63,15 @@ from parfocal_ingest.cell_import import (
     scaled,
 )
 from parfocal_ingest.chunk_builder import CellTable, plan_chunks, write_table
+from parfocal_ingest.import_checks import (
+    Choices,
+    KnownClasses,
+    SlideFrame,
+    Tally,
+    heatmap_problems,
+    problems_of,
+    raster_shape,
+)
 from parfocal_ingest.json_stream import JsonArray
 from parfocal_ingest.matching import Known, Matching, cell_distance, match_regions, pair_centres
 from parfocal_ingest.results import (
@@ -130,6 +148,8 @@ def parfocal_header(data: bytes) -> ParfocalHeader:
 @dataclass
 class Reading:
     collector: CellCollector
+    tally: Tally
+    choices: Choices = field(default_factory=Choices)
     shapes: list[ResultObject] = field(default_factory=list[ResultObject])
     skipped: int = 0
     unreadable: bool = False
@@ -139,6 +159,8 @@ class Reading:
             files = sum(1 for problem in batch.problems if problem.where == "file")
             self.unreadable = self.unreadable or files > 0
             self.skipped += len(batch.problems) - files
+            self.tally.take(batch)
+            batch.objects[:] = [self.choices.adjusted(item) for item in batch.objects]
             self.shapes += [item for item in batch.objects if item.kind in LETTERS]
             self.collector.add([item for item in batch.objects if item.kind is ObjectKind.CELL])
             batch.objects.clear()
@@ -170,10 +192,21 @@ def table_mapping(path: Path) -> tuple[ColumnMapping, Any]:
 
 
 def read_path(path: Path, stored_format: str | None) -> Parsed:
+    return read_checked(path, stored_format)[0]
+
+
+def read_checked(
+    path: Path,
+    stored_format: str | None,
+    frame: SlideFrame | None = None,
+    choices: Choices | None = None,
+) -> tuple[Parsed, Tally]:
     with path.open("rb") as handle:
         chosen = format_for(handle.read(SNIFF_BYTES), stored_format)
+    tally = Tally(chosen, frame or SlideFrame())
     with CellCollector(path.parent) as collector:
-        return read_format(path, chosen, Reading(collector))
+        reading = Reading(collector, tally, choices or Choices())
+        return read_format(path, chosen, reading), tally
 
 
 def read_format(path: Path, chosen: ResultFormat, reading: Reading) -> Parsed:
@@ -192,6 +225,8 @@ def read_format(path: Path, chosen: ResultFormat, reading: Reading) -> Parsed:
             with path.open(encoding="utf-8-sig", newline="") as text:
                 reading.take(stream_table(text, mapping, dialect))
             return reading.parsed(chosen)
+        case ResultFormat.HEATMAP:
+            raise StepFailedError(ImportFailure.HEATMAP_NOT_STORED)
 
 
 def class_list(parsed: Parsed) -> list[str]:
@@ -471,13 +506,108 @@ async def keep_source(context: Context, key: str) -> None:
         )
 
 
+@dataclass(frozen=True)
+class Setting:
+    frame: SlideFrame
+    known: KnownClasses
+    choices: Choices | None
+
+
+async def setting_of(connection: Any, upload: Any) -> Setting:
+    slide = None
+    if upload.slide_id is not None:
+        slide = (
+            await connection.execute(
+                select(slides.c.width, slides.c.height, slides.c.level_count, slides.c.mpp_x).where(
+                    slides.c.id == upload.slide_id
+                )
+            )
+        ).one_or_none()
+    frame = (
+        SlideFrame(slide.width, slide.height, slide.level_count, slide.mpp_x)
+        if slide is not None
+        else SlideFrame()
+    )
+    names = {
+        row.id: row.name
+        for row in await connection.execute(
+            select(project_classes.c.id, project_classes.c.name).where(
+                project_classes.c.project_id == upload.project_id
+            )
+        )
+    }
+    renames = {
+        row.source_name: names[row.class_id]
+        for row in await connection.execute(
+            select(class_mappings.c.source_name, class_mappings.c.class_id).where(
+                class_mappings.c.project_id == upload.project_id
+            )
+        )
+        if row.class_id in names
+    }
+    known = KnownClasses(
+        frozenset(key for name in names.values() if (key := class_key(name)) is not None), renames
+    )
+    return Setting(frame, known, choices_of(upload.import_choices, names, renames))
+
+
+def choices_of(
+    stored: Any, names: Mapping[uuid.UUID, str], renames: Mapping[str, str]
+) -> Choices | None:
+    if not isinstance(stored, dict):
+        return Choices(renames=renames) if renames else None
+    picked = cast("dict[str, Any]", stored)
+    unclassified = picked.get("unclassified_class_id")
+    score = picked.get("score_default")
+    return Choices(
+        score_default=ScoreDefault(score) if score else None,
+        unclassified=names.get(uuid.UUID(unclassified)) if unclassified else None,
+        renames=renames,
+    )
+
+
+async def ask_for_choices(context: Context, problems: list[dict[str, Any]], readable: int) -> None:
+    async with context.step.transaction() as connection:
+        await connection.execute(
+            update(uploads)
+            .where(uploads.c.id == context.upload.id)
+            .values(import_problems={"readable": readable, "problems": problems})
+        )
+    shutil.rmtree(context.folder, ignore_errors=True)
+
+
+async def check_heatmap(context: Context, path: Path, setting: Setting) -> Mapping[str, Any]:
+    if context.upload.row.import_choices is not None:
+        raise StepFailedError(ImportFailure.HEATMAP_NOT_STORED)
+    shape = await asyncio.to_thread(raster_shape, path)
+    await ask_for_choices(context, heatmap_problems(shape, setting.frame), 1)
+    return {"needs_choices": True, "notices": []}
+
+
 async def import_step(context: Context) -> Mapping[str, Any]:
     upload = context.upload.row
     if upload.result_set_id is not None:
         return {"result_set_id": str(upload.result_set_id), "notices": []}
+    async with context.step.transaction() as connection:
+        setting = await setting_of(connection, upload)
     path = await fetch(context)
-    parsed = await asyncio.to_thread(read_path, path, upload.result_format)
+    if upload.result_format == ResultFormat.HEATMAP:
+        return await check_heatmap(context, path, setting)
+    parsed, tally = await asyncio.to_thread(
+        read_checked, path, upload.result_format, setting.frame, setting.choices
+    )
     objects_to_import(parsed)
+    if tally.all_outside:
+        raise StepFailedError(ImportFailure.OUTSIDE_SLIDE)
+    if upload.import_choices is None:
+        problems = problems_of(tally, setting.known, parsed.declared_classes)
+        if problems:
+            await ask_for_choices(context, problems, tally.readable)
+            return {"needs_choices": True, "notices": []}
+    if setting.choices is not None:
+        parsed.declared_classes = [
+            setting.choices.renamed(name) or name for name in parsed.declared_classes
+        ]
     classes = class_list(parsed)
     set_id = result_set_id_for(upload.id)
     async with context.step.transaction() as connection:

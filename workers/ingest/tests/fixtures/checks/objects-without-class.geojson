@@ -1,0 +1,186 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "region-1",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       100,
+       100
+      ],
+      [
+       200,
+       100
+      ],
+      [
+       200,
+       200
+      ],
+      [
+       100,
+       200
+      ],
+      [
+       100,
+       100
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "score": 0.8,
+    "classification": {
+     "name": "Tumor"
+    }
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "region-2",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       300,
+       100
+      ],
+      [
+       400,
+       100
+      ],
+      [
+       400,
+       200
+      ],
+      [
+       300,
+       200
+      ],
+      [
+       300,
+       100
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "score": 0.8
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "region-3",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       500,
+       100
+      ],
+      [
+       600,
+       100
+      ],
+      [
+       600,
+       200
+      ],
+      [
+       500,
+       200
+      ],
+      [
+       500,
+       100
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "score": 0.8,
+    "classification": {
+     "name": "Tumor"
+    }
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "region-4",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       700,
+       100
+      ],
+      [
+       800,
+       100
+      ],
+      [
+       800,
+       200
+      ],
+      [
+       700,
+       200
+      ],
+      [
+       700,
+       100
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "score": 0.8
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "region-5",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       900,
+       100
+      ],
+      [
+       1000,
+       100
+      ],
+      [
+       1000,
+       200
+      ],
+      [
+       900,
+       200
+      ],
+      [
+       900,
+       100
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "score": 0.8
+   }
+  }
+ ]
+}

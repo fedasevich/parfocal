@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 26 |
 | `personal` | 48 |
 | `secret` | 9 |
-| `operational` | 515 |
+| `operational` | 517 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -859,6 +859,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `pairing_rule` | operational |
 | `pairing_certainty` | operational |
 | `result_set_id` | operational |
+| `import_problems` | operational |
+| `import_choices` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

@@ -188,6 +188,8 @@ class Workspace:
     finished_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     doomed_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     result_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
+    waiting_result: SeededUpload = field(default_factory=lambda: SeededUpload())
+    leftover_result: SeededUpload = field(default_factory=lambda: SeededUpload())
 
     @property
     def annotations(self) -> str:
@@ -288,6 +290,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "pairUploadWithSlide": lambda w: Call(
         "PUT", f"/api/uploads/{w.result_upload.id}/slide", {"slide_id": str(w.slide)}
     ),
+    "getImportProblems": lambda w: Call("GET", f"/api/uploads/{w.result_upload.id}/problems"),
+    "downloadImportProblems": lambda w: Call(
+        "GET", f"/api/uploads/{w.result_upload.id}/problems/report"
+    ),
+    "chooseHowToImport": lambda w: Call(
+        "PUT", f"/api/uploads/{w.waiting_result.id}/import-choices", {}
+    ),
+    "leaveResultOut": lambda w: Call("POST", f"/api/uploads/{w.leftover_result.id}/leave-out"),
     "createProject": lambda _: Call("POST", "/api/projects", {"name": "Matrix project"}),
     "listProjectClasses": lambda w: Call("GET", f"/api/projects/{w.project}/classes"),
     "getOpinionForm": lambda w: Call("GET", f"/api/projects/{w.project}/opinion-form"),
@@ -1121,8 +1131,17 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                         (True, "slide"),
                         (False, "slide"),
                         (False, "result"),
+                        (False, "result"),
+                        (False, "result"),
                     )
                 ]
+                waiting: dict[str, list[object]] = {"problems": []}
+                for finished, problems in ((uploads_made[4], waiting), (uploads_made[5], None)):
+                    await connection.execute(
+                        update(uploads)
+                        .where(uploads.c.id == finished.id)
+                        .values(status="completed", closed_at=func.now(), import_problems=problems)
+                    )
         assert isinstance(tenant_id, uuid.UUID)
         assert isinstance(account, uuid.UUID)
         assert isinstance(token, uuid.UUID)

@@ -1991,6 +1991,8 @@ uploads = Table(
     Column("pairing_rule", String(30), nullable=True, info=OPERATIONAL),
     Column("pairing_certainty", String(10), nullable=True, info=OPERATIONAL),
     Column("result_set_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("import_problems", JSONB, nullable=True, info=OPERATIONAL),
+    Column("import_choices", JSONB, nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("id", "project_id"),
     UniqueConstraint("result_set_id"),

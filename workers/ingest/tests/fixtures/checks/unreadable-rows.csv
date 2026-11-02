@@ -1,0 +1,6 @@
+x,y,class,score
+100,120,Tumor,0.9
+abc,140,Tumor,0.8
+160,160,Tumor,0.7
+,180,Tumor,0.6
+220,200,Tumor,0.5

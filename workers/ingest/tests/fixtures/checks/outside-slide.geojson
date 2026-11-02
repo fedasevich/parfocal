@@ -1,0 +1,119 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "far-1",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       50000,
+       60000
+      ],
+      [
+       50100,
+       60000
+      ],
+      [
+       50100,
+       60100
+      ],
+      [
+       50000,
+       60100
+      ],
+      [
+       50000,
+       60000
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "classification": {
+     "name": "Tumor"
+    },
+    "score": 0.9
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "far-2",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       50200,
+       60000
+      ],
+      [
+       50300,
+       60000
+      ],
+      [
+       50300,
+       60100
+      ],
+      [
+       50200,
+       60100
+      ],
+      [
+       50200,
+       60000
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "classification": {
+     "name": "Tumor"
+    },
+    "score": 0.9
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "far-3",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       50400,
+       60000
+      ],
+      [
+       50500,
+       60000
+      ],
+      [
+       50500,
+       60100
+      ],
+      [
+       50400,
+       60100
+      ],
+      [
+       50400,
+       60000
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "objectType": "annotation",
+    "classification": {
+     "name": "Tumor"
+    },
+    "score": 0.9
+   }
+  }
+ ]
+}

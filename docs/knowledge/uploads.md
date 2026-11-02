@@ -92,6 +92,17 @@ RSET-004 (pairing results with slides) built this as [ADR 0125](../adr/0125-resu
 - The result set's id is `uuid5` of the upload id (`result_set_id_for`), so a rerun of the import writes the same keys. Its source file is kept at `t/{tenant}/s/{slide}/results/{set}/source{.ext}`, under the slide's prefix, so the retention purge deletes it with the slide.
 
 
+## Import checks and choices
+
+RSET-005 (import checks and fixes) made the import job check a result before it writes, as [ADR 0141](../adr/0141-result-imports-stop-for-choices-after-a-check.md) (result imports stop for choices after a check) decided.
+
+- A file with problems leaves `uploads.import_problems` set and the job `done` with no set, and `getUploadStatus` answers `waiting` with `needs-choices`. `chooseHowToImport` queues a new job and replaces `uploads.job_id`. A second run never asks again, so choosing is "import the other N".
+- Class mappings are remembered per project in `class_mappings` and applied on every later import, so a file whose new classes were all mapped before imports without asking.
+- Objects without a class and missing scores only count as problems when other objects in the file have them, so a file with no scores at all is not flagged.
+- The outside check needs the slide's `width` and `height`. Slides made in tests by SQL have none, so the check is skipped there.
+- `leaveResultOut` sets the upload `aborted` and clears `job_id`, because the `completed_job` check allows a job only on a completed upload.
+- The problem report CSV has the columns `upload`, `problem`, `place` and `message`, and the file is named `import-problems.csv`, never after the upload, since file names can hold PHI.
+
 ## Sorting a drop into cases
 
 CASES-024 (sorting dropped files into cases) built this on top of the pairing above.

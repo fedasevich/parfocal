@@ -24,12 +24,16 @@ class ResultFormat(StrEnum):
     GEOJSON = "geojson"
     PARFOCAL_JSON = "parfocal-json"
     CSV = "csv"
+    HEATMAP = "heatmap"
 
 
 FORMAT_SUFFIXES: Mapping[str, ResultFormat] = {
     ".geojson": ResultFormat.GEOJSON,
     ".csv": ResultFormat.CSV,
     ".tsv": ResultFormat.CSV,
+    ".png": ResultFormat.HEATMAP,
+    ".tif": ResultFormat.HEATMAP,
+    ".tiff": ResultFormat.HEATMAP,
 }
 SNIFFED_SUFFIXES = frozenset({".json"})
 
@@ -48,6 +52,8 @@ class ImportFailure(StrEnum):
     COLUMNS_UNMAPPED = "result-columns-unmapped"
     TOO_MANY_CLASSES = "result-too-many-classes"
     SLIDE_MISSING = "result-slide-missing"
+    OUTSIDE_SLIDE = "result-outside-slide"
+    HEATMAP_NOT_STORED = "result-heatmap-not-stored"
 
 
 IMPORT_FAILURES: Mapping[str, str] = {
@@ -63,6 +69,12 @@ IMPORT_FAILURES: Mapping[str, str] = {
     ImportFailure.SLIDE_MISSING: (
         "The slide this result belongs to was deleted before the result was imported."
     ),
+    ImportFailure.OUTSIDE_SLIDE: (
+        "Every object in this result file lies outside its slide, so nothing was imported."
+    ),
+    ImportFailure.HEATMAP_NOT_STORED: (
+        "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet."
+    ),
 }
 
 
@@ -70,6 +82,7 @@ class Waiting(StrEnum):
     NEEDS_SLIDE = "needs-slide"
     WAITING_FOR_SLIDE = "waiting-for-slide"
     SLIDE_REFUSED = "slide-refused"
+    NEEDS_CHOICES = "needs-choices"
 
 
 WAITING: Mapping[str, str] = {
@@ -78,7 +91,32 @@ WAITING: Mapping[str, str] = {
     Waiting.SLIDE_REFUSED: (
         "The slide this result belongs to could not be taken in. Pick another slide."
     ),
+    Waiting.NEEDS_CHOICES: "Parfocal found problems in this result. Choose how to import it.",
 }
+
+
+class CheckProblem(StrEnum):
+    UNREADABLE_OBJECTS = "objects-unreadable"
+    OBJECTS_WITHOUT_CLASS = "objects-without-class"
+    UNKNOWN_CLASSES = "classes-unknown"
+    SCORES_MISSING = "scores-missing"
+    PARTLY_OUTSIDE = "objects-outside-slide"
+    HEATMAP_SCALE = "heatmap-scale"
+
+
+CHECK_PROBLEMS: Mapping[str, str] = {
+    CheckProblem.UNREADABLE_OBJECTS: "These objects could not be read.",
+    CheckProblem.OBJECTS_WITHOUT_CLASS: "These objects have no class.",
+    CheckProblem.UNKNOWN_CLASSES: "These classes are not in the project yet. Map them once.",
+    CheckProblem.SCORES_MISSING: "These objects have no score. Count them as no score or as 1.0.",
+    CheckProblem.PARTLY_OUTSIDE: "These objects lie outside the slide.",
+    CheckProblem.HEATMAP_SCALE: "Parfocal guessed the slide level and scale of this heatmap.",
+}
+
+
+class ScoreDefault(StrEnum):
+    NONE = "none"
+    ONE = "one"
 
 
 class ImportNotice(StrEnum):

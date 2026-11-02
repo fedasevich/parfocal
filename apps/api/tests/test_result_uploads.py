@@ -80,6 +80,15 @@ def pick(api: ApiAs, who: MemberPrincipal, upload: dict[str, Any], **choice: str
     return api(who).put(f"/api/uploads/{upload['uploadId']}/slide", json=choice)
 
 
+def choose_and_import(
+    api: ApiAs, database: str, lab: Lab, upload: dict[str, Any], work: Path
+) -> None:
+    assert status_of(api, lab.lead, upload)["reason"] == "needs-choices"
+    chosen = api(lab.lead).put(f"/api/uploads/{upload['uploadId']}/import-choices", json={})
+    assert chosen.status_code == 200, chosen.text
+    run_worker(database, lab.tenant_id, work)
+
+
 def result_set(api: ApiAs, who: MemberPrincipal, set_id: str) -> dict[str, Any]:
     response = api(who).get(f"/api/result-sets/{set_id}")
     assert response.status_code == 200, response.text
@@ -121,6 +130,7 @@ def test_a_result_uploaded_with_its_slide_is_imported_once_the_slide_is_ready(
     )
 
     run_worker(database, lab.tenant_id, tmp_path / "work")
+    choose_and_import(api, database, lab, result, tmp_path / "work")
 
     slide_id = status_of(api, lab.lead, slide_upload)["slide_id"]
     after = status_of(api, lab.lead, result)
@@ -170,6 +180,7 @@ def test_a_result_paired_with_a_ready_slide_is_imported_at_once_and_keeps_ids(
     first = upload_result(api, lab, "Biopsy.geojson", REGIONS, slide_id=str(slide_id))
     assert status_of(api, lab.lead, first)["status"] == "processing"
     run_worker(database, lab.tenant_id, tmp_path / "work")
+    choose_and_import(api, database, lab, first, tmp_path / "work")
     second = upload_result(api, lab, "Biopsy.json", parfocal_file(), slide_id=str(slide_id))
     run_worker(database, lab.tenant_id, tmp_path / "work")
 
@@ -223,6 +234,7 @@ def test_an_unpaired_result_waits_until_a_person_picks_its_slide(
     assert picked.status_code == 200, picked.text
     assert (picked.json()["status"], picked.json()["pairing_rule"]) == ("processing", "picked")
     run_worker(database, lab.tenant_id, tmp_path / "work")
+    choose_and_import(api, database, lab, result, tmp_path / "work")
 
     done = status_of(api, lab.lead, result)
     assert (done["status"], done["slide_id"]) == ("ready", str(slide_id))
@@ -256,6 +268,7 @@ def test_the_slide_cannot_change_once_the_result_is_imported(
     started = pick(api, lab.lead, result, slide_id=str(other))
     assert (started.status_code, started.json()["code"]) == (409, "result-import-started")
     run_worker(database, lab.tenant_id, tmp_path / "work")
+    choose_and_import(api, database, lab, result, tmp_path / "work")
 
     refused = pick(api, lab.lead, result, slide_id=str(other))
     assert (refused.status_code, refused.json()["code"]) == (409, "result-already-imported")
@@ -314,7 +327,7 @@ def test_a_result_whose_slide_is_refused_asks_for_another_slide(
     slide_upload = start_upload(api, lab.lead, lab.project, "A1.svs", len(junk))
     send_file(api, lab.lead, slide_upload, junk)
     result = upload_result(
-        api, lab, "A1.geojson", REGIONS, slide_upload_id=slide_upload["uploadId"]
+        api, lab, "A1.json", parfocal_file(), slide_upload_id=slide_upload["uploadId"]
     )
     run_worker(database, lab.tenant_id, tmp_path / "work")
 
@@ -344,7 +357,7 @@ def test_a_result_upload_checks_its_slide_and_format(api: ApiAs, database: str, 
     cases = [
         (create("A1.svs", slide_id=str(uuid.uuid4())), 422, None),
         (create("A1.geojson", kind="result", pairing_rule="file-name"), 422, None),
-        (create("heat.png", kind="result"), 400, "result-format-unknown"),
+        (create("heat.bmp", kind="result"), 400, "result-format-unknown"),
         (create("A1.geojson", kind="result", slide_id=str(elsewhere)), 404, "slide-not-found"),
         (
             create("A1.geojson", kind="result", slide_upload_id=colleague_upload["uploadId"]),
