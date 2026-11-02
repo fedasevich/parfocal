@@ -1,10 +1,21 @@
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Button } from "@parfocal/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { type DecisionSplit, ProgressRing } from "@parfocal/ui/components/progress-meter";
+import type { MoreItem } from "@parfocal/ui/components/review-popovers";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { Fragment, useState } from "react";
 
 type ReviewMode = "guided" | "full" | "annotate" | "adjudicate";
 
@@ -26,6 +37,9 @@ type ReviewTopBarProps = React.ComponentProps<"header"> & {
   backLabel?: string;
   renderLink?: LinkRenderer | undefined;
   accountSlot?: React.ReactNode;
+  slidesPopover?: React.ReactNode;
+  progressPopover?: React.ReactNode;
+  moreItems?: MoreItem[] | undefined;
 };
 
 const anchorLink: LinkRenderer = ({ children, ...props }) => <a {...props}>{children}</a>;
@@ -48,9 +62,13 @@ function ReviewTopBar({
   backLabel = "My work",
   renderLink = anchorLink,
   accountSlot,
+  slidesPopover,
+  progressPopover,
+  moreItems,
   className,
   ...props
 }: ReviewTopBarProps) {
+  const [slidesOpen, setSlidesOpen] = useState(false);
   const big = mode === "guided" || mode === "adjudicate";
   const thumb = (
     <span
@@ -91,7 +109,7 @@ function ReviewTopBar({
         <b className="truncate text-body-sm font-semibold">{taskName}</b>
         <small className="truncate text-caption text-fg-dim">{taskSub}</small>
       </div>
-      {big ? (
+      {mode === "guided" || !slidesPopover ? (
         <span
           className="inline-flex h-8 shrink-0 items-center gap-2 px-2"
           title="Submit opens the next slide"
@@ -100,28 +118,60 @@ function ReviewTopBar({
           <b className="text-body-sm font-semibold">{slideName}</b>
         </span>
       ) : (
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          title="Slides in this case and task, with their result sets (Q and E step through them)"
-          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg"
-        >
-          {thumb}
-          <b className="text-body-sm font-semibold">{slideName}</b>
-          <Icon name="down" className="text-fg-faint" />
-        </button>
+        <Popover open={slidesOpen} onOpenChange={setSlidesOpen}>
+          <PopoverTrigger
+            aria-haspopup="dialog"
+            title="Slides in this case and task, with their result sets (Q and E step through them)"
+            className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-accent aria-expanded:border-fg-faint"
+          >
+            {thumb}
+            <b className="text-body-sm font-semibold">{slideName}</b>
+            <Icon name="down" className="text-fg-faint" />
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-auto p-0"
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest('[data-slot="slide-row"]')) {
+                setSlidesOpen(false);
+              }
+            }}
+          >
+            {slidesPopover}
+          </PopoverContent>
+        </Popover>
       )}
-      <span
-        className="inline-flex shrink-0 items-center gap-2.5"
-        title="Progress on this slide and in the whole task"
-      >
-        {progress ? <ProgressRing split={progress} size={big ? 40 : 34} /> : null}
-        <span className="grid leading-tight">
-          <b className="text-body-sm font-semibold">{progressTitle}</b>
-          <small className="text-caption text-fg-dim">{progressSub}</small>
+      {progressPopover && progress ? (
+        <Popover>
+          <PopoverTrigger
+            aria-haspopup="dialog"
+            aria-label="Review progress"
+            title="Progress on this slide and in the whole task"
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border-0 bg-transparent p-1 text-left text-fg outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-accent aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]"
+          >
+            <ProgressRing split={progress} size={big ? 40 : 34} />
+            <span className="grid leading-tight">
+              <b className="text-body-sm font-semibold">{progressTitle}</b>
+              <small className="text-caption text-fg-dim">{progressSub}</small>
+            </span>
+            <Icon name="down" className="text-fg-faint" />
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-auto p-4.5">
+            {progressPopover}
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <span
+          className="inline-flex shrink-0 items-center gap-2.5"
+          title="Progress on this slide and in the whole task"
+        >
+          {progress ? <ProgressRing split={progress} size={big ? 40 : 34} /> : null}
+          <span className="grid leading-tight">
+            <b className="text-body-sm font-semibold">{progressTitle}</b>
+            <small className="text-caption text-fg-dim">{progressSub}</small>
+          </span>
         </span>
-        {progress && mode !== "adjudicate" ? <Icon name="down" className="text-fg-faint" /> : null}
-      </span>
+      )}
       <span className="flex-1" />
       {mode === "adjudicate" ? null : (
         <SegmentedControl
@@ -136,6 +186,34 @@ function ReviewTopBar({
           ]}
         />
       )}
+      {moreItems && moreItems.length > 0 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="More"
+                title="More: share, focus mode, shortcuts, settings"
+              />
+            }
+          >
+            <Icon name="more" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            {moreItems.map((item) => (
+              <Fragment key={item.label}>
+                {item.separatorBefore ? <DropdownMenuSeparator /> : null}
+                <DropdownMenuItem onClick={item.onSelect} title={item.title} className="gap-2.5">
+                  <Icon name={item.icon} />
+                  <span>{item.label}</span>
+                  {item.keys ? <DropdownMenuShortcut>{item.keys}</DropdownMenuShortcut> : null}
+                </DropdownMenuItem>
+              </Fragment>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
       <Button
         variant="primary"
         size={big ? "lg" : "default"}

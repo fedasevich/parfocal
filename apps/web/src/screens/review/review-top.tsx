@@ -9,6 +9,7 @@ import { useRouterLink } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import type { ReviewSession } from "./review-data.ts";
+import { useReviewTopPopovers } from "./review-top-popovers.tsx";
 
 export type SlideCounts = DecisionSplit & { total: number; decided: number };
 
@@ -34,6 +35,7 @@ type ReviewTopProps = {
   progressSub?: string | undefined;
   primaryLabel?: string | undefined;
   primaryTitle?: string | undefined;
+  onWholeSlide?: (() => void) | undefined;
 };
 
 export function ReviewTop({
@@ -46,7 +48,9 @@ export function ReviewTop({
   progressSub,
   primaryLabel,
   primaryTitle,
+  onWholeSlide,
 }: ReviewTopProps) {
+  const popovers = useReviewTopPopovers({ mode, session, counts, onWholeSlide });
   const me = okData(useGetMe().data);
   const renderLink = useRouterLink();
   const navigate = useNavigate();
@@ -72,6 +76,9 @@ export function ReviewTop({
           : "Open the Slide done card")
       }
       onPrimary={onSubmit}
+      slidesPopover={popovers.slidesPopover}
+      progressPopover={popovers.progressPopover}
+      moreItems={popovers.moreItems}
       backHref={destinations.myWork()}
       renderLink={renderLink}
       onModeChange={(next) => {

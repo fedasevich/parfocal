@@ -1,0 +1,352 @@
+import { Button } from "@parfocal/ui/components/button";
+import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { Keycap } from "@parfocal/ui/components/keycap";
+import {
+  type DecisionSplit,
+  ProgressBar,
+  ProgressRing,
+} from "@parfocal/ui/components/progress-meter";
+import { StatusTag } from "@parfocal/ui/components/tag";
+import { Zone } from "@parfocal/ui/components/zone";
+import { cn } from "@parfocal/ui/lib/utils";
+import type * as React from "react";
+
+type ProgressPopoverProps = {
+  taskCode: string;
+  taskName: string;
+  taskSub: string;
+  slideName: string;
+  slide: DecisionSplit & { decided: number; total: number };
+  seenPercent?: number | undefined;
+  onWholeSlide?: (() => void) | undefined;
+  wholeSlideTitle?: string | undefined;
+  position: number;
+  slideTotal: number;
+  submittedCount: number;
+  dueText: string;
+  timeLeft: string;
+  guided?: boolean;
+  onPrevious?: (() => void) | undefined;
+  onNext?: (() => void) | undefined;
+  className?: string;
+};
+
+const legendRows = [
+  { key: "agree", label: "Agree", dot: "bg-v-agree" },
+  { key: "disagree", label: "Disagree", dot: "bg-v-disagree" },
+  { key: "unsure", label: "Not sure", dot: "bg-v-unsure" },
+  {
+    key: "open",
+    label: "Still open",
+    dot: "bg-transparent shadow-[inset_0_0_0_1.5px_var(--line-strong)]",
+  },
+] as const;
+
+function DecisionLegend({ split }: { split: DecisionSplit }) {
+  return (
+    <dl className="m-0 grid grid-cols-2 gap-x-4.5 gap-y-2">
+      {legendRows.map((row) => (
+        <div
+          key={row.key}
+          className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 text-body-sm text-fg-dim"
+        >
+          <i aria-hidden="true" className={cn("size-2.5 rounded-full", row.dot)} />
+          <dt>{row.label}</dt>
+          <dd className="m-0 font-semibold text-fg tabular-nums">{split[row.key]}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ReviewProgressPopover({
+  taskCode,
+  taskName,
+  taskSub,
+  slideName,
+  slide,
+  seenPercent,
+  onWholeSlide,
+  wholeSlideTitle,
+  position,
+  slideTotal,
+  submittedCount,
+  dueText,
+  timeLeft,
+  guided = false,
+  onPrevious,
+  onNext,
+  className,
+}: ProgressPopoverProps) {
+  const taskPercent = slideTotal === 0 ? 0 : Math.round((100 * (position - 1)) / slideTotal);
+  return (
+    <div
+      role="dialog"
+      aria-label="Review progress"
+      data-slot="review-progress-popover"
+      className={cn("grid w-85 gap-3.5 p-0.5", className)}
+    >
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3.5">
+        <ProgressRing split={slide} size={64} />
+        <div className="min-w-0">
+          <span className="block text-label font-semibold tracking-wide text-fg-faint uppercase">
+            Task {taskCode}
+          </span>
+          <b className="block text-body font-semibold leading-snug">{taskName}</b>
+          <small className="block text-caption text-fg-faint">{taskSub}</small>
+        </div>
+      </div>
+      <Zone
+        title={`This slide, ${slideName}`}
+        end={
+          <span className="text-caption text-fg-dim tabular-nums">
+            {slide.decided} of {slide.total}
+          </span>
+        }
+      >
+        <DecisionLegend split={slide} />
+        {seenPercent === undefined ? null : (
+          <div className="flex items-center gap-2 border-t border-line pt-2.5 text-body-sm leading-snug text-fg-dim">
+            <Icon name="eye" className="text-fg-faint" />
+            <span>{seenPercent}% of the tissue seen at 10x or more</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={onWholeSlide}
+              title={wholeSlideTitle}
+            >
+              Whole slide
+            </Button>
+          </div>
+        )}
+      </Zone>
+      <Zone
+        title="Whole task"
+        end={
+          <span className="text-caption text-fg-dim tabular-nums">
+            {submittedCount} of {slideTotal} submitted
+          </span>
+        }
+      >
+        <ProgressBar
+          value={taskPercent}
+          label={
+            <>
+              Slide <b>{position}</b> of {slideTotal}
+            </>
+          }
+          valueText={`${taskPercent}%`}
+        />
+        <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-body-sm">
+          <dt className="flex items-center gap-1.5 text-fg-dim">
+            <Icon name="calendar" className="text-fg-faint" />
+            Due
+          </dt>
+          <dd className="m-0 text-right">{dueText}</dd>
+          <dt className="flex items-center gap-1.5 text-fg-dim">
+            <Icon name="clock" className="text-fg-faint" />
+            Time left
+          </dt>
+          <dd className="m-0 text-right">{timeLeft}</dd>
+        </dl>
+      </Zone>
+      <div className="flex items-center justify-between gap-2.5">
+        <span className="text-caption text-fg-dim">Saved as you go</span>
+        <Button onClick={onPrevious} disabled={!onPrevious}>
+          <Icon name="back" />
+          Previous slide
+        </Button>
+        {guided ? null : (
+          <Button variant="primary" onClick={onNext} disabled={!onNext}>
+            Next slide
+            <Icon name="next" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type SlideStatus = { label: string; tone: "neutral" | "accent" | "ok" | "warn" };
+
+type SlideRowData = {
+  id: string;
+  name: string;
+  sub?: React.ReactNode;
+  thumb?: string | undefined;
+  resultSets: number;
+  status: SlideStatus;
+  current?: boolean;
+  disabledReason?: string | undefined;
+};
+
+type SlidesPopoverProps = {
+  caseTitle?: string | undefined;
+  caseSub?: string | undefined;
+  onOpenCase?: (() => void) | undefined;
+  caseHeading?: string;
+  caseSlides: SlideRowData[];
+  looseHeading?: string | undefined;
+  looseSlides?: SlideRowData[];
+  showKeys?: boolean;
+  onPick?: ((id: string) => void) | undefined;
+  footer?: {
+    onResultSets?: (() => void) | undefined;
+    resultSetsLabel?: string;
+    onCompare?: (() => void) | undefined;
+    onAddSlides?: (() => void) | undefined;
+  };
+  ariaLabel?: string;
+  className?: string;
+};
+
+function SlideRowView({ row, onPick }: { row: SlideRowData; onPick?: (id: string) => void }) {
+  return (
+    <button
+      type="button"
+      data-slot="slide-row"
+      data-current={row.current || undefined}
+      disabled={row.disabledReason !== undefined}
+      title={row.disabledReason}
+      onClick={() => onPick?.(row.id)}
+      className={cn(
+        "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+        row.current &&
+          "bg-surf-hl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className="h-10 w-14 rounded-[5px] border border-line bg-[#f1eef2] bg-cover bg-center"
+        style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined}
+      />
+      <span className="grid min-w-0 gap-1">
+        <b className="truncate text-body-sm font-semibold">{row.name}</b>
+        {row.sub ? <small className="truncate text-caption text-fg-faint">{row.sub}</small> : null}
+      </span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 text-caption text-fg-dim",
+          row.resultSets === 0 && "opacity-50",
+        )}
+        title={`${row.resultSets} result set${row.resultSets === 1 ? "" : "s"}`}
+      >
+        <Icon name="layers" size="xs" />
+        <span className="tabular-nums">{row.resultSets}</span>
+      </span>
+      <StatusTag tone={row.status.tone} className="justify-self-end">
+        {row.status.label}
+      </StatusTag>
+    </button>
+  );
+}
+
+function SlidesPopover({
+  caseTitle,
+  caseSub,
+  onOpenCase,
+  caseHeading = "Slides in this case",
+  caseSlides,
+  looseHeading,
+  looseSlides = [],
+  showKeys = true,
+  onPick,
+  footer,
+  ariaLabel = "Slides in this case and task",
+  className,
+}: SlidesPopoverProps) {
+  const heading =
+    "flex items-center justify-between px-2 pt-3 pb-1.5 text-caption font-semibold text-fg-dim";
+  return (
+    <div
+      role="dialog"
+      aria-label={ariaLabel}
+      data-slot="slides-popover"
+      className={cn("grid w-115 overflow-hidden", className)}
+    >
+      {caseTitle ? (
+        <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-3 border-b border-surf-edge bg-surf-section px-4 py-3.5">
+          <Icon name="folder" className="text-fg-dim" />
+          <div className="min-w-0">
+            <b className="block text-body-sm font-semibold">{caseTitle}</b>
+            <small className="block truncate text-caption text-fg-faint">{caseSub}</small>
+          </div>
+          <Button size="sm" onClick={onOpenCase} disabled={!onOpenCase}>
+            Open the case
+          </Button>
+        </div>
+      ) : null}
+      <div className="grid max-h-96 gap-0.5 overflow-y-auto px-2 pt-2 pb-3">
+        <div className={heading}>
+          <span>{caseHeading}</span>
+          {showKeys ? (
+            <span className="inline-flex gap-1">
+              <Keycap keys="Q" />
+              <Keycap keys="E" />
+            </span>
+          ) : null}
+        </div>
+        {caseSlides.map((row) => (
+          <SlideRowView key={row.id} row={row} {...(onPick ? { onPick } : {})} />
+        ))}
+        {looseHeading && looseSlides.length > 0 ? (
+          <>
+            <div className={heading}>
+              <span>{looseHeading}</span>
+            </div>
+            {looseSlides.map((row) => (
+              <SlideRowView key={row.id} row={row} {...(onPick ? { onPick } : {})} />
+            ))}
+          </>
+        ) : null}
+      </div>
+      {footer ? (
+        <div className="flex items-center gap-2 border-t border-surf-edge px-3 py-2.5">
+          {footer.resultSetsLabel ? (
+            <Button
+              variant="ghost"
+              onClick={footer.onResultSets}
+              title="Show, hide, compare and style the result sets of this slide"
+            >
+              <Icon name="layers" />
+              {footer.resultSetsLabel}
+            </Button>
+          ) : null}
+          <span className="flex-1" />
+          {footer.onCompare ? (
+            <Button onClick={footer.onCompare}>
+              <Icon name="slides" />
+              Compare
+            </Button>
+          ) : null}
+          {footer.onAddSlides ? (
+            <Button onClick={footer.onAddSlides}>
+              <Icon name="upload" />
+              Add slides
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type MoreItem = {
+  icon: IconName;
+  label: string;
+  keys?: string;
+  onSelect?: (() => void) | undefined;
+  title?: string | undefined;
+  separatorBefore?: boolean;
+};
+
+export {
+  DecisionLegend,
+  type MoreItem,
+  type ProgressPopoverProps,
+  ReviewProgressPopover,
+  type SlideRowData,
+  SlidesPopover,
+  type SlidesPopoverProps,
+};

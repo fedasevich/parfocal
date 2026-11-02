@@ -16,6 +16,7 @@ import {
   QuotedNote,
 } from "@parfocal/ui/components/disagreements";
 import { Icon } from "@parfocal/ui/components/icon";
+import { SlidesPopover } from "@parfocal/ui/components/review-popovers";
 import { ReviewTopBar } from "@parfocal/ui/components/review-top-bar";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
@@ -219,6 +220,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         </Button>
       </div>
     );
+  const slideLabels = [...new Set(objects.map((object) => object.slide_label))];
   return (
     <div className="grid h-dvh grid-rows-[auto_minmax(0,1fr)] bg-page">
       <ReviewTopBar
@@ -228,6 +230,32 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         slideName={`${shown?.slide_label ?? "A1"} · H&E`}
         slideThumb={lookUrl("overview")}
         progress={counts}
+        slidesPopover={
+          <SlidesPopover
+            ariaLabel="Slides with objects queued for you"
+            caseHeading="Slides with objects for you"
+            showKeys={false}
+            caseSlides={slideLabels.map((label) => {
+              const count = objects.filter((object) => object.slide_label === label).length;
+              const open = label === (shown?.slide_label ?? slideLabels[0]);
+              return {
+                id: label,
+                name: `${label} · H&E`,
+                sub: `${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
+                thumb: lookUrl("overview"),
+                resultSets: count,
+                current: open,
+                status: open
+                  ? { label: "Open", tone: "accent" as const }
+                  : { label: "Queued", tone: "neutral" as const },
+              };
+            })}
+            onPick={(label) => {
+              const target = objects.findIndex((object) => object.slide_label === label);
+              if (target >= 0) goTo(target);
+            }}
+          />
+        }
         progressTitle={`${decided.length} of ${objects.length} decided`}
         progressSub="Objects queued for you"
         primaryTitle={`${percent}% decided`}

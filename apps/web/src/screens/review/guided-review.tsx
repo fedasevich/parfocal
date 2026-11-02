@@ -646,6 +646,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
         mode="guided"
         session={session}
         counts={counts}
+        onWholeSlide={() => setWhole(true)}
         nothingToDecide={noResults}
         submitReason={noResults ? "Nothing to decide on this slide" : submitReason}
         onSubmit={() => {
