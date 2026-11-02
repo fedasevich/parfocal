@@ -3,7 +3,7 @@
 - Date: 2026-11-02
 - Backlog: INGEST-028 (upload protocol check on the R2 dev bucket)
 - Kind: check against a real cloud service
-- Commit: `9e07d57`. The code is `packages/upload-spike` (`--target r2`) and the https forwarding in `packages/latency-proxy`
+- Commit: `9e07d57` for the R2 run, and `7d29d5a` for a fix after it that requires a second ListParts page only when the parts exceed one page, rerun green against MinIO at 256 MiB. The code is `packages/upload-spike` (`--target r2`) and the https forwarding in `packages/latency-proxy`
 - Environment: Apple M4, macOS 15.8.1, Node 26.13.0, Playwright 1.64.0 with headless Chromium, Uppy 6.0.5, `@aws-sdk/client-s3` 3.1160.0 with `requestChecksumCalculation` and `responseChecksumValidation` set to `WHEN_REQUIRED`. R2 bucket `parfocal-dev` (location `eeur`) over the owner's home connection in Europe, through the token "parfocal-dev local" (object read and write on `parfocal-dev` only). The bucket CORS and lifecycle rules came from `infra/tofu` and were applied to `parfocal-dev` alone by the lead at the owner's yes earlier on 2026-11-02
 - Data: a 1 GiB file of random bytes written to the system temp folder and deleted afterwards. No PHI
 
