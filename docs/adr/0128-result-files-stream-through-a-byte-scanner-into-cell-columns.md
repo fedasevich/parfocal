@@ -1,7 +1,7 @@
 # 0128. Result files stream through a byte scanner into cell columns, and the worker writes chunks from those columns
 
 - Date: 2026-11-01
-- Status: Proposed
+- Status: Accepted
 - Deciders: agent (RSET-012), waiting for the owner
 - Backlog: RSET-012 (large result files in bounded memory), touches RSET-011 (cells from imported files), AIP-013 (result chunk store) and OPS-002 (deploy definitions, which writes the Modal app for ingest)
 
@@ -40,5 +40,5 @@ Option 1 for reading and option 1 for writing.
 
 - Two writers of one format now exist. `build_cells` stays for the API and its tests, and the ingest worker uses `chunk_builder`. `test_the_chunk_builder_writes_the_same_bytes_as_the_chunk_store` must pass whenever either changes. Decision 14c in [decisions.md](../decisions.md) asks whether py-common should take numpy and keep one writer.
 - The JSON scanner is a parser that this project owns. Its tests decode random documents at block sizes of 1, 3, 64 and 1 MiB bytes and compare with msgspec on the whole document, and broken documents must fail.
-- The memory ceiling for the worker is decision 14a, and the benchmark asserts the measured peak is under `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, which the Modal function of OPS-002 (deploy definitions) must use when it is written.
+- The worker requests 2 GiB with a 4 GiB hard limit, the owner's choice of 2026-11-02, so a larger file is billed for what it uses instead of being killed. The Modal function of OPS-002 (deploy definitions) must pass `memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB)` from `parfocal_ingest.settings`. The benchmark still asserts the measured peak is under the 2 GiB request, so a regression shows before it costs money.
 - CSV files were already read as rows but decoded as one string. They are now read from the file in batches of 20,000 rows, and an undecodable byte anywhere fails the file as unreadable, as before.
