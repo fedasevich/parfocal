@@ -19,6 +19,10 @@ Use the `jsep` or `jspi` files instead when importing those builds. Source: [STA
 
 The POC needed a middleware plugin for COOP and COEP because `server.headers` skipped transformed modules, and Chrome silently refused the module worker. In Vite 8.3, `server.headers` and `preview.headers` reach the HTML, modules, worker scripts and public files, and the worker runs isolated. Source: [STACK-001 spike](../results/2026-10-08-vite-worker-wasm-spike.md).
 
+## Data and model paths never fall back to the app page
+
+Zarr readers probe `zarr.json` and expect 404 when it is missing, and the model cache must not store a web page under a model's name (POC docs 06 and 15). Paths under `/tiles/`, `/data/` and `/models/` answer a missing file with 404 `application/problem+json`, code `not-found`. In dev and preview the `noAppPageForMissingData` plugin in `apps/web/vite/data-paths.ts` does it, and in the edge Worker `DATA_PATH_PREFIXES` in `apps/edge/src/index.ts` does. The Worker only sees these paths when the assets config lists them in `run_worker_first`, otherwise `single-page-application` handling answers with HTML. That list belongs to OPS-002 (deploy definitions).
+
 ## Headless Chrome on a Mac has real WebGPU
 
 playwright-core with `channel: "chrome"` drives the installed Chrome without downloading a browser, and with `--enable-unsafe-webgpu` headless pages get the `apple metal-3` adapter. Hosted Linux CI does not, which is why golden images use SwiftShader there ([ADR 0011](../adr/0011-hosted-ci-only.md)).

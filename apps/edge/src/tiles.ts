@@ -29,7 +29,7 @@ function keyFor(secret: string): Promise<CryptoKey> {
   return key;
 }
 
-function problem(status: number, code: string, title: string): Response {
+export function problem(status: number, code: string, title: string): Response {
   return Response.json(
     { type: `https://parfocal.eu/problems/${code}`, title, status, code },
     {

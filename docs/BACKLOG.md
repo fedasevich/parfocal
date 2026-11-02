@@ -1007,7 +1007,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a test confirms no preflight and the open-time numbers match INGEST-007.
   Refs doc 09 (4.3 s to 90 ms).
 
-- [ ] TILES-004 · Correct status codes on data paths
+- [x] TILES-004 · Correct status codes on data paths
   No SPA fallback under data and model paths. Missing objects return a real 404.
   Done when a test requests a missing `zarr.json` and a missing model and receives 404, not HTML.
   Refs docs 06, 15.
