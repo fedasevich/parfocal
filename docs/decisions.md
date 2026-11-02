@@ -170,6 +170,16 @@ Agent pushes to `main` print "Required status check ci-ok is expected" and still
 
 Your choice:
 
+## 22. Client state, from STACK-005 (client UI state)
+
+ADR 0143 (one home per kind of client state) is Proposed. It keeps server data in TanStack Query, shareable views in the URL, frame values in the viewer engine, UI state shared across panels in Zustand, flows with named states and guards in XState, and anything kept between visits in the settings layers. No package is installed yet. SHELL-005 (inspector panel with resize and hide) would add Zustand and NAV-006 (smart minimap state machine) would add XState.
+
+- a. Accept ADR 0143 as written. (recommended)
+- b. Use Zustand for the machines too and skip XState.
+- c. Something else, say what.
+
+Your choice:
+
 ## Notes, no decision needed
 
 - Follow-ups from the parallel backend tasks of 2026-11-02, not questions. OBJ-003 (split, merge and added objects) splits and merges only regions, not cells, takes the merged outline from the client and does not yet refuse a decision that retypes a retired object. AIP-011 (job progress streaming) leaves the tier empty until AIP-003 (tiers Best, Good, Fast), and time a stage waits inside a running step still counts toward its throughput. COLLAB-001 (realtime infrastructure) tested the rooms with a fake Durable Object, so the WebSocket upgrade is untested until a Workers test pool or staging runs it. RSET-005 (import checks and fixes) leaves heatmap storage, the share on tissue for each guess, a cleanup of uploads left waiting in quarantine and a clean refusal of an unreadable `.png` heatmap. CASES-024 does not yet replace a duplicate slide while keeping its reviews.
