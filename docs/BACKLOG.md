@@ -1262,7 +1262,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when golden tests render each layer type over a slide.
   Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
 
-- [ ] VIEW-027 · Outline rendering with casings
+- [x] VIEW-027 · Outline rendering with casings
   Class colour outline plus a thin near-black casing, proposals as near-black dashes on a white casing, brightness that never affects overlays.
   The owner kept the VIEW-026 (overlay layer system) placeholder styles on 2026-10-31: fill opacity 0.18 for human annotations, 0.12 for AI proposals, 0.3 for nuclei and 0 for measurements, 2 px lines and 1 px for nuclei, blue open pins and grey resolved pins. Before this task is ticked, compare them with the POC's overlay styles and with published conventions for pathology annotation display, and record where each final value comes from.
   Done when golden tests match the kit specimens and a contrast test over sampled H&E pixels shows under 10% of pixels below 3:1.
