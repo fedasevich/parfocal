@@ -8,7 +8,7 @@ export const toTileAccess = (slideId: string, now: Date = new Date()): TileAcces
   expires_at: new Date(now.getTime() + fakeTileLifetimeSeconds * 1000).toISOString(),
   lifetime_seconds: fakeTileLifetimeSeconds,
   base_path: `/tiles/${slideId}/`,
-  original: "slide.svs",
+  original: "slide.tiff",
 });
 
 export const tileAccessHandlers = (): RequestHandler[] => [

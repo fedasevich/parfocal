@@ -107,7 +107,10 @@ function SlidePreview({
               label: "Continue in guided review",
               run: () => void goTo(destinations.guided(mine.task_id, row.id)),
             }
-          : { label: "Open", run: open }
+          : {
+              label: "Open",
+              run: () => void goTo(destinations.openSlide(row.project.id, row.id, mine?.task_id)),
+            }
       }
       full={reviewing ? open : undefined}
       onClose={onClose}

@@ -19,6 +19,8 @@ export const destinations = {
   newReviewTask: (projectId: string) => `/projects/${projectId}/tasks/new`,
   slide: (projectId: string, slideId: string, taskId?: string, object?: string) =>
     `/projects/${projectId}/slides/${slideId}${query({ task: taskId, object })}`,
+  openSlide: (projectId: string, slideId: string, taskId?: string) =>
+    `/projects/${projectId}/slides/${slideId}/live${query({ task: taskId })}`,
   coSign: (projectId: string, slideId: string) =>
     `/projects/${projectId}/slides/${slideId}/co-sign`,
   guided: (taskId: string, slideId?: string | null) =>

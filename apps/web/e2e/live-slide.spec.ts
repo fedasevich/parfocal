@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const livePath = "/projects/p-1/slides/s-1/live";
+const livePath = "/projects/p-1/slides/missing-1/live";
 
 test("a slide whose file cannot be read says so and offers another try", async ({ page }) => {
   const tileRequests: string[] = [];
@@ -12,7 +12,7 @@ test("a slide whose file cannot be read says so and offers another try", async (
   await expect(stage).toHaveAttribute("data-state", "failed");
   await expect(page.getByRole("alert")).toContainText("The slide file is not available");
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
-  expect(tileRequests.some((url) => url.endsWith("/tiles/s-1/levels.json"))).toBe(true);
+  expect(tileRequests.some((url) => url.endsWith("/tiles/missing-1/levels.json"))).toBe(true);
   await expect(stage.locator("canvas")).toHaveCount(1);
 });
 
