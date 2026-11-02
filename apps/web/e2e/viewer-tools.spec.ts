@@ -91,6 +91,18 @@ test("the minimap opens the whole-slide peek and Esc returns", async ({ page }) 
   await expect(page).not.toHaveURL(/peek=true/);
 });
 
+test("holding Z peeks at the whole slide until the key is released", async ({ page }) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Smart minimap · Reading at 10x"));
+  const peek = page.getByRole("dialog", { name: "Whole slide" });
+  await expect(page.getByRole("button", { name: "Open the whole slide" })).toBeVisible();
+  await page.keyboard.down("z");
+  await expect(peek).toBeVisible();
+  await page.waitForTimeout(500);
+  await page.keyboard.up("z");
+  await expect(peek).toHaveCount(0);
+});
+
 test("the ruler adds M1, and Remove takes it away with Undo", async ({ page }) => {
   const links = await toolLinks(page);
   await page.goto(hrefOf(links, "Smart minimap · Reading at 10x"));

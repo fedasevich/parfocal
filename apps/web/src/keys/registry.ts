@@ -5,6 +5,7 @@ export type Binding = {
   action: string;
   keys: string[];
   hold?: boolean;
+  holdMs?: number;
   inInputs?: boolean;
 };
 
@@ -29,7 +30,7 @@ export type Fired = { action: string; phase: Phase };
 
 export type KeyState = {
   pending: { keys: string[]; at: number } | null;
-  holding: { action: string; key: string; at: number } | null;
+  holding: { action: string; key: string; at: number; holdMs: number } | null;
 };
 
 export type Step = { state: KeyState; fired: Fired[]; consumed: boolean };
@@ -59,7 +60,7 @@ export function comboOf(input: Extract<KeyInput, { type: "down" | "up" }>): stri
   const mods = [
     input.ctrlKey && input.metaKey ? "⌃" : "",
     input.altKey ? "⌥" : "",
-    input.shiftKey ? "⇧" : "",
+    input.shiftKey && input.key !== "?" ? "⇧" : "",
     input.metaKey || input.ctrlKey ? "⌘" : "",
   ].join("");
   return mods + baseKey(input.key, input.code);
@@ -108,7 +109,10 @@ export function resolveBindings(
 
 function startHolding(binding: Binding, key: string, at: number): Step {
   return {
-    state: { pending: null, holding: { action: binding.action, key, at } },
+    state: {
+      pending: null,
+      holding: { action: binding.action, key, at, holdMs: binding.holdMs ?? tapMs },
+    },
     fired: [{ action: binding.action, phase: "hold-start" }],
     consumed: true,
   };
@@ -149,7 +153,7 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
     const holding = state.holding;
     if (holding === null || baseKey(input.key, input.code) !== holding.key)
       return { state, fired: [], consumed: false };
-    const phase: Phase = input.at - holding.at >= tapMs ? "hold-end" : "tap";
+    const phase: Phase = input.at - holding.at >= holding.holdMs ? "hold-end" : "tap";
     return {
       state: { ...state, holding: null },
       fired: [{ action: holding.action, phase }],
