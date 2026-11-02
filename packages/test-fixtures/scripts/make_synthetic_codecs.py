@@ -19,6 +19,9 @@ from make_synthetic import (
 
 CHANNELS = ("DAPI", "FITC", "TRITC")
 CHANNEL_COLOURS = ((0, 0, 255), (0, 255, 0), (255, 0, 0))
+MXIF_CHANNELS = ("Hoechst", "Laminin", "Synaptopodin", "THP")
+MXIF_COLOURS = ((0, 0, 255), (0, 255, 0), (255, 0, 0), (255, 255, 0))
+MXIF_TILE = 32
 J2K_QUALITY = 70
 DAMAGED_TILES = {"no-marker": 1, "garbled-body": 6}
 
@@ -64,37 +67,48 @@ def write_damaged_jpeg2000(path: Path, levels: list[np.ndarray]) -> None:
         file.write(b"\xa5" * (counts[DAMAGED_TILES["garbled-body"]] - 64))
 
 
-def channel_planes(dtype: np.dtype) -> np.ndarray:
+def channel_planes(dtype: np.dtype, count: int = len(CHANNELS)) -> np.ndarray:
     top = int(np.iinfo(dtype).max)
     y, x = np.mgrid[0:HEIGHT, 0:WIDTH]
-    planes = np.zeros((len(CHANNELS), HEIGHT, WIDTH), dtype=np.float64)
+    planes = np.zeros((count, HEIGHT, WIDTH), dtype=np.float64)
     planes[0] = x / (WIDTH - 1) * 0.6
     planes[1] = y / (HEIGHT - 1) * 0.6
     planes[2] = (((x // 128) + (y // 128)) % 2) * 0.5
     planes[0][32:96, 32:224] = 1.0
     planes[1][HEIGHT - 160 : HEIGHT - 32, WIDTH - 160 : WIDTH - 32] = 0.8
     planes[2][200:264, 400:464] = 1.0
+    if count > len(CHANNELS):
+        planes[3] = (x + y) / (WIDTH + HEIGHT - 2) * 0.9
+        planes[3][HEIGHT - 96 : HEIGHT - 32, 32:160] = 1.0
     return np.round(planes * top).astype(dtype)
 
 
 def channel_pyramid(planes: np.ndarray) -> list[np.ndarray]:
     levels = [planes]
+    count = planes.shape[0]
     for _ in range(1, LEVELS):
         previous = levels[-1].astype(np.uint64)
         height, width = previous.shape[1] // 2, previous.shape[2] // 2
-        blocks = previous[:, : height * 2, : width * 2].reshape(len(CHANNELS), height, 2, width, 2)
+        blocks = previous[:, : height * 2, : width * 2].reshape(count, height, 2, width, 2)
         levels.append(((blocks.sum(axis=(2, 4)) + 2) // 4).astype(planes.dtype))
     return levels
 
 
-def write_ome_channels(path: Path, levels: list[np.ndarray]) -> None:
-    colours = [packed_colour(*colour) for colour in CHANNEL_COLOURS]
+def write_ome_channels(
+    path: Path,
+    levels: list[np.ndarray],
+    names: tuple[str, ...] = CHANNELS,
+    colours: tuple[tuple[int, int, int], ...] = CHANNEL_COLOURS,
+    tile: int = TILE,
+    byteorder: str = "<",
+) -> None:
     options = {
         "photometric": "minisblack",
-        "tile": (TILE, TILE),
+        "tile": (tile, tile),
         "compression": "zlib",
     }
-    with tifffile.TiffWriter(path, ome=True) as tiff:
+    big_endian = byteorder == ">"
+    with tifffile.TiffWriter(path, ome=True, bigtiff=big_endian, byteorder=byteorder) as tiff:
         tiff.write(
             levels[0],
             subifds=len(levels) - 1,
@@ -107,7 +121,10 @@ def write_ome_channels(path: Path, levels: list[np.ndarray]) -> None:
                 "PhysicalSizeXUnit": "µm",
                 "PhysicalSizeY": MICRONS_PER_PIXEL,
                 "PhysicalSizeYUnit": "µm",
-                "Channel": {"Name": list(CHANNELS), "Color": colours},
+                "Channel": {
+                    "Name": list(names),
+                    "Color": [packed_colour(*colour) for colour in colours],
+                },
             },
             **options,
         )
@@ -149,6 +166,16 @@ def main() -> None:
         path = SYNTHETIC / f"synthetic-channels-{np.dtype(dtype).name}.ome.tiff"
         write_ome_channels(path, channel_pyramid(channel_planes(np.dtype(dtype))))
         files.append(path)
+    mxif = SYNTHETIC / "synthetic-mxif-uint16-be.ome.tiff"
+    write_ome_channels(
+        mxif,
+        channel_pyramid(channel_planes(np.dtype(np.uint16), len(MXIF_CHANNELS))),
+        names=MXIF_CHANNELS,
+        colours=MXIF_COLOURS,
+        tile=MXIF_TILE,
+        byteorder=">",
+    )
+    files.append(mxif)
     merge_manifest(files)
     for path in files:
         print(f"{path.name}: {path.stat().st_size} bytes")

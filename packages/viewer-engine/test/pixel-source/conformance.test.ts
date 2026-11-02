@@ -122,6 +122,11 @@ pixelSourceConformance(
   { levels: 3, photometric: "channels", dtype: "uint16", micronsPerPixel: 0.5 },
 );
 pixelSourceConformance(
+  "geotiff, big-endian BigTIFF OME with four 16-bit channels in SubIFDs (MxIF layout)",
+  viaRegistry("ome-tiff", "/synthetic/synthetic-mxif-uint16-be.ome.tiff"),
+  { levels: 3, photometric: "channels", dtype: "uint16", micronsPerPixel: 0.5 },
+);
+pixelSourceConformance(
   "geotiff, levels and scale from a slide index",
   () =>
     openTiffSource({

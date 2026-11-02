@@ -242,6 +242,11 @@
       "file": "synthetic-channels-uint16.ome.tiff",
       "sha256": "af0a04c9579582f45f43ccdd343ea171532bee672b54bf2c0869f4ffcdafd23f",
       "bytes": 53949
+    },
+    {
+      "file": "synthetic-mxif-uint16-be.ome.tiff",
+      "sha256": "c590c9ab8b2b67e86e213610e0355ebbf8605fd41a10040ca442985a8b3e8dc1",
+      "bytes": 445430
     }
   ]
 }
