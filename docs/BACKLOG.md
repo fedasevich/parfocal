@@ -3438,9 +3438,9 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on PROJ-001.
   The question asked of every object is not an opinion form question. It is the task's decision style, preset by the study template (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
 
-- [ ] GUIDE-016 · First read questions in the opinion form
-  Each question of an opinion form says when it is asked: in the first read, after the AI is shown, or both. The first read asks only its questions, and the default form's "Is the AI result acceptable for this slide?" is asked only after the AI is shown. The owner asked on 2026-11-02 that forms be very customizable everywhere, so the builder sets this per question, a study template's form carries it, and a task can override it. Old forms keep every question after the AI. Decision 2c, for TASK-004 (blinding and first read).
-  Done when API tests show a first read asks and stores only its questions, the aided read asks the rest, an old form behaves as before, and a component test covers the builder's per-question setting.
+- [x] GUIDE-016 · First read questions in the opinion form
+  Each question of an opinion form says when it is asked: in the first read, after the AI is shown, or both. The first read asks only its questions, and the default form's "Is the AI result acceptable for this slide?" is asked only after the AI is shown. The owner asked on 2026-11-02 that forms be very customizable everywhere, so every question of a project's form carries the setting, and a study template's form carries it with its questions. A task picks the form version that asks what it needs. A form stored before the setting asks every question in both reads, and a task without a first read asks every question. The form builder screen shows the setting when its UI task wires it. Decision 2c, for TASK-004 (blinding and first read).
+  Done when API tests show a first read asks and stores only its questions, the aided read asks the rest, a task without a first read asks everything, and an old form behaves as before.
   Depends on GUIDE-006, TASK-004. Refs [ADR 0118](adr/0118-blinding-and-a-kept-first-read.md) (blinding and a kept first read).
 
 - [ ] GUIDE-007 · Slide done card with the opinion form

@@ -121,6 +121,7 @@ export const toOpinion = (): Opinion => ({
   questions: opinionQuestions,
   answers: fakeView().viewer === "LM" ? lenkaOpinion : {},
   draft: true,
+  read: "single",
   updated_at: "2026-10-15T10:52:00+02:00",
 });
 

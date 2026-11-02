@@ -274,6 +274,14 @@ export const Appendix = {
   methods: "methods",
 } as const;
 
+export type Asked = (typeof Asked)[keyof typeof Asked];
+
+export const Asked = {
+  "first-read": "first-read",
+  aided: "aided",
+  both: "both",
+} as const;
+
 export interface ProjectRef {
   id: string;
   code: string;
@@ -644,6 +652,7 @@ export interface ChoiceQuestion {
   label: Label;
   required?: boolean;
   quick?: boolean;
+  asked?: Asked;
   kind: ChoiceQuestionKind;
   /**
    * @minItems 2
@@ -1070,6 +1079,7 @@ export interface ScaleQuestion {
   label: Label;
   required?: boolean;
   quick?: boolean;
+  asked?: Asked;
   kind: ScaleQuestionKind;
   /**
    * @minimum 0
@@ -1096,6 +1106,7 @@ export interface YesNoQuestion {
   label: Label;
   required?: boolean;
   quick?: boolean;
+  asked?: Asked;
   kind: YesNoQuestionKind;
 }
 
@@ -1110,6 +1121,7 @@ export interface TextQuestion {
   label: Label;
   required?: boolean;
   quick?: boolean;
+  asked?: Asked;
   kind: TextQuestionKind;
   /**
    * @minimum 1
@@ -1788,12 +1800,21 @@ export interface OpenUpload {
 
 export type OpinionAnswersProperty = { [key: string]: unknown };
 
+export type Read = (typeof Read)[keyof typeof Read];
+
+export const Read = {
+  single: "single",
+  "first-read": "first-read",
+  aided: "aided",
+} as const;
+
 export interface Opinion {
   reviewer_id: string;
   form_version: number;
   questions: Question[];
   answers: OpinionAnswersProperty;
   draft: boolean;
+  read: Read;
   updated_at: string | null;
 }
 

@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -284,7 +285,7 @@ def test_judging_the_ai_waits_for_the_first_read(api: ApiAs, database: str) -> N
     early = api(first).post(f"{s.base}/submit")
     assert (early.status_code, early.json()["code"]) == (409, "first-read-needed")
     ok(api(first).post(f"{s.base}/added", json={"kind": "cell", "geometry": SQUARE}))
-    ok(api(first).put(f"{s.base}/opinion", json={"answers": {"acceptable": 2}}))
+    ok(api(first).put(f"{s.base}/opinion", json={"answers": {"comment": "Blind"}}))
     ok(api(first).post(f"{s.base}/first-read"))
     ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "disagree", "reason": "artefact"}))
     unknown = api(first).put(f"{s.base}/verdicts/T9", json={"value": "agree"})
@@ -303,11 +304,11 @@ def stored_first_read(database: str, s: Study, who: str) -> tuple[object, ...]:
 def test_the_blind_first_read_is_kept_after_the_ai_is_shown(api: ApiAs, database: str) -> None:
     s = study(api, database, blinded=True, hidden=True)
     first = s.people["first"]
-    ok(api(first).put(f"{s.base}/opinion", json={"answers": {"acceptable": 2, "comment": "Blind"}}))
+    ok(api(first).put(f"{s.base}/opinion", json={"answers": {"comment": "Blind"}}))
     drawn = ok(api(first).post(f"{s.base}/added", json={"kind": "region", "geometry": SQUARE}))
     recorded = ok(api(first).post(f"{s.base}/first-read")).json()
     assert (recorded["answers"], [item["code"] for item in recorded["added"]]) == (
-        {"acceptable": 2, "comment": "Blind"},
+        {"comment": "Blind"},
         [drawn.json()["code"]],
     )
     kept = stored_first_read(database, s, "first")
@@ -347,6 +348,95 @@ def test_the_blind_first_read_is_kept_after_the_ai_is_shown(api: ApiAs, database
     )
     assert len(audit) == 2
     assert "Blind" not in str(audit)
+
+
+FIRST_READ_FORM = {
+    "questions": [
+        {
+            "kind": "choice",
+            "key": "blind_call",
+            "label": "What do you see without the AI?",
+            "options": ["Tumour", "No tumour"],
+            "asked": "first-read",
+        },
+        {"kind": "scale", "key": "acceptable", "label": "Is the AI acceptable?", "asked": "aided"},
+        {"kind": "text", "key": "comment", "label": "Comment"},
+    ]
+}
+
+
+def task_on_form(api: ApiAs, s: Study, form: Mapping[str, Any], *, hidden: bool) -> str:
+    owner_api = api(s.people["owner"])
+    version = ok(owner_api.put(f"/api/projects/{s.project}/opinion-form", json=form)).json()
+    task = ok(
+        owner_api.post(
+            f"/api/projects/{s.project}/review-tasks",
+            json={
+                "name": "Form task",
+                "slide_ids": [str(s.slide)],
+                "result_sets": [{"slide_id": str(s.slide), "result_set_id": str(s.result_set)}],
+                "reviewer_ids": [s.user("first")],
+                "split": "everyone",
+                "scope": {"kind": "all-regions"},
+                "ai_hidden_first_read": hidden,
+                "opinion_form_version": version["version"],
+            },
+        )
+    ).json()["id"]
+    return f"/api/review-tasks/{task}/slides/{s.slide}"
+
+
+def refused_code(response: Any) -> tuple[int, str]:
+    return response.status_code, response.json()["code"]
+
+
+def test_a_first_read_asks_only_its_questions_and_the_aided_read_the_rest(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=True, hidden=True)
+    base = task_on_form(api, s, FIRST_READ_FORM, hidden=True)
+    first = api(s.people["first"])
+    assert ok(first.get(f"{base}/opinion")).json()["read"] == "first-read"
+    early = first.put(f"{base}/opinion", json={"answers": {"acceptable": 4}})
+    assert refused_code(early) == (400, "question-not-in-this-read")
+    ok(first.put(f"{base}/opinion", json={"answers": {"blind_call": "Tumour", "comment": "Blind"}}))
+    recorded = ok(first.post(f"{base}/first-read")).json()
+    assert recorded["answers"] == {"blind_call": "Tumour", "comment": "Blind"}
+    assert ok(first.get(f"{base}/opinion")).json()["read"] == "aided"
+    late = first.put(f"{base}/opinion", json={"answers": {"blind_call": "No tumour"}})
+    assert refused_code(late) == (400, "question-not-in-this-read")
+    ok(first.put(f"{base}/opinion", json={"answers": {"acceptable": 4, "comment": "Seen"}}))
+    assert ok(first.get(f"{base}/opinion")).json()["answers"] == {
+        "blind_call": "Tumour",
+        "acceptable": 4,
+        "comment": "Seen",
+    }
+    assert ok(first.get(f"{base}/first-read")).json() == recorded
+
+
+def test_a_task_without_a_first_read_asks_every_question(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=True, hidden=True)
+    base = task_on_form(api, s, FIRST_READ_FORM, hidden=False)
+    first = api(s.people["first"])
+    answers = {"blind_call": "No tumour", "acceptable": 3, "comment": "One read"}
+    saved = ok(first.put(f"{base}/opinion", json={"answers": answers})).json()
+    assert (saved["read"], saved["answers"]) == ("single", answers)
+
+
+def test_a_form_stored_before_the_setting_asks_everything_in_both_reads(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=True, hidden=True)
+    owner(
+        database,
+        "UPDATE opinion_forms SET questions = "
+        "(SELECT jsonb_agg(question - 'asked') FROM jsonb_array_elements(questions) question) "
+        f"WHERE project_id = '{s.project}' AND version = 1",
+    )
+    first = api(s.people["first"])
+    ok(first.put(f"{s.base}/opinion", json={"answers": {"acceptable": 2}}))
+    assert ok(first.post(f"{s.base}/first-read")).json()["answers"] == {"acceptable": 2}
+    ok(first.put(f"{s.base}/opinion", json={"answers": {"acceptable": 5}}))
 
 
 def test_a_first_read_is_refused_where_it_does_not_apply(api: ApiAs, database: str) -> None:

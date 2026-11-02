@@ -13,6 +13,7 @@ type Option = Annotated[str, StringConstraints(strip_whitespace=True, min_length
 type EndLabel = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)
 ]
+type Asked = Literal["first-read", "aided", "both"]
 
 
 class QuestionBase(BaseModel):
@@ -20,6 +21,7 @@ class QuestionBase(BaseModel):
     label: Label
     required: bool = False
     quick: bool = False
+    asked: Asked = "both"
 
 
 class ScaleQuestion(QuestionBase):
@@ -82,6 +84,7 @@ DEFAULT_QUESTIONS: list[Question] = [
         label="Is the AI result acceptable for this slide?",
         required=True,
         quick=True,
+        asked="aided",
         min_label="unusable",
         max_label="sign as is",
     ),
@@ -90,13 +93,25 @@ DEFAULT_QUESTIONS: list[Question] = [
         key="main_error",
         label="Main error type",
         quick=True,
+        asked="aided",
         options=["None", "Missed tumor", "False tumor", "Wrong cell types", "Boundaries"],
     ),
     YesNoQuestion(
-        kind="yesno", key="sign_as_is", label="Would you sign this without changes?", quick=True
+        kind="yesno",
+        key="sign_as_is",
+        label="Would you sign this without changes?",
+        quick=True,
+        asked="aided",
     ),
     TextQuestion(kind="text", key="comment", label="Comment"),
 ]
+
+
+type Read = Literal["single", "first-read", "aided"]
+
+
+def asked_in(question: QuestionBase, read: Read) -> bool:
+    return read == "single" or question.asked in {"both", read}
 
 
 def dumped(questions: list[Question]) -> list[dict[str, Any]]:

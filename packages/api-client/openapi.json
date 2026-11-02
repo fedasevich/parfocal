@@ -21452,6 +21452,14 @@
           "methods"
         ]
       },
+      "Asked": {
+        "type": "string",
+        "enum": [
+          "first-read",
+          "aided",
+          "both"
+        ]
+      },
       "AssignedTask": {
         "properties": {
           "id": {
@@ -22076,6 +22084,10 @@
             "type": "boolean",
             "title": "Quick",
             "default": false
+          },
+          "asked": {
+            "$ref": "#/components/schemas/Asked",
+            "default": "both"
           },
           "kind": {
             "type": "string",
@@ -25119,6 +25131,9 @@
             "type": "boolean",
             "title": "Draft"
           },
+          "read": {
+            "$ref": "#/components/schemas/Read"
+          },
           "updated_at": {
             "anyOf": [
               {
@@ -25139,6 +25154,7 @@
           "questions",
           "answers",
           "draft",
+          "read",
           "updated_at"
         ],
         "title": "Opinion"
@@ -26444,6 +26460,14 @@
           "denominator"
         ],
         "title": "RateOut"
+      },
+      "Read": {
+        "type": "string",
+        "enum": [
+          "single",
+          "first-read",
+          "aided"
+        ]
       },
       "Reason": {
         "type": "string",
@@ -28108,6 +28132,10 @@
             "type": "boolean",
             "title": "Quick",
             "default": false
+          },
+          "asked": {
+            "$ref": "#/components/schemas/Asked",
+            "default": "both"
           },
           "kind": {
             "type": "string",
@@ -30422,6 +30450,10 @@
             "title": "Quick",
             "default": false
           },
+          "asked": {
+            "$ref": "#/components/schemas/Asked",
+            "default": "both"
+          },
           "kind": {
             "type": "string",
             "const": "text",
@@ -31229,6 +31261,10 @@
             "type": "boolean",
             "title": "Quick",
             "default": false
+          },
+          "asked": {
+            "$ref": "#/components/schemas/Asked",
+            "default": "both"
           },
           "kind": {
             "type": "string",

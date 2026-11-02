@@ -59,11 +59,11 @@ def test_a_new_project_starts_from_the_default_template(api: ApiAs, database: st
     project = project_for(api, database, people)
     form = api(people["reviewer"]).get(f"{PROJECTS}/{project}/opinion-form").json()
     assert (form["version"], form["questions"]) == (1, template)
-    assert [(q["key"], q["kind"], q["quick"]) for q in template] == [
-        ("acceptable", "scale", True),
-        ("main_error", "choice", True),
-        ("sign_as_is", "yesno", True),
-        ("comment", "text", False),
+    assert [(q["key"], q["kind"], q["quick"], q["asked"]) for q in template] == [
+        ("acceptable", "scale", True, "aided"),
+        ("main_error", "choice", True, "aided"),
+        ("sign_as_is", "yesno", True, "aided"),
+        ("comment", "text", False, "both"),
     ]
     assert (template[0]["min"], template[0]["max"], template[0]["max_label"]) == (
         1,

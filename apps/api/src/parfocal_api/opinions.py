@@ -16,9 +16,11 @@ from parfocal_api.opinion_questions import (
     QUESTIONS,
     ChoiceQuestion,
     Question,
+    Read,
     ScaleQuestion,
     TextQuestion,
     YesNoQuestion,
+    asked_in,
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError
@@ -38,12 +40,18 @@ class Opinion(BaseModel):
     questions: list[Question]
     answers: dict[str, Any]
     draft: bool
+    read: Read
     updated_at: datetime | None
 
 
 class InvalidAnswerError(BadRequestError):
     code = "invalid-answer"
     title = "An answer does not fit its question"
+
+
+class QuestionNotInThisReadError(BadRequestError):
+    code = "question-not-in-this-read"
+    title = "This question is asked in the other read"
 
 
 class ReviewSubmittedError(ConflictError):
@@ -77,12 +85,14 @@ def answer_problem(question: Question, value: Any) -> str | None:
     return None
 
 
-def checked_answers(questions: Sequence[Question], answers: Mapping[str, Any]) -> None:
+def checked_answers(questions: Sequence[Question], answers: Mapping[str, Any], read: Read) -> None:
     by_key = {question.key: question for question in questions}
     for key, value in answers.items():
         question = by_key.get(key)
         if question is None:
             raise InvalidAnswerError(f"{key} is not a question of this form")
+        if not asked_in(question, read):
+            raise QuestionNotInThisReadError(f"{question.label} is asked in the other read")
         if value is None:
             continue
         if (problem := answer_problem(question, value)) is not None:
@@ -117,19 +127,32 @@ async def opinion_of(
             )
         )
     ).one_or_none()
-    submitted_at = await connection.scalar(
-        select(review_assignments.c.submitted_at).where(
-            review_assignments.c.task_id == task_id,
-            review_assignments.c.slide_id == slide_id,
-            review_assignments.c.user_id == reviewer,
+    assignment = (
+        await connection.execute(
+            select(
+                review_assignments.c.submitted_at,
+                review_assignments.c.first_read_at,
+                review_tasks.c.ai_hidden_first_read,
+            )
+            .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
+            .where(
+                review_assignments.c.task_id == task_id,
+                review_assignments.c.slide_id == slide_id,
+                review_assignments.c.user_id == reviewer,
+            )
         )
-    )
+    ).one_or_none()
+    submitted_at = assignment.submitted_at if assignment else None
+    read: Read = "single"
+    if assignment is not None and assignment.ai_hidden_first_read:
+        read = "first-read" if assignment.first_read_at is None else "aided"
     return Opinion(
         reviewer_id=reviewer,
         form_version=version,
         questions=questions,
         answers=dict(stored.answers) if stored else {},
         draft=submitted_at is None,
+        read=read,
         updated_at=stored.updated_at if stored else None,
     )
 
@@ -148,7 +171,7 @@ async def save_opinion(
     current = await opinion_of(connection, task_id, slide_id, me)
     if not current.draft:
         raise ReviewSubmittedError
-    checked_answers(current.questions, change.answers)
+    checked_answers(current.questions, change.answers, current.read)
     merged = {
         key: value
         for key, value in {**current.answers, **change.answers}.items()

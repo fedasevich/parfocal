@@ -12,6 +12,7 @@ from parfocal_api.annotations import Annotation, annotation_of
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.opinion_questions import asked_in
 from parfocal_api.opinions import opinion_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -137,9 +138,14 @@ async def submit_first_read(
         raise AlreadySubmittedError
     opinion = await opinion_of(connection, task_id, slide_id, me)
     added = await added_by(connection, task_id, slide_id, me)
+    answers = {
+        question.key: opinion.answers[question.key]
+        for question in opinion.questions
+        if question.key in opinion.answers and asked_in(question, "first-read")
+    }
     snapshot = {
         "form_version": opinion.form_version,
-        "answers": opinion.answers,
+        "answers": answers,
         "added": [item.model_dump(mode="json") for item in added],
     }
     recorded_at = (
@@ -159,7 +165,7 @@ async def submit_first_read(
         tenant_id=row.tenant_id,
         details={
             "slide_id": str(slide_id),
-            "questions": sorted(opinion.answers),
+            "questions": sorted(answers),
             "added": len(added),
         },
     )
