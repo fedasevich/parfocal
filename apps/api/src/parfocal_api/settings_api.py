@@ -100,7 +100,9 @@ def merged(current: Mapping[str, Any], change: Mapping[str, Any]) -> dict[str, A
 
 
 @me_router.get("", operation_id="getMySettingLayers")
-async def get_my_settings(principal: CurrentPrincipal, connection: TenantConnection) -> MySettingLayers:
+async def get_my_settings(
+    principal: CurrentPrincipal, connection: TenantConnection
+) -> MySettingLayers:
     member = member_of(principal)
     return MySettingLayers(
         lab=await lab_of(connection), personal=await personal_of(connection, member.user_id)

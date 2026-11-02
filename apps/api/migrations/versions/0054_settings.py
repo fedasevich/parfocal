@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Sequence
+from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
@@ -13,7 +14,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-def updated_at() -> sa.Column[object]:
+def updated_at() -> sa.Column[datetime]:
     return sa.Column(
         "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
     )
