@@ -1,4 +1,4 @@
-import { Icon } from "@parfocal/ui/components/icon";
+import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -14,6 +14,7 @@ type TokenItem = {
   endTone?: "warn" | undefined;
   find?: string;
   dim?: string;
+  icon?: IconName;
 };
 
 type TokenProps = React.ComponentProps<"span"> & {
@@ -32,12 +33,17 @@ function TokenLead({ item }: { item: TokenItem }) {
       />
     );
   }
-  return (
-    <span className="grid size-5 shrink-0 place-items-center rounded-full bg-chrome-3 text-fg-dim">
-      <Icon name="mail" size="xs" />
-    </span>
-  );
+  if (item.icon) {
+    return (
+      <span className="grid size-5 shrink-0 place-items-center rounded-full bg-chrome-3 text-fg-dim">
+        <Icon name={item.icon} size="xs" />
+      </span>
+    );
+  }
+  return null;
 }
+
+const hasLead = (item: TokenItem) => Boolean(item.person || item.thumbnail || item.icon);
 
 function Token({ item, onRemove, className, ...props }: TokenProps) {
   return (
@@ -178,7 +184,10 @@ function TokenField({
                 if (event.key === "Enter" && !item.dim) pick(item.id);
               }}
               className={cn(
-                "grid min-h-12 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md px-2 py-1.5",
+                "grid min-h-12 items-center gap-2.5 rounded-md px-2 py-1.5",
+                hasLead(item)
+                  ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+                  : "grid-cols-[minmax(0,1fr)_auto]",
                 item.dim
                   ? "cursor-default opacity-60"
                   : "cursor-pointer hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]",
@@ -216,7 +225,7 @@ function TokenField({
               }}
               className="grid min-h-12 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]"
             >
-              <TokenLead item={{ id: "invite", name: query }} />
+              <TokenLead item={{ id: "invite", name: query, icon: "mail" }} />
               <span>
                 <b className="block text-body-sm font-medium">Invite {query.trim()} by email</b>
                 <small className="block text-caption text-fg-dim">

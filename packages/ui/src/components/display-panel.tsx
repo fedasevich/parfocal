@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
@@ -231,14 +232,20 @@ function PresetMenu({
           <DropdownMenuRadioGroup value={current} onValueChange={(name) => onPick?.(String(name))}>
             <DropdownMenuRadioItem value="Task default">
               Task default
-              <DropdownMenuShortcut>⇧1</DropdownMenuShortcut>
+              <DropdownMenuShortcut>
+                <Keycap keys="⇧1" size="sm" />
+              </DropdownMenuShortcut>
             </DropdownMenuRadioItem>
             <DropdownMenuGroup>
               <DropdownMenuLabel>My presets</DropdownMenuLabel>
               {presets.map((preset) => (
                 <DropdownMenuRadioItem key={preset.name} value={preset.name}>
                   {preset.name}
-                  {preset.key ? <DropdownMenuShortcut>{preset.key}</DropdownMenuShortcut> : null}
+                  {preset.key ? (
+                    <DropdownMenuShortcut>
+                      <Keycap keys={preset.key} size="sm" />
+                    </DropdownMenuShortcut>
+                  ) : null}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuGroup>

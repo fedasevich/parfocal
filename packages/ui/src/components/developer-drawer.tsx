@@ -1,5 +1,6 @@
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Keycap } from "@parfocal/ui/components/keycap";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -39,7 +40,8 @@ function DeveloperDrawer({
             </span>
           </b>
           <small className="text-body-sm leading-[1.45] text-fg-dim">
-            Hidden from doctors. Opens with ⌃⇧D or <span className="font-mono">?lab</span>
+            Hidden from doctors. Opens with <Keycap keys="⌃⇧D" size="sm" /> or{" "}
+            <span className="font-mono">?lab</span>
           </small>
         </div>
         <span className="flex-1" />

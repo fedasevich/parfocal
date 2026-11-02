@@ -21,7 +21,7 @@ const preview: Preview = {
     ),
   ],
   parameters: {
-    layout: "centered",
+    layout: "padded",
     a11y: { test: "error" },
   },
 };
