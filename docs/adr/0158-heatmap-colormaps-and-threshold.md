@@ -1,4 +1,4 @@
-# XXXX. A heatmap is a probability grid coloured in the engine, with fixed colormap tables and a hide-below threshold
+# 0158. A heatmap is a probability grid coloured in the engine, with fixed colormap tables and a hide-below threshold
 
 - Date: 2026-11-03
 - Status: Accepted
