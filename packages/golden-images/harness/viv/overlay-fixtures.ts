@@ -1,4 +1,5 @@
 import {
+  classColors,
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
@@ -8,6 +9,7 @@ import {
   pointBatchFromPoints,
   polygonBatchFromRings,
   type Rgba,
+  white,
 } from "@parfocal/viewer-engine";
 
 export interface OverlayGeometry {
@@ -18,12 +20,7 @@ export interface OverlayGeometry {
 
 type Offset = readonly [dx: number, dy: number];
 
-const rose: Rgba = [244, 63, 94, 255];
-const amber: Rgba = [251, 191, 36, 255];
-const lime: Rgba = [132, 204, 22, 255];
-const cyan: Rgba = [34, 211, 238, 255];
-const orange: Rgba = [251, 146, 60, 255];
-const white: Rgba = [255, 255, 255, 255];
+const { tumor, stroma, immune, other } = classColors;
 
 function seeded(seed: number): () => number {
   let state = seed;
@@ -113,14 +110,14 @@ function heatmap(geometry: OverlayGeometry): OverlayDescription {
 
 function nuclei(geometry: OverlayGeometry): OverlayDescription {
   const random = seeded(2_026_102_5);
-  const classes = [lime, orange, cyan];
+  const classes: readonly Rgba[] = [tumor, stroma, immune, other];
   const rings: { ring: number[]; color: Rgba }[] = [];
   for (let row = 0; row < 5; row++) {
     for (let column = 0; column < 7; column++) {
       const centre: Offset = [-180 + column * 26 + random() * 8, -110 + row * 30 + random() * 8];
       rings.push({
         ring: blob(geometry, centre, 8, 9, 100 + row * 7 + column),
-        color: classes[(row + column) % classes.length] ?? lime,
+        color: classes[(row + column) % classes.length] ?? tumor,
       });
     }
   }
@@ -129,7 +126,7 @@ function nuclei(geometry: OverlayGeometry): OverlayDescription {
     y:
       geometry.centre.y +
       (40 + Math.floor(index / 9) * 22 + random() * 6) * geometry.slidePerScreen,
-    color: classes[index % classes.length] ?? lime,
+    color: classes[index % classes.length] ?? tumor,
   }));
   return createVectorOverlay({
     id: "nuclei",
@@ -153,8 +150,8 @@ function aiProposals(geometry: OverlayGeometry): OverlayDescription {
     kind: "ai-proposals",
     shapes: {
       polygons: polygonBatchFromRings([
-        { ring: project(geometry, concave), color: cyan },
-        { ring: blob(geometry, [110, -70], 34, 11, 7), color: cyan },
+        { ring: project(geometry, concave), color: immune },
+        { ring: blob(geometry, [110, -70], 34, 11, 7), color: immune },
       ]),
     },
   });
@@ -180,18 +177,18 @@ function humanAnnotations(geometry: OverlayGeometry): OverlayDescription {
     id: "human-annotations",
     kind: "human-annotations",
     shapes: {
-      polygons: polygonBatchFromRings([{ ring: project(geometry, lShape), color: rose }]),
-      paths: pathBatchFromLines([{ line: project(geometry, freehand), color: amber }]),
+      polygons: polygonBatchFromRings([{ ring: project(geometry, lShape), color: tumor }]),
+      paths: pathBatchFromLines([{ line: project(geometry, freehand), color: other }]),
       points: pointBatchFromPoints([
         {
           x: geometry.centre.x + 70 * geometry.slidePerScreen,
           y: geometry.centre.y + 70 * geometry.slidePerScreen,
-          color: lime,
+          color: stroma,
         },
         {
           x: geometry.centre.x + 100 * geometry.slidePerScreen,
           y: geometry.centre.y + 95 * geometry.slidePerScreen,
-          color: rose,
+          color: tumor,
         },
       ]),
     },

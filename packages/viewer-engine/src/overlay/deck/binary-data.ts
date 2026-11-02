@@ -87,6 +87,17 @@ export function polygonOutlineData(batch: PolygonBatch): BinaryData {
   };
 }
 
+export function withoutColors(data: BinaryData): BinaryData {
+  const geometry = Object.fromEntries(
+    Object.entries(data.attributes).filter(([name]) => !name.toLowerCase().includes("color")),
+  );
+  return {
+    length: data.length,
+    ...(data.startIndices ? { startIndices: data.startIndices } : {}),
+    attributes: geometry,
+  };
+}
+
 export function pathData(batch: PathBatch): BinaryData {
   return {
     length: batch.count,

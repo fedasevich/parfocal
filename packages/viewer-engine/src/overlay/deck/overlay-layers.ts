@@ -1,4 +1,5 @@
 import type { Layer } from "@deck.gl/core";
+import { PathStyleExtension } from "@deck.gl/extensions";
 import {
   BitmapLayer,
   IconLayer,
@@ -7,14 +8,17 @@ import {
   SolidPolygonLayer,
 } from "@deck.gl/layers";
 import type { OverlayLayer } from "../../engine/types.ts";
+import { nearBlack } from "../outline-style.ts";
 import { isOverlayDescription, isPinOverlay, isRasterOverlay } from "../overlay.ts";
 import { createPinAtlas, type PinIconName } from "../pin-icons.ts";
 import type {
   OverlayDescription,
   PinOverlay,
   RasterOverlay,
+  Rgba,
   ShapeData,
   VectorOverlay,
+  VectorStyle,
 } from "../types.ts";
 import {
   type BinaryData,
@@ -23,6 +27,7 @@ import {
   pointData,
   polygonFillData,
   polygonOutlineData,
+  withoutColors,
 } from "./binary-data.ts";
 
 export const pinSizePx = 28;
@@ -37,6 +42,9 @@ interface VectorParts {
   readonly outlines: BinaryData | null;
   readonly paths: BinaryData | null;
   readonly points: BinaryData | null;
+  readonly outlineGeometry: BinaryData | null;
+  readonly pathGeometry: BinaryData | null;
+  readonly pointGeometry: BinaryData | null;
 }
 
 interface PinParts {
@@ -55,6 +63,8 @@ interface CacheEntry {
 }
 
 const unpickable = { pickable: false } as const;
+
+const dashes = new PathStyleExtension({ dash: true, dashMode: "path" });
 
 let sharedPinAtlas: { image: ImageData; mapping: Record<PinIconName, object> } | null = null;
 
@@ -78,11 +88,17 @@ function construct<Instance>(
 
 function vectorParts(shapes: ShapeData): VectorParts {
   const { polygons, paths, points } = shapes;
+  const outlines = polygons && polygons.count > 0 ? polygonOutlineData(polygons) : null;
+  const lines = paths && paths.count > 0 ? pathData(paths) : null;
+  const dots = points && points.count > 0 ? pointData(points) : null;
   return {
     fills: polygons && polygons.count > 0 ? polygonFillData(polygons) : null,
-    outlines: polygons && polygons.count > 0 ? polygonOutlineData(polygons) : null,
-    paths: paths && paths.count > 0 ? pathData(paths) : null,
-    points: points && points.count > 0 ? pointData(points) : null,
+    outlines,
+    paths: lines,
+    points: dots,
+    outlineGeometry: outlines && withoutColors(outlines),
+    pathGeometry: lines && withoutColors(lines),
+    pointGeometry: dots && withoutColors(dots),
   };
 }
 
@@ -97,6 +113,7 @@ function rasterImage(overlay: RasterOverlay): ImageData {
 
 function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string): Layer[] {
   const { style, visible, opacity } = overlay;
+  const { casing, lineColor, dash } = style;
   const base = { visible, ...unpickable };
   const layers: Layer[] = [];
   const id = (part: string) => `overlay:${overlay.id}:${part}${suffix}`;
@@ -114,7 +131,14 @@ function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string
       }),
     );
   }
-  const lines = (part: string, data: BinaryData, pathType: "loop" | "open") =>
+  const stroke = (
+    part: string,
+    data: BinaryData,
+    pathType: "loop" | "open",
+    widthPx: number,
+    color: Rgba | null,
+    dashArray: VectorStyle["dash"],
+  ) =>
     construct(PathLayer, {
       ...base,
       id: id(part),
@@ -122,26 +146,54 @@ function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string
       opacity,
       _pathType: pathType,
       positionFormat: "XY",
-      getWidth: style.lineWidthPx,
+      getWidth: widthPx,
       widthUnits: "pixels",
       widthMinPixels: 1,
       jointRounded: true,
-      capRounded: true,
+      capRounded: dashArray === null,
+      ...(color === null ? {} : { getColor: color }),
+      ...(dashArray === null
+        ? {}
+        : { extensions: [dashes], getDashArray: dashArray, dashUnits: "pixels" }),
     });
-  if (parts.outlines) layers.push(lines("outlines", parts.outlines, "loop"));
-  if (parts.paths) layers.push(lines("paths", parts.paths, "open"));
-  if (parts.points) {
+  if (casing) {
+    const casingWidthPx = style.lineWidthPx + 2 * casing.widthPx;
+    if (parts.outlineGeometry) {
+      layers.push(
+        stroke("outline-casings", parts.outlineGeometry, "loop", casingWidthPx, casing.color, null),
+      );
+    }
+    if (parts.pathGeometry) {
+      layers.push(
+        stroke("path-casings", parts.pathGeometry, "open", casingWidthPx, casing.color, null),
+      );
+    }
+  }
+  const lineData = (colored: BinaryData | null, plain: BinaryData | null) =>
+    lineColor === null ? colored : plain;
+  const outlines = lineData(parts.outlines, parts.outlineGeometry);
+  if (outlines) {
+    layers.push(stroke("outlines", outlines, "loop", style.lineWidthPx, lineColor, dash));
+  }
+  const paths = lineData(parts.paths, parts.pathGeometry);
+  if (paths) layers.push(stroke("paths", paths, "open", style.lineWidthPx, lineColor, dash));
+  const points = lineColor === null ? parts.points : parts.pointGeometry;
+  if (points) {
     layers.push(
       construct(ScatterplotLayer, {
         ...base,
         id: id("points"),
-        data: parts.points,
+        data: points,
         opacity,
         positionFormat: "XY",
         radiusUnits: "pixels",
-        getRadius: style.pointRadiusPx,
-        stroked: false,
+        getRadius: style.pointRadiusPx + (casing?.widthPx ?? 0),
+        stroked: casing !== null,
+        lineWidthUnits: "pixels",
+        getLineWidth: casing?.widthPx ?? 0,
+        getLineColor: casing?.color ?? nearBlack,
         filled: true,
+        ...(lineColor === null ? {} : { getFillColor: lineColor }),
       }),
     );
   }
