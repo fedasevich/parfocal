@@ -2210,7 +2210,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when an ADR exists.
   Size: S.
 
-- [ ] ANN-001 · Annotation document model in the client
+- [x] ANN-001 · Annotation document model in the client
   Shapes (polygon, freehand, rectangle, ellipse, point marker, ruler, arrow, text, brush region), class, group, provenance (human, model name and version), review state, comments link. Editable shapes separate from columnar model runs.
   Done when unit tests cover create, update, delete and promotion of a run piece to a shape.
   Refs [`poc/src/annotations/document.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/document.ts), `runs.ts`, doc 11.
