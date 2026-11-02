@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-03
 
+- COLLAB-005 (comments tab) added a kit Comments tab with an Open and Resolved toggle with counts, thread cards, go to location and New comment on C, wired into guided review, the full viewer and comments on IDs and driven by useListThreads with new fakes. Object-level lookups still read the draft slide-threads hook until COLLAB-003 or COLLAB-004, and resolve, reopen and reply belong to the thread popover task.
 - INGEST-008 (sparse tile and absent chunk map) adds runs of missing Zarr tiles per level to the version 1 sidecar, written by zarr_index.py, so the Zarr source never requests them and Viv paints them as background. TIFF absence stays as byte count 0, now tested on Philips-4. A missing chunk inside a shard still reads black and belongs to VIEW-017, and the Zarr indexer waits for OME-Zarr ingest.
 - MEAS-001 (ruler tool) adds the ruler to the live slide, with length in µm or mm from the slide's microns per pixel, Shift snap to 45° and double-click snap to the maximum Feret diameter of the smallest closed shape under the pointer. Rulers are ruler shapes in the annotation document, not yet persisted, and model areas reach the snap only through MEAS-006.
 - TILES-008 (malformed capability token) makes verifyCapability answer 401 with reason malformed for bad base64 or an empty part instead of a 500, and a wrong signature now has the reason bad-signature. Edge tests cover all three and check the security headers stay on the 401.

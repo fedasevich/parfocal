@@ -2435,7 +2435,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when component tests cover the popover.
   Size: S.
 
-- [ ] COLLAB-005 · Comments tab
+- [x] COLLAB-005 · Comments tab
   Open and resolved toggle, thread cards, go to location, new comment.
   Done when component tests cover filtering and navigation.
   Size: S.
