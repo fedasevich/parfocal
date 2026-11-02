@@ -23,7 +23,7 @@ The INGEST-012 mask (64 px cells, grown by one cell) is labelled into 8-connecte
 | tumor_009.tif | 97792 x 217088 | 1002 | 1664, 6016, 94016 x 209088 | 11584, 67520, 81216 x 111360 | 46.0% | 99.52% | 100.0% |
 | test_001.tif | 86016 x 89600 | 907 | 2112, 3008, 83904 x 85632 | 4032, 3008, 78144 x 82624 | 89.9% | 99.97% | 100.0% |
 
-Every region touching an edge of the all-cells box was 9 to 25 cells on all three slides, apart from one 1904-cell fragment on test_001 that is real tissue and stays in. The box was the same for every share from 0.05% to 0.5%. At 1% test_001 lost a 3227-cell fragment and at 5% an 8658-cell one, about 1 to 1.5 mm across.
+The speck-sized regions touching an edge of the all-cells box were 9 to 25 cells on all three slides. The other edges are reached by real tissue that stays in, two sections of 13047 and 14440 cells on CMU-1.svs and one 1904-cell fragment on test_001. The box was the same for every share from 0.05% to 0.5%. At 1% test_001 lost a 3227-cell fragment and at 5% an 8658-cell one, both real tissue.
 
 ## Interpretation
 
