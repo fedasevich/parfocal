@@ -31,7 +31,7 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 - No PHI in logs, analytics, committed fixtures or docs.
 - When a task is finished, commit and push everything that belongs to it in the same turn without being asked. Stage by name. Never push failing work, never force-push, never rewrite pushed history.
 - Commit messages are Conventional Commits with the task ID as scope, such as `feat(FOUND-017): Add release versioning` ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)). No attribution lines.
-- Keep tokens low. One task per fresh subagent, at most two alive, about 120 turns each. Run checks two or three times per task, pipe long output through `tail`, shoot screenshots small and compare them by number before opening one. See [agent-workflow.md](docs/knowledge/agent-workflow.md) for models and budgets.
+- Keep tokens low. One task per fresh subagent, at most two alive, about 120 turns each. Run checks two or three times per task and pipe long output through `tail`. Take few screenshots, compare them with the mock by number (`shot --mock`) and open an image only when the number looks wrong. A hook allows 5 images per agent. Details are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
 
 ## Real infrastructure and production
 

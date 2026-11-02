@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-02
 
+- FOUND-021 (lean agent workflow) screenshot follow-up: a hook lets each agent open at most 5 images (PARFOCAL_IMAGE_LIMIT raises it), and the shot script takes --mock SCREEN/SCENE to shoot the same mock scene in the same theme and print how much the app differs, about 17% on Home. The app ignores the stored theme on load and always starts dark, so the script sets the theme itself.
 - FOUND-021 (lean agent workflow) follow-up at the owner's request: dropped the ui-porter agent, so task-runner covers every task, cut docs/README.md from 18.7 KB to 6.1 KB, kept the code and writing style only in the owner's global CLAUDE.md and removed nine stale agent worktrees whose commits were all on main.
 - FOUND-021 (lean agent workflow) done after a transcript audit and a second opinion from Fable: board.py gained brief, find, recent, note and tick, a hook blocks whole reads of the backlog and log, AGENTS.md went from 16.5 KB to 6.5 KB with procedures in knowledge/agent-workflow.md, and there are /start, /finish and /consolidate commands, task-runner and ui-porter agents, pnpm verify and a small screenshot compare script ([ADR 0136](adr/0136-lean-agent-workflow.md)). Savings are not measured yet.
 

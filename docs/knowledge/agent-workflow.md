@@ -54,11 +54,13 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 
 ## Screenshots
 
-An image costs a lot and stays in context for every later turn.
+An image costs a lot and stays in context for every later turn. Take few screenshots and open fewer.
 
-- Shoot small: `pnpm --filter @parfocal/web shot URL out.png` writes 720 by 450 by default.
-- Compare by number first: add `--against MOCK_URL_OR_PNG` to get the share of pixels that differ and a diff image.
-- Open an image only when the number says something is wrong, at most about 5 per task. The owner's review against the mock catches the rest.
+- Read the mock's HTML and the code to know what a screen should show. Don't screenshot to find out.
+- Compare by number: `pnpm --filter @parfocal/web shot APP_URL out.png --mock SCREEN/SCENE` shoots the app and the same mock scene at 720 by 450 in the same theme, then prints the share of pixels that differ and writes a diff image. Scene keys are in [design/prototype-inventory.md](../design/prototype-inventory.md), and a wrong key prints the valid ones. `--theme dark` compares the dark theme. `--against URL_OR_PNG` compares with any other page or image.
+- Expect some difference, because fake data and fonts never match exactly (Home in the light theme differs on about 17%). Look at a screen only when its number is far above the others or jumps after a change.
+- A hook in `.claude/settings.json` lets each agent open at most 5 images. After that it refuses, and the owner can raise `PARFOCAL_IMAGE_LIMIT` for a session.
+- Leave pixel nits to the owner's review against the mock.
 
 ## Starting and finishing a task
 

@@ -9,6 +9,15 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard_big_docs.py\""
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard_images.py\""
+          }
+        ]
       }
     ]
   }
