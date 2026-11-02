@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 28 |
+| `phi` | 30 |
 | `personal` | 56 |
 | `secret` | 9 |
-| `operational` | 555 |
+| `operational` | 556 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -146,6 +146,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `project_id` | operational |
 | `patient_id` | operational |
 | `label` | phi |
+| `label_lower` | phi |
 | `source` | operational |
 | `created_by_user_id` | personal |
 | `created_at` | operational |
@@ -467,6 +468,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `tenant_id` | operational |
 | `number` | operational |
 | `name` | operational |
+| `name_lower` | operational |
 | `privacy_mode` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
@@ -730,6 +732,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `case_id` | operational |
 | `block_id` | operational |
 | `label` | phi |
+| `label_lower` | phi |
 | `barcode` | phi |
 | `stain` | operational |
 | `level` | operational |

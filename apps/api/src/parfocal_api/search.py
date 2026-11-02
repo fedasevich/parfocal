@@ -4,7 +4,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import and_, select
+from sqlalchemy import ColumnElement, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.cases import keyring_of
@@ -65,6 +65,10 @@ def pattern(term: str) -> str:
     return "%" + term.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_") + "%"
 
 
+def contains(lowered: ColumnElement[str], term: str) -> ColumnElement[bool]:
+    return lowered.like(func.lower(pattern(term)))
+
+
 def project_ref(row: Any) -> ProjectRef:
     return ProjectRef(id=row.project_id, code=code_of(row.project_number), name=row.project_name)
 
@@ -96,7 +100,7 @@ async def project_hits(
 ) -> list[SearchHit]:
     rows = await connection.execute(
         select(projects.c.id, projects.c.number, projects.c.name)
-        .where(readable(principal, projects.c.id), projects.c.name.ilike(pattern(term)))
+        .where(readable(principal, projects.c.id), contains(projects.c.name_lower, term))
         .order_by(projects.c.number)
         .limit(PER_KIND)
     )
@@ -123,7 +127,7 @@ async def case_hits(
             projects.c.name.label("project_name"),
         )
         .join(projects, projects.c.id == cases.c.project_id)
-        .where(readable(principal, cases.c.project_id), cases.c.label.ilike(pattern(term)))
+        .where(readable(principal, cases.c.project_id), contains(cases.c.label_lower, term))
         .order_by(cases.c.label)
         .limit(PER_KIND)
     )
@@ -138,7 +142,7 @@ async def slide_hits(
 ) -> list[SearchHit]:
     rows = await connection.execute(
         visible_slides(principal)
-        .where(slides.c.label.ilike(pattern(term)))
+        .where(contains(slides.c.label_lower, term))
         .order_by(slides.c.label)
         .limit(PER_KIND)
     )
