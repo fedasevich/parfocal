@@ -99,6 +99,38 @@ export const Reassign560: Story = {
   ),
 };
 
+export const TokenFieldFirst: Story = {
+  render: () => (
+    <SmallModal
+      defaultOpen
+      trigger={<Button>Send to a reviewer</Button>}
+      title="Send to a reviewer"
+      primaryLabel="Send"
+    >
+      <SmallModalZone title="To whom">
+        <TokenField
+          label="Reviewer"
+          items={[
+            { id: "TB", name: people.TB.name, sub: people.TB.role, person: people.TB },
+            { id: "LM", name: people.LM.name, sub: people.LM.role, person: people.LM },
+          ]}
+          picked={[]}
+        />
+      </SmallModalZone>
+      <SmallModalZone title="Note">
+        <SegmentedControl
+          aria-label="Note"
+          defaultValue="none"
+          options={[
+            { value: "none", label: "No note" },
+            { value: "short", label: "Short note" },
+          ]}
+        />
+      </SmallModalZone>
+    </SmallModal>
+  ),
+};
+
 export const OneBlocker: Story = {
   render: () => (
     <SmallModal

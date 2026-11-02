@@ -6,7 +6,7 @@ import { FormField, TextFieldInput } from "../src/components/form-field.tsx";
 import { LockableRow } from "../src/components/lockable-row.tsx";
 import { NumberStepper } from "../src/components/number-stepper.tsx";
 import { SegmentedControl } from "../src/components/segmented-control.tsx";
-import { TokenField } from "../src/components/token-field.tsx";
+import { TokenField, type TokenItem } from "../src/components/token-field.tsx";
 import { mockAssets, people } from "./fixtures.ts";
 
 const meta = {
@@ -177,6 +177,35 @@ export const TokenFieldPicked: Story = {
         picked={picked}
         onPickedChange={setPicked}
       />
+    );
+  },
+};
+
+export const TokenFieldLive: Story = {
+  render: () => {
+    const [picked, setPicked] = useState<string[]>([]);
+    const [items, setItems] = useState<TokenItem[]>(tokenItems);
+    const [invited, setInvited] = useState<string | null>(null);
+    return (
+      <div className="h-80 w-[480px]">
+        <TokenField
+          label="Reviewers"
+          items={items}
+          picked={picked}
+          onPickedChange={setPicked}
+          onInvite={(email) => {
+            setItems([...items, { id: email, name: email, icon: "mail", sub: "Invited" }]);
+            setPicked([...picked, email]);
+            setInvited(email);
+          }}
+        />
+        <button type="button" className="mt-3 text-body-sm text-fg-dim">
+          Send the task
+        </button>
+        <p aria-live="polite" className="text-caption text-fg-dim">
+          {invited ? `Invited ${invited}` : "Nobody invited"}
+        </p>
+      </div>
     );
   },
 };

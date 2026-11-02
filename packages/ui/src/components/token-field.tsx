@@ -90,6 +90,8 @@ const fold = (text: string) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
+const inviteId = "invite";
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function TokenField({
@@ -108,6 +110,7 @@ function TokenField({
 }: TokenFieldProps) {
   const [query, setQuery] = useState(defaultQuery);
   const [open, setOpen] = useState(defaultOpen);
+  const [activeIndex, setActiveIndex] = useState(0);
   const listId = useId();
   const pickedItems = picked
     .map((id) => items.find((item) => item.id === id))
@@ -120,15 +123,49 @@ function TokenField({
   );
   const inviteable = emailPattern.test(query.trim()) && matches.length === 0;
   const full = single && pickedItems.length > 0;
-  const listOpen = open && !full && (matches.length > 0 || inviteable);
+  const listOpen = open && !full && (matches.length > 0 || needle !== "");
+  const choices = [
+    ...matches.filter((item) => !item.dim).map((item) => item.id),
+    ...(inviteable ? [inviteId] : []),
+  ];
+  const activeId = choices[Math.min(activeIndex, choices.length - 1)];
+  const optionId = (id: string) => `${listId}-${id}`;
   const pick = (id: string) => {
     onPickedChange?.([...picked, id]);
     setQuery("");
+    setActiveIndex(0);
     if (single) setOpen(false);
+  };
+  const invite = () => {
+    onInvite?.(query.trim());
+    setQuery("");
+    setActiveIndex(0);
+  };
+  const choose = (id: string) => (id === inviteId ? invite() : pick(id));
+  const move = (step: number) => {
+    if (choices.length === 0) return;
+    setActiveIndex(
+      (Math.min(activeIndex, choices.length - 1) + step + choices.length) % choices.length,
+    );
+  };
+  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!listOpen) setOpen(true);
+      else move(event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Enter" && listOpen && activeId !== undefined) {
+      event.preventDefault();
+      choose(activeId);
+    } else if (event.key === "Escape" && listOpen) {
+      event.stopPropagation();
+      setOpen(false);
+    } else if (event.key === "Backspace" && query === "" && picked.length > 0) {
+      onPickedChange?.(picked.slice(0, -1));
+    }
   };
   return (
     <div data-slot="token-field" className={cn("relative min-w-0", className)} {...props}>
-      <div
+      <label
         data-invalid={invalid || undefined}
         className="flex min-h-10 cursor-text flex-wrap items-center gap-1.5 rounded-ctl border border-line-strong bg-surf-field px-2 py-1.25 focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_18%,transparent)] data-invalid:border-bad data-invalid:focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--bad)_22%,transparent)]"
       >
@@ -149,20 +186,23 @@ function TokenField({
             aria-label={label}
             aria-expanded={listOpen}
             aria-controls={listOpen ? listId : undefined}
+            aria-activedescendant={listOpen && activeId ? optionId(activeId) : undefined}
             aria-autocomplete="list"
             aria-invalid={invalid || undefined}
             value={query}
             placeholder={pickedItems.length ? "Add another" : placeholder}
             onChange={(event) => {
               setQuery(event.target.value);
+              setActiveIndex(0);
               setOpen(true);
             }}
-            onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
+            onClick={() => setOpen(true)}
             onBlur={() => setOpen(false)}
             className="h-7 min-w-35 flex-1 border-0 bg-transparent px-1 text-body-sm text-fg outline-none placeholder:text-fg-faint"
           />
         )}
-      </div>
+      </label>
       {listOpen ? (
         <div
           id={listId}
@@ -173,19 +213,21 @@ function TokenField({
           {matches.map((item) => (
             <div
               key={item.id}
+              id={optionId(item.id)}
               role="option"
-              aria-selected="false"
-              aria-disabled={item.dim ? true : undefined}
               tabIndex={-1}
+              aria-selected={activeId === item.id}
+              aria-disabled={item.dim ? true : undefined}
               onMouseDown={(event) => {
                 event.preventDefault();
                 if (!item.dim) pick(item.id);
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !item.dim) pick(item.id);
+              onMouseMove={() => {
+                if (!item.dim) setActiveIndex(choices.indexOf(item.id));
               }}
               className={cn(
                 "grid min-h-12 items-center gap-2.5 rounded-md px-2 py-1.5",
+                activeId === item.id && "bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]",
                 hasLead(item)
                   ? "grid-cols-[auto_minmax(0,1fr)_auto]"
                   : "grid-cols-[minmax(0,1fr)_auto]",
@@ -213,20 +255,20 @@ function TokenField({
           ))}
           {inviteable ? (
             <div
+              id={optionId(inviteId)}
               role="option"
-              aria-selected="false"
               tabIndex={-1}
+              aria-selected={activeId === inviteId}
               onMouseDown={(event) => {
                 event.preventDefault();
-                onInvite?.(query.trim());
-                setQuery("");
+                invite();
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") onInvite?.(query.trim());
-              }}
-              className="grid min-h-12 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]"
+              className={cn(
+                "grid min-h-12 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]",
+                activeId === inviteId && "bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]",
+              )}
             >
-              <TokenLead item={{ id: "invite", name: query, icon: "mail" }} />
+              <TokenLead item={{ id: inviteId, name: query, icon: "mail" }} />
               <span>
                 <b className="block text-body-sm font-medium">Invite {query.trim()} by email</b>
                 <small className="block text-caption text-fg-dim">
