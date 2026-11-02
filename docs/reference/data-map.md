@@ -820,7 +820,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 
-## decisions
+## verdicts
 
 | Column | Class |
 |---|---|
