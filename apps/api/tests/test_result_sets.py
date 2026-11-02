@@ -8,6 +8,7 @@ import pytest
 from db_support import APP_URL, ApiAs, with_database
 from sqlalchemy import text
 from test_annotations import make_class, make_slide
+from test_blinding import study
 from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal, ServicePrincipal
@@ -202,7 +203,8 @@ def test_deleting_hides_the_set_and_is_audited(api: ApiAs, database: str) -> Non
     client = api(lb.people["owner"])
     set_id = client.post(lb.sets, json=DRAFT).json()["id"]
     imported(database, lb, uuid.UUID(set_id))
-    assert client.delete(f"/api/result-sets/{set_id}").status_code == 204
+    deleted = client.delete(f"/api/result-sets/{set_id}")
+    assert (deleted.status_code, deleted.json()) == (200, {"tasks": 0, "decisions": 0})
     assert client.get(lb.sets).json() == []
     assert client.get(f"/api/result-sets/{set_id}").status_code == 404
     actions = owner(
@@ -248,3 +250,22 @@ def test_another_workspace_sees_no_sets(api: ApiAs, database: str) -> None:
     assert stranger.get(f"/api/result-sets/{set_id}").status_code == 404
     assert stranger.get(lb.sets).status_code == 404
     assert stranger.get(f"/api/projects/{lb.project}/result-sets").status_code == 404
+
+
+def test_deleting_a_set_that_review_work_uses_needs_confirmation(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=True, hidden=False)
+    client = api(s.people["owner"])
+    path = f"/api/result-sets/{s.result_set}"
+    refused = client.delete(path)
+    assert (refused.status_code, refused.json()["code"]) == (409, "result-set-in-review")
+    assert refused.json()["detail"] == "Used by 1 review task and 1 decision"
+    assert client.get(path).status_code == 200
+    deleted = client.delete(path, params={"confirm": "true"})
+    assert (deleted.status_code, deleted.json()) == (200, {"tasks": 1, "decisions": 1})
+    assert client.get(path).status_code == 404
+    details = owner(
+        database,
+        "SELECT details::jsonb->>'tasks', details::jsonb->>'decisions' FROM audit_events "
+        f"WHERE target_id = '{s.result_set}' AND action = 'result-set.deleted'",
+    )
+    assert details == [("1", "1")]

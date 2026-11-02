@@ -74,6 +74,7 @@ import type {
   RegionMetrics,
   Resolved,
   ResultSet,
+  ResultSetDeletion,
   ResultSetDetail,
   RetentionPolicy,
   ReviewEdit,
@@ -2126,6 +2127,14 @@ export const getGetResultSetResponseMock = (
       object_count: faker.number.int(),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getDeleteResultSetResponseMock = (
+  overrideResponse: Partial<Extract<ResultSetDeletion, object>> = {},
+): ResultSetDeletion => ({
+  tasks: faker.number.int(),
+  decisions: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -7676,18 +7685,23 @@ export const getGetResultSetMockHandler = (
 
 export const getDeleteResultSetMockHandler = (
   overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ResultSetDeletion
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<ResultSetDeletion> | ResultSetDeletion),
   options?: RequestHandlerOptions,
 ) => {
   return http.delete(
     "*/api/result-sets/:resultSetId",
     async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-      if (typeof overrideResponse === "function") {
-        await overrideResponse(info);
-      }
-
-      return new HttpResponse(null, { status: 204 });
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDeleteResultSetResponseMock(),
+        { status: 200 },
+      );
     },
     options,
   );

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -27,7 +27,9 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    review_task_slides,
     slides,
+    verdicts,
 )
 from parfocal_api.taxonomy import resolve_names
 from parfocal_common.chunk_store import ChunkEntry
@@ -95,6 +97,16 @@ class UploadingNotAllowedError(ForbiddenError):
 class ResultSetNotImportingError(ConflictError):
     code = "result-set-not-importing"
     title = "This result set is finished and cannot change"
+
+
+class ResultSetInReviewError(ConflictError):
+    code = "result-set-in-review"
+    title = "Review work uses this result set. Confirm to delete it"
+
+
+class ResultSetDeletion(BaseModel):
+    tasks: int
+    decisions: int
 
 
 class UnknownClassPositionError(BadRequestError):
@@ -496,17 +508,45 @@ async def get_result_set(
     return await detail_of(connection, row)
 
 
+def counted(number: int, noun: str) -> str:
+    return f"{number} {noun}" if number == 1 else f"{number} {noun}s"
+
+
+async def review_use(connection: AsyncConnection, set_id: uuid.UUID) -> ResultSetDeletion:
+    in_tasks = select(review_task_slides.c.task_id, review_task_slides.c.slide_id).where(
+        review_task_slides.c.result_set_id == set_id
+    )
+    tasks = await connection.scalar(
+        select(func.count(func.distinct(review_task_slides.c.task_id))).where(
+            review_task_slides.c.result_set_id == set_id
+        )
+    )
+    decisions = await connection.scalar(
+        select(func.count())
+        .select_from(verdicts)
+        .where(func.row(verdicts.c.task_id, verdicts.c.slide_id).in_(in_tasks))
+    )
+    return ResultSetDeletion(tasks=int(tasks or 0), decisions=int(decisions or 0))
+
+
 @router.delete(
     "/{result_set_id}",
     operation_id="deleteResultSet",
-    status_code=204,
     **require(Permission.UPLOAD_SLIDES, write=True),
 )
 async def delete_result_set(
-    result_set_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
-) -> Response:
+    result_set_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    confirm: bool = False,
+) -> ResultSetDeletion:
     row = await set_row(connection, principal, result_set_id)
     await require_uploading(connection, principal, row.project_id, row.archived_at is not None)
+    use = await review_use(connection, result_set_id)
+    if use.tasks and not confirm:
+        raise ResultSetInReviewError(
+            f"Used by {counted(use.tasks, 'review task')} and {counted(use.decisions, 'decision')}"
+        )
     await connection.execute(
         update(result_sets).where(result_sets.c.id == result_set_id).values(deleted_at=func.now())
     )
@@ -516,6 +556,6 @@ async def delete_result_set(
         AuditAction.RESULT_SET_DELETED,
         row.tenant_id,
         result_set_id,
-        {"slide_id": str(row.slide_id)},
+        {"slide_id": str(row.slide_id), "tasks": use.tasks, "decisions": use.decisions},
     )
-    return Response(status_code=204)
+    return use

@@ -2514,6 +2514,11 @@ export interface ResultSetClass {
   object_count: number;
 }
 
+export interface ResultSetDeletion {
+  tasks: number;
+  decisions: number;
+}
+
 export interface ResultSetDetail {
   id: string;
   project_id: string;
@@ -3116,6 +3121,10 @@ export type DeleteAnnotationParams = {
    * @minimum 1
    */
   version: number;
+};
+
+export type DeleteResultSetParams = {
+  confirm?: boolean;
 };
 
 export type GetResultsSchema200 = { [key: string]: unknown };
@@ -11878,9 +11887,9 @@ export function useGetResultSet<TData = Awaited<ReturnType<typeof getResultSet>>
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export type deleteResultSetResponse204 = {
-  data: void;
-  status: 204;
+export type deleteResultSetResponse200 = {
+  data: ResultSetDeletion;
+  status: 200;
 };
 
 export type deleteResultSetResponse400 = {
@@ -11923,7 +11932,7 @@ export type deleteResultSetResponse500 = {
   status: 500;
 };
 
-export type deleteResultSetResponseSuccess = deleteResultSetResponse204 & {
+export type deleteResultSetResponseSuccess = deleteResultSetResponse200 & {
   headers: Headers;
 };
 export type deleteResultSetResponseError = (
@@ -11941,8 +11950,20 @@ export type deleteResultSetResponseError = (
 
 export type deleteResultSetResponse = deleteResultSetResponseSuccess | deleteResultSetResponseError;
 
-export const getDeleteResultSetUrl = (resultSetId: string) => {
-  return `/api/result-sets/${resultSetId}`;
+export const getDeleteResultSetUrl = (resultSetId: string, params?: DeleteResultSetParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/result-sets/${resultSetId}?${stringifiedParams}`
+    : `/api/result-sets/${resultSetId}`;
 };
 
 /**
@@ -11950,9 +11971,10 @@ export const getDeleteResultSetUrl = (resultSetId: string) => {
  */
 export const deleteResultSet = async (
   resultSetId: string,
+  params?: DeleteResultSetParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<deleteResultSetResponse> => {
-  return apiFetch<deleteResultSetResponse>(getDeleteResultSetUrl(resultSetId), {
+  return apiFetch<deleteResultSetResponse>(getDeleteResultSetUrl(resultSetId, params), {
     ...options,
     method: "DELETE",
   });
@@ -11985,9 +12007,9 @@ export const getDeleteResultSetMutationOptions = <TError = Problem, TContext = u
     Awaited<ReturnType<typeof deleteResultSet>>,
     DeleteResultSetMutationVariables
   > = (props) => {
-    const { resultSetId } = props ?? {};
+    const { resultSetId, params } = props ?? {};
 
-    return deleteResultSet(resultSetId, requestOptions);
+    return deleteResultSet(resultSetId, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -11998,7 +12020,10 @@ export type DeleteResultSetMutationResult = NonNullable<
 >;
 
 export type DeleteResultSetMutationError = Problem;
-export type DeleteResultSetMutationVariables = { resultSetId: string };
+export type DeleteResultSetMutationVariables = {
+  resultSetId: string;
+  params?: DeleteResultSetParams;
+};
 
 /**
  * @summary Delete Result Set

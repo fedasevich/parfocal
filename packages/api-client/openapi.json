@@ -6355,11 +6355,28 @@
               "format": "uuid",
               "title": "Result Set Id"
             }
+          },
+          {
+            "name": "confirm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Confirm"
+            }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Successful Response"
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSetDeletion"
+                }
+              }
+            }
           },
           "400": {
             "content": {
@@ -26998,6 +27015,24 @@
           "object_count"
         ],
         "title": "ResultSetClass"
+      },
+      "ResultSetDeletion": {
+        "properties": {
+          "tasks": {
+            "type": "integer",
+            "title": "Tasks"
+          },
+          "decisions": {
+            "type": "integer",
+            "title": "Decisions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tasks",
+          "decisions"
+        ],
+        "title": "ResultSetDeletion"
       },
       "ResultSetDetail": {
         "properties": {

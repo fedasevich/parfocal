@@ -3264,7 +3264,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when round-trip tests export and re-import a reviewed layer with no loss.
   Depends on RSET-007, OBJ-001.
 
-- [ ] RSET-009 · Confirm deleting a reviewed result set
+- [x] RSET-009 · Confirm deleting a reviewed result set
   Deleting a result set that a review task or a reviewer's decision uses needs `confirm=true`, and the response says how many tasks and decisions it touches.
   Done when API tests refuse the delete without confirmation when a task uses the set, allow it with confirmation, and allow an unreviewed set without it.
   Depends on RSET-001, TASK-001. Split from RSET-001 by [ADR 0077](adr/0077-result-sets.md).
