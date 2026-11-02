@@ -1,4 +1,4 @@
-# XXXX. The key registry layers scopes by rank, expands sets from the keymap and takes a hold time per action
+# 0155. The key registry layers scopes by rank, expands sets from the keymap and takes a hold time per action
 
 - Date: 2026-11-02
 - Status: Accepted
@@ -28,7 +28,7 @@ Option 2 in both. `createActionRegistry(defs).bindings({ preset, personal, scope
 ## Consequences
 
 - `usePeekKey` now runs on the registry, so the whole-slide hold and tap in the full viewer and in focus mode share one decoder with the spike.
-- The backlog line says Z uses 180 ms. The shipped threshold stays 350 ms from the Interaction spec and ADR 0149. The `peek` action can set `holdMs: 180` in one place if the owner prefers it. TODO: decide.
+Z keeps the 350 ms hold of ADR 0149 (command palette, drag and drop and hotkey registry), which the owner accepted on 2026-11-02 over the 180 ms an older backlog line named.
 - The review keys for certainty (1 to 5) and for the class (1 to 4) share digits in one scope, because which one is live depends on the question style. The screen must pass `only` for the style in use until the conflict check (CMD-004) models styles.
 - The other window listeners move over one screen at a time. The settings screen's own `conflicts` should call the registry's rank rule once the keymap feeds the registry.
 - The setting for whole slide by hold, tap or both is not read yet. It maps to a `holdMs` of 0 for hold only and infinity for tap only when the screens read the user's settings.
