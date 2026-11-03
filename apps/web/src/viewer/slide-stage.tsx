@@ -141,7 +141,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
             <ToolRailButton
               icon="ruler"
               label="Ruler"
-              keyHint="L"
+              action="truler"
               pressed={measuring}
               onPressedChange={setMeasuring}
             />
