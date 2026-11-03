@@ -35,15 +35,36 @@ const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
 
 const areaWord = (count: number) => `${count} ${count === 1 ? "area" : "areas"}`;
 
-type StagingCardsProps = React.ComponentProps<"section"> & {
-  areas: readonly AiArea[];
-  showList?: boolean;
-  wording?: WordingMode;
-  typer?: TyperEvidence;
-  warnings?: readonly ModelWarning[];
-  onStart?: (object: string) => void;
-  onSubmit?: () => void;
+const areaLabel = (
+  area: RankedArea,
+  role: string | undefined,
+  visited: ReadonlySet<string> | undefined,
+) =>
+  [
+    `${area.object}, area ${area.number}`,
+    formatMm(area.shownSize),
+    area.category,
+    ...(role ? [role] : []),
+    ...(visited?.has(area.object) ? ["visited"] : []),
+  ].join(", ");
+
+type AreaListProps = {
+  current?: string | null | undefined;
+  visited?: ReadonlySet<string> | undefined;
+  roleOf?: ((object: string) => string | undefined) | undefined;
+  onGoTo?: ((object: string) => void) | undefined;
 };
+
+type StagingCardsProps = React.ComponentProps<"section"> &
+  AreaListProps & {
+    areas: readonly AiArea[];
+    showList?: boolean;
+    wording?: WordingMode;
+    typer?: TyperEvidence;
+    warnings?: readonly ModelWarning[];
+    onStart?: (object: string) => void;
+    onSubmit?: () => void;
+  };
 
 function rowKind(area: RankedArea, settled: boolean) {
   if (!settled) return "Tumor region";
@@ -60,6 +81,10 @@ function StagingCards({
   warnings = [],
   onStart,
   onSubmit,
+  current,
+  visited,
+  roleOf,
+  onGoTo,
   className,
   ...props
 }: StagingCardsProps) {
@@ -117,11 +142,19 @@ function StagingCards({
             <RegionRow
               key={area.object}
               data-area={area.object}
-              objectId={String(area.number)}
+              objectId={area.object}
               kind={rowKind(area, settled)}
               size={formatMm(area.shownSize)}
               category={area.category}
-              selected={area.lead}
+              selected={onGoTo ? current === area.object : area.lead}
+              note={roleOf?.(area.object)}
+              visited={visited?.has(area.object) ?? false}
+              {...(onGoTo
+                ? {
+                    onSelect: () => onGoTo(area.object),
+                    label: areaLabel(area, roleOf?.(area.object), visited),
+                  }
+                : {})}
             />
           ))}
         </InspectorCard>

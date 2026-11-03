@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { type Look, lookUrl } from "../thumbnails.ts";
+import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
 import { cellShapes, hpfSize, overviewSize, regionShapes } from "./slide-geometry.ts";
 
@@ -66,8 +67,11 @@ export function homeCamera(view: StillView, size: Size): Camera {
   };
 }
 
+export const magnificationOf = (view: StillView, camera: Camera) =>
+  camera.scale * readoutPerScale[imageOf(view)];
+
 export const readout = (view: StillView, camera: Camera) => {
-  const value = camera.scale * readoutPerScale[imageOf(view)];
+  const value = magnificationOf(view, camera);
   return `${value >= 10 ? value.toFixed(0) : value >= 1 ? value.toFixed(1) : value.toFixed(2)}×`;
 };
 
@@ -115,6 +119,7 @@ type SlideStillProps = {
   homeOf?: ((size: Size) => Camera) | undefined;
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
+  onPointPick?: ((point: Pin) => void) | undefined;
 };
 
 export function SlideStill({
@@ -141,6 +146,7 @@ export function SlideStill({
   homeOf,
   underlay,
   overlay,
+  onPointPick,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
   const size = useElementSize(ref);
@@ -175,6 +181,16 @@ export function SlideStill({
   const endDrag = () => {
     drag.current = null;
   };
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const start = drag.current;
+    endDrag();
+    if (start === null || onPointPick === undefined) return;
+    if (!isClick(start, { x: event.clientX, y: event.clientY })) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    onPointPick(
+      slidePoint(start.from, size, { x: event.clientX - box.left, y: event.clientY - box.top }),
+    );
+  };
   const target = view.kind === "whole" ? null : view.object;
   const tagAt =
     view.kind === "region"
@@ -199,7 +215,7 @@ export function SlideStill({
       )}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
+      onPointerUp={onPointerUp}
       onPointerCancel={endDrag}
       onWheel={(event) => {
         const factor = event.deltaY < 0 ? 1.15 : 1 / 1.15;

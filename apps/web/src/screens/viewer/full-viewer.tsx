@@ -31,6 +31,7 @@ import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
+import { escapeComment, type Pin, pinForClick } from "../review/comment-pin.ts";
 import {
   answersOf,
   type Confidence,
@@ -45,6 +46,7 @@ import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
+import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
   routeReviewTool,
@@ -60,7 +62,13 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
-import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
+import {
+  type Camera,
+  imageOf,
+  magnificationOf,
+  SlideStill,
+  type StillView,
+} from "../review/slide-still.tsx";
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import {
@@ -74,6 +82,7 @@ import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx"
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
 import { reviewRail } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
+import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
 import {
@@ -84,6 +93,7 @@ import {
   TellMeWhenReady,
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
+import { useAreaNav } from "./use-area-nav.ts";
 import {
   isNavigatorScene,
   type LayerView,
@@ -230,6 +240,12 @@ function ViewerBody({
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [pin, setPin] = useState<Pin | null>(null);
+  const shownPin = search.tool === "comment" ? pin : null;
+  const leaveComment = () => {
+    setPin(null);
+    onSearch({ tool: undefined });
+  };
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
@@ -392,14 +408,12 @@ function ViewerBody({
         onSearch({ focus: true, scene: undefined, tool: undefined });
         return;
       }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "]" && navigator && navigator !== "overview") {
-        event.preventDefault();
-        if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
-        else onSearch({ scene: "travel" });
+      if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+      if (event.key === "Escape" && peekOpen) return;
+      if (event.key === "Escape" && escapeComment({ tool: search.tool, pin: shownPin })) {
+        leaveComment();
         return;
       }
-      if (event.key === "Escape" && peekOpen) return;
       if (event.key === "Escape" && selected) {
         pick(undefined);
         return;
@@ -425,6 +439,31 @@ function ViewerBody({
       : { kind: "whole" };
   const cameraImage = imageOf(stillView);
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
+  const ranked = areaRows(areas, (object) => answer(object)?.value);
+  const areaNav = useAreaNav({
+    order: areaOrder(ranked),
+    spot: {
+      object: selected ?? null,
+      ...(camera ? cameraToSearch(cameraImage, camera) : { x: search.x, y: search.y, z: search.z }),
+    },
+    magnification: shownCamera ? magnificationOf(stillView, shownCamera) : 0,
+    goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
+    restore: (spot) => {
+      setCamera(null);
+      onSearch({ object: spot.object ?? undefined, x: spot.x, y: spot.y, z: spot.z });
+    },
+    intercept: (fired) => {
+      if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
+      if (fired.phase !== "press") return true;
+      if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
+      else onSearch({ scene: "travel" });
+      return true;
+    },
+  });
+  const areaRole = (object: string) => {
+    const role = ranked.find((row) => row.object === object)?.role;
+    return role ? areaRoleText[role] : undefined;
+  };
   const writeSearch = useRef(onSearch);
   writeSearch.current = onSearch;
   const debugCamera = useRef(shownCamera);
@@ -708,7 +747,20 @@ function ViewerBody({
       />
     );
 
-  const commentsBody = selected ? (
+  const commentsBody = shownPin ? (
+    <PinnedThread
+      key={`${shownPin.x},${shownPin.y}`}
+      pin={shownPin}
+      taskId={session.taskId}
+      slideId={session.slideId}
+      offReason={setup.connLost ? netOff : undefined}
+      onCancel={leaveComment}
+      onPosted={() => {
+        setPin(null);
+        setToast({ id: Date.now(), text: "Thread pinned on the slide." });
+      }}
+    />
+  ) : selected ? (
     <ObjectComments
       object={selected}
       threads={session.threads}
@@ -901,7 +953,11 @@ function ViewerBody({
             <AnalysisCards
               parts={viewerParts}
               areas={stagingAreas}
-              onStart={pick}
+              current={selected}
+              visited={areaNav.visited}
+              roleOf={areaRole}
+              onGoTo={areaNav.goTo}
+              onStart={areaNav.goTo}
               onSubmit={() => onSearch({ tab: "opinion" })}
             />
           )
@@ -980,7 +1036,7 @@ function ViewerBody({
         ) : navigator ? (
           <NavigatorCanvas
             scene={navigator}
-            areas={areas}
+            areas={ranked}
             decided={decidedRegions}
             current="T2"
             onPeek={() => onSearch({ peek: true })}
@@ -1012,9 +1068,18 @@ function ViewerBody({
             regionStyle={drawing.regionStyle}
             tags={running || nothing ? [] : drawing.tags}
             underlay={running ? () => <RunningHeat /> : drawing.underlay}
-            overlay={() => (
+            onPointPick={(point) => {
+              const placed = pinForClick(search.tool, point);
+              if (placed === null) return;
+              setPin(placed);
+              onSearch({ object: undefined, tab: "comments" });
+            }}
+            overlay={(still) => (
               <>
                 {canvasNotice}
+                {shownPin ? (
+                  <PinMark pin={shownPin} camera={still.camera} size={still.size} />
+                ) : null}
                 {drawing.legend ? (
                   <div className="absolute top-4 left-4">{drawing.legend}</div>
                 ) : null}
@@ -1085,7 +1150,15 @@ function ViewerBody({
                 <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
                   {tileHint}
                   <MagnificationBar
-                    magnification={stillView.kind === "cell" ? 40 : whole ? 1.25 : 2.5}
+                    magnification={
+                      camera
+                        ? magnificationOf(stillView, camera)
+                        : stillView.kind === "cell"
+                          ? 40
+                          : whole
+                            ? 1.25
+                            : 2.5
+                    }
                     scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
                     scalePx={92}
                     micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
