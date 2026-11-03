@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -734,6 +735,7 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
 }
 
 
+@cache
 def operations() -> dict[str, dict[str, Any]]:
     schema = openapi_schema()
     return {
@@ -743,6 +745,7 @@ def operations() -> dict[str, dict[str, Any]]:
     }
 
 
+@cache
 def guarded_operations() -> dict[str, Permission]:
     return {
         name: Permission(operation["x-permission"])
