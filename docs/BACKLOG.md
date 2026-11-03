@@ -612,7 +612,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SKEL-009, TILES-002.
   Size: S.
 
-- [ ] SKEL-012 · Viewer takes the slide format from ingest
+- [x] SKEL-012 · Viewer takes the slide format from ingest
   The live viewer route of SKEL-006 picks the reader from the original's file extension, although INGEST-004 already identifies the format from the bytes. The slide read returns the identified format and the viewer uses it.
   Done when an API test sees the format on the slide read and a viewer test opens a slide whose stored name has the wrong extension.
   Size: S.
