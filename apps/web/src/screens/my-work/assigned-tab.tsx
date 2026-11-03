@@ -60,7 +60,10 @@ function AssignedRow({
   return (
     <tr
       aria-selected={selected}
-      onClick={onSelect}
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest("button, a")) return;
+        onSelect();
+      }}
       className={`cursor-pointer border-line border-b ${selected ? "bg-accent-soft" : ""}`}
     >
       <td className="px-2 py-2 align-middle">
