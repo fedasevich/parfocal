@@ -54,15 +54,16 @@ const classColour = (name: string | null) =>
 type AnnotateViewProps = {
   tools: ToolSession;
   scene: SceneOf<"annotate">;
+  initialTool?: "smart" | undefined;
   onScene: (scene: SceneOf<"annotate">) => void;
   onLeave: (tab: "objects" | "comments" | "opinion") => void;
 };
 
-export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewProps) {
+export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: AnnotateViewProps) {
   const { session, counts } = tools;
   const layers = okData(useListAnnotationLayers(session.slideId).data);
   const tierList = tiersFor(okData(useListModelTiers().data) ?? [], "outline");
-  const [tool, setTool] = useState("auto");
+  const [tool, setTool] = useState<string>(initialTool ?? "auto");
   const [tierName, setTierName] = useState("Best");
   const [proposals, setProposals] = useState(autoRegionProposals.length);
   const [added, setAdded] = useState(0);

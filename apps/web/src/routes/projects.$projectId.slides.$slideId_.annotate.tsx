@@ -7,6 +7,7 @@ import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 const annotateSearch = z.object({
   task: z.string().optional(),
   scene: z.enum(mockScenes.annotate).optional(),
+  tool: z.enum(["smart"]).optional(),
 });
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate")({
@@ -24,6 +25,7 @@ function AnnotateWorkspace() {
         <AnnotateView
           tools={tools}
           scene={search.scene ?? "auto"}
+          initialTool={search.tool}
           onScene={(scene) =>
             void navigate({ search: (previous) => ({ ...previous, scene }), replace: true })
           }

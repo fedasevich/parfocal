@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { stayTools } from "../screens/review/review-rail.ts";
 import { mockScenes } from "../screens/scenes.ts";
 import { FullViewer } from "../screens/viewer/full-viewer.tsx";
 import { isCompareScene, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
@@ -22,7 +23,7 @@ const slideSearch = z.object({
       ...mockScenes.compare,
     ])
     .optional(),
-  tool: z.enum(["ruler"]).optional(),
+  tool: z.enum(stayTools).optional(),
   focus: z.boolean().optional(),
   peek: z.boolean().optional(),
   tab: z.enum(viewerTabs).optional(),
