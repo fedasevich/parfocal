@@ -28,5 +28,5 @@ Options 2 and 4.
 ## Consequences
 
 - The evaluation takes the counted value of a queue decision, which now also overrides a unanimous reviewer value such as both against the AI. An object left open counts as undecided.
-- The verdict list returns the reopened mark and note, and the reviewer screens still have to show them.
+- The decision list returns the reopened mark and note, and the reviewer screens still have to show them.
 - A later migration can drop the old `decision` column only after every old row has a value, which this migration already fills.
