@@ -1,0 +1,15 @@
+{
+  "fixture": "CMU-1-Small-Region.svs",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 1560,
+      "y": 1320,
+      "width": 240,
+      "height": 240,
+      "file": "level-0-1560-1320.png"
+    }
+  ]
+}

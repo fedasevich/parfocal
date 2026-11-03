@@ -94,3 +94,4 @@ bench-out/
 /.claude/scheduled_tasks.lock
 /.claude/settings.local.json
 /.claude/usage-override.json
+!packages/test-fixtures/reference-tiles/**
