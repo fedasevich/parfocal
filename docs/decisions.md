@@ -126,6 +126,15 @@ The slide picker's case details now show project, case, specimen, blocks, the ta
 
 Your choice:
 
+## 41. Checking the developer drawer against POC doc 34, from LAB-000 (lab research check)
+
+ADR 0189 (proposed) confirms the developer drawer's ten sections in four groups, the nine LAB-001 controls and the `window.__parfocal` handle against the frozen kit, the mock's developer screen and the PROTO-016 code. POC doc 34 lives in the private POC repository, which this session was not allowed to attach, so its lab-tagged leaves are unchecked. "Kit W25" does not exist in the frozen kit, so LAB-001 now points at the "Developer mode, Viv by default" gallery group.
+
+- a. Give one session read access to the POC repository to check doc 34, then accept ADR 0189.
+- b. Accept ADR 0189 without that check.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
