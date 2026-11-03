@@ -2178,7 +2178,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-006 · Cells to check selection
+- [x] REVIEW-006 · Cells to check selection
   Per zone (REVIEW-018), contested-first order (tumor probability nearest 50%), excluding reviewed cells. Every cell is walked, not only the unsure ones ([ADR 0194](adr/0194-confidence-display-rules-and-evidence.md), confidence display rules). Zones are ranked by unsure cells, and the cells outside every zone come last. Built in `packages/ui/src/lib/cells-to-check.ts`.
   Done when unit tests confirm ordering within and across zones on a seeded result.
   Refs doc 33, mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
