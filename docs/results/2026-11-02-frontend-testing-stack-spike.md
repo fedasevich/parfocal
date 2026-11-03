@@ -35,7 +35,7 @@ Can hosted GitHub runners render one Viv tile and one WebGPU frame with software
 | WebGPU tile with `--use-vulkan=swiftshader --enable-features=Vulkan` added | Linux arm64 container | 3 passed, max delta 0, 0, 0, differing fraction 0 |
 | WebGPU tile with those flags added | M4 | 3 passed, max delta 0, 0, 0 |
 | WebGPU tile with `--enable-features=Vulkan` alone, or `--use-vulkan=swiftshader` alone | Linux arm64 container | same error |
-| WebGPU spec on hosted Linux with the Vulkan flags | CI | TODO: first completed `browser` run after the fix |
+| WebGPU spec on hosted Linux with the Vulkan flags | CI run 41599021552, Chrome 156.0.8078.47 | 3 passed, max delta 0, 0, 0, differing fraction 0 |
 
 The CI evidence is job 125414049630 of run 41485331959 on commit e08504d, which finished green on 2026-11-02. The Viv specs print pass or fail, not the measured delta, so the exact M4 to x86 difference on Viv frames is not known. It is inside the JPEG row (4 levels, 0.5% of pixels, mean 1.0).
 
