@@ -228,6 +228,7 @@ describe("reader check: the POC's known failures are caught", () => {
   const cases: readonly [string, string, RasterRewrite, ReaderFindingKind][] = [
     ["YCbCr shown as RGB", "synthetic-jpeg.tiff", ycbcrShownAsRgb, "colour-space"],
     ["YCbCr shown as RGB in Aperio 33003", "JP2K-33003-1.svs", ycbcrShownAsRgb, "colour-space"],
+    ["red and blue swapped", "synthetic-jpeg.tiff", redAndBlueSwapped, "channel-order"],
     ["red and blue swapped", "CMU-1-Small-Region.svs", redAndBlueSwapped, "channel-order"],
     ["tiles placed three pixels off", "synthetic-jpeg.tiff", displaced(3, -2), "offset"],
     [

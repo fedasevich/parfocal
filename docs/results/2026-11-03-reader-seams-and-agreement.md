@@ -3,7 +3,7 @@
 - Date: 2026-11-03
 - Backlog: INGEST-009 (seams and correctness check)
 - Kind: baseline
-- Commit: the INGEST-009 commit on top of 58b21f2
+- Commit: 936946f (the reader check commit)
 - Environment: MacBook, macOS 15.8.1 arm64, Node 26.13.0, Python 3.14 with openslide-bin 4, no browser (the browser reader `openTiffSource` runs in Node with the script JPEG decoder, `nativeJpeg: "off"`)
 - Data: the committed synthetic slides and the public OpenSlide test slides `CMU-1-Small-Region.svs`, `CMU-1.svs`, `JP2K-33003-1.svs`, `CMU-1.tiff`, `OS-1.bif` and `CMU-1.ndpi`. No PHI
 
