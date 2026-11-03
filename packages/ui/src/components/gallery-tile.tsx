@@ -4,6 +4,8 @@ import type * as React from "react";
 
 type GalleryTileState = "to-check" | "current" | "done";
 
+type GalleryTileSize = 40 | 92 | 120;
+
 const dotColors: Record<Decision, string> = {
   agree: "bg-v-agree",
   disagree: "bg-v-disagree",
@@ -11,11 +13,17 @@ const dotColors: Record<Decision, string> = {
   open: "bg-chrome shadow-[0_0_0_2px_var(--chrome),inset_0_0_0_1.5px_var(--fg-faint)]",
 };
 
+const stateWords: Record<GalleryTileState, string> = {
+  "to-check": "to check",
+  current: "current",
+  done: "done",
+};
+
 type GalleryTileProps = Omit<React.ComponentProps<"button">, "children"> & {
   image: string;
   objectId: string;
   label: string;
-  size?: 40 | 92 | 120;
+  size?: GalleryTileSize;
   state?: GalleryTileState;
   decision?: Decision;
   dimmed?: boolean;
@@ -41,51 +49,79 @@ function GalleryTile({
   ...props
 }: GalleryTileProps) {
   const crop = size === 40;
+  const done = state === "done";
+  const status = decision === "open" ? stateWords[state] : decision;
   return (
     <button
       type="button"
       data-slot="gallery-tile"
       data-state={state}
+      data-size={size}
+      data-decision={decision}
       aria-pressed={state === "current"}
-      aria-label={`${objectId}, ${label}, ${decision === "open" ? "open" : decision}`}
+      aria-label={`${objectId} ${label}, ${status}`}
       className={cn(
-        "group/tile relative block cursor-pointer border-0 bg-transparent p-0 text-fg outline-none",
+        "group/tile relative block shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 text-left text-fg focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 focus-visible:outline-solid",
+        crop && "rounded-[5px]",
         dimmed && "opacity-45",
         className,
       )}
+      style={crop ? undefined : { width: size }}
       {...props}
     >
       <span
         className={cn(
-          "relative block rounded-md bg-[#111] bg-cover bg-center shadow-[inset_0_0_0_1px_var(--line)] group-hover/tile:shadow-[0_0_0_2px_var(--line-strong)] group-focus-visible/tile:shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_var(--accent)]",
+          "relative block overflow-hidden rounded-md bg-chrome-2 shadow-[inset_0_0_0_1px_var(--line)] group-hover/tile:shadow-[0_0_0_2px_var(--line-strong)]",
           crop && "rounded-[5px]",
           state === "current" && "shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_var(--accent)]",
           ringed &&
             "shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_color-mix(in_srgb,var(--accent)_75%,white)]",
         )}
-        style={{
-          width: size,
-          height: size,
-          backgroundImage: `url(${image})`,
-          ...(imagePosition ? { backgroundPosition: imagePosition } : {}),
-          ...(imageSize ? { backgroundSize: imageSize } : {}),
-        }}
       >
-        {outline ??
-          (crop ? null : (
-            <span
-              aria-hidden="true"
-              className="absolute top-1/2 left-1/2 size-[42%] -translate-1/2 rounded-full border-[1.5px] border-dashed border-white/85"
-            />
-          ))}
-        {crop ? null : (
-          <span className="absolute bottom-1 left-1 rounded-[3px] bg-black/70 px-1 font-mono text-label leading-4 text-white">
+        <span
+          data-slot="gallery-tile-image"
+          className={cn(
+            "relative block bg-[#111] bg-cover bg-center",
+            done && !crop && "opacity-40",
+          )}
+          style={{
+            width: size,
+            height: size,
+            backgroundImage: `url(${image})`,
+            ...(imagePosition ? { backgroundPosition: imagePosition } : {}),
+            ...(imageSize ? { backgroundSize: imageSize } : {}),
+          }}
+        >
+          {outline ??
+            (crop ? null : (
+              <span
+                aria-hidden="true"
+                data-slot="gallery-tile-ring"
+                className="absolute top-1/2 left-1/2 size-[42%] -translate-1/2 rounded-full border-[1.5px] border-dashed border-white/85"
+              />
+            ))}
+          <span
+            className={
+              crop
+                ? "sr-only"
+                : "absolute bottom-1 left-1 rounded-[3px] bg-black/70 px-1 font-mono text-label leading-4 text-white"
+            }
+          >
             {objectId}
           </span>
-        )}
+        </span>{" "}
+        <span
+          data-slot="gallery-tile-label"
+          className={
+            crop ? "sr-only" : "block truncate px-1.25 py-0.75 text-[10px] leading-3.5 text-fg-dim"
+          }
+        >
+          {label}
+        </span>
       </span>
       <span
         aria-hidden="true"
+        data-slot="gallery-tile-dot"
         className={cn(
           "absolute -right-0.75 -bottom-0.75 size-2.5 rounded-full shadow-[0_0_0_2px_var(--chrome)]",
           dotColors[decision],
@@ -96,4 +132,4 @@ function GalleryTile({
   );
 }
 
-export { GalleryTile, type GalleryTileProps, type GalleryTileState };
+export { GalleryTile, type GalleryTileProps, type GalleryTileSize, type GalleryTileState };
