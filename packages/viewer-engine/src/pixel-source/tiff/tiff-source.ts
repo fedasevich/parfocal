@@ -30,6 +30,7 @@ import {
   openTiff,
   type TiffPage,
 } from "./directory.ts";
+import { frameLayout, rawWindow, resample, sampleAxis } from "./frame-stitching.ts";
 import {
   browserTileDecoder,
   chooseProbeTile,
@@ -343,6 +344,9 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     request.index?.micronsPerPixel !== undefined
       ? request.index.micronsPerPixel
       : await readMicronsPerPixel(base.image);
+  const stitching =
+    request.index?.tileKind === "bif-frames" ? (request.index.stitching ?? null) : null;
+  const frames = stitching === null ? null : frameLayout(stitching, base.width, base.height);
   let closed = false;
   const nativeDecoder =
     request.nativeJpeg === "off"
@@ -488,6 +492,24 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     return { absent: false, width, height, planes };
   };
 
+  const place = async (
+    levelIndex: number,
+    window: PixelWindow,
+    signal?: AbortSignal,
+  ): Promise<PixelResult> => {
+    if (frames === null) return read(levelIndex, window, signal);
+    const level = levelAt(levels, levelIndex);
+    const [x0, y0, x1, y1] = window;
+    const across = sampleAxis(frames.across, level.downsample, level.image.getWidth(), x0, x1);
+    const down = sampleAxis(frames.down, level.downsample, level.image.getHeight(), y0, y1);
+    const raw = await read(levelIndex, rawWindow(across, down), signal);
+    const width = x1 - x0;
+    const height = y1 - y0;
+    if (raw.absent) return { absent: true, width, height };
+    const planes = raw.planes.map((plane) => resample(plane, raw.width, across, down));
+    return { absent: false, width, height, planes };
+  };
+
   return {
     formatId: request.formatId,
     levels,
@@ -498,11 +520,11 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     channels: layout.channels,
     async getTile(tile: TileRequest) {
       const level = checkTile(levels, tile);
-      return read(tile.level, tileWindow(level, tile.x, tile.y), tile.signal);
+      return place(tile.level, tileWindow(level, tile.x, tile.y), tile.signal);
     },
     async getRaster(raster: RasterRequest) {
       const level = levelAt(levels, raster.level);
-      return read(raster.level, checkWindow(level, raster.window), raster.signal);
+      return place(raster.level, checkWindow(level, raster.window), raster.signal);
     },
     async decodeReport(): Promise<DecodeReport> {
       const decided = await decide();

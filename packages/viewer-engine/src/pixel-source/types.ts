@@ -166,6 +166,8 @@ export interface SlideStitching {
   readonly frameHeight: number;
   readonly columnX: readonly number[];
   readonly rowY: readonly number[];
+  readonly advanceX?: number;
+  readonly advanceY?: number;
   readonly width: number;
   readonly height: number;
 }
