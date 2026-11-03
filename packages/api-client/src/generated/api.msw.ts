@@ -4026,6 +4026,7 @@ export const getGetReviewTaskStatesResponseMock = (
       ),
     }),
   ),
+  left_open: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -4053,6 +4054,7 @@ export const getSubmitSlideReviewResponseMock = (
       ),
     }),
   ),
+  left_open: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -4080,6 +4082,7 @@ export const getReopenSlideReviewResponseMock = (
       ),
     }),
   ),
+  left_open: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -4107,6 +4110,7 @@ export const getSignOffReviewTaskResponseMock = (
       ),
     }),
   ),
+  left_open: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -4134,6 +4138,7 @@ export const getReopenReviewTaskResponseMock = (
       ),
     }),
   ),
+  left_open: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -4151,6 +4156,14 @@ export const getSaveVerdictResponseMock = (
   reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  reopened_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  reopened_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -4167,6 +4180,14 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
     reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
     updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    reopened_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    reopened_note: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
   }));
 
 export const getListThreadsResponsePointGeometryMock = (
@@ -5011,15 +5032,36 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
     verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({
         user_id: faker.string.uuid(),
+        answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
         value: faker.helpers.arrayElement(Object.values(VerdictValue)),
         reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+        reopened: faker.datatype.boolean(),
       }),
     ),
     decision: faker.helpers.arrayElement([
-      faker.helpers.arrayElement(Object.values(Decision)),
+      {
+        style: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(DecisionStyle)),
+          null,
+        ]),
+        answer: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+        choice: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(Decision)),
+          null,
+        ]),
+        decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      },
       null,
     ]),
+    left_open: faker.datatype.boolean(),
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    edited_after_decisions: faker.datatype.boolean(),
+    looking_again: faker.datatype.boolean(),
   }));
 
 export const getDecideDisagreementResponseMock = (
@@ -5033,12 +5075,168 @@ export const getDecideDisagreementResponseMock = (
   verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       user_id: faker.string.uuid(),
+      answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
       reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      reopened: faker.datatype.boolean(),
     }),
   ),
-  decision: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(Decision)), null]),
+  decision: faker.helpers.arrayElement([
+    {
+      style: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(DecisionStyle)),
+        null,
+      ]),
+      answer: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      choice: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Decision)),
+        null,
+      ]),
+      decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    },
+    null,
+  ]),
+  left_open: faker.datatype.boolean(),
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  edited_after_decisions: faker.datatype.boolean(),
+  looking_again: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getLeaveDisagreementOpenResponseMock = (
+  overrideResponse: Partial<Extract<QueuedObject, object>> = {},
+): QueuedObject => ({
+  slide_id: faker.string.uuid(),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  why: faker.helpers.arrayElement(Object.values(Why)),
+  verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      reopened: faker.datatype.boolean(),
+    }),
+  ),
+  decision: faker.helpers.arrayElement([
+    {
+      style: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(DecisionStyle)),
+        null,
+      ]),
+      answer: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      choice: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Decision)),
+        null,
+      ]),
+      decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    },
+    null,
+  ]),
+  left_open: faker.datatype.boolean(),
+  note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  edited_after_decisions: faker.datatype.boolean(),
+  looking_again: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getAskReviewersToLookAgainResponseMock = (
+  overrideResponse: Partial<Extract<QueuedObject, object>> = {},
+): QueuedObject => ({
+  slide_id: faker.string.uuid(),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  why: faker.helpers.arrayElement(Object.values(Why)),
+  verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      reopened: faker.datatype.boolean(),
+    }),
+  ),
+  decision: faker.helpers.arrayElement([
+    {
+      style: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(DecisionStyle)),
+        null,
+      ]),
+      answer: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      choice: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Decision)),
+        null,
+      ]),
+      decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    },
+    null,
+  ]),
+  left_open: faker.datatype.boolean(),
+  note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  edited_after_decisions: faker.datatype.boolean(),
+  looking_again: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getKeepReviewerDecisionsResponseMock = (
+  overrideResponse: Partial<Extract<QueuedObject, object>> = {},
+): QueuedObject => ({
+  slide_id: faker.string.uuid(),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  why: faker.helpers.arrayElement(Object.values(Why)),
+  verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      reopened: faker.datatype.boolean(),
+    }),
+  ),
+  decision: faker.helpers.arrayElement([
+    {
+      style: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(DecisionStyle)),
+        null,
+      ]),
+      answer: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      choice: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Decision)),
+        null,
+      ]),
+      decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    },
+    null,
+  ]),
+  left_open: faker.datatype.boolean(),
+  note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  edited_after_decisions: faker.datatype.boolean(),
+  looking_again: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -11615,6 +11813,78 @@ export const getClearDisagreementDecisionMockHandler = (
   );
 };
 
+export const getLeaveDisagreementOpenMockHandler = (
+  overrideResponse?:
+    | QueuedObject
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<QueuedObject> | QueuedObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/disagreements/:slideId/:objectId/left-open",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLeaveDisagreementOpenResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAskReviewersToLookAgainMockHandler = (
+  overrideResponse?:
+    | QueuedObject
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<QueuedObject> | QueuedObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/disagreements/:slideId/:objectId/look-again",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAskReviewersToLookAgainResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getKeepReviewerDecisionsMockHandler = (
+  overrideResponse?:
+    | QueuedObject
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<QueuedObject> | QueuedObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/disagreements/:slideId/:objectId/keep-decisions",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getKeepReviewerDecisionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetTaskEvaluationMockHandler = (
   overrideResponse?:
     | Evaluation
@@ -13003,6 +13273,9 @@ export const getParfocalAPIMock = () => [
   getListDisagreementsMockHandler(),
   getDecideDisagreementMockHandler(),
   getClearDisagreementDecisionMockHandler(),
+  getLeaveDisagreementOpenMockHandler(),
+  getAskReviewersToLookAgainMockHandler(),
+  getKeepReviewerDecisionsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getListStudyTemplatesMockHandler(),
   getCreateStudyTemplateMockHandler(),

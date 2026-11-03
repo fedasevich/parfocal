@@ -490,7 +490,9 @@ async def save_review_edit(
             split=found.split,
             **values,
         )
-        .on_conflict_do_update(index_elements=KEY_COLUMNS, set_=values)
+        .on_conflict_do_update(
+            index_elements=KEY_COLUMNS, set_={**values, "updated_at": func.now()}
+        )
     )
     changes = [
         name

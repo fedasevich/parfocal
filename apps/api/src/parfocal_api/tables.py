@@ -1806,6 +1806,8 @@ verdicts = Table(
     Column("reasons", ARRAY(String(20)), nullable=False, server_default="{}", info=OPERATIONAL),
     Column("reason_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("note", String(500), nullable=True, info=PHI),
+    Column("reopened_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("reopened_note", String(500), nullable=True, info=PHI),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],
@@ -1865,7 +1867,13 @@ disagreement_decisions = Table(
     Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
-    Column("decision", String(20), nullable=False, info=OPERATIONAL),
+    Column("decision", String(20), nullable=True, info=OPERATIONAL),
+    Column("style", String(10), nullable=True, info=OPERATIONAL),
+    Column("answer", String(10), nullable=True, info=OPERATIONAL),
+    Column("answer_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("value", String(10), nullable=True, info=OPERATIONAL),
+    Column("left_open", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    Column("edits_settled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("note", String(500), nullable=True, info=PHI),
     Column(
         "decided_by_user_id",
@@ -1882,6 +1890,34 @@ disagreement_decisions = Table(
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
     one_of("decision", Decision),
+    ForeignKeyConstraint(
+        ["answer_class_id", "project_id"],
+        ["project_classes.id", "project_classes.project_id"],
+        name="fk_disagreement_decisions_answer_class_id_project_classes",
+    ),
+    CheckConstraint(
+        "style IS NULL OR style IN ('certainty', 'agree', 'yes-no', 'blind')", name="style"
+    ),
+    CheckConstraint(
+        "style IS NULL OR "
+        "(style = 'certainty' AND answer IN ('1', '2', '3', '4', '5', 'unsure')) OR "
+        "(style = 'agree' AND answer IN ('agree', 'disagree', 'unsure')) OR "
+        "(style = 'yes-no' AND answer IN ('yes', 'no', 'unsure')) OR "
+        "(style = 'blind' AND answer IN ('class', 'unsure'))",
+        name="answer_fits_style",
+    ),
+    CheckConstraint("(style IS NULL) = (answer IS NULL)", name="style_with_answer"),
+    CheckConstraint(
+        "(answer = 'class') = (answer_class_id IS NOT NULL) "
+        "AND (answer IS NOT NULL OR answer_class_id IS NULL)",
+        name="answer_names_class",
+    ),
+    CheckConstraint("value IS NULL OR value IN ('agree', 'disagree', 'unsure')", name="value"),
+    CheckConstraint(
+        "NOT (left_open AND value IS NOT NULL) "
+        "AND (left_open OR value IS NOT NULL OR edits_settled_at IS NOT NULL)",
+        name="decided_or_left_open",
+    ),
 )
 
 opinions = Table(

@@ -197,6 +197,7 @@ export const toNeighbours = (slideId: string): Neighbours => {
 const submittedStates = (taskId: string, slideId: string): TaskStates => ({
   task_id: taskId,
   signed_off_at: null,
+  left_open: 0,
   slides: [
     {
       slide_id: slideId,

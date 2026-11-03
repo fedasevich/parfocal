@@ -245,6 +245,7 @@ export const toTaskStates = (seeded: ScenarioReviewTask): TaskStates => {
   return {
     task_id: task.id,
     signed_off_at: signed ? `${task.signedOn ?? task.dueOn}T16:00:00+02:00` : null,
+    left_open: 0,
     slides: Array.from({ length: task.slides }, (_, index) => {
       const reviewers = reviewersOf(index).flatMap((key) => {
         if (key === undefined) return [];
@@ -490,7 +491,7 @@ export function workHandlers(): RequestHandler[] {
       const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
       return task
         ? toTaskStates(task)
-        : { task_id: String(params.taskId), signed_off_at: null, slides: [] };
+        : { task_id: String(params.taskId), signed_off_at: null, slides: [], left_open: 0 };
     }),
     getListProjectResultSetsMockHandler(({ params }) =>
       projectResultSets(String(params.projectId)),

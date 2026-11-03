@@ -252,3 +252,29 @@ def test_each_old_verdict_reason_becomes_a_set_of_one(empty_database: str) -> No
         ("two_regions",),
         (None,),
     ]
+
+
+def test_old_queue_choices_read_as_agree_and_disagree(empty_database: str) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0079")
+    for statement in CONTEXT_SEED:
+        query(empty_database, statement)
+    query(empty_database, "ALTER TABLE disagreement_decisions DISABLE TRIGGER ALL")
+    for number, choice in ((1, "keep-ai"), (2, "go-with-reviewers")):
+        query(
+            empty_database,
+            "INSERT INTO disagreement_decisions (tenant_id, project_id, task_id, slide_id, kind, "
+            "number, decision) SELECT p.tenant_id, p.id, gen_random_uuid(), s.id, 'region', "
+            f"{number}, '{choice}' FROM projects p, slides s",
+        )
+    query(empty_database, "ALTER TABLE disagreement_decisions ENABLE TRIGGER ALL")
+
+    command.upgrade(config, "0080")
+    listed = "SELECT number, decision, value, left_open FROM disagreement_decisions ORDER BY number"
+    assert query(empty_database, listed) == [
+        (1, "keep-ai", "agree", False),
+        (2, "go-with-reviewers", "disagree", False),
+    ]
+    command.downgrade(config, "0079")
+    decisions = "SELECT decision FROM disagreement_decisions ORDER BY number"
+    assert query(empty_database, decisions) == [("keep-ai",), ("go-with-reviewers",)]

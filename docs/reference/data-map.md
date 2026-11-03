@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 30 |
+| `phi` | 31 |
 | `personal` | 56 |
 | `secret` | 9 |
-| `operational` | 557 |
+| `operational` | 564 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -175,6 +175,12 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `kind` | operational |
 | `number` | operational |
 | `decision` | operational |
+| `style` | operational |
+| `answer` | operational |
+| `answer_class_id` | operational |
+| `value` | operational |
+| `left_open` | operational |
+| `edits_settled_at` | operational |
 | `note` | phi |
 | `decided_by_user_id` | personal |
 | `created_at` | operational |
@@ -978,6 +984,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reasons` | operational |
 | `reason_class_id` | operational |
 | `note` | phi |
+| `reopened_at` | operational |
+| `reopened_note` | phi |
 | `created_at` | operational |
 | `updated_at` | operational |
 

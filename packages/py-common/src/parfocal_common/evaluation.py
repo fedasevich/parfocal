@@ -11,6 +11,7 @@ UNSURE = "unsure"
 WRONG_CLASS = "wrong_class"
 KEEP_AI = "keep-ai"
 GO_WITH_REVIEWERS = "go-with-reviewers"
+LEFT_OPEN = "left-open"
 CATEGORIES = (AGREE, DISAGREE, UNSURE)
 
 
@@ -110,6 +111,10 @@ def ratio(numerator: int, denominator: int) -> Ratio:
 def consensus(item: AiObject) -> Consensus:
     values = {verdict.value for verdict in item.verdicts.values()}
     if not values:
+        return Consensus.UNDECIDED
+    if item.decision in CATEGORIES:
+        return Consensus(item.decision)
+    if item.decision == LEFT_OPEN:
         return Consensus.UNDECIDED
     if len(values) == 1:
         return Consensus(values.pop())

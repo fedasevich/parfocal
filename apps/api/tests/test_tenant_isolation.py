@@ -611,6 +611,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             kind="region",
             number=1,
             decision="keep-ai",
+            value="agree",
         )
     )
     await connection.execute(
