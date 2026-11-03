@@ -130,6 +130,29 @@ FAILURES: Mapping[str, str] = {
 GENERIC_FAILURE = "Parfocal could not take this file in."
 
 
+class FailureClass(StrEnum):
+    TRANSIENT = "transient"
+    PERMANENT = "permanent"
+
+
+TRANSIENT_FAILURES = frozenset(
+    {
+        Failure.UPLOAD_MISSING,
+        Failure.SIZE_MISMATCH,
+        Failure.UPLOAD_ABORTED,
+        Failure.UPLOAD_EXPIRED,
+        Failure.CHECK_STOPPED,
+        Refusal.TRUNCATED,
+    }
+)
+
+
+def failure_class(code: str) -> FailureClass:
+    if code in TRANSIENT_FAILURES:
+        return FailureClass.TRANSIENT
+    return FailureClass.PERMANENT
+
+
 def failure_message(code: str) -> str:
     return FAILURES.get(code, GENERIC_FAILURE)
 

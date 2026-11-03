@@ -74,6 +74,14 @@ def upload_done_notifications(database: str, who: MemberPrincipal) -> list[tuple
     )
 
 
+def upload_refused_notifications(database: str, who: MemberPrincipal) -> list[tuple[object, ...]]:
+    return owner(
+        database,
+        "SELECT target_type, payload->>'reason', payload->>'detail' FROM notifications "
+        f"WHERE user_id = '{who.user_id}' AND kind = 'upload-refused'",
+    )
+
+
 def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     api: ApiAs, database: str, lab: Lab, tmp_path: Path
 ) -> None:
@@ -218,11 +226,13 @@ def test_a_file_that_is_not_a_usable_slide_fails_with_its_reason(
     state = status_of(api, lab.lead, upload)
     assert (state["status"], state["reason"], state["slide_id"]) == ("failed", reason, None)
     assert state["message"]
+    assert state["failure_class"] == ("transient" if reason == "truncated" else "permanent")
     assert owner(database, f"SELECT id FROM slides WHERE project_id = '{lab.project}'") == []
     assert not exists(upload["key"])
     assert keys_under(f"t/{lab.tenant_id}/s/") == set()
     assert keys_under(f"t/{lab.tenant_id}/restricted/") == set()
     assert upload_done_notifications(database, lab.lead) == []
+    assert upload_refused_notifications(database, lab.lead) == [("job", reason, state["message"])]
     assert ("upload.refused",) in owner(
         database, f"SELECT action FROM audit_events WHERE tenant_id = '{lab.tenant_id}'"
     )

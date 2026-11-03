@@ -23,7 +23,7 @@ type BellTab = "all" | "mentions" | "jobs";
 const tabKinds: Record<BellTab, readonly string[] | null> = {
   all: null,
   mentions: ["mention", "reply"],
-  jobs: ["model-run-finished", "model-run-paused", "upload-done"],
+  jobs: ["model-run-finished", "model-run-paused", "upload-done", "upload-refused"],
 };
 
 const kindIcons: Record<string, IconName> = {
@@ -32,6 +32,7 @@ const kindIcons: Record<string, IconName> = {
   "model-run-finished": "smart",
   "model-run-paused": "warn",
   "upload-done": "upload",
+  "upload-refused": "warn",
   "task-signed-off": "check",
   "task-assigned": "users",
 };

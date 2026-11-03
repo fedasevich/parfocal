@@ -28566,6 +28566,14 @@
         "type": "array",
         "maxItems": 3
       },
+      "FailureClass": {
+        "type": "string",
+        "enum": [
+          "transient",
+          "permanent"
+        ],
+        "title": "FailureClass"
+      },
       "FieldError": {
         "properties": {
           "location": {
@@ -30903,6 +30911,7 @@
           "model-run-finished",
           "model-run-paused",
           "upload-done",
+          "upload-refused",
           "disagreements-ready",
           "task-signed-off",
           "emergency-access",
@@ -38166,6 +38175,16 @@
             ],
             "title": "Reason"
           },
+          "failure_class": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FailureClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "message": {
             "anyOf": [
               {
@@ -38251,6 +38270,7 @@
           "step",
           "slide_id",
           "reason",
+          "failure_class",
           "message",
           "notices",
           "result_format",

@@ -181,6 +181,7 @@ const notificationKinds = [
   "model-run-finished",
   "model-run-paused",
   "upload-done",
+  "upload-refused",
   "task-signed-off",
   "task-assigned",
 ] as const satisfies readonly NotificationKind[];

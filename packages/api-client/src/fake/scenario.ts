@@ -576,6 +576,7 @@ export type ScenarioNotification = {
     | "model-run-finished"
     | "model-run-paused"
     | "upload-done"
+    | "upload-refused"
     | "task-signed-off"
     | "task-assigned";
   actor: PersonKey | null;

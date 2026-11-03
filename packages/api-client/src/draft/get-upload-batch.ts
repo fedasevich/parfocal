@@ -25,6 +25,13 @@ export const uploadBatchSlideSchema = z.object({
     text: z.string(),
   }),
   extra_result: z.object({ name: z.string(), detail: z.string() }),
+  failure: z
+    .object({
+      reason: z.string(),
+      message: z.string(),
+      failure_class: z.enum(["transient", "permanent"]),
+    })
+    .optional(),
 });
 
 export const uploadBatchResultSchema = z.object({

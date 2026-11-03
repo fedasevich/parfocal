@@ -14,6 +14,7 @@ from parfocal_api.notifications import notify
 from parfocal_api.result_imports import queue_waiting_results
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import NotificationKind, slides, uploads
+from parfocal_common.ingest import failure_message
 
 LABEL_LENGTH = 200
 LABEL_STEM_LENGTH = 180
@@ -168,3 +169,19 @@ async def record_refusal(connection: AsyncConnection, upload: Any, code: str) ->
         tenant_id=upload.tenant_id,
         details={"project_id": str(upload.project_id), "reason": code},
     )
+    if upload.created_by_user_id is not None and upload.job_id is not None:
+        await notify(
+            connection,
+            upload.tenant_id,
+            [upload.created_by_user_id],
+            NotificationKind.UPLOAD_REFUSED,
+            TargetKind.JOB,
+            upload.job_id,
+            {
+                "upload_id": str(upload.id),
+                "reason": code,
+                "title": "Upload refused",
+                "detail": failure_message(code),
+                "action": "See why",
+            },
+        )
