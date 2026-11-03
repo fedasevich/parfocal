@@ -1,16 +1,25 @@
+import { Button } from "@parfocal/ui/components/button";
 import { InspectorCard, RegionRow, StagingHero } from "@parfocal/ui/components/inspector";
+import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
+import {
+  type AiArea,
+  aiState,
+  categoryName,
+  findingWords,
+  type RankedArea,
+} from "@parfocal/ui/lib/ai-state";
 import {
   aiSizeError,
   macroMm,
   microMm,
-  type StagingArea,
   type StagingCategory,
   scaleMax,
   scaleMin,
   showsStaging,
-  stagingCategory,
   type ViewerPartName,
 } from "@parfocal/ui/lib/analysis-parts";
+import type { TyperEvidence, WordingMode } from "@parfocal/ui/lib/confidence-words";
+import type { ModelWarning } from "@parfocal/ui/lib/model-warnings";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -24,67 +33,130 @@ const formatMm = (mm: number) => `${mm.toFixed(1)} mm`;
 
 const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
 
+const areaWord = (count: number) => `${count} ${count === 1 ? "area" : "areas"}`;
+
 type StagingCardsProps = React.ComponentProps<"section"> & {
-  areas: StagingArea[];
+  areas: readonly AiArea[];
   showList?: boolean;
+  wording?: WordingMode;
+  typer?: TyperEvidence;
+  warnings?: readonly ModelWarning[];
+  onStart?: (object: string) => void;
+  onSubmit?: () => void;
 };
 
-function StagingCards({ areas, showList = true, className, ...props }: StagingCardsProps) {
-  const ranked = [...areas].sort((left, right) => right.size - left.size);
-  const lead = ranked[0];
+function rowKind(area: RankedArea, settled: boolean) {
+  if (!settled) return "Tumor region";
+  if (area.lead) return "Sets the category";
+  if (area.call === "disagree") return "Not tumor";
+  return area.canChangeCategory ? "Tumor region" : "Cannot change the category";
+}
+
+function StagingCards({
+  areas,
+  showList = true,
+  wording = "plain",
+  typer,
+  warnings = [],
+  onStart,
+  onSubmit,
+  className,
+  ...props
+}: StagingCardsProps) {
+  const state = aiState({ areas });
+  const settled = state.kind === "pre-read" && state.phase === "settled";
   return (
     <section
       data-slot="staging-cards"
+      data-state={state.kind}
+      data-phase={state.kind === "pre-read" ? state.phase : undefined}
       aria-label="Staging"
       className={cn("grid gap-3 border-b border-line bg-chrome p-5", className)}
       {...props}
     >
-      {lead ? (
-        <StagingHero
-          title={`Metastasis likely, largest about ${formatMm(lead.size)}`}
-          category={categoryIfConfirmed[stagingCategory(lead.size)]}
-          sub={`${ranked.length} ${ranked.length === 1 ? "area" : "areas"}, largest first. Start with ${lead.object}.`}
-          range={{
-            min: scaleMin,
-            max: scaleMax,
-            low: clampToScale(lead.size * (1 - aiSizeError)),
-            high: clampToScale(lead.size * (1 + aiSizeError)),
-            point: clampToScale(lead.size),
-            cuts: [microMm, macroMm],
-          }}
-        />
+      {state.kind === "pre-read" ? (
+        settled ? (
+          <StagingHero
+            title={`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
+            category={state.pn}
+            sub={`Suggested ${state.pn}. Area ${state.lead.number} is confirmed and measured, so the smaller areas cannot change the category.`}
+            range={{
+              min: scaleMin,
+              max: scaleMax,
+              low: clampToScale(state.size),
+              high: clampToScale(state.size),
+              point: clampToScale(state.size),
+              cuts: [microMm, macroMm],
+            }}
+          />
+        ) : (
+          <StagingHero
+            title={`${findingWords("Metastasis", state.lead.probability, wording, typer)}, largest about ${formatMm(state.size)}`}
+            category={categoryIfConfirmed[state.category]}
+            sub={`${areaWord(state.areas.length)}, largest first. Confirm and measure area ${state.lead.number} to settle the category.`}
+            range={{
+              min: scaleMin,
+              max: scaleMax,
+              low: clampToScale(state.size * (1 - aiSizeError)),
+              high: clampToScale(state.size * (1 + aiSizeError)),
+              point: clampToScale(state.size),
+              cuts: [microMm, macroMm],
+            }}
+          />
+        )
       ) : (
         <p className="m-0 text-body-sm text-fg-dim">No tumor areas found on this slide.</p>
       )}
-      {showList && ranked.length ? (
+      <ModelWarningsBlock warnings={warnings} />
+      {showList && state.areas.length ? (
         <InspectorCard
           className="grid max-h-40 gap-1 overflow-auto"
           aria-label="Areas, largest first"
         >
-          {ranked.map((area, index) => (
+          {state.areas.map((area) => (
             <RegionRow
               key={area.object}
-              objectId={area.object}
-              kind="Tumor region"
-              size={formatMm(area.size)}
-              category={stagingCategory(area.size)}
-              selected={index === 0}
+              data-area={area.object}
+              objectId={String(area.number)}
+              kind={rowKind(area, settled)}
+              size={formatMm(area.shownSize)}
+              category={area.category}
+              selected={area.lead}
             />
           ))}
         </InspectorCard>
+      ) : null}
+      {state.kind === "pre-read" ? (
+        <div data-slot="staging-footer" className="flex items-center justify-between gap-2">
+          {settled ? (
+            <>
+              <span className="text-body-sm text-fg-dim">The category is settled.</span>
+              <Button variant="primary" size="sm" onClick={onSubmit}>
+                Submit
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onStart ? () => onStart(state.lead.object) : undefined}
+            >
+              Start with area {state.lead.number}
+            </Button>
+          )}
+        </div>
       ) : null}
     </section>
   );
 }
 
-type AnalysisCardsProps = {
+type AnalysisCardsProps = Omit<StagingCardsProps, "showList"> & {
   parts: readonly ViewerPartName[];
-  areas: StagingArea[];
 };
 
-function AnalysisCards({ parts, areas }: AnalysisCardsProps) {
+function AnalysisCards({ parts, ...props }: AnalysisCardsProps) {
   if (!showsStaging(parts)) return null;
-  return <StagingCards areas={areas} showList={parts.includes("area-list")} />;
+  return <StagingCards showList={parts.includes("area-list")} {...props} />;
 }
 
 export { AnalysisCards, type AnalysisCardsProps, StagingCards, type StagingCardsProps };

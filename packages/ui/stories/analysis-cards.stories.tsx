@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AnalysisCards } from "../src/components/analysis-cards.tsx";
 import { SidePanel } from "../src/components/side-panel.tsx";
-import type { StagingArea, ViewerPartName } from "../src/lib/analysis-parts.ts";
+import type { AiArea } from "../src/lib/ai-state.ts";
+import type { ViewerPartName } from "../src/lib/analysis-parts.ts";
 
 const meta = {
   title: "Components/Analysis cards",
@@ -13,17 +14,32 @@ type Story = StoryObj<typeof meta>;
 
 const base: ViewerPartName[] = ["objects", "layers", "decisions", "opinion"];
 
-const areas: StagingArea[] = [
-  { object: "T2", size: 1.3 },
-  { object: "T1", size: 7.7 },
-  { object: "T3", size: 0.15 },
+const areas: AiArea[] = [
+  { object: "T2", size: 1.3, probability: 0.91 },
+  { object: "T1", size: 7.7, probability: 0.68 },
+  { object: "T3", size: 0.15, probability: 0.74 },
 ];
 
-function Panel({ parts }: { parts: ViewerPartName[] }) {
+const settledAreas: AiArea[] = areas.map((area) =>
+  area.object === "T1" ? { ...area, call: "agree", measured: 8.0 } : area,
+);
+
+function Panel({ parts, staged = areas }: { parts: ViewerPartName[]; staged?: AiArea[] }) {
   return (
     <div className="flex h-[640px] bg-page text-fg">
       <SidePanel
-        head={<AnalysisCards parts={parts} areas={areas} />}
+        head={
+          <AnalysisCards
+            parts={parts}
+            areas={staged}
+            onStart={(object) => {
+              document.body.dataset.started = object;
+            }}
+            onSubmit={() => {
+              document.body.dataset.submitted = "yes";
+            }}
+          />
+        }
         tabs={[
           { value: "objects", label: "Objects", body: <p>Objects list</p> },
           { value: "display", label: "Display", body: <p>Layers</p> },
@@ -55,5 +71,11 @@ export const StagingWithoutAreas: Story = {
         tabs={[{ value: "objects", label: "Objects", body: <p>Objects list</p> }]}
       />
     </div>
+  ),
+};
+
+export const LargeDepositSettled: Story = {
+  render: () => (
+    <Panel parts={[...base, "staging-hero", "area-list", "measure-step"]} staged={settledAreas} />
   ),
 };

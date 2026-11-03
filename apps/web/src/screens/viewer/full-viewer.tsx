@@ -247,6 +247,13 @@ function ViewerBody({
     measuring && firstRegion
       ? { object: "M1", mm: measuredSize(firstRegion.size_mm ?? 0), across: firstRegion.object }
       : null;
+  const stagingAreas = regions.map((region) => ({
+    object: region.object,
+    size: region.size_mm ?? 0,
+    probability: region.score,
+    call: answer(region.object)?.value ?? null,
+    measured: measurement?.across === region.object ? measurement.mm : null,
+  }));
   const selected =
     search.object ??
     setup.object ??
@@ -889,7 +896,16 @@ function ViewerBody({
         counts={counts}
         tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
-        panelHead={nothing ? null : <AnalysisCards parts={viewerParts} areas={areas} />}
+        panelHead={
+          nothing ? null : (
+            <AnalysisCards
+              parts={viewerParts}
+              areas={stagingAreas}
+              onStart={pick}
+              onSubmit={() => onSearch({ tab: "opinion" })}
+            />
+          )
+        }
         onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
