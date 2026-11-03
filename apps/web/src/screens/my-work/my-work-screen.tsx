@@ -5,7 +5,7 @@ import {
   useListMySlides,
   useListTasksAssignedByMe,
 } from "@parfocal/api-client";
-import { Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
+import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { useEffect } from "react";
 import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
@@ -98,7 +98,7 @@ export function MyWorkScreen({
   const tabLabel = (label: string, count: number) => (
     <>
       {label}
-      <em className="font-mono text-caption font-medium not-italic text-fg-faint">{count}</em>
+      <TabCount>{count}</TabCount>
     </>
   );
   return (
