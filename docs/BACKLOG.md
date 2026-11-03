@@ -4132,7 +4132,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-002, DS-021. Refs doc 40 G2.
   Size: S.
 
-- [ ] GUIDE-005 · Decisions in the full viewer
+- [x] GUIDE-005 · Decisions in the full viewer
   K, X and U act on the selected object in the full viewer, and the Objects tab lists IDs with decisions.
   Done when E2E gives the same decisions in both modes and sees one review.
   Depends on GUIDE-001, CASE-014.
