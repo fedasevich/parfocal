@@ -3626,6 +3626,7 @@ export interface TileAccess {
   lifetime_seconds: number;
   base_path: string;
   original: string;
+  format: string | null;
 }
 
 export interface TokenRequest {

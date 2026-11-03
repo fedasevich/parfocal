@@ -139,4 +139,5 @@ test("tile access names the slide's own path and a ten-minute lifetime", async (
   assert.equal(access.base_path, "/tiles/slide-1/");
   assert.equal(access.lifetime_seconds, 600);
   assert.equal(access.original, "slide.tiff");
+  assert.equal(access.format, "generic-tiff");
 });

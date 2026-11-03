@@ -46,6 +46,7 @@ class TileAccess(BaseModel):
     lifetime_seconds: int
     base_path: str
     original: str
+    format: str | None
 
 
 router = APIRouter(prefix="/api/slides/{slide_id}/tile-access", tags=["slides"])
@@ -133,6 +134,7 @@ async def get_tile_access(
                 slides.c.project_id,
                 slides.c.original_key,
                 slides.c.file_bytes,
+                slides.c.format,
                 projects.c.privacy_mode,
             )
             .join(projects, projects.c.id == slides.c.project_id)
@@ -188,4 +190,5 @@ async def get_tile_access(
         lifetime_seconds=TOKEN_SECONDS,
         base_path=f"/tiles/{slide_id}/",
         original=original,
+        format=row.format,
     )

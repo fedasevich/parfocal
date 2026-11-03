@@ -9,6 +9,7 @@ export const toTileAccess = (slideId: string, now: Date = new Date()): TileAcces
   lifetime_seconds: fakeTileLifetimeSeconds,
   base_path: `/tiles/${slideId}/`,
   original: "slide.tiff",
+  format: "generic-tiff",
 });
 
 export const tileAccessHandlers = (): RequestHandler[] => [

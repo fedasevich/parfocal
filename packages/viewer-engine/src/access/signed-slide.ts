@@ -5,7 +5,7 @@ import type {
   SlideIndex,
   SlideIndexLevel,
 } from "../pixel-source/types.ts";
-import { UnsupportedFormatError } from "../pixel-source/types.ts";
+import { slideFormatIds, UnsupportedFormatError } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { type Fetcher, TileAccess } from "./tile-access.ts";
 
@@ -126,12 +126,17 @@ export function slideFormatFromName(name: string): SlideFormatId | null {
   return namedFormats.find(([pattern]) => pattern.test(name))?.[1] ?? null;
 }
 
+export function identifiedSlideFormat(format: string | null | undefined): SlideFormatId | null {
+  return slideFormatIds.find((formatId) => formatId === format) ?? null;
+}
+
 export interface SignedSlideOptions {
   readonly access: TileAccess;
   readonly basePath: string;
   readonly original: string;
   readonly baseUrl?: string | URL;
   readonly formatId?: SlideFormatId;
+  readonly identifiedFormat?: string | null;
   readonly fetcher?: Fetcher;
   readonly signal?: AbortSignal;
 }
@@ -154,7 +159,10 @@ function requestUrl(input: RequestInfo | URL): string {
 
 export async function signedOpenRequest(options: SignedSlideOptions): Promise<OpenRequest> {
   const { access, basePath, original, baseUrl, fetcher, signal } = options;
-  const formatId = options.formatId ?? slideFormatFromName(original);
+  const formatId =
+    options.formatId ??
+    identifiedSlideFormat(options.identifiedFormat) ??
+    slideFormatFromName(original);
   if (formatId === null) throw new UnsupportedFormatError(original);
   const directory = directoryUrl(basePath, baseUrl);
   const origin = appOrigin(baseUrl);
@@ -179,6 +187,7 @@ export interface TileGrant {
   readonly lifetimeSeconds: number;
   readonly basePath: string;
   readonly original: string;
+  readonly format?: string | null;
 }
 
 export interface SlideAccess {
