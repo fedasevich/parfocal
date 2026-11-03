@@ -15,10 +15,6 @@ const stories = Object.values(index.entries).filter((entry) => entry.type === "s
 const baseUiFocusGuards = "[data-base-ui-focus-guard]";
 
 const knownExclusions: Record<string, { selector: string; fixedBy: string }> = {
-  "kit-pages--design-system": {
-    selector: '[data-slot="button"][data-variant="primary"][data-state="hover"]',
-    fixedBy: "DS-006",
-  },
   "components-viewer-tools--minimap-faded-under-the-pointer": {
     selector: '[data-slot="smart-minimap"][data-faded]',
     fixedBy: "NAV-006",
