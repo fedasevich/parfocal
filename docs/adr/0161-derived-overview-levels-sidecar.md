@@ -1,4 +1,4 @@
-# XXXX. Ingest writes the missing coarse power-of-two levels as a lossless TIFF sidecar that the pixel source appends to the slide's levels
+# 0161. Ingest writes the missing coarse power-of-two levels as a lossless TIFF sidecar that the pixel source appends to the slide's levels
 
 - Date: 2026-11-03
 - Status: Accepted

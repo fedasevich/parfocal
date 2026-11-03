@@ -53,5 +53,5 @@ Only the levels coarser than the coarsest stored level are derived. The 2x and 8
 
 ## Follow-ups
 
-- [ADR XXXX](../adr/XXXX-derived-overview-levels-sidecar.md) (ingest writes the missing coarse levels as a lossless TIFF sidecar).
+- [ADR 0161](../adr/0161-derived-overview-levels-sidecar.md) (ingest writes the missing coarse levels as a lossless TIFF sidecar).
 - TODO: the web app does not yet open slides through a served `tile-index.json`. When it does, it must serve `overview-levels.tiff` from the folder of the original.
