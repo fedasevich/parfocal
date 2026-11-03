@@ -1,12 +1,15 @@
 import {
+  type AiModel,
   useGetSecuritySettings,
   useGetStorageUsage,
+  useHideModel,
   useListAiModels,
   useListAuditEvents,
   useListProjects,
   useListServiceAccounts,
   useListTaxonomyTemplates,
   useListWebhooks,
+  useShowModel,
 } from "@parfocal/api-client";
 import { NameCell, SettingRow } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
@@ -26,6 +29,7 @@ import {
 import { CategoryTag, StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
@@ -174,10 +178,45 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
   );
 }
 
+const modelLists = (key: readonly unknown[]) =>
+  typeof key[0] === "string" && key[0].endsWith("/models");
+
+function useModelVisibility(notify: Notify) {
+  const queryClient = useQueryClient();
+  const hide = useHideModel();
+  const show = useShowModel();
+  const [shown, setShown] = useState<Record<string, boolean>>({});
+  const apply = (model: AiModel, next: boolean) => {
+    setShown((current) => ({ ...current, [model.id]: next }));
+    if (model.catalogue_name === null) return;
+    (next ? show : hide).mutate(
+      { name: model.catalogue_name },
+      {
+        onSuccess: () =>
+          void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
+        onError: (error) => {
+          setShown((current) => ({ ...current, [model.id]: !next }));
+          notify(error instanceof Error ? error.message : "That did not save. Try again.");
+        },
+      },
+    );
+  };
+  const change = (model: AiModel, next: boolean) => {
+    apply(model, next);
+    notify(
+      next
+        ? `${model.name} shows in every model list again.`
+        : `${model.name} is hidden from every model list. Result sets it made stay.`,
+      () => apply(model, !next),
+    );
+  };
+  return { shownOf: (model: AiModel) => shown[model.id] ?? model.shown, change };
+}
+
 export function ModelsSection({ notify }: { notify: Notify }) {
   const data = useListAiModels().data?.data;
   const personOf = usePeople();
-  const [shown, setShown] = useState<Record<string, boolean>>({});
+  const visibility = useModelVisibility(notify);
   const [cancelled, setCancelled] = useState<string[]>([]);
   if (data === undefined) return null;
   const parfocal = data.models.filter((model) => model.source === "parfocal");
@@ -201,7 +240,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
           </TableHeader>
           <TableBody>
             {parfocal.map((model) => {
-              const on = shown[model.id] ?? model.shown;
+              const on = visibility.shownOf(model);
               return (
                 <TableRow key={model.id} className={on ? "" : "opacity-55"}>
                   <TableCell>
@@ -224,15 +263,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                     <Switch
                       aria-label={`Show ${model.name}`}
                       checked={on}
-                      onCheckedChange={(next) => {
-                        setShown({ ...shown, [model.id]: next });
-                        notify(
-                          next
-                            ? `${model.name} shows in every model list again.`
-                            : `${model.name} is hidden from every model list. Result sets it made stay.`,
-                          () => setShown((current) => ({ ...current, [model.id]: !next })),
-                        );
-                      }}
+                      onCheckedChange={(next) => visibility.change(model, next)}
                     />
                   </TableCell>
                 </TableRow>

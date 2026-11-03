@@ -27,6 +27,7 @@ from parfocal_api.tables import (
     class_mappings,
     disagreement_decisions,
     emergency_grants,
+    hidden_models,
     invitations,
     job_steps,
     job_units,
@@ -825,6 +826,16 @@ async def seed_model_tiers(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(version)
 
 
+async def seed_hidden_models(connection: AsyncConnection, seeded: Seeded) -> None:
+    user = seeded.ids["user"]
+    await connection.execute(
+        insert(hidden_models).values(
+            tenant_id=seeded.tenant_id, model_name="hovernet", hidden_by_user_id=user
+        )
+    )
+    seeded.markers.add(str(user))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -844,6 +855,7 @@ SEEDERS: dict[str, Seeder] = {
     "model_runs": seed_model_runs,
     "site_validations": seed_site_validations,
     "model_tiers": seed_model_tiers,
+    "hidden_models": seed_hidden_models,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1052,6 +1064,7 @@ GET_ROUTES = {
     ),
     "listSiteValidations": Route(Exposure.TENANT, lambda _: "/api/site-validations"),
     "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
+    "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
     ),

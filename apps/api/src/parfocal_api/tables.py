@@ -2032,6 +2032,22 @@ model_tiers = Table(
 )
 
 
+hidden_models = Table(
+    "hidden_models",
+    metadata,
+    *owned_ids(),
+    Column("model_name", String(80), nullable=False, info=OPERATIONAL),
+    Column(
+        "hidden_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "model_name"),
+)
+
 rate_counters = Table(
     "rate_counters",
     metadata,

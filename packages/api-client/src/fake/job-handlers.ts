@@ -14,6 +14,7 @@ import type {
   RunStage,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
+import { hiddenModelHandlers, isModelHidden } from "./hidden-models.ts";
 import { fakeJobsState, updateJobsState } from "./jobs-scene.ts";
 import { people, projectByCode, projects } from "./scenario.ts";
 import {
@@ -137,8 +138,10 @@ const allRunsById = (runId: string) => {
   return undefined;
 };
 
+const shownModels = () => models.filter((model) => !isModelHidden(model.name));
+
 export const toProjectModels = (): ProjectModel[] =>
-  models.map(
+  shownModels().map(
     (model): ProjectModel => ({
       id: model.id,
       name: model.name,
@@ -159,7 +162,11 @@ export const toProjectModels = (): ProjectModel[] =>
 export const toModelRunDefaults = (): ModelRunDefaults =>
   modelRunDefaultsSchema.parse({
     slide_ids: defaultRunSlideIds,
-    model_id: modelByKey(defaultRunModel).id,
+    model_id: (
+      shownModels().find((model) => model.key === defaultRunModel) ??
+      shownModels()[0] ??
+      modelByKey(defaultRunModel)
+    ).id,
   });
 
 const modelKeyOf = (name: string): ModelKey =>
@@ -232,6 +239,7 @@ const cancelled = (run: ModelRun): ModelRun => ({
 
 export function jobHandlers(): RequestHandler[] {
   return [
+    ...hiddenModelHandlers(),
     getListModelRunsMockHandler(({ params, request }) =>
       toModelRuns(String(params.projectId), new URL(request.url).searchParams.get("batch_id")),
     ),

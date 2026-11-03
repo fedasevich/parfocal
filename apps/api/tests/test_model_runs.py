@@ -62,7 +62,9 @@ def problem(response: Any) -> tuple[int, str]:
     return response.status_code, response.json()["code"]
 
 
-def make_lab(api: ApiAs, database: str, *, hidden: bool = False) -> Lab:
+def make_lab(
+    api: ApiAs, database: str, *, hidden: bool = False, admins: tuple[str, ...] = ()
+) -> Lab:
     workspace = make_workspace(
         database,
         {
@@ -73,6 +75,7 @@ def make_lab(api: ApiAs, database: str, *, hidden: bool = False) -> Lab:
             "reader": Role.REVIEWER,
             "stranger": Role.REVIEWER,
         },
+        admins=admins,
     )
     people, tenant = workspace.people, workspace.tenant_id
     project = make_project(database, tenant, "de-identified")

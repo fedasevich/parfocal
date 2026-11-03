@@ -109,6 +109,7 @@ OPEN_OPERATIONS = {
     "listAnnouncements": "member",
     "listSiteValidations": "member",
     "listModelTiers": "member",
+    "listModelVisibility": "member",
     "getMyHome": "member",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
@@ -381,6 +382,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", "/api/tenant/model-tiers/outline/fast", {"name": "hovernet"}
     ),
     "resetModelTier": lambda _: Call("DELETE", "/api/tenant/model-tiers/outline/fast"),
+    "hideModel": lambda _: Call("PUT", "/api/tenant/hidden-models/hovernet"),
+    "showModel": lambda _: Call("DELETE", "/api/tenant/hidden-models/hovernet"),
     "changeProjectPrivacy": lambda w: Call(
         "POST",
         f"/api/projects/{w.spare_project}/privacy-mode",
@@ -714,6 +717,7 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
     "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
     "listModelTiers": lambda _: Call("GET", "/api/tenant/model-tiers"),
+    "listModelVisibility": lambda _: Call("GET", "/api/tenant/hidden-models"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),

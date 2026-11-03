@@ -4,7 +4,7 @@
  * Parfocal API
  * OpenAPI spec version: 0.0.0
  */
-
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -19,7 +19,6 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { apiFetch } from "../fetcher.ts";
 export type UploadStatus = (typeof UploadStatus)[keyof typeof UploadStatus];
@@ -2036,6 +2035,13 @@ export interface ModelRunDraft {
   task_id?: string | null;
   scope: RunScope;
   parameters: RunChoices;
+}
+
+export interface ModelShown {
+  name: string;
+  title: string;
+  shown: boolean;
+  hidden_by: string | null;
 }
 
 export type MuteSubject = (typeof MuteSubject)[keyof typeof MuteSubject];
@@ -10433,6 +10439,480 @@ export const useResetModelTier = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getResetModelTierMutationOptions(options), queryClient);
+};
+
+export type listModelVisibilityResponse200 = {
+  data: ModelShown[];
+  status: 200;
+};
+
+export type listModelVisibilityResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listModelVisibilityResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listModelVisibilityResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listModelVisibilityResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listModelVisibilityResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listModelVisibilityResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listModelVisibilityResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listModelVisibilityResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listModelVisibilityResponseSuccess = listModelVisibilityResponse200 & {
+  headers: Headers;
+};
+export type listModelVisibilityResponseError = (
+  | listModelVisibilityResponse400
+  | listModelVisibilityResponse401
+  | listModelVisibilityResponse403
+  | listModelVisibilityResponse404
+  | listModelVisibilityResponse409
+  | listModelVisibilityResponse422
+  | listModelVisibilityResponse429
+  | listModelVisibilityResponse500
+) & {
+  headers: Headers;
+};
+
+export type listModelVisibilityResponse =
+  | listModelVisibilityResponseSuccess
+  | listModelVisibilityResponseError;
+
+export const getListModelVisibilityUrl = () => {
+  return `/api/tenant/hidden-models`;
+};
+
+/**
+ * @summary List Model Visibility
+ */
+export const listModelVisibility = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listModelVisibilityResponse> => {
+  return apiFetch<listModelVisibilityResponse>(getListModelVisibilityUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListModelVisibilityQueryKey = () => {
+  return [`/api/tenant/hidden-models`] as const;
+};
+
+export const getListModelVisibilityQueryOptions = <
+  TData = Awaited<ReturnType<typeof listModelVisibility>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listModelVisibility>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListModelVisibilityQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listModelVisibility>>> = ({ signal }) =>
+    listModelVisibility({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listModelVisibility>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListModelVisibilityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listModelVisibility>>
+>;
+export type ListModelVisibilityQueryError = Problem;
+
+export function useListModelVisibility<
+  TData = Awaited<ReturnType<typeof listModelVisibility>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listModelVisibility>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelVisibility>>,
+          TError,
+          Awaited<ReturnType<typeof listModelVisibility>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelVisibility<
+  TData = Awaited<ReturnType<typeof listModelVisibility>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listModelVisibility>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listModelVisibility>>,
+          TError,
+          Awaited<ReturnType<typeof listModelVisibility>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListModelVisibility<
+  TData = Awaited<ReturnType<typeof listModelVisibility>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listModelVisibility>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Model Visibility
+ */
+
+export function useListModelVisibility<
+  TData = Awaited<ReturnType<typeof listModelVisibility>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listModelVisibility>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListModelVisibilityQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type hideModelResponse200 = {
+  data: ModelShown;
+  status: 200;
+};
+
+export type hideModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type hideModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type hideModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type hideModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type hideModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type hideModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type hideModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type hideModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type hideModelResponseSuccess = hideModelResponse200 & {
+  headers: Headers;
+};
+export type hideModelResponseError = (
+  | hideModelResponse400
+  | hideModelResponse401
+  | hideModelResponse403
+  | hideModelResponse404
+  | hideModelResponse409
+  | hideModelResponse422
+  | hideModelResponse429
+  | hideModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type hideModelResponse = hideModelResponseSuccess | hideModelResponseError;
+
+export const getHideModelUrl = (name: string) => {
+  return `/api/tenant/hidden-models/${name}`;
+};
+
+/**
+ * @summary Hide Model
+ */
+export const hideModel = async (
+  name: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<hideModelResponse> => {
+  return apiFetch<hideModelResponse>(getHideModelUrl(name), {
+    ...options,
+    method: "PUT",
+  });
+};
+
+export const getHideModelMutationKey = () => ["hideModel"] as const;
+
+export const getHideModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hideModel>>,
+    TError,
+    HideModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hideModel>>,
+  TError,
+  HideModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getHideModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hideModel>>,
+    HideModelMutationVariables
+  > = (props) => {
+    const { name } = props ?? {};
+
+    return hideModel(name, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type HideModelMutationResult = NonNullable<Awaited<ReturnType<typeof hideModel>>>;
+
+export type HideModelMutationError = Problem;
+export type HideModelMutationVariables = { name: string };
+
+/**
+ * @summary Hide Model
+ */
+export const useHideModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hideModel>>,
+      TError,
+      HideModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hideModel>>,
+  TError,
+  HideModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getHideModelMutationOptions(options), queryClient);
+};
+
+export type showModelResponse200 = {
+  data: ModelShown;
+  status: 200;
+};
+
+export type showModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type showModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type showModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type showModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type showModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type showModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type showModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type showModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type showModelResponseSuccess = showModelResponse200 & {
+  headers: Headers;
+};
+export type showModelResponseError = (
+  | showModelResponse400
+  | showModelResponse401
+  | showModelResponse403
+  | showModelResponse404
+  | showModelResponse409
+  | showModelResponse422
+  | showModelResponse429
+  | showModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type showModelResponse = showModelResponseSuccess | showModelResponseError;
+
+export const getShowModelUrl = (name: string) => {
+  return `/api/tenant/hidden-models/${name}`;
+};
+
+/**
+ * @summary Show Model
+ */
+export const showModel = async (
+  name: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<showModelResponse> => {
+  return apiFetch<showModelResponse>(getShowModelUrl(name), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getShowModelMutationKey = () => ["showModel"] as const;
+
+export const getShowModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof showModel>>,
+    TError,
+    ShowModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof showModel>>,
+  TError,
+  ShowModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getShowModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof showModel>>,
+    ShowModelMutationVariables
+  > = (props) => {
+    const { name } = props ?? {};
+
+    return showModel(name, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ShowModelMutationResult = NonNullable<Awaited<ReturnType<typeof showModel>>>;
+
+export type ShowModelMutationError = Problem;
+export type ShowModelMutationVariables = { name: string };
+
+/**
+ * @summary Show Model
+ */
+export const useShowModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof showModel>>,
+      TError,
+      ShowModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof showModel>>,
+  TError,
+  ShowModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getShowModelMutationOptions(options), queryClient);
 };
 
 export type listModelRunAreasResponse200 = {

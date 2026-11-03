@@ -1,3 +1,4 @@
+import { resetHiddenModels } from "./hidden-models.ts";
 import {
   defaultRunModel,
   defaultStartedSlides,
@@ -34,4 +35,5 @@ export function setFakeJobsScene(next: FakeJobsScene | null): boolean {
 
 export function resetJobsState(): void {
   state = initialJobsState;
+  resetHiddenModels();
 }

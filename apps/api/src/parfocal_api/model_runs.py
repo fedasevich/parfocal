@@ -23,6 +23,7 @@ from parfocal_api.annotations import MultiPolygonGeometry, PolygonGeometry, chec
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.hidden_models import hidden_names, refuse_hidden
 from parfocal_api.model_catalogue import (
     BY_NAME,
     CATALOGUE,
@@ -591,6 +592,10 @@ async def start_model_runs(
     if isinstance(draft.scope, SelectionScope):
         await check_selection(connection, draft.scope)
     parameters = await parameters_from(connection, draft.parameters)
+    await refuse_hidden(
+        connection,
+        {parameters.detector.name} | ({parameters.typer.name} if parameters.typer else set()),
+    )
     settings = settings_from(draft, parameters)
     batch_id = uuid.uuid4()
     actor = actor_of(principal)
@@ -834,6 +839,7 @@ async def list_project_models(
     }
     minutes = {name: rate.minutes_per_slide for name, rate in rates.items()}
     ahead = await runs_ahead(connection)
+    hidden = await hidden_names(connection)
     now = datetime.now(UTC)
     return [
         ProjectModel(
@@ -852,4 +858,5 @@ async def list_project_models(
             latency_ms=None,
         )
         for model in CATALOGUE
+        if model.name not in hidden
     ]

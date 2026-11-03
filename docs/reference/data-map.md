@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 31 |
-| `personal` | 56 |
+| `personal` | 57 |
 | `secret` | 9 |
-| `operational` | 564 |
+| `operational` | 569 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -198,6 +198,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reason` | phi |
 | `granted_at` | operational |
 | `expires_at` | operational |
+
+## hidden_models
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `model_name` | operational |
+| `hidden_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## invitations
 

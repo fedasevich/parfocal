@@ -19,6 +19,7 @@ from parfocal_api import (
     emergency,
     evaluation,
     first_reads,
+    hidden_models,
     home,
     import_checks,
     inbox,
@@ -165,6 +166,7 @@ def create_app(
     app.include_router(project_jobs.router)
     app.include_router(model_runs.router)
     app.include_router(model_tiers.router)
+    app.include_router(hidden_models.router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)
     app.include_router(opinion_forms.template_router)
