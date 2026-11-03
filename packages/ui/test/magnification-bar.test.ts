@@ -4,6 +4,7 @@ import {
   type BarSignals,
   calmBar,
   formatMagnification,
+  formatReadout,
   isBarOpen,
   magnificationBarRect,
   magnificationPresets,
@@ -92,4 +93,10 @@ test("a changed brightness widens the folded chip and the open bar does not depe
     magnificationBarRect(canvas, { open: true, brightnessChanged: true }),
     magnificationBarRect(canvas, { open: true, brightnessChanged: false }),
   );
+});
+
+test("the readout shows the objective, the digital label above the scan objective and the microns per pixel", () => {
+  assert.equal(formatReadout(20, false, 0.5), "20× · 0.50 µm/px");
+  assert.equal(formatReadout(80, true, 0.125), "80× digital · 0.13 µm/px");
+  assert.equal(formatReadout(2.5, false, 4), "2.5× · 4.00 µm/px");
 });
