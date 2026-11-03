@@ -2112,7 +2112,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Only in projects with the sentinel node staging template (PROJ-005).
   Size: M.
 
-- [ ] CASE-014 · Inspector with Objects, Layers, Comments and Opinion
+- [x] CASE-014 · Inspector with Objects, Layers, Comments and Opinion
   Four tabs with counts. Objects lists the object IDs with their decisions and, with the staging template, the staging hero and area list. Layers holds the result sets and their styles (VIZ-001). Comments lists the threads by ID (COLLAB-005). Opinion holds the form (GUIDE-007). The template line names the project's analysis template.
   Done when component tests cover each tab with seeded data, the counts follow changes, and a project without a template shows no staging.
   Depends on CASE-001, OBJ-001, GUIDE-001. Refs mock: case, mock: layers, doc 37 "Viewer".
