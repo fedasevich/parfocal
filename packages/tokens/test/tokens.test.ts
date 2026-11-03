@@ -10,10 +10,12 @@ import {
   densityMode,
   densitySpacingPx,
   effectiveMotionMode,
+  effectiveTheme,
   iconSizesPx,
   motionDurationsMs,
   motionEasings,
   motionMs,
+  neutralChromeTokens,
   proposalColor,
   radiiPx,
   spaceUnitPx,
@@ -23,6 +25,7 @@ import {
   surfaceSpacingPx,
   surfaceSpacingRulesPx,
   tagHeightPx,
+  themeChoice,
   themedTokens,
   typeScale,
   unsureColor,
@@ -227,4 +230,42 @@ test("each surface level has its own colour in both themes", () => {
     assert.ok(colours.every(Boolean));
     assert.equal(new Set(colours).size, surfaceLevels.length);
   }
+});
+
+function oklchChroma(hex: string): number {
+  const linear = [1, 3, 5].map((at) => {
+    const channel = Number.parseInt(hex.slice(at, at + 2), 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  const [r = 0, g = 0, b = 0] = linear;
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bAxis = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return Math.hypot(a, bAxis);
+}
+
+test("chrome tokens are neutral with chroma near zero in both themes", () => {
+  assert.ok(oklchChroma("#1a56be") > 0.1);
+  for (const [name, values] of [
+    ["dark", dark],
+    ["light", light],
+  ] as const) {
+    for (const token of neutralChromeTokens) {
+      const value = values.get(token) ?? "";
+      assert.match(value, /^#[0-9a-f]{6}$/, `${token} in ${name} is not a hex colour`);
+      assert.ok(oklchChroma(value) < 0.005, `${token} in ${name} has chroma`);
+    }
+  }
+});
+
+test("the theme choice defaults to system and system follows the device", () => {
+  assert.equal(themeChoice(undefined), "system");
+  assert.equal(themeChoice("sepia"), "system");
+  assert.equal(themeChoice("light"), "light");
+  assert.equal(effectiveTheme("system", true), "light");
+  assert.equal(effectiveTheme("system", false), "dark");
+  assert.equal(effectiveTheme("dark", true), "dark");
+  assert.equal(effectiveTheme("light", false), "light");
 });

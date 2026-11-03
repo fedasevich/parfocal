@@ -35,7 +35,7 @@ import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
-import { applyTheme, type ThemeChoice } from "../../shell/theme.ts";
+import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import { homeLayoutOfSetup, type SetupRole as Role } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
 import { slideImage } from "./auth-side.tsx";
@@ -196,7 +196,7 @@ export function SetupScreen({ step, change }: Props) {
     first: "sample",
     device: "mouse",
     keys: "QuPath",
-    theme: "dark",
+    theme: readTheme(),
     newName: "",
   });
   const set = (next: Partial<Choices>) => setU({ ...u, ...next });
@@ -462,7 +462,7 @@ export function SetupScreen({ step, change }: Props) {
           value={u.theme}
           onValueChange={(value) => {
             const theme = value as ThemeChoice;
-            applyTheme(theme);
+            chooseTheme(theme);
             set({ theme });
           }}
           options={[
