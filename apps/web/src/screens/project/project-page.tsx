@@ -20,6 +20,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { useFormat } from "../../format.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "./mock-toast.tsx";
 import { usePeople } from "./people.ts";
@@ -56,6 +57,7 @@ export function ProjectPage({
   overlay?: ReactNode;
 }) {
   const project = okData(useGetProject(projectId).data);
+  const format = useFormat();
   const overview = useGetProjectOverview(projectId).data?.data;
   const tasks = okData(useListReviewTasks(projectId).data) ?? [];
   const people = usePeople();
@@ -133,9 +135,7 @@ export function ProjectPage({
               ) : null}
               {overview ? <span>{plural(overview.slides, "slide")}</span> : null}
               {overview ? <span>{plural(overview.result_sets, "result set")}</span> : null}
-              {overview ? (
-                <span>{overview.objects.toLocaleString("en-US")} objects with an ID</span>
-              ) : null}
+              {overview ? <span>{format.integer(overview.objects)} objects with an ID</span> : null}
               {overview ? <span>{overview.reviewed_percent}% reviewed</span> : null}
             </p>
           </div>

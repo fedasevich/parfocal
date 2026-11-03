@@ -23,6 +23,7 @@ import { FilterChip } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useState } from "react";
+import { useFormat } from "../../format.ts";
 import { okData } from "../placeholder.tsx";
 import { usePeople } from "./people.ts";
 
@@ -50,9 +51,6 @@ const setName = (set: Pick<ResultSet, "name" | "model_version">) =>
   `${set.name.split(" ")[0] ?? set.name} ${set.model_version}`;
 
 const slideTitle = (slide: ProjectSlide) => `${slide.label} · ${slide.stain}`;
-
-const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 export function useProjectSlides(projectId: string): ProjectSlide[] {
   const rows = okData(useListMySlides({ project_id: projectId }).data)?.slides ?? [];
@@ -368,6 +366,7 @@ function ResultSetDetail({
 }) {
   const sets = okData(useListSlideResultSets(slide.id).data) ?? [];
   const people = usePeople();
+  const format = useFormat();
   const navigate = useNavigate();
   const view = () =>
     void navigate({
@@ -396,12 +395,12 @@ function ResultSetDetail({
               </span>
               <span className="text-body-sm text-fg-dim">
                 {set.region_count} regions
-                {set.cell_count ? ` · ${set.cell_count.toLocaleString("en-US")} cells` : ""}
+                {set.cell_count ? ` · ${format.integer(set.cell_count)} cells` : ""}
               </span>
               <Person
                 person={people.byId(set.created_by_user_id)}
                 size={20}
-                sub={`added ${shortDate(set.created_at)}`}
+                sub={`added ${format.dateShort(new Date(set.created_at))}`}
               />
               <span className="flex gap-0.5">
                 <Button size="sm" variant="ghost" onClick={view}>

@@ -13,7 +13,9 @@ import {
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { ClassCounts, ScoreHistogram } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
+import type { Format } from "@parfocal/ui/lib/format";
 import { useState } from "react";
+import { defaultFormat } from "../../format.ts";
 import { type Count, countWord } from "../review/decision-style.ts";
 import type { Answer } from "../review/review-state.ts";
 
@@ -36,6 +38,7 @@ export function tableRows(
   objects: ReviewObject[],
   added: { object: string; size: string; note: string | null }[],
   answer: (object: string) => Answer | undefined,
+  format: Format = defaultFormat,
 ): TableRowItem[] {
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects
@@ -51,7 +54,7 @@ export function tableRows(
       object: item.object,
       kind: "Tumor region",
       score: item.score,
-      size: `${item.size_mm?.toFixed(item.size_mm < 1 ? 2 : 1)} mm`,
+      size: item.size_mm == null ? "" : format.size(item.size_mm),
       answer: answer(item.object),
       added: false,
       note: noteOf(answer(item.object)),
