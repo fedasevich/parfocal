@@ -1,4 +1,4 @@
-# XXXX. A mention is a user ID token in the message text, and it is refused for anyone who could not read the message
+# 0165. A mention is a user ID token in the message text, and it is refused for anyone who could not read the message
 
 - Date: 2026-11-03
 - Status: Accepted
