@@ -2,10 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { BeforeYouList } from "../src/components/before-you-list.tsx";
 import { Button } from "../src/components/button.tsx";
-import { FlowBar, FlowPage, Stepper, SummaryRows } from "../src/components/flow-page.tsx";
+import {
+  FlowBar,
+  FlowPage,
+  Stepper,
+  SummaryRows,
+  useFlowSteps,
+} from "../src/components/flow-page.tsx";
 import { FormField, TextFieldInput } from "../src/components/form-field.tsx";
 import { Icon } from "../src/components/icon.tsx";
-import { Keycap } from "../src/components/keycap.tsx";
 import { SegmentedControl } from "../src/components/segmented-control.tsx";
 import { SmallModal, SmallModalZone } from "../src/components/small-modal.tsx";
 import { TokenField } from "../src/components/token-field.tsx";
@@ -254,9 +259,28 @@ const taskSteps = [
   { label: "Send" },
 ];
 
-function TaskFlow({ start }: { start: number }) {
-  const [current, setCurrent] = useState(start);
-  const last = current === taskSteps.length - 1;
+const taskSummary = [
+  "12 slides with CAMELYON v1.0",
+  "Lenka Malá, Simona Marková, Jan Růžička",
+  "Regions and 50 sampled cells, 5-point certainty",
+  "Blind, due 24 Oct, everyone reviews every slide",
+];
+
+const moreZones = Array.from({ length: 8 }, (_, index) => `More settings ${index + 1}`);
+
+function TaskFlow({
+  start,
+  reached = start,
+  blocked = false,
+  long = false,
+}: {
+  start: number;
+  reached?: number;
+  blocked?: boolean;
+  long?: boolean;
+}) {
+  const flow = useFlowSteps(taskSteps.length, { current: start, reached });
+  const extra = long ? moreZones : [];
   return (
     <FlowPage
       className="h-[720px]"
@@ -268,51 +292,51 @@ function TaskFlow({ start }: { start: number }) {
       title="New review task"
       subtitle="Ask reviewers to check one result set on the slides you pick."
       steps={taskSteps}
-      current={current}
-      onStepSelect={setCurrent}
-      moreBelow={!last}
+      current={flow.current}
+      reached={flow.reached}
+      onStepSelect={flow.go}
       bar={
         <FlowBar
           back={
-            current > 0 ? (
-              <Button onClick={() => setCurrent(current - 1)}>
+            flow.first ? null : (
+              <Button onClick={flow.back}>
                 <Icon name="back" />
                 Back
               </Button>
-            ) : null
+            )
           }
-          hint={last ? "Reviewers get it in My work." : "Leaving keeps the draft."}
-          next={
-            <Button
-              variant="primary"
-              onClick={() => setCurrent(Math.min(taskSteps.length - 1, current + 1))}
-            >
-              {last ? "Send to 3 reviewers" : "Next"}
-              <Keycap keys="↵" size="sm" />
-            </Button>
-          }
+          hint={flow.last ? "Reviewers get it in My work." : "Leaving keeps the draft."}
+          primary={{
+            label: flow.last ? "Send to 3 reviewers" : "Next",
+            onClick: flow.next,
+            ...(blocked ? { disabled: true, reason: "Pick at least one reviewer first." } : {}),
+          }}
         />
       }
     >
-      {last ? (
+      {flow.last ? (
         <Zone title="Check and send">
           <SummaryRows
-            rows={[
-              { label: "Slides", value: "12 slides with CAMELYON v1.0" },
-              { label: "Reviewers", value: "Lenka Malá, Simona Marková, Jan Růžička" },
-              { label: "What to check", value: "Regions and 50 sampled cells, 5-point certainty" },
-              { label: "How it runs", value: "Blind, due 24 Oct, everyone reviews every slide" },
-            ]}
+            rows={taskSteps.slice(0, -1).map((step, index) => ({
+              label: step.label,
+              value: taskSummary[index],
+              onChange: () => flow.go(index),
+            }))}
           />
         </Zone>
       ) : (
         <>
-          <Zone title={taskSteps[current]?.label} sub="Every reviewer sees the same slides.">
+          <Zone title={taskSteps[flow.current]?.label} sub="Every reviewer sees the same slides.">
             <Hint>The zones of this step go here.</Hint>
           </Zone>
           <Zone title="Study template">
             <Hint>Sentinel node AI evaluation v3</Hint>
           </Zone>
+          {extra.map((name) => (
+            <Zone key={name} title={name}>
+              <Hint>{"A longer step keeps going below the bar. ".repeat(4)}</Hint>
+            </Zone>
+          ))}
         </>
       )}
     </FlowPage>
@@ -321,6 +345,9 @@ function TaskFlow({ start }: { start: number }) {
 
 export const FlowFirstStep: Story = { render: () => <TaskFlow start={0} /> };
 export const FlowMiddleStep: Story = { render: () => <TaskFlow start={2} /> };
+export const FlowMiddleStepRevisited: Story = { render: () => <TaskFlow start={1} reached={3} /> };
+export const FlowNextBlocked: Story = { render: () => <TaskFlow start={1} blocked /> };
+export const FlowLongStep: Story = { render: () => <TaskFlow start={2} long /> };
 export const FlowLastStep: Story = { render: () => <TaskFlow start={4} /> };
 
 export const StepperOnly: Story = {
