@@ -1677,7 +1677,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
   Size: M.
 
-- [ ] DS-029 · Visible focus ring on every control
+- [x] DS-029 · Visible focus ring on every control
   DS-006 (buttons and icon buttons) found that `outline-none` next to `focus-visible:outline-2` left the button focus ring invisible. Other kit components combine the same classes. Check every interactive component in packages/ui and apps/web and make the ring draw.
   Done when a test tabs through the kit stories and asserts a visible outline on each focused control, and axe passes.
   Depends on DS-006.
@@ -1693,6 +1693,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-016 (motion tokens and reduced motion) added the duration and easing tokens, but the dialog, small modal and dropdown still use `duration-100` and the magnification bar a fixed 280 ms, so they do not slow down in presenting mode ([ADR 0187](adr/0187-motion-tokens-scale-and-global-reduced-motion.md)).
   Done when no component in packages/ui or apps/web uses a fixed transition duration, and a test checks a dialog's duration in presenting mode.
   Depends on DS-016.
+  Size: S.
+
+- [ ] DS-032 · Steady axe run on animated stories
+  DS-029 (visible focus ring) found that axe reads `components-settings--key-states` mid-way through the pulsing shortcut key animation, so its contrast check passes or fails from run to run in both themes. Run the axe spec with reduced motion or stop the pulse before the check, without excluding the story.
+  Done when the axe spec passes `components-settings--key-states` ten runs in a row in both themes.
+  Depends on DS-029.
   Size: S.
 
 ---
