@@ -4,6 +4,7 @@ import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.t
 import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
+  getClearVerdictMockHandler,
   getGetOpinionMockHandler,
   getGetSlideNeighboursMockHandler,
   getListMentionableMembersMockHandler,
@@ -23,7 +24,7 @@ import type {
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { objectsOn, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
+import { objectsOn, rememberDecision, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
 import { people, projectByCode, reviewTasks, slideByIndex, slides, threads } from "./scenario.ts";
 import {
   addedByLenka,
@@ -288,9 +289,9 @@ export function reviewHandlers(): RequestHandler[] {
       const settings = decisionSettingsFor(taskById(String(params["taskId"]))?.code ?? "RT-14");
       const answer = body.answer ?? body.value ?? "unsure";
       const aiClass = sentinelClasses.find((item) => item.name === reviewObjects[index]?.className);
-      return {
+      const saved = {
         object: objectId,
-        kind: reviewObjects[index]?.kind === "cell" ? "cell" : "region",
+        kind: reviewObjects[index]?.kind === "cell" ? ("cell" as const) : ("region" as const),
         number: index + 1,
         style: settings.style,
         answer,
@@ -301,6 +302,16 @@ export function reviewHandlers(): RequestHandler[] {
         note: body.note ?? null,
         updated_at: "2026-10-15T10:52:00+02:00",
       };
+      rememberDecision(String(params["taskId"]), String(params["slideId"]), objectId, saved);
+      return saved;
+    }),
+    getClearVerdictMockHandler(({ params }) => {
+      rememberDecision(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        String(params["objectId"]),
+        null,
+      );
     }),
     getSubmitSlideReviewMockHandler(({ params }) =>
       submittedStates(String(params["taskId"]), String(params["slideId"])),

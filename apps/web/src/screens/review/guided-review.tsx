@@ -1,4 +1,4 @@
-import { useSaveVerdict, useSubmitSlideReview } from "@parfocal/api-client";
+import { useSubmitSlideReview } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -21,7 +21,6 @@ import {
   cardText,
   countsAs,
   countWord,
-  decisionBody,
   rawFor,
   rawLabel,
   showsClaim,
@@ -49,6 +48,7 @@ import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "
 import { ReviewTop } from "./review-top.tsx";
 import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab } from "./threads-tab.tsx";
+import { useDecisionSaves } from "./use-decision-saves.ts";
 
 type GuidedReviewProps = {
   taskId: string;
@@ -80,9 +80,9 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   const setup = guidedSetup(scene);
   const navigate = useNavigate();
   const person = usePeople();
-  const saveVerdict = useSaveVerdict();
   const submitReview = useSubmitSlideReview();
   const style = setup.style ? { ...session.style, kind: setup.style } : session.style;
+  const decisions = useDecisionSaves(session, style);
   const objects = setup.issue === "noresults" ? [] : session.objects;
   const noResults = objects.length === 0;
   const regions = objects.filter((item) => item.kind === "region");
@@ -217,7 +217,6 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   const answerWith = (raw: string) => {
     if (current === undefined || buttonsOff) return;
     const value = countsAs(style, raw, current);
-    const previous = overrides.get(currentId);
     const kept = answer(currentId);
     const next = put(currentId, {
       value,
@@ -225,12 +224,7 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
       reasons: kept?.value === value ? kept.reasons : [],
       note: kept?.note ?? null,
     });
-    saveVerdict.mutate({
-      taskId: session.taskId,
-      slideId: session.slideId,
-      objectId: currentId,
-      data: decisionBody(style, raw, session.classes, value),
-    });
+    decisions.save(currentId, raw, value);
     const label = rawLabel(style, raw, session.classes);
     showUndoToast({
       message:
@@ -238,10 +232,8 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
           ? `${currentId}: ${countWord[value].toLowerCase()}`
           : `${currentId}: ${label}, counts as ${countWord[value].toLowerCase()}`,
       undo: () => {
-        const restore = new Map(next);
-        if (previous === undefined) restore.delete(currentId);
-        else restore.set(currentId, previous);
-        setOverrides(restore);
+        setOverrides(new Map(next).set(currentId, kept ?? null));
+        decisions.restore(currentId, kept);
         setIndex(index);
         setShowDone(false);
       },
@@ -654,6 +646,7 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
     <main className="flex h-dvh min-w-0 flex-col bg-page text-fg" data-scene={scene ?? "region"}>
       <ReviewTop
         mode="guided"
+        object={currentId || undefined}
         session={session}
         counts={counts}
         onWholeSlide={() => setWhole(true)}
@@ -730,7 +723,9 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
                     onCancelRest={() => setConfirmRest(false)}
                     onApplyRest={() => {
                       const next = new Map(overrides);
+                      const before = overrides;
                       for (const cell of openCells) {
+                        decisions.save(cell.object, rawFor(style, "agree", cell), "agree");
                         next.set(cell.object, {
                           value: "agree",
                           raw: "agree",
@@ -742,7 +737,10 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
                       setConfirmRest(false);
                       showUndoToast({
                         message: `${openCells.length} cells marked agree`,
-                        undo: () => setOverrides(overrides),
+                        undo: () => {
+                          setOverrides(before);
+                          for (const cell of openCells) decisions.restore(cell.object, undefined);
+                        },
                       });
                     }}
                     onFoldChange={setCellsFolded}

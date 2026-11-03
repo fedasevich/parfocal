@@ -1,4 +1,3 @@
-import { useSaveVerdict } from "@parfocal/api-client";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import {
@@ -11,8 +10,9 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
 import { useAnswerKeys } from "../review/answer-keys.ts";
-import { answersOf, countsAs, countWord, decisionBody } from "../review/decision-style.ts";
+import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
+import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
 import { MinimapAreas, toScreen, viewportOf } from "./slide-maps.tsx";
@@ -53,7 +53,7 @@ export function FocusView({
     },
   );
   const { session, answer, setAnswer } = tools;
-  const saveVerdict = useSaveVerdict();
+  const decisions = useDecisionSaves(session, session.style);
   const [camera, setCamera] = useState<Camera | null>(null);
   const regions = session.objects.filter((item) => item.kind === "region");
   const current =
@@ -66,12 +66,7 @@ export function FocusView({
     if (current === undefined) return;
     const value = countsAs(session.style, raw, current);
     setAnswer(current.object, { value, raw, reasons: [], note: null });
-    saveVerdict.mutate({
-      taskId: session.taskId,
-      slideId: session.slideId,
-      objectId: current.object,
-      data: decisionBody(session.style, raw, session.classes, value),
-    });
+    decisions.save(current.object, raw, value);
   };
 
   useAnswerKeys(keys, decide, current !== undefined);

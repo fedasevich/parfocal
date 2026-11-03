@@ -6,7 +6,6 @@ import {
   useGetSlideAiProgress,
   useGetSlideResultStats,
   useListSlideResultSets,
-  useSaveVerdict,
   useSubmitSlideReview,
   type ViewerPart,
 } from "@parfocal/api-client";
@@ -49,7 +48,6 @@ import {
   type Confidence,
   cardText,
   countsAs,
-  decisionBody,
   rawFor,
   showsClaim,
 } from "../review/decision-style.ts";
@@ -84,6 +82,7 @@ import {
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
+import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import {
   AiSays,
   type ListFilter,
@@ -205,7 +204,6 @@ function ViewerBody({
   const navigate = useNavigate();
   const router = useRouter();
   const person = usePeople();
-  const saveVerdict = useSaveVerdict();
   const submitReview = useSubmitSlideReview();
   const progress = okData(
     useGetSlideAiProgress(slideId, {
@@ -220,6 +218,7 @@ function ViewerBody({
   const setName = useSetName(session);
   const running = progress?.state === "running";
   const style = session.style;
+  const decisions = useDecisionSaves(session, style);
   const objects = setup.issue === "noresults" || setup.issue === "withdrawn" ? [] : session.objects;
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
@@ -358,7 +357,6 @@ function ViewerBody({
   const decide = (raw: string) => {
     if (current === undefined || buttonsOff) return;
     const value = countsAs(style, raw, current);
-    const previous = overrides.get(current.object);
     const kept = answer(current.object);
     const next = put(current.object, {
       value,
@@ -366,20 +364,13 @@ function ViewerBody({
       reasons: kept?.value === value ? kept.reasons : [],
       note: kept?.note ?? null,
     });
-    saveVerdict.mutate({
-      taskId: session.taskId,
-      slideId: session.slideId,
-      objectId: current.object,
-      data: decisionBody(style, raw, session.classes, value),
-    });
+    decisions.save(current.object, raw, value);
     setToast({
       id: Date.now(),
       text: `${current.object}: ${value === "unsure" ? "not sure" : value}`,
       undo: () => {
-        const restore = new Map(next);
-        if (previous === undefined) restore.delete(current.object);
-        else restore.set(current.object, previous);
-        setOverrides(restore);
+        setOverrides(new Map(next).set(current.object, kept ?? null));
+        decisions.restore(current.object, kept);
       },
     });
     if (value !== "agree") setNote({ open: true, reasons: [], text: "" });
@@ -949,6 +940,7 @@ function ViewerBody({
   const topBar = (
     <ReviewTop
       mode="full"
+      object={selected ?? undefined}
       onWholeSlide={() => onSearch({ peek: true })}
       session={
         noTask

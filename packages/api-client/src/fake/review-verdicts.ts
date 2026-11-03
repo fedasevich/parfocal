@@ -50,7 +50,23 @@ export const reviewOrderFor = (taskId: string, slideId: string): ReviewOrder => 
   };
 };
 
-export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
+const savedDecisions = new Map<string, Map<string, Verdict | null>>();
+
+const savedKey = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
+
+export const rememberDecision = (
+  taskId: string,
+  slideId: string,
+  object: string,
+  decision: Verdict | null,
+) => {
+  const key = savedKey(taskId, slideId);
+  const kept = savedDecisions.get(key) ?? new Map<string, Verdict | null>();
+  kept.set(object, decision);
+  savedDecisions.set(key, kept);
+};
+
+const startingDecisions = (taskId: string, slideId: string): Verdict[] => {
   if (!reviewsA1(taskId, slideId)) return [];
   const decided = lenkaDecisionsInReview();
   return reviewObjects.flatMap((item, index) => {
@@ -72,4 +88,19 @@ export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
       },
     ];
   });
+};
+
+export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
+  const kept = savedDecisions.get(savedKey(taskId, slideId));
+  const starting = startingDecisions(taskId, slideId);
+  if (kept === undefined) return starting;
+  const merged = new Map<string, Verdict>(starting.map((item) => [item.object, item]));
+  for (const [object, decision] of kept) {
+    if (decision === null) merged.delete(object);
+    else merged.set(object, decision);
+  }
+  const order = new Map(reviewObjects.map((item, index) => [item.object, index]));
+  return [...merged.values()].sort(
+    (a, b) => (order.get(a.object) ?? 0) - (order.get(b.object) ?? 0),
+  );
 };
