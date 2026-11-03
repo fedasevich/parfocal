@@ -1545,7 +1545,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-007 · Segmented control, toggle, slider, stepper
+- [x] DS-007 · Segmented control, toggle, slider, stepper
   A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1). The small number stepper is the one the Counts as line of the decision styles uses. Every control has a locked state that reads as dim text with a lock icon and the reason under it, such as "Locked by RT-14: confidence hidden this round".
   Done when stories, keyboard tests and axe pass.
   Depends on PROTO-011.
