@@ -1556,7 +1556,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-010 · Tool rail button
+- [x] DS-010 · Tool rail button
   38 px, key badge, active state, AI dot.
   Done when stories and tests cover each state.
   Depends on PROTO-011.
