@@ -11,6 +11,7 @@ import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
 import { useFormat } from "../../format.ts";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
+import { noteAction } from "../review/note-key.ts";
 import { answerLabel, NoteEditor, noteReasonsFor, SavedNote } from "../review/object-card.tsx";
 import type { Answer } from "../review/review-state.ts";
 
@@ -181,7 +182,7 @@ export function ObjectFoot({
       >
         <Icon name="comment" />
         Add a note
-        <Keycap keys="N" size="sm" />
+        <Keycap action={noteAction} size="sm" />
       </button>
     );
   }

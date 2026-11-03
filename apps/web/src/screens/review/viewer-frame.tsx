@@ -2,6 +2,7 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { FactList } from "@parfocal/ui/components/inspector";
+import { useKeyLabel } from "@parfocal/ui/components/keycap";
 import { ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SidePanel, type SidePanelTab } from "@parfocal/ui/components/side-panel";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
@@ -16,13 +17,42 @@ import { ReviewTop, type SlideCounts } from "./review-top.tsx";
 
 export type ViewerTool = "select" | "hand" | "annotate" | "comment" | "ai";
 
-export type RailTool = { tool: string; icon: IconName; label: string; key: string; ai?: boolean };
+export type RailTool = {
+  tool: string;
+  icon: IconName;
+  label: string;
+  action?: string;
+  key?: string;
+  ai?: boolean;
+};
+
+function RailToolButton({
+  item,
+  pressed,
+  onToolChange,
+}: {
+  item: RailTool;
+  pressed: boolean;
+  onToolChange: ((tool: string) => void) | undefined;
+}) {
+  const keyHint = useKeyLabel(item.action, item.key);
+  return (
+    <ToolRailButton
+      icon={item.icon}
+      label={item.label}
+      {...(keyHint === null ? {} : { keyHint })}
+      ai={item.ai ?? false}
+      pressed={pressed}
+      {...(onToolChange ? { onPressedChange: () => onToolChange(item.tool) } : {})}
+    />
+  );
+}
 
 const tools: RailTool[] = [
-  { tool: "select", icon: "select", label: "Select", key: "V" },
-  { tool: "hand", icon: "hand", label: "Pan", key: "H" },
+  { tool: "select", icon: "select", label: "Select", action: "tselect" },
+  { tool: "hand", icon: "hand", label: "Pan", action: "thand" },
   { tool: "annotate", icon: "pen", label: "Annotate", key: "P" },
-  { tool: "comment", icon: "comment", label: "Comment on an ID", key: "C" },
+  { tool: "comment", icon: "comment", label: "Comment on an ID", action: "tcomment" },
   { tool: "ai", icon: "smart", label: "AI tools", key: "A", ai: true },
 ];
 
@@ -94,14 +124,11 @@ export function ViewerFrame({
             {railGroups.map((group) => (
               <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
                 {group.map((item) => (
-                  <ToolRailButton
+                  <RailToolButton
                     key={item.tool}
-                    icon={item.icon}
-                    label={item.label}
-                    keyHint={item.key}
-                    ai={item.ai ?? false}
+                    item={item}
                     pressed={item.tool === tool}
-                    {...(onToolChange ? { onPressedChange: () => onToolChange(item.tool) } : {})}
+                    onToolChange={onToolChange}
                   />
                 ))}
               </ToolRailGroup>

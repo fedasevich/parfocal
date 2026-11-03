@@ -22,6 +22,20 @@ export const agreeWithTheAi: ReviewStyle = {
   disagreeTo: 2,
 };
 
+const answerActions: Record<StyleKind, string[]> = {
+  agree: ["dagree", "ddisagree", "dunsure"],
+  yesno: ["dyes", "dno", "dunsure"],
+  certainty: ["dcert"],
+  blind: ["dclass", "dunsure"],
+};
+
+const everyStyleActions = ["drest", "dnote", "dnext", "dprev", "dnear", "dadd", "dsubmit"];
+
+export const decisionKeyActions = (kind: StyleKind) => [
+  ...answerActions[kind],
+  ...everyStyleActions,
+];
+
 const kindOfApi = {
   certainty: "certainty",
   agree: "agree",
