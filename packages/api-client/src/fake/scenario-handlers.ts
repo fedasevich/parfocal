@@ -22,6 +22,7 @@ import type {
   SignOutRight,
   Workspace,
 } from "../generated/api.ts";
+import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
 import {
   type PersonKey,
@@ -106,6 +107,7 @@ export const toProject = (project: ScenarioProject): Project => ({
   colour: project.colour,
   privacy_mode: project.privacy,
   template: project.template,
+  viewer_parts: viewerPartsOf(project.template),
   archived_at: null,
   created_at: project.createdAt,
   my_role: roleIn(project, fakeView().viewer),

@@ -32335,6 +32335,13 @@
           "template": {
             "$ref": "#/components/schemas/AnalysisTemplate"
           },
+          "viewer_parts": {
+            "items": {
+              "$ref": "#/components/schemas/ViewerPart"
+            },
+            "type": "array",
+            "title": "Viewer Parts"
+          },
           "archived_at": {
             "anyOf": [
               {
@@ -32383,6 +32390,7 @@
           "colour",
           "privacy_mode",
           "template",
+          "viewer_parts",
           "archived_at",
           "created_at",
           "sample",
@@ -38799,6 +38807,21 @@
           "height"
         ],
         "title": "ViewScope"
+      },
+      "ViewerPart": {
+        "type": "string",
+        "enum": [
+          "objects",
+          "layers",
+          "decisions",
+          "opinion",
+          "staging-hero",
+          "area-list",
+          "measure-step",
+          "unsure-zones",
+          "cell-typing"
+        ],
+        "title": "ViewerPart"
       },
       "Week": {
         "properties": {

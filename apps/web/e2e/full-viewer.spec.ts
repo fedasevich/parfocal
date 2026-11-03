@@ -172,3 +172,24 @@ test("a clinical case opens its report from Open report", async ({ page }) => {
   await page.getByRole("button", { name: "Open report" }).click();
   await expect(page).toHaveURL(/\/report/);
 });
+
+test("the staging cards show only in a project with the sentinel node template", async ({
+  page,
+}) => {
+  const links = await viewerLinks(page);
+  const href = hrefOf(links, "Full viewer · Objects tab");
+  await page.goto(href);
+  const staging = panel(page).getByRole("region", { name: "Staging" });
+  await expect(staging).toBeVisible();
+  await expect(staging).toContainText("Metastasis likely, largest about");
+  await expect(staging).toContainText("if confirmed");
+  const projectId = href.match(/projects\/([^/?]+)/)?.[1] ?? "";
+  const cellReview = "00000000-0000-4000-8003-000000000009";
+  const noTemplate = "00000000-0000-4000-8003-000000000011";
+  for (const other of [cellReview, noTemplate]) {
+    await page.goto(href.replace(projectId, other));
+    await expect(viewer(page)).toBeVisible();
+    await expect(panel(page).getByRole("tab", { name: /Objects/ })).toBeVisible();
+    await expect(panel(page).getByRole("region", { name: "Staging" })).toHaveCount(0);
+  }
+});

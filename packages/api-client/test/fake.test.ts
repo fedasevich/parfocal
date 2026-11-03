@@ -94,6 +94,21 @@ test("a seeded detail answers by id and refuses an unknown one with a problem", 
   });
 });
 
+test("each seeded project lists the viewer parts of its analysis template", async () => {
+  const base = ["objects", "layers", "decisions", "opinion"];
+  const parts = Object.fromEntries(
+    body(await listProjects()).map((project) => [project.code, project.viewer_parts]),
+  );
+  assert.deepEqual(parts, {
+    P07: [...base, "staging-hero", "area-list", "measure-step"],
+    P03: [...base, "staging-hero", "area-list", "measure-step"],
+    P09: [...base, "unsure-zones", "cell-typing"],
+    P11: base,
+  });
+  const p11 = scenario.projectByCode("P11");
+  assert.deepEqual(body(await getProject(p11.id)).viewer_parts, base);
+});
+
 test("operations outside the seed still answer with typed generated data", async () => {
   assert.equal(typeof body(await getHealth()).status, "string");
 });

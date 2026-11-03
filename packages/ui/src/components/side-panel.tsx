@@ -17,6 +17,7 @@ type SidePanelProps = Omit<React.ComponentProps<"aside">, "defaultValue"> & {
   onValueChange?: ((value: string) => void) | undefined;
   width?: number;
   variant?: "panel" | "quiet";
+  head?: React.ReactNode;
 };
 
 function SidePanel({
@@ -26,6 +27,7 @@ function SidePanel({
   onValueChange,
   width = 340,
   variant = "panel",
+  head,
   className,
   ...props
 }: SidePanelProps) {
@@ -37,6 +39,7 @@ function SidePanel({
       style={{ width }}
       {...props}
     >
+      {head}
       <Tabs
         {...(value === undefined ? { defaultValue: defaultTab ?? tabs[0]?.value } : { value })}
         onValueChange={(next) => onValueChange?.(String(next))}
