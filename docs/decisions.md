@@ -70,6 +70,15 @@ SEC-021 drafted records of processing, a DPIA for AI results review, a DPA templ
 
 Your choice:
 
+## 35. Lingui for web app strings, from I18N-000 (research check for i18n libraries)
+
+ADR 0173 picks Lingui 6 with ICU messages, PO catalogues and the en-XA pseudo locale, matching the backend (ADR 0172). FormatJS and i18next were compared and rejected. The raw-string lint rule may need a small local oxlint plugin, because oxlint's JS plugin support is alpha.
+
+- a. Accept Lingui (ADR 0173 becomes Accepted). (recommended)
+- b. Use FormatJS (react-intl) instead.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

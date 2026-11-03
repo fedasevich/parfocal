@@ -901,7 +901,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 33 I18N · Internationalisation readiness
 
-- [ ] I18N-000 · Research check for i18n libraries
+- [x] I18N-000 · Research check for i18n libraries
   Candidates: Lingui, FormatJS (react-intl), i18next with ICU. Default: Lingui with ICU messages and extraction.
   Done when an ADR exists.
   Size: S.
