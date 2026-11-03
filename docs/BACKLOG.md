@@ -1575,7 +1575,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: L.
 
-- [ ] DS-013 · Gallery tile
+- [x] DS-013 · Gallery tile
   92 px and 120 px sizes. States are to check, current, done. Dashed ring on the cell, label in AI wording.
   Done when stories and tests cover each state.
   Depends on PROTO-011.
