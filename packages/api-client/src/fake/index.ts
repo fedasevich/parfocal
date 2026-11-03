@@ -3,6 +3,7 @@ import type { RequestHandler } from "msw";
 import { getParfocalAPIMock } from "../generated/api.msw.ts";
 import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
+import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
@@ -41,6 +42,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
+    ...annotationHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
   ];
@@ -55,6 +57,7 @@ export {
   toTaskEvaluation,
 } from "./adjudication-handlers.ts";
 export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
+export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
 export {
