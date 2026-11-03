@@ -29,7 +29,7 @@ function DistanceCue({
       data-slot="distance-cue"
       data-active={active || undefined}
       className={cn(
-        "absolute z-2 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-chrome py-1.25 pr-2.25 pl-1.75 text-caption text-fg shadow-pop hover:border-accent data-active:border-accent [&_svg]:text-c-tumor",
+        "absolute z-2 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-chrome py-1.25 pr-2.25 pl-1.75 text-caption text-fg whitespace-nowrap shadow-pop transition-[opacity,border-color] duration-(--motion-fast) ease-standard starting:opacity-0 hover:border-accent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent data-active:border-accent [&_svg]:text-c-tumor",
         className,
       )}
       {...props}

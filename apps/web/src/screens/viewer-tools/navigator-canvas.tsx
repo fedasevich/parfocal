@@ -17,6 +17,7 @@ import { hpfSize, regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, midSize, SlideStill, type StillLook } from "../review/slide-still.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
+import { cueStyle, edgeCues, neighbourTargets } from "./edge-cues.ts";
 import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
 import {
   type AreaMark,
@@ -29,7 +30,6 @@ import {
 import {
   areaTwoCells,
   cellsUnderReview,
-  distanceMm,
   midEdge,
   seenPercent,
   seenTrail,
@@ -129,15 +129,26 @@ export function NavigatorCanvas({
         let mapSize: MinimapSize = "full";
         let extent: MapRect | undefined;
         let extra = null;
+        const cues = reading
+          ? edgeCues(
+              size,
+              viewport,
+              neighbourTargets(
+                areas.map((area) => area.object),
+                current,
+                (object) => {
+                  const shape = regionShapes[object];
+                  return shape ? boxCentre(shape.box) : undefined;
+                },
+              ),
+            )
+          : [];
         if (reading) {
           for (const point of edgePoints) {
             const at = toScreen(shown, size, point);
             hot.push([at.x, at.y, 3]);
           }
-          blocked.push(
-            [12, size.height * 0.58 - 20, 260, 44],
-            [size.width - 250, size.height * 0.18 - 6, 240, 40],
-          );
+          for (const cue of cues) blocked.push(cue.rect);
           if (scene === "travel") mapSize = "travel";
           if (scene === "avoid") {
             const from = { x: size.width - 330, y: size.height - 190 };
@@ -181,25 +192,22 @@ export function NavigatorCanvas({
         ];
         return (
           <>
-            {reading ? (
-              <>
-                <DistanceCue
-                  label="T1"
-                  distance={`${distanceMm.T1.toFixed(1)} mm`}
-                  direction="back"
-                  style={{ left: 14, bottom: "42%" }}
-                  onClick={() => onGoTo("T1")}
-                />
-                <DistanceCue
-                  label="Area 3"
-                  distance={`${distanceMm.T3.toFixed(1)} mm`}
-                  direction="next"
-                  active={scene === "travel"}
-                  style={{ right: 14, top: "18%" }}
-                  onClick={scene === "travel" ? () => onGoTo("T3") : onTravel}
-                />
-              </>
-            ) : null}
+            {cues.map((cue) => (
+              <DistanceCue
+                key={cue.object}
+                data-side={cue.side}
+                label={cue.label}
+                distance={`${cue.mm.toFixed(1)} mm`}
+                direction={cue.direction}
+                active={scene === "travel" && cue.direction === "next"}
+                style={cueStyle(cue)}
+                onClick={
+                  cue.direction === "next" && scene !== "travel"
+                    ? onTravel
+                    : () => onGoTo(cue.object)
+                }
+              />
+            ))}
             {extra}
             <SmartMinimap
               data-corner={place.corner}
@@ -210,7 +218,8 @@ export function NavigatorCanvas({
               title={
                 scene === "travel" ? (
                   <>
-                    <b>Going to area 3</b> · {distanceMm.T3.toFixed(1)} mm
+                    <b>Going to area 3</b> ·{" "}
+                    {(cues.find((cue) => cue.direction === "next")?.mm ?? 0).toFixed(1)} mm
                   </>
                 ) : (
                   <>

@@ -78,6 +78,19 @@ test("the minimap leaves the corner the ruler is in, and travel shows the route"
   await expect(page).toHaveURL(/object=T3/);
 });
 
+test("the edge cues point off screen and fly back to the previous area", async ({ page }) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Smart minimap · Reading at 10x"));
+  const back = page.getByRole("button", { name: /^T1 · \d+\.\d mm away$/ });
+  await expect(back).toHaveAttribute("data-side", /left|bottom/);
+  await expect(page.getByRole("button", { name: /^Area 3 · \d+\.\d mm away$/ })).toHaveAttribute(
+    "data-side",
+    /right|top/,
+  );
+  await back.click();
+  await expect(page).toHaveURL(/object=T1/);
+});
+
 test("the minimap opens the whole-slide peek and Esc returns", async ({ page }) => {
   const links = await toolLinks(page);
   await page.goto(hrefOf(links, "Smart minimap · Reading at 10x"));
