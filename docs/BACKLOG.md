@@ -1229,7 +1229,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 16, doc 34 §1.
   Size: M.
 
-- [ ] VIEW-056 · Guided trace recorder for wheel, trackpad and pinch
+- [x] VIEW-056 · Guided trace recorder for wheel, trackpad and pinch
   The owner records the device traces VIEW-021 needs, but only when a mouse is at hand (decision 30 of 2026-11-02). A dev page at `/spikes/input-traces` walks through each gesture one at a time: it names the device and the gesture, such as "Mac trackpad, pinch in slowly", counts down 3 seconds, records the raw wheel, pointer and gesture events for 5 seconds with a visible timer, and moves to the next step. At the end it downloads one JSON file per device that VIEW-021's tests can replay, and the owner commits it or hands it to an agent.
   Done when a Playwright test drives the page with synthetic wheel events through every step and the downloaded JSON replays in a unit test, and the page lists the steps for a mouse, a Mac trackpad and an optional Windows touchpad.
   Size: M.
