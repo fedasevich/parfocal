@@ -909,7 +909,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when STACK-026 and STACK-039 are confirmed or revised in an ADR.
   Size: S.
 
-- [ ] INGEST-001 · Upload API with presigned multipart
+- [x] INGEST-001 · Upload API with presigned multipart
   Create upload, get part URLs, list parts, complete, abort. Uploads land in a tenant-scoped quarantine prefix. Per [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) the routes follow Uppy's Companion S3 contract, the browser only sends part `PUT` requests to R2, and the API does create, ListParts with pagination, complete and abort itself, because R2 cannot presign POSTs. The API chooses the key `t/{tenant}/quarantine/{upload}/{name}` and the part size (16 MiB, grown to stay within 10,000 parts), stores both with an upload record, signs one part URL at a time for 15 minutes, and refuses a completion unless the parts run from 1 without gaps and every part but the last has the stored size, since MinIO accepts uneven parts that R2 refuses. A lookup by name, size and last-modified time returns the caller's open upload so a reloaded page can resume. A job aborts uploads with no new part for 24 hours, and an R2 lifecycle rule aborts incomplete uploads under the quarantine prefix after 1 day.
   Done when API tests cover the lifecycle, size limits, the equal part size check, ListParts beyond one page, the open upload lookup, the stale upload job, and that tenant B can neither sign, list, complete nor abort tenant A's upload, and INGEST-028 has confirmed the R2 behaviour the routes rely on.
   Depends on STACK-039. Refs `packages/upload-spike`.
