@@ -1884,7 +1884,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Refs mock: worklist/review.
   Size: M.
 
-- [ ] WL-006 · Keyboard navigation in the worklist
+- [x] WL-006 · Keyboard navigation in the worklist
   Arrow keys and J and K move the selection in each tab, Enter opens the task or slide and Esc clears the selection.
   Done when E2E drives the whole list by keyboard.
   Size: S.
