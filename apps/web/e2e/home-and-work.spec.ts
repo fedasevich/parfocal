@@ -150,3 +150,38 @@ test("View as in the account menu switches the persona through the as param", as
   await page.goto("/team?as=DH");
   await expect(badge(page)).toContainText("viewing as Daniel Hruška");
 });
+
+test("only people with admin rights see Post and End on the announcements", async ({ page }) => {
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Announcements" });
+  await expect(card).toContainText("CellViT is now one of Parfocal's models");
+  await expect(card.getByRole("button", { name: "Post" })).toHaveCount(0);
+  await expect(card.getByRole("button", { name: /^End announcement/ })).toHaveCount(0);
+});
+
+test("an admin posts an announcement, sees it first with its end, and ends it", async ({
+  page,
+}) => {
+  await page.goto("/?as=DH");
+  const card = page.getByRole("region", { name: "Announcements" });
+  await expect(card.getByRole("button", { name: /^End announcement/ })).toHaveCount(3);
+  await card.getByRole("button", { name: "Post" }).click();
+  const dialog = page.getByRole("dialog", { name: "Post an announcement" });
+  await dialog.getByRole("button", { name: /^Post/ }).click();
+  await expect(dialog).toContainText("Write what you want to tell people.");
+  await dialog.getByRole("radio", { name: "Slowdown" }).click();
+  await dialog.getByLabel("Text").fill("Lab server restarts at 16:00");
+  await dialog.getByRole("radio", { name: "1 hour" }).click();
+  await dialog.getByRole("button", { name: /^Post/ }).click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    card.getByRole("button", { name: /^End announcement/ }).first(),
+  ).toHaveAccessibleName("End announcement: Lab server restarts at 16:00");
+  await expect(card).toContainText("until 15:30");
+  await expect(card.getByRole("button", { name: /^End announcement/ })).toHaveCount(4);
+  await card
+    .getByRole("button", { name: "End announcement: Lab server restarts at 16:00" })
+    .click();
+  await expect(card).not.toContainText("Lab server restarts at 16:00");
+  await expect(card.getByRole("button", { name: /^End announcement/ })).toHaveCount(3);
+});

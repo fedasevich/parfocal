@@ -22,8 +22,8 @@ import type {
   SignOutRight,
   Workspace,
 } from "../generated/api.ts";
+import { currentAnnouncements } from "./announcement-board.ts";
 import {
-  announcements,
   type PersonKey,
   people,
   projectByCode,
@@ -272,12 +272,14 @@ export const toAnnouncement = (item: ScenarioAnnouncement): Announcement => ({
   kind: item.kind,
   text: item.text,
   ends_at: item.endsAt,
-  created_by_user_id: null,
+  created_by_user_id: item.createdBy ?? null,
   created_at: item.createdAt,
 });
 
 const announcementsFor = (firstWeek: boolean) =>
-  firstWeek ? announcements.filter((item) => item.kind === "change") : announcements;
+  firstWeek
+    ? currentAnnouncements().filter((item) => item.kind === "change")
+    : currentAnnouncements();
 
 const emptyWorkspaceHome = (home: Home): Home => ({
   ...home,

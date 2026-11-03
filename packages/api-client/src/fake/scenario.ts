@@ -119,7 +119,7 @@ export type ScenarioJob = {
   minutesLeft: number | null;
 };
 
-const uuid = (group: number, index: number) =>
+export const uuid = (group: number, index: number) =>
   `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
 
 const person = (
@@ -540,6 +540,7 @@ export type ScenarioAnnouncement = {
   text: string;
   createdAt: string;
   endsAt: string | null;
+  createdBy?: string;
 };
 
 export const announcements: ScenarioAnnouncement[] = [
