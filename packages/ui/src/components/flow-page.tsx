@@ -180,13 +180,15 @@ function Stepper({
                 >
                   {mark}
                   {step.label}
-                  <span id={whyId} className="sr-only">
-                    {why}
-                  </span>
                 </TooltipTrigger>
                 <TooltipContent>{why}</TooltipContent>
               </Tooltip>
             )}
+            {state !== "current" && !reachable ? (
+              <span id={whyId} className="sr-only">
+                {why}
+              </span>
+            ) : null}
           </li>
         );
       })}
