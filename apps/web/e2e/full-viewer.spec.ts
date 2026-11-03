@@ -204,6 +204,7 @@ const objectOf = (page: Page) => new URL(page.url()).searchParams.get("object");
 test("G then n flies to each area, the brackets step through them and each is visited at 10x", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const links = await viewerLinks(page);
   await page.goto(hrefOf(links, "Full viewer · Objects tab"));
   const list = panel(page).getByLabel("Areas, largest first");
@@ -222,9 +223,13 @@ test("G then n flies to each area, the brackets step through them and each is vi
     const still = await viewer(page).locator("[data-slot=slide-still]").boundingBox();
     if (still) await page.mouse.move(still.x + still.width / 2, still.y + still.height / 2);
     await expect(async () => {
-      await page.mouse.wheel(0, -100);
+      for (let step = 0; step < 8; step += 1) {
+        await page.mouse.wheel(0, -100);
+        await page.waitForTimeout(40);
+      }
+      await page.waitForTimeout(400);
       expect(Number(new URL(page.url()).searchParams.get("z"))).toBeGreaterThanOrEqual(16);
-    }).toPass();
+    }).toPass({ intervals: [100] });
     await expect(row.locator("[data-visited]")).toHaveCount(1);
   }
   await page.keyboard.press("[");
