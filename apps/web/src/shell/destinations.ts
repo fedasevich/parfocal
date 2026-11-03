@@ -51,4 +51,5 @@ export const destinations = {
     `/team${query({ scene: link.scene, task: link.task, focus: link.focus })}`,
   settings: (section: SettingsSection) => `/settings/${section}`,
   admin: () => "/admin",
+  developer: (section?: string) => `/developer${query({ section })}`,
 };

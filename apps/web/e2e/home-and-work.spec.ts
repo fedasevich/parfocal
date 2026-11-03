@@ -16,7 +16,7 @@ test("every home and My work scene opens on fake data", async ({ page }) => {
     {
       path: "/my-work?open=palette&find=meas",
       heading: "My work",
-      shows: "Units and measurement display",
+      shows: "Lengths",
     },
   ];
   for (const { path, heading, shows } of scenes) {
