@@ -27,6 +27,7 @@ export type Manifest = {
 export const packageDir = join(import.meta.dirname, "..");
 export const manifestPath = join(packageDir, "fixtures.json");
 export const syntheticDir = join(packageDir, "synthetic");
+export const referenceTilesDir = join(packageDir, "reference-tiles");
 export const defaultGroups: Group[] = ["small"];
 
 const sha256Pattern = /^[0-9a-f]{64}$/;

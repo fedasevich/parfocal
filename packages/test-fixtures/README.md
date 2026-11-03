@@ -62,3 +62,13 @@ uv run --no-project --python 3.14 --with tifffile --with numpy --with imagecodec
 ```
 
 and the codec and channel files with the same command on `make_synthetic_codecs.py`, which needs the same packages. Either script also rewrites the `synthetic` checksums in `fixtures.json`. The OME-XML holds a random UUID, so every run changes the checksums.
+
+## Reference tiles from the server reader
+
+`reference-tiles/<slide>/` holds windows that the ingest worker's reader (OpenSlide, or tifffile for OME-TIFF) cut out of a slide, for INGEST-009 (the seams and correctness check). Each `manifest.json` lists one window per level for the two finest levels that hold at least 2 × 2 tiles, centred on a tile corner and picked as the most textured of up to 25 corners. The browser reader test `packages/viewer-engine/test/pixel-source/reader-check.test.ts` reads the same windows through `openTiffSource` and must agree within the native JPEG agreement threshold. `workers/ingest/tests/test_reference_tiles.py` checks that the committed tiles still match the server reader. Rewrite them with
+
+```
+PARFOCAL_UPDATE_GOLDEN=1 pnpm --filter @parfocal/ingest exec uv run --package parfocal-ingest pytest tests/test_reference_tiles.py
+```
+
+with the `small`, `formats` and `viewer` groups fetched, and look at the PNGs before committing. `python -m parfocal_ingest.reference_tiles SLIDE DIR` writes the same set for any other slide.

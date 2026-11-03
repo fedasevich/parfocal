@@ -22,6 +22,8 @@
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.64.0",
+    "@types/pngjs": "6.0.5",
+    "pngjs": "7.0.0",
     "vite": "8.3.3"
   },
   "dependencies": {
