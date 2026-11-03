@@ -1,4 +1,4 @@
-import type { ProjectCode } from "./scenario.ts";
+import type { ProjectCode, SeededProjectCode } from "./scenario.ts";
 
 export type ProjectOverviewSeed = {
   objects: number | null;
@@ -14,7 +14,7 @@ export type ProjectOverviewSeed = {
   } | null;
 };
 
-export const projectOverviews: Record<ProjectCode, ProjectOverviewSeed> = {
+const seededOverviews: Record<SeededProjectCode, ProjectOverviewSeed> = {
   P07: {
     objects: 412880,
     needsReview: 8,
@@ -53,6 +53,18 @@ export const projectOverviews: Record<ProjectCode, ProjectOverviewSeed> = {
     importFailure: null,
   },
 };
+
+const emptyOverview: ProjectOverviewSeed = {
+  objects: 0,
+  needsReview: 0,
+  noResults: 0,
+  storageAllowanceGb: null,
+  storageUsedGb: 0,
+  importFailure: null,
+};
+
+export const overviewSeedOf = (code: ProjectCode): ProjectOverviewSeed =>
+  code in seededOverviews ? seededOverviews[code as SeededProjectCode] : emptyOverview;
 
 export const objectsPerSlide = 6770;
 

@@ -21,11 +21,10 @@ function NewProjectRoute() {
       overlay={
         <NewProjectDrawer
           onClose={close}
-          onCreate={() =>
+          onCreated={(created) =>
             void navigate({
               to: "/projects/$projectId/upload",
-              params: { projectId: behind.id },
-              search: { scene: "empty" },
+              params: { projectId: created.id },
             })
           }
         />

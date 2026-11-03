@@ -37,8 +37,8 @@ import {
   classMappings,
   formatCheck,
   objectsPerSlide,
+  overviewSeedOf,
   projectImports,
-  projectOverviews,
   resultPreview,
   sourceFiles,
   sourceListings,
@@ -94,7 +94,7 @@ export const toTaxonomyTemplates = (): Template[] => [
 
 export const toProjectOverview = (idOrCode: string): ProjectOverview => {
   const project = projectOf(idOrCode);
-  const seed = projectOverviews[project.code];
+  const seed = overviewSeedOf(project.code);
   return projectOverviewSchema.parse({
     project_id: project.id,
     cases: project.counts.cases,
@@ -237,7 +237,7 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
     storage: {
       needed_gb: uploadStorage.neededGb,
       left_gb: uploadStorage.leftGb,
-      allowance_gb: projectOverviews[project.code].storageAllowanceGb ?? 525,
+      allowance_gb: overviewSeedOf(project.code).storageAllowanceGb ?? 525,
       trimmed_gb: uploadStorage.trimmedGb,
       trimmed_slides: uploadStorage.trimmedSlides,
     },
