@@ -1,6 +1,7 @@
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { cn } from "@parfocal/ui/lib/utils";
+import type * as React from "react";
 
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
@@ -17,7 +18,7 @@ function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
     <RadioPrimitive.Root
       data-slot="radio-group-item"
       className={cn(
-        "group/radio-group-item peer relative flex aspect-square size-4 shrink-0 rounded-full border border-input outline-none group-has-[:focus-visible]/field-label:ring-0 group-has-[:focus-visible]/field-label:not-data-checked:border-input after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:focus-visible:ring-destructive/50 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:focus-visible:ring-destructive/70 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground group-has-[:focus-visible]/field-label:data-checked:border-primary dark:data-checked:bg-primary",
+        "group/radio-group-item peer relative flex aspect-square size-4 shrink-0 cursor-pointer rounded-full border border-line-strong bg-surf-field outline-none transition-colors duration-(--motion-fast) ease-standard after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-not-allowed data-disabled:cursor-not-allowed data-disabled:opacity-40 aria-invalid:border-bad data-checked:border-accent-fill data-checked:bg-accent-fill",
         className,
       )}
       {...props}
@@ -26,10 +27,37 @@ function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
         data-slot="radio-group-indicator"
         className="flex size-4 items-center justify-center"
       >
-        <span className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground" />
+        <span className="absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-on-accent" />
       </RadioPrimitive.Indicator>
     </RadioPrimitive.Root>
   );
 }
 
-export { RadioGroup, RadioGroupItem };
+type RadioRowProps = Omit<React.ComponentProps<"label">, "title"> & {
+  value: string;
+  title: React.ReactNode;
+  text?: React.ReactNode;
+  disabled?: boolean;
+};
+
+function RadioRow({ value, title, text, disabled, className, ...props }: RadioRowProps) {
+  return (
+    <label
+      data-slot="radio-row"
+      data-disabled={disabled || undefined}
+      className={cn(
+        "group/radio-row flex cursor-pointer items-start gap-2.5 data-disabled:cursor-not-allowed",
+        className,
+      )}
+      {...props}
+    >
+      <RadioGroupItem value={value} disabled={disabled ?? false} className="mt-0.5" />
+      <span className="grid gap-0.5 group-data-disabled/radio-row:opacity-40">
+        <b className="text-body-sm font-semibold text-fg">{title}</b>
+        {text ? <small className="text-body-sm text-fg-dim">{text}</small> : null}
+      </span>
+    </label>
+  );
+}
+
+export { RadioGroup, RadioGroupItem, RadioRow, type RadioRowProps };
