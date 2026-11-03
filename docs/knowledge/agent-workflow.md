@@ -65,13 +65,50 @@ Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready tas
 
 `Idea:` tasks stay in the backlog but come last. At most one task that adds a migration runs at a time.
 
-## Two agents in parallel
+## Parallel runs
 
-- Each agent works in its own worktree, `git worktree add ../parfocal-wt/ID -b task/ID`, never in the main checkout.
-- Lanes keep them apart. Opus takes `apps/api`, `workers`, `infra` and migrations, Sonnet takes `apps/web` and `packages/ui`. A task that touches both runs alone.
-- The main session claims both tasks in one commit before spawning. Agents commit only on their branch and never run `note`, `tick` or push, because `docs/log.md` and `docs/BACKLOG.md` are where commits collide.
-- When an agent hands back, the main session rebases its branch on `main`, runs `pnpm -s verify`, `note` and `tick`, and pushes. One merge at a time.
-- Web Playwright runs use `CI=1` in a worktree so two runs do not share port 5183.
+The way the owner runs a batch of tasks, used for the overnight run of 2026-11-02 (51 tasks) and after. When the owner says "run N tasks" or "use the limit until the reset", follow this without asking.
+
+How many agents and which model:
+
+- Frontend tasks (`apps/web`, `packages/ui`) go to Sonnet with high effort. Backend tasks (`apps/api`, `workers`, `infra`, migrations, measured work) go to Opus with medium effort. Nothing higher.
+- Two agents at a time by default. When the queue is all Sonnet work, run up to five. Go back to two as soon as the 5-hour usage climbs faster than about 5% per merged task, or passes 60%.
+- At most one task that adds a migration runs at a time. Never run two tasks that touch the same screen or fake API store, such as the bell and mentions, at once. Hold the second until the first merges.
+- Pick tasks by [Picking the next task](#picking-the-next-task), quick wins and high "unblocks" counts first.
+
+Stopping:
+
+- When the owner names a stop time, such as "stop by 2 am" so the next 5-hour window starts when they need it, start no new agent that cannot finish before it, merge what hands back, push and stop.
+- Otherwise follow [Plan usage limits](#plan-usage-limits). Agents stop starting at 80%. For a run that must go on past a reset, set a cron heartbeat after the reset and delete it when the run ends.
+
+The lead worktree and its scripts, in `scripts/lead/`:
+
+- All merges, notes, ticks and pushes happen in one detached lead worktree at `../parfocal-wt/lead`, which `env.sh` creates on first use. The main checkout only fast-forwards, so another session's uncommitted files there stay safe.
+- `claim.sh ID...` claims in the lead and commits without pushing.
+- Each agent runs with `isolation: "worktree"` and commits only on its own branch.
+- `merge.sh ID BRANCH "log text" [review note]`:
+  - It merges the branch, numbers any `XXXX-*.md` ADR, runs `pnpm install` and `pnpm -s verify`, writes the note and ticks the task. With a fourth argument it moves the task to review with that note instead.
+  - It commits, removes the agent's worktree and branch, and prints `MERGED-OK`.
+  - It stops with `MERGE CONFLICT` or `VERIFY FAILED` and leaves the fix to the lead.
+- `push.sh` pushes. `merge.sh` calls it after every third merge, so CI runs in batches and failure emails stay few. Run `push.sh` before ending a run.
+
+The agent prompt always says:
+
+- Read the task with `board.py show ID` and only the docs it lists. Grep for what already exists and build on it.
+- Run `pnpm install` first, and `uv sync` when Python is touched.
+- Build the tests that the "Done when" line names, and compare screens with the mock by number.
+- Name new ADRs `docs/adr/XXXX-short-title.md`, with a `# XXXX. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
+- Do not edit `docs/BACKLOG.md`, `docs/log.md`, `docs/decisions.md`, `docs/board/` or READMEs (except the results index). Do not claim, note, tick or push.
+- Never use the word "verdict", and write no code comments.
+- Use a distinct `PARFOCAL_E2E_PORT` from 5190 to 5199 and stop the dev server before finishing.
+- Run `pnpm -s verify` until it passes, and also run the browser specs the task touched, because `verify` does not run `test:browser`.
+- Commit as `feat(ID): ...` and hand back in at most 10 lines with a log line.
+
+What the lead does with a hand-back:
+
+- If the "Done when" line is met, tick. If only CI or a deploy is missing, move the task to review or blocked with a note naming the wait.
+- A real product choice goes into `docs/decisions.md` with a recommended option.
+- Watch `main`'s CI between merges and fix a red run before starting more agents.
 
 ## Tasks in review
 
