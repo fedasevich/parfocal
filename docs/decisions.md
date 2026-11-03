@@ -210,6 +210,15 @@ NAV-012 asks for Shift+2, but the approved mock and kit give Shift+1 to Shift+4 
 
 Your choice:
 
+## 49. A manual Lock the screen in the account menu, from SHELL-012 (account menu)
+
+The account menu shows "Lock the screen" disabled. Building it needs LockCard wording for a manual lock instead of "after N minutes" (IAM-021, in review).
+
+- a. Yes, build a manual lock in the menu. (recommended, quick to leave a workstation safely)
+- b. Drop it from the menu.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

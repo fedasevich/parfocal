@@ -1723,6 +1723,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-002 · Global top bar and sidebar
   One top bar outside a slide, with the Parfocal logo and the workspace's name and logo with its switcher (IAM-008), search that opens the palette and accepts object IDs, New project, Upload as a normal button, the jobs ring (JOBS-003), the bell (NOTIF-002) and the account menu (SHELL-012). The sidebar holds Home, My work with its count, the projects with their slide counts, New project and, for admins, Admin under Workspace. Mentions live only behind the bell. Settings and theme are reached through the account menu and Cmd+comma.
+  Replace the hand-written `apps/web/src/shell/shell-store.ts` (SHELL-012, built on useSyncExternalStore) with the Zustand shell store ADR 0182 asks for.
   Done when component and E2E tests cover each control, every control is reachable by keyboard, and a test confirms the sidebar has no Mentions entry.
   Refs mock: home, doc 39, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: M.
@@ -1786,6 +1787,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when component tests cover each item, axe passes, keyboard users reach every item, and E2E logs out and back in with a draft intact.
   Depends on IAM-002, IAM-015. Refs mock 1, kit W35, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
+
+- [ ] SHELL-013 · Help and what's new
+  The account menu (SHELL-012) shows "Help and what's new" disabled. Build the page it opens: short help per screen, the keyboard map link and release notes from the release versioning (FOUND-017).
+  Done when the menu item opens the page, a component test covers it, and axe passes.
+  Depends on SHELL-012.
+  Size: S.
 
 ---
 
@@ -1938,6 +1945,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
 
 - [ ] WL-013 · Hide names
   Swap names for initials across the app for screen sharing and teaching.
+  Read `useShell((s) => s.initialsOnly)` from the shell store, which the account menu already sets (SHELL-012).
   Done when E2E confirms no full name appears anywhere in the DOM with the toggle on.
   Size: M.
 
