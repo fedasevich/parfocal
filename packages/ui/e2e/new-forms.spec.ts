@@ -41,7 +41,7 @@ test("New project in clinical mode with the cell review template and a picked cl
   await expect(page.getByRole("radio", { name: /^PanNuke/ })).toBeChecked();
   await expect(page.getByTestId("class-list")).toContainText("Neoplastic");
   await expect(page.getByTestId("class-list")).not.toContainText("Tumor");
-  await page.getByRole("radio", { name: /^Sentinel node 3 classes/ }).click();
+  await page.getByRole("radio", { name: "Sentinel node", exact: true }).click();
   await expect(page.getByTestId("class-list")).toContainText("Tumor");
   await page.getByRole("button", { name: "Create and upload" }).click();
   expect(await submitted(page)).toEqual({
