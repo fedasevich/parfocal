@@ -1521,7 +1521,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
   Size: M.
 
-- [ ] DS-003 · Typography
+- [x] DS-003 · Typography
   IBM Plex Sans and IBM Plex Mono, self-hosted. Nine sizes and nothing between them: label 11/600 in capitals, caption 12, body small 13, body 14, lead 16, title small 18/600, title 20/600, page title 24/600 and display 28/600. Running text is never under 12 px, and 11 px is only for capital labels, tags, counts and keycaps. Mono only for IDs, numbers in columns, file names and keys.
   Done when the type specimen story passes visual tests, fonts load without layout shift, and a lint check fails on a font size off the scale.
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
@@ -1717,6 +1717,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [ ] DS-035 · Warn tag contrast in the light theme
   DS-026 (table) found the amber "warn" status tag at 4.3:1 against the light page background, below the 4.5:1 axe needs.
   Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
+  Size: S.
+
+- [ ] DS-036 · Preload the main Plex fonts
+  DS-003 (typography) committed the IBM Plex woff2 files with font-display optional (ADR 0227), so a first visit on a slow link may draw in the fallback font. Preload the two main files in apps/web index.html.
+  Done when a browser test on a throttled first load sees Plex rendered, and the preload names files that exist in the build.
+  Depends on DS-003.
   Size: S.
 
 ---
