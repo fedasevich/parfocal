@@ -82,11 +82,37 @@ export const spaceUnitPx = 4;
 
 export const radiiPx = { sm: 4, md: 7, lg: 10, ctl: 8, zone: 12 } as const;
 
+export const surfaceLevels = ["page", "panel", "section", "highlight"] as const;
+
+export type SurfaceLevel = (typeof surfaceLevels)[number];
+
+export const surfaceLevelTokens = {
+  page: "surf-page",
+  panel: "surf-panel",
+  section: "surf-section",
+  highlight: "surf-hl",
+} as const satisfies Record<SurfaceLevel, string>;
+
+export const surfaceSpacingPx = {
+  "space-zone": { comfortable: 28, compact: 24 },
+  "space-in": { comfortable: 10, compact: 8 },
+  "pad-zone": { comfortable: 18, compact: 14 },
+  "pad-modal": { comfortable: 24, compact: 24 },
+} as const satisfies Record<string, Record<DensityMode, number>>;
+
+export type SurfaceSpacing = keyof typeof surfaceSpacingPx;
+
+export const surfaceSpacingRulesPx = {
+  "space-zone": { min: 24, max: 32 },
+  "space-in": { min: 8, max: 12 },
+  "pad-modal": { min: 24, max: Number.POSITIVE_INFINITY },
+} as const satisfies Partial<Record<SurfaceSpacing, { min: number; max: number }>>;
+
 export const spacingPx = {
-  zone: 28,
-  in: 10,
-  padZone: 18,
-  padModal: 24,
+  zone: surfaceSpacingPx["space-zone"].comfortable,
+  in: surfaceSpacingPx["space-in"].comfortable,
+  padZone: surfaceSpacingPx["pad-zone"].comfortable,
+  padModal: surfaceSpacingPx["pad-modal"].comfortable,
   padSmallModal: 20,
 } as const;
 
