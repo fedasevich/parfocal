@@ -301,7 +301,7 @@ function SmartMinimap({
             aria-label="Open the whole slide"
             title="Click to open the whole slide (or hold Z)"
             onClick={onOpen}
-            className="absolute inset-0 cursor-zoom-in rounded-[5px] border-0 bg-transparent p-0 outline-none hover:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="absolute inset-0 cursor-zoom-in rounded-[5px] border-0 bg-transparent p-0 outline-none hover:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {size === "pip" ? null : (
               <span className="pointer-events-none absolute top-1.25 right-1.25 inline-flex h-5.5 items-center gap-1 rounded-md bg-[rgb(17_17_17/0.78)] px-1.5 text-caption font-medium text-white">

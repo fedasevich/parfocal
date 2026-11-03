@@ -125,7 +125,7 @@ function FilterChip({ className, children, ...props }: FilterChipProps) {
     <TogglePrimitive
       data-slot="filter-chip"
       className={cn(
-        "group/chip inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-transparent px-3 text-caption leading-none font-medium whitespace-nowrap text-fg-dim outline-none hover:border-fg-faint hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-pressed:border-accent data-pressed:bg-surf-hl data-pressed:text-fg",
+        "group/chip inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-transparent px-3 text-caption leading-none font-medium whitespace-nowrap text-fg-dim outline-none hover:border-fg-faint hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent data-pressed:border-accent data-pressed:bg-surf-hl data-pressed:text-fg",
         className,
       )}
       {...props}

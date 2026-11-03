@@ -84,7 +84,7 @@ function ReviewTopBar({
     </>
   );
   const backClass =
-    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-ctl px-2 text-body-sm font-medium text-fg-dim no-underline outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-accent";
+    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-ctl px-2 text-body-sm font-medium text-fg-dim no-underline outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";
   return (
     <header
       data-slot="review-top-bar"
@@ -122,7 +122,7 @@ function ReviewTopBar({
           <PopoverTrigger
             aria-haspopup="dialog"
             title="Slides in this case and task, with their result sets (Q and E step through them)"
-            className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-accent aria-expanded:border-fg-faint"
+            className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
           >
             {thumb}
             <b className="text-body-sm font-semibold">{slideName}</b>
@@ -146,7 +146,7 @@ function ReviewTopBar({
           <PopoverTrigger
             aria-haspopup="dialog"
             title="Progress on this slide and in the whole task"
-            className="inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border-0 bg-transparent p-1 text-left text-fg outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-accent aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]"
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border-0 bg-transparent p-1 text-left text-fg outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]"
           >
             <ProgressRing split={progress} size={big ? 40 : 34} />
             <span className="grid leading-tight">

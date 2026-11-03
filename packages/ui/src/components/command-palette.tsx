@@ -81,7 +81,7 @@ function CommandPaletteView({
   const trimmed = query.trim();
   return (
     <>
-      <div className="flex items-center gap-2.5 border-line border-b px-4 py-3.5 text-[16px]">
+      <div className="flex items-center gap-2.5 border-line border-b px-4 py-3.5 text-[16px] focus-within:border-b-accent">
         <Icon name="search" className="text-fg-dim" />
         <input
           aria-label="Search actions, places and settings"

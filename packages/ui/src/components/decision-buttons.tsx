@@ -154,7 +154,7 @@ function DecisionButtons({
             data-counts-as={answer.countsAs}
             onClick={() => onValueChange?.(answer.raw)}
             className={cn(
-              "cursor-pointer border-line-strong bg-chrome-2 text-left text-fg outline-none hover:not-disabled:border-accent hover:not-disabled:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-45 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:disabled:opacity-100",
+              "cursor-pointer border-line-strong bg-chrome-2 text-left text-fg outline-none hover:not-disabled:border-accent hover:not-disabled:bg-accent-soft focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-45 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:disabled:opacity-100",
               size === "large"
                 ? cn(
                     "grid grid-cols-[28px_1fr_auto] items-center gap-3 rounded-zone border-[1.5px] px-4.5 font-semibold",

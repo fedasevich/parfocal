@@ -363,7 +363,7 @@ function BackLink({ keyHint = "Esc", className, children, ...props }: BackLinkPr
       type="button"
       data-slot="back-link"
       className={cn(
-        "inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim hover:text-fg focus-visible:outline-2 focus-visible:outline-accent",
+        "inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         className,
       )}
       {...props}

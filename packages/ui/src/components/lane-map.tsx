@@ -196,7 +196,7 @@ function LaneMapBox({
     props: mergeProps<"button">(
       {
         className: cn(
-          "absolute flex cursor-pointer flex-col items-start gap-1 overflow-hidden rounded-ctl border border-line bg-btn-bg px-2.5 py-[9px] text-left text-fg no-underline outline-none hover:border-accent hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--btn-bg))] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2",
+          "absolute flex cursor-pointer flex-col items-start gap-1 overflow-hidden rounded-ctl border border-line bg-btn-bg px-2.5 py-[9px] text-left text-fg no-underline outline-none hover:border-accent hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--btn-bg))] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent focus-visible:outline-offset-2",
           dim && "border-dashed bg-transparent text-fg-dim",
           className,
         ),

@@ -73,7 +73,7 @@ function ModelPicker({
         aria-haspopup="listbox"
         aria-invalid={invalid || undefined}
         className={cn(
-          "grid min-h-13 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3 py-2 text-left font-[inherit] text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-accent data-popup-open:border-accent",
+          "grid min-h-13 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3 py-2 text-left font-[inherit] text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-popup-open:border-accent",
           invalid && "border-bad",
           className,
         )}
@@ -128,7 +128,7 @@ function ModelPicker({
                         }
                       }}
                       className={cn(
-                        "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto_104px_16px] items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-accent",
+                        "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto_104px_16px] items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                         on && "bg-surf-hl",
                       )}
                     >

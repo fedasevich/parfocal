@@ -137,7 +137,7 @@ function JobSlideRow({
           aria-expanded={open}
           title={open ? "Hide the steps" : "Show the steps"}
           onClick={() => onOpenChange(!open)}
-          className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
+          className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
         >
           <span className="tabular-nums">
             {stepsDone} of {stepsTotal}

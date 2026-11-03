@@ -153,7 +153,7 @@ export function AllSlidesTab({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <label className="flex h-7.5 w-65 items-center gap-2 rounded-lg border border-line-strong px-2.5 text-body-sm text-fg-faint">
+        <label className="flex h-7.5 w-65 items-center gap-2 rounded-lg border border-line-strong px-2.5 text-body-sm text-fg-faint focus-within:border-accent">
           <Icon name="search" />
           <input
             aria-label="Find a slide, case or ID"
