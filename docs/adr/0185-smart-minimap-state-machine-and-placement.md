@@ -66,7 +66,7 @@ Hot points and weights, from the mock: points along the tumor edge in view at 3 
 | No move while panning | never while panning | placement is recomputed every frame | NAV-007 |
 | Hot points in the cells scene | current cell 50 plus every cell to check at 4, legend blocked | current cell only, no legend block | NAV-007 |
 | Kit inputs with no weight in the mock | open thread, floating cells panel, proposals and pins | none | NAV-007 chooses weights and records them here or in a new record |
-| Minimap setting | When useful, Always, Never, default When useful | Settings screen and `get-my-settings.ts` use those three, but `settings_catalogue.py` and `catalogue.generated.ts` say `corner` or `hidden`, default `corner` | NAV-009 |
+| Minimap setting | When useful, Always, Never, default When useful | the catalogue now says `useful`, `always` or `never`, default `useful`, and `shownMinimap` in `minimap-box.ts` applies it | done in NAV-009 |
 | When useful text | appears once half or less of the tissue is on screen | Settings help says "once you zoom past the whole slide" | NAV-009 |
 | Full viewer | the map shows in the full viewer | `full-viewer.tsx` passes `minimap={false}` | NAV-006 |
 | Guided review | the kit gives the smart minimap to the full viewer only | `slide-still.tsx` draws its own fixed 136 px map top right | NAV-006 decides whether guided review moves to `SmartMinimap` |

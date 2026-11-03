@@ -94,7 +94,7 @@ CATALOGUE: tuple[Setting, ...] = (
     choice("magnification_label", "objective", ("objective", "microns-per-pixel"), PERSONAL),
     choice("tools", "rail", ("rail", "dock"), PERSONAL),
     whole("side_panel_width", 320, 240, 560, PERSONAL),
-    choice("minimap", "corner", ("corner", "hidden"), PERSONAL),
+    choice("minimap", "useful", ("useful", "always", "never"), PERSONAL),
     switch("slide_strip", False, PERSONAL),
     choice("confidence_wording", "words", ("words", "numbers", "colour", "hidden"), PERSONAL),
     choice("outline_mode", "outline", ("outline", "fill", "dots"), PERSONAL),
