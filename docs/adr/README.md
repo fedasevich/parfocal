@@ -172,3 +172,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0164](0164-bif-frames-placed-like-openslide.md) | The browser reader places BIF camera frames on OpenSlide's even confidence-weighted pitch, not on the per-boundary layout | Accepted | 2026-11-03 |
 | [0165](0165-mentions-in-thread-messages.md) | A mention is a user ID token in the message text, and it is refused for anyone who could not read the message | Accepted | 2026-11-03 |
 | [0166](0166-viewer-parts-from-the-analysis-template.md) | Viewer parts from the analysis template | Accepted | 2026-11-03 |
+| [0167](0167-task-invitations.md) | Task invitations ride on workspace invitations, and their email may name the project and task | Accepted | 2026-11-03 |

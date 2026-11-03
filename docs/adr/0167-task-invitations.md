@@ -1,4 +1,4 @@
-# XXXX. Task invitations ride on workspace invitations, and their email may name the project and task
+# 0167. Task invitations ride on workspace invitations, and their email may name the project and task
 
 - Date: 2026-11-03
 - Status: Accepted
