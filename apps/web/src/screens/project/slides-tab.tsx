@@ -254,7 +254,7 @@ function SlideRow({
       <tr
         data-testid="slide-row"
         className={cn(
-          "group cursor-pointer [&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-3 [&>td]:text-fg-dim",
+          "group cursor-pointer [&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:text-fg-dim",
           expanded
             ? "[&>td]:border-b-transparent [&>td]:bg-surf-hl"
             : "hover:[&>td]:bg-[color-mix(in_srgb,var(--fg)_3%,transparent)]",

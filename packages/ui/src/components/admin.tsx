@@ -122,7 +122,7 @@ function SettingRow({ label, detail, on, locked, onChange, className, ...props }
     <div
       data-slot="setting-row"
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3 text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line",
+        "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-(--density-list-row-y) text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line",
         className,
       )}
       {...props}

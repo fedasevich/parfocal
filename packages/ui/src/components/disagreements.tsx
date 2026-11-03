@@ -105,7 +105,7 @@ function EvidenceRow({ icon, title, className, children, ...props }: EvidenceRow
     <div
       data-slot="evidence-row"
       className={cn(
-        "grid grid-cols-[minmax(0,180px)_minmax(0,1fr)] items-start gap-x-3 rounded-ctl border border-line bg-surf-panel px-3 py-2.5 text-body-sm dark:border-transparent dark:bg-chrome-2",
+        "grid grid-cols-[minmax(0,180px)_minmax(0,1fr)] items-start gap-x-3 rounded-ctl border border-line bg-surf-panel px-3 py-(--density-item-y) text-body-sm dark:border-transparent dark:bg-chrome-2",
         className,
       )}
       {...props}

@@ -191,6 +191,9 @@ export const densitySpacingPx = {
   "foot-x": { comfortable: 20, compact: 14 },
   "foot-top": { comfortable: 14, compact: 10 },
   "foot-bottom": { comfortable: 18, compact: 12 },
+  "item-y": { comfortable: 10, compact: 6 },
+  "page-gap": { comfortable: 22, compact: 14 },
+  "flow-gap": { comfortable: 16, compact: 14 },
 } as const satisfies Record<string, Record<DensityMode, number>>;
 
 export type DensitySpacing = keyof typeof densitySpacingPx;

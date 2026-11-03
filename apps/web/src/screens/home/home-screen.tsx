@@ -431,7 +431,7 @@ function HomeWithoutData({
   const goTo = useGoTo();
   const kind = error instanceof ApiError ? error.kind : undefined;
   return (
-    <main className="grid content-start gap-5.5 px-8 pt-5.5 pb-4.5 pl-7">
+    <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
         <h1 className="m-0 text-[24px] font-semibold text-fg">
           {greeting(now())}, {firstName}
@@ -574,7 +574,7 @@ export function HomeScreen() {
     tasks: <ComingUp tasks={home.tasks} projects={home.projects} />,
   };
   return (
-    <main className="grid content-start gap-5.5 px-8 pt-5.5 pb-4.5 pl-7">
+    <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
         <h1 className="m-0 text-[24px] font-semibold text-fg">
           {firstWeek ? `Welcome to Parfocal, ${firstName}` : `${greeting(today)}, ${firstName}`}

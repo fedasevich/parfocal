@@ -181,7 +181,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   };
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-7 pt-5 pb-5">
+    <main className="flex min-h-0 flex-1 flex-col gap-(--density-flow-gap) overflow-auto px-7 pt-5 pb-5">
       <header className="flex items-end justify-between gap-4">
         <div className="grid gap-1">
           <Breadcrumbs

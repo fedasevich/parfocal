@@ -241,18 +241,18 @@ export function AllSlidesTab({
                   onClick={() => onSelect(row.id)}
                   className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}
                 >
-                  <td className="px-2 py-2 align-middle">
+                  <td className="px-2 py-(--density-cell-y) align-middle">
                     <span className="inline-flex items-center gap-2.25">
                       <SlideThumb className="h-5.5 w-8.5" />
                       <b className="font-medium text-fg">{row.label}</b>
                     </span>
                   </td>
                   {preview ? null : (
-                    <td className="px-2 py-2 align-middle text-fg-dim">
+                    <td className="px-2 py-(--density-cell-y) align-middle text-fg-dim">
                       {row.project.code} · {row.case_label ? `case ${row.case_label}` : "loose"}
                     </td>
                   )}
-                  <td className="px-2 py-2 align-middle">
+                  <td className="px-2 py-(--density-cell-y) align-middle">
                     <span className="flex flex-wrap gap-1">
                       {row.result_sets.length > 0 ? (
                         row.result_sets.map((set) => {
@@ -264,7 +264,7 @@ export function AllSlidesTab({
                       )}
                     </span>
                   </td>
-                  <td className="px-2 py-2 align-middle">
+                  <td className="px-2 py-(--density-cell-y) align-middle">
                     {row.reviews.length > 0 ? (
                       row.reviews.map((review) => (
                         <span key={`${review.task_id}-${review.user_id}`} className="my-0.75 flex">
@@ -279,7 +279,7 @@ export function AllSlidesTab({
                       <span className="text-fg-dim">not assigned</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 align-middle">{statusOf(row)}</td>
+                  <td className="px-2 py-(--density-cell-y) align-middle">{statusOf(row)}</td>
                 </tr>
               );
             })}

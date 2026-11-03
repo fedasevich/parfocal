@@ -165,6 +165,9 @@
   --density-foot-x: 20px;
   --density-foot-top: 14px;
   --density-foot-bottom: 18px;
+  --density-item-y: 10px;
+  --density-page-gap: 22px;
+  --density-flow-gap: 16px;
   --space-zone: 28px;
   --space-in: 10px;
   --pad-zone: 18px;
@@ -181,6 +184,9 @@
   --density-foot-x: 14px;
   --density-foot-top: 10px;
   --density-foot-bottom: 12px;
+  --density-item-y: 6px;
+  --density-page-gap: 14px;
+  --density-flow-gap: 14px;
   --space-zone: 24px;
   --space-in: 8px;
   --pad-zone: 14px;

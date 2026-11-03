@@ -17,6 +17,7 @@ const geometry = async (page: Page) => {
       head: box("[data-slot=table-head]").height,
       row: box("[data-slot=table-body] [data-slot=table-row]").height,
       list: box("[data-testid=list]").height,
+      settings: box("[data-testid=settings]").height,
       firstCard: box("[data-slot=side-panel-body] > :first-child").top,
       secondCard: box("[data-slot=side-panel-body] > :nth-child(2)").top,
       cardHeight: box("[data-slot=side-panel-body] > :first-child").height,
@@ -43,6 +44,13 @@ for (const density of ["comfortable", "compact"] as const) {
     await expect(foot).toHaveCSS("padding-left", px(densitySpacingPx["foot-x"][density]));
     await expect(foot).toHaveCSS("padding-top", px(densitySpacingPx["foot-top"][density]));
     await expect(foot).toHaveCSS("padding-bottom", px(densitySpacingPx["foot-bottom"][density]));
+    await expect(page.getByTestId("page")).toHaveCSS(
+      "row-gap",
+      px(densitySpacingPx["page-gap"][density]),
+    );
+    const setting = page.locator("[data-slot=setting-row]").nth(1);
+    await expect(setting).toHaveCSS("padding-top", px(densitySpacingPx["list-row-y"][density]));
+    await expect(setting).toHaveCSS("padding-bottom", px(densitySpacingPx["list-row-y"][density]));
     const shape = await geometry(page);
     expect(shape.secondCard - shape.firstCard - shape.cardHeight).toBeCloseTo(
       densitySpacingPx["panel-gap"][density],
@@ -59,6 +67,7 @@ test("compact fits more rows and a shorter inspector than comfortable", async ({
   const saved = 2 * (densitySpacingPx["cell-y"].comfortable - densitySpacingPx["cell-y"].compact);
   expect(comfortable.row - compact.row).toBeCloseTo(saved, 0);
   expect(compact.list).toBeLessThan(comfortable.list);
+  expect(compact.settings).toBeLessThan(comfortable.settings);
   expect(compact.head).toBeLessThan(comfortable.head);
   expect(compact.foot).toBeLessThan(comfortable.foot);
   expect(compact.firstCard).toBeLessThan(comfortable.firstCard);

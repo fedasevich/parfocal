@@ -96,7 +96,7 @@ function TaskRow({
   return (
     <tr
       data-testid="task-row"
-      className="[&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-3 [&>td]:text-fg-dim last:[&>td]:border-b-0"
+      className="[&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:text-fg-dim last:[&>td]:border-b-0"
     >
       <td>
         <span className="grid min-w-0 gap-0.5">

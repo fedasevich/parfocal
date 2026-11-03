@@ -194,7 +194,7 @@ function EvaluationBody({
   );
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-4 px-7 pt-4 pb-5">
+    <main className="flex min-h-0 flex-1 flex-col gap-(--density-flow-gap) px-7 pt-4 pb-5">
       <header className="grid gap-2">
         <Breadcrumbs start={<SidebarToggle />} renderLink={renderLink} items={crumbs} />
         <div className="flex items-end justify-between gap-4">
