@@ -151,3 +151,17 @@ test("measuring a small cluster over 0.2 mm turns it back into a pre-read", () =
   assert.equal(state.kind, "pre-read");
   assert.equal(state.kind === "pre-read" && state.phase, "settled");
 });
+
+test("a measurement larger than the AI estimate takes the lead", () => {
+  const state = aiState({
+    areas: [
+      { object: "A", size: 2.5 },
+      { object: "B", size: 1, measured: 3 },
+    ],
+  });
+  assert.equal(state.kind, "pre-read");
+  if (state.kind !== "pre-read") return;
+  assert.equal(state.lead.object, "B");
+  assert.equal(state.category, "macro");
+  assert.deepEqual([state.areas[0]?.number, state.areas[0]?.object], [1, "B"]);
+});

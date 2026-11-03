@@ -99,7 +99,7 @@ export function areaCategory(area: AiArea): StagingCategory {
 }
 
 export function rankAreas(areas: readonly AiArea[]): AiArea[] {
-  return [...areas].sort((left, right) => right.size - left.size);
+  return [...areas].sort((left, right) => shownSize(right) - shownSize(left));
 }
 
 export function aiState({ areas, running = false }: AiStateInput): AiState {
