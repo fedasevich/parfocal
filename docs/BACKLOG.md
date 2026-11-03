@@ -4438,7 +4438,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on IAM-002. Refs mock: signin.
   Size: M.
 
-- [ ] ONB-002 · Sign-up and email confirmation
+- [x] ONB-002 · Sign-up and email confirmation
   Name, work email, password or single sign-on, and what the person mostly does, then a one-time code.
   Done when E2E signs up, confirms and reaches setup.
   Depends on ONB-001. Refs mock: signup.
