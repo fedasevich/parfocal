@@ -84,6 +84,8 @@ test("Smooth carries the POC's tuned values and is the default", () => {
   assert.equal(smooth.pinchOctavesPerPixel * Math.LN2, 0.0075);
   assert.equal(smooth.maxOctavesPerEvent, 0.5);
   assert.equal(smooth.keyPanStepPx, 120);
+  assert.equal(smooth.keyPanRampMs, 120);
+  assert.equal(cameraProfiles.instant.keyPanRampMs, 0);
   assert.equal(smooth.zoomAnchor, "cursor");
 });
 

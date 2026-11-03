@@ -10,6 +10,7 @@ export type ActionDef = {
   keys: string[];
   presets?: Partial<Record<Exclude<Preset, "default">, string[]>>;
   hold?: boolean;
+  sustain?: boolean;
   holdMs?: number;
   inInputs?: boolean;
 };
@@ -85,6 +86,7 @@ export function createActionRegistry(defs: readonly ActionDef[]) {
         for (const [suffix, keys] of expandSlot(slot)) {
           const binding: Binding = { action: `${def.id}${suffix}`, keys };
           if (def.hold) binding.hold = true;
+          if (def.sustain) binding.sustain = true;
           if (def.holdMs !== undefined) binding.holdMs = def.holdMs;
           if (def.inInputs) binding.inInputs = true;
           ranked.push({ rank: scopeRank[def.scope], binding });

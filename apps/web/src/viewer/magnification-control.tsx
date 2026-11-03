@@ -1,5 +1,5 @@
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
-import { type MagnificationLabel, presetForDigit } from "@parfocal/ui/lib/magnification-bar";
+import type { MagnificationLabel } from "@parfocal/ui/lib/magnification-bar";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { keyRegistry } from "../keys/catalogue.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -22,7 +22,7 @@ type MagnificationControlProps = {
 
 const scaleBarMaxPx = 96;
 const brightnessStep = 10;
-const hotkeyIds = ["mag", "brightup", "brightdown"] as const;
+const hotkeyIds = ["brightup", "brightdown"] as const;
 
 function useAltDigitHeld(): boolean {
   const [held, setHeld] = useState(false);
@@ -77,12 +77,8 @@ export function MagnificationControl({
       if (action === "brightup") onBrightnessChange(Math.min(140, brightness + brightnessStep));
       else if (action === "brightdown")
         onBrightnessChange(Math.max(20, brightness - brightnessStep));
-      else if (action.startsWith("mag:")) {
-        const preset = presetForDigit(Number(action.slice(4)));
-        if (preset !== null) jumpTo(preset);
-      }
     },
-    [brightness, jumpTo, onBrightnessChange],
+    [brightness, onBrightnessChange],
   );
   useHotkeys(bindings, onFire);
 

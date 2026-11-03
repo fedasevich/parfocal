@@ -19,6 +19,7 @@ export interface CameraProfile extends ThrowFeel, FlightTiming {
   readonly pinchOctavesPerPixel: number;
   readonly maxOctavesPerEvent: number;
   readonly keyPanStepPx: number;
+  readonly keyPanRampMs: number;
   readonly zoomAnchor: ZoomAnchor;
 }
 
@@ -37,6 +38,7 @@ const smooth: CameraProfile = {
   pinchOctavesPerPixel: pocPinchNatsPerPixel / Math.LN2,
   maxOctavesPerEvent: 0.5,
   keyPanStepPx: pocKeyPanStepPx,
+  keyPanRampMs: 120,
   zoomAnchor: "cursor",
 };
 
@@ -47,6 +49,7 @@ export function withoutMotion(profile: CameraProfile): CameraProfile {
     zoomEaseMs: 0,
     shortestFlightMs: 0,
     longestFlightMs: 0,
+    keyPanRampMs: 0,
   };
 }
 
@@ -56,6 +59,7 @@ const precise: CameraProfile = {
   zoomEaseMs: smooth.zoomEaseMs / 2,
   shortestFlightMs: smooth.shortestFlightMs / 2,
   longestFlightMs: smooth.longestFlightMs / 2,
+  keyPanRampMs: smooth.keyPanRampMs / 2,
 };
 
 export const cameraProfiles = {
