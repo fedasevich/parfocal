@@ -1527,7 +1527,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
   Size: M.
 
-- [ ] DS-004 · Icon set with key badges
+- [x] DS-004 · Icon set with key badges
   The SVG icon set from the mock (select, hand, smart, auto, poly, free, rect, ellipse, marker, ruler, arrow, text, comment, brush, slides, sun, gear, help, share, back, next, popout, device icons, panel, home, check, warn, eye, lock, search, flag and others) as React components. Five sizes: 12 inside tags and checkboxes, 16 by default, 20 for sidebar navigation, large buttons, tiles and zone headers, 24 for drop zones and empty states, and 40 for state badges. Icons take the text colour, the accent only for a selected state and a status colour only when the icon is the status. One stroke width. Tools show their key in the tooltip.
   Done when every icon has a story and an accessible name, and a test fails on an icon size off the scale.
   Depends on PROTO-011. Refs doc 41, doc 40 D4.
