@@ -351,6 +351,9 @@ type FlowBarProps = React.ComponentProps<"div"> & {
   blockers?: React.ReactNode;
 };
 
+const enterOwners =
+  "textarea, select, button, a, form, [contenteditable='true'], [role='dialog'], [role='menu'], [role='listbox'], [role='combobox']";
+
 function FlowPrimaryButton({
   primary,
   describedBy,
@@ -359,6 +362,18 @@ function FlowPrimaryButton({
   describedBy?: string;
 }) {
   const off = Boolean(primary.disabled) || (primary.blockers?.length ?? 0) > 0;
+  const run = primary.onClick;
+  React.useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || event.defaultPrevented || off) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      if (event.target instanceof Element && event.target.closest(enterOwners)) return;
+      event.preventDefault();
+      run?.();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [off, run]);
   return (
     <Button
       variant="primary"

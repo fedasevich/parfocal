@@ -71,6 +71,17 @@ test("Tab reaches the steps in order and Next moves forward", async ({ page }) =
   await expect(stepper(page).getByRole("button", { name: /What to check/ })).toBeFocused();
 });
 
+test("Enter runs the primary action and a blocked one stays put", async ({ page }) => {
+  await page.goto(story(`${flows}flow-first-step`));
+  await expect(currentStep(page)).toHaveText(/Slides/);
+  await page.keyboard.press("Enter");
+  await expect(currentStep(page)).toHaveText(/Reviewers/);
+  await page.goto(story(`${flows}flow-next-blocked`));
+  await expect(currentStep(page)).toHaveText(/Reviewers/);
+  await page.keyboard.press("Enter");
+  await expect(currentStep(page)).toHaveText(/Reviewers/);
+});
+
 test("a disabled Next names its reason", async ({ page }) => {
   await page.goto(story(`${flows}flow-next-blocked`));
   const next = page.getByRole("button", { name: /^Next/ });
