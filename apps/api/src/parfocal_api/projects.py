@@ -8,6 +8,7 @@ from sqlalchemy import delete, func, insert, literal_column, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.analysis_templates import ViewerPart, viewer_parts
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.class_templates import TaxonomyTemplate, insert_template
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -69,6 +70,7 @@ class Project(BaseModel):
     colour: int
     privacy_mode: PrivacyMode
     template: AnalysisTemplate
+    viewer_parts: list[ViewerPart]
     archived_at: datetime | None
     created_at: datetime
     sample: bool
@@ -170,6 +172,7 @@ async def project_of(
         .order_by(project_members.c.role, project_members.c.user_id)
     )
     privacy_mode = PrivacyMode(row.privacy_mode)
+    template = AnalysisTemplate(row.template)
     return Project(
         id=row.id,
         code=code_of(row.number),
@@ -177,7 +180,8 @@ async def project_of(
         name=row.name,
         colour=row.colour,
         privacy_mode=privacy_mode,
-        template=AnalysisTemplate(row.template),
+        template=template,
+        viewer_parts=viewer_parts(template),
         archived_at=row.archived_at,
         created_at=row.created_at,
         sample=row.sample,

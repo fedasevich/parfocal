@@ -207,6 +207,7 @@ import {
   UploadStatus,
   VerdictReason,
   VerdictValue,
+  ViewerPart,
   Why,
 } from "./api.ts";
 
@@ -256,6 +257,7 @@ export const getCreateProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -288,6 +290,7 @@ export const getListProjectsResponseMock = (): Project[] =>
     colour: faker.number.int(),
     privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
     template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+    viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
     archived_at: faker.helpers.arrayElement([
       faker.date.past().toISOString().slice(0, 19) + "Z",
       null,
@@ -320,6 +323,7 @@ export const getGetProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -353,6 +357,7 @@ export const getUpdateProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -386,6 +391,7 @@ export const getChangeProjectPrivacyResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -419,6 +425,7 @@ export const getArchiveProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -452,6 +459,7 @@ export const getRestoreProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -485,6 +493,7 @@ export const getSetProjectMemberResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -518,6 +527,7 @@ export const getCreateSampleProjectResponseMock = (
   colour: faker.number.int(),
   privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
   template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
   archived_at: faker.helpers.arrayElement([
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
@@ -552,6 +562,7 @@ export const getSetProjectMemberSignOutResponseMock = (
     colour: faker.number.int(),
     privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
     template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+    viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
     archived_at: faker.helpers.arrayElement([
       faker.date.past().toISOString().slice(0, 19) + "Z",
       null,

@@ -6,7 +6,9 @@ import {
   useListSlideResultSets,
   useSaveVerdict,
   useSubmitSlideReview,
+  type ViewerPart,
 } from "@parfocal/api-client";
+import { AnalysisCards } from "@parfocal/ui/components/analysis-cards";
 import { Banner } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -124,6 +126,7 @@ function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
       clinical={project.privacy_mode === "clinical"}
       projectCode={project.code}
       projectName={project.name}
+      viewerParts={project.viewer_parts}
     />
   );
 }
@@ -133,6 +136,7 @@ type BodyProps = FullViewerProps & {
   clinical: boolean;
   projectCode: string;
   projectName: string;
+  viewerParts: ViewerPart[];
 };
 
 function addedSize(note: string | null) {
@@ -150,6 +154,7 @@ function ViewerBody({
   clinical,
   projectCode,
   projectName,
+  viewerParts,
 }: BodyProps) {
   const scene = search.scene;
   const setup = viewerSetup(scene);
@@ -831,6 +836,7 @@ function ViewerBody({
         counts={counts}
         tool={measuring ? "ruler" : running || nothing ? "hand" : "select"}
         railGroups={reviewRail}
+        panelHead={nothing ? null : <AnalysisCards parts={viewerParts} areas={areas} />}
         onToolChange={(next) => {
           if (next === "ruler") onSearch({ tool: "ruler", object: undefined, scene: undefined });
           if (next === "select") onSearch({ tool: undefined });

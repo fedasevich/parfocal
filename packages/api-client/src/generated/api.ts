@@ -2371,6 +2371,20 @@ export interface ProfileChange {
   title?: ParfocalApiUsersTitle | null;
 }
 
+export type ViewerPart = (typeof ViewerPart)[keyof typeof ViewerPart];
+
+export const ViewerPart = {
+  objects: "objects",
+  layers: "layers",
+  decisions: "decisions",
+  opinion: "opinion",
+  "staging-hero": "staging-hero",
+  "area-list": "area-list",
+  "measure-step": "measure-step",
+  "unsure-zones": "unsure-zones",
+  "cell-typing": "cell-typing",
+} as const;
+
 export type SignOutRight = (typeof SignOutRight)[keyof typeof SignOutRight];
 
 export const SignOutRight = {
@@ -2393,6 +2407,7 @@ export interface Project {
   colour: number;
   privacy_mode: PrivacyMode;
   template: AnalysisTemplate;
+  viewer_parts: ViewerPart[];
   archived_at: string | null;
   created_at: string;
   sample: boolean;
