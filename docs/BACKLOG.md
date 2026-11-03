@@ -2023,7 +2023,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests switch slides and come back to the same view.
   Size: S.
 
-- [ ] CASE-004 · AI state: pre-read ready
+- [x] CASE-004 · AI state: pre-read ready
   Heat overlay and area outlines with numbered badges. The panel leads with the staging question for a sentinel node: "Metastasis likely, largest about 7.7 mm", a chip "Macro if confirmed", and a size scale with the 0.2 and 2 mm lines (REVIEW-004). The area list is largest first with size and category per row. The footer says "Start with area 1". Once the largest area is confirmed and measured the hero reads "Macrometastasis, 8.0 mm, settled" with the suggested pN stage, the smaller rows say they cannot change the category, and the footer offers submit.
   Done when component tests cover the content and behaviour of the mock 5 "Large deposit found" scene in both the open and the settled state.
   Refs kit W2, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
