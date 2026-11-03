@@ -22,14 +22,45 @@ const categoryIfConfirmed: Record<StagingCategory, string> = {
 
 const formatMm = (mm: number) => `${mm.toFixed(1)} mm`;
 
+const areaLabel = (
+  number: number,
+  area: StagingArea,
+  role: string | undefined,
+  visited: ReadonlySet<string> | undefined,
+) =>
+  [
+    `${area.object}, area ${number}`,
+    formatMm(area.size),
+    stagingCategory(area.size),
+    ...(role ? [role] : []),
+    ...(visited?.has(area.object) ? ["visited"] : []),
+  ].join(", ");
+
 const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
 
-type StagingCardsProps = React.ComponentProps<"section"> & {
-  areas: StagingArea[];
-  showList?: boolean;
+type AreaListProps = {
+  current?: string | null | undefined;
+  visited?: ReadonlySet<string> | undefined;
+  roleOf?: ((object: string) => string | undefined) | undefined;
+  onGoTo?: ((object: string) => void) | undefined;
 };
 
-function StagingCards({ areas, showList = true, className, ...props }: StagingCardsProps) {
+type StagingCardsProps = React.ComponentProps<"section"> &
+  AreaListProps & {
+    areas: StagingArea[];
+    showList?: boolean;
+  };
+
+function StagingCards({
+  areas,
+  showList = true,
+  current,
+  visited,
+  roleOf,
+  onGoTo,
+  className,
+  ...props
+}: StagingCardsProps) {
   const ranked = [...areas].sort((left, right) => right.size - left.size);
   const lead = ranked[0];
   return (
@@ -68,7 +99,15 @@ function StagingCards({ areas, showList = true, className, ...props }: StagingCa
               kind="Tumor region"
               size={formatMm(area.size)}
               category={stagingCategory(area.size)}
-              selected={index === 0}
+              selected={onGoTo ? current === area.object : index === 0}
+              note={roleOf?.(area.object)}
+              visited={visited?.has(area.object) ?? false}
+              {...(onGoTo
+                ? {
+                    onSelect: () => onGoTo(area.object),
+                    label: areaLabel(index + 1, area, roleOf?.(area.object), visited),
+                  }
+                : {})}
             />
           ))}
         </InspectorCard>
@@ -77,14 +116,14 @@ function StagingCards({ areas, showList = true, className, ...props }: StagingCa
   );
 }
 
-type AnalysisCardsProps = {
+type AnalysisCardsProps = AreaListProps & {
   parts: readonly ViewerPartName[];
   areas: StagingArea[];
 };
 
-function AnalysisCards({ parts, areas }: AnalysisCardsProps) {
+function AnalysisCards({ parts, areas, ...list }: AnalysisCardsProps) {
   if (!showsStaging(parts)) return null;
-  return <StagingCards areas={areas} showList={parts.includes("area-list")} />;
+  return <StagingCards areas={areas} showList={parts.includes("area-list")} {...list} />;
 }
 
 export { AnalysisCards, type AnalysisCardsProps, StagingCards, type StagingCardsProps };

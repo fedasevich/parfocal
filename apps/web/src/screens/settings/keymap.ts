@@ -50,6 +50,8 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         { note: "full viewer only. Guided review opens the next slide after Submit" },
       ],
       ["area", "Go to AI area n", ["G then 1 … 9"], "new", { sequence: true }],
+      ["prevarea", "Previous area, by size", ["["], "new"],
+      ["nextarea", "Next area, by size", ["]"], "new"],
       ["brightup", "Slide brighter", ["⌥↑"], "new", { inInputs: true }],
       ["brightdown", "Slide dimmer", ["⌥↓"], "new", { inInputs: true }],
       ["brightreset", "Slide brightness back to 100%", ["⌥0"], "new"],
