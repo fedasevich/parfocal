@@ -129,7 +129,8 @@ test("sign-up confirms the email and opens setup", async ({ page }) => {
 });
 
 test("the invite joins in one step and opens the first slide", async ({ page }) => {
-  await page.goto("/invite");
+  await page.goto("/invitations/rt14-simona");
+  await expect(page).toHaveURL(/\/invite\?token=rt14-simona$/);
   await expect(page.getByText("12 slides, about 3 hours")).toBeVisible();
   await expect(page.getByText("This project is de-identified")).toBeVisible();
   await page.getByRole("button", { name: "Accept and create my account" }).click();

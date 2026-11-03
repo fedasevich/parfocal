@@ -1,4 +1,4 @@
-import { type TaskDraft, useCreateReviewTask } from "@parfocal/api-client";
+import { type TaskDraft, useCreateReviewTask, useInviteTaskReviewer } from "@parfocal/api-client";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
@@ -150,6 +150,7 @@ function NewTaskFlow({
   const [toast, setToast] = useState<string | null>(null);
   const [sentTaskId, setSentTaskId] = useState<string | null>(null);
   const create = useCreateReviewTask();
+  const invite = useInviteTaskReviewer();
   const renderLink = useLinkRenderer();
   const page: PageKey = step ?? sceneStep[scene];
   const all = issues(draft, data);
@@ -245,7 +246,16 @@ function NewTaskFlow({
       { projectId: data.projectId, data: toTaskDraft(draft, data) },
       {
         onSuccess: (response) => {
-          if (response.status === 201) setSentTaskId(response.data.id);
+          if (response.status === 201) {
+            const taskId = response.data.id;
+            setSentTaskId(taskId);
+            for (const email of draft.invites) {
+              invite.mutate(
+                { taskId, data: { email } },
+                { onError: () => setToast(`The invite to ${email} could not be sent. Try again.`) },
+              );
+            }
+          }
           setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
           onNavigate({ step: "sent" });
         },

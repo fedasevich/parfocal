@@ -9,6 +9,7 @@ import type { RequestHandlerOptions } from "msw";
 import { HttpResponse, http } from "msw";
 import type {
   AbortedUpload,
+  AcceptedInvitation,
   Annotation,
   AnnotationRef,
   AnnotationVersion,
@@ -8138,6 +8139,7 @@ export const getListInvitationsResponseMock = (): Invitation[] =>
     expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     expired: faker.datatype.boolean(),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   }));
 
 export const getCreateInvitationResponseMock = (
@@ -8151,6 +8153,7 @@ export const getCreateInvitationResponseMock = (
   expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   expired: faker.datatype.boolean(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   ...overrideResponse,
 });
 
@@ -8165,6 +8168,7 @@ export const getResendInvitationResponseMock = (
   expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   expired: faker.datatype.boolean(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   ...overrideResponse,
 });
 
@@ -8179,12 +8183,13 @@ export const getInvitePlatformMemberResponseMock = (
   expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   expired: faker.datatype.boolean(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   ...overrideResponse,
 });
 
 export const getAcceptInvitationResponseMock = (
-  overrideResponse: Partial<Extract<Workspace, object>> = {},
-): Workspace => ({
+  overrideResponse: Partial<Extract<AcceptedInvitation, object>> = {},
+): AcceptedInvitation => ({
   tenant_id: faker.string.uuid(),
   role: faker.helpers.arrayElement(Object.values(Role)),
   admin_rights: faker.datatype.boolean(),
@@ -8193,6 +8198,29 @@ export const getAcceptInvitationResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  landing: faker.helpers.arrayElement([
+    {
+      project_id: faker.string.uuid(),
+      task_id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getInviteTaskReviewerResponseMock = (
+  overrideResponse: Partial<Extract<Invitation, object>> = {},
+): Invitation => ({
+  id: faker.string.uuid(),
+  tenant_id: faker.string.uuid(),
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  expired: faker.datatype.boolean(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   ...overrideResponse,
 });
 
@@ -12702,8 +12730,10 @@ export const getInvitePlatformMemberMockHandler = (
 
 export const getAcceptInvitationMockHandler = (
   overrideResponse?:
-    | Workspace
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Workspace> | Workspace),
+    | AcceptedInvitation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AcceptedInvitation> | AcceptedInvitation),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
@@ -12716,6 +12746,28 @@ export const getAcceptInvitationMockHandler = (
             : overrideResponse
           : getAcceptInvitationResponseMock(),
         { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getInviteTaskReviewerMockHandler = (
+  overrideResponse?:
+    | Invitation
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Invitation> | Invitation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/invitations",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getInviteTaskReviewerResponseMock(),
+        { status: 201 },
       );
     },
     options,
@@ -12990,6 +13042,7 @@ export const getParfocalAPIMock = () => [
   getResendInvitationMockHandler(),
   getInvitePlatformMemberMockHandler(),
   getAcceptInvitationMockHandler(),
+  getInviteTaskReviewerMockHandler(),
   getGetMySettingLayersMockHandler(),
   getSetMySettingLayersMockHandler(),
   getSetWorkspaceSettingsMockHandler(),

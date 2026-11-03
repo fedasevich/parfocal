@@ -72,10 +72,18 @@ export function InviteScreen({ token, scene, change }: Props) {
     accept.mutate(
       { data: { token } },
       {
-        onSuccess: () =>
+        onSuccess: (response) => {
+          const landing = response.status === 200 ? response.data.landing : null;
           void goTo(
-            destinations.slide(preview.project.id, preview.task.first_slide_id, preview.task.id),
-          ),
+            landing
+              ? destinations.slide(landing.project_id, landing.slide_id, landing.task_id)
+              : destinations.slide(
+                  preview.project.id,
+                  preview.task.first_slide_id,
+                  preview.task.id,
+                ),
+          );
+        },
       },
     );
   const inviter = toPersonInfo(preview.invited_by);

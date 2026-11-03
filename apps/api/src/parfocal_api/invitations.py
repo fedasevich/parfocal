@@ -1,34 +1,43 @@
 import secrets
 import uuid
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, StringConstraints
 from sqlalchemy import Row, exists, func, insert, literal_column, select, update
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, auth_state, digest
 from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
-from parfocal_api.email_templates import render
+from parfocal_api.email_templates import TASK_INVITATION_TEMPLATE, render
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import database_scope
+from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import (
     ConflictError,
     NotFoundError,
     ProblemError,
     TenantSuspendedError,
 )
+from parfocal_api.review_tasks import audit
 from parfocal_api.tables import (
+    ProjectRole,
     Role,
     TenantStatus,
     invitations,
     memberships,
+    project_members,
+    projects,
+    review_task_slides,
+    review_tasks,
     sessions,
     tenants,
     users,
 )
+from parfocal_api.task_changes import changeable_task, person_of, place
 from parfocal_api.users import (
     AlreadyAMemberError,
     RoleDraft,
@@ -63,6 +72,42 @@ class Invitation(BaseModel):
     expires_at: datetime
     created_at: datetime
     expired: bool
+    task_id: uuid.UUID | None = None
+
+
+class TaskInvitationDraft(BaseModel):
+    email: Email
+
+
+class TaskLanding(BaseModel):
+    project_id: uuid.UUID
+    task_id: uuid.UUID
+    slide_id: uuid.UUID
+
+
+class AcceptedInvitation(Workspace):
+    landing: TaskLanding | None = None
+
+
+@dataclass(frozen=True)
+class TaskEmail:
+    task_id: uuid.UUID
+    inviter_name: str
+    project_name: str
+    task_name: str
+    slide_count: int
+    due_on: date | None
+
+    def values(self) -> dict[str, str]:
+        return {
+            "inviter_name": self.inviter_name,
+            "project_name": self.project_name,
+            "task_name": self.task_name,
+            "slide_count": f"{self.slide_count} slide{'' if self.slide_count == 1 else 's'}",
+            "due_on": "none set yet"
+            if self.due_on is None
+            else f"{self.due_on.day} {self.due_on:%B %Y}",
+        }
 
 
 class InvitationToken(BaseModel):
@@ -94,6 +139,7 @@ class InvitationExpiredError(ProblemError):
 tenant_router = APIRouter(prefix="/api/tenant/invitations", tags=["invitations"])
 platform_router = APIRouter(prefix="/api/platform", tags=["platform"])
 public_router = APIRouter(prefix="/api/invitations", tags=["invitations"])
+task_router = APIRouter(prefix="/api/review-tasks", tags=["review-tasks"])
 
 
 def invitation_of(row: Row[Any]) -> Invitation:
@@ -114,6 +160,7 @@ async def invite(
     principal: CurrentPrincipal,
     tenant_id: uuid.UUID,
     draft: InvitationDraft,
+    task: TaskEmail | None = None,
 ) -> Invitation:
     already = await connection.scalar(
         select(
@@ -152,6 +199,7 @@ async def invite(
                 role=draft.role,
                 admin_rights=draft.admin_rights,
                 token_hash=digest(token),
+                task_id=None if task is None else task.task_id,
                 expires_at=func.now() + INVITATION_LIFETIME,
             )
             .returning(*invitations.c, EXPIRED)
@@ -164,15 +212,18 @@ async def invite(
         AuditTarget.INVITATION,
         row.id,
         tenant_id=tenant_id,
-        details=draft.model_dump(include={"role", "admin_rights"}),
+        details=draft.model_dump(include={"role", "admin_rights"})
+        | ({} if task is None else {"task_id": str(task.task_id)}),
     )
     link = f"{auth_state(request).public_origin}/invitations/{token}"
     workspace = await connection.scalar(select(tenants.c.name).where(tenants.c.id == tenant_id))
-    rendered = render(INVITATION_TEMPLATE, {"workspace_name": str(workspace), "link": link})
+    template = INVITATION_TEMPLATE if task is None else TASK_INVITATION_TEMPLATE
+    values = {"workspace_name": str(workspace), "link": link}
+    rendered = render(template, values if task is None else values | task.values())
     clients_of(request).email.send(
         EmailMessage(
             to=draft.email,
-            template=INVITATION_TEMPLATE,
+            template=template,
             link=link,
             subject=rendered.subject,
             text=rendered.text,
@@ -299,10 +350,118 @@ async def invite_platform_member(
     return await invite(connection, request, principal, tenant_id, draft)
 
 
+@task_router.post(
+    "/{task_id}/invitations",
+    operation_id="inviteTaskReviewer",
+    status_code=201,
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def invite_task_reviewer(
+    task_id: uuid.UUID,
+    draft: TaskInvitationDraft,
+    request: Request,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Invitation:
+    row = await changeable_task(connection, principal, task_id)
+    project_name = await connection.scalar(
+        select(projects.c.name).where(projects.c.id == row.project_id)
+    )
+    slide_count = await connection.scalar(
+        select(func.count())
+        .select_from(review_task_slides)
+        .where(review_task_slides.c.task_id == task_id)
+    )
+    inviter = (
+        await connection.scalar(select(users.c.display_name).where(users.c.id == principal.user_id))
+        if isinstance(principal, MemberPrincipal)
+        else None
+    )
+    task = TaskEmail(
+        task_id=task_id,
+        inviter_name=str(inviter or "A colleague"),
+        project_name=str(project_name),
+        task_name=row.name,
+        slide_count=int(slide_count or 0),
+        due_on=row.due_on,
+    )
+    return await invite(
+        connection,
+        request,
+        principal,
+        row.tenant_id,
+        InvitationDraft(email=draft.email, role=Role.REVIEWER),
+        task,
+    )
+
+
+async def join_task(
+    connection: AsyncConnection,
+    principal: Principal,
+    task_id: uuid.UUID,
+    user_id: uuid.UUID,
+    subject: str,
+) -> TaskLanding | None:
+    row = (
+        await connection.execute(
+            select(review_tasks)
+            .join(projects, projects.c.id == review_tasks.c.project_id)
+            .where(
+                review_tasks.c.id == task_id,
+                review_tasks.c.archived_at.is_(None),
+                review_tasks.c.signed_off_at.is_(None),
+                projects.c.archived_at.is_(None),
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        return None
+    slide_ids = list(
+        await connection.scalars(
+            select(review_task_slides.c.slide_id)
+            .where(review_task_slides.c.task_id == task_id)
+            .order_by(review_task_slides.c.position)
+        )
+    )
+    if not slide_ids:
+        return None
+    joined = await connection.scalar(
+        upsert(project_members)
+        .values(
+            tenant_id=row.tenant_id,
+            project_id=row.project_id,
+            user_id=user_id,
+            role=ProjectRole.REVIEWER,
+        )
+        .on_conflict_do_nothing()
+        .returning(project_members.c.user_id)
+    )
+    if joined is not None:
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.PROJECT_MEMBER_SET,
+            AuditTarget.PERSON,
+            person=subject,
+            tenant_id=row.tenant_id,
+            details={"project_id": str(row.project_id), "from": None, "to": ProjectRole.REVIEWER},
+        )
+    await place(connection, row, user_id, slide_ids)
+    await audit(
+        connection,
+        principal,
+        AuditAction.TASK_REVIEWER_ADDED,
+        row.tenant_id,
+        task_id,
+        {"reviewer": await person_of(connection, user_id), "slides": len(slide_ids)},
+    )
+    return TaskLanding(project_id=row.project_id, task_id=task_id, slide_id=slide_ids[0])
+
+
 @public_router.post("/accept", operation_id="acceptInvitation")
 async def accept_invitation(
     body: InvitationToken, request: Request, principal: CurrentPrincipal
-) -> Workspace:
+) -> AcceptedInvitation:
     person = signed_in(principal)
     state = auth_state(request)
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
@@ -395,9 +554,17 @@ async def accept_invitation(
                     "invitation_id": str(invitation.id),
                 },
             )
-            return next(
+            landing = (
+                None
+                if invitation.task_id is None
+                else await join_task(
+                    connection, principal, invitation.task_id, person.user_id, person.subject
+                )
+            )
+            workspace = next(
                 workspace
                 for workspace in await own_workspaces(connection, person.user_id)
                 if workspace.tenant_id == tenant_id
             )
+            return AcceptedInvitation(**workspace.model_dump(), landing=landing)
     raise InvitationExpiredError

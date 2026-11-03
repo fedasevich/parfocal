@@ -580,6 +580,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "addTaskReviewer": lambda w: Call(
         "POST", f"/api/review-tasks/{w.add_task}/reviewers", {"user_id": str(w.lead)}
     ),
+    "inviteTaskReviewer": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.add_task}/invitations",
+        {"email": f"{uuid.uuid4().hex[:8]}@example.test"},
+    ),
     "nudgeReviewer": lambda w: Call(
         "POST",
         f"/api/review-tasks/{w.task}/nudges",
