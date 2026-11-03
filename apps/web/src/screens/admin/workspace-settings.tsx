@@ -51,6 +51,7 @@ import {
   announcementEnds,
   announcementKinds,
   classOptions,
+  cutoffChoices,
   type DefaultKey,
   defaultChange,
   defaultsOf,
@@ -64,11 +65,14 @@ import {
   NOT_CHOSEN,
   privacyOptions,
   sessionHourChoices,
+  type TumorShareKey,
   taskText,
   tierCell,
   tierLevels,
   tierTasks,
   tierText,
+  tumorShareChange,
+  tumorShareOf,
   withCurrent,
 } from "./workspace-settings-model.ts";
 
@@ -311,6 +315,81 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   );
 }
 
+function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const queryClient = useQueryClient();
+  const save = useSetWorkspaceSettings();
+  const current = tumorShareOf(lab);
+  const apply = (key: TumorShareKey, value: number | boolean, said: string, undo?: () => void) =>
+    save.mutate(
+      { data: tumorShareChange(lab, key, value) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(said, undo);
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+  const switchRow = (
+    label: string,
+    key: "tumor_share_result_sentinel_node" | "tumor_share_result_pannuke",
+    help: string,
+  ) => (
+    <Labelled label={label} help={help}>
+      <SegmentedControl
+        aria-label={label}
+        value={current[key] ? "shown" : "hidden"}
+        onValueChange={(value) => {
+          const next = value === "shown";
+          if (next === current[key]) return;
+          apply(
+            key,
+            next,
+            next ? "The tumor share result is shown." : "The tumor share result is hidden.",
+            () => apply(key, !next, "Setting restored."),
+          );
+        }}
+        options={[
+          { value: "shown", label: "Shown" },
+          { value: "hidden", label: "Hidden" },
+        ]}
+      />
+    </Labelled>
+  );
+  return (
+    <Zone
+      title="Tumor share result"
+      sub="For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are."
+    >
+      <div className={rows}>
+        <Labelled label="Cutoff" help="Tumor cells as a share of the cells typed.">
+          <NumberChoice
+            label="Tumor share cutoff"
+            value={current.tumor_share_cutoff}
+            choices={cutoffChoices}
+            format={(value) => `${value}%`}
+            onChange={(value) =>
+              apply("tumor_share_cutoff", value, `The cutoff is ${value}%.`, () =>
+                apply("tumor_share_cutoff", current.tumor_share_cutoff, "Cutoff restored."),
+              )
+            }
+          />
+        </Labelled>
+        {switchRow(
+          "Cell cases",
+          "tumor_share_result_pannuke",
+          "For example a block chosen for molecular testing.",
+        )}
+        {switchRow(
+          "Sentinel nodes",
+          "tumor_share_result_sentinel_node",
+          "A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it.",
+        )}
+      </div>
+    </Zone>
+  );
+}
+
 function Tiers({ notify }: { notify: Notify }) {
   const mappings = okData(useListModelTiers().data) ?? [];
   const queryClient = useQueryClient();
@@ -515,6 +594,7 @@ export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
     <>
       <LockTimes notify={notify} />
       <Defaults lab={lab} notify={notify} />
+      <TumorShare lab={lab} notify={notify} />
       <Tiers notify={notify} />
       <Announcements notify={notify} />
     </>

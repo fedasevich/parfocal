@@ -17,6 +17,7 @@ import {
   ZoneRow,
 } from "../src/components/inspector.tsx";
 import { ToolRail, ToolRailButton, ToolRailGroup } from "../src/components/tool-rail-button.tsx";
+import { tumorShareResultFor } from "../src/lib/tumor-share.ts";
 import { mockAssets, projectClasses } from "./fixtures.ts";
 
 const meta = {
@@ -180,6 +181,19 @@ export const InspectorPrimitives: Story = {
       </StepBlock>
       <ZoneRow objectId="Z1" text="14 unsure cells" pinned />
       <NumberLine sure={18224} unsure={14} total={18238} />
+      <NumberLine
+        sure={18224}
+        unsure={14}
+        total={18238}
+        result={tumorShareResultFor(
+          Array.from({ length: 400 }, (_, index) =>
+            index < 128
+              ? { probability: 0.75, calledTumor: true }
+              : { probability: 36 / 272, calledTumor: false },
+          ),
+          0.2,
+        )}
+      />
       <div className="flex gap-2">
         <CellCrop image={mockAssets.hpf} objectId="T1·C145" />
         <CellCrop image={mockAssets.hpf} objectId="T1·C146" />

@@ -7,6 +7,8 @@ import type {
   WorkspaceSettingsChange,
 } from "@parfocal/api-client";
 
+import type { TumorShareSettings } from "@parfocal/ui/lib/tumor-share";
+
 export type DefaultKey = "default_privacy_mode" | "default_classes" | "default_study_template";
 
 export type WorkspaceDefaults = {
@@ -47,6 +49,31 @@ export function defaultChange(
   value: string | null,
 ): WorkspaceSettingsChange {
   return { values: { [key]: value === NO_TEMPLATE ? null : value }, locked: lab.locked };
+}
+
+export type TumorShareKey =
+  | "tumor_share_cutoff"
+  | "tumor_share_result_sentinel_node"
+  | "tumor_share_result_pannuke";
+
+export const cutoffChoices = [10, 20, 30, 40, 50];
+
+export function tumorShareOf(lab: LabSettings): TumorShareSettings {
+  const { tumor_share_cutoff: cutoff, tumor_share_result_sentinel_node: sentinel } = lab.values;
+  const { tumor_share_result_pannuke: pannuke } = lab.values;
+  return {
+    tumor_share_cutoff: typeof cutoff === "number" ? cutoff : 20,
+    tumor_share_result_sentinel_node: typeof sentinel === "boolean" ? sentinel : false,
+    tumor_share_result_pannuke: typeof pannuke === "boolean" ? pannuke : true,
+  };
+}
+
+export function tumorShareChange(
+  lab: LabSettings,
+  key: TumorShareKey,
+  value: number | boolean,
+): WorkspaceSettingsChange {
+  return { values: { [key]: value }, locked: lab.locked };
 }
 
 export function durationText(minutes: number): string {

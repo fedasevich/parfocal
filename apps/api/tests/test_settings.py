@@ -6,7 +6,7 @@ import pytest
 from db_support import ApiAs
 from workspace_support import make_workspace, owner
 
-from parfocal_api.settings_catalogue import TS_PATH, render
+from parfocal_api.settings_catalogue import BY_KEY, TS_PATH, Layer, render
 from parfocal_api.tables import Role
 
 ME = "/api/me/setting-layers"
@@ -20,6 +20,20 @@ def problem(response: Any) -> tuple[int, str]:
 
 def test_the_typescript_catalogue_is_current() -> None:
     assert Path(TS_PATH).read_text() == render()
+
+
+def test_the_tumor_share_result_is_a_lab_setting_off_for_sentinel_nodes() -> None:
+    for key in (
+        "tumor_share_cutoff",
+        "tumor_share_result_sentinel_node",
+        "tumor_share_result_pannuke",
+    ):
+        assert BY_KEY[key].layers == {Layer.LAB}
+    assert BY_KEY["tumor_share_result_sentinel_node"].default is False
+    assert BY_KEY["tumor_share_result_pannuke"].default is True
+    assert BY_KEY["tumor_share_cutoff"].default == 20
+    assert BY_KEY["tumor_share_cutoff"].problem(0) is not None
+    assert BY_KEY["tumor_share_cutoff"].problem(30) is None
 
 
 @pytest.mark.db

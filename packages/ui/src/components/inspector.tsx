@@ -1,6 +1,7 @@
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
+import { resultChipText, type TumorShareResult } from "@parfocal/ui/lib/tumor-share";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -286,9 +287,29 @@ type NumberLineProps = React.ComponentProps<"div"> & {
   sure: number;
   unsure: number;
   total: number;
+  result?: TumorShareResult | null;
 };
 
-function NumberLine({ sure, unsure, total, className, ...props }: NumberLineProps) {
+function ResultChip({ result }: { result: TumorShareResult }) {
+  const open = result.side === "either";
+  return (
+    <span
+      data-slot="result-chip"
+      data-state={result.state}
+      data-side={result.side}
+      className={cn(
+        "w-fit rounded-full border px-2 py-0.5 text-caption",
+        open
+          ? "border-dashed border-[color-mix(in_srgb,var(--v-unsure)_60%,transparent)] bg-[color-mix(in_srgb,var(--v-unsure)_14%,transparent)] text-fg"
+          : "border-[color-mix(in_srgb,var(--v-agree)_60%,transparent)] bg-[color-mix(in_srgb,var(--v-agree)_14%,transparent)] text-fg",
+      )}
+    >
+      {resultChipText(result)}
+    </span>
+  );
+}
+
+function NumberLine({ sure, unsure, total, result, className, ...props }: NumberLineProps) {
   return (
     <div data-slot="number-line" className={cn("grid gap-1.5", className)} {...props}>
       <div
@@ -305,6 +326,7 @@ function NumberLine({ sure, unsure, total, className, ...props }: NumberLineProp
       <span className="text-caption text-fg-dim">
         {sure.toLocaleString("en-US")} sure · {unsure.toLocaleString("en-US")} unsure
       </span>
+      {result ? <ResultChip result={result} /> : null}
     </div>
   );
 }
