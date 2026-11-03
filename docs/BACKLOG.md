@@ -2258,7 +2258,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests map calibrated probabilities to phrases with the four band thresholds of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) (confidence display rules), read per typer.
   Size: S.
 
-- [ ] REVIEW-012 · Outline display modes
+- [x] REVIEW-012 · Outline display modes
   Fade (default, opacity from calibrated probability), mark unsure, bands, with the formulas from the mock. Unsure marks and zone outlines are neutral, white dashes with a dark casing, never a hue, because every hue sits near a class colour for some colour-vision deficiency.
   Done when golden tests cover each mode.
   Refs mock §2.4, doc 33, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -2347,6 +2347,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   REVIEW-022 (AI wording on screen) added frequency to the personal setting `confidence_wording` and the `aiWording` helper, but the Settings screen has no row for the setting, and guided review reads the task's display preset instead of it.
   Done when Settings shows the row with all four values, guided review follows the setting when the task does not lock a preset, and component tests cover both.
   Depends on REVIEW-022.
+  Size: S.
+
+- [ ] REVIEW-027 · Outline modes in the review viewer
+  REVIEW-012 (outline display modes) added fade, mark unsure and bands as overlay data in `packages/viewer-engine/src/overlay/outline-modes.ts` with golden tests, but nothing in the web app calls `outlineModeOverlays`. Connect the Settings and developer confidence mode to it in the review viewer.
+  Done when a browser test on a real slide switches each mode and the overlay changes, and the setting is remembered.
+  Depends on REVIEW-012.
   Size: S.
 
 ---
