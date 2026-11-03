@@ -42,6 +42,7 @@ import type {
   Tenant,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
+import { isModelHidden } from "./hidden-models.ts";
 import {
   type PersonKey,
   people,
@@ -54,6 +55,7 @@ import {
   workspaces,
 } from "./scenario.ts";
 import {
+  type AiModelSeed,
   adminRightsHolders,
   aiModels,
   auditAt,
@@ -123,7 +125,7 @@ export const toAdminOverview = (): AdminOverview =>
     can_sign_out_user_ids: canSignOut.map((key) => people[key].id),
     projects: workspaceTotals.projects,
     invites_waiting: toInvitations().length,
-    models: aiModels.filter((model) => model.shown).length,
+    models: toAiModels().models.filter((model) => model.shown).length,
     runs_now: runningNow.length,
     stored_tb: Math.round(storage.parts.reduce((sum, part) => sum + part.tb, 0) * 10) / 10,
     capacity_tb: storage.totalTb,
@@ -140,13 +142,24 @@ export const toMemberActivity = (): MemberActivity[] =>
     project_codes: projectsOf(row.key),
   }));
 
+function withVisibility(model: AiModelSeed): AiModelSeed {
+  if (model.source !== "parfocal" || model.catalogueName === null) return model;
+  if (isModelHidden(model.catalogueName)) {
+    return { ...model, shown: false, status: "hidden", whoCanRun: "Nobody while hidden" };
+  }
+  return model.shown
+    ? model
+    : { ...model, shown: true, status: "active", whoCanRun: "Researchers" };
+}
+
 export const toAiModels = (): AiModels =>
   aiModelsSchema.parse({
-    models: aiModels.map((model) => ({
+    models: aiModels.map(withVisibility).map((model) => ({
       id: model.id,
       name: model.name,
       version: model.version,
       source: model.source,
+      catalogue_name: model.catalogueName,
       makes: model.makes,
       description: model.description,
       runs_on: model.runsOn,

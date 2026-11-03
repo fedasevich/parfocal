@@ -11,11 +11,14 @@ import {
 import {
   cancelModelRun,
   getModelRunDefaults,
+  hideModel,
+  listAiModels,
   listModelRuns,
   listMyJobs,
   listProjectModels,
   moveModelRun,
   resumeModelRun,
+  showModel,
   startModelRuns,
 } from "../src/index.ts";
 
@@ -157,4 +160,35 @@ test("the finished run has every step done on four slides", async () => {
     runs.map((run) => run.stages[4]?.units_done),
     [21408, 15330, 18902, 12775],
   );
+});
+
+test("a hidden Parfocal model leaves Run a model and the admin list, and showing it brings it back", async () => {
+  const names = async () => {
+    const response = await listProjectModels(p07);
+    return response.status === 200 ? response.data.map((model) => model.name) : [];
+  };
+  assert.deepEqual(await names(), [
+    "camelyon-tumor",
+    "pathosam-hovernext",
+    "hovernet",
+    "lab-hovernet-fork",
+  ]);
+  const hidden = await hideModel("camelyon-tumor");
+  assert.deepEqual(hidden.data, {
+    name: "camelyon-tumor",
+    title: "CAMELYON tumor model",
+    shown: false,
+    hidden_by: scenario.people.DH.id,
+  });
+  assert.deepEqual(await names(), ["pathosam-hovernext", "hovernet", "lab-hovernet-fork"]);
+  const defaults = await getModelRunDefaults(p07);
+  assert.notEqual(defaults.data.model_id, scenarioJobs.modelByKey("cam").id);
+  const admin = (await listAiModels()).data.models.find(
+    (model) => model.catalogue_name === "camelyon-tumor",
+  );
+  assert.equal(admin?.shown, false);
+  assert.equal(admin?.status, "hidden");
+  await showModel("camelyon-tumor");
+  assert.equal((await names()).length, 4);
+  await assert.rejects(hideModel("not-a-model"), /bad-request/);
 });

@@ -86,6 +86,7 @@ export function toConnectedModel(draft: LabModelDraft): AiModel {
     name: draft.name,
     version: draft.version,
     source: "lab",
+    catalogue_name: null,
     makes: seed?.makes ?? ["Cells"],
     description: seed?.description ?? "Typed cells",
     runs_on: `Your server · ${new URL(draft.address).host}`,

@@ -15,6 +15,7 @@ export const aiModelSchema = z.object({
   name: z.string(),
   version: z.string(),
   source: z.enum(["parfocal", "lab"]),
+  catalogue_name: z.string().nullable(),
   makes: z.array(z.string()),
   description: z.string(),
   runs_on: z.string(),

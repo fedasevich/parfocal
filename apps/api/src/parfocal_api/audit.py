@@ -117,6 +117,8 @@ class AuditAction(StrEnum):
     SITE_VALIDATION_RECORDED = "site-validation.recorded"
     MODEL_TIER_SET = "model-tier.set"
     MODEL_TIER_RESET = "model-tier.reset"
+    MODEL_HIDDEN = "model.hidden"
+    MODEL_SHOWN = "model.shown"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"

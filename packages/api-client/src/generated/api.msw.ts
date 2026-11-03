@@ -60,6 +60,7 @@ import type {
   Mentionable,
   Message,
   ModelRun,
+  ModelShown,
   MultiPolygonGeometry,
   Mute,
   MySettingLayers,
@@ -1885,6 +1886,34 @@ export const getResetModelTierResponseMock = (
     null,
   ]),
   set_by_lab: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getListModelVisibilityResponseMock = (): ModelShown[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    shown: faker.datatype.boolean(),
+    hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  }));
+
+export const getHideModelResponseMock = (
+  overrideResponse: Partial<Extract<ModelShown, object>> = {},
+): ModelShown => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  shown: faker.datatype.boolean(),
+  hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getShowModelResponseMock = (
+  overrideResponse: Partial<Extract<ModelShown, object>> = {},
+): ModelShown => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  shown: faker.datatype.boolean(),
+  hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
   ...overrideResponse,
 });
 
@@ -9318,6 +9347,76 @@ export const getResetModelTierMockHandler = (
   );
 };
 
+export const getListModelVisibilityMockHandler = (
+  overrideResponse?:
+    | ModelShown[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ModelShown[]> | ModelShown[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/hidden-models",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListModelVisibilityResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getHideModelMockHandler = (
+  overrideResponse?:
+    | ModelShown
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<ModelShown> | ModelShown),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/hidden-models/:name",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getHideModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getShowModelMockHandler = (
+  overrideResponse?:
+    | ModelShown
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<ModelShown> | ModelShown),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/hidden-models/:name",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getShowModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelRunAreasMockHandler = (
   overrideResponse?:
     | RunAreas
@@ -13164,6 +13263,9 @@ export const getParfocalAPIMock = () => [
   getListModelTiersMockHandler(),
   getSetModelTierMockHandler(),
   getResetModelTierMockHandler(),
+  getListModelVisibilityMockHandler(),
+  getHideModelMockHandler(),
+  getShowModelMockHandler(),
   getListModelRunAreasMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),

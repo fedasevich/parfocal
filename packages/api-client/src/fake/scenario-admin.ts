@@ -181,6 +181,7 @@ export type AiModelSeed = {
   name: string;
   version: string;
   source: "parfocal" | "lab";
+  catalogueName: string | null;
   makes: string[];
   description: string;
   runsOn: string;
@@ -201,6 +202,7 @@ export const aiModels: AiModelSeed[] = [
     name: "CAMELYON tumor model",
     version: "v1.0",
     source: "parfocal",
+    catalogueName: "camelyon-tumor",
     makes: ["Regions", "Heatmap"],
     description: "Tumor regions and a heatmap",
     runsOn: "Parfocal GPU",
@@ -214,6 +216,7 @@ export const aiModels: AiModelSeed[] = [
     name: "PathoSAM + HoVer-NeXt",
     version: "v1.2",
     source: "parfocal",
+    catalogueName: "pathosam-hovernext",
     makes: ["Regions", "Cells"],
     description: "Regions and typed cells",
     runsOn: "Parfocal GPU",
@@ -227,6 +230,7 @@ export const aiModels: AiModelSeed[] = [
     name: "HoVer-Net",
     version: "v0.9",
     source: "parfocal",
+    catalogueName: "hovernet",
     makes: ["Cells"],
     description: "Cell outlines and types",
     runsOn: "Parfocal GPU",
@@ -240,6 +244,7 @@ export const aiModels: AiModelSeed[] = [
     name: "SlimSAM-77",
     version: "v1.0",
     source: "parfocal",
+    catalogueName: "slimsam-77",
     makes: ["Outline where you point"],
     description: "An outline where you point",
     runsOn: "In the browser",
@@ -253,6 +258,7 @@ export const aiModels: AiModelSeed[] = [
     name: "CellViT",
     version: "v1.0",
     source: "parfocal",
+    catalogueName: "cellvit",
     makes: ["Cells"],
     description: "Cell outlines and types",
     runsOn: "Parfocal GPU",
@@ -266,6 +272,7 @@ export const aiModels: AiModelSeed[] = [
     name: "Lab HoVer-Net fork",
     version: "v2.1",
     source: "lab",
+    catalogueName: null,
     makes: ["Cells"],
     description: "Typed cells",
     runsOn: "Your server · ml.cuailab.cz",
@@ -279,6 +286,7 @@ export const aiModels: AiModelSeed[] = [
     name: "Lab model",
     version: "v3.0",
     source: "lab",
+    catalogueName: null,
     makes: ["Regions"],
     description: "Results imported from files",
     runsOn: "Not run here",
