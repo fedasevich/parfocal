@@ -72,6 +72,61 @@ CATALOGUE: tuple[CatalogueModel, ...] = (
 BY_NAME: Mapping[str, CatalogueModel] = {model.name: model for model in CATALOGUE}
 
 
+@dataclass(frozen=True)
+class TyperCalibration:
+    temperature: float
+    ece_after: float
+    test_set_accuracy: float
+    test_set_confident_share: float
+    test_set_unsure_share: float
+    validated_sites: tuple[str, ...]
+
+
+PANNUKE_SITES_BUT_LUNG = (
+    "Adrenal Gland",
+    "Bile Duct",
+    "Bladder",
+    "Breast",
+    "Cervix",
+    "Colon",
+    "Esophagus",
+    "Head & Neck",
+    "Kidney",
+    "Liver",
+    "Ovarian",
+    "Pancreatic",
+    "Prostate",
+    "Skin",
+    "Stomach",
+    "Testis",
+    "Thyroid",
+    "Uterus",
+)
+
+CALIBRATIONS: Mapping[tuple[str, str, int], TyperCalibration] = {
+    ("pathosam-hovernext", "v1.2", 1): TyperCalibration(
+        temperature=1.42,
+        ece_after=0.0223,
+        test_set_accuracy=0.8297,
+        test_set_confident_share=0.5941,
+        test_set_unsure_share=0.0755,
+        validated_sites=PANNUKE_SITES_BUT_LUNG,
+    ),
+    ("pathosam-hovernext", "v1.2", 8): TyperCalibration(
+        temperature=1.29,
+        ece_after=0.0187,
+        test_set_accuracy=0.8348,
+        test_set_confident_share=0.6076,
+        test_set_unsure_share=0.0694,
+        validated_sites=PANNUKE_SITES_BUT_LUNG,
+    ),
+}
+
+
+def calibration_of(name: str, version: str, test_time_views: int) -> TyperCalibration | None:
+    return CALIBRATIONS.get((name, version, test_time_views))
+
+
 def latest_version(name: str) -> str | None:
     model = BY_NAME.get(name)
     return model.version if model is not None else None

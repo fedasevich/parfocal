@@ -11,6 +11,7 @@ from parfocal_common.object_ids import Letter
 from parfocal_common.review_order import (
     CellChunk,
     CellPool,
+    calibrated,
     least_sure_first,
     pack,
     scoped_cells,
@@ -167,3 +168,22 @@ def test_a_large_slide_orders_within_a_sane_time_and_size() -> None:
     assert len(packed) == 5 * len(below)
     assert random_seconds < 0.1 * LARGE_CELLS / 1000
     assert below_seconds < 0.1 * LARGE_CELLS / 1000
+
+
+def test_calibration_keeps_bytes_at_one_and_softens_them_above_one() -> None:
+    assert calibrated([200, 55], 0, 1.0) == 200
+    assert calibrated([200, 55], 0, 2.0) == round(255 * 1 / (1 + (55 / 200) ** 0.5))
+    assert calibrated([200, 55], 1, 2.0) < 128 < calibrated([200, 55], 0, 2.0) < 200
+    assert calibrated([255, 0, 0], 0, 1.42) == 255
+
+
+def test_the_temperature_can_swap_two_cells_of_three_classes() -> None:
+    chunk = CellChunk.read(
+        chunk_bytes([(1, 0, 40, 10, 10), (2, 1, 40, 30, 10)], [170, 85, 0, 38, 180, 37], classes=3)
+    )
+    keys = cells(1, 2)
+    assert least_sure_first(chunk.rated(keys), 1, "slide") == cells(1, 2)
+    assert least_sure_first(chunk.rated(keys, 1.42), 1, "slide") == cells(2, 1)
+    pool = CellPool()
+    pool.add(chunk, 1.42)
+    assert least_sure_first(pool.sample(2, 1, "slide"), 1, "slide") == cells(2, 1)
