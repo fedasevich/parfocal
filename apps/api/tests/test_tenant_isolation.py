@@ -645,6 +645,29 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.update({thread_title, message_body})
+    colleague_name = f"Colleague {uuid.uuid4().hex[:8]}"
+    colleague = await connection.scalar(
+        insert(users)
+        .values(
+            subject=f"colleague-{task_id}",
+            display_name=colleague_name,
+            initials="CO",
+            avatar_colour=0,
+        )
+        .returning(users.c.id)
+    )
+    await connection.execute(
+        insert(memberships).values(tenant_id=seeded.tenant_id, user_id=colleague, role="researcher")
+    )
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            user_id=colleague,
+            role="viewer",
+        )
+    )
+    seeded.markers.add(colleague_name)
     taker = await connection.scalar(
         insert(users)
         .values(subject=f"taker-{task_id}", display_name="Taker", initials="TT", avatar_colour=0)
