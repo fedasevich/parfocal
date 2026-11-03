@@ -58,6 +58,18 @@ Ventana BIF slides are stitched from camera frames. The browser now places them 
 
 Your choice:
 
+## 34. Legal facts for the GDPR documents, from SEC-021 (GDPR documentation)
+
+SEC-021 drafted records of processing, a DPIA for AI results review, a DPA template, the subprocessor list and a cookie and storage policy in `docs/compliance/`. They stay drafts in review until these are answered and counsel reads them.
+
+- a. The legal entity that acts as controller and processor, with its address and contact. Write it here.
+- b. Whether to name a DPO, and who.
+- c. Retention periods for unaccepted invitations, ended sessions, read notifications and operator records.
+- d. Whether counsel must confirm that analytics with no device storage need no consent (ADR 0171) in the first tenants' countries.
+- e. Whether any clinical use needs a medical device assessment.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
