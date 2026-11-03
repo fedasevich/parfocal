@@ -7,6 +7,7 @@ import {
   routeTransition,
   stageName,
   type TransitionHost,
+  targetWaitMs,
 } from "../src/shell/view-transitions.ts";
 
 type Listener = (event: { type: string }) => void;
@@ -113,6 +114,25 @@ test("the clicked row grows into the stage and both names clear at the end", asy
   assert.equal(stage.style.viewTransitionName, "");
   assert.equal(fake.attrs.has("data-vt"), false);
   assert.equal(transitions.active(), false);
+});
+
+test("a stage that renders a moment after the route update still gets the name", async () => {
+  const fake = fakeHost();
+  const stage = new FakeElement({ "data-vt-target": "" });
+  const transitions = createTransitions(fake.host);
+  await transitions.run(() => {
+    setTimeout(() => fake.elements.push(stage), 25);
+  }, "open");
+  assert.equal(stage.style.viewTransitionName, stageName);
+});
+
+test("a stage that never renders leaves the move without a target", async () => {
+  const fake = fakeHost();
+  const transitions = createTransitions(fake.host);
+  const started = Date.now();
+  await transitions.run(() => undefined, "open");
+  assert.ok(Date.now() - started >= targetWaitMs - 20);
+  assert.equal(fake.attrs.get("data-vt"), "open");
 });
 
 test("the selected row is the source when focus sits elsewhere", async () => {

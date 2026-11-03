@@ -134,9 +134,11 @@ test("a tap on Z latches the peek with a return hint until Z again", async ({ pa
   await plainViewer(page);
   const peek = page.getByRole("dialog", { name: "Whole slide" });
   await page.keyboard.down("z");
-  await expect(peek).toBeVisible();
   await expect(peek.getByText(/release/)).toBeVisible();
+  await page.waitForTimeout(500);
   await page.keyboard.up("z");
+  await expect(peek).toHaveCount(0);
+  await page.keyboard.press("z");
   await expect(peek).toBeVisible();
   await expect(peek.getByText(/press/)).toBeVisible();
   await page.keyboard.press("z");

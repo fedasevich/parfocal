@@ -64,6 +64,18 @@ function sourceOf(host: TransitionHost): Named | null {
   );
 }
 
+export const targetWaitMs = 300;
+const targetPollMs = 10;
+
+async function renderedTarget(host: TransitionHost): Promise<Named | null> {
+  for (let waited = 0; waited < targetWaitMs; waited += targetPollMs) {
+    const found = host.querySelector(targetSelector);
+    if (found) return found;
+    await new Promise((resolve) => setTimeout(resolve, targetPollMs));
+  }
+  return host.querySelector(targetSelector);
+}
+
 export function createTransitions(host: TransitionHost | undefined) {
   let current: { handle: Handle; clear: () => void } | null = null;
 
@@ -98,7 +110,7 @@ export function createTransitions(host: TransitionHost | undefined) {
     const handle = host.startViewTransition(async () => {
       if (source) source.style.viewTransitionName = "";
       await update();
-      target = host.querySelector(targetSelector);
+      target = await renderedTarget(host);
       if (target) target.style.viewTransitionName = stageName;
     });
     const entry = { handle, clear };
