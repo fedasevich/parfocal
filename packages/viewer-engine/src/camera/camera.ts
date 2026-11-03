@@ -180,6 +180,28 @@ export function fitCamera(
   return areaCamera(fitArea(slide, tissue), viewport, limits);
 }
 
+export const selectionMarginPx = 48;
+
+export function selectionCamera(
+  area: SlideArea,
+  viewport: Viewport,
+  limits: CameraBounds,
+  marginPx: number = selectionMarginPx,
+): Camera {
+  const centre = { x: area.x + area.width / 2, y: area.y + area.height / 2 };
+  const room = {
+    width: Math.max(1, viewport.width - 2 * marginPx),
+    height: Math.max(1, viewport.height - 2 * marginPx),
+  };
+  const scales = [
+    area.width > 0 ? room.width / area.width : Number.POSITIVE_INFINITY,
+    area.height > 0 ? room.height / area.height : Number.POSITIVE_INFINITY,
+  ];
+  const scale = Math.min(...scales);
+  const zoom = Number.isFinite(scale) ? Math.log2(scale) : limits.maxZoom;
+  return clampCamera({ ...centre, zoom }, limits);
+}
+
 export function areaCamera(area: SlideArea, viewport: Viewport, limits: CameraBounds): Camera {
   const centre = { x: area.x + area.width / 2, y: area.y + area.height / 2 };
   if (viewport.width <= 0 || viewport.height <= 0 || area.width <= 0 || area.height <= 0) {

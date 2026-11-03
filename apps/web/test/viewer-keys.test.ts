@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { comboOf, idleKeys, type KeyInput, step } from "../src/keys/registry.ts";
 import {
   applyViewerKey,
+  selectionArea,
   type ViewerKeyTarget,
   viewerKeyBindings,
 } from "../src/viewer/viewer-keys.ts";
@@ -22,6 +23,7 @@ function drive(keys: (Key | "blur")[], bindings = viewerKeyBindings()) {
         `zoom ${octaves === zoomOctaves ? "in" : octaves === -zoomOctaves ? "out" : octaves}`,
       ),
     fit: () => calls.push("fit"),
+    zoomToSelection: () => calls.push("selection"),
     zoomToMagnification: (magnification) => calls.push(`mag ${magnification}`),
     press: (direction, fast) => calls.push(`press ${direction}${fast ? " fast" : ""}`),
     release: (direction) => calls.push(`release ${direction}`),
@@ -186,4 +188,26 @@ test("the WASD preset pans with the same easing hold", () => {
 test("the shifted plus reads as plus", () => {
   assert.equal(comboOf({ type: "down", key: "+", code: "Equal", shiftKey: true, at: 0 }), "+");
   assert.equal(comboOf({ type: "down", key: "=", code: "Equal", at: 0 }), "+");
+});
+
+test("Shift and F zoom to the selection, and plain F does not", () => {
+  const { calls } = drive([
+    { key: "F", code: "KeyF", shiftKey: true },
+    { key: "F", code: "KeyF", shiftKey: true, type: "up" },
+    { key: "f", code: "KeyF" },
+  ]);
+  assert.deepEqual(calls, ["selection"]);
+});
+
+test("the selection area is the box around every selected shape", () => {
+  assert.deepEqual(
+    selectionArea([
+      [100, 200, 150, 250],
+      [400, 100, 500, 120],
+    ]),
+    { x: 100, y: 100, width: 400, height: 150 },
+  );
+  assert.deepEqual(selectionArea([[40, 60, 40, 60]]), { x: 40, y: 60, width: 0, height: 0 });
+  assert.equal(selectionArea([]), null);
+  assert.equal(selectionArea([[Number.NaN, 0, 1, 1]]), null);
 });

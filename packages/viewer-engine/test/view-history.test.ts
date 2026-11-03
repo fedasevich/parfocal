@@ -195,3 +195,18 @@ test("switching slides clears the history", async () => {
   assert.equal(bound.back(), false);
   bound.dispose();
 });
+
+test("a zoom to the selection records the view it left, so back returns there", async () => {
+  const { engine, bound, rest } = setup();
+  await engine.openSlide({ id: "a" });
+  rest();
+  const fitted = engine.getCamera();
+  void engine.flyToSelection({ x: 12_000, y: 9000, width: 700, height: 300 });
+  rest();
+  const selected = engine.getCamera();
+  assert.notDeepEqual(selected, fitted);
+  assert.deepEqual(bound.history.entries().back, [fitted]);
+  assert.equal(bound.back(), true);
+  rest();
+  assert.deepEqual(engine.getCamera(), fitted);
+});

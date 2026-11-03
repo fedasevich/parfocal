@@ -149,6 +149,7 @@ export interface ViewerEngine {
   readonly endDrag: () => void;
   readonly flyTo: (target: Camera) => Promise<FlightEnd>;
   readonly flyToArea: (area: SlideArea) => Promise<FlightEnd>;
+  readonly flyToSelection: (area: SlideArea, marginPx?: number) => Promise<FlightEnd>;
   readonly subscribeCamera: (listener: () => void) => Unsubscribe;
   readonly on: <Name extends keyof EngineEvents>(
     name: Name,
