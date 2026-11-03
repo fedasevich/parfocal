@@ -27,6 +27,7 @@ import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
@@ -369,10 +370,13 @@ function ViewerBody({
     if (kept) setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
   });
 
+  useAnswerKeys(
+    answersOf(style, session.classes, current),
+    decide,
+    current !== undefined && tab === "objects",
+  );
+
   useEffect(() => {
-    const keys = new Map(
-      answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
-    );
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, [contenteditable], [role=dialog], [role=menu]")) return;
@@ -392,12 +396,6 @@ function ViewerBody({
       if (event.key === "Escape" && selected) {
         pick(undefined);
         return;
-      }
-      if (current === undefined || tab !== "objects") return;
-      const raw = keys.get(event.key.toLowerCase());
-      if (raw && !event.shiftKey) {
-        event.preventDefault();
-        decide(raw);
       }
     };
     window.addEventListener("keydown", onKey);

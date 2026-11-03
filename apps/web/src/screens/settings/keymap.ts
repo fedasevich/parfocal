@@ -101,6 +101,21 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
     ],
   ],
   [
+    "The review rail",
+    "review",
+    "review",
+    [
+      [
+        "annotate",
+        "Annotate this slide",
+        ["P"],
+        "new",
+        { note: "in a review. In Annotate the same key draws a polygon" },
+      ],
+      ["aitools", "AI tools", ["⇧A"], "new", { note: "A alone shows or hides overlays" }],
+    ],
+  ],
+  [
     "Tools",
     "all",
     "annotate",

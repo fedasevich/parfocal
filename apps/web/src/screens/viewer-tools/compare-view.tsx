@@ -21,8 +21,8 @@ import {
   toggleLinked,
   unlinkViews,
 } from "@parfocal/viewer-engine";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
-import { keyRegistry } from "../../keys/catalogue.ts";
+import { type CSSProperties, useEffect, useState } from "react";
+import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
@@ -120,10 +120,7 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
   const setLinked = (on: boolean) =>
     setLink((state) => (on ? relinkViews(state, linkReference) : unlinkViews(state)));
 
-  const bindings = useMemo(
-    () => keyRegistry.bindings({ scopes: ["compare"], only: ["linkviews"] }),
-    [],
-  );
+  const bindings = useBindings(["compare"], ["linkviews"]);
   useHotkeys(bindings, ({ action }) => {
     if (action === "linkviews") setLink((state) => toggleLinked(state, linkReference));
   });

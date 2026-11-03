@@ -3,8 +3,8 @@ import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
 import type { IconName } from "@parfocal/ui/components/icon";
 import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
-import { type KeyboardEvent, useCallback, useMemo, useRef, useState } from "react";
-import { keyRegistry } from "../keys/catalogue.ts";
+import { type KeyboardEvent, useCallback, useRef, useState } from "react";
+import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
@@ -175,7 +175,7 @@ export function CommandPalette() {
   const isOpen = overlay.open === "palette";
   const toggle = useRef(() => {});
   toggle.current = () => void overlay.set(isOpen ? undefined : "palette");
-  const bindings = useMemo(() => keyRegistry.bindings({ only: ["search"] }), []);
+  const bindings = useBindings([], ["search"]);
   const onFire = useCallback(() => toggle.current(), []);
   useHotkeys(bindings, onFire);
   const close = () => void overlay.set(undefined);
