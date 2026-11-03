@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { chromeBudget, chromeShare } from "./chrome-share.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -169,19 +170,6 @@ test("focus mode answers from the keys and the key in the pill brings the interf
   await expect(page.getByTestId("full-viewer")).toBeVisible();
 });
 
-const chromeShare = (page: Page) =>
-  page.evaluate(() => {
-    const parts = document.querySelectorAll(
-      'header, [data-slot="tool-rail"], [data-slot="side-panel"]',
-    );
-    let covered = 0;
-    for (const part of parts) {
-      const box = part.getBoundingClientRect();
-      covered += Math.max(0, box.width) * Math.max(0, box.height);
-    }
-    return covered / (window.innerWidth * window.innerHeight);
-  });
-
 test("the focus key hides the top bar, rail and inspector and brings them back", async ({
   page,
 }) => {
@@ -194,7 +182,9 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   await expect(page.locator("header")).toBeVisible();
   await expect(page.locator('[data-slot="tool-rail"]')).toBeVisible();
   await expect(page.locator('[data-slot="side-panel"]')).toBeVisible();
-  expect(await chromeShare(page)).toBeGreaterThan(0.2);
+  const before = await chromeShare(page);
+  expect(before).toBeGreaterThan(0);
+  expect(before).toBeLessThan(chromeBudget);
 
   await page.keyboard.press("Control+Backslash");
   await expect(page.getByTestId("focus-mode")).toBeVisible();
