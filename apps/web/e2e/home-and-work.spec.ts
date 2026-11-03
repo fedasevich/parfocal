@@ -108,6 +108,36 @@ test("the bell filters, opens an item and marks everything read", async ({ page 
   await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/evaluation$/);
 });
 
+test("a mention opened from the bell on Home lands on its thread and is marked read", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Notifications, 5 unread" }).click();
+  const panel = page.getByRole("dialog", { name: "Notifications" });
+  await panel.getByRole("radio", { name: /Mentions/ }).click();
+  await expect(panel.getByTestId("notification")).toHaveCount(2);
+  await panel
+    .getByTestId("notification")
+    .filter({ hasText: "Daniel Hruška mentioned you" })
+    .getByRole("button", { name: "Open the thread" })
+    .click();
+  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/comments\?.*thread=T2/);
+  await expect(page.getByRole("region", { name: "Thread on T2" })).toBeVisible();
+  await expect(panel).toHaveCount(0);
+  await page.goBack();
+  await expect(page.getByRole("button", { name: "Notifications, 4 unread" })).toBeVisible();
+});
+
+test("See all in the bell goes to My work", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /^Notifications/ }).click();
+  await page
+    .getByRole("dialog", { name: "Notifications" })
+    .getByRole("button", { name: "See all" })
+    .click();
+  await expect(page).toHaveURL(/\/my-work/);
+});
+
 test("the palette opens from the search box and ⌘K, finds places and runs on Enter", async ({
   page,
 }) => {

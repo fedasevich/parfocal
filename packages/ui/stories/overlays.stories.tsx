@@ -78,9 +78,51 @@ function PopoverStage({ children }: { children: React.ReactNode }) {
 export const NotificationsUnread: Story = {
   render: () => (
     <PopoverStage>
-      <NotificationsPanel items={inbox} onOpen={none} onMarkAllRead={none} onClose={none} />
+      <NotificationsPanel
+        items={inbox}
+        onOpen={none}
+        onMarkAllRead={none}
+        onSeeAll={none}
+        onClose={none}
+      />
     </PopoverStage>
   ),
+};
+
+function InteractiveInbox() {
+  const [items, setItems] = useState(inbox);
+  const [opened, setOpened] = useState("none");
+  const [seenAll, setSeenAll] = useState(false);
+  return (
+    <PopoverStage>
+      <NotificationsPanel
+        items={items}
+        onOpen={(item) => {
+          setOpened(item.id);
+          setItems((current) =>
+            current.map((candidate) =>
+              candidate.id === item.id ? { ...candidate, read: true } : candidate,
+            ),
+          );
+        }}
+        onMarkAllRead={() =>
+          setItems((current) => current.map((item) => ({ ...item, read: true })))
+        }
+        onSeeAll={() => setSeenAll(true)}
+        onClose={none}
+      />
+      <output data-testid="opened" className="sr-only">
+        {opened}
+      </output>
+      <output data-testid="see-all" className="sr-only">
+        {seenAll ? "pressed" : "idle"}
+      </output>
+    </PopoverStage>
+  );
+}
+
+export const NotificationsInteractive: Story = {
+  render: () => <InteractiveInbox />,
 };
 
 export const NotificationsAllRead: Story = {
@@ -90,6 +132,7 @@ export const NotificationsAllRead: Story = {
         items={inbox.map((item) => ({ ...item, read: true }))}
         onOpen={none}
         onMarkAllRead={none}
+        onSeeAll={none}
         onClose={none}
       />
     </PopoverStage>
@@ -99,7 +142,13 @@ export const NotificationsAllRead: Story = {
 export const NotificationsEmpty: Story = {
   render: () => (
     <PopoverStage>
-      <NotificationsPanel items={[]} onOpen={none} onMarkAllRead={none} onClose={none} />
+      <NotificationsPanel
+        items={[]}
+        onOpen={none}
+        onMarkAllRead={none}
+        onSeeAll={none}
+        onClose={none}
+      />
     </PopoverStage>
   ),
 };
@@ -114,6 +163,7 @@ export const NotificationsMany: Story = {
         })}
         onOpen={none}
         onMarkAllRead={none}
+        onSeeAll={none}
         onClose={none}
       />
     </PopoverStage>

@@ -23,6 +23,7 @@ type NotificationsPanelProps = {
   items: readonly NotificationItem[];
   onOpen: (item: NotificationItem) => void;
   onMarkAllRead: () => void;
+  onSeeAll: () => void;
   onClose: () => void;
 };
 
@@ -76,7 +77,13 @@ function NotificationRow({
   );
 }
 
-function NotificationsPanel({ items, onOpen, onMarkAllRead, onClose }: NotificationsPanelProps) {
+function NotificationsPanel({
+  items,
+  onOpen,
+  onMarkAllRead,
+  onSeeAll,
+  onClose,
+}: NotificationsPanelProps) {
   const [tab, setTab] = useState<NotificationGroup>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const inTab = (item: NotificationItem, which: NotificationGroup) =>
@@ -139,10 +146,10 @@ function NotificationsPanel({ items, onOpen, onMarkAllRead, onClose }: Notificat
         ) : (
           <span className="text-caption text-fg-dim">All read</span>
         )}
-        <span className="inline-flex items-center gap-1 text-body-sm font-semibold text-fg-dim">
+        <Button variant="link" className="text-fg-dim" onClick={onSeeAll}>
           See all
           <Icon name="next" />
-        </span>
+        </Button>
       </div>
     </div>
   );

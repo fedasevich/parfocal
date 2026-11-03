@@ -157,7 +157,7 @@ const appLink = (item: ScenarioNotification): string => {
   const a1 = slideByIndex(1);
   if (item.kind === "mention" || item.kind === "reply") {
     const object = encodeURIComponent(item.objectId ?? "");
-    return `/projects/${p07.id}/slides/${a1.id}?task=${taskIdOf("RT-14")}&object=${object}`;
+    return `/tasks/${taskIdOf("RT-14")}/comments?slide=${a1.id}&thread=${object}`;
   }
   if (item.kind === "task-signed-off") return `/tasks/${taskIdOf("RT-09")}/evaluation`;
   if (item.kind === "task-assigned") return `/tasks/${taskIdOf("RT-14")}/guided?slide=${a1.id}`;
