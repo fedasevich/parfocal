@@ -14,8 +14,8 @@ import {
 } from "@parfocal/ui/components/review-popovers";
 import type { ReviewMode } from "@parfocal/ui/components/review-top-bar";
 import { useQueries } from "@tanstack/react-query";
-import { type ReactNode, useMemo } from "react";
-import { keyRegistry } from "../../keys/catalogue.ts";
+import type { ReactNode } from "react";
+import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
@@ -171,10 +171,7 @@ export function useReviewTopPopovers({
       };
     });
 
-  const stepBindings = useMemo(
-    () => keyRegistry.bindings({ scopes: ["viewer"], only: slideStepKeys }),
-    [],
-  );
+  const stepBindings = useBindings(["viewer"], slideStepKeys);
   const stepIds =
     (caseDetail?.slides.length ?? 0) > 0
       ? [...caseSlides, ...looseSlides].map((slide) => slide.id)

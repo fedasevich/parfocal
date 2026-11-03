@@ -10,6 +10,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
+import { useAnswerKeys } from "../review/answer-keys.ts";
 import { answersOf, countsAs, countWord, decisionBody } from "../review/decision-style.ts";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
@@ -73,18 +74,14 @@ export function FocusView({
     });
   };
 
+  useAnswerKeys(keys, decide, current !== undefined);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
         event.preventDefault();
         onShowUi();
         return;
-      }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      const raw = keys.find((item) => item.key.toLowerCase() === event.key.toLowerCase())?.raw;
-      if (raw) {
-        event.preventDefault();
-        decide(raw);
       }
     };
     window.addEventListener("keydown", onKey);

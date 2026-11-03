@@ -12,6 +12,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { usePeople } from "../people.ts";
+import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
 import {
@@ -291,20 +292,15 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     if (!showDone && !noResults && answer(currentId)) openNote();
   });
 
+  useAnswerKeys(answersOf(style, session.classes, current), answerWith, !showDone && !noResults);
+
   useEffect(() => {
-    const keys = new Map(
-      answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
-    );
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, [contenteditable], [role=dialog]")) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (showDone || noResults) return;
-      const raw = keys.get(event.key.toLowerCase());
-      if (raw && !event.shiftKey) {
-        event.preventDefault();
-        answerWith(raw);
-      } else if (event.key === "ArrowRight") {
+      if (event.key === "ArrowRight") {
         goTo(index + 1);
       } else if (event.key === "ArrowLeft") {
         goTo(index - 1);
