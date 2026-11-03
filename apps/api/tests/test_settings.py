@@ -36,6 +36,14 @@ def test_the_tumor_share_result_is_a_lab_setting_off_for_sentinel_nodes() -> Non
     assert BY_KEY["tumor_share_cutoff"].problem(30) is None
 
 
+def test_the_home_layout_is_personal_and_follows_the_role_by_default() -> None:
+    setting = BY_KEY["home_layout"]
+    assert setting.layers == {Layer.PERSONAL}
+    assert setting.default == "role"
+    assert setting.problem("research") is None
+    assert setting.problem("anything") is not None
+
+
 @pytest.mark.db
 def test_personal_settings_are_kept_per_person_and_cleared_with_null(
     api: ApiAs, database: str

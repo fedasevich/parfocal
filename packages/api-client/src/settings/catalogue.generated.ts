@@ -28,6 +28,7 @@ export type SettingValues = {
   tumor_share_cutoff: number;
   tumor_share_result_sentinel_node: boolean;
   tumor_share_result_pannuke: boolean;
+  home_layout: "role" | "review" | "research" | "both";
 };
 
 export type SettingKey = keyof SettingValues;
@@ -298,6 +299,19 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "default": true,
     "layers": [
       "lab"
+    ]
+  },
+  "home_layout": {
+    "kind": "choice",
+    "default": "role",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "role",
+      "review",
+      "research",
+      "both"
     ]
   }
 };

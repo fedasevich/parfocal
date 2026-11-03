@@ -148,6 +148,20 @@ export {
   slidePointToMicrons,
   viewWidthMicrons,
 } from "./camera/units.ts";
+export type {
+  BoundViewHistory,
+  HistoryEngine,
+  RestTimers,
+  ViewHistory,
+  ViewHistoryEntries,
+} from "./camera/view-history.ts";
+export {
+  bindViewHistory,
+  createViewHistory,
+  sameView,
+  viewHistoryLimit,
+  viewRestMs,
+} from "./camera/view-history.ts";
 export {
   createDecodePool,
   type DecodePool,
@@ -245,6 +259,22 @@ export {
   type ViewerInput,
   type WheelInput,
 } from "./input/gestures.ts";
+export {
+  advanceKeyPan,
+  createKeyPan,
+  fastKeyPanFactor,
+  type KeyPan,
+  type KeyPanHost,
+  type KeyPanState,
+  keyPanCruisePxPerMs,
+  keyPanMoving,
+  keyPanStepsPerSecond,
+  keyPanTarget,
+  keyZoomFactor,
+  keyZoomOctaves,
+  type PanDirection,
+  restingKeyPan,
+} from "./input/keyboard-pan.ts";
 export {
   createTapRecognizer,
   type DoubleTap,

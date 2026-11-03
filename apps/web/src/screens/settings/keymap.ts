@@ -17,6 +17,7 @@ export type KeyAction = {
   range?: boolean;
   direction?: boolean;
   hold?: boolean;
+  sustain?: boolean;
   sequence?: boolean;
   safe?: boolean;
   fixed?: boolean;
@@ -31,12 +32,14 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
     "all",
     "viewer",
     [
-      ["zoomin", "Zoom in", ["="], "clin"],
+      ["zoomin", "Zoom in", ["+"], "clin"],
       ["zoomout", "Zoom out", ["-"], "clin"],
       ["fit", "Fit the slide", ["0"], "new"],
       ["mag", "Objective 1.25× to 40×", ["⌥1 … ⌥6"], "clin", { range: true }],
-      ["pan", "Pan", ["Arrows"], "clin", { direction: true }],
+      ["pan", "Pan, faster with Shift", ["Arrows"], "clin", { direction: true, sustain: true }],
       ["peek", "Whole slide", ["Z"], "new", { hold: true }],
+      ["viewback", "Back to the previous view", ["⌥←"], "new"],
+      ["viewforward", "Forward to the next view", ["⌥→"], "new"],
       ["prevslide", "Previous slide", ["Q"], "clin"],
       [
         "nextslide",

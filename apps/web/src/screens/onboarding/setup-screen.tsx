@@ -1,4 +1,9 @@
-import { useGetMe, useListJoinableWorkspaces, useUpdateMe } from "@parfocal/api-client";
+import {
+  useGetMe,
+  useListJoinableWorkspaces,
+  useSetMySettingLayers,
+  useUpdateMe,
+} from "@parfocal/api-client";
 import {
   AuthField,
   AuthForm,
@@ -31,11 +36,11 @@ import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { applyTheme, type ThemeChoice } from "../../shell/theme.ts";
+import { homeLayoutOfSetup, type SetupRole as Role } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
 import { slideImage } from "./auth-side.tsx";
 import { onboardingScenes, type SetupStep } from "./scenes.ts";
 
-type Role = "res" | "rev" | "both";
 type First = "sample" | "create" | "wait";
 type Device = "mouse" | "trackpad" | "spacemouse" | "gamepad" | "pen" | "keyboard";
 
@@ -176,6 +181,7 @@ export function SetupScreen({ step, change }: Props) {
   const me = okData(useGetMe().data);
   const joinable = useListJoinableWorkspaces().data?.data ?? [];
   const updateMe = useUpdateMe();
+  const saveLayers = useSetMySettingLayers();
   const goTo = useGoTo();
   const index = onboardingScenes.setup.indexOf(step);
   const [reached, setReached] = useState(index);
@@ -502,7 +508,8 @@ export function SetupScreen({ step, change }: Props) {
       : index === 1 && ws === "new"
         ? "Create it and continue"
         : `Next: ${stepNames[index + 1] ?? ""}`;
-  const finish = () =>
+  const finish = () => {
+    saveLayers.mutate({ data: { values: { home_layout: homeLayoutOfSetup[u.role] } } });
     void goTo(
       u.first === "sample"
         ? "/?scene=new"
@@ -510,6 +517,7 @@ export function SetupScreen({ step, change }: Props) {
           ? destinations.newProject()
           : destinations.home(),
     );
+  };
   const finishLabel =
     u.first === "create"
       ? "Create my first project"

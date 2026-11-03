@@ -403,10 +403,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ## 01 FOUND · Repository and engineering foundations
 
-- [ ] FOUND-000 · Research check for monorepo, CI and developer experience
+- [x] FOUND-000 · Research check for monorepo, CI and developer experience
   Re-check STACK-013, STACK-018 and STACK-038 against current releases and record anything that changed.
   Done when an ADR exists or the existing ADRs are confirmed.
   Size: S.
+  Confirmed ADR 0006, ADR 0007 and ADR 0011 on 2026-11-03 in [the tooling re-check](results/2026-11-03-tooling-recheck.md). Python 3.15 is out but onnxruntime, scikit-image and numcodecs have no wheels for it yet.
 
 - [x] FOUND-001 · Monorepo skeleton
   Create `apps/web`, `apps/api`, `apps/edge` (router Worker and Durable Objects), `workers/ingest`, `workers/ml`, `packages/viewer-engine`, `packages/ui`, `packages/api-client`, `packages/tokens`, `packages/test-fixtures`, `infra/`, `docs/adr/`. Root README explains the layout.
@@ -533,6 +534,18 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-025.
   Size: L.
 
+- [ ] FOUND-027 · Refresh the tooling pins
+  [The tooling re-check](results/2026-11-03-tooling-recheck.md) found Ruff 0.17 and uv 0.13 outside the ranges in `pyproject.toml` and the exact JavaScript pins (pnpm, Turborepo, Biome, Oxlint, oxlint-tsgolint, Lefthook, commitlint, Playwright) behind by minor or patch releases. Raise them together, widen `uv_build` to 0.13, fix what new Biome and Ruff rules report, and keep TypeScript on 7.
+  Done when the lockfiles carry the new versions and `pnpm verify` and the golden-image suite are green.
+  Depends on FOUND-000.
+  Size: S.
+
+- [ ] FOUND-028 · CI runner image for Ubuntu 26.04
+  GitHub moves `ubuntu-latest` from Ubuntu 24.04 to 26.04 between 2026-10-19 and 2026-11-19, and every CI job uses `ubuntu-latest`. Run the workflows once on `ubuntu-26.04`, then either move to it explicitly or pin `ubuntu-24.04` until the golden-image suite passes on 26.04, so the image changes only on purpose.
+  Done when every job names an explicit Ubuntu version and CI is green on it.
+  Depends on FOUND-000.
+  Size: S.
+
 ---
 
 ## 02 SKEL · Walking skeleton (milestone M1)
@@ -588,8 +601,20 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on OPS-005.
   Size: L.
 
-- [ ] SKEL-010 · Skeleton retrospective
+- [x] SKEL-010 · Skeleton retrospective
   Done when an ADR lists what the skeleton revealed (latency, memory, gaps) and the backlog is edited to reflect it.
+  Recorded in [ADR 0169](adr/0169-walking-skeleton-retrospective.md), which added SKEL-011 and SKEL-012 and edited TEST-004 and TEST-007.
+  Size: S.
+
+- [ ] SKEL-011 · Skeleton numbers from staging and hosted runners
+  Every latency number of the skeleton so far is local ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). Measure the fitted view and the sharp view after a jump on `CMU-1.svs` against staging, warm tile fetch p95 from the same region over HTTP/2 or HTTP/3 with the gateway's cache layer on, and the performance budget suite on the hosted runner.
+  Done when a result file records those numbers with the machine, browser and network, and `perf-budgets.json` time limits are set from the hosted-runner numbers instead of twice the local baseline.
+  Depends on SKEL-009, TILES-002.
+  Size: S.
+
+- [ ] SKEL-012 · Viewer takes the slide format from ingest
+  The live viewer route of SKEL-006 picks the reader from the original's file extension, although INGEST-004 already identifies the format from the bytes. The slide read returns the identified format and the viewer uses it.
+  Done when an API test sees the format on the slide read and a viewer test opens a slide whose stored name has the wrong extension.
   Size: S.
 
 ---
@@ -784,6 +809,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on PROJ-002, TILES-001. Split from PROJ-002 (privacy modes) on 2026-11-02. Refs [ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md).
   Size: L.
 
+- [ ] SEC-029 · Security contact for each workspace
+  SEC-018 (incident response runbook) tells workspaces about a breach within 24 hours, but a workspace has no security contact to tell. Add a security contact address to the workspace settings, shown to workspace admins and required before a workspace holds clinical data, and point the runbook at it.
+  Done when API tests cover setting, reading and requiring the contact with isolation and audit, and a component test covers the admin field.
+  Depends on SEC-018.
+  Size: S.
+
 - [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
@@ -887,13 +918,15 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 ## 33 I18N · Internationalisation readiness
 
-- [ ] I18N-000 · Research check for i18n libraries
+- [x] I18N-000 · Research check for i18n libraries
   Candidates: Lingui, FormatJS (react-intl), i18next with ICU. Default: Lingui with ICU messages and extraction.
   Done when an ADR exists.
   Size: S.
 
 - [ ] I18N-001 · String externalisation in the web app
   Done when every UI string goes through the i18n layer, an English catalogue is extracted, and a lint rule fails on raw string literals in JSX.
+  Uses Lingui 6 with ICU messages, PO catalogues and the `en-XA` pseudo locale per [ADR 0173](adr/0173-lingui-for-web-app-strings.md).
+  Depends on I18N-000.
   Size: M.
 
 - [x] I18N-002 · Locale-aware formatting
@@ -901,7 +934,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when unit tests cover each formatter, including tabular figures for measurements.
   Size: S.
 
-- [ ] I18N-003 · Backend messages and report templates are locale-ready
+- [x] I18N-003 · Backend messages and report templates are locale-ready
   Report templates and emails take a locale parameter even though only English ships.
   Done when a pseudo-locale test renders a report and an email with every string translated.
   Size: M.
@@ -916,8 +949,9 @@ Formats in scope, all read natively: Aperio SVS (JPEG and JPEG 2000), generic ti
 
 Conversion policy: the original is never altered. A conversion to OME-Zarr is produced only when a trigger fires, and the viewer then reads the converted copy while the original remains the record. Triggers are an unreadable format, a reader correctness failure that cannot be worked around, or a performance budget failure from VIEW-040. Each trigger has an ADR.
 
-- [ ] INGEST-000 · Research check for upload and server readers
+- [x] INGEST-000 · Research check for upload and server readers
   Done when STACK-026 and STACK-039 are confirmed or revised in an ADR.
+  Done in [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md): STACK-039 stands, and STACK-026 stands with tifffile reading OME-TIFF and the worker's own OME-Zarr reader.
   Size: S.
 
 - [x] INGEST-001 · Upload API with presigned multipart
@@ -1083,6 +1117,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when `parfocal-dev/fixtures/` holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, the read-only key is refused a write, and the R2 storage cost is logged.
   Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
   Size: L.
+
+- [ ] INGEST-030 · Name the OME-TIFF reader after tifffile
+  The ingest worker reads OME-TIFF with tifffile, but `Reader.TIFFSLIDE` in `parfocal_ingest.pyramid` stores the string `tiffslide` in each slide's `reader` column. Rename the value to `tifffile` and add a migration that updates existing slide rows, so the stored reader names the library that read the file.
+  Done when worker tests read `tifffile` for the OME-TIFF fixture and a migration test shows an old `tiffslide` row read back as `tifffile`.
+  Depends on INGEST-000. Refs [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md).
+  Size: S.
 
 ## 06 TILES · Tile delivery
 
@@ -1250,7 +1290,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when `reader-check.ts` passes on OS-1.bif within 2 grey levels of the reference tiles with a seam ratio under 2, and the existing BIF golden is updated.
   Size: M.
 
-- [ ] VIEW-022 · Keyboard navigation
+- [x] VIEW-022 · Keyboard navigation
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
   Size: S.
@@ -1361,7 +1401,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when unit tests replay mouse and trackpad traces through each detent and check the stop and the release, and a test confirms nothing changes when the setting is off.
   Depends on VIEW-021, VIEW-045.
   Size: S.
-- [ ] VIEW-047 · View history
+- [x] VIEW-047 · View history
   Jumps (fly-to, presets, fit, minimap clicks, area and object navigation) record the view they left. Continuous pans and zooms count as one entry once the camera rests. Back and forward keys from the key registry move through the last 50 views with a fly-to, and the history is per slide and cleared on a slide switch.
   Done when unit tests cover recording, coalescing a pan into one entry, back and forward, and the cap, and a browser test goes back after a minimap jump and lands on the old view.
   Depends on VIEW-020, CMD-001.
@@ -1445,30 +1485,30 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Size: S.
 
 - [ ] LAB-001 · Developer drawer
-  Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD, pause models.
+  Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. The ten sections of the mock in four groups, as [ADR 0189](adr/0189-developer-drawer-control-list.md) lists them. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD and pause models drive the viewer. The heatmap, model, typing and job zones drive their features once those tasks land.
   Done when component tests cover each control and a permission test hides it from doctors.
-  Refs mock 20, kit W25.
+  Refs mock `developer` screen, kit gallery "Developer mode, Viv by default", [ADR 0189](adr/0189-developer-drawer-control-list.md).
   Size: M.
 
 - [ ] LAB-002 · Performance HUD
-  Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Floats in a free corner and can be hidden.
+  Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Atlas use shows only on the WebGPU route. Floats in a free corner (top left, top right or bottom left) and can be hidden.
   Done when a test confirms the HUD costs under 0.5 ms per frame.
   Refs [`poc/src/app/hud.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/hud.ts).
   Size: M.
 
 - [ ] LAB-003 · Sample slides and synthetic data
-  Format samples and CAMELYON slides loadable for developers, synthetic nuclei at 100k and 1M, with a visible "synthetic" chip.
+  Format samples (15 sample slides and 5 large files) and CAMELYON slides loadable for developers, synthetic nuclei at 10k, 100k, 500k and 1M, with a visible "synthetic" chip.
   Done when tests confirm synthetic layers are always labelled.
   Refs doc 25.
   Size: M.
 
 - [ ] LAB-004 · Pan sweep benchmark and export
-  Done when the sweep runs from the drawer and exports CSV.
+  Done when the sweep runs from the drawer and exports CSV with the 16 columns the drawer lists.
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
 
 - [ ] LAB-005 · Debug handle
-  A typed `window.__parfocal` handle in non-production builds for tests and debugging.
+  A typed `window.__parfocal` handle in non-production builds for tests and debugging, starting from the 20 members the mock lists for `window.__wsi`. The drawer's reference text changes to the new name ([ADR 0189](adr/0189-developer-drawer-control-list.md)).
   Done when E2E tests use it to read camera state.
   Size: S.
 
@@ -1510,7 +1550,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-006 · Buttons and icon buttons
+- [x] DS-006 · Buttons and icon buttons
   Primary, secondary, ghost. One filled primary button per screen, so the top bar's Upload is a normal button (doc 40 D2). States are default, hover, pressed, focus and disabled. Inline key hints. 32 px height, 24 px minimum target.
   Done when stories, interaction tests and axe pass.
   Depends on PROTO-011.
@@ -1528,12 +1568,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: M.
 
-- [ ] DS-009 · Keycap component
+- [x] DS-009 · Keycap component
   Done when keycaps render the user's current binding from the key registry, not a hard-coded letter.
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-010 · Tool rail button
+- [x] DS-010 · Tool rail button
   38 px, key badge, active state, AI dot.
   Done when stories and tests cover each state.
   Depends on PROTO-011.
@@ -1552,13 +1592,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: L.
 
-- [ ] DS-013 · Gallery tile
+- [x] DS-013 · Gallery tile
   92 px and 120 px sizes. States are to check, current, done. Dashed ring on the cell, label in AI wording.
   Done when stories and tests cover each state.
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-014 · Avatar, avatar stack, presence dot
+- [x] DS-014 · Avatar, avatar stack, presence dot
   A person is always an avatar with a name. A stack shows the names in a tooltip and a +N count (doc 38).
   Done when stories exist and colours come from the user profile.
   Depends on PROTO-011.
@@ -1570,7 +1610,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit W18.
   Size: M.
 
-- [ ] DS-016 · Motion tokens and reduced motion
+- [x] DS-016 · Motion tokens and reduced motion
   Durations 120 to 400 ms, easing tokens, a slow presenting mode at one third speed, reduced motion turns every transition into a cut.
   Done when tests run with `prefers-reduced-motion` and assert no animation.
   Depends on PROTO-011. Refs kit motion page.
@@ -1636,7 +1676,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs mock: admin/people, mock: project/slides, mock: layers/table, mock: disagree/queue, mock: creport/deposits.
   Size: M.
 
-- [ ] DS-027 · Before you list with Go to links
+- [x] DS-027 · Before you list with Go to links
   The list that names everything that blocks a primary action, one row per blocker with a Go to link that opens the object, the first open cell, the field or the question. It reads "Before you submit" on the Slide done card, "Before you can sign out" on the clinical report and "Before you can" in small modals and on flow pages. With a single blocker there is no list, and the reason sits under the disabled primary instead.
   Done when stories cover one blocker and several, a test checks that Go to moves focus to its target and that the disabled primary's description names the reason, and axe passes.
   Depends on PROTO-011. Refs kit: submit and Slide done, mock: guided/skipped, mock: signoff/blocked, mock: creport/missing.
@@ -1648,12 +1688,31 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
   Size: M.
 
+- [ ] DS-029 · Visible focus ring on every control
+  DS-006 (buttons and icon buttons) found that `outline-none` next to `focus-visible:outline-2` left the button focus ring invisible. Other kit components combine the same classes. Check every interactive component in packages/ui and apps/web and make the ring draw.
+  Done when a test tabs through the kit stories and asserts a visible outline on each focused control, and axe passes.
+  Depends on DS-006.
+  Size: S.
+
+- [ ] DS-030 · Every key hint from the key registry
+  DS-009 (keycap component) moved keycaps onto the key registry, but the tool rail key badges still come from hard-coded keys in `apps/web/src/screens/viewer-tools/rails.ts`, and "Add a note" shows N from a hard-coded handler while N is also No in the yes or no decision style. Register the note action, settle the N clash, and read the rail badges from the registry.
+  Done when a test changes a binding and the rail badge and the note hint follow it, and a test proves no two actions in one decision style share a key.
+  Depends on DS-009, DS-010.
+  Size: S.
+
+- [ ] DS-031 · Fixed durations onto the motion tokens
+  DS-016 (motion tokens and reduced motion) added the duration and easing tokens, but the dialog, small modal and dropdown still use `duration-100` and the magnification bar a fixed 280 ms, so they do not slow down in presenting mode ([ADR 0187](adr/0187-motion-tokens-scale-and-global-reduced-motion.md)).
+  Done when no component in packages/ui or apps/web uses a fixed transition duration, and a test checks a dialog's duration in presenting mode.
+  Depends on DS-016.
+  Size: S.
+
 ---
 
 ## 09 SHELL · Application shell and layout
 
-- [ ] SHELL-000 · Research check
+- [x] SHELL-000 · Research check
   Done when STACK-003 and STACK-005 are confirmed for the shell.
+  Confirmed in [ADR 0182](adr/0182-shell-routing-and-state-confirmed.md): no upgrade due.
   Size: S.
 
 - [x] SHELL-001 · Routes and code splitting
@@ -1788,7 +1847,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Depends on HOME-011. The API moved to HOME-011 by [ADR 0085](adr/0085-home-aggregate-api.md).
   Size: M.
 
-- [ ] HOME-010 · Role-based default home
+- [x] HOME-010 · Role-based default home
   The launchpad for everyone. A reviewer's continue card and tasks come first, a researcher's projects and Start something come first, set from the role chosen at setup (ONB-004) and changeable in settings.
   Done when tests cover defaults per role and the override.
   Size: S.
@@ -1922,7 +1981,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
 
 The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-direction.md)). The inspector has Objects, Layers, Comments and Opinion tabs (CASE-014). Sentinel-node staging is a project analysis template (PROJ-005), so the staging tasks here and in REVIEW apply only in projects that turn it on.
 
-- [ ] CASE-000 · Research check
+- [x] CASE-000 · Research check
   Done when the case view state model (slide, workspace, inspector tab, area, review position) is captured in an ADR.
   Size: S.
 
@@ -1937,7 +1996,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock 5, kit W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] CASE-003 · Per-slide view memory
+- [x] CASE-003 · Per-slide view memory
   Each slide remembers its camera while the case is open.
   Done when tests switch slides and come back to the same view.
   Size: S.
@@ -1978,7 +2037,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests check it against the coverage raster.
   Size: S.
 
-- [ ] CASE-010 · Patient banner
+- [x] CASE-010 · Patient banner
   Only in clinical projects (PROJ-002). A lab-locked setting that keeps name, sex, age and record number visible on every case screen.
   Done when tests cover the setting and initials mode.
   Size: S.
@@ -2017,7 +2076,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 13 NAV · Navigation aids
 
-- [ ] NAV-000 · Research check
+- [x] NAV-000 · Research check
   Done when the minimap state machine and placement algorithm are written as an ADR from kit and mock specs.
   Size: S.
 
@@ -2027,7 +2086,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock §2.6.
   Size: M.
 
-- [ ] NAV-002 · Scale bar and readout
+- [x] NAV-002 · Scale bar and readout
   Nice values from 10 µm to 5 mm, mm at 1000 µm and above, readout with objective and microns per pixel, "digital" above the scan objective.
   Done when unit tests cover the scale bar choice at every zoom.
   Size: S.
@@ -2052,23 +2111,23 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 - [ ] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
   Done when model-based tests drive every transition.
-  Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice.
+  Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-007 · Minimap placement scoring
   Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning.
   Done when unit tests reproduce the mock's placement decisions for each scene.
-  Refs mock 7 placement algorithm.
+  Refs mock 7 placement algorithm. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-008 · Minimap content
   Seen trail, area outlines with badges, viewport rectangle (crosshair below 8 px), cell dots in area mode, header and footer text. The map is a button: a click opens the whole-slide peek (NAV-010), with a corner "open" hint and a hover ring. Dragging the viewport rectangle still moves the view.
   Done when golden tests cover reading, area and travel modes and E2E opens the peek by clicking the map.
-  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md). [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-009 · Minimap settings
-  When useful, always, never.
+  When useful, always, never. The settings catalogue still says corner or hidden, and the help text must match the half of the tissue rule, see [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md).
   Done when tests cover each mode.
   Size: S.
 
@@ -3527,8 +3586,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on IAM-004.
 
 - [ ] TEST-004 · E2E harness
-  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure.
-  Done when the skeleton suite runs locally and in CI.
+  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure. Each run removes the workspace and project it created, since the SKEL-008 test leaves one of each behind per run ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
+  Done when the skeleton suite runs locally and in CI, and the local database holds no more workspaces after a run than before it.
   Size: M.
 
 - [x] TEST-005 · Golden-image rendering tests
@@ -3544,7 +3603,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: M.
 
 - [ ] TEST-007 · Memory and leak suite
-  Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots.
+  Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots. Includes `CMU-1.svs` from the `formats` fixture group, which VIEW-030 left untested ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
   Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
   Size: M.
 

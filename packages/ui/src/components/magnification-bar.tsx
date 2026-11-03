@@ -3,6 +3,7 @@ import {
   type BarSignals,
   calmBar,
   formatMagnification,
+  formatReadout,
   isBarOpen,
   type MagnificationLabel,
   type MagnificationPreset,
@@ -186,8 +187,7 @@ function MagnificationBar({
       >
         <span aria-hidden="true" className="ml-2.5 h-6 w-px shrink-0 bg-line" />
         <span className="font-mono text-label text-fg-faint">
-          {formatMagnification(magnification, "objective")}
-          {digital ? " digital" : ""} · {micronsPerPixel.toFixed(2)} µm/px
+          {formatReadout(magnification, digital, micronsPerPixel)}
         </span>
       </span>
       {onBrightnessChange ? (

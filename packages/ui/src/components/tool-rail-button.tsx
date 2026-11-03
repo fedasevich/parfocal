@@ -44,7 +44,7 @@ function ToolRailButton({
         {keyHint ? (
           <span
             aria-hidden="true"
-            className="absolute right-0.5 bottom-px font-mono text-[8px] leading-none font-medium text-fg-faint group-data-pressed:text-on-accent"
+            className="absolute right-0.5 bottom-px font-mono text-[8px] leading-none font-medium text-fg-faint group-data-pressed:text-on-accent group-data-pressed:opacity-80"
           >
             {keyHint}
           </span>

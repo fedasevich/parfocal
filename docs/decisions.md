@@ -58,6 +58,104 @@ Ventana BIF slides are stitched from camera frames. The browser now places them 
 
 Your choice:
 
+## 34. Legal facts for the GDPR documents, from SEC-021 (GDPR documentation)
+
+SEC-021 drafted records of processing, a DPIA for AI results review, a DPA template, the subprocessor list and a cookie and storage policy in `docs/compliance/`. They stay drafts in review until these are answered and counsel reads them.
+
+- a. The legal entity that acts as controller and processor, with its address and contact. Write it here.
+- b. Whether to name a DPO, and who.
+- c. Retention periods for unaccepted invitations, ended sessions, read notifications and operator records.
+- d. Whether counsel must confirm that analytics with no device storage need no consent (ADR 0171) in the first tenants' countries.
+- e. Whether any clinical use needs a medical device assessment.
+
+Your choice:
+
+## 35. Lingui for web app strings, from I18N-000 (research check for i18n libraries)
+
+ADR 0173 picks Lingui 6 with ICU messages, PO catalogues and the en-XA pseudo locale, matching the backend (ADR 0172). FormatJS and i18next were compared and rejected. The raw-string lint rule may need a small local oxlint plugin, because oxlint's JS plugin support is alpha.
+
+- a. Accept Lingui (ADR 0173 becomes Accepted). (recommended)
+- b. Use FormatJS (react-intl) instead.
+
+Your choice:
+
+## 36. Remember a slide's camera across visits, from CASE-000 (case view state model)
+
+ADR 0176 keeps each slide's last camera only while its case is open (CASE-003 built that). The mock does not ask for more.
+
+- a. No, forget it when the case closes. (recommended, matches the mock)
+- b. Yes, remember it per device across visits.
+
+Your choice:
+
+## 37. Primary button hover, from DS-006 (buttons and icon buttons)
+
+The mock lightens the filled primary button on hover with white, which drops its text below 4.5:1 contrast. DS-006 darkens it instead (12% black on hover, 24% on press), so axe passes without an exclusion.
+
+- a. Keep the darker hover. (recommended, meets contrast)
+- b. Keep the mock's lighter hover and accept the contrast exclusion.
+
+Your choice:
+
+## 38. Smart minimap, from NAV-000 (minimap state machine and placement)
+
+ADR 0185 (proposed) makes the minimap one state machine with size modes hidden, reading, area, locator and travel, a fade flag and the Z peek, placed by the mock's corner scoring. Three choices the kit leaves open:
+
+- a. Should G then n also start travel from area or locator mode, not only from reading? (recommended: yes, from any visible mode)
+- b. Should guided review drop its own fixed 136 px minimap and use the smart minimap? (recommended: yes)
+- c. Weights for an open thread, the floating cells panel, proposals and pins in corner scoring are not in the kit. (recommended: NAV-007 picks them and records them in ADR 0185)
+- d. Accept ADR 0185.
+
+Your choice:
+
+## 39. Keys for view history back and forward, from VIEW-047 (view history)
+
+The viewer now flies back and forward through the views you left. The default keys are Alt+Left and Alt+Right, which override the browser's own back and forward keys while the viewer has focus (on Windows and Linux).
+
+- a. Keep Alt+Left and Alt+Right. (recommended, they match browser habit and people can rebind them)
+- b. Use [ and ] instead and leave the browser keys alone.
+
+Your choice:
+
+## 40. The clinical note in case details, from CASE-011 (case header details)
+
+The slide picker's case details now show project, case, specimen, blocks, the task and its researcher, and in clinical projects a clinical note row. ADR 0054 removed `cases.clinical_note`, so that row always reads "No clinical note".
+
+- a. Add a backlog task to store an encrypted clinical note per case, with a migration. (recommended if clinical projects need the note on screen)
+- b. Drop the clinical note row from the picker.
+
+Your choice:
+
+## 41. Checking the developer drawer against POC doc 34, from LAB-000 (lab research check)
+
+ADR 0189 (proposed) confirms the developer drawer's ten sections in four groups, the nine LAB-001 controls and the `window.__parfocal` handle against the frozen kit, the mock's developer screen and the PROTO-016 code. POC doc 34 lives in the private POC repository, which this session was not allowed to attach, so its lab-tagged leaves are unchecked. "Kit W25" does not exist in the frozen kit, so LAB-001 now points at the "Developer mode, Viv by default" gallery group.
+
+- a. Give one session read access to the POC repository to check doc 34, then accept ADR 0189.
+- b. Accept ADR 0189 without that check.
+
+Your choice:
+
+## 42. Incident response facts, from SEC-018 (incident response and breach notification runbook)
+
+SEC-018 wrote the runbook (`docs/compliance/incident-response.md`), an empty breach register, a ready tabletop scenario with an empty record, and ADR 0186 (proposed). Every alert channel today is about cost only. It stays in review until these are settled.
+
+- a. Confirm 24 hours as the deadline for telling workspaces (DPA clause 4.6), or give counsel's number.
+- b. Name the incident lead, deputy, privacy contact, counsel, the supervisory authority (depends on the legal entity in 34a) and one security contact address.
+- c. Choose a private place for full breach records, because this repository is public.
+- d. Run the tabletop exercise and record it.
+
+Your choice:
+
+## 43. Record number in initials mode, from CASE-010 (patient banner)
+
+Clinical case screens now show the patient banner (name, sex, age, record number), and the lab can lock initials mode for names. The record number is also a direct identifier, and today it stays visible in initials mode.
+
+- a. Keep it visible (current build).
+- b. Hide it in initials mode. (recommended, initials mode is meant to hide identity)
+- c. Show only its last 3 digits.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

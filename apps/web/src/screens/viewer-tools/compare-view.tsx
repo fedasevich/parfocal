@@ -276,7 +276,7 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
           <Icon name="slides" />
           <span>Linked: pan, zoom and rotation move both</span>
           <Switch aria-label="Linked" checked={linked} onCheckedChange={setLinked} />
-          <Keycap keys="⇧L" size="sm" />
+          <Keycap action="linkviews" keys="⇧L" size="sm" />
         </FloatingPill>
       </div>
     </ViewerFrame>

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  caseMemoryKey,
   forgetSlideCameras,
+  openCaseMemory,
   recallSlideCamera,
   rememberSlideCamera,
   stepSlideId,
@@ -40,4 +42,42 @@ test("a later camera replaces the earlier one for the same slide", () => {
   rememberSlideCamera("a1", { x: 0.2, y: 0.3, z: 4 });
   rememberSlideCamera("a1", { x: 0.5, y: 0.5, z: 2 });
   assert.deepEqual(recallSlideCamera("a1"), { x: 0.5, y: 0.5, z: 2 });
+});
+
+test("switching slides and coming back returns to the same view", () => {
+  forgetSlideCameras();
+  openCaseMemory(caseMemoryKey("p1", "A"));
+  rememberSlideCamera("a1", { x: 0.2, y: 0.3, z: 4 });
+  const back = stepSlideId(ids, "a1", 1);
+  assert.equal(back, "a2");
+  assert.deepEqual(recallSlideCamera("a2"), {});
+  rememberSlideCamera("a2", { x: 0.6, y: 0.6, z: 2 });
+  const returned = stepSlideId(ids, "a2", -1);
+  assert.equal(returned, "a1");
+  assert.deepEqual(recallSlideCamera("a1"), { x: 0.2, y: 0.3, z: 4 });
+  assert.deepEqual(recallSlideCamera("a2"), { x: 0.6, y: 0.6, z: 2 });
+});
+
+test("the memory lasts while the case stays open", () => {
+  forgetSlideCameras();
+  openCaseMemory(caseMemoryKey("p1", "A"));
+  rememberSlideCamera("a1", { x: 0.2, y: 0.3, z: 4 });
+  openCaseMemory(caseMemoryKey("p1", "A"));
+  openCaseMemory(caseMemoryKey("p1", null));
+  openCaseMemory(caseMemoryKey(undefined, "A"));
+  assert.deepEqual(recallSlideCamera("a1"), { x: 0.2, y: 0.3, z: 4 });
+});
+
+test("opening another case forgets the views of the one before", () => {
+  forgetSlideCameras();
+  openCaseMemory(caseMemoryKey("p1", "A"));
+  rememberSlideCamera("a1", { x: 0.2, y: 0.3, z: 4 });
+  openCaseMemory(caseMemoryKey("p1", "B"));
+  assert.deepEqual(recallSlideCamera("a1"), {});
+  openCaseMemory(caseMemoryKey("p1", "A"));
+  assert.deepEqual(recallSlideCamera("a1"), {});
+});
+
+test("the same case label in another project is another case", () => {
+  assert.notEqual(caseMemoryKey("p1", "A"), caseMemoryKey("p2", "A"));
 });

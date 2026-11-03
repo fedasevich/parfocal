@@ -131,6 +131,13 @@
   --text-display: 28px;
   --text-display--line-height: 36px;
 
+  --ease-standard: var(--motion-ease-standard);
+  --ease-enter: var(--motion-ease-enter);
+  --ease-exit: var(--motion-ease-exit);
+  --ease-in-out: var(--motion-ease-in-out);
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--motion-ease-standard);
+
   --font-sans: var(--font-ui);
   --font-mono: var(--font-data);
 }

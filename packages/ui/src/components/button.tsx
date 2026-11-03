@@ -3,20 +3,20 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-ctl border font-medium leading-none whitespace-nowrap transition-colors outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=focus]:outline-2 data-[state=focus]:outline-offset-2 data-[state=focus]:outline-accent active:not-aria-[haspopup]:translate-y-px data-[state=pressed]:translate-y-px disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-ctl border font-medium leading-none whitespace-nowrap transition-colors outline-none select-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=focus]:outline-2 data-[state=focus]:outline-solid data-[state=focus]:outline-offset-2 data-[state=focus]:outline-accent active:not-aria-[haspopup]:translate-y-px data-[state=pressed]:translate-y-px disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         secondary:
-          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
+          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint active:not-disabled:bg-chrome-3 data-[state=pressed]:bg-chrome-3 disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
         default:
-          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
+          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint active:not-disabled:bg-chrome-3 data-[state=pressed]:bg-chrome-3 disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
         outline:
-          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
+          "border-line-strong bg-btn-bg text-fg hover:not-disabled:border-fg-faint data-[state=hover]:border-fg-faint active:not-disabled:bg-chrome-3 data-[state=pressed]:bg-chrome-3 disabled:opacity-45 aria-disabled:opacity-45 aria-expanded:border-fg-faint",
         primary:
-          "border-accent-fill bg-accent-fill text-on-accent hover:not-disabled:border-transparent hover:not-disabled:bg-[color-mix(in_srgb,var(--accent-fill)_86%,#fff)] data-[state=hover]:bg-[color-mix(in_srgb,var(--accent-fill)_86%,#fff)] data-[state=pressed]:brightness-90 disabled:border-transparent disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] disabled:text-fg-dim aria-disabled:border-transparent aria-disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] aria-disabled:text-fg-dim",
+          "border-accent-fill bg-accent-fill text-on-accent hover:not-disabled:border-transparent hover:not-disabled:bg-[color-mix(in_srgb,var(--accent-fill)_88%,#000)] data-[state=hover]:border-transparent data-[state=hover]:bg-[color-mix(in_srgb,var(--accent-fill)_88%,#000)] active:not-disabled:bg-[color-mix(in_srgb,var(--accent-fill)_76%,#000)] data-[state=pressed]:bg-[color-mix(in_srgb,var(--accent-fill)_76%,#000)] disabled:border-transparent disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] disabled:text-fg-dim aria-disabled:border-transparent aria-disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] aria-disabled:text-fg-dim",
         ghost:
-          "border-transparent bg-transparent text-fg-dim hover:not-disabled:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:not-disabled:text-fg data-[state=hover]:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] data-[state=hover]:text-fg aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] aria-expanded:text-fg disabled:opacity-45",
+          "border-transparent bg-transparent text-fg-dim hover:not-disabled:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:not-disabled:text-fg data-[state=hover]:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] data-[state=hover]:text-fg aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] aria-expanded:text-fg active:not-disabled:bg-[color-mix(in_srgb,var(--fg)_14%,transparent)] data-[state=pressed]:bg-[color-mix(in_srgb,var(--fg)_14%,transparent)] data-[state=pressed]:text-fg disabled:opacity-45 aria-disabled:opacity-45",
         selected: "border-accent bg-accent-soft text-fg [&_svg]:text-accent",
         destructive:
           "border-line-strong bg-btn-bg text-bad hover:not-disabled:border-bad disabled:opacity-45",

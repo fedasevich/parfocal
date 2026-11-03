@@ -40,6 +40,7 @@ export type RowKey =
   | "presetKeys"
   | "presets"
   | "signature"
+  | "homeLayout"
   | "tools"
   | "panelWidth"
   | "hidePanel"
@@ -110,6 +111,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
     ),
   ],
   layout: [
+    row(
+      "homeLayout",
+      "Home",
+      "personal",
+      "What comes first on your home. From my role follows the role you chose at setup.",
+    ),
     row(
       "tools",
       "Tools",

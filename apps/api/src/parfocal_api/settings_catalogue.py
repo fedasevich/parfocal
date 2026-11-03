@@ -113,6 +113,7 @@ CATALOGUE: tuple[Setting, ...] = (
     whole("tumor_share_cutoff", 20, 1, 99, LAB),
     switch("tumor_share_result_sentinel_node", False, LAB),
     switch("tumor_share_result_pannuke", True, LAB),
+    choice("home_layout", "role", ("role", "review", "research", "both"), PERSONAL),
 )
 
 BY_KEY: Mapping[str, Setting] = {setting.key: setting for setting in CATALOGUE}

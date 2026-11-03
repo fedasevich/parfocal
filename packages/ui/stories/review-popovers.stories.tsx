@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ReviewProgressPopover, SlidesPopover } from "../src/components/review-popovers.tsx";
+import {
+  CaseDetails,
+  ReviewProgressPopover,
+  SlidesPopover,
+} from "../src/components/review-popovers.tsx";
 import { ReviewTopBar } from "../src/components/review-top-bar.tsx";
 import { mockAssets } from "./fixtures.ts";
 
@@ -38,6 +42,14 @@ const slidesBody = (
     caseTitle="Case S26-04812"
     caseSub="Lymph node · Sentinel node AI evaluation"
     onOpenCase={() => undefined}
+    details={{
+      project: "Sentinel node AI evaluation",
+      caseLabel: "S26-04812",
+      specimen: "A · Lymph node, sentinel, left",
+      blocks: ["A1", "A2"],
+      task: "RT-14 · Round 2 · CAMELYON v1.0",
+      researcher: "Demo Researcher",
+    }}
     caseSlides={[
       {
         id: "a1",
@@ -91,6 +103,35 @@ export const SlidesInCase: Story = {
   render: () => (
     <div className="w-fit rounded-zone border border-line-strong bg-popover shadow-pop">
       {slidesBody}
+    </div>
+  ),
+};
+
+const detailsFrame = "w-115 rounded-zone border border-line-strong bg-popover shadow-pop";
+
+export const CaseDetailsClinical: Story = {
+  render: () => (
+    <div className={detailsFrame}>
+      <CaseDetails
+        details={{
+          project: "Demo clinical project",
+          caseLabel: "S26-00001",
+          specimen: "A · Skin excision, back",
+          blocks: ["A1"],
+          task: "RT-2 · Second read",
+          researcher: "Demo Researcher",
+          clinical: true,
+          clinicalNote: "Fake note for the demo. Lesion growing over three months.",
+        }}
+      />
+    </div>
+  ),
+};
+
+export const CaseDetailsMissing: Story = {
+  render: () => (
+    <div className={detailsFrame}>
+      <CaseDetails details={{ clinical: true }} />
     </div>
   ),
 };

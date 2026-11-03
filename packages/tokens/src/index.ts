@@ -117,3 +117,36 @@ export type TypeStyle = keyof typeof typeScale;
 export const smallModalWidthsPx = [480, 560] as const;
 
 export const flowPageMainMaxPx = 760;
+
+export const motionDurationsMs = { fast: 120, base: 200, slow: 300, slower: 400 } as const;
+
+export type MotionDuration = keyof typeof motionDurationsMs;
+
+export const motionEasings = {
+  standard: [0.2, 0, 0, 1],
+  enter: [0, 0, 0.2, 1],
+  exit: [0.4, 0, 1, 1],
+  "in-out": [0.65, 0, 0.35, 1],
+} as const;
+
+export type MotionEasing = keyof typeof motionEasings;
+
+export const motionModes = ["normal", "presenting", "reduced"] as const;
+
+export type MotionMode = (typeof motionModes)[number];
+
+export const motionScale: Record<MotionMode, number> = { normal: 1, presenting: 3, reduced: 0 };
+
+export const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+
+export function effectiveMotionMode(mode: MotionMode, prefersReduced: boolean): MotionMode {
+  return prefersReduced ? "reduced" : mode;
+}
+
+export function motionMs(duration: MotionDuration, mode: MotionMode = "normal"): number {
+  return motionDurationsMs[duration] * motionScale[mode];
+}
+
+export function cubicBezierCss(easing: MotionEasing): string {
+  return `cubic-bezier(${motionEasings[easing].join(", ")})`;
+}

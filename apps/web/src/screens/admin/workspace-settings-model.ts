@@ -147,3 +147,36 @@ export function endsAtFor(choice: AnnouncementEnd, from: Date): string | null {
 }
 
 export const isAnnouncementText = (text: string) => text.trim().length > 0 && text.length <= 280;
+
+export type PatientBannerSettings = {
+  shown: boolean;
+  names: "full" | "initials";
+  namesLocked: boolean;
+};
+
+export type PatientBannerChange =
+  | { key: "shown"; value: boolean }
+  | { key: "names"; value: "full" | "initials" }
+  | { key: "namesLocked"; value: boolean };
+
+export function patientBannerOf(lab: LabSettings): PatientBannerSettings {
+  const { patient_banner: shown, patient_names: names } = lab.values;
+  return {
+    shown: typeof shown === "boolean" ? shown : true,
+    names: names === "initials" ? "initials" : "full",
+    namesLocked: lab.locked.includes("patient_names"),
+  };
+}
+
+export function patientBannerChange(
+  lab: LabSettings,
+  change: PatientBannerChange,
+): WorkspaceSettingsChange {
+  const others = lab.locked.filter((key) => key !== "patient_names");
+  const current = patientBannerOf(lab);
+  const namesLocked = change.key === "namesLocked" ? change.value : current.namesLocked;
+  const locked = namesLocked ? [...others, "patient_names"] : others;
+  if (change.key === "shown") return { values: { patient_banner: change.value }, locked };
+  if (change.key === "names") return { values: { patient_names: change.value }, locked };
+  return { values: { patient_names: current.names }, locked };
+}

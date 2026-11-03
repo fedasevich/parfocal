@@ -5,9 +5,11 @@ import {
   type MyTask,
   type Project,
   type ResumeTarget,
+  resolveSetting,
   useGetMe,
   useGetMyChecklist,
   useGetMyHome,
+  useGetMySettingLayers,
   useGetNotificationCounts,
   useListProjects,
 } from "@parfocal/api-client";
@@ -17,7 +19,7 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { AvatarStack } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag } from "@parfocal/ui/components/tag";
-import { type ReactNode, useState } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
@@ -30,6 +32,13 @@ import { useSlideProgress } from "../slide-progress.ts";
 import { coverTile, lookUrl } from "../thumbnails.ts";
 import { Announcements } from "./announcements.tsx";
 import { DotRow, SideCard } from "./cards.tsx";
+import {
+  type HomeBlock,
+  homeBlocks,
+  homeLayoutFor,
+  type SideBlock,
+  sideBlocks,
+} from "./home-layout.ts";
 
 const Section = ({ children }: { children: ReactNode }) => (
   <span className="text-caption font-semibold text-fg-dim">{children}</span>
@@ -472,6 +481,7 @@ export function HomeScreen() {
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
   const goTo = useGoTo();
+  const layers = okData(useGetMySettingLayers().data);
   if (me === undefined) {
     return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
   }
@@ -489,6 +499,14 @@ export function HomeScreen() {
     me.workspaces.find((workspace) => workspace.tenant_id === me.active_tenant_id)?.admin_rights ??
     false;
   const firstWeek = checklist !== undefined && !checklist.hidden;
+  const layout = homeLayoutFor(
+    resolveSetting("home_layout", {
+      lab: layers?.lab ?? { values: {}, locked: [] },
+      personal: layers?.personal ?? {},
+      device: {},
+    }).value,
+    me.workspaces.find((workspace) => workspace.tenant_id === me.active_tenant_id)?.role,
+  );
   const inProgress = home.tasks.filter((task) => task.status === "in-review").length;
   const mentions = (counts?.kinds ?? [])
     .filter((kind) => kind.kind === "mention" || kind.kind === "reply")
@@ -507,6 +525,54 @@ export function HomeScreen() {
         .join(" · ");
   const membersOf = (id: string) => projects.find((project) => project.id === id)?.members ?? [];
   const firstProjectId = projects[0]?.id ?? "";
+  const main: Record<HomeBlock, ReactNode> = {
+    continue: (
+      <>
+        <Section>{firstWeek ? "Start here" : "Continue where you left off"}</Section>
+        {home.resume ? (
+          <ResumeHero resume={home.resume} />
+        ) : firstWeek && checklist?.sample_project ? (
+          <SampleHero sample={checklist.sample_project} firstProjectId={firstProjectId} />
+        ) : (
+          <p className="text-body-sm text-fg-dim">
+            Nothing in progress. Start something{" "}
+            {homeBlocks[layout].indexOf("start") > homeBlocks[layout].indexOf("continue")
+              ? "below"
+              : "above"}
+            .
+          </p>
+        )}
+      </>
+    ),
+    start: (
+      <>
+        <Section>Start something</Section>
+        <QuickActions
+          slidesWithoutResults={home.slides_without_results}
+          projectId={firstProjectId}
+        />
+      </>
+    ),
+    projects: (
+      <>
+        <div className="flex items-center justify-between">
+          <Section>Projects</Section>
+          <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
+            New project
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {home.projects.map((project) => (
+            <ProjectCard key={project.id} project={project} members={membersOf(project.id)} />
+          ))}
+        </div>
+      </>
+    ),
+  };
+  const side: Record<SideBlock, ReactNode> = {
+    week: <ThisWeek week={home.week} taskId={home.resume?.task_id} />,
+    tasks: <ComingUp tasks={home.tasks} projects={home.projects} />,
+  };
   return (
     <main className="grid content-start gap-5.5 px-8 pt-5.5 pb-4.5 pl-7">
       <header>
@@ -519,41 +585,17 @@ export function HomeScreen() {
       </header>
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <div className="grid gap-3">
-          <Section>{firstWeek ? "Start here" : "Continue where you left off"}</Section>
-          {home.resume ? (
-            <ResumeHero resume={home.resume} />
-          ) : firstWeek && checklist?.sample_project ? (
-            <SampleHero sample={checklist.sample_project} firstProjectId={firstProjectId} />
-          ) : (
-            <p className="text-body-sm text-fg-dim">Nothing in progress. Start something below.</p>
-          )}
-          <div className="mt-3">
-            <Section>Start something</Section>
-          </div>
-          <QuickActions
-            slidesWithoutResults={home.slides_without_results}
-            projectId={firstProjectId}
-          />
-          <div className="mt-3 flex items-center justify-between">
-            <Section>Projects</Section>
-            <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
-              New project
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {home.projects.map((project) => (
-              <ProjectCard key={project.id} project={project} members={membersOf(project.id)} />
-            ))}
-          </div>
+          {homeBlocks[layout].map((block, index) => (
+            <div key={block} className={`grid gap-3 ${index > 0 ? "mt-3" : ""}`}>
+              {main[block]}
+            </div>
+          ))}
         </div>
         <aside className="grid gap-3">
           {firstWeek && checklist ? (
             <ChecklistCard checklist={checklist} />
           ) : (
-            <>
-              <ThisWeek week={home.week} taskId={home.resume?.task_id} />
-              <ComingUp tasks={home.tasks} projects={home.projects} />
-            </>
+            sideBlocks[layout].map((block) => <Fragment key={block}>{side[block]}</Fragment>)
           )}
           <Announcements items={home.announcements} firstWeek={firstWeek} canPost={canPost} />
         </aside>

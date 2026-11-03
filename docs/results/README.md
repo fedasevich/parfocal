@@ -65,3 +65,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-03 | [Derived overview levels bring coarse-zoom tile reads on Aperio slides from 25 to 45 times a full ladder to 0.4 to 0.6 times](2026-11-03-derived-overview-levels.md) | INGEST-013 | benchmark |
 | 2026-11-03 | [Signed slide bytes on the app origin open without a preflight in Chrome in 0.63 s at 100 ms RTT, and another origin preflights every read and doubles the open](2026-11-03-same-origin-slide-bytes.md) | TILES-003 | comparison |
 | 2026-11-03 | [The browser reader places BIF frames like OpenSlide and agrees within 0.6 grey levels, down from 52 to 65](2026-11-03-bif-frame-placement.md) | VIEW-057 | check |
+| 2026-11-03 | [Monorepo, CI and Python tooling still match ADR 0006, ADR 0007 and ADR 0011, with Ruff, uv and Ubuntu runner upgrades due](2026-11-03-tooling-recheck.md) | FOUND-000 | check |
