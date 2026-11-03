@@ -3673,7 +3673,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when API tests cover templates, custom classes, the colour check rejecting a colour too close to another, and a stored mapping applied to a second import.
   Depends on PROJ-001. Refs doc 37, mock: upload/check. The API carries its own port of the colour check, so this no longer waits for DS-002 ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)).
 
-- [ ] PROJ-005 · Analysis templates
+- [x] PROJ-005 · Analysis templates
   A project turns on an analysis template. Sentinel node staging adds the staging hero, the area list and the measure step (REVIEW-003, REVIEW-004, CASE-004, MEAS-006). Cell review adds unsure zones and cell typing. None shows objects, layers, decisions and the opinion form only.
   Done when API tests cover each template and component tests show the staging cards only with the staging template.
   Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
