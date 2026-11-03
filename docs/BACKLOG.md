@@ -1683,7 +1683,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-006.
   Size: S.
 
-- [ ] DS-030 · Every key hint from the key registry
+- [x] DS-030 · Every key hint from the key registry
   DS-009 (keycap component) moved keycaps onto the key registry, but the tool rail key badges still come from hard-coded keys in `apps/web/src/screens/viewer-tools/rails.ts`, and "Add a note" shows N from a hard-coded handler while N is also No in the yes or no decision style. Register the note action, settle the N clash, and read the rail badges from the registry.
   Done when a test changes a binding and the rail badge and the note hint follow it, and a test proves no two actions in one decision style share a key.
   Depends on DS-009, DS-010.
@@ -3300,6 +3300,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when E2E rebinds J and the review HUD shows the new key, and tests cover a conflict swap, a reserved key, the modifier rule, a set, the single-letter switch and position matching on a Czech layout.
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
+
+- [ ] CMD-007 · Every shortcut fires on the person's own keys
+  DS-030 (every key hint from the key registry) made every hint follow the person's keys, but the decision answer keys (K, X, Y, N and the digits) and the note key still fire on the defaults, and the rail's Annotate (P), AI tools (A, the same key as overlays) and hide panel (]) buttons are not registry actions. Route them all through the registry and settle the A clash.
+  Done when a test rebinds an answer key, the note key and Annotate, and each fires on the new key and not the old one, and a test proves no two actions in one scope share a default key.
+  Depends on DS-030.
+  Size: S.
 
 ---
 

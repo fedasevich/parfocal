@@ -175,6 +175,16 @@ ADR 0197 (proposed) keeps the kit key map, adds hold Space to pan and Alt as a s
 
 Your choice:
 
+## 46. The Add a note key, from DS-030 (every key hint from the key registry)
+
+N is No in the yes or no decision style, so "Add a note" moved from N to ⇧N. People can rebind it.
+
+- a. Keep ⇧N. (recommended, one key in every style)
+- b. Use C, the same key as Comment.
+- c. N in every style except yes or no.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
