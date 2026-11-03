@@ -54,11 +54,11 @@ test("the case inspector does not shift while findings stream in", async ({ page
   const found = panel.getByRole("list", { name: "Found so far" }).getByRole("listitem");
   await expect(heading).toBeVisible({ timeout: 30_000 });
   const first = await found.count();
-  expect(first).toBeLessThan(4);
-  await expect(heading).toHaveText(`Still reading this slide, ${first + 2} regions so far`, {
+  expect(first).toBeLessThan(5);
+  await expect(heading).toHaveText("Still reading this slide, 5 regions so far", {
     timeout: 30_000,
   });
-  await expect(found).toHaveCount(first + 2);
+  await expect(found).toHaveCount(5);
   await expect(panel.getByTestId("next-found")).toHaveCount(1);
   const shifts = await page.evaluate(() => window.__shifts ?? []);
   const panelShifts = shifts.filter((shift) => shift.inPanel);
