@@ -34,6 +34,7 @@ export interface ShapeData {
 export interface LineCasing {
   readonly widthPx: number;
   readonly color: Rgba;
+  readonly followsAlpha?: boolean;
 }
 
 export interface VectorStyle {

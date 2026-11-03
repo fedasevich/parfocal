@@ -9,7 +9,7 @@ import {
   type VivRoute,
   vivRendererFactory,
 } from "@parfocal/viewer-engine/viv";
-import { overlayFixture } from "./overlay-fixtures.ts";
+import { outlineModeFixture, overlayFixture } from "./overlay-fixtures.ts";
 import {
   type SyntheticHarness,
   type SyntheticRequest,
@@ -91,13 +91,15 @@ const render = async (request: SyntheticRequest): Promise<SyntheticResult> => {
   current.mount(host);
   await current.openSlide({ id: "synthetic" });
   current.setCamera(request.camera);
-  if (request.annotations) {
-    const geometry = {
-      centre: { x: request.camera.x, y: request.camera.y },
-      slidePerScreen: 2 ** -request.camera.zoom,
-      viewport: { width: host.clientWidth, height: host.clientHeight },
-    };
-    createOverlayController(current).set(overlayFixture("human-annotations", geometry));
+  const geometry = {
+    centre: { x: request.camera.x, y: request.camera.y },
+    slidePerScreen: 2 ** -request.camera.zoom,
+    viewport: { width: host.clientWidth, height: host.clientHeight },
+  };
+  const overlays = createOverlayController(current);
+  if (request.annotations) overlays.set(overlayFixture("human-annotations", geometry));
+  if (request.outlineMode) {
+    for (const overlay of outlineModeFixture(request.outlineMode, geometry)) overlays.set(overlay);
   }
   const brightness = request.brightness ?? 100;
   if (request.brightnessBy === "css-filter") host.style.filter = `brightness(${brightness / 100})`;

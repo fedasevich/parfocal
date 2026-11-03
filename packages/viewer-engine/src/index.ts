@@ -349,6 +349,25 @@ export {
   withHeatmapLook,
 } from "./overlay/heatmap.ts";
 export {
+  bandAlphas,
+  type ConfidenceBand,
+  closeCallMargin,
+  confidenceBand,
+  confidenceBandFloors,
+  defaultOutlineMode,
+  fadeAlpha,
+  fadeStrength,
+  isUnsureCall,
+  type OutlineMode,
+  type OutlineModeOptions,
+  outlineAlpha,
+  outlineModeOverlays,
+  outlineModes,
+  type TypedOutline,
+  unsureDash,
+  unsureStyle,
+} from "./overlay/outline-modes.ts";
+export {
   type ClassName,
   classColors,
   nearBlack,

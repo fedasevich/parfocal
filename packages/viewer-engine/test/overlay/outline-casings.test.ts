@@ -103,3 +103,23 @@ test("a style without a casing draws no casing layers and no point ring", () => 
   );
   assert.equal(layer(layers, "points").stroked, false);
 });
+
+test("a casing that follows alpha takes each outline's alpha in its own colour", () => {
+  const faint = polygonBatchFromRings([
+    { ring: [0, 0, 10, 0, 10, 10, 0, 10], color: [255, 0, 0, 51] },
+  ]);
+  const builder = createOverlayLayerBuilder();
+  const overlay = createVectorOverlay({
+    id: "a",
+    kind: "nuclei",
+    shapes: { polygons: faint },
+    style: { casing: { widthPx: 1, color: nearBlack, followsAlpha: true } },
+  });
+  const find = (built: unknown[]) =>
+    propsOf(built.find((entry) => (entry as { id: string }).id === "overlay:a:outline-casings"));
+  const casing = find(builder.build([overlay]));
+  const colors = (casing.data as { attributes: { getColor: { value: Uint8Array } } }).attributes
+    .getColor.value;
+  assert.deepEqual(Array.from(colors.subarray(0, 4)), [11, 11, 11, 51]);
+  assert.equal(find(builder.build([overlay])).data, casing.data);
+});
