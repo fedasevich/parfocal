@@ -18,7 +18,6 @@ export {
 } from "./access/signed-slide.ts";
 export type { Fetcher, Mint, MintedAccess } from "./access/tile-access.ts";
 export { TileAccess } from "./access/tile-access.ts";
-
 export type {
   Camera,
   CameraBounds,
@@ -180,6 +179,13 @@ export {
   type RangeCacheStats,
   type RangeReply,
 } from "./decode/range-cache.ts";
+export {
+  clampSlideBrightness,
+  defaultSlideBrightness,
+  maxSlideBrightness,
+  minSlideBrightness,
+  slideBrightnessFactor,
+} from "./engine/brightness.ts";
 export {
   createViewerEngine,
   EngineDisposedError,

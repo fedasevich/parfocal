@@ -71,6 +71,7 @@ const stillRoute: RendererRoute = {
   setCamera: () => {},
   setOverlays: () => {},
   invalidateOverlay: () => {},
+  setSlideBrightness: () => {},
   destroy: () => {},
 };
 

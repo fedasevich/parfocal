@@ -41,7 +41,7 @@ const keysOf = (...ids: string[]) =>
     .join(" ");
 
 const rowKeys: Partial<Record<RowKey, string[]>> = {
-  brightness: ["brightup", "brightdown"],
+  brightness: ["brightup", "brightdown", "brightreset"],
   hidePanel: ["panel"],
 };
 

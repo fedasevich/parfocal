@@ -9,6 +9,7 @@ import {
   type DecodeWorker,
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
+import { slideTint } from "../engine/brightness.ts";
 import { animationFrames, systemClock } from "../engine/environment.ts";
 import { createGuardedFrames } from "../engine/guarded-frames.ts";
 import {
@@ -126,6 +127,7 @@ export function createVivRoute(
   let shown: Shown | null = null;
   let overlays: readonly OverlayLayer[] = [];
   let overlayLayers: Layer[] = [];
+  let brightness = 1;
   const overlayBuilder = createOverlayLayerBuilder();
   let changes = 0;
   let renderedChanges = -1;
@@ -215,7 +217,7 @@ export function createVivRoute(
       channelsVisible: [true],
       dtype: "Uint8",
       ...unpickable,
-      ...{ [interpolationRuleProp]: interpolationRule },
+      ...{ [interpolationRuleProp]: interpolationRule, tintColor: slideTint(brightness) },
     }) as Layer;
 
   const showSlide = (slide: PixelSlide | null) => {
@@ -368,6 +370,12 @@ export function createVivRoute(
     setCamera,
     setOverlays: (next) => {
       overlays = next;
+      applyLayers();
+    },
+    setSlideBrightness: (factor) => {
+      if (factor === brightness) return;
+      brightness = factor;
+      if (shown) shown = { ...shown, layer: slideLayer(shown.slide, shown.levels) };
       applyLayers();
     },
     invalidateOverlay: (id) => {

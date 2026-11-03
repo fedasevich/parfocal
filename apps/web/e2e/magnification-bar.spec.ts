@@ -103,6 +103,27 @@ test("brightness shows in the folded chip only when it is not 100 percent and ho
   await expect(parts(page, "brightness")).toHaveCSS("opacity", "1");
 });
 
+test("Alt+Up and Alt+Down step the slide brightness, Alt+0 resets it, and no CSS filter dims the stage", async ({
+  page,
+}) => {
+  const bar = await openSlide(page);
+  await page.keyboard.press("Alt+ArrowDown");
+  await page.keyboard.press("Alt+ArrowDown");
+  await expect(bar.getByRole("button", { name: /^Slide brightness 80%/ })).toBeVisible();
+  await page.keyboard.press("Alt+ArrowUp");
+  await expect(bar.getByRole("button", { name: /^Slide brightness 90%/ })).toBeVisible();
+  const filters = await page
+    .getByTestId("slide-stage")
+    .evaluate((stage) =>
+      [stage, ...stage.querySelectorAll("*")]
+        .map((element) => getComputedStyle(element).filter)
+        .filter((filter) => filter !== "none"),
+    );
+  expect(filters).toEqual([]);
+  await page.keyboard.press("Alt+0");
+  await expect(bar.getByRole("button", { name: /^Slide brightness 100%/ })).toBeAttached();
+});
+
 test("the blocked area covers the bar in both states", async ({ page }) => {
   const bar = await openSlide(page);
   const stage = page.getByTestId("slide-stage");

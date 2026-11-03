@@ -188,3 +188,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0191](0191-home-layout-as-a-personal-setting.md) | The home layout is a personal setting that setup writes from the chosen role and settings change | Proposed | 2026-11-03 |
 | [0194](0194-confidence-display-rules-and-evidence.md) | Confidence display rules are written over calibrated probabilities and are re-checked per typer | Proposed | 2026-11-03 |
 | [0197](0197-annotate-key-map-check-and-client-geometry-libraries.md) | The Annotate key map stays as the kit has it, and the client does geometry with Clipper2, earcut through math.gl, flatbush and a small planar module of its own | Proposed | 2026-11-03 |
+| [0195](0195-slide-brightness-as-a-slide-layer-tint.md) | Slide brightness is a tint on the slide layer inside the engine, so overlays keep their colour | Proposed | 2026-11-03 |

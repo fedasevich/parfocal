@@ -156,6 +156,7 @@ export class FakeRoute implements RendererRoute<FakeSlide> {
   cameraCalls = 0;
   overlays: readonly OverlayLayer[] = [];
   invalidated: string[] = [];
+  brightness: number[] = [];
   destroyed = false;
   readonly container: EngineContainer;
 
@@ -178,6 +179,10 @@ export class FakeRoute implements RendererRoute<FakeSlide> {
 
   invalidateOverlay(id: string): void {
     this.invalidated.push(id);
+  }
+
+  setSlideBrightness(factor: number): void {
+    this.brightness.push(factor);
   }
 
   destroy(): void {
