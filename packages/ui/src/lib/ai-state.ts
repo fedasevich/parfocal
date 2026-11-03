@@ -1,4 +1,9 @@
-import { type StagingArea, type StagingCategory, stagingCategory } from "./analysis-parts.ts";
+import {
+  microMm,
+  type StagingArea,
+  type StagingCategory,
+  stagingCategory,
+} from "./analysis-parts.ts";
 import {
   bandOf,
   type ConfidenceBand,
@@ -9,10 +14,13 @@ import {
 
 export type AreaCall = "agree" | "disagree" | "unsure";
 
+export type CellCount = { low: number; high: number };
+
 export type AiArea = StagingArea & {
   probability?: number;
   call?: AreaCall | null;
   measured?: number | null;
+  cells?: CellCount | null;
 };
 
 export type AiStateInput = {
@@ -28,9 +36,13 @@ export type RankedArea = AiArea & {
   canChangeCategory: boolean;
 };
 
-export type AiStateKind = "running" | "no-tumor" | "pre-read";
+export type AiStateKind = "running" | "no-tumor" | "pre-read" | "small-cluster";
 
 export type PreReadPhase = "open" | "settled";
+
+export type ClusterStepName = "confirm" | "measure" | "count";
+
+export type ClusterStep = { step: ClusterStepName; done: boolean };
 
 export type AiState =
   | { kind: "running"; areas: RankedArea[] }
@@ -43,6 +55,16 @@ export type AiState =
       size: number;
       category: StagingCategory;
       pn: string;
+    }
+  | {
+      kind: "small-cluster";
+      phase: PreReadPhase;
+      areas: RankedArea[];
+      lead: RankedArea;
+      size: number;
+      category: StagingCategory;
+      pn: string;
+      steps: ClusterStep[];
     };
 
 export const categoryName: Record<StagingCategory, string> = {
@@ -61,6 +83,21 @@ const categoryRank: Record<StagingCategory, number> = { ITC: 0, micro: 1, macro:
 
 export const shownSize = (area: AiArea) => area.measured ?? area.size;
 
+export const cellLine = 200;
+
+export const needsCount = (area: AiArea) => shownSize(area) <= microMm;
+
+export const countFirm = (cells: CellCount | null | undefined) =>
+  cells != null && (cells.high <= cellLine || cells.low > cellLine);
+
+export function areaCategory(area: AiArea): StagingCategory {
+  const size = shownSize(area);
+  if (needsCount(area) && countFirm(area.cells) && (area.cells?.low ?? 0) > cellLine) {
+    return "micro";
+  }
+  return stagingCategory(size);
+}
+
 export function rankAreas(areas: readonly AiArea[]): AiArea[] {
   return [...areas].sort((left, right) => right.size - left.size);
 }
@@ -69,10 +106,22 @@ export function aiState({ areas, running = false }: AiStateInput): AiState {
   const ordered = running ? [...areas] : rankAreas(areas);
   const leadIndex = ordered.findIndex((area) => area.call !== "disagree");
   const leadArea = ordered[leadIndex];
-  const settled = leadArea !== undefined && leadArea.call === "agree" && leadArea.measured != null;
-  const leadCategory = leadArea ? stagingCategory(shownSize(leadArea)) : null;
+  const cluster = leadArea !== undefined && needsCount(leadArea);
+  const steps: ClusterStep[] = leadArea
+    ? [
+        { step: "confirm", done: leadArea.call === "agree" },
+        { step: "measure", done: leadArea.measured != null },
+        { step: "count", done: countFirm(leadArea.cells) },
+      ]
+    : [];
+  const settled =
+    leadArea !== undefined &&
+    leadArea.call === "agree" &&
+    leadArea.measured != null &&
+    (!cluster || countFirm(leadArea.cells));
+  const leadCategory = leadArea ? areaCategory(leadArea) : null;
   const ranked: RankedArea[] = ordered.map((area, index) => {
-    const category = stagingCategory(shownSize(area));
+    const category = areaCategory(area);
     const lead = index === leadIndex;
     const below =
       leadCategory !== null &&
@@ -90,6 +139,18 @@ export function aiState({ areas, running = false }: AiStateInput): AiState {
   if (running) return { kind: "running", areas: ranked.map((area) => ({ ...area, lead: false })) };
   const lead = ranked[leadIndex];
   if (!lead) return { kind: "no-tumor", areas: ranked };
+  if (cluster) {
+    return {
+      kind: "small-cluster",
+      phase: settled ? "settled" : "open",
+      areas: ranked,
+      lead,
+      size: lead.shownSize,
+      category: lead.category,
+      pn: suggestedPn[lead.category],
+      steps,
+    };
+  }
   return {
     kind: "pre-read",
     phase: settled ? "settled" : "open",
