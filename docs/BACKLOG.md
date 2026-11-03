@@ -2088,23 +2088,23 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 - [ ] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
   Done when model-based tests drive every transition.
-  Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice.
+  Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-007 · Minimap placement scoring
   Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning.
   Done when unit tests reproduce the mock's placement decisions for each scene.
-  Refs mock 7 placement algorithm.
+  Refs mock 7 placement algorithm. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-008 · Minimap content
   Seen trail, area outlines with badges, viewport rectangle (crosshair below 8 px), cell dots in area mode, header and footer text. The map is a button: a click opens the whole-slide peek (NAV-010), with a corner "open" hint and a hover ring. Dragging the viewport rectangle still moves the view.
   Done when golden tests cover reading, area and travel modes and E2E opens the peek by clicking the map.
-  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
+  Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md). [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-009 · Minimap settings
-  When useful, always, never.
+  When useful, always, never. The settings catalogue still says corner or hidden, and the help text must match the half of the tissue rule, see [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md).
   Done when tests cover each mode.
   Size: S.
 
