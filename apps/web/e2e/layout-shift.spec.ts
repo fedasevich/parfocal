@@ -67,6 +67,33 @@ test("the case inspector does not shift while findings stream in", async ({ page
   expect(cls).toBe(0);
 });
 
+test("the map fills in and staging areas appear as the job streams while the view stays put", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const href = await runningHref(page);
+  await recordShifts(page);
+  await page.goto(`${href}&stream=1`);
+  const panel = page.getByRole("complementary", { name: "Side panel" });
+  const slide = page.getByRole("img", { name: "The whole slide" });
+  const reached = page.getByTestId("ai-reached");
+  await expect(reached).toBeAttached({ timeout: 30_000 });
+  const viewBox = await slide.getAttribute("viewBox");
+  const startReach = Number(await reached.getAttribute("data-reached"));
+  const staging = panel.locator("[data-slot=staging-cards]");
+  await expect(staging).toHaveAttribute("data-state", "running");
+  await expect(staging.getByTestId("next-area")).toHaveCount(1);
+  await expect
+    .poll(async () => Number(await reached.getAttribute("data-reached")), { timeout: 30_000 })
+    .toBe(0.95);
+  expect(startReach).toBeLessThan(0.95);
+  await expect(staging.getByRole("heading")).toHaveText("Still reading, 5 areas so far");
+  await expect(staging.getByTestId("next-area")).toHaveCount(1);
+  expect(await slide.getAttribute("viewBox")).toBe(viewBox);
+  const shifts = await page.evaluate(() => window.__shifts ?? []);
+  expect(shifts, JSON.stringify(shifts)).toEqual([]);
+});
+
 const pulseOf = (page: Page) =>
   page
     .getByTestId("next-found")

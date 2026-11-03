@@ -1,4 +1,5 @@
 import {
+  type SlideAiProgress,
   useGetMyHome,
   useGetProject,
   useGetSlideAiProgress,
@@ -263,13 +264,16 @@ function ViewerBody({
     measuring && firstRegion
       ? { object: "M1", mm: measuredSize(firstRegion.size_mm ?? 0), across: firstRegion.object }
       : null;
-  const stagingAreas = regions.map((region) => ({
-    object: region.object,
-    size: region.size_mm ?? 0,
-    probability: region.score,
-    call: answer(region.object)?.value ?? null,
-    measured: measurement?.across === region.object ? measurement.mm : null,
-  }));
+  const foundSoFar = (object: string) => !running || (progress?.found.includes(object) ?? false);
+  const stagingAreas = regions
+    .filter((region) => foundSoFar(region.object))
+    .map((region) => ({
+      object: region.object,
+      size: region.size_mm ?? 0,
+      probability: region.score,
+      call: answer(region.object)?.value ?? null,
+      measured: measurement?.across === region.object ? measurement.mm : null,
+    }));
   const selected =
     search.object ??
     setup.object ??
@@ -953,9 +957,10 @@ function ViewerBody({
             <AnalysisCards
               parts={viewerParts}
               areas={stagingAreas}
+              running={running}
               current={selected}
               visited={areaNav.visited}
-              roleOf={areaRole}
+              roleOf={running ? undefined : areaRole}
               onGoTo={areaNav.goTo}
               onStart={areaNav.goTo}
               onSubmit={() => onSearch({ tab: "opinion" })}
@@ -1067,7 +1072,9 @@ function ViewerBody({
             slideName={session.slideName}
             regionStyle={drawing.regionStyle}
             tags={running || nothing ? [] : drawing.tags}
-            underlay={running ? () => <RunningHeat /> : drawing.underlay}
+            underlay={
+              running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
+            }
             onPointPick={(point) => {
               const placed = pinForClick(search.tool, point);
               if (placed === null) return;
@@ -1207,12 +1214,17 @@ function ViewerBody({
   );
 }
 
-function RunningHeat() {
+function readReach(progress: SlideAiProgress | undefined) {
+  const regionsStep = progress?.steps.find((step) => step.key === "regions");
+  return Math.min(1, Math.max(0, (regionsStep?.percent ?? 0) / 100));
+}
+
+function RunningHeat({ reached }: { reached: number }) {
   return (
     <>
       <defs>
         <clipPath id="running-clip">
-          <rect x={0} y={0} width={1400} height={1924 * 0.55} />
+          <rect x={0} y={0} width={1400} height={1924 * reached} />
         </clipPath>
       </defs>
       <image
@@ -1223,10 +1235,12 @@ function RunningHeat() {
         clipPath="url(#running-clip)"
       />
       <line
+        data-testid="ai-reached"
+        data-reached={reached}
         x1={0}
         x2={1400}
-        y1={1924 * 0.55}
-        y2={1924 * 0.55}
+        y1={1924 * reached}
+        y2={1924 * reached}
         stroke="var(--accent)"
         strokeWidth={2}
         strokeDasharray="8 6"

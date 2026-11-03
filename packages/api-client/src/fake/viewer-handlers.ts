@@ -51,17 +51,25 @@ const foundAfter = (reads: number) => [
   ...aiStillReading.later.slice(0, Math.max(0, reads - 1)),
 ];
 
-export const toSlideAiProgress = (slideId: string): SlideAiProgress =>
-  slideAiProgressSchema.parse(
-    fakeViewerScene() === "running"
-      ? {
-          slide_id: slideId,
-          state: "running",
-          steps: aiStillReading.steps,
-          found: foundAfter(nextFakeProgressRead()),
-        }
-      : { slide_id: slideId, state: "ready", steps: [], found: [] },
+const stepsAfter = (reads: number) =>
+  aiStillReading.steps.map((step) =>
+    step.state === "running"
+      ? { ...step, percent: Math.min(95, step.percent + 10 * Math.max(0, reads - 1)) }
+      : step,
   );
+
+export const toSlideAiProgress = (slideId: string): SlideAiProgress => {
+  if (fakeViewerScene() !== "running") {
+    return slideAiProgressSchema.parse({ slide_id: slideId, state: "ready", steps: [], found: [] });
+  }
+  const reads = nextFakeProgressRead();
+  return slideAiProgressSchema.parse({
+    slide_id: slideId,
+    state: "running",
+    steps: stepsAfter(reads),
+    found: foundAfter(reads),
+  });
+};
 
 export const getGetSlideResultStatsMockHandler = (overrideResponse?: SlideResultStats) =>
   http.get<{ taskId: string; slideId: string }>(
