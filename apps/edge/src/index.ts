@@ -1,3 +1,4 @@
+import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
 import { withSecurityHeaders } from "#security-headers.ts";
@@ -22,11 +23,11 @@ export type AppEnv = {
   readonly UPLOAD_ORIGIN?: string;
 };
 
-export type EdgeEnv = TileEnv & RoomEnv & AppEnv;
+export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv;
 
 export default {
   async fetch(request: Request, env: EdgeEnv, context: ExecutionContext): Promise<Response> {
-    const response = await route(request, env, context);
+    const response = (await guard(request, env)) ?? (await route(request, env, context));
     return withSecurityHeaders(request, response, {
       uploadOrigin: env.UPLOAD_ORIGIN,
     });
