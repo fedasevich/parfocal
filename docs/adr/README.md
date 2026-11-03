@@ -177,3 +177,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0169](0169-walking-skeleton-retrospective.md) | Walking skeleton retrospective | Accepted | 2026-11-03 |
 | [0171](0171-analytics-without-device-storage.md) | Product analytics store nothing on the device, so Parfocal shows no consent banner | Accepted | 2026-11-03 |
 | [0172](0172-backend-message-catalogues-and-pseudo-locale.md) | Backend messages live in keyed catalogues with a pseudo locale | Accepted | 2026-11-03 |
+| [0176](0176-case-view-state-model.md) | The case view state model: the slide and workspace in the path, the view in the URL, camera memory per slide while the case is open | Accepted | 2026-11-03 |
