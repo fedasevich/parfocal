@@ -36,6 +36,7 @@ type ReviewTopProps = {
   primaryLabel?: string | undefined;
   primaryTitle?: string | undefined;
   onWholeSlide?: (() => void) | undefined;
+  object?: string | undefined;
 };
 
 export function ReviewTop({
@@ -49,6 +50,7 @@ export function ReviewTop({
   primaryLabel,
   primaryTitle,
   onWholeSlide,
+  object,
 }: ReviewTopProps) {
   const popovers = useReviewTopPopovers({ mode, session, counts, onWholeSlide });
   const me = okData(useGetMe().data);
@@ -88,14 +90,14 @@ export function ReviewTop({
             void navigate({
               to: "/projects/$projectId/slides/$slideId",
               params: { projectId, slideId: session.slideId },
-              search: { task: session.taskId },
+              search: { task: session.taskId, ...(object ? { object } : {}) },
             });
           }
           if (next === "guided") {
             void navigate({
               to: "/tasks/$taskId/guided",
               params: { taskId: session.taskId },
-              search: { slide: session.slideId },
+              search: { slide: session.slideId, ...(object ? { object } : {}) },
             });
           }
         }}
