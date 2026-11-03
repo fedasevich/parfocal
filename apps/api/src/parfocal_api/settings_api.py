@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import Mapping
 from typing import Annotated, Any
 
@@ -12,6 +13,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import BadRequestError, ConflictError
+from parfocal_api.review_tasks import pinned_template
 from parfocal_api.settings_catalogue import BY_KEY, CATALOGUE, Layer
 from parfocal_api.tables import personal_settings, workspace_settings
 from parfocal_common.db import CURRENT_TENANT
@@ -140,6 +142,9 @@ async def set_workspace_settings(
     change: WorkspaceSettingsChange, principal: CurrentPrincipal, connection: TenantConnection
 ) -> LabSettings:
     checked(change.values, Layer.LAB)
+    template = change.values.get("default_study_template")
+    if template is not None:
+        await pinned_template(connection, uuid.UUID(template), None)
     current = await lab_of(connection)
     values = merged(current.values, change.values)
     locked = sorted(set(change.locked))

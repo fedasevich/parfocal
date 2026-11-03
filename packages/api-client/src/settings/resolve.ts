@@ -28,6 +28,8 @@ const fits = (entry: SettingEntry, value: unknown): boolean => {
       return typeof value === "string" && (entry.options ?? []).includes(value);
     case "switch":
       return typeof value === "boolean";
+    case "id":
+      return typeof value === "string" && value !== "";
     case "whole":
       return (
         Number.isInteger(value) &&

@@ -38378,7 +38378,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 21
+        "maxProperties": 24
       },
       "Verdict": {
         "properties": {
@@ -38772,7 +38772,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 21,
+            "maxItems": 24,
             "title": "Locked",
             "default": []
           }

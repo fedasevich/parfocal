@@ -22,12 +22,15 @@ export type SettingValues = {
   initials_while_sharing: boolean;
   lock_after_minutes: number;
   patient_banner: boolean;
+  default_privacy_mode: "de-identified" | "clinical";
+  default_classes: "none" | "sentinel-node" | "pannuke";
+  default_study_template: string;
 };
 
 export type SettingKey = keyof SettingValues;
 
 export type SettingEntry = {
-  kind: "choice" | "switch" | "whole";
+  kind: "choice" | "switch" | "whole" | "id";
   default: string | boolean | number;
   layers: Layer[];
   options?: string[];
@@ -237,6 +240,36 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   "patient_banner": {
     "kind": "switch",
     "default": true,
+    "layers": [
+      "lab"
+    ]
+  },
+  "default_privacy_mode": {
+    "kind": "choice",
+    "default": "de-identified",
+    "layers": [
+      "lab"
+    ],
+    "options": [
+      "de-identified",
+      "clinical"
+    ]
+  },
+  "default_classes": {
+    "kind": "choice",
+    "default": "none",
+    "layers": [
+      "lab"
+    ],
+    "options": [
+      "none",
+      "sentinel-node",
+      "pannuke"
+    ]
+  },
+  "default_study_template": {
+    "kind": "id",
+    "default": "",
     "layers": [
       "lab"
     ]

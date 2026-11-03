@@ -4,6 +4,7 @@ import { getParfocalAPIMock } from "../generated/api.msw.ts";
 import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
+import { consoleHandlers } from "./console-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
@@ -35,6 +36,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adjudicationHandlers(),
     ...caseHandlers(),
     ...settingsHandlers(),
+    ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
     ...viewerToolsHandlers(),
@@ -58,6 +60,11 @@ export {
   fakeConnectModelScene,
   setFakeConnectModelScene,
 } from "./connect-model-scene.ts";
+export {
+  liveAnnouncements,
+  liveWorkspaceSettings,
+  resetConsoleActions,
+} from "./console-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export {
   type FakeJobsScene,
