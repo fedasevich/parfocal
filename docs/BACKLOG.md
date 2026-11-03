@@ -2318,7 +2318,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-001.
   Size: S.
 
-- [ ] REVIEW-022 · AI wording on screen with a frequency option
+- [x] REVIEW-022 · AI wording on screen with a frequency option
   REVIEW-011 (AI wording modes) added `confidence-words.ts` with plain, percent and frequency modes, but nothing on screen uses it, and the personal setting `confidence_wording` (words, numbers, colour, hidden) has no frequency option.
   Done when the inspector and the gallery tile read their AI wording through the module, the setting offers frequency, and component tests cover each mode and the percent fallback for an uncalibrated typer.
   Depends on REVIEW-011.
@@ -2332,6 +2332,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] REVIEW-024 · Model warnings on the full viewer
   REVIEW-023 (model warnings in the inspector) built `ModelWarningsBlock`, but no screen has the typer metadata (calibration, test set accuracy and shares, validated sites) or the personal `model_warnings` setting to pass in. Add the metadata to the fake result set and the API contract, call `slideStatistics` on the slide's cells, and put the block under AiSays in full-viewer.tsx, gated by `model_warnings`.
+  Give the fake typers calibration evidence too, because without it the Word confidence preset (preset 3 on task RT-14) falls back to percent since REVIEW-022.
   Done when a component test shows the block on a slide whose typer trips a rule and hides it when the setting is off.
   Depends on REVIEW-023.
   Size: S.
@@ -2340,6 +2341,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   REVIEW-021 (comment pin) posts a pinned thread through `useCreateThread`, but the api-client fake has no POST threads override, so a posted thread comes back as random mock data and never appears in the fake list.
   Done when an api-client fake test posts a thread with a point anchor and lists it back, and the comment pin E2E sees the new thread in the Comments tab.
   Depends on REVIEW-021.
+  Size: S.
+
+- [ ] REVIEW-026 · Confidence wording in Settings and guided review
+  REVIEW-022 (AI wording on screen) added frequency to the personal setting `confidence_wording` and the `aiWording` helper, but the Settings screen has no row for the setting, and guided review reads the task's display preset instead of it.
+  Done when Settings shows the row with all four values, guided review follows the setting when the task does not lock a preset, and component tests cover both.
+  Depends on REVIEW-022.
   Size: S.
 
 ---
