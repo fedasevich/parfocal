@@ -2305,10 +2305,16 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-011.
   Size: S.
 
-- [ ] REVIEW-023 · Model warnings in the inspector
+- [x] REVIEW-023 · Model warnings in the inspector
   REVIEW-014 (model warnings) added `modelWarnings` and `slideStatistics` in packages/ui lib/model-warnings.ts, but nothing shows them. Show them in the inspector's Model warnings block (the mock's `blkWarn` toggle).
   Done when component tests cover no warning, one and several, and the block's toggle.
   Depends on REVIEW-014.
+  Size: S.
+
+- [ ] REVIEW-024 · Model warnings on the full viewer
+  REVIEW-023 (model warnings in the inspector) built `ModelWarningsBlock`, but no screen has the typer metadata (calibration, test set accuracy and shares, validated sites) or the personal `model_warnings` setting to pass in. Add the metadata to the fake result set and the API contract, call `slideStatistics` on the slide's cells, and put the block under AiSays in full-viewer.tsx, gated by `model_warnings`.
+  Done when a component test shows the block on a slide whose typer trips a rule and hides it when the setting is off.
+  Depends on REVIEW-023.
   Size: S.
 
 ---

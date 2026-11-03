@@ -228,6 +228,15 @@ The task title says keys 1 to 4, but its note says keys follow the project taxon
 
 Your choice:
 
+## 60. Model warnings when there are none, from REVIEW-023 (model warnings in the inspector)
+
+The inspector's Model warnings block lists what the rules of ADR 0194 find.
+
+- a. Hide the block when there are no warnings (built). (recommended, keeps the inspector quiet)
+- b. Show a quiet "No model warnings for this slide" line.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
