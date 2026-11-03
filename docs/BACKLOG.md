@@ -4008,7 +4008,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, EVAL-006, EVAL-007. Refs mock: task/decision, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: admin (the template editor), kit: decision styles, doc 44.
   Size: L.
 
-- [ ] GUIDE-018 · Change Counts as on an existing task
+- [x] GUIDE-018 · Change Counts as on an existing task
   GUIDE-015 left no screen that changes Counts as once a task exists, although the client's `useChangeReviewTask` does it. Put it in a task settings drawer on the project's Tasks list, with a confirm that says how many answers it recounts, which was the recommended option when GUIDE-015 handed back on 2026-11-02.
   Done when a Playwright test changes Counts as on a seeded task, sees the recount count in the confirm, and the report's Methods block shows the change.
   Depends on GUIDE-015.
