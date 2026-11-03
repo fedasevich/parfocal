@@ -1551,7 +1551,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D3, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: M.
 
-- [ ] DS-009 · Keycap component
+- [x] DS-009 · Keycap component
   Done when keycaps render the user's current binding from the key registry, not a hard-coded letter.
   Depends on PROTO-011.
   Size: S.
@@ -1675,6 +1675,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-006 (buttons and icon buttons) found that `outline-none` next to `focus-visible:outline-2` left the button focus ring invisible. Other kit components combine the same classes. Check every interactive component in packages/ui and apps/web and make the ring draw.
   Done when a test tabs through the kit stories and asserts a visible outline on each focused control, and axe passes.
   Depends on DS-006.
+  Size: S.
+
+- [ ] DS-030 · Every key hint from the key registry
+  DS-009 (keycap component) moved keycaps onto the key registry, but the tool rail key badges still come from hard-coded keys in `apps/web/src/screens/viewer-tools/rails.ts`, and "Add a note" shows N from a hard-coded handler while N is also No in the yes or no decision style. Register the note action, settle the N clash, and read the rail badges from the registry.
+  Done when a test changes a binding and the rail badge and the note hint follow it, and a test proves no two actions in one decision style share a key.
+  Depends on DS-009, DS-010.
   Size: S.
 
 ---
