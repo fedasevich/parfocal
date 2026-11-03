@@ -3863,7 +3863,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
   Size: L.
 
-- [ ] TASK-006 · Invitations to a task
+- [x] TASK-006 · Invitations to a task
   Inviting someone new to a task sends an email without PHI that names who asked, the project, the work and the due date. Accepting creates the account and opens the first slide (ONB-003).
   Done when API and E2E tests cover invite, accept and landing on the first slide.
   Depends on TASK-001, IAM-007, NOTIF-004.
