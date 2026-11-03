@@ -1264,7 +1264,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when `reader-check.ts` passes on OS-1.bif within 2 grey levels of the reference tiles with a seam ratio under 2, and the existing BIF golden is updated.
   Size: M.
 
-- [ ] VIEW-022 · Keyboard navigation
+- [x] VIEW-022 · Keyboard navigation
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
   Size: S.
