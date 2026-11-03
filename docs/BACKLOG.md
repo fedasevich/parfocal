@@ -2413,7 +2413,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock §2.9.
   Size: M.
 
-- [ ] ANN-004 · Select tool
+- [x] ANN-004 · Select tool
   Click selects, Shift+click toggles (only if moved less than 3 px), marquee on empty space, move with axis lock, vertex and edge reshape with 45° snap, double-click edge adds a point, double-click point removes it.
   Done when interaction tests replay each gesture.
   Refs doc 16.

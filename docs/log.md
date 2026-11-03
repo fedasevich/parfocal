@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ANN-004 (select tool): a pure state machine in apps/web/src/annotations/select-tool.ts with hit testing and reshape helpers, a SelectLayer in the slide stage, armed by V or the rail button. Click selects, Shift+click toggles under 3 px of movement, a marquee selects shapes it touches, a drag moves with Shift locking an axis, vertex and edge drags reshape with Shift snapping to 45 degrees, double-click adds or removes a point down to three, and Escape restores. 38 tests replay each gesture in the trace format. Doc 16 is not in the repo, so the agent's choices are in docs/knowledge/frontend-ui.md. The ruler is the only shape the app draws today. A commit(before, after, label) hook waits for ANN-013 (undo and redo).
 - VIEW-049 (tissue box delivered to the viewer): the real opener createPixelSlideOpener takes a tissueUrl, fetches the tissue.json beside the slide while the pixel source opens and passes its box as the engine slide's tissue. A box passed by the caller still wins. The box is not in the tile index because ingest writes the index before it derives the tissue mask. A missing, broken, null or failed box opens fitted to the whole scan. Tested through the real opener with a synthetic TIFF. TODO: apps/web does not use the real opener yet, so CASE-016 wires tissueUrl.
 
 ## 2026-11-03
