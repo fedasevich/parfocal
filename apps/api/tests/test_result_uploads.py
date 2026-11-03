@@ -311,6 +311,12 @@ def test_a_result_file_that_cannot_be_imported_fails_with_its_reason(
     state = status_of(api, lab.lead, result)
     assert (state["status"], state["reason"], state["result_set_id"]) == ("failed", reason, None)
     assert state["message"]
+    assert state["failure_class"] == "permanent"
+    assert owner(
+        database,
+        "SELECT payload->>'reason' FROM notifications "
+        f"WHERE user_id = '{lab.lead.user_id}' AND kind = 'upload-refused'",
+    ) == [(reason,)]
     assert owner(database, f"SELECT id FROM result_sets WHERE slide_id = '{slide_id}'") == []
     assert not exists(result["key"])
     assert ("upload.refused",) in owner(

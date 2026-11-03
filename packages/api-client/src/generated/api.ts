@@ -1173,6 +1173,13 @@ export interface Scope {
  */
 export type ExtraScopes = Scope[];
 
+export type FailureClass = (typeof FailureClass)[keyof typeof FailureClass];
+
+export const FailureClass = {
+  transient: "transient",
+  permanent: "permanent",
+} as const;
+
 export interface FieldError {
   location: (string | number)[];
   message: string;
@@ -1472,6 +1479,7 @@ export const NotificationKind = {
   "model-run-finished": "model-run-finished",
   "model-run-paused": "model-run-paused",
   "upload-done": "upload-done",
+  "upload-refused": "upload-refused",
   "disagreements-ready": "disagreements-ready",
   "task-signed-off": "task-signed-off",
   "emergency-access": "emergency-access",
@@ -3616,6 +3624,7 @@ export interface UploadState {
   step: string | null;
   slide_id: string | null;
   reason: string | null;
+  failure_class: FailureClass | null;
   message: string | null;
   notices: IngestNotice[];
   result_format: ResultFormat | null;

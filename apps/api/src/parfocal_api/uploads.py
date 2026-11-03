@@ -26,7 +26,14 @@ from parfocal_api.result_imports import (
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
-from parfocal_common.ingest import NOTICES, Failure, enqueue_ingest, failure_message
+from parfocal_common.ingest import (
+    NOTICES,
+    Failure,
+    FailureClass,
+    enqueue_ingest,
+    failure_class,
+    failure_message,
+)
 from parfocal_common.jobs import JobStatus, StepStatus
 from parfocal_common.object_store import NoSuchUploadError, StorageError, StoredPart
 from parfocal_common.pairing import Certainty, Rule
@@ -166,6 +173,7 @@ class UploadState(BaseModel):
     step: str | None
     slide_id: uuid.UUID | None
     reason: str | None
+    failure_class: FailureClass | None
     message: str | None
     notices: list[IngestNotice]
     result_format: ResultFormat | None
@@ -532,6 +540,12 @@ def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:
     return IngestStatus.FAILED, reason, failure_message(reason)
 
 
+def class_of(status: IngestStatus, reason: str | None) -> FailureClass | None:
+    if status is IngestStatus.FAILED and reason is not None:
+        return failure_class(reason)
+    return None
+
+
 def waiting(reason: Waiting) -> tuple[IngestStatus, str | None, str | None]:
     return IngestStatus.WAITING, reason, WAITING[reason]
 
@@ -677,6 +691,7 @@ async def result_state(connection: AsyncConnection, row: Any) -> UploadState:
         step=step if status is IngestStatus.PROCESSING else None,
         slide_id=row.slide_id,
         reason=reason,
+        failure_class=class_of(status, reason),
         message=message,
         notices=notices_of(await import_notices(connection, row.job_id)) if imported else [],
     )
@@ -698,6 +713,7 @@ async def slide_state(connection: AsyncConnection, row: Any) -> UploadState:
         step=step if status is IngestStatus.PROCESSING else None,
         slide_id=slide.id if slide is not None else None,
         reason=reason,
+        failure_class=class_of(status, reason),
         message=message,
         notices=notices_of(slide.notices) if slide is not None else [],
     )

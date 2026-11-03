@@ -2,11 +2,13 @@ import type { UploadBatch, UploadBatchSlide } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { IngestFailure } from "@parfocal/ui/components/ingest-failure";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
+import { supportHref } from "../../upload/ingest-failure.ts";
 import { Thumb } from "./parts.tsx";
 import {
   joinAnd,
@@ -98,6 +100,7 @@ export function ProgressStep({
   scene,
   projectId,
   firstSlideId,
+  onRetry,
 }: {
   batch: UploadBatch;
   model: UploadModel;
@@ -106,6 +109,7 @@ export function ProgressStep({
   scene: UploadScene;
   projectId: string;
   firstSlideId: string | undefined;
+  onRetry?: ((index: number) => void) | undefined;
 }) {
   const offline = scene === "sourceoff" && !state.sourceBack;
   const back = scene === "sourceoff" && state.sourceBack;
@@ -214,6 +218,20 @@ export function ProgressStep({
                     <Icon name="down" className={cn(open && "rotate-180")} />
                   </button>
                 </div>
+                {slide.failure ? (
+                  <IngestFailure
+                    className="mr-3.5 mb-3.5 ml-16.5"
+                    fileName={slide.name}
+                    message={slide.failure.message}
+                    failureClass={slide.failure.failure_class}
+                    supportHref={
+                      slide.failure.failure_class === "permanent"
+                        ? supportHref(slide.failure.reason)
+                        : undefined
+                    }
+                    onRetry={onRetry ? () => onRetry(index) : undefined}
+                  />
+                ) : null}
                 {open ? (
                   <StepList slide={slide} projectId={projectId} firstSlideId={firstSlideId} />
                 ) : null}

@@ -940,6 +940,7 @@ class NotificationKind(StrEnum):
     MODEL_RUN_FINISHED = "model-run-finished"
     MODEL_RUN_PAUSED = "model-run-paused"
     UPLOAD_DONE = "upload-done"
+    UPLOAD_REFUSED = "upload-refused"
     DISAGREEMENTS_READY = "disagreements-ready"
     TASK_SIGNED_OFF = "task-signed-off"
     EMERGENCY_ACCESS = "emergency-access"

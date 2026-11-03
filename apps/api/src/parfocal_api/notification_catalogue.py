@@ -105,6 +105,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         QUIET,
         breaks_mute=False,
     ),
+    NotificationKind.UPLOAD_REFUSED: Entry(
+        TargetKind.JOB,
+        "Upload refused",
+        "A file you uploaded was refused. Open it to see why.",
+        QUIET,
+        breaks_mute=False,
+    ),
     NotificationKind.DISAGREEMENTS_READY: Entry(
         TargetKind.TASK,
         "Disagreements to decide",
