@@ -908,6 +908,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] I18N-001 · String externalisation in the web app
   Done when every UI string goes through the i18n layer, an English catalogue is extracted, and a lint rule fails on raw string literals in JSX.
+  Uses Lingui 6 with ICU messages, PO catalogues and the `en-XA` pseudo locale per [ADR 0173](adr/0173-lingui-for-web-app-strings.md).
+  Depends on I18N-000.
   Size: M.
 
 - [x] I18N-002 · Locale-aware formatting
