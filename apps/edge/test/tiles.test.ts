@@ -487,3 +487,31 @@ describe("the byte range cache", () => {
     assert.equal(cache.puts.length, 0);
   });
 });
+
+describe("the same-origin data path", () => {
+  test("answers a CORS preflight with 405 and grants no other origin", async () => {
+    const headers = new Headers({
+      Origin: "https://elsewhere.test",
+      "Access-Control-Request-Method": "GET",
+      "Access-Control-Request-Headers": "authorization, range",
+    });
+    const env = { SLIDES: lab() as unknown as R2Bucket, TILE_TOKEN_KEY: SECRET } satisfies TileEnv;
+    const response = await handleTiles(
+      new Request(`https://parfocal.test${ORIGINAL}`, { method: "OPTIONS", headers }),
+      env,
+      () => NOW,
+      () => undefined,
+    );
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get("Access-Control-Allow-Origin"), null);
+    assert.equal(response.headers.get("Access-Control-Allow-Headers"), null);
+    assert.equal(response.headers.get("Cross-Origin-Resource-Policy"), "same-origin");
+  });
+
+  test("serves a range with no CORS grant, so only the app origin can read it", async () => {
+    const response = await request(lab(), ORIGINAL, await tokenFor(), "bytes=0-99");
+    assert.equal(response.status, 206);
+    assert.equal(response.headers.get("Access-Control-Allow-Origin"), null);
+    assert.equal(response.headers.get("Cross-Origin-Resource-Policy"), "same-origin");
+  });
+});

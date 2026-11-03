@@ -1,6 +1,7 @@
 export const packageName = "@parfocal/viewer-engine";
 
 export {
+  CrossOriginSlideBytesError,
   createSlideAccess,
   LEVEL_TABLE_FILE,
   type LevelTable,

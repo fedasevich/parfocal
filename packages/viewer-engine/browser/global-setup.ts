@@ -38,6 +38,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           channels: fileURLToPath(new URL("./page/channels.html", import.meta.url)),
           "overlay-indices": fileURLToPath(new URL("./page/overlay-indices.html", import.meta.url)),
           lifecycle: fileURLToPath(new URL("./page/lifecycle.html", import.meta.url)),
+          "same-origin": fileURLToPath(new URL("./page/same-origin.html", import.meta.url)),
           "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),
         },
       },

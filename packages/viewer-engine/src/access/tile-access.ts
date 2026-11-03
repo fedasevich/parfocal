@@ -74,5 +74,5 @@ export class TileAccess {
 function withToken(init: RequestInit, token: string): RequestInit {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
-  return { ...init, headers };
+  return { cache: "no-store", ...init, headers };
 }

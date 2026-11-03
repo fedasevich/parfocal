@@ -30,6 +30,16 @@ export class SlideBytesError extends Error {
   }
 }
 
+export class CrossOriginSlideBytesError extends Error {
+  readonly url: string;
+
+  constructor(url: string, origin: string) {
+    super(`Slide bytes are read only from the app origin ${origin}, not from ${url}`);
+    this.name = "CrossOriginSlideBytesError";
+    this.url = url;
+  }
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
@@ -131,6 +141,11 @@ function directoryUrl(basePath: string, baseUrl: string | URL | undefined): URL 
   return base.pathname.endsWith("/") ? base : new URL(`${base.pathname}/`, base);
 }
 
+function appOrigin(baseUrl: string | URL | undefined): string | null {
+  const page = baseUrl ?? (typeof location === "undefined" ? undefined : location.href);
+  return page === undefined ? null : new URL(page).origin;
+}
+
 function requestUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") return input;
   if (input instanceof URL) return input.href;
@@ -142,6 +157,10 @@ export async function signedOpenRequest(options: SignedSlideOptions): Promise<Op
   const formatId = options.formatId ?? slideFormatFromName(original);
   if (formatId === null) throw new UnsupportedFormatError(original);
   const directory = directoryUrl(basePath, baseUrl);
+  const origin = appOrigin(baseUrl);
+  if (origin !== null && directory.origin !== origin) {
+    throw new CrossOriginSlideBytesError(directory.href, origin);
+  }
   const tableUrl = new URL(LEVEL_TABLE_FILE, directory).href;
   const response = await access.fetch(tableUrl, signal === undefined ? {} : { signal }, fetcher);
   if (!response.ok) throw new SlideBytesError(tableUrl, response.status);

@@ -74,6 +74,22 @@ describe("tile access", () => {
     assert.ok(lab.mints <= (2 * TWO_HOURS_MS) / (LIFETIME_SECONDS * 1000) + 1);
   });
 
+  test("byte reads skip the browser cache, whose per-URL lock would queue parallel ranges", async () => {
+    const seen: RequestInit[] = [];
+    const access = new TileAccess(() =>
+      Promise.resolve({ token: "t", lifetimeSeconds: LIFETIME_SECONDS }),
+    );
+    const edge: Fetcher = (_input, init) => {
+      seen.push(init);
+      return Promise.resolve(new Response(null, { status: 206 }));
+    };
+    await access.fetch(URL, { headers: { range: "bytes=0-9" } }, edge);
+    await access.fetch(URL, { cache: "default" }, edge);
+    assert.equal(seen[0]?.cache, "no-store");
+    assert.equal(new Headers(seen[0]?.headers).get("range"), "bytes=0-9");
+    assert.equal(seen[1]?.cache, "default");
+  });
+
   test("a viewer left idle past the lifetime gets a fresh token before its next tile", async () => {
     const lab = new Lab();
     const access = new TileAccess(lab.mint, lab.clock);
