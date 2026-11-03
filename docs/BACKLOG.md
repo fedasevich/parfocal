@@ -971,7 +971,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when tests on CAMELYON16 slides cover more than 98% of annotated tumour and exclude glass, with a golden mask image.
   Refs [`poc/server/app/nuclei/wsi.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/app/nuclei/wsi.py) (tissue mask at 64 px cells).
 
-- [ ] INGEST-013 · Derived overview levels for ladder gaps
+- [x] INGEST-013 · Derived overview levels for ladder gaps
   Where a vendor pyramid skips levels and Viv's power-of-two ladder would read huge tiles, write small derived levels as a sidecar.
   Done when coarse-zoom tile reads on the affected fixtures drop from the POC's 19 to 85× cost to within 2× of a full ladder.
   Refs doc 03.
