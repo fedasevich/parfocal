@@ -1,5 +1,7 @@
 import type { RequestHandler } from "msw";
 import {
+  getCreateAnnouncementMockHandler,
+  getEndAnnouncementMockHandler,
   getGetNotificationCountsMockHandler,
   getGetReviewOrderMockHandler,
   getGetReviewTaskMockHandler,
@@ -14,6 +16,7 @@ import {
   getSearchMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  AnnouncementDraft,
   AssignedTask,
   InboxCounts,
   InboxItem,
@@ -28,11 +31,16 @@ import type {
   TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
+import {
+  currentAnnouncements,
+  endAnnouncement,
+  postAnnouncement,
+  resetAnnouncementBoard,
+} from "./announcement-board.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
 import {
-  announcements,
   cases,
   myWorkSlideIds,
   notifications,
@@ -417,6 +425,7 @@ export const verdictsOf = verdictsFor;
 
 export function workHandlers(): RequestHandler[] {
   const inbox = createInbox();
+  resetAnnouncementBoard();
   return [
     getListTasksAssignedByMeMockHandler(() => tasksAssignedBy(fakeView().viewer)),
     getListMySlidesMockHandler(({ request }) => {
@@ -464,7 +473,24 @@ export function workHandlers(): RequestHandler[] {
       const query = new URL(request.url).searchParams.get("q") ?? "";
       return { query, hits: searchScenario(query) };
     }),
-    getListAnnouncementsMockHandler(announcements.map(toAnnouncement)),
+    getListAnnouncementsMockHandler(() => currentAnnouncements().map(toAnnouncement)),
+    getCreateAnnouncementMockHandler(async ({ request }) => {
+      const draft = (await request.json()) as AnnouncementDraft;
+      return toAnnouncement(
+        postAnnouncement({
+          kind: draft.kind,
+          text: draft.text.trim(),
+          endsAt: draft.ends_at ?? null,
+          createdBy: people[fakeView().viewer].id,
+        }),
+      );
+    }),
+    getEndAnnouncementMockHandler(({ request }) => {
+      const id = new URL(request.url).pathname.split("/").at(-2) ?? "";
+      const ended = endAnnouncement(id);
+      if (ended === undefined) throw new Error(`No announcement ${id}`);
+      return toAnnouncement(ended);
+    }),
     getGetReviewOrderMockHandler(({ params }) =>
       reviewOrderOf(String(params.taskId), String(params.slideId)),
     ),

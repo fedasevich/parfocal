@@ -1,5 +1,4 @@
 import {
-  type Announcement,
   ApiError,
   type Checklist,
   type HomeProject,
@@ -23,20 +22,14 @@ import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
-import {
-  formatDue,
-  formatLongDay,
-  formatWeekday,
-  greeting,
-  percent,
-  plural,
-  relativeDay,
-} from "../format.ts";
+import { formatDue, formatLongDay, formatWeekday, greeting, percent, plural } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useSlideProgress } from "../slide-progress.ts";
 import { coverTile, lookUrl } from "../thumbnails.ts";
+import { Announcements } from "./announcements.tsx";
+import { DotRow, SideCard } from "./cards.tsx";
 
 const Section = ({ children }: { children: ReactNode }) => (
   <span className="text-caption font-semibold text-fg-dim">{children}</span>
@@ -44,60 +37,6 @@ const Section = ({ children }: { children: ReactNode }) => (
 
 const shortName = (task: { task_name?: string; name?: string }) =>
   (task.task_name ?? task.name ?? "").split(" · ")[0] ?? "";
-
-function SideCard({
-  title,
-  end,
-  children,
-}: {
-  title: string;
-  end?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section aria-label={title} className="grid gap-3 rounded-xl border border-line bg-chrome p-4">
-      <div className="flex items-center justify-between">
-        <b className="text-body font-semibold text-fg">{title}</b>
-        {end}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function DotRow({
-  colour,
-  title,
-  sub,
-  onClick,
-}: {
-  colour: string;
-  title: string;
-  sub: string;
-  onClick?: () => void;
-}) {
-  const body = (
-    <>
-      <i aria-hidden="true" className="mt-1.5 size-2 rounded-full" style={{ background: colour }} />
-      <span className="text-left">
-        <span className="text-fg">{title}</span>
-        <small className="mt-0.5 block text-caption text-fg-faint">{sub}</small>
-      </span>
-    </>
-  );
-  const layout = "grid grid-cols-[8px_minmax(0,1fr)] items-start gap-3 text-body-sm";
-  return onClick ? (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${layout} cursor-pointer border-0 bg-transparent p-0`}
-    >
-      {body}
-    </button>
-  ) : (
-    <div className={layout}>{body}</div>
-  );
-}
 
 function ResumeHero({ resume }: { resume: ResumeTarget }) {
   const goTo = useGoTo();
@@ -379,28 +318,6 @@ function ChecklistCard({ checklist }: { checklist: Checklist }) {
   );
 }
 
-const announcementLook: Record<Announcement["kind"], { colour: string; source: string }> = {
-  model: { colour: "var(--v-agree)", source: "Parfocal" },
-  slowdown: { colour: "var(--warn)", source: "Lab server" },
-  change: { colour: "var(--fg-faint)", source: "Viewer" },
-};
-
-function Announcements({ items, firstWeek }: { items: Announcement[]; firstWeek: boolean }) {
-  const today = now();
-  return (
-    <SideCard title="Announcements">
-      {items.map((item) => (
-        <DotRow
-          key={item.id}
-          colour={firstWeek ? "var(--accent)" : announcementLook[item.kind].colour}
-          title={item.text}
-          sub={`${announcementLook[item.kind].source} · ${relativeDay(new Date(item.created_at), today)}`}
-        />
-      ))}
-    </SideCard>
-  );
-}
-
 function ThisWeek({
   week,
   taskId,
@@ -568,6 +485,9 @@ export function HomeScreen() {
       />
     );
   }
+  const canPost =
+    me.workspaces.find((workspace) => workspace.tenant_id === me.active_tenant_id)?.admin_rights ??
+    false;
   const firstWeek = checklist !== undefined && !checklist.hidden;
   const inProgress = home.tasks.filter((task) => task.status === "in-review").length;
   const mentions = (counts?.kinds ?? [])
@@ -635,7 +555,7 @@ export function HomeScreen() {
               <ComingUp tasks={home.tasks} projects={home.projects} />
             </>
           )}
-          <Announcements items={home.announcements} firstWeek={firstWeek} />
+          <Announcements items={home.announcements} firstWeek={firstWeek} canPost={canPost} />
         </aside>
       </div>
     </main>

@@ -3,6 +3,9 @@ import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import { defaultFakeView, fakeApiHandlers, scenario, setFakeView } from "../src/fake/index.ts";
 import {
+  type AnnouncementDraft,
+  createAnnouncement,
+  endAnnouncement,
   getMe,
   getMyChecklist,
   getMyHome,
@@ -10,6 +13,7 @@ import {
   getReviewOrder,
   getReviewTask,
   getReviewTaskStates,
+  listAnnouncements,
   listMyAdjudications,
   listMyCosignRequests,
   listMyReviewTasks,
@@ -235,4 +239,41 @@ test("a task's states give each reviewer their submitted slides first", async ()
   assert.equal(even.slides.length, 40);
   assert.ok(even.slides.every((slide) => slide.reviewers.length === 1));
   assert.ok(even.slides.every((slide) => slide.state === "signed-off"));
+});
+
+async function post(draft: AnnouncementDraft) {
+  const response = await createAnnouncement(draft);
+  if (response.status !== 201) throw new Error(`Posting failed with ${response.status}`);
+  return response.data;
+}
+
+const listedIds = async () => body(await listAnnouncements()).map((item) => item.id);
+
+test("a posted announcement lists first and on Home, and ending it removes it", async () => {
+  const before = await listedIds();
+  assert.equal(before.length, 3);
+  const posted = await post({ kind: "slowdown", text: "  Server is slow  " });
+  assert.equal(posted.text, "Server is slow");
+  assert.deepEqual(await listedIds(), [posted.id, ...before]);
+  assert.equal(body(await getMyHome()).announcements[0]?.id, posted.id);
+  await endAnnouncement(posted.id);
+  assert.deepEqual(await listedIds(), before);
+  assert.equal(body(await getMyHome()).announcements.length, 3);
+});
+
+test("a posted announcement whose end time has passed is not listed", async () => {
+  const lapsed = await post({
+    kind: "change",
+    text: "Old news",
+    ends_at: "2026-10-15T14:00:00+02:00",
+  });
+  const lasting = await post({
+    kind: "model",
+    text: "New model",
+    ends_at: "2026-10-15T15:30:00+02:00",
+  });
+  const ids = await listedIds();
+  assert.equal(ids.includes(lapsed.id), false);
+  assert.equal(ids.includes(lasting.id), true);
+  await endAnnouncement(lasting.id);
 });
