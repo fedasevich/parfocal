@@ -125,5 +125,11 @@ export {
   setFakeViewerScene,
 } from "./viewer-scene.ts";
 export { toAnnotationLayers, toModelTiers } from "./viewer-tools-handlers.ts";
-export { searchScenario, tasksAssignedBy, toSlideRow } from "./work-handlers.ts";
+export {
+  bulkSlideRows,
+  searchScenario,
+  setFakeBulkSlides,
+  tasksAssignedBy,
+  toSlideRow,
+} from "./work-handlers.ts";
 export { setFakeSuspendedWorkspace } from "./workspace-scene.ts";
