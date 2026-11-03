@@ -21,6 +21,7 @@ import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
 import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
+import { Route as InvitationsTokenRouteImport } from "./routes/invitations.$token.tsx";
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
@@ -107,6 +108,11 @@ const TeamRoute = TeamRouteImport.update({
 const FlowMapIndexRoute = FlowMapIndexRouteImport.update({
   id: "/flow-map/",
   path: "/flow-map/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const InvitationsTokenRoute = InvitationsTokenRouteImport.update({
+  id: "/invitations/$token",
+  path: "/invitations/$token",
   getParentRoute: () => rootRouteImport,
 } as any);
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
@@ -310,6 +317,7 @@ export interface FileRoutesByTo {
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
+  "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
@@ -395,6 +404,7 @@ export interface FileRouteTypes {
     | "/sign-in"
     | "/sign-up"
     | "/team"
+    | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | "/sign-in"
     | "/sign-up"
     | "/team"
+    | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | "/sign-in"
     | "/sign-up"
     | "/team"
+    | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
@@ -519,6 +531,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute;
   SignUpRoute: typeof SignUpRoute;
   TeamRoute: typeof TeamRoute;
+  InvitationsTokenRoute: typeof InvitationsTokenRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
   SpikesHotkeysRoute: typeof SpikesHotkeysRoute;
@@ -633,6 +646,13 @@ declare module "@tanstack/react-router" {
       path: "/flow-map";
       fullPath: "/flow-map/";
       preLoaderRoute: typeof FlowMapIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/invitations/$token": {
+      id: "/invitations/$token";
+      path: "/invitations/$token";
+      fullPath: "/invitations/$token";
+      preLoaderRoute: typeof InvitationsTokenRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/projects/new": {
@@ -839,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   TeamRoute: TeamRoute,
+  InvitationsTokenRoute: InvitationsTokenRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
   SpikesHotkeysRoute: SpikesHotkeysRoute,

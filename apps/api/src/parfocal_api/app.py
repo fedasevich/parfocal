@@ -224,6 +224,7 @@ def create_app(
     app.include_router(invitations.tenant_router)
     app.include_router(invitations.platform_router)
     app.include_router(invitations.public_router)
+    app.include_router(invitations.task_router)
     app.include_router(settings_api.me_router)
     app.include_router(settings_api.tenant_router)
 

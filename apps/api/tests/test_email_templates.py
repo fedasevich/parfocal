@@ -7,6 +7,11 @@ SENTINELS = {
     "recipient_name": "RECIPIENT-SENTINEL",
     "workspace_name": "WORKSPACE-SENTINEL",
     "link": "https://parfocal.test/go/00000000-0000-0000-0000-000000000001",
+    "inviter_name": "INVITER-SENTINEL",
+    "project_name": "PROJECT-SENTINEL",
+    "task_name": "TASK-SENTINEL",
+    "slide_count": "SLIDES-SENTINEL",
+    "due_on": "DUE-SENTINEL",
 }
 PATIENT_SENTINELS = ("Eva Testová", "MRN123456", "1970-01-02", "S26-0042", "tumor_009")
 
@@ -14,6 +19,15 @@ PATIENT_SENTINELS = ("Eva Testová", "MRN123456", "1970-01-02", "S26-0042", "tum
 def test_the_template_set_and_its_parameters_are_the_reviewed_ones() -> None:
     assert {name: sorted(fields_of(template)) for name, template in TEMPLATES.items()} == {
         "invitation": ["link", "workspace_name"],
+        "task-invitation": [
+            "due_on",
+            "inviter_name",
+            "link",
+            "project_name",
+            "slide_count",
+            "task_name",
+            "workspace_name",
+        ],
         **{
             f"notification.{kind}": ["link", "recipient_name", "workspace_name"]
             for kind in NotificationKind
@@ -49,3 +63,11 @@ def test_names_are_escaped_in_html() -> None:
     )
     assert "<script>" not in email.html
     assert "&lt;script&gt;" in email.html
+
+
+def test_the_task_invitation_subject_names_only_the_workspace() -> None:
+    email = render("task-invitation", SENTINELS)
+    assert "WORKSPACE-SENTINEL" in email.subject
+    for key in ("inviter_name", "project_name", "task_name", "slide_count", "due_on"):
+        assert SENTINELS[key] not in email.subject, key
+        assert SENTINELS[key] in email.text, key

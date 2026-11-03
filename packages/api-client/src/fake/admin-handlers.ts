@@ -18,6 +18,7 @@ import {
   getCreateStudyTemplateMockHandler,
   getGetCurrentTenantMockHandler,
   getGetSessionPolicyMockHandler,
+  getInviteTaskReviewerMockHandler,
   getListAuditEventsMockHandler,
   getListInvitationsMockHandler,
   getListMemberActivityMockHandler,
@@ -27,6 +28,7 @@ import {
   getSetMemberAdminRightsMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  AcceptedInvitation,
   AuditEvent,
   Invitation,
   InvitationDraft,
@@ -36,8 +38,8 @@ import type {
   SessionPolicy,
   StudyTemplate,
   StudyTemplateDraft,
+  TaskInvitationDraft,
   Tenant,
-  Workspace,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
@@ -392,8 +394,9 @@ const memberOf = (userId: string, change: Partial<Member>): Member => {
 
 const userIdFromPath = (url: string) => url.split("/members/")[1]?.split("/")[0] ?? "";
 
-const joinedWorkspace = (): Workspace => {
+const joinedWorkspace = (): AcceptedInvitation => {
   const workspace = workspaces[0];
+  const preview = toInvitePreview();
   return {
     tenant_id: tenant.id,
     role: "reviewer",
@@ -403,6 +406,11 @@ const joinedWorkspace = (): Workspace => {
     kind: workspace?.kind ?? "research",
     status: "active",
     organisation_name: workspace?.organisation ?? "",
+    landing: {
+      project_id: preview.project.id,
+      task_id: preview.task.id,
+      slide_id: preview.task.first_slide_id,
+    },
   };
 };
 
@@ -466,6 +474,22 @@ export function adminHandlers(): RequestHandler[] {
       return memberOf(userIdFromPath(request.url), { role: body.role });
     }),
     getAcceptInvitationMockHandler(() => joinedWorkspace()),
+    getInviteTaskReviewerMockHandler(async ({ request, params }) => {
+      const body = (await request.json()) as TaskInvitationDraft;
+      const invitation: Invitation = {
+        id: newInvitationId(),
+        tenant_id: tenant.id,
+        email: body.email.trim().toLowerCase(),
+        role: "reviewer",
+        admin_rights: false,
+        created_at: scenarioNow,
+        expires_at: "2026-10-29T23:59:00+02:00",
+        expired: false,
+        task_id: String(params["taskId"]),
+      };
+      created.push(invitation);
+      return invitation;
+    }),
     getCreateStudyTemplateMockHandler(async ({ request }) =>
       createdTemplate((await request.json()) as StudyTemplateDraft),
     ),

@@ -36,6 +36,46 @@ export interface AbortedUpload {
   status: UploadStatus;
 }
 
+export type Role = (typeof Role)[keyof typeof Role];
+
+export const Role = {
+  researcher: "researcher",
+  reviewer: "reviewer",
+} as const;
+
+export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];
+
+export const TenantKind = {
+  diagnostic: "diagnostic",
+  research: "research",
+  "second-opinion": "second-opinion",
+} as const;
+
+export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus];
+
+export const TenantStatus = {
+  active: "active",
+  suspended: "suspended",
+} as const;
+
+export interface TaskLanding {
+  project_id: string;
+  task_id: string;
+  slide_id: string;
+}
+
+export interface AcceptedInvitation {
+  tenant_id: string;
+  role: Role;
+  admin_rights: boolean;
+  slug: string;
+  name: string;
+  kind: TenantKind;
+  status: TenantStatus;
+  organisation_name: string;
+  landing?: TaskLanding | null;
+}
+
 /**
  * @minLength 1
  * @maxLength 100
@@ -1560,13 +1600,6 @@ export const IngestStatus = {
  */
 export type Initials = string;
 
-export type Role = (typeof Role)[keyof typeof Role];
-
-export const Role = {
-  researcher: "researcher",
-  reviewer: "reviewer",
-} as const;
-
 export interface Invitation {
   id: string;
   tenant_id: string;
@@ -1576,6 +1609,7 @@ export interface Invitation {
   expires_at: string;
   created_at: string;
   expired: boolean;
+  task_id?: string | null;
 }
 
 export interface InvitationDraft {
@@ -1714,21 +1748,6 @@ export interface Marked {
   marked: number;
   unread: number;
 }
-
-export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];
-
-export const TenantKind = {
-  diagnostic: "diagnostic",
-  research: "research",
-  "second-opinion": "second-opinion",
-} as const;
-
-export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus];
-
-export const TenantStatus = {
-  active: "active",
-  suspended: "suspended",
-} as const;
 
 export interface Workspace {
   tenant_id: string;
@@ -3482,6 +3501,10 @@ export interface TaskDraft {
   study_template_id?: string | null;
   study_template_version?: number | null;
   decision?: DecisionSettings | null;
+}
+
+export interface TaskInvitationDraft {
+  email: Email;
 }
 
 export interface TaskReviewerCreate {
@@ -38579,7 +38602,7 @@ export const useInvitePlatformMember = <TError = Problem, TContext = unknown>(
 };
 
 export type acceptInvitationResponse200 = {
-  data: Workspace;
+  data: AcceptedInvitation;
   status: 200;
 };
 
@@ -38744,6 +38767,178 @@ export const useAcceptInvitation = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getAcceptInvitationMutationOptions(options), queryClient);
+};
+
+export type inviteTaskReviewerResponse201 = {
+  data: Invitation;
+  status: 201;
+};
+
+export type inviteTaskReviewerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type inviteTaskReviewerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type inviteTaskReviewerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type inviteTaskReviewerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type inviteTaskReviewerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type inviteTaskReviewerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type inviteTaskReviewerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type inviteTaskReviewerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type inviteTaskReviewerResponseSuccess = inviteTaskReviewerResponse201 & {
+  headers: Headers;
+};
+export type inviteTaskReviewerResponseError = (
+  | inviteTaskReviewerResponse400
+  | inviteTaskReviewerResponse401
+  | inviteTaskReviewerResponse403
+  | inviteTaskReviewerResponse404
+  | inviteTaskReviewerResponse409
+  | inviteTaskReviewerResponse422
+  | inviteTaskReviewerResponse429
+  | inviteTaskReviewerResponse500
+) & {
+  headers: Headers;
+};
+
+export type inviteTaskReviewerResponse =
+  | inviteTaskReviewerResponseSuccess
+  | inviteTaskReviewerResponseError;
+
+export const getInviteTaskReviewerUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/invitations`;
+};
+
+/**
+ * @summary Invite Task Reviewer
+ */
+export const inviteTaskReviewer = async (
+  taskId: string,
+  taskInvitationDraft: TaskInvitationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<inviteTaskReviewerResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<inviteTaskReviewerResponse>(getInviteTaskReviewerUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskInvitationDraft),
+  });
+};
+
+export const getInviteTaskReviewerMutationKey = () => ["inviteTaskReviewer"] as const;
+
+export const getInviteTaskReviewerMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof inviteTaskReviewer>>,
+    TError,
+    InviteTaskReviewerMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof inviteTaskReviewer>>,
+  TError,
+  InviteTaskReviewerMutationVariables,
+  TContext
+> => {
+  const mutationKey = getInviteTaskReviewerMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof inviteTaskReviewer>>,
+    InviteTaskReviewerMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return inviteTaskReviewer(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type InviteTaskReviewerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof inviteTaskReviewer>>
+>;
+export type InviteTaskReviewerMutationBody = TaskInvitationDraft;
+export type InviteTaskReviewerMutationError = Problem;
+export type InviteTaskReviewerMutationVariables = { taskId: string; data: TaskInvitationDraft };
+
+/**
+ * @summary Invite Task Reviewer
+ */
+export const useInviteTaskReviewer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof inviteTaskReviewer>>,
+      TError,
+      InviteTaskReviewerMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof inviteTaskReviewer>>,
+  TError,
+  InviteTaskReviewerMutationVariables,
+  TContext
+> => {
+  return useMutation(getInviteTaskReviewerMutationOptions(options), queryClient);
 };
 
 export type getMySettingLayersResponse200 = {

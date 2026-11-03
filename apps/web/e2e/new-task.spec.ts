@@ -79,6 +79,25 @@ test("Next walks every step, Change goes back, and Send creates RT-16", async ({
   );
 });
 
+test("Send invites a new reviewer by email to the created task", async ({ page }) => {
+  await page.goto(`${newTask}?scene=reviewers`);
+  const who = flow(page).getByRole("combobox", { name: "Who reviews" });
+  await who.fill("nova@lab.example");
+  await flow(page).getByText("Invite nova@lab.example by email").click();
+  for (const step of ["What to check", "How it runs", "Send"]) {
+    await flow(page).getByRole("button", { name: "Next" }).click();
+    await expect(flow(page).locator('[aria-current="step"]')).toHaveText(new RegExp(step));
+  }
+  const invited = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      /\/api\/review-tasks\/00000000-0000-4000-8043-000000000016\/invitations$/.test(request.url()),
+  );
+  await flow(page).getByRole("button", { name: "Create, notify 2 reviewers and invite 1" }).click();
+  expect((await invited).postDataJSON()).toEqual({ email: "nova@lab.example" });
+  await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
+});
+
 test("Next on a blocked step keeps the step and focuses the field", async ({ page }) => {
   await page.goto(`${newTask}?scene=nobody`);
   const next = flow(page).getByRole("button", { name: "Next" });

@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 30 |
 | `personal` | 56 |
 | `secret` | 9 |
-| `operational` | 556 |
+| `operational` | 557 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -203,6 +203,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `role` | operational |
 | `admin_rights` | operational |
 | `token_hash` | secret |
+| `task_id` | operational |
 | `expires_at` | operational |
 | `accepted_at` | operational |
 | `revoked_at` | operational |

@@ -6,7 +6,19 @@ from string import Formatter
 from parfocal_api.notification_catalogue import CATALOGUE
 from parfocal_api.tables import NotificationKind
 
-PARAMETERS = frozenset({"recipient_name", "workspace_name", "link"})
+PARAMETERS = frozenset(
+    {
+        "recipient_name",
+        "workspace_name",
+        "link",
+        "inviter_name",
+        "project_name",
+        "task_name",
+        "slide_count",
+        "due_on",
+    }
+)
+TASK_INVITATION_TEMPLATE = "task-invitation"
 DIGEST_TEMPLATE = "notification.digest"
 
 
@@ -49,6 +61,19 @@ TEMPLATES: Mapping[str, Template] = {
             "The invitation works once and expires in seven days.",
         ),
         action="Accept the invitation",
+    ),
+    TASK_INVITATION_TEMPLATE: Template(
+        name=TASK_INVITATION_TEMPLATE,
+        subject="You have been invited to review in {workspace_name} on Parfocal",
+        lines=(
+            "Hello,",
+            "{inviter_name} asked you to review {slide_count} in the task {task_name} "
+            "of the project {project_name} in {workspace_name}.",
+            "Due date: {due_on}.",
+            "Accepting creates your account and opens your first slide. "
+            "The invitation works once and expires in seven days.",
+        ),
+        action="Accept and open the first slide",
     ),
     **{f"notification.{kind}": notification_template(kind) for kind in NotificationKind},
     DIGEST_TEMPLATE: Template(
