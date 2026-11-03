@@ -40,6 +40,17 @@ export function useAreaNav({ order, spot, magnification, ...handlers }: AreaNavO
     [history],
   );
 
+  const jump = useCallback(
+    (target: Spot) => {
+      const now = latest.current;
+      if (sameSpot(target, now.spot)) return false;
+      history.settle(now.spot);
+      now.restore(target);
+      return true;
+    },
+    [history],
+  );
+
   const bindings = useMemo(
     () => keyRegistry.bindings({ scopes: ["viewer"], only: areaKeyIds }),
     [],
@@ -61,5 +72,5 @@ export function useAreaNav({ order, spot, magnification, ...handlers }: AreaNavO
   );
   useHotkeys(bindings, onFire);
 
-  return { visited, goTo };
+  return { visited, goTo, jump };
 }
