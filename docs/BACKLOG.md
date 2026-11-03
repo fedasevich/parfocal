@@ -1647,7 +1647,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
   Size: M.
 
-- [ ] DS-024 · Form fields with labels, hints and inline errors
+- [x] DS-024 · Form fields with labels, hints and inline errors
   The text field, the textarea with a character count, the select, the checkbox and the radio row, each with a label, an optional help line, a Required mark where it applies and the one inline error style of SHELL-010 (error and issue states in every flow) under the field. The error names what is wrong and how to fix it, and typed text is never cleared by an error.
   Done when stories cover each control in its default, focus, filled, error and disabled states in both themes, a test checks that every label, help line and error is tied to its control for assistive technology, and axe passes.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: signin/email, mock: task/send, mock: admin/addmodel.
