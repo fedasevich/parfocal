@@ -1151,7 +1151,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a test requests a missing `zarr.json` and a missing model and receives 404, not HTML.
   Refs docs 06, 15.
 
-- [ ] TILES-005 · Range coalescing for sharded Zarr
+- [x] TILES-005 · Range coalescing for sharded Zarr
   When OME-Zarr v0.5 sharded stores are read, coalesce adjacent inner-chunk ranges.
   Done when the request count for a viewport drops as in doc 32 (194 to 39) in the latency-proxy test.
   Size: S.
