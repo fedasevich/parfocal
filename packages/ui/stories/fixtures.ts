@@ -1,21 +1,66 @@
-import type { PersonInfo } from "../src/components/person.tsx";
+import {
+  type AvatarProfile,
+  type PersonInfo,
+  personFromProfile,
+} from "../src/lib/avatar-colours.ts";
 
-export const people = {
-  LM: { initials: "LM", name: "Lenka Malá", color: "#2563eb", role: "Consultant · breast, nodes" },
-  AK: { initials: "AK", name: "Anna Kopecká", color: "#6d28d9", role: "Consultant · breast" },
-  SM: { initials: "SM", name: "Simona Marková", color: "#0f766e", role: "Consultant · consults" },
-  JR: { initials: "JR", name: "Jan Růžička", color: "#b45309", role: "Consultant · GI, nodes" },
-  TB: { initials: "TB", name: "Tomáš Beneš", color: "#7c3aed", role: "Pathologist · nodes" },
-  PK: { initials: "PK", name: "Petra Králová", color: "#64748b", role: "On leave until 22 Oct" },
-  HL: { initials: "HL", name: "Hana Lukešová", color: "#be185d", role: "Histology technician" },
-  MV: { initials: "MV", name: "Martin Vlček", color: "#0369a1", role: "IHC technician" },
+export const profiles = {
+  LM: {
+    initials: "LM",
+    display_name: "Lenka Malá",
+    avatar_colour: 0,
+    title: "Consultant · breast, nodes",
+  },
+  AK: {
+    initials: "AK",
+    display_name: "Anna Kopecká",
+    avatar_colour: 1,
+    title: "Consultant · breast",
+  },
+  SM: {
+    initials: "SM",
+    display_name: "Simona Marková",
+    avatar_colour: 2,
+    title: "Consultant · consults",
+  },
+  JR: {
+    initials: "JR",
+    display_name: "Jan Růžička",
+    avatar_colour: 3,
+    title: "Consultant · GI, nodes",
+  },
+  TB: {
+    initials: "TB",
+    display_name: "Tomáš Beneš",
+    avatar_colour: 4,
+    title: "Pathologist · nodes",
+  },
+  PK: {
+    initials: "PK",
+    display_name: "Petra Králová",
+    avatar_colour: 5,
+    title: "On leave until 22 Oct",
+  },
+  HL: {
+    initials: "HL",
+    display_name: "Hana Lukešová",
+    avatar_colour: 6,
+    title: "Histology technician",
+  },
+  MV: { initials: "MV", display_name: "Martin Vlček", avatar_colour: 7, title: "IHC technician" },
   DH: {
     initials: "DH",
-    name: "Daniel Hruška",
-    color: "#0891b2",
-    role: "Researcher · AI evaluation",
+    display_name: "Daniel Hruška",
+    avatar_colour: 8,
+    title: "Researcher · AI evaluation",
   },
-} satisfies Record<string, PersonInfo>;
+} satisfies Record<string, AvatarProfile>;
+
+type PersonaKey = keyof typeof profiles;
+
+export const people = Object.fromEntries(
+  Object.entries(profiles).map(([key, profile]) => [key, personFromProfile(profile)]),
+) as Record<PersonaKey, Required<PersonInfo>>;
 
 export const projectClasses = [
   { name: "Tumor", color: "#f87171" },

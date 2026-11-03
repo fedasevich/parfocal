@@ -1,15 +1,14 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
+import {
+  type AvatarProfile,
+  type PersonInfo,
+  personFromProfile,
+  readableOn,
+} from "@parfocal/ui/lib/avatar-colours";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
-
-type PersonInfo = {
-  initials: string;
-  name: string;
-  color: string;
-  role?: string;
-};
 
 type Presence = "available" | "busy" | "away";
 
@@ -24,25 +23,6 @@ const presenceLabels: Record<Presence, string> = {
   busy: "Busy",
   away: "Away",
 };
-
-function channel(value: number) {
-  const scaled = value / 255;
-  return scaled <= 0.03928 ? scaled / 12.92 : ((scaled + 0.055) / 1.055) ** 2.4;
-}
-
-function luminance(hex: string) {
-  const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
-  if (!match) return 0;
-  const [r, g, b] = match.slice(1).map((part) => channel(Number.parseInt(part, 16)));
-  return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0);
-}
-
-function readableOn(background: string) {
-  const l = luminance(background);
-  const onWhite = 1.05 / (l + 0.05);
-  const onDark = (l + 0.05) / (luminance("#0b0b0b") + 0.05);
-  return onWhite >= onDark ? "#ffffff" : "#0b0b0b";
-}
 
 type PersonAvatarProps = Omit<AvatarPrimitive.Root.Props, "children" | "style"> & {
   style?: React.CSSProperties | undefined;
@@ -180,7 +160,7 @@ function AvatarStack({ people, max = 3, size = 24, className, ...props }: Avatar
       >
         {shown.map((person, index) => (
           <PersonAvatar
-            key={person.initials}
+            key={`${index}-${person.initials}`}
             person={person}
             size={size}
             className={cn("border-2 border-surf-panel", index > 0 ? "-ml-1.5" : "")}
@@ -188,6 +168,7 @@ function AvatarStack({ people, max = 3, size = 24, className, ...props }: Avatar
         ))}
         {hidden > 0 ? (
           <span
+            data-slot="avatar-stack-count"
             className="-ml-1.5 inline-grid shrink-0 place-items-center rounded-full border-2 border-surf-panel bg-chrome-3 font-mono font-semibold text-fg-dim"
             style={{ width: size, height: size, fontSize: Math.round(size * 0.4) }}
           >
@@ -201,6 +182,7 @@ function AvatarStack({ people, max = 3, size = 24, className, ...props }: Avatar
 }
 
 export {
+  type AvatarProfile,
   AvatarStack,
   type AvatarStackProps,
   Person,
@@ -211,5 +193,6 @@ export {
   type Presence,
   PresenceDot,
   type PresenceDotProps,
+  personFromProfile,
   readableOn,
 };

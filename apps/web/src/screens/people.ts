@@ -1,16 +1,10 @@
 import { type Member, useListTenantMembers } from "@parfocal/api-client";
-import type { PersonInfo } from "@parfocal/ui/components/person";
-import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
+import { type PersonInfo, personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { okData } from "./placeholder.tsx";
 
 export const toPersonInfo = (
   member: Pick<Member, "display_name" | "initials" | "avatar_colour" | "title">,
-): PersonInfo => ({
-  name: member.display_name,
-  initials: member.initials,
-  color: avatarColour(member.avatar_colour),
-  ...(member.title ? { role: member.title } : {}),
-});
+): PersonInfo => personFromProfile(member);
 
 export function usePeople(): (userId: string | null | undefined) => PersonInfo | undefined {
   const members = okData(useListTenantMembers().data) ?? [];
