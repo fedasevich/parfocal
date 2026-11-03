@@ -4385,7 +4385,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
   Size: M.
 
-- [ ] JOBS-006 · Show or hide Parfocal models
+- [x] JOBS-006 · Show or hide Parfocal models
   Parfocal's models are always listed unless a researcher with admin rights hides one. A hidden model leaves every model list and its result sets stay. Hiding shows an Undo.
   Done when API tests cover hiding and E2E hides a model and finds it gone from Run a model.
   Depends on JOBS-001, DS-021. Refs mock: admin/models, doc 40 R1.
