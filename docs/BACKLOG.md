@@ -2445,7 +2445,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when component tests cover filtering and navigation.
   Size: S.
 
-- [ ] COLLAB-006 · Mentions
+- [x] COLLAB-006 · Mentions
   At-mention colleagues in a message, which notifies them.
   Done when tests cover mention parsing and notification.
   Depends on NOTIF-001.
