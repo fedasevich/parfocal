@@ -31,7 +31,7 @@ function AuthBrand() {
       <span className="grid size-8 place-items-center rounded-lg border border-white/30 text-accent">
         <Icon name="parfocal" size="md" />
       </span>
-      <b className="text-[20px] font-bold tracking-[-0.01em]">Parfocal</b>
+      <b className="text-title font-bold tracking-[-0.01em]">Parfocal</b>
     </div>
   );
 }
@@ -98,7 +98,7 @@ function AuthPitchSide({
         <AuthBrand />
       </div>
       <div className="relative mt-auto grid gap-4">
-        <h1 className="m-0 text-[32px] leading-[1.15] font-semibold tracking-[-0.01em]">
+        <h1 className="m-0 text-display leading-[1.15] font-semibold tracking-[-0.01em]">
           {headline}
         </h1>
         <div className="grid gap-2.5">
@@ -250,7 +250,7 @@ function AuthForm({ width = "normal", center = false, className, ...props }: Aut
 function AuthHeading({ title, children }: { title: React.ReactNode; children?: React.ReactNode }) {
   return (
     <div data-slot="auth-heading">
-      <h2 className="m-0 text-[28px] font-semibold tracking-[-0.01em] text-fg">{title}</h2>
+      <h2 className="m-0 text-display font-semibold tracking-[-0.01em] text-fg">{title}</h2>
       {children ? (
         <p className="mt-1.5 mb-0 text-body leading-[1.45] text-fg-dim">{children}</p>
       ) : null}
@@ -409,7 +409,7 @@ function CodeBoxes({ digits, length = 6, className, ...props }: CodeBoxesProps) 
         <span
           key={index}
           className={cn(
-            "grid h-13 w-11 place-items-center rounded-lg border border-line-strong bg-chrome font-mono text-[24px] font-semibold text-fg",
+            "grid h-13 w-11 place-items-center rounded-lg border border-line-strong bg-chrome font-mono text-page-title font-semibold text-fg",
             index === digits.length && "border-accent shadow-[0_0_0_3px_var(--accent-soft)]",
           )}
         >
@@ -601,7 +601,7 @@ function PasskeySheet({
         <Icon name="key" />
         <span>parfocal.eu</span>
       </div>
-      <b className="text-[16px] font-semibold text-fg">{title}</b>
+      <b className="text-lead font-semibold text-fg">{title}</b>
       {kind === "qr" ? (
         <div className="grid grid-cols-[auto_1fr] items-center gap-4 text-body-sm leading-[1.45] text-fg-dim">
           <QrCode />
@@ -675,7 +675,7 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
       >
         <PersonAvatar person={person} size={56} />
         <div>
-          <b className="text-[18px] text-fg">{person.name}</b>
+          <b className="text-title-sm text-fg">{person.name}</b>
           <div className="text-body-sm text-fg-dim">
             Locked after {minutes} minutes without input
           </div>

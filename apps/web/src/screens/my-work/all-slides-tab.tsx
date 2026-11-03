@@ -4,12 +4,15 @@ import { FilterChip } from "@parfocal/ui/components/filter-chip";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useSlideProgress } from "../slide-progress.ts";
+import { slideOpenPath } from "./list-keys.ts";
 import {
   PreviewPanel,
   SetChip,
@@ -124,6 +127,192 @@ function SlidePreview({
   );
 }
 
+type Look = ReturnType<typeof useSetLook>;
+
+const rowEstimate = 45;
+
+function scrollParentOf(element: HTMLElement | null): HTMLElement | null {
+  for (let node = element?.parentElement ?? null; node; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY;
+    if (overflow === "auto" || overflow === "scroll") return node;
+  }
+  return (document.scrollingElement as HTMLElement | null) ?? null;
+}
+
+function SlideLine({
+  row,
+  index,
+  on,
+  showProject,
+  look,
+  measure,
+  onSelect,
+  onOpen,
+}: {
+  row: SlideRow;
+  index: number;
+  on: boolean;
+  showProject: boolean;
+  look: Look;
+  measure: (element: HTMLTableRowElement | null) => void;
+  onSelect: (key: string) => void;
+  onOpen: (row: SlideRow) => void;
+}) {
+  const people = usePeople();
+  return (
+    <tr
+      ref={measure}
+      data-index={index}
+      aria-rowindex={index + 2}
+      aria-selected={on}
+      data-vt-source=""
+      onClick={() => onSelect(row.id)}
+      onDoubleClick={() => onOpen(row)}
+      className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}
+    >
+      <td className="px-2 py-(--density-cell-y) align-middle">
+        <span className="inline-flex items-center gap-2.25">
+          <SlideThumb className="h-5.5 w-8.5" />
+          <b className="font-medium text-fg">{row.label}</b>
+        </span>
+      </td>
+      {showProject ? (
+        <td className="px-2 py-(--density-cell-y) align-middle text-fg-dim">
+          {row.project.code} · {row.case_label ? `case ${row.case_label}` : "loose"}
+        </td>
+      ) : null}
+      <td className="px-2 py-(--density-cell-y) align-middle">
+        <span className="flex flex-wrap gap-1">
+          {row.result_sets.length > 0 ? (
+            row.result_sets.map((set) => {
+              const chip = look(set);
+              return <SetChip key={set.id} label={chip.label} source={chip.source} />;
+            })
+          ) : (
+            <span className="text-fg-dim">none</span>
+          )}
+        </span>
+      </td>
+      <td className="px-2 py-(--density-cell-y) align-middle">
+        {row.reviews.length > 0 ? (
+          row.reviews.map((review) => (
+            <span key={`${review.task_id}-${review.user_id}`} className="my-0.75 flex">
+              <Person
+                {...personProp(people(review.user_id))}
+                size={22}
+                sub={reviewWords[review.state]?.word ?? review.state}
+              />
+            </span>
+          ))
+        ) : (
+          <span className="text-fg-dim">not assigned</span>
+        )}
+      </td>
+      <td className="px-2 py-(--density-cell-y) align-middle">{statusOf(row)}</td>
+    </tr>
+  );
+}
+
+function SlideTable({
+  rows,
+  selected,
+  showProject,
+  look,
+  onSelect,
+  onOpen,
+}: {
+  rows: SlideRow[];
+  selected: string | undefined;
+  showProject: boolean;
+  look: Look;
+  onSelect: (key: string) => void;
+  onOpen: (row: SlideRow) => void;
+}) {
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
+  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const [margin, setMargin] = useState(0);
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    const parent = scrollParentOf(body);
+    if (parent !== scroller) setScroller(parent);
+    if (!body || !parent) return;
+    const offset =
+      body.getBoundingClientRect().top - parent.getBoundingClientRect().top + parent.scrollTop;
+    if (Math.abs(offset - margin) > 0.5) setMargin(offset);
+  });
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scroller,
+    estimateSize: () => rowEstimate,
+    getItemKey: (index) => rows[index]?.id ?? index,
+    overscan: 10,
+    scrollMargin: margin,
+  });
+  const selectedIndex = selected === undefined ? -1 : rows.findIndex((row) => row.id === selected);
+  useEffect(() => {
+    if (selectedIndex >= 0) virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
+  }, [selectedIndex, virtualizer]);
+  const items = virtualizer.getVirtualItems();
+  const before = (items[0]?.start ?? margin) - margin;
+  const after = virtualizer.getTotalSize() - ((items.at(-1)?.end ?? margin) - margin);
+  const headings = [
+    "Slide",
+    ...(showProject ? ["Project"] : []),
+    "Result sets",
+    "Reviews",
+    "Status",
+  ];
+  return (
+    <table
+      aria-label="All slides"
+      aria-rowcount={rows.length + 1}
+      className="w-full border-collapse text-body-sm"
+    >
+      <thead>
+        <tr aria-rowindex={1} className="text-left text-caption text-fg-dim">
+          {headings.map((heading) => (
+            <th
+              key={heading}
+              className="whitespace-nowrap border-line-strong border-b px-2 py-1.75 font-semibold"
+            >
+              {heading}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody ref={bodyRef}>
+        {before > 0 ? (
+          <tr data-slot="spacer" style={{ height: before }}>
+            <td colSpan={headings.length} className="p-0" />
+          </tr>
+        ) : null}
+        {items.map((item) => {
+          const row = rows[item.index];
+          if (!row) return null;
+          return (
+            <SlideLine
+              key={row.id}
+              row={row}
+              index={item.index}
+              on={row.id === selected}
+              showProject={showProject}
+              look={look}
+              measure={virtualizer.measureElement}
+              onSelect={onSelect}
+              onOpen={onOpen}
+            />
+          );
+        })}
+        {after > 0 ? (
+          <tr data-slot="spacer" style={{ height: after }}>
+            <td colSpan={headings.length} className="p-0" />
+          </tr>
+        ) : null}
+      </tbody>
+    </table>
+  );
+}
+
 export function AllSlidesTab({
   rows,
   everyRow,
@@ -146,6 +335,8 @@ export function AllSlidesTab({
   onSelect: (key: string | undefined) => void;
 }) {
   const people = usePeople();
+  const goTo = useGoTo();
+  const me = okData(useGetMe().data);
   const look = useSetLook(rows[0]?.project.id);
   const preview = rows.find((row) => row.id === selected);
   const choices = filterChoices(everyRow, (userId) => people(userId)?.name ?? "Reviewer");
@@ -216,75 +407,14 @@ export function AllSlidesTab({
       <div
         className={`mt-1 grid items-start gap-5 ${preview ? "grid-cols-[minmax(0,1fr)_360px]" : "grid-cols-[minmax(0,1fr)]"}`}
       >
-        <table className="w-full border-collapse text-body-sm">
-          <thead>
-            <tr className="text-left text-caption text-fg-dim">
-              {["Slide", ...(preview ? [] : ["Project"]), "Result sets", "Reviews", "Status"].map(
-                (heading) => (
-                  <th
-                    key={heading}
-                    className="whitespace-nowrap border-line-strong border-b px-2 py-1.75 font-semibold"
-                  >
-                    {heading}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const on = row.id === selected;
-              return (
-                <tr
-                  key={row.id}
-                  aria-selected={on}
-                  onClick={() => onSelect(row.id)}
-                  className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}
-                >
-                  <td className="px-2 py-2 align-middle">
-                    <span className="inline-flex items-center gap-2.25">
-                      <SlideThumb className="h-5.5 w-8.5" />
-                      <b className="font-medium text-fg">{row.label}</b>
-                    </span>
-                  </td>
-                  {preview ? null : (
-                    <td className="px-2 py-2 align-middle text-fg-dim">
-                      {row.project.code} · {row.case_label ? `case ${row.case_label}` : "loose"}
-                    </td>
-                  )}
-                  <td className="px-2 py-2 align-middle">
-                    <span className="flex flex-wrap gap-1">
-                      {row.result_sets.length > 0 ? (
-                        row.result_sets.map((set) => {
-                          const chip = look(set);
-                          return <SetChip key={set.id} label={chip.label} source={chip.source} />;
-                        })
-                      ) : (
-                        <span className="text-fg-dim">none</span>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 align-middle">
-                    {row.reviews.length > 0 ? (
-                      row.reviews.map((review) => (
-                        <span key={`${review.task_id}-${review.user_id}`} className="my-0.75 flex">
-                          <Person
-                            {...personProp(people(review.user_id))}
-                            size={22}
-                            sub={reviewWords[review.state]?.word ?? review.state}
-                          />
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-fg-dim">not assigned</span>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 align-middle">{statusOf(row)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <SlideTable
+          rows={rows}
+          selected={selected}
+          showProject={!preview}
+          look={look}
+          onSelect={onSelect}
+          onOpen={(row) => void goTo(slideOpenPath(row, me?.user_id))}
+        />
         {rows.length === 0 ? (
           <p className="m-0 py-6 text-center text-body-sm text-fg-dim">
             {active > 0 || query ? "No slide matches these filters." : "No slides yet."}

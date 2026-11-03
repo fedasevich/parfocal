@@ -28,8 +28,10 @@ export type ShortcutSettings = {
   custom: Record<string, string[]>;
 };
 
+export const resolveOf = (settings: ShortcutSettings | undefined): Resolve =>
+  settings === undefined ? {} : { preset: settings.preset, personal: settings.custom };
+
 export function keyLabeller(defs: readonly ActionDef[], settings: ShortcutSettings | undefined) {
-  const resolve: Resolve =
-    settings === undefined ? {} : { preset: settings.preset, personal: settings.custom };
+  const resolve = resolveOf(settings);
   return (fired: string) => keyLabel(defs, resolve, fired);
 }

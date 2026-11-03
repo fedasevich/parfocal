@@ -69,6 +69,7 @@ function ReviewTopBar({
   ...props
 }: ReviewTopBarProps) {
   const [slidesOpen, setSlidesOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
   const big = mode === "guided" || mode === "adjudicate";
   const thumb = (
     <span
@@ -142,7 +143,7 @@ function ReviewTopBar({
         </Popover>
       )}
       {progressPopover && progress ? (
-        <Popover>
+        <Popover open={progressOpen} onOpenChange={setProgressOpen}>
           <PopoverTrigger
             aria-haspopup="dialog"
             title="Progress on this slide and in the whole task"
@@ -155,7 +156,14 @@ function ReviewTopBar({
             </span>
             <Icon name="down" className="text-fg-faint" />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto p-4.5">
+          <PopoverContent
+            align="start"
+            className="w-auto p-4.5"
+            onClick={(event) => {
+              if ((event.target as Element).closest("[data-closes-popover]"))
+                setProgressOpen(false);
+            }}
+          >
             {progressPopover}
           </PopoverContent>
         </Popover>

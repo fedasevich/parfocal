@@ -1,9 +1,4 @@
-import {
-  type SetRef,
-  type TaskScope,
-  useListProjectResultSets,
-  useListSlideThreads,
-} from "@parfocal/api-client";
+import { type SetRef, useListProjectResultSets, useListSlideThreads } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { FactList } from "@parfocal/ui/components/inspector";
@@ -15,13 +10,7 @@ import { okData } from "../placeholder.tsx";
 import type { SlideProgress } from "../slide-progress.ts";
 import { lookUrl } from "../thumbnails.ts";
 
-export const scopeWords: Record<TaskScope, string> = {
-  "all-regions": "Tumor regions: all",
-  "random-cells": "A random sample of cells",
-  "cells-below-score": "Cells the model was least sure about",
-  "inside-rois": "Only inside ROIs",
-  "unsure-zones": "Unsure zones only",
-};
+export { scopeWords } from "./to-review-rows.ts";
 
 export const SectionLabel = ({ children }: { children: ReactNode }) => (
   <span className="text-caption font-semibold text-fg-dim">{children}</span>
@@ -164,7 +153,7 @@ export function PreviewPanel({
         style={{ backgroundImage: `url(${lookUrl("overview")})` }}
       />
       <div>
-        <h3 className="m-0 text-[18px] font-semibold text-fg">{title}</h3>
+        <h3 className="m-0 text-title-sm font-semibold text-fg">{title}</h3>
         {subtitle ? (
           <small className="mt-0.5 block text-caption text-fg-dim">{subtitle}</small>
         ) : null}

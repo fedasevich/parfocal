@@ -2,9 +2,9 @@ import { getTileAccess } from "@parfocal/api-client";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createDocument } from "../annotations/document.ts";
-import { keyRegistry } from "../keys/catalogue.ts";
+import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { loadViewerEngine } from "./load-engine.ts";
@@ -64,10 +64,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
   }, []);
   const [measuring, setMeasuring] = useState(false);
   const [annotations, setAnnotations] = useState(createDocument);
-  const rulerBindings = useMemo(
-    () => keyRegistry.bindings({ scopes: ["annotate"], only: ["truler"] }),
-    [],
-  );
+  const rulerBindings = useBindings(["annotate"], ["truler"]);
   const onToolKey = useCallback(({ phase }: { phase: string }) => {
     if (phase === "press") setMeasuring((on) => !on);
   }, []);
@@ -144,7 +141,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
             <ToolRailButton
               icon="ruler"
               label="Ruler"
-              keyHint="L"
+              action="truler"
               pressed={measuring}
               onPressedChange={setMeasuring}
             />

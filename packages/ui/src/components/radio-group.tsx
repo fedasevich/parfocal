@@ -60,7 +60,7 @@ function RadioRow({ value, title, text, disabled, className, ...props }: RadioRo
         aria-describedby={text ? `${id}-text` : undefined}
         className="mt-0.5"
       />
-      <span className="grid gap-0.5 group-data-disabled/radio-row:opacity-40">
+      <span className="grid gap-0.5 peer-data-disabled:opacity-40 group-data-disabled/radio-row:opacity-40">
         <b id={`${id}-title`} className="text-body-sm font-semibold text-fg">
           {title}
         </b>

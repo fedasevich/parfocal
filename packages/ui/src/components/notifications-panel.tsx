@@ -104,7 +104,7 @@ function NotificationsPanel({
   return (
     <div className="flex max-h-[780px] min-h-0 flex-col">
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
-        <b className="text-[16px] text-fg">Notifications</b>
+        <b className="text-lead text-fg">Notifications</b>
         <span className="flex items-center gap-3">
           <label className="flex cursor-pointer items-center gap-2 text-caption text-fg-dim">
             Unread only

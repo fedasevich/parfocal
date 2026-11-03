@@ -78,6 +78,45 @@ export type Theme = (typeof themes)[number];
 
 export const defaultTheme: Theme = "dark";
 
+export const themeChoices = ["system", "dark", "light"] as const;
+
+export type ThemeChoice = (typeof themeChoices)[number];
+
+export const defaultThemeChoice: ThemeChoice = "system";
+
+export const lightSchemeQuery = "(prefers-color-scheme: light)";
+
+export function themeChoice(value: unknown): ThemeChoice {
+  return themeChoices.find((choice) => choice === value) ?? defaultThemeChoice;
+}
+
+export function effectiveTheme(choice: ThemeChoice, prefersLight: boolean): Theme {
+  if (choice === "system") return prefersLight ? "light" : defaultTheme;
+  return choice;
+}
+
+export const neutralChromeTokens = [
+  "surf-page",
+  "surf-panel",
+  "surf-section",
+  "surf-field",
+  "surf-edge",
+  "page",
+  "chrome",
+  "chrome-2",
+  "chrome-3",
+  "canvas",
+  "tl-a",
+  "tl-b",
+  "line",
+  "line-strong",
+  "fg",
+  "fg-dim",
+  "fg-faint",
+  "seg-on",
+  "btn-bg",
+] as const;
+
 export const spaceUnitPx = 4;
 
 export const radiiPx = { sm: 4, md: 7, lg: 10, ctl: 8, zone: 12 } as const;
@@ -140,6 +179,14 @@ export const typeScale = {
 
 export type TypeStyle = keyof typeof typeScale;
 
+export const typeStyles = Object.keys(typeScale) as TypeStyle[];
+
+export const minRunningTextPx = 12;
+
+export const fontFamilies = { ui: "IBM Plex Sans", data: "IBM Plex Mono" } as const;
+
+export const fontWeights = { ui: [400, 500, 600, 700], data: [400, 500, 600] } as const;
+
 export const smallModalWidthsPx = [480, 560] as const;
 
 export const flowPageMainMaxPx = 760;
@@ -191,6 +238,9 @@ export const densitySpacingPx = {
   "foot-x": { comfortable: 20, compact: 14 },
   "foot-top": { comfortable: 14, compact: 10 },
   "foot-bottom": { comfortable: 18, compact: 12 },
+  "item-y": { comfortable: 10, compact: 6 },
+  "page-gap": { comfortable: 22, compact: 14 },
+  "flow-gap": { comfortable: 16, compact: 14 },
 } as const satisfies Record<string, Record<DensityMode, number>>;
 
 export type DensitySpacing = keyof typeof densitySpacingPx;

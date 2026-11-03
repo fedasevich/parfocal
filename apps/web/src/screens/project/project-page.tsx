@@ -122,7 +122,7 @@ export function ProjectPage({
         <header className="flex flex-none items-start justify-between gap-6 pt-0.5 pb-5.5">
           <div className="grid min-w-0 gap-2">
             <div className="flex min-w-0 items-center gap-3.5">
-              <h2 className="m-0 truncate text-[24px] font-semibold tracking-[-0.015em]">
+              <h2 className="m-0 truncate text-page-title font-semibold tracking-[-0.015em]">
                 {project.name}
               </h2>
               {privacyTag(project)}

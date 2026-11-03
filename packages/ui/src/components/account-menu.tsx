@@ -29,6 +29,7 @@ type AccountMenuProps = {
   organisation?: string | undefined;
   presence: AccountPresence;
   onNextPresence: () => void;
+  presenceBusy?: boolean;
   theme: AccountTheme;
   onThemeChange: (theme: AccountTheme) => void;
   initialsOnly: boolean;
@@ -52,6 +53,7 @@ function AccountMenu({
   organisation,
   presence,
   onNextPresence,
+  presenceBusy,
   theme,
   onThemeChange,
   initialsOnly,
@@ -96,6 +98,7 @@ function AccountMenu({
         </div>
         <DropdownMenuItem
           closeOnClick={false}
+          disabled={presenceBusy ?? false}
           onClick={onNextPresence}
           className="mx-1 mb-1 grid grid-cols-[18px_1fr_14px] items-center gap-2.5 border border-line"
         >

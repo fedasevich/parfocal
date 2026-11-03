@@ -1,4 +1,5 @@
 import {
+  type SlideAiProgress,
   useGetMyHome,
   useGetProject,
   useGetSlideAiProgress,
@@ -19,6 +20,15 @@ import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/sli
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
+import {
+  advanceScan,
+  currentField,
+  fieldCentre,
+  type Scan,
+  scanPath,
+  scanSummary,
+  startScan,
+} from "@parfocal/ui/lib/systematic-scan";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
@@ -27,9 +37,11 @@ import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
+import { escapeComment, type Pin, pinForClick } from "../review/comment-pin.ts";
 import {
   answersOf,
   type Confidence,
@@ -44,6 +56,7 @@ import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
+import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
   routeReviewTool,
@@ -68,6 +81,7 @@ import {
 } from "../review/slide-still.tsx";
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
+import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
 import {
   AiSays,
   type ListFilter,
@@ -77,7 +91,8 @@ import {
 } from "../review/viewer-frame.tsx";
 import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
-import { reviewRail } from "../viewer-tools/rails.ts";
+import { peekSpot } from "../viewer-tools/peek-model.ts";
+import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
@@ -237,6 +252,23 @@ function ViewerBody({
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [scan, setScan] = useState<Scan | null>(null);
+  const noTumor = regions.length === 0 && !running;
+  const scanStep = () => {
+    const next = scan ? advanceScan(scan) : startScan(scanPath(overviewTissue, scanField));
+    setScan(next);
+    const field = currentField(next);
+    if (field === null) return;
+    const [x, y] = fieldCentre(field);
+    if (search.object !== undefined) onSearch({ object: undefined });
+    setCamera({ x, y, scale: scanScale });
+  };
+  const [pin, setPin] = useState<Pin | null>(null);
+  const shownPin = search.tool === "comment" ? pin : null;
+  const leaveComment = () => {
+    setPin(null);
+    onSearch({ tool: undefined });
+  };
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
@@ -254,6 +286,16 @@ function ViewerBody({
     measuring && firstRegion
       ? { object: "M1", mm: measuredSize(firstRegion.size_mm ?? 0), across: firstRegion.object }
       : null;
+  const foundSoFar = (object: string) => !running || (progress?.found.includes(object) ?? false);
+  const stagingAreas = regions
+    .filter((region) => foundSoFar(region.object))
+    .map((region) => ({
+      object: region.object,
+      size: region.size_mm ?? 0,
+      probability: region.score,
+      call: answer(region.object)?.value ?? null,
+      measured: measurement?.across === region.object ? measurement.mm : null,
+    }));
   const selected =
     search.object ??
     setup.object ??
@@ -358,7 +400,7 @@ function ViewerBody({
       void navigate({
         to: "/projects/$projectId/slides/$slideId/annotate",
         params: { projectId, slideId },
-        search: { task: session.taskId, tool: route.tool },
+        search: { task: session.taskId, ...(route.tool ? { tool: route.tool } : {}) },
       });
       return;
     }
@@ -377,10 +419,13 @@ function ViewerBody({
     if (kept) setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
   });
 
+  useAnswerKeys(
+    answersOf(style, session.classes, current),
+    decide,
+    current !== undefined && tab === "objects",
+  );
+
   useEffect(() => {
-    const keys = new Map(
-      answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
-    );
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, [contenteditable], [role=dialog], [role=menu]")) return;
@@ -391,15 +436,13 @@ function ViewerBody({
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
       if (event.key === "Escape" && peekOpen) return;
+      if (event.key === "Escape" && escapeComment({ tool: search.tool, pin: shownPin })) {
+        leaveComment();
+        return;
+      }
       if (event.key === "Escape" && selected) {
         pick(undefined);
         return;
-      }
-      if (current === undefined || tab !== "objects") return;
-      const raw = keys.get(event.key.toLowerCase());
-      if (raw && !event.shiftKey) {
-        event.preventDefault();
-        decide(raw);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -433,9 +476,20 @@ function ViewerBody({
     goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
     restore: (spot) => {
       setCamera(null);
-      onSearch({ object: spot.object ?? undefined, x: spot.x, y: spot.y, z: spot.z });
+      setPeekHeld(false);
+      onSearch({
+        object: spot.object ?? undefined,
+        x: spot.x,
+        y: spot.y,
+        z: spot.z,
+        ...(peekOpen ? { peek: undefined } : {}),
+      });
     },
     intercept: (fired) => {
+      if (fired.action === "nextarea" && !navigator && noTumor && scan !== null) {
+        if (fired.phase === "press") scanStep();
+        return true;
+      }
       if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
       if (fired.phase !== "press") return true;
       if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
@@ -730,7 +784,20 @@ function ViewerBody({
       />
     );
 
-  const commentsBody = selected ? (
+  const commentsBody = shownPin ? (
+    <PinnedThread
+      key={`${shownPin.x},${shownPin.y}`}
+      pin={shownPin}
+      taskId={session.taskId}
+      slideId={session.slideId}
+      offReason={setup.connLost ? netOff : undefined}
+      onCancel={leaveComment}
+      onPosted={() => {
+        setPin(null);
+        setToast({ id: Date.now(), text: "Thread pinned on the slide." });
+      }}
+    />
+  ) : selected ? (
     <ObjectComments
       object={selected}
       threads={session.threads}
@@ -877,6 +944,7 @@ function ViewerBody({
   const topBar = (
     <ReviewTop
       mode="full"
+      onWholeSlide={() => onSearch({ peek: true })}
       session={
         noTask
           ? {
@@ -918,15 +986,21 @@ function ViewerBody({
         counts={counts}
         tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
+        railKeys={reviewRailKeys}
         panelHead={
           nothing ? null : (
             <AnalysisCards
               parts={viewerParts}
-              areas={ranked}
+              areas={stagingAreas}
+              running={running}
               current={selected}
               visited={areaNav.visited}
-              roleOf={areaRole}
+              roleOf={running ? undefined : areaRole}
               onGoTo={areaNav.goTo}
+              onStart={areaNav.goTo}
+              onSubmit={() => onSearch({ tab: "opinion" })}
+              scan={noTumor ? scanSummary(overviewTissue, scan) : null}
+              onScan={scanStep}
             />
           )
         }
@@ -937,13 +1011,14 @@ function ViewerBody({
             <SlidePeek
               slideName={session.slideName}
               areas={areas}
-              decided={decidedRegions}
+              checked={regions
+                .filter((region) => answer(region.object))
+                .map((region) => region.object)}
               atCell={navigator === "cells" || navigator === "focus" || current?.kind === "cell"}
               held={peekHeld}
               onClose={closePeek}
               onPick={(point) => {
-                closePeek();
-                if (!navigator && !measuring) setCamera({ x: point[0], y: point[1], scale: 1.5 });
+                if (!areaNav.jump(peekSpot(point))) closePeek();
               }}
             />
           ) : null
@@ -1035,10 +1110,21 @@ function ViewerBody({
             slideName={session.slideName}
             regionStyle={drawing.regionStyle}
             tags={running || nothing ? [] : drawing.tags}
-            underlay={running ? () => <RunningHeat /> : drawing.underlay}
-            overlay={() => (
+            underlay={
+              running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
+            }
+            onPointPick={(point) => {
+              const placed = pinForClick(search.tool, point);
+              if (placed === null) return;
+              setPin(placed);
+              onSearch({ object: undefined, tab: "comments" });
+            }}
+            overlay={(still) => (
               <>
                 {canvasNotice}
+                {shownPin ? (
+                  <PinMark pin={shownPin} camera={still.camera} size={still.size} />
+                ) : null}
                 {drawing.legend ? (
                   <div className="absolute top-4 left-4">{drawing.legend}</div>
                 ) : null}
@@ -1166,12 +1252,17 @@ function ViewerBody({
   );
 }
 
-function RunningHeat() {
+function readReach(progress: SlideAiProgress | undefined) {
+  const regionsStep = progress?.steps.find((step) => step.key === "regions");
+  return Math.min(1, Math.max(0, (regionsStep?.percent ?? 0) / 100));
+}
+
+function RunningHeat({ reached }: { reached: number }) {
   return (
     <>
       <defs>
         <clipPath id="running-clip">
-          <rect x={0} y={0} width={1400} height={1924 * 0.55} />
+          <rect x={0} y={0} width={1400} height={1924 * reached} />
         </clipPath>
       </defs>
       <image
@@ -1182,10 +1273,12 @@ function RunningHeat() {
         clipPath="url(#running-clip)"
       />
       <line
+        data-testid="ai-reached"
+        data-reached={reached}
         x1={0}
         x2={1400}
-        y1={1924 * 0.55}
-        y2={1924 * 0.55}
+        y1={1924 * reached}
+        y2={1924 * reached}
         stroke="var(--accent)"
         strokeWidth={2}
         strokeDasharray="8 6"

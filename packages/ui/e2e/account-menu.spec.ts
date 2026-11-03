@@ -19,6 +19,14 @@ test("the status row switches availability and keeps the menu open", async ({ pa
   await expect(page.getByRole("menuitem", { name: /Available/ })).toBeVisible();
 });
 
+test("the status row waits while the change is saving", async ({ page }) => {
+  await page.goto(story("components-overlays--account-menu-saving"));
+  await expect(page.getByRole("menuitem", { name: /Available/ })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+});
+
 test("theme and initials only apply at once", async ({ page }) => {
   await page.goto(story(open));
   await page.getByRole("menuitemradio", { name: "Light" }).click();
@@ -64,8 +72,7 @@ test("keyboard users reach every item in order", async ({ page }) => {
     reached.push(name);
     await page.keyboard.press("ArrowDown");
   }
-  const text = reached.join(" | ");
-  for (const label of [
+  const labels = [
     "Available",
     "Dark",
     "Initials only",
@@ -74,9 +81,10 @@ test("keyboard users reach every item in order", async ({ page }) => {
     "Profile and signature",
     "Help and what's new",
     "Log out",
-  ]) {
-    expect(text).toContain(label);
-  }
+  ];
+  const order = labels.map((label) => reached.findIndex((name) => name.includes(label)));
+  for (const at of order) expect(at).toBeGreaterThanOrEqual(0);
+  expect(order).toEqual([...order].sort((left, right) => left - right));
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toBeHidden();
 });

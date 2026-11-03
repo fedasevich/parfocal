@@ -11,7 +11,7 @@ export type SettingValues = {
   side_panel_width: number;
   minimap: "useful" | "always" | "never";
   slide_strip: boolean;
-  confidence_wording: "words" | "numbers" | "colour" | "hidden";
+  confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
   outline_mode: "outline" | "fill" | "dots";
   decision_cutoff: number;
   wheel_mode: "zoom" | "pan";
@@ -157,6 +157,7 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "options": [
       "words",
       "numbers",
+      "frequency",
       "colour",
       "hidden"
     ]

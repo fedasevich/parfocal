@@ -23,7 +23,7 @@ export const Disabled: Story = {
 
 export const WithLabel: Story = {
   render: () => (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex items-center gap-2 text-body">
       <Switch defaultChecked />
       Show cell outlines
     </label>

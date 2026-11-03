@@ -48,8 +48,8 @@ function PrototypeIndex() {
       : undefined;
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
-      <h1 className="font-semibold text-2xl text-fg">Prototype index</h1>
-      <p className="text-fg-dim text-sm">
+      <h1 className="font-semibold text-page-title text-fg">Prototype index</h1>
+      <p className="text-fg-dim text-body">
         Every screen of the app, opened with the scenario's data. Only the dev build has this page.
       </p>
       <ul className="flex flex-col gap-2" aria-label="Screens">

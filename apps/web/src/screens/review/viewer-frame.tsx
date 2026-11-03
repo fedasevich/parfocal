@@ -12,6 +12,7 @@ import { cn } from "@parfocal/ui/lib/utils";
 import type { ReactNode } from "react";
 import { type Count, countWord } from "./decision-style.ts";
 import type { ReviewSession } from "./review-data.ts";
+import { useRailKeys } from "./review-rail.ts";
 import type { Answer } from "./review-state.ts";
 import { ReviewTop, type SlideCounts } from "./review-top.tsx";
 
@@ -51,9 +52,9 @@ function RailToolButton({
 const tools: RailTool[] = [
   { tool: "select", icon: "select", label: "Select", action: "tselect" },
   { tool: "hand", icon: "hand", label: "Pan", action: "thand" },
-  { tool: "annotate", icon: "pen", label: "Annotate", key: "P" },
+  { tool: "annotate", icon: "pen", label: "Annotate", action: "annotate" },
   { tool: "comment", icon: "comment", label: "Comment on an ID", action: "tcomment" },
-  { tool: "ai", icon: "smart", label: "AI tools", key: "A", ai: true },
+  { tool: "ai", icon: "smart", label: "AI tools", action: "aitools", ai: true },
 ];
 
 type ViewerFrameProps = {
@@ -61,6 +62,7 @@ type ViewerFrameProps = {
   counts: SlideCounts | undefined;
   tool: string;
   railGroups?: RailTool[][] | undefined;
+  railKeys?: Record<string, string> | undefined;
   onToolChange?: ((tool: string) => void) | undefined;
   onCompare?: (() => void) | undefined;
   overlay?: ReactNode;
@@ -93,10 +95,13 @@ export function ViewerFrame({
   progressSub,
   scene,
   railGroups = [tools],
+  railKeys,
   onToolChange,
   onCompare,
   overlay,
 }: ViewerFrameProps) {
+  const panelKey = useKeyLabel("panel");
+  useRailKeys(railGroups, onToolChange, railKeys);
   return (
     <main
       className="flex h-dvh min-w-0 flex-col bg-page text-fg"
@@ -143,11 +148,17 @@ export function ViewerFrame({
                 onPressedChange={onCompare}
               />
             ) : null}
-            <ToolRailButton icon="panel" label="Hide the side panel" keyHint="I" />
+            <ToolRailButton
+              icon="panel"
+              label="Hide the side panel"
+              {...(panelKey === null ? {} : { keyHint: panelKey })}
+            />
           </ToolRailGroup>
         </ToolRail>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative flex min-h-0 min-w-0 flex-1">{children}</div>
+          <div data-vt-target="" className="relative flex min-h-0 min-w-0 flex-1">
+            {children}
+          </div>
           {below}
         </div>
         <SidePanel

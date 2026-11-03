@@ -23,7 +23,9 @@ function StatStrip({
           key={stat.label}
           className="grid min-w-0 gap-0.75 border-l border-line px-4.5 first:border-l-0 first:pl-0"
         >
-          <b className="font-mono text-[24px] leading-[1.1] font-semibold text-fg">{stat.value}</b>
+          <b className="font-mono text-page-title leading-[1.1] font-semibold text-fg">
+            {stat.value}
+          </b>
           <span className="text-body-sm text-fg-dim">{stat.label}</span>
           <small className="text-caption text-fg-faint">{stat.detail}</small>
         </div>
@@ -60,7 +62,7 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
         <b
           className={cn(
             "font-semibold tracking-[-0.01em] text-fg",
-            size === "sm" ? "text-[18px]" : "text-[24px]",
+            size === "sm" ? "text-title-sm" : "text-page-title",
           )}
         >
           {tb(used)}
@@ -122,7 +124,7 @@ function SettingRow({ label, detail, on, locked, onChange, className, ...props }
     <div
       data-slot="setting-row"
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3 text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line",
+        "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-(--density-list-row-y) text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line",
         className,
       )}
       {...props}

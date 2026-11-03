@@ -12,6 +12,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { usePeople } from "../people.ts";
+import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
 import {
@@ -52,6 +53,7 @@ import { ThreadsTab } from "./threads-tab.tsx";
 type GuidedReviewProps = {
   taskId: string;
   slideId: string;
+  objectId?: string | undefined;
   scene: GuidedScene | undefined;
   submitted: boolean;
   tab: GuidedTab | undefined;
@@ -74,7 +76,7 @@ type BodyProps = GuidedReviewProps & { session: ReviewSession };
 
 const netOff = "The connection is lost. It saves when the connection is back.";
 
-function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) {
+function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: BodyProps) {
   const setup = guidedSetup(scene);
   const navigate = useNavigate();
   const person = usePeople();
@@ -117,6 +119,8 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     return at < 0 ? regions.length : at;
   };
   const [index, setIndex] = useState(() => {
+    const asked = objectId ? objects.findIndex((item) => item.object === objectId) : -1;
+    if (asked >= 0) return asked;
     if (setup.focus === "first-open-cell") return firstOpenCell();
     return Math.max(
       0,
@@ -291,20 +295,15 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     if (!showDone && !noResults && answer(currentId)) openNote();
   });
 
+  useAnswerKeys(answersOf(style, session.classes, current), answerWith, !showDone && !noResults);
+
   useEffect(() => {
-    const keys = new Map(
-      answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
-    );
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, [contenteditable], [role=dialog]")) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (showDone || noResults) return;
-      const raw = keys.get(event.key.toLowerCase());
-      if (raw && !event.shiftKey) {
-        event.preventDefault();
-        answerWith(raw);
-      } else if (event.key === "ArrowRight") {
+      if (event.key === "ArrowRight") {
         goTo(index + 1);
       } else if (event.key === "ArrowLeft") {
         goTo(index - 1);
@@ -667,7 +666,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
         }}
       />
       {banner}
-      <div className="flex min-h-0 flex-1">
+      <div data-vt-target="" className="flex min-h-0 flex-1">
         <SlideStill
           view={view}
           camera={camera}

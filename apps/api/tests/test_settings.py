@@ -54,6 +54,15 @@ def test_the_minimap_is_personal_and_shows_when_useful_by_default() -> None:
         assert setting.problem(stale) is not None
 
 
+def test_confidence_wording_offers_frequency_and_keeps_words_by_default() -> None:
+    setting = BY_KEY["confidence_wording"]
+    assert setting.layers == {Layer.PERSONAL}
+    assert setting.default == "words"
+    for mode in ("words", "numbers", "frequency", "colour", "hidden"):
+        assert setting.problem(mode) is None
+    assert setting.problem("percent") is not None
+
+
 @pytest.mark.db
 def test_personal_settings_are_kept_per_person_and_cleared_with_null(
     api: ApiAs, database: str

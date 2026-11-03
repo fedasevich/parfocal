@@ -194,12 +194,12 @@ function EvaluationBody({
   );
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-4 px-7 pt-4 pb-5">
+    <main className="flex min-h-0 flex-1 flex-col gap-(--density-flow-gap) px-7 pt-4 pb-5">
       <header className="grid gap-2">
         <Breadcrumbs start={<SidebarToggle />} renderLink={renderLink} items={crumbs} />
         <div className="flex items-end justify-between gap-4">
           <div className="grid gap-1">
-            <h1 className="m-0 text-[20px] font-semibold text-fg">
+            <h1 className="m-0 text-title font-semibold text-fg">
               {report.round_name} · {report.model}
             </h1>
             <p className="m-0 text-body-sm text-fg-dim">

@@ -5,12 +5,15 @@ import {
   createRasterOverlay,
   createVectorOverlay,
   type HeatmapLook,
+  type OutlineMode,
   type OverlayDescription,
   type OverlayKind,
+  outlineModeOverlays,
   pathBatchFromLines,
   pointBatchFromPoints,
   polygonBatchFromRings,
   type Rgba,
+  type TypedOutline,
   white,
 } from "@parfocal/viewer-engine";
 
@@ -275,4 +278,49 @@ export function overlayFixture(
   heatmapLook?: Partial<HeatmapLook>,
 ): OverlayDescription {
   return builders[kind](geometry, heatmapLook);
+}
+
+const typedClasses = ["tumor", "stroma", "immune", "other"] as const;
+
+const typedProbabilities: readonly (readonly [top: number, second: number])[] = [
+  [0.97, 0.02],
+  [0.86, 0.1],
+  [0.72, 0.2],
+  [0.6, 0.55],
+  [0.48, 0.3],
+  [0.42, 0.38],
+  [0.33, 0.3],
+];
+
+export function typedOutlines(geometry: OverlayGeometry): TypedOutline[] {
+  const outlines: TypedOutline[] = [];
+  for (let row = 0; row < typedClasses.length; row++) {
+    typedProbabilities.forEach(([top, second], column) => {
+      outlines.push({
+        ring: blob(
+          geometry,
+          [-150 + column * 50, -105 + row * 70],
+          18,
+          11,
+          300 + row * 11 + column,
+        ),
+        className: typedClasses[row] ?? "tumor",
+        top,
+        second,
+      });
+    });
+  }
+  return outlines;
+}
+
+export function outlineModeFixture(
+  mode: OutlineMode,
+  geometry: OverlayGeometry,
+): OverlayDescription[] {
+  return outlineModeOverlays({
+    id: "nuclei",
+    mode,
+    outlines: typedOutlines(geometry),
+    style: { lineWidthPx: 2 },
+  });
 }

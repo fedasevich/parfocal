@@ -50,7 +50,11 @@ test("object IDs follow the mock's format", () => {
   assert.equal(scenario.objectIds.region(1), "T2");
   assert.equal(scenario.objectIds.cell(44, 1), "T2·C145");
   const full = scenario.objectIds.full("P07", "S26-04812", "A1", scenario.resumePoint.object);
-  assert.equal(full, "P07/S26-04812/A1/T2·C145");
+  assert.equal(full, "P07/S26-04812/A1/T5");
+  assert.equal(
+    scenario.objectIds.full("P07", "S26-04812", "A1", "T2·C145"),
+    "P07/S26-04812/A1/T2·C145",
+  );
   assert.match(full, scenario.fullObjectIdPattern);
   assert.doesNotMatch("P07/S26-04812/A1/C145", scenario.fullObjectIdPattern);
 });

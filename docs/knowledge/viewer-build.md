@@ -197,6 +197,10 @@ Running earcut once when a polygon batch is built and passing the indices to `So
 
 A deck.gl layer with `visible: false` keeps its models and GPU buffers and costs nothing to show again. A layer that leaves the `layers` array has `finalizeState` called, which destroys its models and attribute buffers. The overlay golden spec checks both through `layerManager.getLayers()`, reading `destroyed` on buffers and `_destroyed` on luma.gl models, which have no `destroyed` getter. Source: VIEW-026.
 
+## Outline modes are data, and a faded outline fades its casing
+
+The outline display modes (fade, mark unsure, bands) need no renderer change beyond one flag. `outlineModeOverlays` turns typed outlines with calibrated top and second probabilities into vector overlays: fade and bands set each outline's alpha (fade 0.12 + 0.88 x strength, strength (top minus 0.25) / 0.75; bands 1, 0.55, 0.22 and 0.12 for confident, likely, unsure and doubtful, cut at 80, 55 and 40 percent), and mark unsure moves unsure calls into a second overlay of white dashes on a near-black casing one order above. A casing drawn in a constant colour stays fully dark under a faint outline and hides the fade, so `LineCasing.followsAlpha` gives the casing layer each outline's alpha in the casing colour, cached per layer part. Source: REVIEW-012, [ADR 0194](../adr/0194-confidence-display-rules-and-evidence.md).
+
 ## ImageData is enough for a BitmapLayer image and an IconLayer atlas
 
 Both layers take an `ImageData` for `image` and `iconAtlas` and load it without an asynchronous fetch, but their textures are still created on the first frame, so a golden capture must wait for `layer.isLoaded` of every overlay layer as well as the slide. The Viv route's `whenIdle` does. Draw the icon atlas in code, from a signed distance function, instead of with a canvas, so that no font or anti-aliasing difference between machines reaches a golden. For a `BitmapLayer` in the engine's y-down view the bounds are `[left, bottom, right, top]` with bottom as the larger y, and a raster test needs an asymmetric image to notice a flip. Source: VIEW-026.

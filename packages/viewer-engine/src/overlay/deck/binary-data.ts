@@ -1,4 +1,4 @@
-import type { PathBatch, PinBatch, PointBatch, PolygonBatch } from "../types.ts";
+import type { PathBatch, PinBatch, PointBatch, PolygonBatch, Rgba } from "../types.ts";
 
 interface BinaryAttribute {
   readonly value: Float32Array | Uint8Array | Uint32Array;
@@ -84,6 +84,22 @@ export function polygonOutlineData(batch: PolygonBatch): BinaryData {
       getPath: { value: positions, size: 2 },
       getColor: { value: colors, size: 4, normalized: true },
     },
+  };
+}
+
+export function withCasingColor(data: BinaryData, casing: Rgba): BinaryData {
+  const source = data.attributes.getColor;
+  if (source === undefined || source instanceof Uint32Array) return data;
+  const colors = new Uint8Array(source.value.length);
+  for (let offset = 0; offset < colors.length; offset += 4) {
+    colors[offset] = casing[0];
+    colors[offset + 1] = casing[1];
+    colors[offset + 2] = casing[2];
+    colors[offset + 3] = Math.round(((source.value[offset + 3] ?? 0) * casing[3]) / 255);
+  }
+  return {
+    ...data,
+    attributes: { ...data.attributes, getColor: { value: colors, size: 4, normalized: true } },
   };
 }
 

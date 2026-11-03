@@ -89,10 +89,8 @@ function LaneMapHeader({ title, description, className, ...props }: LaneMapHeade
       className={cn("absolute top-[18px] right-6 left-6", className)}
       {...props}
     >
-      <h1 className="m-0 font-semibold text-[22px] text-fg leading-7">{title}</h1>
-      {description ? (
-        <p className="mt-1.5 text-[14px] text-fg-dim leading-5">{description}</p>
-      ) : null}
+      <h1 className="m-0 font-semibold text-page-title text-fg leading-7">{title}</h1>
+      {description ? <p className="mt-1.5 text-body text-fg-dim leading-5">{description}</p> : null}
     </header>
   );
 }
@@ -203,7 +201,7 @@ function LaneMapBox({
         style: { left: x, top: y, width: w, height: h, ...style },
         children: (
           <>
-            <b className="font-semibold text-[14px] leading-[18px]">{title}</b>
+            <b className="font-semibold text-body leading-[18px]">{title}</b>
             {sub ? <span className="text-body-sm text-fg-dim leading-4">{sub}</span> : null}
           </>
         ),

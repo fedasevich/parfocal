@@ -10,9 +10,13 @@ import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
+import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
+import { viewTransitions } from "./shell/view-transitions.ts";
 
 const config = readBuildConfig();
+
+installTheme();
 
 installDebugHandle(window, config.appEnv);
 provideDebug(benchmarkDebug(window));
@@ -26,6 +30,7 @@ const prototypeFrame = import.meta.env.DEV
   : undefined;
 
 const router = createAppRouter(prototypeFrame);
+viewTransitions.listen();
 
 if (import.meta.env.DEV && config.fakeApi !== "off") {
   const { startFakeApi } = await import("./fake-api/start.tsx");

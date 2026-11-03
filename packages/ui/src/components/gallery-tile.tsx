@@ -1,4 +1,10 @@
 import type { Decision } from "@parfocal/tokens";
+import {
+  aiWording,
+  type TypeCall,
+  type TyperEvidence,
+  type WordingSetting,
+} from "@parfocal/ui/lib/confidence-words";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -19,6 +25,12 @@ const stateWords: Record<GalleryTileState, string> = {
   done: "done",
 };
 
+type GalleryTileAi = {
+  calls: readonly TypeCall[];
+  typer: TyperEvidence;
+  wording: WordingSetting;
+};
+
 type GalleryTileProps = Omit<React.ComponentProps<"button">, "children"> & {
   image: string;
   objectId: string;
@@ -31,6 +43,7 @@ type GalleryTileProps = Omit<React.ComponentProps<"button">, "children"> & {
   imagePosition?: string | undefined;
   imageSize?: string | undefined;
   outline?: React.ReactNode;
+  ai?: GalleryTileAi | undefined;
 };
 
 function GalleryTile({
@@ -45,12 +58,15 @@ function GalleryTile({
   imagePosition,
   imageSize,
   outline,
+  ai,
   className,
   ...props
 }: GalleryTileProps) {
   const crop = size === 40;
   const done = state === "done";
   const status = decision === "open" ? stateWords[state] : decision;
+  const wording = ai ? aiWording(ai.calls, ai.wording, ai.typer) : undefined;
+  const shown = wording?.text ?? label;
   return (
     <button
       type="button"
@@ -59,7 +75,9 @@ function GalleryTile({
       data-size={size}
       data-decision={decision}
       aria-pressed={state === "current"}
-      aria-label={`${objectId} ${label}, ${status}`}
+      data-wording={wording?.mode ?? wording?.setting}
+      data-band={wording?.band}
+      aria-label={`${objectId} ${shown}, ${status}`}
       className={cn(
         "group/tile relative block shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 text-left text-fg focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 focus-visible:outline-solid",
         crop && "rounded-[5px]",
@@ -113,10 +131,10 @@ function GalleryTile({
         <span
           data-slot="gallery-tile-label"
           className={
-            crop ? "sr-only" : "block truncate px-1.25 py-0.75 text-[10px] leading-3.5 text-fg-dim"
+            crop ? "sr-only" : "block truncate px-1.25 py-0.75 text-label leading-3.5 text-fg-dim"
           }
         >
-          {label}
+          {shown}
         </span>
       </span>
       <span
@@ -132,4 +150,10 @@ function GalleryTile({
   );
 }
 
-export { GalleryTile, type GalleryTileProps, type GalleryTileSize, type GalleryTileState };
+export {
+  GalleryTile,
+  type GalleryTileAi,
+  type GalleryTileProps,
+  type GalleryTileSize,
+  type GalleryTileState,
+};

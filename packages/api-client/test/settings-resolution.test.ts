@@ -119,3 +119,12 @@ test("the minimap resolves each of its modes and drops a stale corner or hidden"
     assert.deepEqual([resolved.value, resolved.source], ["useful", "default"]);
   }
 });
+
+test("confidence wording resolves frequency and keeps words as the default", () => {
+  assert.equal(resolveSetting("confidence_wording", empty()).value, "words");
+  const resolved = resolveSetting("confidence_wording", {
+    ...empty(),
+    personal: { confidence_wording: "frequency" },
+  });
+  assert.deepEqual([resolved.value, resolved.source], ["frequency", "personal"]);
+});

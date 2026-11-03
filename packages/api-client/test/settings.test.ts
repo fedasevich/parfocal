@@ -176,7 +176,7 @@ test("lock times, tiers and announcements change on save and come back on reset"
 
 test("my availability starts available and keeps an away status with its note", async () => {
   assert.equal((await getMyAvailability()).data.status, "available");
-  await setMyAvailability({ status: "away", until: "2026-11-04T15:00:00+01:00", note: "Course" });
+  await setMyAvailability({ status: "away", until: "2099-11-04T15:00:00+01:00", note: "Course" });
   const away = await getMyAvailability();
   assert.equal(away.status, 200);
   if (away.status === 200) assert.deepEqual([away.data.status, away.data.note], ["away", "Course"]);
@@ -189,4 +189,12 @@ test("my availability starts available and keeps an away status with its note", 
       ["available", null, null],
     );
   }
+});
+
+test("available with a note or a past end is refused like the API", async () => {
+  await assert.rejects(setMyAvailability({ status: "available", note: "x" }), { status: 400 });
+  await assert.rejects(setMyAvailability({ status: "away", until: "2020-01-01T00:00:00Z" }), {
+    status: 400,
+  });
+  assert.equal((await getMyAvailability()).data.status, "available");
 });

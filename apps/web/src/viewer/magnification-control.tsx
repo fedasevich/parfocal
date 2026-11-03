@@ -1,7 +1,7 @@
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import type { MagnificationLabel } from "@parfocal/ui/lib/magnification-bar";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { keyRegistry } from "../keys/catalogue.ts";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { loadViewerEngine } from "./load-engine.ts";
 import { brightnessAfterKey, brightnessKeyIds } from "./slide-brightness.ts";
@@ -63,10 +63,7 @@ export function MagnificationControl({
     setZoomStamp((stamp) => stamp + 1);
   }, [camera.zoom]);
 
-  const bindings = useMemo(
-    () => keyRegistry.bindings({ scopes: ["viewer"], only: brightnessKeyIds }),
-    [],
-  );
+  const bindings = useBindings(["viewer"], brightnessKeyIds);
   const jumpTo = useCallback(
     (preset: number) => {
       engine.zoomToMagnification(preset);

@@ -13,7 +13,7 @@ import {
 } from "@parfocal/ui/components/comment-thread";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
-import { useKeptDraft } from "../../session/kept-drafts.ts";
+import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { toPersonInfo, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 
@@ -78,7 +78,7 @@ export function ObjectThread({
   const [sent, setSent] = useState<CommentMessage[]>([]);
   const [draft, setDraft] = useKeptDraft(
     meId,
-    `comment:${thread?.id ?? `${window.location.pathname}${window.location.search}#${object}`}`,
+    commentDraftId(thread?.id, object, window.location.pathname),
     initialDraft,
   );
   const [replyTo, setReplyTo] = useState<string | null>(null);

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@parfocal/tokens/fonts.css";
 @import "@parfocal/tokens/tokens.css";
 @import "@parfocal/tokens/theme.css";
 

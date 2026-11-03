@@ -6,6 +6,12 @@ type Drafts = Record<string, string>;
 
 const slot = (owner: string, id: string) => `${owner}|${id}`;
 
+export const commentDraftId = (
+  threadId: string | null | undefined,
+  object: string,
+  pathname: string,
+) => `comment:${threadId ?? `${pathname}#${object}`}`;
+
 function storage(): Storage | undefined {
   return typeof sessionStorage === "undefined" ? undefined : sessionStorage;
 }
@@ -43,9 +49,10 @@ export function useKeptDraft(
 ): [string, (text: string) => void] {
   const read = () => (owner === undefined ? undefined : readDraft(owner, id)) ?? initial;
   const [text, setText] = useState(read);
-  const [readFor, setReadFor] = useState(owner);
-  if (owner !== readFor) {
-    setReadFor(owner);
+  const key = owner === undefined ? undefined : slot(owner, id);
+  const [readFor, setReadFor] = useState(key);
+  if (key !== readFor) {
+    setReadFor(key);
     setText(read());
   }
   const change = (next: string) => {

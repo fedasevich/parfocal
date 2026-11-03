@@ -33,7 +33,7 @@ function DeveloperDrawer({
     >
       <div className="flex items-center gap-2.5 border-b border-line py-3 pr-3 pl-4.5">
         <div className="grid min-w-0 gap-0.5">
-          <b className="flex items-center gap-2 text-[16px] font-semibold">
+          <b className="flex items-center gap-2 text-lead font-semibold">
             Developer
             <span className="rounded-[3px] bg-bad-fill px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
               LAB
@@ -195,7 +195,7 @@ function DevFigures({ items }: { items: [string, string][] }) {
           key={label}
           className="grid min-w-0 gap-0.5 rounded-ctl border border-line bg-surf-panel px-2.5 py-2"
         >
-          <b className="font-mono text-[16px] leading-tight font-semibold text-fg">{value}</b>
+          <b className="font-mono text-lead leading-tight font-semibold text-fg">{value}</b>
           <span className="truncate text-caption text-fg-faint">{label}</span>
         </div>
       ))}

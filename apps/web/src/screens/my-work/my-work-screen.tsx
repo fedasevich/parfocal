@@ -1,5 +1,6 @@
 import {
   useGetMe,
+  useGetMyHome,
   useListMyAdjudications,
   useListMyReviewTasks,
   useListMySlides,
@@ -14,9 +15,16 @@ import { formatLongDay, plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { AllSlidesTab } from "./all-slides-tab.tsx";
 import { AssignedTab } from "./assigned-tab.tsx";
-import { assignedOpenPath, ignoresListKeys, listMove, slideOpenPath } from "./list-keys.ts";
+import {
+  assignedOpenPath,
+  ignoresListKeys,
+  listMove,
+  onListRow,
+  slideOpenPath,
+} from "./list-keys.ts";
 import type { MyWorkState, MyWorkTab } from "./scenes.ts";
 import { slideQuery } from "./slide-filters.ts";
+import { continuePath, continuesHero, heroPath } from "./to-review-rows.ts";
 import { activeTasks, adjudicationKey, ToReviewTab } from "./to-review-tab.tsx";
 
 type Change = Partial<Omit<MyWorkState, "q" | "filters">> & {
@@ -39,6 +47,8 @@ export function MyWorkScreen({
   const me = okData(useGetMe().data);
   const everySlide = okData(useListMySlides().data)?.slides ?? [];
   const active = activeTasks(tasks);
+  const resume = okData(useGetMyHome().data)?.resume ?? null;
+  const hero = state.tab === "review" ? heroPath(active, resume) : undefined;
   const toReview = active.length + adjudications.length;
   const reviewRows = [
     ...adjudications.map((item) => ({
@@ -47,7 +57,7 @@ export function MyWorkScreen({
     })),
     ...active.map((task) => ({
       key: task.id,
-      path: destinations.guided(task.id, task.next_slide_id),
+      path: continuePath(task, resume),
     })),
   ];
   const rows =
@@ -68,6 +78,11 @@ export function MyWorkScreen({
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || ignoresListKeys(event.target, event.key)) return;
       const move = listMove(event, rowKeys, state.sel);
+      if (move === undefined && hero && continuesHero(event, state.sel, onListRow(event.target))) {
+        event.preventDefault();
+        void goTo(hero);
+        return;
+      }
       if (move === undefined) return;
       event.preventDefault();
       if (move.kind === "clear") change({ sel: undefined });
@@ -102,9 +117,9 @@ export function MyWorkScreen({
     </>
   );
   return (
-    <main className="flex min-h-0 flex-col gap-4 px-8 pt-5.5 pb-4.5 pl-7">
+    <main className="flex min-h-0 flex-col gap-(--density-flow-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-[24px] font-semibold tracking-[-0.01em] text-fg">My work</h1>
+        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">My work</h1>
         <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">{subtitle}</p>
       </header>
       <Tabs

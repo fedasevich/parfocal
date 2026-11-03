@@ -35,7 +35,7 @@ import { now } from "../../clock.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
-import { applyTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
+import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -293,7 +293,7 @@ function LoadedSettings({
         ]}
         onChange={(value) => {
           setTheme(value as ThemeChoice);
-          applyTheme(value as ThemeChoice);
+          chooseTheme(value as ThemeChoice);
         }}
       />
     ),

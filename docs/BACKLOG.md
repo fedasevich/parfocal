@@ -1532,19 +1532,19 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
   Size: M.
 
-- [ ] DS-003 · Typography
+- [x] DS-003 · Typography
   IBM Plex Sans and IBM Plex Mono, self-hosted. Nine sizes and nothing between them: label 11/600 in capitals, caption 12, body small 13, body 14, lead 16, title small 18/600, title 20/600, page title 24/600 and display 28/600. Running text is never under 12 px, and 11 px is only for capital labels, tags, counts and keycaps. Mono only for IDs, numbers in columns, file names and keys.
   Done when the type specimen story passes visual tests, fonts load without layout shift, and a lint check fails on a font size off the scale.
   Depends on PROTO-011. Refs doc 41, kit: UI kit: tags, icons and type, doc 40 D5.
   Size: M.
 
-- [ ] DS-004 · Icon set with key badges
+- [x] DS-004 · Icon set with key badges
   The SVG icon set from the mock (select, hand, smart, auto, poly, free, rect, ellipse, marker, ruler, arrow, text, comment, brush, slides, sun, gear, help, share, back, next, popout, device icons, panel, home, check, warn, eye, lock, search, flag and others) as React components. Five sizes: 12 inside tags and checkboxes, 16 by default, 20 for sidebar navigation, large buttons, tiles and zone headers, 24 for drop zones and empty states, and 40 for state badges. Icons take the text colour, the accent only for a selected state and a status colour only when the icon is the status. One stroke width. Tools show their key in the tooltip.
   Done when every icon has a story and an accessible name, and a test fails on an icon size off the scale.
   Depends on PROTO-011. Refs doc 41, doc 40 D4.
   Size: M.
 
-- [ ] DS-005 · Theme switching
+- [x] DS-005 · Theme switching
   System, dark and light, with the user setting stored per device. Neutral chroma near zero for chrome.
   Done when visual tests cover both themes for every component.
   Depends on PROTO-011.
@@ -1652,7 +1652,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: team/nudge, mock: disagree/sendadj, mock: signoff/ready, POC doc 44 (the round 6 working mock) section 1.
   Size: M.
 
-- [ ] DS-023 · Flow page with the shared stepper
+- [x] DS-023 · Flow page with the shared stepper
   One page shape for every long form: New review task, upload, the clinical report, Connect a model, sign-up, setup and the invite landing. A breadcrumb, a 24 px title and a 13 px subtitle, then one stepper row where every visited step can be clicked and opens that step and a step that cannot be reached yet says why in its tooltip. The main column, up to 760 px, holds the step's zones, with no summary panel, and the last step is the one place that sums everything up, with a Change link on each row. A sticky bottom bar has Back, the reason or hint and Next or the primary, a disabled Next names its reason, a shadow over the bar shows when more content follows, and leaving with a draft keeps it.
   Done when stories cover a flow at its first, a middle and its last step, a test opens a visited step from the stepper and finds an unreached step refused with its reason, keyboard tests move through the stepper, and axe passes.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
@@ -1706,13 +1706,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-016.
   Size: S.
 
-- [ ] DS-032 · Steady axe run on animated stories
+- [x] DS-032 · Steady axe run on animated stories
   DS-029 (visible focus ring) found that axe reads `components-settings--key-states` mid-way through the pulsing shortcut key animation, so its contrast check passes or fails from run to run in both themes. Run the axe spec with reduced motion or stop the pulse before the check, without excluding the story.
   Done when the axe spec passes `components-settings--key-states` ten runs in a row in both themes.
   Depends on DS-029.
   Size: S.
 
-- [ ] DS-033 · Density for page gaps and every list row
+- [x] DS-033 · Density for page gaps and every list row
   DS-017 (density modes) put table rows, the inspector and the My work to-review rows on the `--density-*` variables, but page gaps (the mock's `.wl-main` 22 to 14 px) and the other list rows still use fixed spacing.
   Done when every list row and page gap reads a density variable, and the density spec checks a page gap and one more list in both modes.
   Depends on DS-017.
@@ -1720,6 +1720,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] DS-034 · App tables on the shared table
   DS-026 (table) added sortable headers, a checkbox column, `selected` rows, number and ID cells and an empty row in packages/ui. Move the admin sections, project slides, object table, disagreement queue and clinical report deposits onto them. The object table picks a row by mouse click only, so its rows cannot be reached by keyboard.
+  Also put the project and My work table headers on `--density-head-y`, and the project slide set rows (9 px) and the Team reviewer rows on the density variables, which DS-033 left out.
   Done when each of those tables uses the shared table, a test tabs to an object table row and opens it with Enter, and axe passes on each screen.
   Depends on DS-026.
   Size: M.
@@ -1728,6 +1729,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-026 (table) found the amber "warn" status tag at 4.3:1 against the light page background, below the 4.5:1 axe needs.
   Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
   Size: S.
+
+- [ ] DS-036 · Preload the main Plex fonts
+  DS-003 (typography) committed the IBM Plex woff2 files with font-display optional (ADR 0227), so a first visit on a slow link may draw in the fallback font. Preload the two main files in apps/web index.html.
+  Done when a browser test on a throttled first load sees Plex rendered, and the preload names files that exist in the build.
+  Depends on DS-003.
+  Size: S.
+
+- [ ] DS-037 · Flow screens keep their step and draft
+  DS-023 (flow page with the shared stepper) added a furthest-step `reached` value and the `useFlowSteps` hook, but the app's flow screens do not pass `reached` and lose the draft and step when you leave. Use `useFlowSteps` with the web app's `useKeptDraft` on every flow screen.
+  Done when a test on each flow screen visits a later step, leaves, comes back to the same step with the draft kept, and reopens a visited step from the stepper.
+  Depends on DS-023.
+  Size: M.
 
 ---
 
@@ -1763,6 +1776,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-005 · Inspector panel with resize and hide
   Default 340 px, drag between 280 and 560, drag below 220 hides it, I toggles it, a floating tab shows the active section and count when hidden. Option "hides while panning".
+  The rail's Hide the side panel button already fires the `panel` action on I (CMD-007), but ViewerFrame has no hidden state, so I does nothing on the viewer yet.
   Done when interaction tests cover resize, hide, restore and persistence per user.
   Refs kit W10, mock §2.3.
   Size: M.
@@ -1785,7 +1799,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock 16, kit W23.
   Size: S.
 
-- [ ] SHELL-009 · Screen coverage measurement
+- [x] SHELL-009 · Screen coverage measurement
   A test utility that measures the share of the canvas covered by chrome at 1280, 1440 and 1920 widths.
   SHELL-008 (focus mode) measures the chrome share in place in apps/web/e2e/viewer-tools.spec.ts (chromeShare over 0.2 before focus, 0 in focus). Replace it with this utility and its expected value.
   Done when CI enforces under 35% in Review at 1440×900 (KPI).
@@ -1919,7 +1933,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Refs mock 2 caption.
   Size: S.
 
-- [ ] WL-005 · To review tab
+- [x] WL-005 · To review tab
   One Continue card for the task in progress with the slide image, progress and time left, then each of my tasks with its project, scope, due date, blinding, my progress and a status tag, with Continue or Start. A side column shows mentions and replies. Opening the next slide is one action.
   Done when component tests cover a task in progress, a new task and a finished one, and E2E continues from My work into guided review at the next object.
   Refs mock: worklist/review.
@@ -2001,7 +2015,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
   Size: M.
 
-- [ ] WL-019 · All slides tab
+- [x] WL-019 · All slides tab
   Every slide the person can see, with project and case, result sets, reviews by person and status, a search that filters as you type and the filters of WL-017. A row opens the slide.
   Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.
   Depends on WL-001, WL-017. Refs mock: worklist/all.
@@ -2033,24 +2047,30 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests switch slides and come back to the same view.
   Size: S.
 
-- [ ] CASE-004 · AI state: pre-read ready
+- [x] CASE-004 · AI state: pre-read ready
   Heat overlay and area outlines with numbered badges. The panel leads with the staging question for a sentinel node: "Metastasis likely, largest about 7.7 mm", a chip "Macro if confirmed", and a size scale with the 0.2 and 2 mm lines (REVIEW-004). The area list is largest first with size and category per row. The footer says "Start with area 1". Once the largest area is confirmed and measured the hero reads "Macrometastasis, 8.0 mm, settled" with the suggested pN stage, the smaller rows say they cannot change the category, and the footer offers submit.
   Done when component tests cover the content and behaviour of the mock 5 "Large deposit found" scene in both the open and the settled state.
   Refs kit W2, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Only in projects with the sentinel node staging template (PROJ-005).
   Size: M.
 
-- [ ] CASE-005 · AI state: still running
+- [x] CASE-005 · AI state: still running
   The map fills in as computed, with a dashed line where the AI has reached. Stage progress card. Areas appear as found, with placeholders. The view never moves.
   Done when E2E with a simulated job stream shows areas appearing and zero layout shift.
   Refs kit W18.
   Size: M.
 
-- [ ] CASE-006 · AI state: no tumor flagged
+- [x] CASE-006 · AI state: no tumor flagged
   "Needs review" chip (never "negative"), systematic scan path at 10× in reading order, coverage bar, start systematic scan.
   Done when tests confirm the path covers the tissue mask and the scan advances one field per step.
   Refs kit W19.
   Size: M.
+
+- [ ] CASE-016 · Systematic scan on the real tissue mask
+  CASE-006 (AI state: no tumor flagged) steps a 10x field through a tissue mask traced from the mock `overview.jpg` on a 50 pixel grid (apps/web/src/screens/review/tissue-mask.ts). Serve the slide's real tissue mask from the API (VIEW-049 delivers the tissue box) and size the 10x field from the real viewport.
+  Done when a browser test on a real slide steps the scan with ] and reaches full coverage of the stored mask.
+  Depends on CASE-006, VIEW-049.
+  Size: S.
 
 - [ ] CASE-007 · Systematic scan mode
   Step field by field along the serpentine path with a key, marking seen tissue.
@@ -2085,7 +2105,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when unit tests cover the state machine and every transition is audited.
   Size: M.
 
-- [ ] CASE-013 · AI state: only a small cluster
+- [x] CASE-013 · AI state: only a small cluster
   When the largest area sits near 0.2 mm, the hero says both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis, and lists the steps still open (confirm, measure, count cells).
   Done when component tests cover the content and behaviour of the mock 5 "Only a small cluster" scene and the step list follows the staging state.
   Depends on REVIEW-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -2267,7 +2287,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests map calibrated probabilities to phrases with the four band thresholds of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) (confidence display rules), read per typer.
   Size: S.
 
-- [ ] REVIEW-012 · Outline display modes
+- [x] REVIEW-012 · Outline display modes
   Fade (default, opacity from calibrated probability), mark unsure, bands, with the formulas from the mock. Unsure marks and zone outlines are neutral, white dashes with a dark casing, never a hue, because every hue sits near a class colour for some colour-vision deficiency.
   Done when golden tests cover each mode.
   Refs mock §2.4, doc 33, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -2321,22 +2341,47 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
   Size: M.
 
-- [ ] REVIEW-021 · Comment tool pins a thread on click
+- [x] REVIEW-021 · Comment tool pins a thread on click
   REVIEW-001 (review rail) routes the Comment tool (C) to the comments tab, but clicking the slide in comment mode does not pin a new thread there yet.
   Done when a test clicks the slide in comment mode and a new thread opens pinned at that point, and Esc leaves comment mode without a thread.
   Depends on REVIEW-001.
   Size: S.
 
-- [ ] REVIEW-022 · AI wording on screen with a frequency option
+- [x] REVIEW-022 · AI wording on screen with a frequency option
   REVIEW-011 (AI wording modes) added `confidence-words.ts` with plain, percent and frequency modes, but nothing on screen uses it, and the personal setting `confidence_wording` (words, numbers, colour, hidden) has no frequency option.
   Done when the inspector and the gallery tile read their AI wording through the module, the setting offers frequency, and component tests cover each mode and the percent fallback for an uncalibrated typer.
   Depends on REVIEW-011.
   Size: S.
 
-- [ ] REVIEW-023 · Model warnings in the inspector
+- [x] REVIEW-023 · Model warnings in the inspector
   REVIEW-014 (model warnings) added `modelWarnings` and `slideStatistics` in packages/ui lib/model-warnings.ts, but nothing shows them. Show them in the inspector's Model warnings block (the mock's `blkWarn` toggle).
   Done when component tests cover no warning, one and several, and the block's toggle.
   Depends on REVIEW-014.
+  Size: S.
+
+- [ ] REVIEW-024 · Model warnings on the full viewer
+  REVIEW-023 (model warnings in the inspector) built `ModelWarningsBlock`, but no screen has the typer metadata (calibration, test set accuracy and shares, validated sites) or the personal `model_warnings` setting to pass in. Add the metadata to the fake result set and the API contract, call `slideStatistics` on the slide's cells, and put the block under AiSays in full-viewer.tsx, gated by `model_warnings`.
+  Give the fake typers calibration evidence too, because without it the Word confidence preset (preset 3 on task RT-14) falls back to percent since REVIEW-022.
+  Done when a component test shows the block on a slide whose typer trips a rule and hides it when the setting is off.
+  Depends on REVIEW-023.
+  Size: S.
+
+- [ ] REVIEW-025 · Fake keeps posted threads
+  REVIEW-021 (comment pin) posts a pinned thread through `useCreateThread`, but the api-client fake has no POST threads override, so a posted thread comes back as random mock data and never appears in the fake list.
+  Done when an api-client fake test posts a thread with a point anchor and lists it back, and the comment pin E2E sees the new thread in the Comments tab.
+  Depends on REVIEW-021.
+  Size: S.
+
+- [ ] REVIEW-026 · Confidence wording in Settings and guided review
+  REVIEW-022 (AI wording on screen) added frequency to the personal setting `confidence_wording` and the `aiWording` helper, but the Settings screen has no row for the setting, and guided review reads the task's display preset instead of it.
+  Done when Settings shows the row with all four values, guided review follows the setting when the task does not lock a preset, and component tests cover both.
+  Depends on REVIEW-022.
+  Size: S.
+
+- [ ] REVIEW-027 · Outline modes in the review viewer
+  REVIEW-012 (outline display modes) added fade, mark unsure and bands as overlay data in `packages/viewer-engine/src/overlay/outline-modes.ts` with golden tests, but nothing in the web app calls `outlineModeOverlays`. Connect the Settings and developer confidence mode to it in the review viewer.
+  Done when a browser test on a real slide switches each mode and the overlay changes, and the setting is remembered.
+  Depends on REVIEW-012.
   Size: S.
 
 ---
@@ -3383,7 +3428,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] CMD-007 · Every shortcut fires on the person's own keys
+- [x] CMD-007 · Every shortcut fires on the person's own keys
   DS-030 (every key hint from the key registry) made every hint follow the person's keys, but the decision answer keys (K, X, Y, N and the digits) and the note key still fire on the defaults, and the rail's Annotate (P), AI tools (A, the same key as overlays) and hide panel (]) buttons are not registry actions. Route them all through the registry and settle the A clash.
   Done when a test rebinds an answer key, the note key and Annotate, and each fires on the new key and not the old one, and a test proves no two actions in one scope share a default key.
   Depends on DS-030.

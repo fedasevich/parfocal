@@ -1,3 +1,4 @@
+import type { OutlineMode } from "@parfocal/viewer-engine";
 import type { InterpolationRule } from "@parfocal/viewer-engine/viv";
 
 export interface SyntheticRequest {
@@ -6,6 +7,7 @@ export interface SyntheticRequest {
   readonly brightness?: number;
   readonly brightnessBy?: "engine" | "css-filter";
   readonly annotations?: boolean;
+  readonly outlineMode?: OutlineMode;
 }
 
 export interface TextureFilter {

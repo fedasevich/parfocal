@@ -485,7 +485,7 @@ export const resumePoint = {
   project: "P07" as ProjectCode,
   caseLabel: "S26-04812",
   slideLabel: "A1",
-  object: objectIds.cell(44, 1),
+  object: objectIds.region(4),
   position: 7,
 };
 

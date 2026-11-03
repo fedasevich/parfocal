@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { keepDraft, readDraft } from "../src/session/kept-drafts.ts";
+import { commentDraftId, keepDraft, readDraft } from "../src/session/kept-drafts.ts";
 import { nextAvailability, presenceOf, shownPerson } from "../src/shell/account-presence.ts";
 import { shellStore } from "../src/shell/shell-store.ts";
 
@@ -58,4 +58,9 @@ test("a kept draft belongs to its writer and an empty draft is dropped", () => {
   keepDraft("u1", "comment:t1", "  ");
   assert.equal(readDraft("u1", "comment:t1"), undefined);
   assert.equal(values.size, 0);
+});
+
+test("a draft for an object with no thread survives pan and zoom", () => {
+  assert.equal(commentDraftId(undefined, "c-12", "/p/1"), "comment:/p/1#c-12");
+  assert.equal(commentDraftId("t1", "c-12", "/p/1"), "comment:t1");
 });

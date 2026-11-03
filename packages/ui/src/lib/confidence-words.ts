@@ -111,3 +111,46 @@ export function confidenceWords(
         : percentText(shape, first, second);
   return { mode: used, band, shape, text };
 }
+
+export type WordingSetting = "words" | "numbers" | "frequency" | "colour" | "hidden";
+
+export const DEFAULT_WORDING_SETTING: WordingSetting = "words";
+
+const settingModes: Record<WordingSetting, WordingMode | null> = {
+  words: "plain",
+  numbers: "percent",
+  frequency: "frequency",
+  colour: null,
+  hidden: null,
+};
+
+export const wordingModeOf = (setting: WordingSetting): WordingMode | null => settingModes[setting];
+
+export type AiWording = {
+  setting: WordingSetting;
+  mode: WordingMode | null;
+  band: ConfidenceBand;
+  text: string | null;
+};
+
+export function aiWording(
+  calls: readonly TypeCall[],
+  setting: WordingSetting,
+  typer: TyperEvidence,
+): AiWording {
+  const asked = wordingModeOf(setting);
+  const words = confidenceWords(calls, asked ?? DEFAULT_WORDING, typer);
+  if (setting === "hidden") return { setting, mode: null, band: words.band, text: null };
+  if (asked === null) {
+    const [first] = ranked(calls);
+    return { setting, mode: null, band: words.band, text: first?.label ?? null };
+  }
+  return { setting, mode: words.mode, band: words.band, text: words.text };
+}
+
+export const unmeasuredTyper = (name: string): TyperEvidence => ({
+  name,
+  calibrated: false,
+  checkedOnHeldOut: false,
+  bandAccuracy: {},
+});

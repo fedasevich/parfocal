@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { usePersonalKeys } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -82,7 +83,8 @@ export function useViewerKeys(
     }),
     [engine, module, pan],
   );
-  const bindings = useMemo(() => viewerKeyBindings(), []);
+  const resolve = usePersonalKeys();
+  const bindings = useMemo(() => viewerKeyBindings(resolve), [resolve]);
   const onFire = useCallback(
     (fired: Parameters<typeof applyViewerKey>[0]) => applyViewerKey(fired, target, shift.current),
     [target],

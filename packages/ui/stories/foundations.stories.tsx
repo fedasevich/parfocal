@@ -1,6 +1,6 @@
+import { type TypeStyle, typeScale, typeStyles } from "@parfocal/tokens";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../src/components/button.tsx";
-import { Icon, type IconSize, iconNames } from "../src/components/icon.tsx";
 import { Keycap } from "../src/components/keycap.tsx";
 
 const meta = {
@@ -17,38 +17,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const sizes: IconSize[] = ["xs", "sm", "md", "lg", "xl"];
-
-export const IconSet: Story = {
-  render: () => (
-    <div className="grid w-[880px] grid-cols-8 gap-3 text-fg">
-      {iconNames.map((name) => (
-        <div key={name} className="grid justify-items-center gap-1.5 text-caption text-fg-dim">
-          <Icon name={name} size="md" className="text-fg" />
-          <span>{name}</span>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const IconSizes: Story = {
-  render: () => (
-    <div className="flex items-end gap-6 text-fg">
-      {sizes.map((size) => (
-        <div key={size} className="grid justify-items-center gap-2 text-caption text-fg-dim">
-          <Icon name="check" size={size} className="text-fg" />
-          <b>{size}</b>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const IconWithName: Story = {
-  render: () => <Icon name="lock" size="md" label="Locked by the task" className="text-fg" />,
-};
 
 export const Keycaps: Story = {
   render: () => (
@@ -69,34 +37,78 @@ export const Keycaps: Story = {
   ),
 };
 
-const typeScale = [
-  [
-    "Label",
-    "text-label font-semibold uppercase tracking-[0.07em] text-fg-faint",
-    "AREAS, LARGEST FIRST",
-  ],
-  ["Caption", "text-caption", "Imported 12 Oct from tumor_009_camelyon.geojson"],
-  ["Body small", "text-body-sm", "Tumor region · 6.2 mm across"],
-  ["Body", "text-body", "Only the largest deposit sets the node's category."],
-  ["Lead", "text-lead", "Tumor, 91% sure · 6.2 mm across"],
-  ["Title small", "text-title-sm font-semibold", "Run a model"],
-  ["Title", "text-title font-semibold", "Metastasis likely"],
-  ["Page title", "text-page-title font-semibold", "Sentinel node AI evaluation"],
-  ["Display", "text-display font-semibold", "Is T2 tumor?"],
+const typeExamples: Record<TypeStyle, { name: string; className: string; example: string }> = {
+  label: {
+    name: "Label",
+    className: "text-label font-semibold uppercase tracking-[0.07em] text-fg-faint",
+    example: "AREAS, LARGEST FIRST",
+  },
+  caption: {
+    name: "Caption",
+    className: "text-caption",
+    example: "Imported 12 Oct from tumor_009_camelyon.geojson",
+  },
+  "body-sm": {
+    name: "Body small",
+    className: "text-body-sm",
+    example: "Tumor region · 6.2 mm across",
+  },
+  body: {
+    name: "Body",
+    className: "text-body",
+    example: "Only the largest deposit sets the node's category.",
+  },
+  lead: { name: "Lead", className: "text-lead", example: "Tumor, 91% sure · 6.2 mm across" },
+  "title-sm": { name: "Title small", className: "text-title-sm", example: "Run a model" },
+  title: { name: "Title", className: "text-title", example: "Metastasis likely" },
+  "page-title": {
+    name: "Page title",
+    className: "text-page-title",
+    example: "Sentinel node AI evaluation",
+  },
+  display: { name: "Display", className: "text-display", example: "Is T2 tumor?" },
+};
+
+const monoExamples = [
+  ["ID", "C-2024-0117"],
+  ["Number in a column", "6.20 mm  ·  91%"],
+  ["File name", "tumor_009_camelyon.geojson"],
+  ["Key", "Shift+D"],
 ] as const;
 
 export const TypeScale: Story = {
   render: () => (
-    <div className="grid w-[720px] text-fg">
-      {typeScale.map(([name, className, example]) => (
-        <div
-          key={name}
-          className="grid grid-cols-[150px_1fr] items-baseline gap-4 border-b border-line py-2"
-        >
-          <small className="font-mono text-caption text-fg-faint">{name}</small>
-          <span className={className}>{example}</span>
-        </div>
-      ))}
+    <div className="grid w-[720px] gap-6 text-fg">
+      <div data-testid="type-scale" className="grid">
+        {typeStyles.map((style) => {
+          const { name, className, example } = typeExamples[style];
+          const { size, weight, line } = typeScale[style];
+          return (
+            <div
+              key={style}
+              className="grid grid-cols-[150px_1fr] items-baseline gap-4 border-b border-line py-2"
+            >
+              <small className="grid font-mono text-caption text-fg-faint">
+                {name}
+                <span className="text-label">
+                  {size}/{line} · {weight}
+                </span>
+              </small>
+              <span data-type-style={style} className={className}>
+                {example}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div data-testid="type-mono" className="grid gap-1">
+        {monoExamples.map(([use, example]) => (
+          <div key={use} className="grid grid-cols-[150px_1fr] items-baseline gap-4">
+            <small className="text-caption text-fg-faint">{use}</small>
+            <span className="font-mono text-body">{example}</span>
+          </div>
+        ))}
+      </div>
     </div>
   ),
 };

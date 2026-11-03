@@ -352,7 +352,15 @@ export const CommandPaletteNothingMatches: Story = {
   render: () => <PaletteStage query="zzz" list={[]} current={0} />,
 };
 
-function AccountStage({ initialsOnly, jobTitle }: { initialsOnly: boolean; jobTitle: string }) {
+function AccountStage({
+  initialsOnly,
+  jobTitle,
+  presenceBusy = false,
+}: {
+  initialsOnly: boolean;
+  jobTitle: string;
+  presenceBusy?: boolean;
+}) {
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [only, setOnly] = useState(initialsOnly);
   const [away, setAway] = useState(false);
@@ -393,6 +401,7 @@ function AccountStage({ initialsOnly, jobTitle }: { initialsOnly: boolean; jobTi
               }
         }
         onNextPresence={() => setAway(!away)}
+        presenceBusy={presenceBusy}
         theme={theme}
         onThemeChange={setTheme}
         initialsOnly={only}
@@ -406,6 +415,12 @@ function AccountStage({ initialsOnly, jobTitle }: { initialsOnly: boolean; jobTi
 
 export const AccountMenuOpen: Story = {
   render: () => <AccountStage initialsOnly={false} jobTitle="Consultant · breast, nodes" />,
+};
+
+export const AccountMenuSaving: Story = {
+  render: () => (
+    <AccountStage initialsOnly={false} jobTitle="Consultant · breast, nodes" presenceBusy />
+  ),
 };
 
 export const AccountMenuLongRoleInitialsOnly: Story = {

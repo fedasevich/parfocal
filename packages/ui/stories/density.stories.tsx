@@ -1,5 +1,6 @@
 import type { DensityMode } from "@parfocal/tokens";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SettingRow } from "../src/components/admin.tsx";
 import { Button } from "../src/components/button.tsx";
 import { InspectorCard } from "../src/components/inspector.tsx";
 import { SidePanel } from "../src/components/side-panel.tsx";
@@ -23,49 +24,61 @@ const slides = [
 
 function DensityDemo({ density }: { density: DensityMode }) {
   return (
-    <div data-density={density} className="flex h-[560px] gap-6 bg-page p-4 text-fg">
-      <div className="w-[460px]">
-        <Table data-testid="list">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Slide</TableHead>
-              <TableHead>Tissue</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Objects</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {slides.map(([name, tissue, state, objects]) => (
-              <TableRow key={name}>
-                <TableCell>
-                  <b>{name}</b>
-                </TableCell>
-                <TableCell>{tissue}</TableCell>
-                <TableCell>{state}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{objects}</TableCell>
+    <div
+      data-density={density}
+      data-testid="page"
+      className="flex flex-col gap-(--density-page-gap) bg-page p-4 text-fg"
+    >
+      <h2 className="m-0 text-body font-semibold">Slides and settings</h2>
+      <div className="flex h-[560px] gap-6">
+        <div className="w-[460px]">
+          <Table data-testid="list">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Slide</TableHead>
+                <TableHead>Tissue</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead className="text-right">Objects</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {slides.map(([name, tissue, state, objects]) => (
+                <TableRow key={name}>
+                  <TableCell>
+                    <b>{name}</b>
+                  </TableCell>
+                  <TableCell>{tissue}</TableCell>
+                  <TableCell>{state}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">{objects}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <SidePanel
+          data-testid="inspector"
+          tabs={[
+            {
+              value: "objects",
+              label: "Objects",
+              body: (
+                <>
+                  <InspectorCard>Tumor area T1, 7.7 mm</InspectorCard>
+                  <InspectorCard>Tumor area T2, 1.3 mm</InspectorCard>
+                  <InspectorCard>Tumor area T3, 0.15 mm</InspectorCard>
+                </>
+              ),
+              foot: <Button>Submit slide</Button>,
+            },
+            { value: "display", label: "Display", body: <p>Layers</p> },
+          ]}
+        />
       </div>
-      <SidePanel
-        data-testid="inspector"
-        tabs={[
-          {
-            value: "objects",
-            label: "Objects",
-            body: (
-              <>
-                <InspectorCard>Tumor area T1, 7.7 mm</InspectorCard>
-                <InspectorCard>Tumor area T2, 1.3 mm</InspectorCard>
-                <InspectorCard>Tumor area T3, 0.15 mm</InspectorCard>
-              </>
-            ),
-            foot: <Button>Submit slide</Button>,
-          },
-          { value: "display", label: "Display", body: <p>Layers</p> },
-        ]}
-      />
+      <div data-testid="settings" className="w-[460px]">
+        <SettingRow label="Show object outlines" on />
+        <SettingRow label="Ask before submit" on={false} />
+        <SettingRow label="Keep the last layer" on />
+      </div>
     </div>
   );
 }

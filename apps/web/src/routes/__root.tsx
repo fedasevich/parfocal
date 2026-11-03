@@ -37,7 +37,7 @@ function Root() {
 function NotFound() {
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-2 p-8">
-      <h1 className="font-semibold text-2xl text-fg">Page not found</h1>
+      <h1 className="font-semibold text-page-title text-fg">Page not found</h1>
       <Link to="/" className="text-accent underline">
         Go home
       </Link>

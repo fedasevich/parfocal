@@ -2,6 +2,7 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
 import { lookUrl } from "../thumbnails.ts";
+import { reviewTyper } from "./ai-wording.ts";
 import type { Answer } from "./review-state.ts";
 import { cellShapes, hpfSize } from "./slide-geometry.ts";
 
@@ -100,7 +101,13 @@ export function CellsGrid({
             decision={value ?? "open"}
             ringed={confirming && !value}
             dimmed={confirming && Boolean(value)}
+            ai={{
+              calls: [{ label: cell.class_name.toLowerCase(), probability: cell.score }],
+              typer: reviewTyper,
+              wording: claimHidden ? "hidden" : "words",
+            }}
             outline={<CellOutline object={cell.object} white={claimHidden} />}
+            data-vt-source=""
             onClick={() => onPick(cell.object)}
             {...cropStyle(cell.object)}
           />

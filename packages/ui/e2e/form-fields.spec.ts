@@ -92,6 +92,16 @@ test("the radio group names its legend and describes its help line or error", as
   ).toBeDisabled();
 });
 
+test("a disabled radio group dims every row's text", async ({ page }) => {
+  await open(page, "radio-states");
+  const locked = page.getByRole("radiogroup", { name: "Locked order" });
+  await expect(locked.locator('[data-slot="radio-row"] > span:last-child').first()).toHaveCSS(
+    "opacity",
+    "0.4",
+  );
+  await expect(locked.getByRole("radio", { name: /AI/ })).toBeDisabled();
+});
+
 for (const theme of ["dark", "light"] as const) {
   test(`an error never clears what was typed in ${theme}`, async ({ page }) => {
     await open(page, "error-keeps-typing", theme);

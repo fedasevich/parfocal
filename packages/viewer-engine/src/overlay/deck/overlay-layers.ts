@@ -27,6 +27,7 @@ import {
   pointData,
   polygonFillData,
   polygonOutlineData,
+  withCasingColor,
   withoutColors,
 } from "./binary-data.ts";
 
@@ -45,6 +46,7 @@ interface VectorParts {
   readonly outlineGeometry: BinaryData | null;
   readonly pathGeometry: BinaryData | null;
   readonly pointGeometry: BinaryData | null;
+  readonly casingTints: Map<string, BinaryData>;
 }
 
 interface PinParts {
@@ -99,6 +101,7 @@ function vectorParts(shapes: ShapeData): VectorParts {
     outlineGeometry: outlines && withoutColors(outlines),
     pathGeometry: lines && withoutColors(lines),
     pointGeometry: dots && withoutColors(dots),
+    casingTints: new Map(),
   };
 }
 
@@ -158,16 +161,24 @@ function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string
     });
   if (casing) {
     const casingWidthPx = style.lineWidthPx + 2 * casing.widthPx;
-    if (parts.outlineGeometry) {
-      layers.push(
-        stroke("outline-casings", parts.outlineGeometry, "loop", casingWidthPx, casing.color, null),
-      );
-    }
-    if (parts.pathGeometry) {
-      layers.push(
-        stroke("path-casings", parts.pathGeometry, "open", casingWidthPx, casing.color, null),
-      );
-    }
+    const casingLine = (
+      part: string,
+      colored: BinaryData | null,
+      plain: BinaryData | null,
+      pathType: "loop" | "open",
+    ) => {
+      if (plain === null) return;
+      if (casing.followsAlpha && colored !== null) {
+        const key = `${part}:${casing.color.join(",")}`;
+        const tinted = parts.casingTints.get(key) ?? withCasingColor(colored, casing.color);
+        parts.casingTints.set(key, tinted);
+        layers.push(stroke(part, tinted, pathType, casingWidthPx, null, null));
+        return;
+      }
+      layers.push(stroke(part, plain, pathType, casingWidthPx, casing.color, null));
+    };
+    casingLine("outline-casings", parts.outlines, parts.outlineGeometry, "loop");
+    casingLine("path-casings", parts.paths, parts.pathGeometry, "open");
   }
   const lineData = (colored: BinaryData | null, plain: BinaryData | null) =>
     lineColor === null ? colored : plain;

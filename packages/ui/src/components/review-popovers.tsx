@@ -115,6 +115,7 @@ function ReviewProgressPopover({
               className="ml-auto"
               onClick={onWholeSlide}
               title={wholeSlideTitle}
+              data-closes-popover={onWholeSlide ? "" : undefined}
             >
               Whole slide
             </Button>

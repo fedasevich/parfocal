@@ -17,7 +17,8 @@ All are set by the web app for features the user uses, hold no identifier of the
 
 | Key | Storage | What it holds | Why it is needed |
 |---|---|---|---|
-| `parfocal-theme` | localStorage | Light, dark or system | Keeps the chosen theme |
+| `parfocal.device-settings` | localStorage | The device layer of the settings, such as the theme (system, light or dark) | Keeps the settings that belong to this device |
+| `parfocal-theme` | localStorage | The theme from before the device layer | Read once, moved into `parfocal.device-settings` and removed |
 | `parfocal-developer-mode` | localStorage | On or absent | Keeps developer mode on for people who turned it on |
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |

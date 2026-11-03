@@ -139,7 +139,9 @@ test("the invite joins in one step and opens the first slide", async ({ page }) 
 test("setup carries the role into the first project and ends on the first-week home", async ({
   page,
 }) => {
-  await page.goto("/setup");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
+  await page.evaluate(() => window.history.pushState(null, "", "/setup"));
   await page.getByRole("radio", { name: /Researcher/ }).click();
   await expect(page.getByText("Home opens on your projects")).toBeVisible();
   await page.getByRole("button", { name: "Next: Workspace" }).click();
@@ -155,6 +157,12 @@ test("setup carries the role into the first project and ends on the first-week h
   await expect(page.getByText("Upload slides and their AI results")).toBeVisible();
   await page.getByRole("button", { name: "Open the sample project", exact: true }).click();
   await expect(page).toHaveURL(/\/\?scene=new$/);
+  await expect(
+    page
+      .getByRole("main")
+      .getByText(/^(Start something|Start here|Continue where you left off)$/)
+      .first(),
+  ).toHaveText("Start something");
 });
 
 test("admin is Daniel's, with its own sections and the app's top bar", async ({ page }) => {
