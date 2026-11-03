@@ -1,4 +1,5 @@
 import {
+  getGetMySettingLayersQueryKey,
   useGetMe,
   useListJoinableWorkspaces,
   useSetMySettingLayers,
@@ -31,6 +32,7 @@ import {
 } from "@parfocal/ui/components/select";
 import { FilterChip, StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -181,7 +183,13 @@ export function SetupScreen({ step, change }: Props) {
   const me = okData(useGetMe().data);
   const joinable = useListJoinableWorkspaces().data?.data ?? [];
   const updateMe = useUpdateMe();
-  const saveLayers = useSetMySettingLayers();
+  const queryClient = useQueryClient();
+  const saveLayers = useSetMySettingLayers({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
+    },
+  });
   const goTo = useGoTo();
   const index = onboardingScenes.setup.indexOf(step);
   const [reached, setReached] = useState(index);

@@ -481,8 +481,9 @@ export function HomeScreen() {
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
   const goTo = useGoTo();
-  const layers = okData(useGetMySettingLayers().data);
-  if (me === undefined) {
+  const layersQuery = useGetMySettingLayers();
+  const layers = okData(layersQuery.data);
+  if (me === undefined || layersQuery.isPending) {
     return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
   }
   const firstName = me.display_name.split(" ")[0] ?? me.display_name;
