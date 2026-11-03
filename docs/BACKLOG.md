@@ -1920,7 +1920,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when E2E opens a slide from My work and from the project page and the slide is fitted within the TEST-006 budget.
   Size: M.
 
-- [ ] CASE-002 · Slides popover
+- [x] CASE-002 · Slides popover
   The top bar's slide button opens the case's slides with thumbnail, case, block and stain, the number of result sets, review progress and processing progress. Q and E step through slides. Every other slide has a "Side by side" button (CMP-007), and the footer has "Compare slides" and "Add slides" (INGEST-021). The permanent tray is an optional pinned strip in settings, off by default.
   Done when tests cover switching from the popover and by key, switching preserves per-slide camera, and the pinned strip setting works.
   Refs mock 5, kit W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
