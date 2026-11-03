@@ -90,6 +90,13 @@ class CaseDetail(BaseModel):
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
+CASE_SLIDE_ORDER = (
+    slides.c.position.asc().nulls_last(),
+    slides.c.created_at,
+    slides.c.label,
+    slides.c.id,
+)
+
 
 def keyring_of(request: Request) -> MasterKeyring:
     return cast("MasterKeyring", request.app.keyring)
@@ -194,7 +201,7 @@ async def case_detail(
                 PrivacyMode(row.privacy_mode),
                 "Case not found",
             )
-    slide_rows = (await connection.execute(in_case.order_by(slides.c.created_at))).all()
+    slide_rows = (await connection.execute(in_case.order_by(*CASE_SLIDE_ORDER))).all()
     visible = await sees_restricted(
         connection, principal, row.project_id, PrivacyMode(row.privacy_mode)
     )

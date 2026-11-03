@@ -825,6 +825,7 @@ slides = Table(
     Column("barcode", String(100), nullable=True, info=PHI),
     Column("stain", String(60), nullable=False, server_default="H&E", info=OPERATIONAL),
     Column("level", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column("position", SmallInteger, nullable=True, info=OPERATIONAL),
     Column("upload_id", Uuid[uuid.UUID](), nullable=True, unique=True, info=OPERATIONAL),
     Column("format", String(30), nullable=True, info=OPERATIONAL),
     Column("variant", String(30), nullable=True, info=OPERATIONAL),

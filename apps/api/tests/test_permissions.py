@@ -623,6 +623,12 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "specimens": [{"letter": "A"}],
         },
     ),
+    "changeSlideDetails": lambda w: Call(
+        "PATCH", f"/api/slides/{w.slide}", {"stain": "PAS", "level": 2}
+    ),
+    "reorderCaseSlides": lambda w: Call(
+        "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
+    ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
