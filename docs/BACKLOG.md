@@ -885,7 +885,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when every UI string goes through the i18n layer, an English catalogue is extracted, and a lint rule fails on raw string literals in JSX.
   Size: M.
 
-- [ ] I18N-002 · Locale-aware formatting
+- [x] I18N-002 · Locale-aware formatting
   Numbers, dates, durations, lengths (µm and mm) and percentages formatted through one module that reads the user's settings.
   Done when unit tests cover each formatter, including tabular figures for measurements.
   Size: S.
