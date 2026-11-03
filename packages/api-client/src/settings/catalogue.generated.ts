@@ -9,7 +9,7 @@ export type SettingValues = {
   magnification_label: "objective" | "microns-per-pixel";
   tools: "rail" | "dock";
   side_panel_width: number;
-  minimap: "corner" | "hidden";
+  minimap: "useful" | "always" | "never";
   slide_strip: boolean;
   confidence_wording: "words" | "numbers" | "colour" | "hidden";
   outline_mode: "outline" | "fill" | "dots";
@@ -131,13 +131,14 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   },
   "minimap": {
     "kind": "choice",
-    "default": "corner",
+    "default": "useful",
     "layers": [
       "personal"
     ],
     "options": [
-      "corner",
-      "hidden"
+      "useful",
+      "always",
+      "never"
     ]
   },
   "slide_strip": {

@@ -44,6 +44,16 @@ def test_the_home_layout_is_personal_and_follows_the_role_by_default() -> None:
     assert setting.problem("anything") is not None
 
 
+def test_the_minimap_is_personal_and_shows_when_useful_by_default() -> None:
+    setting = BY_KEY["minimap"]
+    assert setting.layers == {Layer.PERSONAL}
+    assert setting.default == "useful"
+    for mode in ("useful", "always", "never"):
+        assert setting.problem(mode) is None
+    for stale in ("corner", "hidden"):
+        assert setting.problem(stale) is not None
+
+
 @pytest.mark.db
 def test_personal_settings_are_kept_per_person_and_cleared_with_null(
     api: ApiAs, database: str

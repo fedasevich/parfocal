@@ -107,3 +107,15 @@ test("resolving everything gives a value for every key", () => {
   assert.deepEqual(Object.keys(all).sort(), [...keys].sort());
   for (const key of keys) assert.equal(all[key], catalogue[key].default);
 });
+
+test("the minimap resolves each of its modes and drops a stale corner or hidden", () => {
+  assert.equal(resolveSetting("minimap", empty()).value, "useful");
+  for (const mode of ["useful", "always", "never"] as const) {
+    const resolved = resolveSetting("minimap", { ...empty(), personal: { minimap: mode } });
+    assert.deepEqual([resolved.value, resolved.source], [mode, "personal"]);
+  }
+  for (const stale of ["corner", "hidden"]) {
+    const resolved = resolveSetting("minimap", { ...empty(), personal: { minimap: stale } });
+    assert.deepEqual([resolved.value, resolved.source], ["useful", "default"]);
+  }
+});

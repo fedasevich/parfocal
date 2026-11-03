@@ -15,3 +15,14 @@ export function minimapBox(size: MinimapSize, extent: MapRect) {
   const chrome = size === "pip" ? 12 : size === "compact" ? 34 : 56;
   return { mapWidth: width, mapHeight: height, width: width + 12, height: height + chrome };
 }
+
+export type MinimapSetting = "useful" | "always" | "never";
+
+export function shownMinimap(
+  setting: MinimapSetting,
+  mode: MinimapSize | "hidden",
+): MinimapSize | null {
+  if (setting === "never") return null;
+  if (mode === "hidden") return setting === "always" ? "full" : null;
+  return mode;
+}
