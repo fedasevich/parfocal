@@ -22,7 +22,7 @@ export type TumorShareResult = {
   toCheck: number;
 };
 
-const contestedness = (probability: number) => Math.min(probability, 1 - probability);
+export const contestedness = (probability: number) => Math.min(probability, 1 - probability);
 
 export function sideOf(low: number, high: number, cutoff: number): CutoffSide {
   if (low >= cutoff) return "above";
