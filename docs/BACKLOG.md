@@ -522,7 +522,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
 
-- [ ] FOUND-025 · Faster and less wasteful CI
+- [x] FOUND-025 · Faster and less wasteful CI
   On 2026-11-03 one ci run took 46 min, because the five browser suites ran one after another and the db job took 30 min, and docs-only commits ran everything. Run the browser suites as a matrix of one job per package, skip db, formats, e2e and browser when the commits since the last green run on main touch only docs and Markdown (docs/design stays code, because the e2e serves it), cancel a running ci on main when a newer push arrives, and find why the db job is slow.
   Done when actionlint passes on .github/workflows/ci.yml, a docs-only push runs lint, typecheck and test and passes ci-ok with the heavy jobs skipped, a code push runs every job, and the db job time and its cause are written in the log.
   Size: M.

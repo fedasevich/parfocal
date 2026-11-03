@@ -1,3 +1,0 @@
-status: in-progress
-by: claude
-since: 2026-11-03
