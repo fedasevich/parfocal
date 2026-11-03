@@ -4,6 +4,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createDocument } from "../annotations/document.ts";
+import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
@@ -18,6 +19,8 @@ type Phase =
   | { readonly state: "loading" }
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
+
+type ViewerTool = "hand" | "ruler" | "select";
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
@@ -62,13 +65,16 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
     host.current = node;
     setHostNode(node);
   }, []);
-  const [measuring, setMeasuring] = useState(false);
+  const [tool, setTool] = useState<ViewerTool>("hand");
   const [annotations, setAnnotations] = useState(createDocument);
-  const rulerBindings = useBindings(["annotate"], ["truler"]);
-  const onToolKey = useCallback(({ phase }: { phase: string }) => {
-    if (phase === "press") setMeasuring((on) => !on);
+  const toolBindings = useBindings(["annotate"], ["truler", "tselect"]);
+  const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
+    if (phase !== "press") return;
+    const pressed = action === "tselect" ? "select" : "ruler";
+    setTool((current) => (current === pressed ? "hand" : pressed));
   }, []);
-  useHotkeys(rulerBindings, onToolKey);
+  useHotkeys(toolBindings, onToolKey);
+  const leaveTool = useCallback(() => setTool("hand"), []);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
@@ -123,7 +129,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       data-testid="slide-stage"
       data-state={phase.state}
       data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
-      data-tool={measuring ? "ruler" : "hand"}
+      data-tool={tool}
       className="relative size-full min-h-0 bg-chrome data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
@@ -132,18 +138,33 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
           <RulerLayer
             engine={session.engine}
             stage={hostNode}
-            active={measuring}
+            active={tool === "ruler"}
             document={annotations}
             onDocumentChange={setAnnotations}
-            onLeave={() => setMeasuring(false)}
+            onLeave={leaveTool}
           />
-          <div className="absolute top-4 left-4 rounded-ctl border border-line bg-chrome">
+          <SelectLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "select"}
+            document={annotations}
+            onDocumentChange={setAnnotations}
+            onLeave={leaveTool}
+          />
+          <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
+            <ToolRailButton
+              icon="select"
+              label="Select"
+              action="tselect"
+              pressed={tool === "select"}
+              onPressedChange={(on) => setTool(on ? "select" : "hand")}
+            />
             <ToolRailButton
               icon="ruler"
               label="Ruler"
               action="truler"
-              pressed={measuring}
-              onPressedChange={setMeasuring}
+              pressed={tool === "ruler"}
+              onPressedChange={(on) => setTool(on ? "ruler" : "hand")}
             />
           </div>
         </>
