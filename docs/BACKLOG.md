@@ -1050,7 +1050,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when component tests cover each failure class.
   Size: M.
 
-- [ ] INGEST-019 · Slide metadata editing
+- [x] INGEST-019 · Slide metadata editing
   Stain, block, level, slide label text (permission-gated), ordering within the case.
   Done when API and component tests cover editing and reordering.
   Size: M.
