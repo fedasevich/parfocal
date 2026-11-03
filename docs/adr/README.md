@@ -182,3 +182,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0179](0179-upload-and-server-readers-rechecked.md) | The upload protocol stands, and the server readers stand except that tifffile reads OME-TIFF and the worker reads unsharded OME-Zarr itself | Accepted | 2026-11-03 |
 | [0182](0182-shell-routing-and-state-confirmed.md) | The shell keeps TanStack Router with Zod search params and the one-home state rule, with no upgrade due | Accepted | 2026-11-03 |
 | [0185](0185-smart-minimap-state-machine-and-placement.md) | The smart minimap is one XState machine with a size mode, a fade flag and a peek overlay, placed by scoring the four corners | Proposed | 2026-11-03 |
+| [0189](0189-developer-drawer-control-list.md) | The developer drawer keeps the ten sections of the mock, and the debug handle is `window.__parfocal` | Proposed | 2026-11-03 |

@@ -1468,30 +1468,30 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Size: S.
 
 - [ ] LAB-001 · Developer drawer
-  Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD, pause models.
+  Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. The ten sections of the mock in four groups, as [ADR 0189](adr/0189-developer-drawer-control-list.md) lists them. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD and pause models drive the viewer. The heatmap, model, typing and job zones drive their features once those tasks land.
   Done when component tests cover each control and a permission test hides it from doctors.
-  Refs mock 20, kit W25.
+  Refs mock `developer` screen, kit gallery "Developer mode, Viv by default", [ADR 0189](adr/0189-developer-drawer-control-list.md).
   Size: M.
 
 - [ ] LAB-002 · Performance HUD
-  Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Floats in a free corner and can be hidden.
+  Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Atlas use shows only on the WebGPU route. Floats in a free corner (top left, top right or bottom left) and can be hidden.
   Done when a test confirms the HUD costs under 0.5 ms per frame.
   Refs [`poc/src/app/hud.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/hud.ts).
   Size: M.
 
 - [ ] LAB-003 · Sample slides and synthetic data
-  Format samples and CAMELYON slides loadable for developers, synthetic nuclei at 100k and 1M, with a visible "synthetic" chip.
+  Format samples (15 sample slides and 5 large files) and CAMELYON slides loadable for developers, synthetic nuclei at 10k, 100k, 500k and 1M, with a visible "synthetic" chip.
   Done when tests confirm synthetic layers are always labelled.
   Refs doc 25.
   Size: M.
 
 - [ ] LAB-004 · Pan sweep benchmark and export
-  Done when the sweep runs from the drawer and exports CSV.
+  Done when the sweep runs from the drawer and exports CSV with the 16 columns the drawer lists.
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
 
 - [ ] LAB-005 · Debug handle
-  A typed `window.__parfocal` handle in non-production builds for tests and debugging.
+  A typed `window.__parfocal` handle in non-production builds for tests and debugging, starting from the 20 members the mock lists for `window.__wsi`. The drawer's reference text changes to the new name ([ADR 0189](adr/0189-developer-drawer-control-list.md)).
   Done when E2E tests use it to read camera state.
   Size: S.
 
