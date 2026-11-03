@@ -2156,7 +2156,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when an ADR lists the display rules and their evidence.
   Size: S.
 
-- [ ] REVIEW-001 · Review rail
+- [x] REVIEW-001 · Review rail
   Five tools: select V, hand H, ruler L, comment C, smart select S (routes to Annotate).
   Done when component tests cover each tool and routing.
   Size: S.
