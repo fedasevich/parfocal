@@ -58,6 +58,7 @@ export {
 } from "./adjudication-handlers.ts";
 export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
 export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
+export { resetSlideEdits } from "./case-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
 export {

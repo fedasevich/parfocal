@@ -3317,6 +3317,18 @@ export interface SlideDecision {
   keep?: boolean | null;
 }
 
+export interface SlideDetailsChange {
+  stain?: string | null;
+  block_id?: string | null;
+  level?: number | null;
+  label?: string | null;
+}
+
+export interface SlideOrder {
+  /** @maxItems 500 */
+  slide_ids: string[];
+}
+
 export type SlideOutcome = (typeof SlideOutcome)[keyof typeof SlideOutcome];
 
 export const SlideOutcome = {
@@ -12404,6 +12416,350 @@ export const useCreateCase = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCreateCaseMutationOptions(options), queryClient);
+};
+
+export type changeSlideDetailsResponse200 = {
+  data: SlideDetail;
+  status: 200;
+};
+
+export type changeSlideDetailsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeSlideDetailsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeSlideDetailsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeSlideDetailsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeSlideDetailsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeSlideDetailsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeSlideDetailsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeSlideDetailsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeSlideDetailsResponseSuccess = changeSlideDetailsResponse200 & {
+  headers: Headers;
+};
+export type changeSlideDetailsResponseError = (
+  | changeSlideDetailsResponse400
+  | changeSlideDetailsResponse401
+  | changeSlideDetailsResponse403
+  | changeSlideDetailsResponse404
+  | changeSlideDetailsResponse409
+  | changeSlideDetailsResponse422
+  | changeSlideDetailsResponse429
+  | changeSlideDetailsResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeSlideDetailsResponse =
+  | changeSlideDetailsResponseSuccess
+  | changeSlideDetailsResponseError;
+
+export const getChangeSlideDetailsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}`;
+};
+
+/**
+ * @summary Change Slide Details
+ */
+export const changeSlideDetails = async (
+  slideId: string,
+  slideDetailsChange: SlideDetailsChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeSlideDetailsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeSlideDetailsResponse>(getChangeSlideDetailsUrl(slideId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideDetailsChange),
+  });
+};
+
+export const getChangeSlideDetailsMutationKey = () => ["changeSlideDetails"] as const;
+
+export const getChangeSlideDetailsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeSlideDetails>>,
+    TError,
+    ChangeSlideDetailsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeSlideDetails>>,
+  TError,
+  ChangeSlideDetailsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeSlideDetailsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeSlideDetails>>,
+    ChangeSlideDetailsMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return changeSlideDetails(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeSlideDetailsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeSlideDetails>>
+>;
+export type ChangeSlideDetailsMutationBody = SlideDetailsChange;
+export type ChangeSlideDetailsMutationError = Problem;
+export type ChangeSlideDetailsMutationVariables = { slideId: string; data: SlideDetailsChange };
+
+/**
+ * @summary Change Slide Details
+ */
+export const useChangeSlideDetails = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeSlideDetails>>,
+      TError,
+      ChangeSlideDetailsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeSlideDetails>>,
+  TError,
+  ChangeSlideDetailsMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeSlideDetailsMutationOptions(options), queryClient);
+};
+
+export type reorderCaseSlidesResponse200 = {
+  data: CaseDetail;
+  status: 200;
+};
+
+export type reorderCaseSlidesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reorderCaseSlidesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reorderCaseSlidesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reorderCaseSlidesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reorderCaseSlidesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reorderCaseSlidesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reorderCaseSlidesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reorderCaseSlidesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reorderCaseSlidesResponseSuccess = reorderCaseSlidesResponse200 & {
+  headers: Headers;
+};
+export type reorderCaseSlidesResponseError = (
+  | reorderCaseSlidesResponse400
+  | reorderCaseSlidesResponse401
+  | reorderCaseSlidesResponse403
+  | reorderCaseSlidesResponse404
+  | reorderCaseSlidesResponse409
+  | reorderCaseSlidesResponse422
+  | reorderCaseSlidesResponse429
+  | reorderCaseSlidesResponse500
+) & {
+  headers: Headers;
+};
+
+export type reorderCaseSlidesResponse =
+  | reorderCaseSlidesResponseSuccess
+  | reorderCaseSlidesResponseError;
+
+export const getReorderCaseSlidesUrl = (caseId: string) => {
+  return `/api/cases/${caseId}/slide-order`;
+};
+
+/**
+ * @summary Reorder Case Slides
+ */
+export const reorderCaseSlides = async (
+  caseId: string,
+  slideOrder: SlideOrder,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reorderCaseSlidesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<reorderCaseSlidesResponse>(getReorderCaseSlidesUrl(caseId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideOrder),
+  });
+};
+
+export const getReorderCaseSlidesMutationKey = () => ["reorderCaseSlides"] as const;
+
+export const getReorderCaseSlidesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderCaseSlides>>,
+    TError,
+    ReorderCaseSlidesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reorderCaseSlides>>,
+  TError,
+  ReorderCaseSlidesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReorderCaseSlidesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reorderCaseSlides>>,
+    ReorderCaseSlidesMutationVariables
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return reorderCaseSlides(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReorderCaseSlidesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reorderCaseSlides>>
+>;
+export type ReorderCaseSlidesMutationBody = SlideOrder;
+export type ReorderCaseSlidesMutationError = Problem;
+export type ReorderCaseSlidesMutationVariables = { caseId: string; data: SlideOrder };
+
+/**
+ * @summary Reorder Case Slides
+ */
+export const useReorderCaseSlides = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reorderCaseSlides>>,
+      TError,
+      ReorderCaseSlidesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reorderCaseSlides>>,
+  TError,
+  ReorderCaseSlidesMutationVariables,
+  TContext
+> => {
+  return useMutation(getReorderCaseSlidesMutationOptions(options), queryClient);
 };
 
 export type listAnnotationsResponse200 = {

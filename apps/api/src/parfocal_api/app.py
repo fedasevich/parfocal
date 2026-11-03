@@ -54,6 +54,7 @@ from parfocal_api import (
     settings_api,
     sign_out,
     site_validations,
+    slide_details,
     study_templates,
     task_changes,
     taxonomy,
@@ -172,6 +173,7 @@ def create_app(
     app.include_router(opinion_forms.template_router)
     app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
+    app.include_router(slide_details.router)
     app.include_router(annotations.router)
     app.include_router(result_sets.slide_router)
     app.include_router(result_sets.project_router)

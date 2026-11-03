@@ -4,6 +4,7 @@ import {
   type ResultSet,
   type SlideRow as SlideRowData,
   useGetProjectOverview,
+  useListCases,
   useListMySlides,
   useListProjectResultSets,
   useListSlideResultSets,
@@ -25,6 +26,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
 import { okData } from "../placeholder.tsx";
+import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
 
 type ProjectSlide = SlideRowData & {
@@ -105,6 +107,10 @@ export function SlidesTab({
   const overview = useGetProjectOverview(project.id).data?.data;
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
   const [shut, setShut] = useState<Record<string, boolean>>({});
+  const [editing, setEditing] = useState<{ id: string; label: string } | undefined>();
+  const caseList = okData(useListCases({ project_id: project.id }).data) ?? [];
+  const caseIdOf = (label: string) => caseList.find((item) => item.label === label)?.id;
+  const owner = project.my_role === "owner";
   const groups = groupSlides(slides, overview);
   const isOpen = (group: Group, index: number) =>
     shut[group.key] === undefined ? index === 0 || group.key === "loose" : !shut[group.key];
@@ -180,6 +186,20 @@ export function SlidesTab({
                         <Icon name={expanded ? "down" : "next"} />
                         <b className="font-semibold text-fg">{group.label}</b>
                         <span>{group.sub}</span>
+                        {owner && group.key !== "loose" && caseIdOf(group.key) ? (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            className="ml-auto"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              const id = caseIdOf(group.key);
+                              if (id) setEditing({ id, label: group.key });
+                            }}
+                          >
+                            Edit slides
+                          </Button>
+                        ) : null}
                       </span>
                     </td>
                   </tr>
@@ -218,6 +238,13 @@ export function SlidesTab({
           </tbody>
         </table>
       </div>
+      {editing ? (
+        <CaseSlidesEditor
+          caseId={editing.id}
+          caseLabel={editing.label}
+          onClose={() => setEditing(undefined)}
+        />
+      ) : null}
     </>
   );
 }
