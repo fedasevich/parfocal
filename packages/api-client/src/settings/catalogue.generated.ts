@@ -61,8 +61,8 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "layers": [
       "device"
     ],
-    "minimum": 50,
-    "maximum": 150
+    "minimum": 20,
+    "maximum": 140
   },
   "density": {
     "kind": "choice",

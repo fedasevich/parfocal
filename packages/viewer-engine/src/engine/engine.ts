@@ -15,6 +15,11 @@ import {
 import { createCameraController, type FlightEnd, type ScreenOffset } from "../camera/controller.ts";
 import { zoomForMagnification } from "../camera/magnification.ts";
 import {
+  clampSlideBrightness,
+  defaultSlideBrightness,
+  slideBrightnessFactor,
+} from "./brightness.ts";
+import {
   animationFrames,
   observeElementResize,
   prefersReducedMotion,
@@ -133,6 +138,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
   const eventListeners: { [Name in keyof EngineEvents]: Set<(event: EngineEvents[Name]) => void> } =
     { pointer: new Set(), slide: new Set() };
   const overlays = new Map<string, OverlayLayer>();
+  let brightness = defaultSlideBrightness;
 
   const currentBounds = (): CameraBounds => {
     if (bounds === null) {
@@ -355,6 +361,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     mounted = { container, route, detach };
     bounds = null;
     route.setOverlays(sortedOverlays());
+    route.setSlideBrightness(slideBrightnessFactor(brightness));
     route.showSlide(slide);
     route.setCamera(camera);
     if (fitPending) fitIfPossible();
@@ -542,6 +549,14 @@ export function createViewerEngine<Slide extends EngineSlide>(
       };
     },
     registerOverlay,
+    getSlideBrightness: () => brightness,
+    setSlideBrightness: (percent) => {
+      assertAlive();
+      const next = clampSlideBrightness(percent);
+      if (next === brightness) return;
+      brightness = next;
+      mounted?.route.setSlideBrightness(slideBrightnessFactor(brightness));
+    },
     dispose,
   };
 }

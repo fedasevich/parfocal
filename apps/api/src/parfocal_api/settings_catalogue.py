@@ -87,7 +87,7 @@ def identifier(key: str, layers: frozenset[Layer]) -> Setting:
 
 CATALOGUE: tuple[Setting, ...] = (
     choice("theme", "system", ("system", "light", "dark"), DEVICE),
-    whole("slide_brightness", 100, 50, 150, DEVICE),
+    whole("slide_brightness", 100, 20, 140, DEVICE),
     choice("density", "comfortable", ("comfortable", "compact"), PERSONAL),
     choice("patient_names", "full", ("full", "initials"), LAB_OR_PERSONAL),
     choice("length_unit", "um", ("um", "mm"), PERSONAL),

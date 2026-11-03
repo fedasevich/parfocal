@@ -3,6 +3,9 @@ import type { InterpolationRule } from "@parfocal/viewer-engine/viv";
 export interface SyntheticRequest {
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly interpolation: InterpolationRule;
+  readonly brightness?: number;
+  readonly brightnessBy?: "engine" | "css-filter";
+  readonly annotations?: boolean;
 }
 
 export interface TextureFilter {

@@ -51,6 +51,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["area", "Go to AI area n", ["G then 1 … 9"], "new", { sequence: true }],
       ["brightup", "Slide brighter", ["⌥↑"], "new", { inInputs: true }],
       ["brightdown", "Slide dimmer", ["⌥↓"], "new", { inInputs: true }],
+      ["brightreset", "Slide brightness back to 100%", ["⌥0"], "new"],
     ],
   ],
   [

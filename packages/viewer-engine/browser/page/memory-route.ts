@@ -94,6 +94,7 @@ export function createMemoryRoute(
     },
     setOverlays() {},
     invalidateOverlay() {},
+    setSlideBrightness() {},
     destroy: release,
     async whenLoaded(timeoutMs) {
       const deadline = performance.now() + timeoutMs;

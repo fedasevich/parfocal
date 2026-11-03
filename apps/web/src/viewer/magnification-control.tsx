@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { keyRegistry } from "../keys/catalogue.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { loadViewerEngine } from "./load-engine.ts";
+import { brightnessAfterKey, brightnessKeyIds } from "./slide-brightness.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 export type ViewerModule = Awaited<ReturnType<typeof loadViewerEngine>>;
@@ -21,8 +22,6 @@ type MagnificationControlProps = {
 };
 
 const scaleBarMaxPx = 96;
-const brightnessStep = 10;
-const hotkeyIds = ["brightup", "brightdown"] as const;
 
 function useAltDigitHeld(): boolean {
   const [held, setHeld] = useState(false);
@@ -64,7 +63,10 @@ export function MagnificationControl({
     setZoomStamp((stamp) => stamp + 1);
   }, [camera.zoom]);
 
-  const bindings = useMemo(() => keyRegistry.bindings({ scopes: ["viewer"], only: hotkeyIds }), []);
+  const bindings = useMemo(
+    () => keyRegistry.bindings({ scopes: ["viewer"], only: brightnessKeyIds }),
+    [],
+  );
   const jumpTo = useCallback(
     (preset: number) => {
       engine.zoomToMagnification(preset);
@@ -74,9 +76,8 @@ export function MagnificationControl({
   const onFire = useCallback(
     ({ action, phase }: { action: string; phase: string }) => {
       if (phase !== "press") return;
-      if (action === "brightup") onBrightnessChange(Math.min(140, brightness + brightnessStep));
-      else if (action === "brightdown")
-        onBrightnessChange(Math.max(20, brightness - brightnessStep));
+      const next = brightnessAfterKey(action, brightness);
+      if (next !== brightness) onBrightnessChange(next);
     },
     [brightness, onBrightnessChange],
   );

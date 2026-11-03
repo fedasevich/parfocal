@@ -55,6 +55,10 @@ Regenerate only the three digital zoom goldens, never with `pnpm golden:update`,
 
 `render/viv-gpu-loss.spec.ts` uses `harness/viv/gpu-loss.html` to lose and restore the WebGL context with `WEBGL_lose_context` and checks that the same frame, camera, slide and overlay come back with one live Deck, and that an impossible recovery ends in one `GpuUnrecoverableError`.
 
+## Slide brightness
+
+`render/viv-brightness.spec.ts` renders the synthetic slide at 2x with the human annotation fixture at 100, 20, 60 and 140 percent slide brightness. Pixels the overlay does not touch must equal the 100 percent pixel times the factor within 1, and opaque outline pixels must keep their exact class colour. A CSS filter on the viewer must fail the outline check. It needs no fixture download. [ADR 0195](../../docs/adr/0195-slide-brightness-as-a-slide-layer-tint.md) has the design.
+
 ## Tolerances
 
 A pixel differs when any of R, G or B is further than `maxChannelDelta` from the golden. A frame passes when no more than `maxDifferingFraction` of its pixels differ and the mean error of every channel stays under `maxMeanChannelError`.
