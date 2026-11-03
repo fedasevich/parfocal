@@ -16,6 +16,7 @@ import {
   getSlideAgreement,
   getSlideNeighbours,
   getTaskDisplay,
+  listMentionableMembers,
   listReviewObjects,
   listSlideThreads,
   listThreadComments,
@@ -199,4 +200,17 @@ test("the slide's threads come with titles, authors and a resolved state, filter
   );
   assert.equal(body(await listThreads(rt14.id, a1.id, { resolved: false })).length, 3);
   assert.deepEqual(body(await listThreads(rt14.id, scenario.slideByIndex(2).id)), []);
+});
+
+test("a blinded reviewer can mention only the researcher, the researcher anyone else", async () => {
+  assert.ok(rt14);
+  const asReviewer = body(await listMentionableMembers(rt14.id, a1.id));
+  assert.deepEqual(
+    asReviewer.map((member) => member.user_id),
+    [scenario.people.DH.id],
+  );
+  setFakeView({ viewer: "DH", firstWeek: false });
+  const asResearcher = body(await listMentionableMembers(rt14.id, a1.id));
+  assert.equal(asResearcher.length, Object.keys(scenario.people).length - 1);
+  assert.ok(asResearcher.every((member) => member.user_id !== scenario.people.DH.id));
 });

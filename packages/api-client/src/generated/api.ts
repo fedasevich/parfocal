@@ -1794,6 +1794,13 @@ export interface MembershipDraft {
   user_id: string;
 }
 
+export interface Mentionable {
+  user_id: string;
+  display_name: string;
+  initials: string;
+  avatar_colour: number;
+}
+
 export interface MergeDraft {
   /**
    * @minItems 2
@@ -1808,6 +1815,7 @@ export interface Message {
   id: string;
   author_id: string;
   body: string;
+  mentions: string[];
   created_at: string;
 }
 
@@ -27789,6 +27797,213 @@ export const useCreateThread = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getCreateThreadMutationOptions(options), queryClient);
 };
+
+export type listMentionableMembersResponse200 = {
+  data: Mentionable[];
+  status: 200;
+};
+
+export type listMentionableMembersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMentionableMembersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMentionableMembersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMentionableMembersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMentionableMembersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMentionableMembersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMentionableMembersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMentionableMembersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMentionableMembersResponseSuccess = listMentionableMembersResponse200 & {
+  headers: Headers;
+};
+export type listMentionableMembersResponseError = (
+  | listMentionableMembersResponse400
+  | listMentionableMembersResponse401
+  | listMentionableMembersResponse403
+  | listMentionableMembersResponse404
+  | listMentionableMembersResponse409
+  | listMentionableMembersResponse422
+  | listMentionableMembersResponse429
+  | listMentionableMembersResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMentionableMembersResponse =
+  | listMentionableMembersResponseSuccess
+  | listMentionableMembersResponseError;
+
+export const getListMentionableMembersUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/mentionable`;
+};
+
+/**
+ * @summary List Mentionable
+ */
+export const listMentionableMembers = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMentionableMembersResponse> => {
+  return apiFetch<listMentionableMembersResponse>(getListMentionableMembersUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMentionableMembersQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/threads/mentionable`] as const;
+};
+
+export const getListMentionableMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMentionableMembers>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMentionableMembersQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMentionableMembers>>> = ({ signal }) =>
+    listMentionableMembers(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListMentionableMembersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMentionableMembers>>
+>;
+export type ListMentionableMembersQueryError = Problem;
+
+export function useListMentionableMembers<
+  TData = Awaited<ReturnType<typeof listMentionableMembers>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentionableMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listMentionableMembers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMentionableMembers<
+  TData = Awaited<ReturnType<typeof listMentionableMembers>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentionableMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listMentionableMembers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMentionableMembers<
+  TData = Awaited<ReturnType<typeof listMentionableMembers>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Mentionable
+ */
+
+export function useListMentionableMembers<
+  TData = Awaited<ReturnType<typeof listMentionableMembers>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMentionableMembersQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getThreadResponse200 = {
   data: ThreadDetail;

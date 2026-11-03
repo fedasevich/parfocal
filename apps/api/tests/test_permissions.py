@@ -539,6 +539,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "getReviewTaskStates": lambda w: Call("GET", f"/api/review-tasks/{w.task}/states"),
     "listThreads": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads"),
+    "listMentionableMembers": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/mentionable"
+    ),
     "getThread": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}"
     ),
