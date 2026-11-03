@@ -56,7 +56,7 @@ class SlowStore(ObjectStore):
     async def put_object(
         self, key: str, body: bytes, content_type: str, *, content_encoding: str | None = None
     ) -> None:
-        if not key.endswith(("levels.json", "tile-index.json")):
+        if not key.endswith(("levels.json", "tile-index.json", "overview-levels.tiff")):
             await asyncio.sleep(DERIVED_PAUSE_SECONDS)
         await super().put_object(key, body, content_type, content_encoding=content_encoding)
 

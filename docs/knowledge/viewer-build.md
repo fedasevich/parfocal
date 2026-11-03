@@ -75,6 +75,8 @@ React calls the `subscribe` and `getSnapshot` functions given to `useSyncExterna
 
 `MultiscaleImageLayer` asks loader entry `i` for tile `z = -i` and places it as a `2^i` downsample, using the tile's own width and height for its bounds. Aperio stores 1x, 4x and 16x, so the route builds a virtual ladder (`virtualLadder` in `src/viv/viv-levels.ts`) where each `2^i` entry reads the finest real level not finer than it and box-averages by the residual factor. For CMU-1.svs that is nine entries, the last averaging the 16x level by 16. A short edge tile must keep its true size, or the edge stretches. Source: VIEW-002, [ADR 0102](../adr/0102-viv-route-feeds-a-virtual-rgb-ladder.md).
 
+Where the vendor ladder stops early, ingest writes the missing coarse levels to `overview-levels.tiff` next to the original and names it in `tile-index.json` as `overviewLevels`. `registry.open` appends those levels to the slide's own, so the coarse virtual levels read them with a residual of 1, and falls back to the slide alone when the file is missing. The 2x and 8x steps between Aperio levels still average by 2. Source: INGEST-013, [result](../results/2026-11-03-derived-overview-levels.md).
+
 ## Tell Viv the planes are RGB, because the source already converted them
 
 The PixelSource returns RGB for YCbCr files (`readRGB`), so the route sets `meta.photometricInterpretation` to 2 on every level. Setting 6 as well would convert twice. Handing Viv unconverted Y, Cb and Cr as RGB misses the CMU-1.svs goldens by 6.5 to 94 levels of mean error. Source: VIEW-002, [result](../results/2026-10-23-viv-route-goldens.md).

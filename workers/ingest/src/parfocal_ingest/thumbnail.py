@@ -91,8 +91,7 @@ def ome_region(path: Path, level: Level) -> Image.Image:
     return flattened(Image.fromarray(pixels[: level.height, : level.width]), WHITE)
 
 
-def region_for(path: Path, found: Format, pyramid: Pyramid, longest: int) -> Image.Image:
-    level = coarsest_level(pyramid, longest)
+def level_image(path: Path, found: Format, pyramid: Pyramid, level: Level) -> Image.Image:
     match pyramid.reader:
         case Reader.WSIDICOM:
             return dicom_region(path, level)
@@ -100,6 +99,10 @@ def region_for(path: Path, found: Format, pyramid: Pyramid, longest: int) -> Ima
             return ome_region(path, level)
         case Reader.OPENSLIDE:
             return openslide_region(path, found, pyramid, level)
+
+
+def region_for(path: Path, found: Format, pyramid: Pyramid, longest: int) -> Image.Image:
+    return level_image(path, found, pyramid, coarsest_level(pyramid, longest))
 
 
 def scaled(image: Image.Image, pyramid: Pyramid, longest: int) -> Image.Image:

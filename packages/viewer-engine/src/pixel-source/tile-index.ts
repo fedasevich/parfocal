@@ -74,7 +74,25 @@ export function readTileIndex(document: unknown): SlideIndex {
       checkPage(sibling, `level ${index} sibling ${at}`);
     });
   });
+  checkOverviewLevels(document.overviewLevels);
   return document as unknown as SlideIndex;
+}
+
+function checkOverviewLevels(reference: unknown): void {
+  if (reference === undefined) return;
+  if (!isRecord(reference) || typeof reference.path !== "string" || reference.path === "")
+    throw new TileIndexError("the overview levels have no path");
+  const { downsamples } = reference;
+  if (
+    !isNumberList(downsamples) ||
+    downsamples.length === 0 ||
+    downsamples.some((value, at) => !isPowerOfTwo(value) || value <= (downsamples[at - 1] ?? 1))
+  )
+    throw new TileIndexError("the overview levels have no rising power-of-two downsamples");
+}
+
+function isPowerOfTwo(value: number): boolean {
+  return Number.isInteger(value) && value >= 1 && (value & (value - 1)) === 0;
 }
 
 export function tileOffsets(page: SlideIndexPage): number[] | null {

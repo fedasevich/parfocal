@@ -146,7 +146,7 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     assert macro.content.startswith(b"\xff\xd8")
 
     public = slide_prefix(lab.tenant_id, slide_id)
-    assert keys_under(public) == {*PUBLIC_FILES, "original.svs"}
+    assert keys_under(public) == {*PUBLIC_FILES, "overview-levels.tiff", "original.svs"}
     assert keys_under(restricted_prefix(lab.tenant_id, slide_id)) == {"label.png", "macro.jpg"}
     assert keys_under(f"t/{lab.tenant_id}/quarantine/") == set()
     assert with_store(lambda store: store.get_object(original)) == data
@@ -161,6 +161,10 @@ def test_an_uploaded_slide_goes_from_uploading_to_processing_to_ready(
     tiles = json.loads(gzip.decompress(stored_index))
     assert (tiles["formatId"], tiles["tileKind"]) == ("aperio-svs", "grid")
     assert [(level["page"], level["width"]) for level in tiles["levels"]] == [(0, 2220)]
+    assert tiles["overviewLevels"] == {
+        "path": "overview-levels.tiff",
+        "downsamples": [2, 4, 8, 16],
+    }
     thumbnail = with_store(lambda store: store.get_object(f"{public}thumbnail.jpg"))
     assert max(Image.open(io.BytesIO(thumbnail)).size) == THUMBNAIL_SIDE
     expected = fixture_thumbnail("CMU-1-Small-Region.svs")

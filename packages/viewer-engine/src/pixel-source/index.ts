@@ -1,4 +1,8 @@
 export { recoverLadder, type StoredLevel, tileColumns, tileRows, tileWindow } from "./geometry.ts";
+export {
+  OverviewLevelsMismatchError,
+  withOverviewLevels,
+} from "./overview-levels.ts";
 export * from "./reader-check.ts";
 export {
   createDefaultPixelSourceRegistry,
@@ -30,6 +34,7 @@ export {
   type NativeTileDecoder,
   type NativeTilePixels,
   type OpenRequest,
+  type OverviewLevelsRef,
   type Photometric,
   type PixelArray,
   type PixelDtype,
