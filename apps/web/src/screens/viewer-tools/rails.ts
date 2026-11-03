@@ -2,39 +2,39 @@ import type { RailTool } from "../review/viewer-frame.tsx";
 
 export const reviewRail: RailTool[][] = [
   [
-    { tool: "select", icon: "select", label: "Select", key: "V" },
-    { tool: "hand", icon: "hand", label: "Pan", key: "H" },
+    { tool: "select", icon: "select", label: "Select", action: "tselect" },
+    { tool: "hand", icon: "hand", label: "Pan", action: "thand" },
   ],
   [
-    { tool: "ruler", icon: "ruler", label: "Measure", key: "L" },
-    { tool: "comment", icon: "comment", label: "Comment on an ID", key: "C" },
+    { tool: "ruler", icon: "ruler", label: "Measure", action: "truler" },
+    { tool: "comment", icon: "comment", label: "Comment on an ID", action: "tcomment" },
   ],
-  [{ tool: "smart", icon: "smart", label: "Smart select", key: "S", ai: true }],
+  [{ tool: "smart", icon: "smart", label: "Smart select", action: "tsmart", ai: true }],
 ];
 
 export const annotateRail: RailTool[][] = [
   [
-    { tool: "select", icon: "select", label: "Select", key: "V" },
-    { tool: "hand", icon: "hand", label: "Pan", key: "H" },
+    { tool: "select", icon: "select", label: "Select", action: "tselect" },
+    { tool: "hand", icon: "hand", label: "Pan", action: "thand" },
   ],
   [
-    { tool: "smart", icon: "smart", label: "Smart select", key: "S", ai: true },
-    { tool: "auto", icon: "auto", label: "Auto region", key: "U", ai: true },
+    { tool: "smart", icon: "smart", label: "Smart select", action: "tsmart", ai: true },
+    { tool: "auto", icon: "auto", label: "Auto region", action: "tauto", ai: true },
   ],
   [
-    { tool: "poly", icon: "poly", label: "Polygon", key: "P" },
-    { tool: "free", icon: "free", label: "Freehand", key: "⇧P" },
-    { tool: "rect", icon: "rect", label: "Rectangle", key: "R" },
-    { tool: "ellipse", icon: "ellipse", label: "Ellipse", key: "O" },
-    { tool: "marker", icon: "marker", label: "Count marker", key: "M" },
+    { tool: "poly", icon: "poly", label: "Polygon", action: "tpoly" },
+    { tool: "free", icon: "free", label: "Freehand", action: "tfree" },
+    { tool: "rect", icon: "rect", label: "Rectangle", action: "trect" },
+    { tool: "ellipse", icon: "ellipse", label: "Ellipse", action: "tellipse" },
+    { tool: "marker", icon: "marker", label: "Count marker", action: "tmarker" },
   ],
   [
-    { tool: "ruler", icon: "ruler", label: "Ruler", key: "L" },
-    { tool: "arrow", icon: "arrow", label: "Arrow", key: "⇧L" },
-    { tool: "text", icon: "text", label: "Text", key: "T" },
-    { tool: "comment", icon: "comment", label: "Comment", key: "C" },
+    { tool: "ruler", icon: "ruler", label: "Ruler", action: "truler" },
+    { tool: "arrow", icon: "arrow", label: "Arrow", action: "tarrow" },
+    { tool: "text", icon: "text", label: "Text", action: "ttext" },
+    { tool: "comment", icon: "comment", label: "Comment", action: "tcomment" },
   ],
-  [{ tool: "brush", icon: "brush", label: "Brush", key: "B" }],
+  [{ tool: "brush", icon: "brush", label: "Brush", action: "tbrush" }],
 ];
 
 export const toolHints: Record<string, string[]> = {

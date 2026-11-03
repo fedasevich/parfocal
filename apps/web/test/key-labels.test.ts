@@ -3,6 +3,10 @@ import { test } from "node:test";
 import type { ActionDef } from "../src/keys/actions.ts";
 import { keyRegistry } from "../src/keys/catalogue.ts";
 import { keyLabel, keyLabeller } from "../src/keys/key-labels.ts";
+import { conflicts } from "../src/keys/registry.ts";
+import { decisionKeyActions } from "../src/screens/review/decision-mapping.ts";
+import { noteAction } from "../src/screens/review/note-key.ts";
+import { annotateRail, reviewRail } from "../src/screens/viewer-tools/rails.ts";
 
 const defs = keyRegistry.defs;
 
@@ -54,4 +58,36 @@ test("one step of a range or direction shows its own key", () => {
   assert.equal(label("pan:left"), "←");
   assert.equal(label("area:2"), "G 2");
   assert.equal(label("dclass:9"), null);
+});
+
+test("rail badges and the note hint follow a changed binding", () => {
+  const rails = [...reviewRail.flat(), ...annotateRail.flat()];
+  const ids = new Set(defs.map((def) => def.id));
+  for (const item of rails) assert.ok(item.action && ids.has(item.action), item.tool);
+  const before = keyLabeller(defs, undefined);
+  assert.equal(before("tselect"), "V");
+  assert.equal(before(noteAction), "⇧N");
+  const after = keyLabeller(defs, {
+    preset: "default",
+    custom: { tselect: ["⇧V"], tbrush: ["⌘B"], [noteAction]: ["⇧M"] },
+  });
+  const badge = (tool: string) => {
+    const item = rails.find((rail) => rail.tool === tool);
+    return item?.action === undefined ? undefined : after(item.action);
+  };
+  assert.equal(badge("select"), "⇧V");
+  assert.equal(badge("brush"), "⌘B");
+  assert.equal(badge("rect"), "R");
+  assert.equal(after(noteAction), "⇧M");
+});
+
+test("no two actions in one decision style share a key", () => {
+  for (const kind of ["agree", "yesno", "certainty", "blind"] as const) {
+    const bindings = keyRegistry.bindings({ scopes: ["review"], only: decisionKeyActions(kind) });
+    assert.deepEqual(conflicts(bindings), [], kind);
+    assert.ok(
+      bindings.some((binding) => binding.action === noteAction),
+      kind,
+    );
+  }
 });

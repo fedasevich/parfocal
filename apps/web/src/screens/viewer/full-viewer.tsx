@@ -41,6 +41,7 @@ import {
 import { type DisplayLock, DisplayTab, displaySettings } from "../review/display-tab.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
+import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
@@ -326,6 +327,12 @@ function ViewerBody({
     setNote({ ...note, open: false });
   };
 
+  useNoteKey(() => {
+    if (current === undefined || tab !== "objects") return;
+    const kept = answer(current.object);
+    if (kept) setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
+  });
+
   useEffect(() => {
     const keys = new Map(
       answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
@@ -355,10 +362,6 @@ function ViewerBody({
       if (raw && !event.shiftKey) {
         event.preventDefault();
         decide(raw);
-      } else if ((event.key === "n" || event.key === "N") && answer(current.object)) {
-        event.preventDefault();
-        const kept = answer(current.object);
-        setNote({ open: true, reasons: kept?.reasons ?? [], text: kept?.note ?? "" });
       }
     };
     window.addEventListener("keydown", onKey);

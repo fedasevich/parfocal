@@ -84,6 +84,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "new",
         { note: "the open cells in the cells panel" },
       ],
+      ["dnote", "Add a note", ["⇧N"], "new", { note: "once the object has a decision" }],
       ["dnext", "Skip for now, next object", ["J"], "new"],
       ["dprev", "Previous object", ["⇧J"], "new"],
       [
