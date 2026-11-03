@@ -61,3 +61,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-02 | [Under the enforced CSP a local production build is cross-origin isolated and runs module workers with shared WASM memory](2026-11-02-security-headers-local-check.md) | SEC-011 | check |
 | 2026-11-02 | [Outlines with casings keep 3:1 contrast on all but 5 to 6% of H&E pixels for tumor and immune and on all pixels for the rest](2026-11-02-outline-casing-contrast.md) | VIEW-027 | benchmark |
 | 2026-11-03 | [Search on 100,000 cases drops from a p95 of 48 to 59 ms to 24 to 25 ms with LIKE on stored lowercase labels](2026-11-03-search-latency-lower-labels.md) | CASES-009 | benchmark |
+| 2026-11-03 | [The browser reader agrees with the server reader within 1 to 2 grey levels with seam ratios of 1.1 to 1.7, except BIF, which ignores stitch positions](2026-11-03-reader-seams-and-agreement.md) | INGEST-009 | check |

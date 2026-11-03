@@ -1234,6 +1234,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a Playwright test drives the page with synthetic wheel events through every step and the downloaded JSON replays in a unit test, and the page lists the steps for a mouse, a Mac trackpad and an optional Windows touchpad.
   Size: M.
 
+- [ ] VIEW-057 · Place BIF frames by their stitch positions in the browser reader
+  INGEST-009 (seams and correctness check) found on 2026-11-03 that the browser reader ignores the BIF stitching layout the sidecar tile index carries (ADR 0153), so OS-1.bif differs from OpenSlide by 52 to 65 grey levels with a seam ratio of about 3.
+  Done when `reader-check.ts` passes on OS-1.bif within 2 grey levels of the reference tiles with a seam ratio under 2, and the existing BIF golden is updated.
+  Size: M.
+
 - [ ] VIEW-022 · Keyboard navigation
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
