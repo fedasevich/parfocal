@@ -1533,7 +1533,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs doc 41, doc 40 D4.
   Size: M.
 
-- [ ] DS-005 · Theme switching
+- [x] DS-005 · Theme switching
   System, dark and light, with the user setting stored per device. Neutral chroma near zero for chrome.
   Done when visual tests cover both themes for every component.
   Depends on PROTO-011.
