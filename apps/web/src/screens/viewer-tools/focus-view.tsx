@@ -194,7 +194,7 @@ export function FocusView({
         <SlidePeek
           slideName={session.slideName}
           areas={areas}
-          decided={regions.filter((region) => answer(region.object)).length}
+          checked={regions.filter((region) => answer(region.object)).map((region) => region.object)}
           atCell={false}
           held={held}
           onClose={() => onPeekChange(false)}

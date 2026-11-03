@@ -81,6 +81,7 @@ import {
 } from "../review/viewer-frame.tsx";
 import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
+import { peekSpot } from "../viewer-tools/peek-model.ts";
 import { reviewRail } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
@@ -454,7 +455,14 @@ function ViewerBody({
     goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
     restore: (spot) => {
       setCamera(null);
-      onSearch({ object: spot.object ?? undefined, x: spot.x, y: spot.y, z: spot.z });
+      setPeekHeld(false);
+      onSearch({
+        object: spot.object ?? undefined,
+        x: spot.x,
+        y: spot.y,
+        z: spot.z,
+        ...(peekOpen ? { peek: undefined } : {}),
+      });
     },
     intercept: (fired) => {
       if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
@@ -911,6 +919,7 @@ function ViewerBody({
   const topBar = (
     <ReviewTop
       mode="full"
+      onWholeSlide={() => onSearch({ peek: true })}
       session={
         noTask
           ? {
@@ -974,13 +983,14 @@ function ViewerBody({
             <SlidePeek
               slideName={session.slideName}
               areas={areas}
-              decided={decidedRegions}
+              checked={regions
+                .filter((region) => answer(region.object))
+                .map((region) => region.object)}
               atCell={navigator === "cells" || navigator === "focus" || current?.kind === "cell"}
               held={peekHeld}
               onClose={closePeek}
               onPick={(point) => {
-                closePeek();
-                if (!navigator && !measuring) setCamera({ x: point[0], y: point[1], scale: 1.5 });
+                if (!areaNav.jump(peekSpot(point))) closePeek();
               }}
             />
           ) : null

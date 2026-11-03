@@ -9,7 +9,7 @@ const toolLink =
 async function toolLinks(page: Page) {
   await page.goto("/prototype");
   const links = page.getByRole("list", { name: "Screens" }).getByRole("link", { name: toolLink });
-  await expect(links).toHaveCount(14);
+  await expect(links).toHaveCount(14, { timeout: 20_000 });
   return links.evaluateAll((anchors) =>
     anchors.map((anchor) => ({
       name: anchor.textContent ?? "",
@@ -23,6 +23,16 @@ const hrefOf = (links: { name: string; href: string }[], name: string) => {
   if (found === undefined) throw new Error(`no link named ${name}`);
   return found.href;
 };
+
+async function plainViewer(page: Page) {
+  const links = await toolLinks(page);
+  const plain = new URL(hrefOf(links, "Smart minimap · Reading at 10x"), "http://localhost");
+  plain.searchParams.delete("scene");
+  await page.goto(`${plain.pathname}${plain.search}`);
+  await expect(page.getByTitle("Progress on this slide and in the whole task")).toBeVisible({
+    timeout: 20_000,
+  });
+}
 
 const minimap = (page: Page) => page.locator('[data-slot="smart-minimap"]');
 
@@ -115,6 +125,43 @@ test("holding Z peeks at the whole slide until the key is released", async ({ pa
   await page.waitForTimeout(500);
   await page.keyboard.up("z");
   await expect(peek).toHaveCount(0);
+});
+
+test("a tap on Z latches the peek with a return hint until Z again", async ({ page }) => {
+  await plainViewer(page);
+  const peek = page.getByRole("dialog", { name: "Whole slide" });
+  await page.keyboard.down("z");
+  await expect(peek).toBeVisible();
+  await expect(peek.getByText(/release/)).toBeVisible();
+  await page.keyboard.up("z");
+  await expect(peek).toBeVisible();
+  await expect(peek.getByText(/press/)).toBeVisible();
+  await page.keyboard.press("z");
+  await expect(peek).toHaveCount(0);
+});
+
+test("the progress ring opens the whole-slide peek", async ({ page }) => {
+  await plainViewer(page);
+  await page.getByTitle("Progress on this slide and in the whole task").click();
+  await page.getByRole("button", { name: "Whole slide", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Review progress" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Whole slide" })).toBeVisible();
+  await expect(page).toHaveURL(/peek=true/);
+});
+
+test("a click on the peek goes there and the view back key returns", async ({ page }) => {
+  await plainViewer(page);
+  await page.keyboard.press("z");
+  const slide = page.getByRole("img", { name: "The whole slide. Click a place to go there" });
+  await expect(slide).toBeVisible();
+  const box = await slide.boundingBox();
+  if (box === null) throw new Error("the whole slide has no box");
+  await slide.click({ position: { x: box.width / 2, y: box.height / 4 } });
+  await expect(page.getByRole("dialog", { name: "Whole slide" })).toHaveCount(0);
+  await expect(page).not.toHaveURL(/peek=true/);
+  await expect(page).toHaveURL(/y=0\.25/);
+  await page.keyboard.press("Alt+ArrowLeft");
+  await expect(page).not.toHaveURL(/y=0\.25/);
 });
 
 test("the ruler adds M1, and Remove takes it away with Undo", async ({ page }) => {
