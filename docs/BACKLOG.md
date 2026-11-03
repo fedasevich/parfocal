@@ -2335,6 +2335,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-003 · Context bar
   One floating bar with the active tool's options and Discard and Accept, replacing conditional rows.
+  Wire the class swatch strip and `useClassKeys` (apps/web/src/annotations/class-keys.ts, ANN-011) into the Annotate workspace.
   Done when component tests render the context bar for every tool per the mock CTX table.
   Refs mock §2.9.
   Size: M.
@@ -2376,7 +2377,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover painting, erasing and undo, and the painted map persists.
   Size: M.
 
-- [ ] ANN-011 · Classes and keys 1 to 4
+- [x] ANN-011 · Classes and keys 1 to 4
   With nothing selected, sets the class for new shapes. With a selection, re-classes it. In review contexts it also marks reviewed and teaches. The swatch click and the key behave the same (fixes the POC inconsistency).
   Done when tests confirm identical behaviour for key and swatch.
   Refs doc 34 inconsistencies.
