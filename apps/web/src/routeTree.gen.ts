@@ -25,6 +25,7 @@ import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
 import { Route as SpikesHotkeysRouteImport } from "./routes/spikes.hotkeys.tsx";
+import { Route as SpikesInputTracesRouteImport } from "./routes/spikes.input-traces.tsx";
 import { Route as SpikesWorklistRouteImport } from "./routes/spikes.worklist.tsx";
 import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
 import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map.walkthrough.$chapter.tsx";
@@ -126,6 +127,11 @@ const SettingsSectionRoute = SettingsSectionRouteImport.update({
 const SpikesHotkeysRoute = SpikesHotkeysRouteImport.update({
   id: "/spikes/hotkeys",
   path: "/spikes/hotkeys",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SpikesInputTracesRoute = SpikesInputTracesRouteImport.update({
+  id: "/spikes/input-traces",
+  path: "/spikes/input-traces",
   getParentRoute: () => rootRouteImport,
 } as any);
 const SpikesWorklistRoute = SpikesWorklistRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
+  "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
+  "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map": typeof FlowMapIndexRoute;
   "/settings": typeof SettingsIndexRoute;
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
+  "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
+    | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/flow-map/"
     | "/settings/"
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
+    | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/flow-map"
     | "/settings"
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | "/projects/new"
     | "/settings/$section"
     | "/spikes/hotkeys"
+    | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/flow-map/"
     | "/settings/"
@@ -510,6 +522,7 @@ export interface RootRouteChildren {
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
   SpikesHotkeysRoute: typeof SpikesHotkeysRoute;
+  SpikesInputTracesRoute: typeof SpikesInputTracesRoute;
   SpikesWorklistRoute: typeof SpikesWorklistRoute;
   FlowMapIndexRoute: typeof FlowMapIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
@@ -648,6 +661,13 @@ declare module "@tanstack/react-router" {
       path: "/spikes/hotkeys";
       fullPath: "/spikes/hotkeys";
       preLoaderRoute: typeof SpikesHotkeysRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/spikes/input-traces": {
+      id: "/spikes/input-traces";
+      path: "/spikes/input-traces";
+      fullPath: "/spikes/input-traces";
+      preLoaderRoute: typeof SpikesInputTracesRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/spikes/worklist": {
@@ -822,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
   SpikesHotkeysRoute: SpikesHotkeysRoute,
+  SpikesInputTracesRoute: SpikesInputTracesRoute,
   SpikesWorklistRoute: SpikesWorklistRoute,
   FlowMapIndexRoute: FlowMapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
