@@ -56,6 +56,7 @@ import type {
   MemberActivity,
   MemberAvailability,
   Membership,
+  Mentionable,
   Message,
   ModelRun,
   MultiPolygonGeometry,
@@ -4366,11 +4367,22 @@ export const getCreateThreadResponseMock = (
       id: faker.string.uuid(),
       author_id: faker.string.uuid(),
       body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
   ...overrideResponse,
 });
+
+export const getListMentionableMembersResponseMock = (): Mentionable[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    initials: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    avatar_colour: faker.number.int(),
+  }));
 
 export const getGetThreadResponsePointGeometryMock = (
   overrideResponse: Partial<PointGeometry> = {},
@@ -4479,6 +4491,9 @@ export const getGetThreadResponseMock = (
       id: faker.string.uuid(),
       author_id: faker.string.uuid(),
       body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
@@ -4491,6 +4506,9 @@ export const getReplyToThreadResponseMock = (
   id: faker.string.uuid(),
   author_id: faker.string.uuid(),
   body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
@@ -4602,6 +4620,9 @@ export const getResolveThreadResponseMock = (
       id: faker.string.uuid(),
       author_id: faker.string.uuid(),
       body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
@@ -4715,6 +4736,9 @@ export const getReopenThreadResponseMock = (
       id: faker.string.uuid(),
       author_id: faker.string.uuid(),
       body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
@@ -11260,6 +11284,30 @@ export const getCreateThreadMockHandler = (
   );
 };
 
+export const getListMentionableMembersMockHandler = (
+  overrideResponse?:
+    | Mentionable[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<Mentionable[]> | Mentionable[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/threads/mentionable",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListMentionableMembersResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetThreadMockHandler = (
   overrideResponse?:
     | ThreadDetail
@@ -12879,6 +12927,7 @@ export const getParfocalAPIMock = () => [
   getListVerdictsMockHandler(),
   getListThreadsMockHandler(),
   getCreateThreadMockHandler(),
+  getListMentionableMembersMockHandler(),
   getGetThreadMockHandler(),
   getDeleteThreadMockHandler(),
   getReplyToThreadMockHandler(),

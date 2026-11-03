@@ -6,12 +6,14 @@ import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-co
 import {
   getGetOpinionMockHandler,
   getGetSlideNeighboursMockHandler,
+  getListMentionableMembersMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
   getSaveVerdictMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  Mentionable,
   Neighbours,
   Opinion,
   ProjectClass,
@@ -122,6 +124,23 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
       resolved_by: item.open ? null : people[item.by].id,
       message_count: item.replies + 1,
       last_message_at: item.last,
+    }));
+};
+
+export const toMentionable = (taskId: string): Mentionable[] => {
+  const task = taskById(taskId);
+  const viewer = fakeView().viewer;
+  const researcher = projectByCode(task?.project ?? "P07").owner;
+  const blindedFromPeers = (task?.blinded ?? false) && viewer !== researcher;
+  return Object.values(people)
+    .filter((person) => person.key !== viewer)
+    .filter((person) => !blindedFromPeers || person.key === researcher)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((person) => ({
+      user_id: person.id,
+      display_name: person.name,
+      initials: person.key,
+      avatar_colour: person.colour,
     }));
 };
 
@@ -258,6 +277,7 @@ export function reviewHandlers(): RequestHandler[] {
         asked === null ? null : asked === "true",
       );
     }),
+    getListMentionableMembersMockHandler(({ params }) => toMentionable(String(params["taskId"]))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
     getSaveVerdictMockHandler(async ({ request, params }) => {

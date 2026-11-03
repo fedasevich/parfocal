@@ -988,6 +988,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/threads",
     ),
+    "listMentionableMembers": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/threads/mentionable",
+    ),
     "getThread": Route(
         Exposure.TENANT,
         lambda a: (

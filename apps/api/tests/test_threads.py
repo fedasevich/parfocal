@@ -1,10 +1,13 @@
 import json
+import uuid
 from typing import Any
 
 import pytest
 from db_support import ApiAs
 from test_blinding import SQUARE, Study, ok, study
 from workspace_support import owner
+
+from parfocal_api.mentions import MAX_MENTIONS, token_for
 
 pytestmark = pytest.mark.db
 
@@ -245,3 +248,128 @@ def test_replies_notify_followers_who_may_see_them(api: ApiAs, database: str) ->
     gone = api(s.people["owner"]).get(f"/api/me/notifications/{notification}/target")
     assert gone.status_code == 404
     assert code_of(gone) == "target-gone"
+
+
+def mention(s: Study, who: str) -> str:
+    return token_for(s.people[who].user_id)
+
+
+def mention_rows(database: str, thread_id: str) -> list[tuple[str, bool]]:
+    return [
+        (str(row[0]), bool(row[1]))
+        for row in owner(
+            database,
+            "SELECT user_id, muted FROM notifications "
+            f"WHERE kind = 'mention' AND target_id = '{thread_id}' ORDER BY created_at, user_id",
+        )
+    ]
+
+
+def test_a_mention_notifies_the_colleague_and_breaks_a_mute(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    owner(
+        database,
+        "INSERT INTO notification_mutes (tenant_id, user_id, subject, subject_id) "
+        f"SELECT tenant_id, '{s.user('second')}', 'task', id FROM review_tasks "
+        f"WHERE id = '{s.task}'",
+    )
+    people = f"{mention(s, 'owner')} and {mention(s, 'second')} please check, {mention(s, 'first')}"
+    opening = {
+        "title": "Who looks?",
+        "body": people,
+        "anchor": {"kind": "point", "geometry": POINT},
+    }
+    thread = ok(api(s.people["first"]).post(f"{s.base}/threads", json=opening)).json()
+    assert thread["messages"][0]["mentions"] == [s.user("owner"), s.user("second"), s.user("first")]
+    assert sorted(mention_rows(database, thread["id"])) == sorted(
+        [(s.user("owner"), False), (s.user("second"), False)]
+    )
+    path = f"{s.base}/threads/{thread['id']}"
+    reply = ok(
+        api(s.people["owner"]).post(
+            f"{path}/messages", json={"body": f"Thanks {mention(s, 'first')}"}
+        )
+    ).json()
+    assert reply["mentions"] == [s.user("first")]
+    assert [row[0] for row in mention_rows(database, thread["id"])].count(s.user("first")) == 1
+    assert reply_rows(database, thread["id"]) == []
+    ok(api(s.people["owner"]).post(f"{path}/messages", json={"body": "No mention"}))
+    assert {str(row[0]) for row in reply_rows(database, thread["id"])} == {s.user("first")}
+    rows = audit_rows(database, thread["id"])
+    assert rows[0][1]["mentions"] == 2
+    assert "@[" not in json.dumps([details for _, details in rows])
+
+
+def test_only_members_who_see_the_task_slide_can_be_mentioned(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    point = {"kind": "point", "geometry": POINT}
+    for who in ("third", "admin"):
+        refused = api(s.people["first"]).post(
+            f"{s.base}/threads",
+            json={"title": "Nope", "body": f"Hello {mention(s, who)}", "anchor": point},
+        )
+        assert refused.status_code == 400, who
+        assert code_of(refused) == "bad-mention", who
+    stranger = api(s.people["first"]).post(
+        f"{s.base}/threads",
+        json={"title": "Nope", "body": f"Hello {token_for(uuid.uuid4())}", "anchor": point},
+    )
+    assert stranger.status_code == 400
+    assert code_of(stranger) == "bad-mention"
+    assert titles(api, s, "first") == []
+    crowd = " ".join(token_for(uuid.uuid4()) for _ in range(MAX_MENTIONS + 1))
+    too_many = api(s.people["first"]).post(
+        f"{s.base}/threads", json={"title": "Crowd", "body": crowd, "anchor": point}
+    )
+    assert too_many.status_code == 400
+    thread = ok(start(api, s, "first", point)).json()
+    path = f"{s.base}/threads/{thread['id']}"
+    refused_reply = api(s.people["owner"]).post(
+        f"{path}/messages", json={"body": mention(s, "third")}
+    )
+    assert refused_reply.status_code == 400
+    assert len(ok(api(s.people["first"]).get(path)).json()["messages"]) == 1
+    assert mention_rows(database, thread["id"]) == []
+
+
+def test_a_blinded_reviewer_cannot_mention_another_reviewer(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=True, hidden=False)
+    point = {"kind": "point", "geometry": POINT}
+    refused = api(s.people["first"]).post(
+        f"{s.base}/threads",
+        json={"title": "Peek", "body": f"Hello {mention(s, 'second')}", "anchor": point},
+    )
+    assert refused.status_code == 400
+    assert code_of(refused) == "bad-mention"
+    researchers = ok(start(api, s, "owner", point)).json()
+    path = f"{s.base}/threads/{researchers['id']}/messages"
+    blind = api(s.people["first"]).post(path, json={"body": f"Hello {mention(s, 'second')}"})
+    assert blind.status_code == 400
+    answer = ok(api(s.people["first"]).post(path, json={"body": f"Hello {mention(s, 'owner')}"}))
+    assert answer.json()["mentions"] == [s.user("owner")]
+    assert mention_rows(database, researchers["id"]) == [(s.user("owner"), False)]
+
+
+def test_the_mentionable_list_holds_members_who_see_the_slide_and_each_other(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+
+    def listed(study_: Study, who: str) -> list[dict[str, Any]]:
+        found: list[dict[str, Any]] = ok(
+            api(study_.people[who]).get(f"{study_.base}/threads/mentionable")
+        ).json()
+        return found
+
+    assert {entry["user_id"] for entry in listed(s, "first")} == {
+        s.user(who) for who in ("owner", "viewer", "second")
+    }
+    assert {entry["user_id"] for entry in listed(s, "owner")} == {
+        s.user(who) for who in ("viewer", "first", "second")
+    }
+    assert set(listed(s, "first")[0]) == {"user_id", "display_name", "initials", "avatar_colour"}
+    blind = study(api, database, blinded=True, hidden=False)
+    assert {entry["user_id"] for entry in listed(blind, "first")} == {
+        blind.user(who) for who in ("owner", "viewer")
+    }
+    assert api(blind.people["third"]).get(f"{blind.base}/threads/mentionable").status_code == 404

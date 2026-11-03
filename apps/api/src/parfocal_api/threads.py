@@ -20,6 +20,7 @@ from parfocal_api.annotations import (
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.mentions import MAX_MENTIONS, mentioned_in
 from parfocal_api.notification_catalogue import TargetKind
 from parfocal_api.notifications import deliver_after_commit, notify
 from parfocal_api.permissions import Grant, Permission, member_of, require
@@ -45,6 +46,7 @@ from parfocal_api.tables import (
     review_assignments,
     thread_messages,
     threads,
+    users,
 )
 from parfocal_common.object_ids import Letter, ObjectId, ObjectIdError, parse
 
@@ -97,7 +99,15 @@ class Message(BaseModel):
     id: uuid.UUID
     author_id: uuid.UUID
     body: str
+    mentions: list[uuid.UUID]
     created_at: datetime
+
+
+class Mentionable(BaseModel):
+    user_id: uuid.UUID
+    display_name: str
+    initials: str
+    avatar_colour: int
 
 
 class Thread(BaseModel):
@@ -132,6 +142,11 @@ class BadAnchorError(BadRequestError):
 class ThreadHasRepliesError(ConflictError):
     code = "thread-has-replies"
     title = "This thread has replies. Confirm to delete them with it"
+
+
+class BadMentionError(BadRequestError):
+    code = "bad-mention"
+    title = "Only members who can see this thread can be mentioned in it"
 
 
 class NotThreadAuthorError(ForbiddenError):
@@ -277,7 +292,13 @@ def anchor_of(row: Any) -> Anchor:
 
 
 def message_of(row: Any) -> Message:
-    return Message(id=row.id, author_id=row.user_id, body=row.body, created_at=row.created_at)
+    return Message(
+        id=row.id,
+        author_id=row.user_id,
+        body=row.body,
+        mentions=mentioned_in(row.body),
+        created_at=row.created_at,
+    )
 
 
 def thread_of(row: Any, messages: list[Message]) -> ThreadDetail:
@@ -369,8 +390,52 @@ async def audit(
     )
 
 
+async def reader_sight(connection: AsyncConnection, place: Any, person: uuid.UUID) -> Sight | None:
+    reader = await principal_of(connection, place.tenant_id, person)
+    if reader is None:
+        return None
+    try:
+        seen = await task_slide(connection, reader, place.task_id, place.slide_id)
+    except NotFoundError, ForbiddenError:
+        return None
+    return Sight(connection, reader, seen)
+
+
+async def who_sees_the_post(
+    connection: AsyncConnection,
+    place: Any,
+    row: Any,
+    poster: uuid.UUID,
+    people: Iterable[uuid.UUID],
+) -> list[uuid.UUID]:
+    found: list[uuid.UUID] = []
+    for person in sorted(people):
+        sight = await reader_sight(connection, place, person)
+        if sight is not None and await sight.sees_thread(row) and await sight.sees(poster):
+            found.append(person)
+    return found
+
+
+async def checked_mentions(
+    connection: AsyncConnection, place: Any, row: Any, poster: Sight, body: str
+) -> list[uuid.UUID]:
+    me = member_of(poster.reader).user_id
+    named = [person for person in mentioned_in(body) if person != me]
+    if len(named) > MAX_MENTIONS:
+        raise BadMentionError(f"A message mentions at most {MAX_MENTIONS} people")
+    allowed = await who_sees_the_post(connection, place, row, me, named)
+    for person in named:
+        if person not in allowed or not await poster.sees(person):
+            raise BadMentionError
+    return named
+
+
 async def tell_followers(
-    connection: AsyncConnection, place: Any, row: Any, poster: uuid.UUID
+    connection: AsyncConnection,
+    place: Any,
+    row: Any,
+    poster: uuid.UUID,
+    mentioned: list[uuid.UUID],
 ) -> None:
     followers = {row.created_by_user_id} | set(
         await connection.scalars(
@@ -378,26 +443,25 @@ async def tell_followers(
         )
     )
     followers.discard(poster)
-    told: list[uuid.UUID] = []
-    for person in sorted(followers):
-        reader = await principal_of(connection, place.tenant_id, person)
-        if reader is None:
-            continue
-        try:
-            seen = await task_slide(connection, reader, place.task_id, place.slide_id)
-        except NotFoundError, ForbiddenError:
-            continue
-        sight = Sight(connection, reader, seen)
-        if await sight.sees_thread(row) and await sight.sees(poster):
-            told.append(person)
+    followers.difference_update(mentioned)
+    payload = {"task_id": str(place.task_id), "slide_id": str(place.slide_id)}
     await notify(
         connection,
         place.tenant_id,
-        told,
+        await who_sees_the_post(connection, place, row, poster, followers),
         NotificationKind.REPLY,
         TargetKind.THREAD,
         row.id,
-        {"task_id": str(place.task_id), "slide_id": str(place.slide_id)},
+        payload,
+    )
+    await notify(
+        connection,
+        place.tenant_id,
+        mentioned,
+        NotificationKind.MENTION,
+        TargetKind.THREAD,
+        row.id,
+        payload,
     )
 
 
@@ -431,6 +495,37 @@ async def list_threads(
     return found
 
 
+@router.get("/mentionable", operation_id="listMentionableMembers", **require(Permission.SEE_SLIDES))
+async def list_mentionable(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> list[Mentionable]:
+    place = await task_slide(connection, principal, task_id, slide_id)
+    me = member_of(principal).user_id
+    own = Sight(connection, principal, place)
+    rows = await connection.execute(
+        select(users.c.id, users.c.display_name, users.c.initials, users.c.avatar_colour)
+        .join(memberships, memberships.c.user_id == users.c.id)
+        .where(memberships.c.tenant_id == place.tenant_id, users.c.id != me)
+        .order_by(users.c.display_name, users.c.id)
+    )
+    found: list[Mentionable] = []
+    for row in rows:
+        other = await reader_sight(connection, place, row.id)
+        if other is not None and await own.sees(row.id) and await other.sees(me):
+            found.append(
+                Mentionable(
+                    user_id=row.id,
+                    display_name=row.display_name,
+                    initials=row.initials,
+                    avatar_colour=row.avatar_colour,
+                )
+            )
+    return found
+
+
 @router.post(
     "",
     operation_id="createThread",
@@ -443,6 +538,8 @@ async def create_thread(
     draft: ThreadCreate,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
 ) -> ThreadDetail:
     place = await writable_place(connection, principal, task_id, slide_id)
     if place.signed_off_at is not None:
@@ -475,6 +572,8 @@ async def create_thread(
             tenant_id=place.tenant_id, thread_id=row.id, user_id=me, body=draft.body
         )
     )
+    own = Sight(connection, principal, place)
+    mentioned = await checked_mentions(connection, place, row, own, draft.body)
     await audit(
         connection,
         principal,
@@ -485,8 +584,11 @@ async def create_thread(
             "object": object_id,
             "title_length": len(draft.title),
             "message_length": len(draft.body),
+            "mentions": len(mentioned),
         },
     )
+    await tell_followers(connection, place, row, me, mentioned)
+    background.add_task(deliver_after_commit, http.app, place.tenant_id)
     return await detail(Sight(connection, principal, place), row)
 
 
@@ -531,13 +633,19 @@ async def reply_to_thread(
             .returning(*thread_messages.c)
         )
     ).one()
-    await tell_followers(connection, place, row, me)
+    own = Sight(connection, principal, place)
+    mentioned = await checked_mentions(connection, place, row, own, draft.body)
+    await tell_followers(connection, place, row, me, mentioned)
     await audit(
         connection,
         principal,
         AuditAction.THREAD_REPLIED,
         row,
-        {"message_id": str(message.id), "message_length": len(draft.body)},
+        {
+            "message_id": str(message.id),
+            "message_length": len(draft.body),
+            "mentions": len(mentioned),
+        },
     )
     background.add_task(deliver_after_commit, http.app, place.tenant_id)
     return message_of(message)
