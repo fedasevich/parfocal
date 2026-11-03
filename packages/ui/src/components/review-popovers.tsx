@@ -182,10 +182,61 @@ type SlideRowData = {
   disabledReason?: string | undefined;
 };
 
+type CaseDetailsData = {
+  project?: string | undefined;
+  caseLabel?: string | undefined;
+  specimen?: string | undefined;
+  blocks?: string[] | undefined;
+  task?: string | undefined;
+  researcher?: string | undefined;
+  clinical?: boolean | undefined;
+  clinicalNote?: string | undefined;
+};
+
+function CaseDetails({ details }: { details: CaseDetailsData }) {
+  const blocks = details.blocks ?? [];
+  const rows: [string, string, string | undefined, string][] = [
+    ["project", "Project", details.project, "Not known"],
+    ["case", "Case", details.caseLabel, "No case attached"],
+    ["specimen", "Specimen", details.specimen, "Not recorded"],
+    ["blocks", "Blocks", blocks.length > 0 ? blocks.join(", ") : undefined, "No blocks recorded"],
+    ["task", "Task", details.task, "Not part of a task"],
+    ["researcher", "Researcher", details.researcher, "Not known"],
+  ];
+  if (details.clinical) {
+    rows.push(["clinical-note", "Clinical note", details.clinicalNote, "No clinical note"]);
+  }
+  return (
+    <dl
+      aria-label="Case details"
+      data-slot="case-details"
+      className="m-0 grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 gap-y-1 border-b border-surf-edge px-4 py-3 text-caption"
+    >
+      {rows.map(([field, label, value, missing]) => (
+        <div key={field} data-field={field} className="contents">
+          <dt className="text-fg-faint">{label}</dt>
+          <dd
+            data-missing={value ? undefined : true}
+            className={cn(
+              "m-0 min-w-0 text-fg",
+              field === "clinical-note" ? "line-clamp-3 whitespace-pre-line" : "truncate",
+              !value && "text-fg-faint italic",
+            )}
+            title={value}
+          >
+            {value || missing}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 type SlidesPopoverProps = {
   caseTitle?: string | undefined;
   caseSub?: string | undefined;
   onOpenCase?: (() => void) | undefined;
+  details?: CaseDetailsData | undefined;
   caseHeading?: string;
   caseSlides: SlideRowData[];
   looseHeading?: string | undefined;
@@ -288,6 +339,7 @@ function SlidesPopover({
   caseTitle,
   caseSub,
   onOpenCase,
+  details,
   caseHeading = "Slides in this case",
   caseSlides,
   looseHeading,
@@ -323,6 +375,7 @@ function SlidesPopover({
           </Button>
         </div>
       ) : null}
+      {details ? <CaseDetails details={details} /> : null}
       <div className="grid max-h-96 gap-0.5 overflow-y-auto px-2 pt-2 pb-3">
         <div className={heading}>
           <span>{caseHeading}</span>
@@ -449,6 +502,8 @@ type MoreItem = {
 };
 
 export {
+  CaseDetails,
+  type CaseDetailsData,
   DecisionLegend,
   type MoreItem,
   PinnedSlideStrip,
