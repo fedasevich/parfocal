@@ -50,6 +50,7 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-sparse.tiff` | `synthetic-jpeg.tiff` with level 0 tiles 1, 6 and 7 left out (offset and byte count 0), as Philips and Argos scanners do |
 | `synthetic-jp2k-33005.tiff` | The same pyramid as JPEG 2000 tiles of Aperio compression 33005, with the multiple component transform on |
 | `synthetic-jp2k-33003.tiff` | The same as 33005 under compression number 33003, so it checks routing and not the YCbCr layout |
+| `synthetic-decoy.scn` | Leica SCN whose macro image (1536 × 2048) is larger than the slide (1024 × 768, three levels), so a reader that opens the largest image opens the wrong one. Made by `scripts/make_synthetic_scn.py` |
 | `synthetic-jp2k-damaged.tiff` | `synthetic-jp2k-33005.tiff` with tile 1 stripped of its codestream marker and the body of tile 6 overwritten |
 | `synthetic-channels-uint8.ome.tiff` | OME-TIFF with three 8-bit channels (DAPI, FITC, TRITC) as separate zlib pages, two SubIFD levels each |
 | `synthetic-channels-uint16.ome.tiff` | The same with 16-bit samples |
