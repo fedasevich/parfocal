@@ -29,6 +29,7 @@ test("sequential tile requests each pay one RTT", async ({ page, network, rttMs 
     requests: REQUESTS,
     bytes: REQUESTS * TILE_BYTES,
     uploadedBytes: 0,
+    methods: { GET: REQUESTS },
   });
   const fastest = sorted[0] ?? 0;
   expect(fastest).toBeGreaterThanOrEqual(rttMs - 1);
