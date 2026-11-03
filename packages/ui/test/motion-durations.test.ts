@@ -15,7 +15,7 @@ const sources = (dir: string): string[] =>
   });
 
 const fixed =
-  /\b(duration|delay)-(\d+|\[[^\]]+\])(?![\w-])|(transition|animation)(-duration|-delay)?:[^;]*\d+m?s\b/g;
+  /\b(duration|delay)-(\d+|\[[^\]]+\])(?![\w-])|(transition|animation)(-duration|-delay)?:[^;]*\d+m?s\b|animate-\[[^\]]*?[_[]\d+(\.\d+)?m?s[_\]]/g;
 
 test("no component in packages/ui or apps/web uses a fixed transition duration", () => {
   const found = roots

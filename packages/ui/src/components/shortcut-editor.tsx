@@ -12,8 +12,7 @@ const keyBindingVariants = cva(
         mine: "border-accent bg-accent-soft text-accent",
         conflict: "border-bad text-bad",
         off: "text-fg-faint line-through",
-        recording:
-          "min-w-[110px] border-accent text-fg motion-safe:animate-[pulse_1.2s_ease-in-out_infinite]",
+        recording: "min-w-[110px] border-accent text-fg motion-safe:animate-pulse",
       },
       size: { md: "", sm: "pointer-events-none h-5 min-w-5 text-label" },
     },

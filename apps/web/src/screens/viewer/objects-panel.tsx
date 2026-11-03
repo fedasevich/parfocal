@@ -4,6 +4,7 @@ import { DecisionButtons, type ProjectClass } from "@parfocal/ui/components/deci
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import type { PersonInfo } from "@parfocal/ui/components/person";
+import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
 import { Switch } from "@parfocal/ui/components/switch";
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { AiRunningSteps, type AiStep } from "@parfocal/ui/components/visualize";
@@ -63,10 +64,7 @@ export function RunningObjects({
       </Zone>
       <ul aria-label="Found so far" className="m-0 grid list-none gap-1 p-0">
         {found.map((item) => (
-          <li
-            key={item.object}
-            className="grid grid-cols-[44px_1fr_auto_auto] items-start gap-2 px-1 py-2 text-body-sm"
-          >
+          <li key={item.object} className={foundRow}>
             <ObjectIdTag>{item.object}</ObjectIdTag>
             <span className="grid">
               <span>Tumor region</span>
@@ -79,8 +77,25 @@ export function RunningObjects({
             <span className="font-mono text-fg-dim">{item.size_mm?.toFixed(1)} mm</span>
           </li>
         ))}
+        <NextFoundRow key={`next-${found.length}`} />
       </ul>
     </>
+  );
+}
+
+const foundRow = "grid grid-cols-[44px_1fr_auto_auto] items-start gap-2 px-1 py-2 text-body-sm";
+
+function NextFoundRow() {
+  return (
+    <li aria-hidden="true" data-testid="next-found" className={foundRow}>
+      <Skeleton className="h-(--tag-h) rounded-sm" />
+      <span className="grid">
+        <SkeletonLine width="7.5em" />
+        <SkeletonLine width="5em" className="text-caption" />
+      </span>
+      <SkeletonLine width="4ch" className="font-mono" />
+      <SkeletonLine width="6ch" className="font-mono" />
+    </li>
   );
 }
 
