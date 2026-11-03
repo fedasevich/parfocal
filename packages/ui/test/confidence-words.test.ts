@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  aiWording,
   bandOf,
   confidenceWords,
   DEFAULT_WORDING,
@@ -8,6 +9,8 @@ import {
   shapeOf,
   type TypeCall,
   type TyperEvidence,
+  unmeasuredTyper,
+  wordingModeOf,
 } from "../src/lib/confidence-words.ts";
 
 const hoverNext: TyperEvidence = {
@@ -106,4 +109,30 @@ test("plain is the default and stays plain for a checked typer", () => {
 
 test("an empty call is refused", () => {
   assert.throws(() => confidenceWords([], "plain", hoverNext));
+});
+
+test("each wording setting maps to a mode, colour and hidden to none", () => {
+  assert.equal(wordingModeOf("words"), "plain");
+  assert.equal(wordingModeOf("numbers"), "percent");
+  assert.equal(wordingModeOf("frequency"), "frequency");
+  assert.equal(wordingModeOf("colour"), null);
+  assert.equal(wordingModeOf("hidden"), null);
+});
+
+test("the AI wording follows the setting and falls back to percent for an uncalibrated typer", () => {
+  const calls = call(0.72, 0.2);
+  assert.equal(aiWording(calls, "words", hoverNext).text, "probably tumor");
+  assert.equal(aiWording(calls, "numbers", hoverNext).text, "tumor 72%");
+  assert.equal(aiWording(calls, "frequency", hoverNext).text, "tumor, right about 7 in 10 times");
+  assert.deepEqual(aiWording(calls, "colour", hoverNext), {
+    setting: "colour",
+    mode: null,
+    band: "likely",
+    text: "tumor",
+  });
+  assert.equal(aiWording(calls, "hidden", hoverNext).text, null);
+  for (const setting of ["words", "frequency"] as const) {
+    const shown = aiWording(calls, setting, unmeasuredTyper("New typer"));
+    assert.deepEqual([shown.mode, shown.text], ["percent", "tumor 72%"]);
+  }
 });
