@@ -11,6 +11,8 @@ import {
   modelsForTask,
   NOT_CHOSEN,
   tierCell,
+  tumorShareChange,
+  tumorShareOf,
   withCurrent,
 } from "../src/screens/admin/workspace-settings-model.ts";
 
@@ -91,4 +93,23 @@ test("an announcement ends when the person says, and needs some text", () => {
   assert.equal(isAnnouncementText("   "), false);
   assert.equal(isAnnouncementText("x".repeat(281)), false);
   assert.equal(isAnnouncementText("Rounds move to 09:00"), true);
+});
+
+test("a workspace with nothing saved shows the tumor share result at 20% for cell cases and hides it for sentinel nodes", () => {
+  assert.deepEqual(tumorShareOf({ values: {}, locked: [] }), {
+    tumor_share_cutoff: 20,
+    tumor_share_result_sentinel_node: false,
+    tumor_share_result_pannuke: true,
+  });
+  assert.equal(
+    tumorShareOf({ values: { tumor_share_cutoff: 30 }, locked: [] }).tumor_share_cutoff,
+    30,
+  );
+});
+
+test("saving one tumor share setting sends only it and keeps every lock", () => {
+  assert.deepEqual(tumorShareChange(lab, "tumor_share_result_sentinel_node", true), {
+    values: { tumor_share_result_sentinel_node: true },
+    locked: ["lock_after_minutes"],
+  });
 });

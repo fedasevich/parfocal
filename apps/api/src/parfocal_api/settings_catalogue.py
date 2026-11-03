@@ -110,6 +110,9 @@ CATALOGUE: tuple[Setting, ...] = (
     choice("default_privacy_mode", "de-identified", ("de-identified", "clinical"), LAB),
     choice("default_classes", "none", ("none", "sentinel-node", "pannuke"), LAB),
     identifier("default_study_template", LAB),
+    whole("tumor_share_cutoff", 20, 1, 99, LAB),
+    switch("tumor_share_result_sentinel_node", False, LAB),
+    switch("tumor_share_result_pannuke", True, LAB),
 )
 
 BY_KEY: Mapping[str, Setting] = {setting.key: setting for setting in CATALOGUE}

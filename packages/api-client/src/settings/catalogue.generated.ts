@@ -25,6 +25,9 @@ export type SettingValues = {
   default_privacy_mode: "de-identified" | "clinical";
   default_classes: "none" | "sentinel-node" | "pannuke";
   default_study_template: string;
+  tumor_share_cutoff: number;
+  tumor_share_result_sentinel_node: boolean;
+  tumor_share_result_pannuke: boolean;
 };
 
 export type SettingKey = keyof SettingValues;
@@ -270,6 +273,29 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   "default_study_template": {
     "kind": "id",
     "default": "",
+    "layers": [
+      "lab"
+    ]
+  },
+  "tumor_share_cutoff": {
+    "kind": "whole",
+    "default": 20,
+    "layers": [
+      "lab"
+    ],
+    "minimum": 1,
+    "maximum": 99
+  },
+  "tumor_share_result_sentinel_node": {
+    "kind": "switch",
+    "default": false,
+    "layers": [
+      "lab"
+    ]
+  },
+  "tumor_share_result_pannuke": {
+    "kind": "switch",
+    "default": true,
     "layers": [
       "lab"
     ]
