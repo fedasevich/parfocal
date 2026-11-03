@@ -200,6 +200,16 @@ AIP-002 also requires a licence block, which conflicts with STACK-031 (licence p
 
 Your choice:
 
+## 48. The zoom to selection key, from NAV-012 (zoom to selection)
+
+NAV-012 asks for Shift+2, but the approved mock and kit give Shift+1 to Shift+4 to display presets, and the default keymap must have no clashes. It is built on ⇧F for now, and people can rebind it.
+
+- a. Keep ⇧F. (recommended, F already means fit)
+- b. Use Shift+2 and move the display presets, which changes the mock.
+- c. Another key, such as "." or ⇧0.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

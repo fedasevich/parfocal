@@ -2145,6 +2145,12 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when a test confirms the selection is fitted with margin.
   Size: S.
 
+- [ ] NAV-013 · Feed the selection to zoom to selection
+  NAV-012 (zoom to selection) added the `zoomsel` action and `engine.flyToSelection`, but the live slide stage passes no selection, so the key does nothing there. Feed the selected shapes, or the focused AI area, into `useViewerKeys` once a select tool or area focus reaches the live stage.
+  Done when a browser test selects a shape on the live stage, presses the key and the camera fits it with the 48 px margin.
+  Depends on NAV-012, ANN-004.
+  Size: S.
+
 ---
 
 ## 14 REVIEW · Review workspace
