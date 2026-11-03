@@ -37,9 +37,9 @@ export function heroPath(active: MyTask[], resume: ResumeTarget | null): string 
   return task ? continuePath(task, resume) : undefined;
 }
 
-export function continuesHero(event: ListKey, sel: string | undefined): boolean {
+export function continuesHero(event: ListKey, sel: string | undefined, onRow = false): boolean {
   if (event.metaKey || event.ctrlKey || event.altKey) return false;
-  return event.key === "Enter" && sel === undefined;
+  return event.key === "Enter" && sel === undefined && !onRow;
 }
 
 export function reviewRow(

@@ -15,7 +15,13 @@ import { formatLongDay, plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { AllSlidesTab } from "./all-slides-tab.tsx";
 import { AssignedTab } from "./assigned-tab.tsx";
-import { assignedOpenPath, ignoresListKeys, listMove, slideOpenPath } from "./list-keys.ts";
+import {
+  assignedOpenPath,
+  ignoresListKeys,
+  listMove,
+  onListRow,
+  slideOpenPath,
+} from "./list-keys.ts";
 import type { MyWorkState, MyWorkTab } from "./scenes.ts";
 import { slideQuery } from "./slide-filters.ts";
 import { continuePath, continuesHero, heroPath } from "./to-review-rows.ts";
@@ -72,7 +78,7 @@ export function MyWorkScreen({
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || ignoresListKeys(event.target, event.key)) return;
       const move = listMove(event, rowKeys, state.sel);
-      if (move === undefined && hero && continuesHero(event, state.sel)) {
+      if (move === undefined && hero && continuesHero(event, state.sel, onListRow(event.target))) {
         event.preventDefault();
         void goTo(hero);
         return;

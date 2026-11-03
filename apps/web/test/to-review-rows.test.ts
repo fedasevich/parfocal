@@ -92,4 +92,5 @@ test("Enter with nothing selected continues the task in progress in one action",
   assert.equal(continuesHero({ key: "Enter" }, "task-3"), false);
   assert.equal(continuesHero({ key: "Enter", metaKey: true }, undefined), false);
   assert.equal(continuesHero({ key: "j" }, undefined), false);
+  assert.equal(continuesHero({ key: "Enter" }, undefined, true), false);
 });

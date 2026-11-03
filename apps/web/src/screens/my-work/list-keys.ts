@@ -10,6 +10,9 @@ export type ListKey = {
   altKey?: boolean;
 };
 
+export const onListRow = (target: EventTarget | null) =>
+  Boolean((target as HTMLElement | null)?.closest?.("[role='option']"));
+
 const down = new Set(["ArrowDown", "j", "J"]);
 const up = new Set(["ArrowUp", "k", "K"]);
 
