@@ -1611,7 +1611,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-018 · Surfaces and zones
+- [x] DS-018 · Surfaces and zones
   Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding. A zone can fold to a one-line summary of its settings, such as "Outline 2 px · by class · IDs on" in the Display panel.
   Done when stories show each level in both themes and a visual test covers a modal with three zones.
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
