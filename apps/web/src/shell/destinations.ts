@@ -31,6 +31,8 @@ export const destinations = {
       y: view.y?.toString(),
       z: view.z?.toString(),
     })}`,
+  focus: (projectId: string, slideId: string, taskId?: string) =>
+    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, focus: "true" })}`,
   compareSlides: (
     projectId: string,
     slideId: string,

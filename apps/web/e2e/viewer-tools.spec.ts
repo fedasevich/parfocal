@@ -155,3 +155,56 @@ test("focus mode answers from the keys and the key in the pill brings the interf
   await page.getByRole("button", { name: "Show the interface" }).click();
   await expect(page.getByTestId("full-viewer")).toBeVisible();
 });
+
+const chromeShare = (page: Page) =>
+  page.evaluate(() => {
+    const parts = document.querySelectorAll(
+      'header, [data-slot="tool-rail"], [data-slot="side-panel"]',
+    );
+    let covered = 0;
+    for (const part of parts) {
+      const box = part.getBoundingClientRect();
+      covered += Math.max(0, box.width) * Math.max(0, box.height);
+    }
+    return covered / (window.innerWidth * window.innerHeight);
+  });
+
+test("the focus key hides the top bar, rail and inspector and brings them back", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const links = await toolLinks(page);
+  const viewer = new URL(hrefOf(links, "Focus mode"), "http://localhost");
+  viewer.searchParams.delete("focus");
+  await page.goto(`${viewer.pathname}${viewer.search}`);
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.locator("header")).toBeVisible();
+  await expect(page.locator('[data-slot="tool-rail"]')).toBeVisible();
+  await expect(page.locator('[data-slot="side-panel"]')).toBeVisible();
+  expect(await chromeShare(page)).toBeGreaterThan(0.2);
+
+  await page.keyboard.press("Control+Backslash");
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
+  await expect(page.locator("header")).toHaveCount(0);
+  await expect(page.locator('[data-slot="tool-rail"]')).toHaveCount(0);
+  await expect(page.locator('[data-slot="side-panel"]')).toHaveCount(0);
+  await expect(page.locator('[data-slot="floating-pill"]')).toBeVisible();
+  await expect(page.locator('[data-slot="focus-card"]')).toBeVisible();
+  await expect(minimap(page)).toBeVisible();
+  await expect(page.locator('[data-slot="magnification-bar"]')).toBeVisible();
+  expect(await chromeShare(page)).toBe(0);
+
+  await page.keyboard.press("Control+Backslash");
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.locator("header")).toBeVisible();
+  await expect(page.locator('[data-slot="side-panel"]')).toBeVisible();
+});
+
+test("focus mode opens from the More menu of the annotate workspace", async ({ page }) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Annotate workspace · Auto region"));
+  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("menuitem", { name: /Focus mode/ }).click();
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
+  await expect(page.locator("header")).toHaveCount(0);
+});

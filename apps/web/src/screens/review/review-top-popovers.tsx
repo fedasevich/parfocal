@@ -287,7 +287,8 @@ export function useReviewTopPopovers({
             icon: "expand",
             label: "Focus mode",
             keys: "⌘\\",
-            title: "Focus mode is not built yet",
+            onSelect: () =>
+              projectId && void goTo(destinations.focus(projectId, session.slideId, task?.id)),
             separatorBefore: true,
           },
           {
