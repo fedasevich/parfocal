@@ -1744,7 +1744,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs kit motion table.
   Size: M.
 
-- [ ] SHELL-008 · Focus mode
+- [x] SHELL-008 · Focus mode
   Cmd+\ hides the top bar, rail and inspector, shows the focus pill and the area card, keeps the minimap and magnification bar.
   Done when E2E covers enter and exit and the screen-coverage measurement drops to the expected value.
   Refs mock 16, kit W23.
@@ -1752,6 +1752,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-009 · Screen coverage measurement
   A test utility that measures the share of the canvas covered by chrome at 1280, 1440 and 1920 widths.
+  SHELL-008 (focus mode) measures the chrome share in place in apps/web/e2e/viewer-tools.spec.ts (chromeShare over 0.2 before focus, 0 in focus). Replace it with this utility and its expected value.
   Done when CI enforces under 35% in Review at 1440×900 (KPI).
   Refs doc 35.
   Size: M.
