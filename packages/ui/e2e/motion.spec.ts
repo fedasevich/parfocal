@@ -39,7 +39,7 @@ test("motion tokens drive the move, presenting runs at one third speed", async (
     "0.12s",
   );
   await page.getByRole("button", { name: "Move" }).click();
-  expect(await runningAnimations(page)).toBeGreaterThan(0);
+  await expect.poll(() => runningAnimations(page)).toBeGreaterThan(0);
 
   await page.goto(story("components-motion--presenting"));
   await expect(page.getByTestId("mover")).toHaveCSS("transition-duration", "0.9s");
