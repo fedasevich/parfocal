@@ -3188,7 +3188,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover editing and locked fields.
   Size: S.
 
-- [ ] SET-011 · Workspace settings console
+- [x] SET-011 · Workspace settings console
   Workspace values for lock times, tiers, the default privacy mode, default classes, the default study template, and announcements, in the admin page (ADMIN-001).
   Done when permission tests restrict it to researchers with admin rights and changes are audited.
   Size: M.
