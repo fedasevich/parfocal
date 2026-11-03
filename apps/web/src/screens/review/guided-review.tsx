@@ -666,7 +666,7 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
         }}
       />
       {banner}
-      <div className="flex min-h-0 flex-1">
+      <div data-vt-target="" className="flex min-h-0 flex-1">
         <SlideStill
           view={view}
           camera={camera}

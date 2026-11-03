@@ -204,6 +204,31 @@
   scroll-behavior: auto !important;
 }
 
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--motion-slow);
+  animation-timing-function: var(--motion-ease-standard);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-base);
+}
+
+::view-transition-group(stage) {
+  animation-duration: var(--motion-slower);
+  animation-timing-function: var(--motion-ease-in-out);
+}
+
+:root[data-motion="reduced"]::view-transition-group(*),
+:root[data-motion="reduced"]::view-transition-old(*),
+:root[data-motion="reduced"]::view-transition-new(*) {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root,
   [data-motion] {

@@ -154,7 +154,9 @@ export function ViewerFrame({
           </ToolRailGroup>
         </ToolRail>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative flex min-h-0 min-w-0 flex-1">{children}</div>
+          <div data-vt-target="" className="relative flex min-h-0 min-w-0 flex-1">
+            {children}
+          </div>
           {below}
         </div>
         <SidePanel

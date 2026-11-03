@@ -107,6 +107,7 @@ export function CellsGrid({
               wording: claimHidden ? "hidden" : "words",
             }}
             outline={<CellOutline object={cell.object} white={claimHidden} />}
+            data-vt-source=""
             onClick={() => onPick(cell.object)}
             {...cropStyle(cell.object)}
           />

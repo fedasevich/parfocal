@@ -238,6 +238,7 @@ export function AllSlidesTab({
                 <tr
                   key={row.id}
                   aria-selected={on}
+                  data-vt-source=""
                   onClick={() => onSelect(row.id)}
                   className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}
                 >
