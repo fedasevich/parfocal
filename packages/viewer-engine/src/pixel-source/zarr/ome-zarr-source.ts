@@ -238,9 +238,11 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
   const url = absoluteUrl(request.url, request.baseUrl);
   const fetcher = request.fetch;
   const store = slideStore(
-    new zarr.FetchStore(
-      url.href,
-      fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) },
+    zarr.withRangeCoalescing(
+      new zarr.FetchStore(
+        url.href,
+        fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) },
+      ),
     ),
   );
   const root = await openRoot(store, request.index?.zarrVersion);

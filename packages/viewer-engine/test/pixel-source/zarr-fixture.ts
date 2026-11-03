@@ -11,6 +11,7 @@ export interface ZarrFixtureOptions {
   readonly chunk: number;
   readonly levels: number;
   readonly missing?: readonly (readonly [level: number, row: number, column: number])[];
+  readonly shard?: number;
 }
 
 export interface ZarrFixture {
@@ -99,6 +100,58 @@ async function put(path: string, content: string | Uint8Array): Promise<void> {
   await writeFile(path, content);
 }
 
+const littleEndian = { name: "bytes", configuration: { endian: "little" } };
+
+function shardingCodec(chunks: readonly number[]) {
+  return {
+    name: "sharding_indexed",
+    configuration: {
+      chunk_shape: chunks,
+      codecs: [littleEndian],
+      index_codecs: [littleEndian],
+      index_location: "end",
+    },
+  };
+}
+
+const emptyEntry = 2n ** 64n - 1n;
+
+async function writeShards(
+  options: ZarrFixtureOptions,
+  level: number,
+  folder: string,
+  width: number,
+  height: number,
+  rows: number,
+  columns: number,
+  shard: number,
+): Promise<void> {
+  for (let shardRow = 0; shardRow * shard < rows; shardRow++) {
+    for (let shardColumn = 0; shardColumn * shard < columns; shardColumn++) {
+      const parts: Uint8Array[] = [];
+      const index = new BigUint64Array(shard * shard * 2).fill(emptyEntry);
+      let offset = 0;
+      for (let inner = 0; inner < shard * shard; inner++) {
+        const row = shardRow * shard + Math.floor(inner / shard);
+        const column = shardColumn * shard + (inner % shard);
+        const skipped =
+          row >= rows ||
+          column >= columns ||
+          options.missing?.some(([l, r, c]) => l === level && r === row && c === column);
+        if (skipped) continue;
+        const bytes = chunkBytes(options, level, width, height, row, column);
+        parts.push(bytes);
+        index[inner * 2] = BigInt(offset);
+        index[inner * 2 + 1] = BigInt(bytes.length);
+        offset += bytes.length;
+      }
+      parts.push(new Uint8Array(index.buffer));
+      const key = [...(options.channels === 3 ? ["0"] : []), String(shardRow), String(shardColumn)];
+      await put(join(folder, "c", ...key), Buffer.concat(parts));
+    }
+  }
+}
+
 export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<ZarrFixture> {
   const root = await mkdtemp(join(tmpdir(), "parfocal-zarr-"));
   const attributes = { multiscales: multiscales(options), omero: omero(options) };
@@ -122,6 +175,9 @@ export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<Zar
     const chunks =
       options.channels === 3 ? [3, options.chunk, options.chunk] : [options.chunk, options.chunk];
     const folder = join(root, String(level));
+    const shardShape = chunks.map((size, axis) =>
+      axis === chunks.length - 1 || axis === chunks.length - 2 ? size * (options.shard ?? 1) : size,
+    );
     if (options.version === 2) {
       await put(
         join(folder, ".zarray"),
@@ -145,10 +201,13 @@ export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<Zar
           node_type: "array",
           shape,
           data_type: options.dtype,
-          chunk_grid: { name: "regular", configuration: { chunk_shape: chunks } },
+          chunk_grid: {
+            name: "regular",
+            configuration: { chunk_shape: options.shard === undefined ? chunks : shardShape },
+          },
           chunk_key_encoding: { name: "default", configuration: { separator: "/" } },
           fill_value: 0,
-          codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+          codecs: options.shard === undefined ? [littleEndian] : [shardingCodec(chunks)],
           attributes: {},
           dimension_names: options.channels === 3 ? ["c", "y", "x"] : ["y", "x"],
         }),
@@ -156,6 +215,10 @@ export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<Zar
     }
     const rows = Math.ceil(height / options.chunk);
     const columns = Math.ceil(width / options.chunk);
+    if (options.shard !== undefined) {
+      await writeShards(options, level, folder, width, height, rows, columns, options.shard);
+      continue;
+    }
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
         const skipped = options.missing?.some(
