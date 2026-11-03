@@ -1587,7 +1587,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-014 · Avatar, avatar stack, presence dot
+- [x] DS-014 · Avatar, avatar stack, presence dot
   A person is always an avatar with a name. A stack shows the names in a tooltip and a +N count (doc 38).
   Done when stories exist and colours come from the user profile.
   Depends on PROTO-011.
