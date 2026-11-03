@@ -1410,7 +1410,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   A slide opens fitted to the bounding box of its tissue mask with a small margin instead of the whole scan with its empty glass. `0` and the fit command use the same box. Without a mask the whole slide is fitted.
   Done when unit tests fit a slide with and without a mask, and a golden test opens a CMU-1.svs fixture with a mask fitted to its tissue.
   Depends on VIEW-020, INGEST-012. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
-- [ ] VIEW-049 · Deliver the tissue box to the viewer
+- [x] VIEW-049 · Deliver the tissue box to the viewer
   The tissue box that VIEW-048 (open fitted to the tissue) reads reaches the viewer with the slide, from the slide index or the slide record, instead of being passed by hand. A slide without a stored mask opens fitted to the whole scan.
   Done when a test opens a slide through the real opener and the camera is fitted to the stored box, and a slide with no box opens fitted to the whole scan.
   Depends on VIEW-048, INGEST-007. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).

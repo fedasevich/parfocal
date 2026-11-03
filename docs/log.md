@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-04
+
+- VIEW-049 (tissue box delivered to the viewer): the real opener createPixelSlideOpener takes a tissueUrl, fetches the tissue.json beside the slide while the pixel source opens and passes its box as the engine slide's tissue. A box passed by the caller still wins. The box is not in the tile index because ingest writes the index before it derives the tissue mask. A missing, broken, null or failed box opens fitted to the whole scan. Tested through the real opener with a synthetic TIFF. TODO: apps/web does not use the real opener yet, so CASE-016 wires tissueUrl.
+
 ## 2026-11-03
 
 - JOBS-003 (jobs tray): the tray from PROTO-005 already existed. Failed rows now read Failed in red and cancelled rows Cancelled in warn, where both showed Done in green, and import jobs get a link icon. Five Storybook component specs cover the ring and every row state, seven E2E tests open an upload, a paused run and a finished run from the tray. Only the newest upload opens its steps, older ones open their project. TODO: JobRow's progress bar takes the detail text as its name instead of the title, for JOBS-004 or an accessibility pass.
