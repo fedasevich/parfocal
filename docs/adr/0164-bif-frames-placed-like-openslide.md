@@ -1,4 +1,4 @@
-# XXXX. The browser reader places BIF camera frames on OpenSlide's even confidence-weighted pitch, not on the per-boundary layout
+# 0164. The browser reader places BIF camera frames on OpenSlide's even confidence-weighted pitch, not on the per-boundary layout
 
 - Date: 2026-11-03
 - Status: Accepted
