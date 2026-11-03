@@ -3318,7 +3318,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover routing by preference and tenant isolation.
   Built as [ADR 0074](adr/0074-notifications-as-rows-with-an-email-outbox.md) says. Realtime delivery waits for STACK-024.
 
-- [ ] NOTIF-002 · The bell
+- [x] NOTIF-002 · The bell
   The bell in the top bar opens a panel over the current page with For me, Mentions and Jobs, each with its unread count, Unread only, Mark all read and See all. Opening an item marks it read and goes to the exact place. The bell is the only place for mentions, and the sidebar has no Mentions entry.
   Done when component tests cover the filters, the counts, marking one read and marking all read, and E2E opens a mention from the bell on Home and lands on the thread.
   Depends on NOTIF-006. Refs mock: notifs/panel, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
