@@ -9,16 +9,16 @@
 
 ## Question
 
-Does reading slide bytes from the app origin remove every CORS preflight when the viewer sends its capability token in `Authorization`, and does the open in a browser stay within the 1 s budget INGEST-007 set at 100 ms RTT?
+Does reading slide bytes from the app origin remove every CORS preflight when the viewer sends its capability token in `Authorization`, and does the open in a browser stay within the 1 s budget INGEST-007 (sidecar tile index) set at 100 ms RTT?
 
 ## Method
 
 1. `pnpm --filter @parfocal/viewer-engine exec playwright test browser/same-origin.spec.ts`. The page loads from proxy A. In the same-origin arm the bytes come from proxy A under `/tiles/{slide}/`. In the cross-origin arm they come from proxy B, whose server answers preflights with `Access-Control-Allow-Origin` for the page, `Allow-Headers: authorization, range` and `Max-Age: 7200`.
-2. Each open uses a fresh slide id and token, so no URL repeats between opens. Each arm does one walk of the directory chain and then three opens with the sidecar. An open is timed from the first byte request to the decoded coarsest tile, as in INGEST-007. Every request goes through `TileAccess.fetch`, so it carries `Authorization: Bearer`.
+2. Each open uses a fresh slide id and token, so no URL repeats between opens. Each arm does one walk of the directory chain and then three opens with the sidecar. An open is timed from the first byte request to the decoded coarsest tile, as in INGEST-007 (sidecar tile index). Every request goes through `TileAccess.fetch`, so it carries `Authorization: Bearer`.
 3. The servers count `OPTIONS` requests and byte reads themselves, because Playwright answers preflights on its own when routing is on.
 4. The same spec with `SAME_ORIGIN_RTT_MS=200`, run once by hand.
 5. Before `TileAccess` asked for `cache: "no-store"`, the same-origin arm ran once with the browser's default cache mode.
-6. `node --test test/pixel-source/tile-index.test.ts` in `packages/viewer-engine` on the same machine on the same day, for the Node number INGEST-007 reported.
+6. `node --test test/pixel-source/tile-index.test.ts` in `packages/viewer-engine` on the same machine on the same day, for the Node number INGEST-007 (sidecar tile index) reported.
 
 ## Results
 
@@ -32,7 +32,7 @@ Times in milliseconds. Preflights and reads are for the whole arm of four opens.
 | 200 ms | other origin | 6341 | 2469, 2457, 2455 | 63 | 63 |
 | 100 ms | same origin, default cache mode | 1773 | 1354, 1371, 1367 | 0 | 55 |
 
-| RTT | INGEST-007 in Node | Node today | Chrome today, same origin |
+| RTT | INGEST-007 (sidecar tile index) in Node | Node today | Chrome today, same origin |
 |---|---|---|---|
 | 100 ms | walk 1329 to 1389, sidecar 354 to 392 | walk 1396, sidecar 376 | walk 1674 to 1675, sidecar 626 to 638 |
 | 200 ms | walk 2625, sidecar 692 | | walk 3281, sidecar 1237 to 1253 |
@@ -40,7 +40,7 @@ Times in milliseconds. Preflights and reads are for the whole arm of four opens.
 ## Interpretation
 
 - On the app origin no preflight was sent in any run, although every request carried `Authorization`. On another origin every one of the 63 reads was preflighted, despite `Access-Control-Max-Age: 7200`. The likely cause is that Chrome skips its preflight cache for a request that bypasses the HTTP cache. The other-origin arm was not run with the default cache mode, so this is not checked. The extra round trip per read doubles the open, 1.26 to 1.29 s against 0.63 s at 100 ms RTT, and the walk, 3.25 s against 1.67 s. POC doc 09 (four research claims, retested) found no preflight in the POC, because a bare `Range` header is CORS-safelisted. The token header is not, so for this platform the preflight is real and the same-origin path removes it.
-- The sidecar open in Chrome stays under the 1 s budget at 100 ms RTT, so the INGEST-007 budget holds in a browser. It costs about six round trips against about four in Node. The server log of one open shows the sidecar, the header, two waves of six and five directory reads, a second read inside the coarsest directory and the tile. Node reads through geotiff's 1 MiB block cache, which keeps the second read in memory, while the signed path injects `TileAccess.fetch` and reads exact ranges with no block cache, as decode workers need for tiles.
+- The sidecar open in Chrome stays under the 1 s budget at 100 ms RTT, so the INGEST-007 (sidecar tile index) budget holds in a browser. It costs about six round trips against about four in Node. The server log of one open shows the sidecar, the header, two waves of six and five directory reads, a second read inside the coarsest directory and the tile. Node reads through geotiff's 1 MiB block cache, which keeps the second read in memory, while the signed path injects `TileAccess.fetch` and reads exact ranges with no block cache, as decode workers need for tiles.
 - With the browser's default cache mode the same-origin sidecar open took 1.35 to 1.37 s. Chrome lets one request at a time write a URL's cache entry, so parallel ranges of one file queue behind each other. `TileAccess` now asks for `cache: "no-store"` unless the caller sets a cache mode, which brought the open to 0.63 s. The viewer keeps bytes in its own range cache, so the HTTP cache added nothing.
 
 ## Limits

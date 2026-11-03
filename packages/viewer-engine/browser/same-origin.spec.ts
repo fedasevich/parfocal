@@ -124,7 +124,7 @@ async function measure(page: Page, arm: Arm, bytesOrigin: string, gateway: Gatew
   return measured[arm];
 }
 
-test("bytes under the app origin carry the token with no preflight and open within the INGEST-007 budget", async ({
+test("bytes under the app origin carry the token with no preflight and open within the sidecar tile index budget", async ({
   page,
 }) => {
   const result = await measure(page, "same-origin", appProxy?.url ?? "", appGateway as Gateway);
