@@ -5,7 +5,6 @@ import {
   getGetMyAvailabilityMockHandler,
   getListNotificationPreferencesMockHandler,
   getListSessionsMockHandler,
-  getSetMyAvailabilityMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   AvailabilityChange,
@@ -34,6 +33,21 @@ export const toMyAvailability = (): MemberAvailability => ({
   until: myAvailability.status === "away" ? (myAvailability.until ?? null) : null,
   note: myAvailability.status === "away" ? (myAvailability.note ?? null) : null,
 });
+
+const allowedAvailability = (change: AvailabilityChange) =>
+  !(change.status === "available" && (change.until || change.note)) &&
+  !(change.until && new Date(change.until).getTime() <= Date.now());
+
+const invalidAvailability = () =>
+  HttpResponse.json(
+    {
+      type: "about:blank",
+      title: "Only away takes an end or a note, and the end must be ahead",
+      status: 400,
+      code: "invalid-availability",
+    },
+    { status: 400, headers: { "content-type": "application/problem+json" } },
+  );
 
 const hoursAfter = (at: string, hours: number) =>
   new Date(new Date(at).getTime() + hours * 3_600_000).toISOString();
@@ -80,9 +94,11 @@ export function settingsHandlers(): RequestHandler[] {
     getListSessionsMockHandler(() => toSessions()),
     getListNotificationPreferencesMockHandler(() => toPreferences()),
     getGetMyAvailabilityMockHandler(() => toMyAvailability()),
-    getSetMyAvailabilityMockHandler(async ({ request }) => {
-      myAvailability = (await request.json()) as AvailabilityChange;
-      return toMyAvailability();
+    http.put("*/api/me/availability", async ({ request }) => {
+      const change = (await request.json()) as AvailabilityChange;
+      if (!allowedAvailability(change)) return invalidAvailability();
+      myAvailability = change;
+      return HttpResponse.json(toMyAvailability());
     }),
     getEndOtherSessionsMockHandler(() => {
       const ended = othersEnded ? 0 : sessions.filter((session) => !session.current).length;
