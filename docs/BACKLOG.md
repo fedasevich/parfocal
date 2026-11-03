@@ -4432,7 +4432,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when an ADR records the sign-up and setup flow on top of IAM-002 and IAM-007.
   Size: S.
 
-- [ ] ONB-001 · Sign-in screens
+- [x] ONB-001 · Sign-in screens
   Parfocal with the workspace logo, single sign-on first when the email domain matches, email and password, a sign-in link with a code, and forgot password with a reset checked for length, reuse and leaks. A deep link lands on its target after sign-in.
   Done when E2E covers each path and the deep link.
   Depends on IAM-002. Refs mock: signin.
