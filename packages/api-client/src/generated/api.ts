@@ -3704,7 +3704,7 @@ export interface WorkspaceChoice {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 21 */
+  /** @maxItems 24 */
   locked?: string[];
 }
 

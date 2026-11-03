@@ -1,9 +1,10 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type AnnotationLayers, annotationLayersSchema } from "../draft/list-annotation-layers.ts";
 import type { TierMapping } from "../generated/api.ts";
+import { liveModelTiers } from "./console-handlers.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { slideByIndex } from "./scenario.ts";
-import { layersOnA1, modelTiers } from "./scenario-viewer-tools.ts";
+import { layersOnA1 } from "./scenario-viewer-tools.ts";
 
 export const toAnnotationLayers = (slideId: string): AnnotationLayers =>
   annotationLayersSchema.parse({
@@ -12,7 +13,7 @@ export const toAnnotationLayers = (slideId: string): AnnotationLayers =>
     new_shapes_go_to: slideId === slideByIndex(1).id ? "area2-tumor" : "",
   });
 
-export const toModelTiers = (): TierMapping[] => modelTiers.map((mapping) => ({ ...mapping }));
+export const toModelTiers = (): TierMapping[] => liveModelTiers();
 
 export const getListAnnotationLayersMockHandler = (overrideResponse?: AnnotationLayers) =>
   http.get<{ slideId: string }>("*/api/slides/:slideId/annotation-layers", ({ params }) =>

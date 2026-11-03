@@ -60,6 +60,12 @@ const pathosam = tierModel(
 );
 const hovernet = tierModel("hovernet", "HoVer-Net", "v0.9", "Every cell with a type, no regions");
 
+export const tierModels: { model: TierModel; makes: string[] }[] = [
+  { model: camelyon, makes: ["regions", "heatmap"] },
+  { model: pathosam, makes: ["regions", "cells"] },
+  { model: hovernet, makes: ["cells"] },
+];
+
 const mapped = (task: TierTask, tier: ModelTier, model: TierModel | null): TierMapping => ({
   task,
   tier,

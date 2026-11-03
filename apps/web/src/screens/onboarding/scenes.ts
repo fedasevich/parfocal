@@ -25,6 +25,7 @@ export const onboardingScenes = {
     "api",
     "audit",
     "security",
+    "settings",
     "tplnew",
     "tpledit",
     "addmodel",
@@ -50,6 +51,7 @@ export const adminSections = [
   "api",
   "audit",
   "security",
+  "settings",
 ] as const;
 
 export type AdminSection = (typeof adminSections)[number];

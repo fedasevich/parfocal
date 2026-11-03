@@ -28,11 +28,11 @@ import type {
   TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
+import { liveAnnouncements } from "./console-handlers.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
 import {
-  announcements,
   cases,
   myWorkSlideIds,
   notifications,
@@ -49,7 +49,7 @@ import {
   slideReviews,
   slides,
 } from "./scenario.ts";
-import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
+import { assignedTo, toProjectRef } from "./scenario-handlers.ts";
 import { fakeView } from "./view.ts";
 
 const taskByCode = (code: string): ScenarioReviewTask => {
@@ -464,7 +464,7 @@ export function workHandlers(): RequestHandler[] {
       const query = new URL(request.url).searchParams.get("q") ?? "";
       return { query, hits: searchScenario(query) };
     }),
-    getListAnnouncementsMockHandler(announcements.map(toAnnouncement)),
+    getListAnnouncementsMockHandler(() => liveAnnouncements()),
     getGetReviewOrderMockHandler(({ params }) =>
       reviewOrderOf(String(params.taskId), String(params.slideId)),
     ),

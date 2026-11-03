@@ -26,6 +26,7 @@ import {
 } from "./sections.tsx";
 import { StorageSection } from "./storage.tsx";
 import { editorTitle, type TemplateDraft, TemplateEditor, TemplatesSection } from "./templates.tsx";
+import { WorkspaceSettingsSection } from "./workspace-settings.tsx";
 
 type Props = {
   section: AdminSection;
@@ -170,6 +171,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
     api: <ApiSection notify={notify} />,
     audit: <AuditSection />,
     security: <SecuritySection />,
+    settings: <WorkspaceSettingsSection notify={notify} />,
   };
   return (
     <AdminShell section={section}>

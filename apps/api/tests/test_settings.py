@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Any
 
@@ -96,4 +97,77 @@ def test_another_workspace_sees_none_of_the_settings(api: ApiAs, database: str) 
     assert api(second["researcher"]).get(ME).json() == {
         "lab": {"values": {}, "locked": []},
         "personal": {},
+    }
+
+
+@pytest.mark.db
+def test_only_researchers_with_admin_rights_save_workspace_defaults(
+    api: ApiAs, database: str
+) -> None:
+    people = make_workspace(database, PEOPLE, admins={"admin"}).people
+    body = {"values": {"default_privacy_mode": "clinical", "default_classes": "pannuke"}}
+    assert api(people["researcher"]).put(WORKSPACE, json=body).status_code == 403
+    assert api(people["reviewer"]).put(WORKSPACE, json=body).status_code == 403
+    assert api(people["admin"]).get(ME).json()["lab"]["values"] == {}
+    saved = api(people["admin"]).put(WORKSPACE, json=body)
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["values"] == body["values"]
+    assert api(people["reviewer"]).get(ME).json()["lab"]["values"] == body["values"]
+
+
+@pytest.mark.db
+def test_the_default_study_template_must_be_the_workspaces_and_changes_are_audited(
+    api: ApiAs, database: str
+) -> None:
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    admin = api(workspace.people["admin"])
+    template = admin.get("/api/study-templates").json()[0]["id"]
+    nowhere = "00000000-0000-4000-8000-000000000000"
+    unknown = admin.put(WORKSPACE, json={"values": {"default_study_template": nowhere}})
+    assert problem(unknown) == (400, "unknown-study-template")
+    malformed = admin.put(WORKSPACE, json={"values": {"default_study_template": "latest"}})
+    assert problem(malformed) == (400, "invalid-setting")
+    unknown_mode = admin.put(WORKSPACE, json={"values": {"default_privacy_mode": "open"}})
+    assert problem(unknown_mode) == (400, "invalid-setting")
+    saved = admin.put(
+        WORKSPACE,
+        json={"values": {"default_study_template": template, "default_classes": "none"}},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["values"]["default_study_template"] == template
+    cleared = admin.put(WORKSPACE, json={"values": {"default_study_template": None}})
+    assert "default_study_template" not in cleared.json()["values"]
+    audited = owner(
+        database,
+        "SELECT details FROM audit_events "
+        f"WHERE tenant_id = '{workspace.tenant_id}' AND action = 'tenant.settings-changed' "
+        "ORDER BY seq",
+    )
+    assert len(audited) == 2
+    assert json.loads(str(audited[0][0]))["keys"] == ["default_classes", "default_study_template"]
+
+
+@pytest.mark.db
+def test_every_console_write_needs_admin_rights_and_is_audited(api: ApiAs, database: str) -> None:
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    people = workspace.people
+    writes = [
+        ("put", "/api/tenant/session-policy", {"idle_lock_minutes": 30, "session_hours": 8}),
+        ("put", "/api/tenant/model-tiers/tumor/good", {"name": "camelyon-tumor"}),
+        ("post", "/api/announcements", {"kind": "change", "text": "Rounds move to 09:00"}),
+    ]
+    for method, path, body in writes:
+        for who in ("researcher", "reviewer"):
+            refused = getattr(api(people[who]), method)(path, json=body)
+            assert refused.status_code == 403, (path, who)
+        allowed = getattr(api(people["admin"]), method)(path, json=body)
+        assert allowed.status_code in (200, 201), (path, allowed.text)
+    actions = owner(
+        database,
+        f"SELECT action FROM audit_events WHERE tenant_id = '{workspace.tenant_id}' ORDER BY seq",
+    )
+    assert {row[0] for row in actions} >= {
+        "tenant.session-policy-changed",
+        "model-tier.set",
+        "announcement.posted",
     }

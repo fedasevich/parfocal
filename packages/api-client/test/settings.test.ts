@@ -1,15 +1,29 @@
 import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
-import { fakeApiHandlers, resetSettingsActions, scenarioReview } from "../src/fake/index.ts";
 import {
+  fakeApiHandlers,
+  resetConsoleActions,
+  resetSettingsActions,
+  scenarioReview,
+} from "../src/fake/index.ts";
+import {
+  createAnnouncement,
+  endAnnouncement,
   endOtherSessions,
   getGetMySettingsQueryOptions,
+  getMySettingLayers,
   getMySettings,
   getSessionPolicy,
   isDraftMeta,
+  listAnnouncements,
+  listModelTiers,
   listNotificationPreferences,
   listSessions,
+  resetModelTier,
+  setModelTier,
+  setWorkspaceSettings,
+  updateSessionPolicy,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -22,7 +36,10 @@ before(() => {
     patchedFetch(new URL(input instanceof Request ? input.url : input, "http://app.test"), init);
 });
 
-afterEach(() => resetSettingsActions());
+afterEach(() => {
+  resetSettingsActions();
+  resetConsoleActions();
+});
 
 after(() => {
   server.close();
@@ -72,4 +89,65 @@ test("notification preferences read email, bell or quiet per kind", async () => 
   const mention = preferences.data.find((item) => item.kind === "mention");
   assert.deepEqual([assigned?.email, assigned?.in_app], [true, true]);
   assert.deepEqual([mention?.email, mention?.in_app], [false, true]);
+});
+
+test("the workspace keeps its defaults and locks, and refuses a lock without a value", async () => {
+  const saved = await setWorkspaceSettings({
+    values: { default_privacy_mode: "clinical", default_classes: "pannuke" },
+    locked: ["default_privacy_mode"],
+  });
+  assert.equal(saved.status, 200);
+  const layers = await getMySettingLayers();
+  if (layers.status !== 200) throw new Error("no layers");
+  assert.deepEqual(layers.data.lab.values, {
+    default_privacy_mode: "clinical",
+    default_classes: "pannuke",
+  });
+  assert.deepEqual(layers.data.lab.locked, ["default_privacy_mode"]);
+  await assert.rejects(setWorkspaceSettings({ values: {}, locked: ["default_study_template"] }), {
+    status: 400,
+  });
+  await assert.rejects(setWorkspaceSettings({ values: { lock_after_minutes: 9000 } }), {
+    status: 400,
+  });
+});
+
+test("lock times, tiers and announcements change on save and come back on reset", async () => {
+  const policy = await updateSessionPolicy({
+    idle_lock_minutes: 30,
+    session_hours: 10,
+    emergency_hours: 4,
+  });
+  assert.equal(policy.status, 200);
+  const read = await getSessionPolicy();
+  if (read.status === 200) assert.equal(read.data.idle_lock_minutes, 30);
+  const tier = await setModelTier("tumor", "good", { name: "camelyon-tumor" });
+  assert.equal(tier.status, 200);
+  await assert.rejects(setModelTier("tumor", "fast", { name: "hovernet" }), { status: 409 });
+  const tiers = await listModelTiers();
+  if (tiers.status === 200) {
+    const good = tiers.data.find((item) => item.task === "tumor" && item.tier === "good");
+    assert.deepEqual([good?.model?.name, good?.set_by_lab], ["camelyon-tumor", true]);
+  }
+  await resetModelTier("tumor", "good");
+  const after = await listModelTiers();
+  if (after.status === 200) {
+    assert.equal(
+      after.data.find((item) => item.task === "tumor" && item.tier === "good")?.model,
+      null,
+    );
+  }
+  const posted = await createAnnouncement({ kind: "change", text: "Rounds move to 09:00" });
+  assert.equal(posted.status, 201);
+  if (posted.status !== 201) return;
+  const listed = await listAnnouncements();
+  if (listed.status === 200) assert.equal(listed.data[0]?.text, "Rounds move to 09:00");
+  await endAnnouncement(posted.data.id);
+  const remaining = await listAnnouncements();
+  if (remaining.status === 200) {
+    assert.equal(
+      remaining.data.some((item) => item.id === posted.data.id),
+      false,
+    );
+  }
 });

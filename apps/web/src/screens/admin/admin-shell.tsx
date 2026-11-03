@@ -61,6 +61,12 @@ export const adminSectionList: {
     icon: "shield",
     sub: "Sign-in, sessions and where data is kept",
   },
+  {
+    key: "settings",
+    label: "Workspace settings",
+    icon: "sliders",
+    sub: "Lock times, model tiers, what new work starts with and announcements",
+  },
 ];
 
 export const adminHref = (section: AdminSection) => `/admin?section=${section}`;

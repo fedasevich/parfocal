@@ -72,6 +72,7 @@ const scenes: { path: string; heading: string; shows: string }[] = [
     shows: "Rejected a call with a bad signature",
   },
   { path: "/admin?scene=security", heading: "Security", shows: "Lock after inactivity" },
+  { path: "/admin?scene=settings", heading: "Workspace settings", shows: "Lock times" },
   { path: "/admin?scene=tplnew", heading: "", shows: "Opens in the editor." },
   { path: "/admin?scene=tpledit", heading: "CAMELYON rounds", shows: "Back to the library" },
   { path: "/admin?scene=addmodel", heading: "Connect your own model", shows: "Test connection" },
@@ -162,7 +163,7 @@ test("admin is Daniel's, with its own sections and the app's top bar", async ({ 
   await page.goto("/admin");
   await expect(badge(page)).toContainText("viewing as Daniel Hruška");
   const nav = page.getByRole("navigation", { name: "Admin sections" });
-  await expect(nav.getByRole("link")).toHaveCount(10);
+  await expect(nav.getByRole("link")).toHaveCount(11);
   await nav.getByRole("link", { name: "People and roles" }).click();
   await expect(page).toHaveURL(/section=people/);
   await expect(page.getByRole("row", { name: /ondrej@fnvltava.example/ })).toContainText(
@@ -259,4 +260,41 @@ test("Connect your own model opens the flow page from AI models", async ({ page 
   await page.getByRole("button", { name: "Connect your own model" }).click();
   await expect(page).toHaveURL(/scene=addmodel/);
   await expect(page.getByRole("heading", { name: "Where it runs" })).toBeVisible();
+});
+
+test("the workspace settings console saves lock times, defaults, tiers and announcements", async ({
+  page,
+}) => {
+  await page.goto("/admin?section=settings");
+  await expect(page.getByRole("combobox", { name: "Lock after inactivity" })).toContainText(
+    "15 minutes",
+  );
+  await page.getByRole("combobox", { name: "Lock after inactivity" }).click();
+  await page.getByRole("option", { name: "30 minutes" }).click();
+  await expect(page.getByText("Screens lock after 30 minutes without activity.")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Lock after inactivity" })).toContainText(
+    "30 minutes",
+  );
+
+  await page.getByRole("radio", { name: "Clinical" }).click();
+  await expect(page.getByText("New projects start clinical.")).toBeVisible();
+  await page.getByRole("combobox", { name: "Classes of new projects" }).click();
+  await page.getByRole("option", { name: "PanNuke" }).click();
+  await expect(page.getByRole("combobox", { name: "Classes of new projects" })).toContainText(
+    "PanNuke",
+  );
+  await page.getByRole("combobox", { name: "Study template of new tasks" }).click();
+  await page.getByRole("option").nth(1).click();
+  await expect(page.getByText("New review tasks start from that template.")).toBeVisible();
+
+  const tumorGood = page.getByRole("combobox", { name: "Tumor regions, Good" });
+  await tumorGood.click();
+  await page.getByRole("option", { name: "CAMELYON tumor model" }).click();
+  await expect(tumorGood).toContainText("CAMELYON tumor model · v1.0");
+
+  await page.getByRole("textbox", { name: "Announcement text" }).fill("Rounds move to 09:00");
+  await page.getByRole("button", { name: "Post" }).click();
+  await expect(page.getByText("Rounds move to 09:00").first()).toBeVisible();
+  await page.getByRole("button", { name: "End: Rounds move to 09:00" }).click();
+  await expect(page.getByRole("button", { name: "End: Rounds move to 09:00" })).toHaveCount(0);
 });

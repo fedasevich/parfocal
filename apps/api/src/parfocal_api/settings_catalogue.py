@@ -1,5 +1,6 @@
 import json
 import sys
+import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -26,6 +27,7 @@ class Kind(StrEnum):
     CHOICE = "choice"
     SWITCH = "switch"
     WHOLE = "whole"
+    ID = "id"
 
 
 LAB = frozenset({Layer.LAB})
@@ -59,6 +61,11 @@ class Setting:
                     return f"is at least {self.minimum}"
                 if self.maximum is not None and value > self.maximum:
                     return f"is at most {self.maximum}"
+            case Kind.ID:
+                try:
+                    uuid.UUID(value if isinstance(value, str) else "")
+                except ValueError:
+                    return "is an identifier"
         return None
 
 
@@ -72,6 +79,10 @@ def switch(key: str, default: bool, layers: frozenset[Layer]) -> Setting:
 
 def whole(key: str, default: int, low: int, high: int, layers: frozenset[Layer]) -> Setting:
     return Setting(key, Kind.WHOLE, default, layers, minimum=low, maximum=high)
+
+
+def identifier(key: str, layers: frozenset[Layer]) -> Setting:
+    return Setting(key, Kind.ID, "", layers)
 
 
 CATALOGUE: tuple[Setting, ...] = (
@@ -96,6 +107,9 @@ CATALOGUE: tuple[Setting, ...] = (
     switch("initials_while_sharing", True, PERSONAL),
     whole("lock_after_minutes", 15, 1, 240, LAB),
     switch("patient_banner", True, LAB),
+    choice("default_privacy_mode", "de-identified", ("de-identified", "clinical"), LAB),
+    choice("default_classes", "none", ("none", "sentinel-node", "pannuke"), LAB),
+    identifier("default_study_template", LAB),
 )
 
 BY_KEY: Mapping[str, Setting] = {setting.key: setting for setting in CATALOGUE}
@@ -109,6 +123,8 @@ def ts_type(setting: Setting) -> str:
             return "boolean"
         case Kind.WHOLE:
             return "number"
+        case Kind.ID:
+            return "string"
 
 
 def entry(setting: Setting) -> dict[str, Any]:
@@ -133,7 +149,7 @@ def render() -> str:
         f"export type SettingValues = {{\n{fields}\n}};\n\n"
         "export type SettingKey = keyof SettingValues;\n\n"
         "export type SettingEntry = {\n"
-        '  kind: "choice" | "switch" | "whole";\n'
+        '  kind: "choice" | "switch" | "whole" | "id";\n'
         "  default: string | boolean | number;\n"
         "  layers: Layer[];\n"
         "  options?: string[];\n"
