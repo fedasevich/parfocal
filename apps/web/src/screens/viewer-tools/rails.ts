@@ -12,6 +12,8 @@ export const reviewRail: RailTool[][] = [
   [{ tool: "smart", icon: "smart", label: "Smart select", action: "tsmart", ai: true }],
 ];
 
+export const reviewRailKeys: Record<string, string> = { annotate: "annotate", aitools: "smart" };
+
 export const annotateRail: RailTool[][] = [
   [
     { tool: "select", icon: "select", label: "Select", action: "tselect" },

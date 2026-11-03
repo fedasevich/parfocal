@@ -3,11 +3,13 @@ import { test } from "node:test";
 import { keyRegistry } from "../src/keys/catalogue.ts";
 import { keyLabeller } from "../src/keys/key-labels.ts";
 import {
+  railKeyIds,
+  railToolOf,
   reviewToolActions,
   routeReviewTool,
   shownReviewTool,
 } from "../src/screens/review/review-rail.ts";
-import { reviewRail } from "../src/screens/viewer-tools/rails.ts";
+import { reviewRail, reviewRailKeys } from "../src/screens/viewer-tools/rails.ts";
 
 const label = keyLabeller(keyRegistry.defs, undefined);
 const rail = reviewRail.flat();
@@ -58,4 +60,13 @@ test("the rail shows hand while the slide is idle and select otherwise", () => {
   assert.equal(shownReviewTool(undefined, false), "select");
   assert.equal(shownReviewTool(undefined, true), "hand");
   assert.equal(shownReviewTool("ruler", true), "ruler");
+});
+
+test("P opens Annotate and Shift+A picks smart select from the review rail", () => {
+  assert.deepEqual(railKeyIds(reviewRail, reviewRailKeys), ["annotate", "aitools"]);
+  const press = (action: string) =>
+    railToolOf(reviewRail, { action, phase: "press" }, reviewRailKeys);
+  assert.equal(press("annotate"), "annotate");
+  assert.equal(press("aitools"), "smart");
+  assert.deepEqual(routeReviewTool("annotate"), { kind: "annotate", tool: undefined });
 });

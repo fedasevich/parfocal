@@ -62,6 +62,7 @@ type ViewerFrameProps = {
   counts: SlideCounts | undefined;
   tool: string;
   railGroups?: RailTool[][] | undefined;
+  railKeys?: Record<string, string> | undefined;
   onToolChange?: ((tool: string) => void) | undefined;
   onCompare?: (() => void) | undefined;
   overlay?: ReactNode;
@@ -94,12 +95,13 @@ export function ViewerFrame({
   progressSub,
   scene,
   railGroups = [tools],
+  railKeys,
   onToolChange,
   onCompare,
   overlay,
 }: ViewerFrameProps) {
   const panelKey = useKeyLabel("panel");
-  useRailKeys(railGroups, onToolChange);
+  useRailKeys(railGroups, onToolChange, railKeys);
   return (
     <main
       className="flex h-dvh min-w-0 flex-col bg-page text-fg"

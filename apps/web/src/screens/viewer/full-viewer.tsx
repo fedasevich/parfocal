@@ -92,7 +92,7 @@ import {
 import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
 import { peekSpot } from "../viewer-tools/peek-model.ts";
-import { reviewRail } from "../viewer-tools/rails.ts";
+import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
@@ -400,7 +400,7 @@ function ViewerBody({
       void navigate({
         to: "/projects/$projectId/slides/$slideId/annotate",
         params: { projectId, slideId },
-        search: { task: session.taskId, tool: route.tool },
+        search: { task: session.taskId, ...(route.tool ? { tool: route.tool } : {}) },
       });
       return;
     }
@@ -986,6 +986,7 @@ function ViewerBody({
         counts={counts}
         tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
+        railKeys={reviewRailKeys}
         panelHead={
           nothing ? null : (
             <AnalysisCards
