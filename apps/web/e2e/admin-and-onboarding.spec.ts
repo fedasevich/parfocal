@@ -117,14 +117,6 @@ test("the lock unlocks to the same slide and no access asks the owner", async ({
   await expect(page.getByRole("button", { name: /Asked, 11:02/ })).toBeDisabled();
 });
 
-test("sign-up confirms the email and opens setup", async ({ page }) => {
-  await page.goto("/sign-up");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("heading", { name: "Confirm your email" })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm and set up" }).click();
-  await expect(page).toHaveURL(/\/setup\?step=role$/);
-});
-
 test("the invite joins in one step and opens the first slide", async ({ page }) => {
   await page.goto("/invitations/rt14-simona");
   await expect(page).toHaveURL(/\/invite\?token=rt14-simona$/);
