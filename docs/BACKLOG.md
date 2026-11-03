@@ -2049,11 +2049,17 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs kit W18.
   Size: M.
 
-- [ ] CASE-006 · AI state: no tumor flagged
+- [x] CASE-006 · AI state: no tumor flagged
   "Needs review" chip (never "negative"), systematic scan path at 10× in reading order, coverage bar, start systematic scan.
   Done when tests confirm the path covers the tissue mask and the scan advances one field per step.
   Refs kit W19.
   Size: M.
+
+- [ ] CASE-016 · Systematic scan on the real tissue mask
+  CASE-006 (AI state: no tumor flagged) steps a 10x field through a tissue mask traced from the mock `overview.jpg` on a 50 pixel grid (apps/web/src/screens/review/tissue-mask.ts). Serve the slide's real tissue mask from the API (VIEW-049 delivers the tissue box) and size the 10x field from the real viewport.
+  Done when a browser test on a real slide steps the scan with ] and reaches full coverage of the stored mask.
+  Depends on CASE-006, VIEW-049.
+  Size: S.
 
 - [ ] CASE-007 · Systematic scan mode
   Step field by field along the serpentine path with a key, marking seen tissue.
