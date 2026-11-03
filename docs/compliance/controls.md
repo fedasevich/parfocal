@@ -37,8 +37,8 @@ This matrix maps the GDPR articles, the HIPAA Security Rule safeguards and the I
 | Art. 28 | Processor | SEC-021 (DPA template, subprocessor list), SEC-020 (subprocessor BAAs) | [dpa-template.md](dpa-template.md) and [subprocessors.md](subprocessors.md). |
 | Art. 30 | Records of processing activities | SEC-021 (records of processing), SEC-001 (data map) | [records-of-processing.md](records-of-processing.md). |
 | Art. 32 | Security of processing | SEC-002 (encryption), SEC-004 (field encryption), SEC-003 (audit log), IAM-004 (row-level security), SEC-014 (backups), SEC-015 (vulnerability management), SEC-022 (penetration test) | See the ISO tables for the full technical list. |
-| Art. 33 | Notification of a personal data breach to the supervisory authority | SEC-018 (incident response runbook) | |
-| Art. 34 | Communication of a personal data breach to the data subject | SEC-018 (incident response runbook) | |
+| Art. 33 | Notification of a personal data breach to the supervisory authority | SEC-018 (incident response runbook) | [incident-response.md](incident-response.md) and the [register](incident-register.md). |
+| Art. 34 | Communication of a personal data breach to the data subject | SEC-018 (incident response runbook) | [incident-response.md](incident-response.md). |
 | Art. 35 | Data protection impact assessment | SEC-021 (DPIA for AI-assisted diagnosis) | [dpia-ai-results-review.md](dpia-ai-results-review.md), a draft until counsel signs it. |
 | Art. 36 | Prior consultation | SEC-021 (DPIA) | Needed only if the DPIA shows high residual risk. |
 | Art. 37 | Designation of the data protection officer | Policy | Decision for the company. TODO in [records-of-processing.md](records-of-processing.md). |
@@ -149,7 +149,7 @@ Section 164.306 sets the general rules and has no row. Each row is a standard or
 | 5.24 | Information security incident management planning and preparation | SEC-018 (incident response runbook) | |
 | 5.25 | Assessment and decision on information security events | SEC-018 (incident response runbook) | |
 | 5.26 | Response to information security incidents | SEC-018 (incident response runbook) | |
-| 5.27 | Learning from information security incidents | SEC-018 (tabletop exercise) | |
+| 5.27 | Learning from information security incidents | SEC-018 (tabletop exercise) | [tabletop-exercise.md](tabletop-exercise.md), not run yet. |
 | 5.28 | Collection of evidence | SEC-003 (audit log), SEC-024 (signed audit export) | |
 | 5.29 | Information security during disruption | OPS-008 (disaster recovery), SEC-019 (continuity policy) | |
 | 5.30 | ICT readiness for business continuity | OPS-008 (disaster recovery), SEC-014 (backups), OPS-007 (alerting) | |
