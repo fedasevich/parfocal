@@ -19,7 +19,7 @@ This matrix maps the GDPR articles, the HIPAA Security Rule safeguards and the I
 |---|---|---|---|
 | Art. 5 | Principles relating to processing of personal data | SEC-001 (data classification), SEC-006 (retention policies), SEC-004 (field encryption), SEC-003 (audit log), SEC-021 (GDPR documentation) | Covers minimisation, storage limitation, integrity and accountability. |
 | Art. 6 | Lawfulness of processing | SEC-021 (GDPR documentation) | The tenant chooses and records the legal basis. The DPA template states it. |
-| Art. 7 | Conditions for consent | EXP-007 (analytics consent and opt-out), SEC-021 (consent banner) | Applies to analytics and cookies. Care of patients does not rely on consent. |
+| Art. 7 | Conditions for consent | EXP-007 (analytics consent and opt-out), SEC-021 (cookie and consent policy) | Analytics store nothing on the device and rely on legitimate interest with an opt-out, so no banner ([ADR 0171](../adr/0171-analytics-without-device-storage.md), [cookies-and-storage.md](cookies-and-storage.md)). Care of patients does not rely on consent. |
 | Art. 9 | Processing of special categories of personal data | SEC-001 (data classification), SEC-004 (field encryption), SEC-008 (pseudonymised research), SEC-021 (DPIA) | Health data is special category data. |
 | Art. 12 | Transparent information and modalities for data subjects | SEC-007 (access and erasure workflows), SEC-021 (GDPR documentation) | Response deadlines are a tenant process that the export workflow supports. |
 | Art. 13 | Information to be provided where data are collected from the data subject | Gap | Privacy notice for platform users. See the gap list. |
@@ -34,20 +34,20 @@ This matrix maps the GDPR articles, the HIPAA Security Rule safeguards and the I
 | Art. 22 | Automated individual decision-making, including profiling | REPORT-008 (sign-out), REPORT-007 (AI disclosure), REPORT-006 (before-signing checklist), SEC-021 (DPIA) | A pathologist signs every report, so AI output is advice only. |
 | Art. 24 | Responsibility of the controller | SEC-021 (GDPR documentation), SEC-019 (ISO policies) | |
 | Art. 25 | Data protection by design and by default | SEC-001 (data classification), SEC-004 (field encryption), SEC-009 (label and macro handling), SEC-010 (PHI-safe telemetry), IAM-004 (row-level security) | |
-| Art. 28 | Processor | SEC-021 (DPA template, subprocessor list), SEC-020 (subprocessor BAAs) | |
-| Art. 30 | Records of processing activities | SEC-021 (records of processing), SEC-001 (data map) | |
+| Art. 28 | Processor | SEC-021 (DPA template, subprocessor list), SEC-020 (subprocessor BAAs) | [dpa-template.md](dpa-template.md) and [subprocessors.md](subprocessors.md). |
+| Art. 30 | Records of processing activities | SEC-021 (records of processing), SEC-001 (data map) | [records-of-processing.md](records-of-processing.md). |
 | Art. 32 | Security of processing | SEC-002 (encryption), SEC-004 (field encryption), SEC-003 (audit log), IAM-004 (row-level security), SEC-014 (backups), SEC-015 (vulnerability management), SEC-022 (penetration test) | See the ISO tables for the full technical list. |
 | Art. 33 | Notification of a personal data breach to the supervisory authority | SEC-018 (incident response runbook) | |
 | Art. 34 | Communication of a personal data breach to the data subject | SEC-018 (incident response runbook) | |
-| Art. 35 | Data protection impact assessment | SEC-021 (DPIA for AI-assisted diagnosis) | |
+| Art. 35 | Data protection impact assessment | SEC-021 (DPIA for AI-assisted diagnosis) | [dpia-ai-results-review.md](dpia-ai-results-review.md), a draft until counsel signs it. |
 | Art. 36 | Prior consultation | SEC-021 (DPIA) | Needed only if the DPIA shows high residual risk. |
-| Art. 37 | Designation of the data protection officer | Policy | Decision for the company. Record it in SEC-021. |
+| Art. 37 | Designation of the data protection officer | Policy | Decision for the company. TODO in [records-of-processing.md](records-of-processing.md). |
 | Art. 44 | General principle for transfers | SEC-005 (data residency), SEC-021 (subprocessor list) | |
 | Art. 45 | Transfers on the basis of an adequacy decision | SEC-005 (data residency), SEC-021 (subprocessor list) | |
 | Art. 46 | Transfers subject to appropriate safeguards | SEC-021 (DPA template, subprocessor list), SEC-005 (data residency) | Standard contractual clauses go in the subprocessor contracts. |
 | Art. 47 | Binding corporate rules | Policy | Not expected to apply. |
 | Art. 48 | Transfers or disclosures not authorised by Union law | Policy | Procedure for foreign access requests. Add it to the contacts in SEC-018 (incident response runbook). |
-| Art. 49 | Derogations for specific situations | Policy | Not relied on. Record that in SEC-021. |
+| Art. 49 | Derogations for specific situations | Policy | Not relied on, as [subprocessors.md](subprocessors.md) records. |
 
 ## HIPAA Security Rule
 
