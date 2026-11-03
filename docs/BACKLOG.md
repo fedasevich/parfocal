@@ -523,13 +523,24 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
 
-- [ ] FOUND-025 · Refresh the tooling pins
+- [x] FOUND-025 · Faster and less wasteful CI
+  On 2026-11-03 one ci run took 46 min, because the five browser suites ran one after another and the db job took 30 min, and docs-only commits ran everything. Run the browser suites as a matrix of one job per package, skip db, formats, e2e and browser when the commits since the last green run on main touch only docs and Markdown (docs/design stays code, because the e2e serves it), cancel a running ci on main when a newer push arrives, and find why the db job is slow.
+  Done when actionlint passes on .github/workflows/ci.yml, a docs-only push runs lint, typecheck and test and passes ci-ok with the heavy jobs skipped, a code push runs every job, and the db job time and its cause are written in the log.
+  Size: M.
+
+- [ ] FOUND-026 · Web browser tests against a built app
+  The apps/web Playwright suite runs on the Vite dev server, where one page load fetches about 340 modules, against 25 from a production build that loads about ten times faster. The fake API and the developer pages start only under `import.meta.env.DEV`, so a build mode for tests needs its own public flag, preview server branches for the dev-only Vite plugins and a guard that a production build has neither. Needs an ADR, because it changes how the app is built for tests.
+  Done when the web suite runs against `vite build --mode e2e` and `vite preview` in CI, a guard test fails if a production build contains the fake API or a developer route, and the ADR is written.
+  Depends on FOUND-025.
+  Size: L.
+
+- [ ] FOUND-027 · Refresh the tooling pins
   [The tooling re-check](results/2026-11-03-tooling-recheck.md) found Ruff 0.17 and uv 0.13 outside the ranges in `pyproject.toml` and the exact JavaScript pins (pnpm, Turborepo, Biome, Oxlint, oxlint-tsgolint, Lefthook, commitlint, Playwright) behind by minor or patch releases. Raise them together, widen `uv_build` to 0.13, fix what new Biome and Ruff rules report, and keep TypeScript on 7.
   Done when the lockfiles carry the new versions and `pnpm verify` and the golden-image suite are green.
   Depends on FOUND-000.
   Size: S.
 
-- [ ] FOUND-026 · CI runner image for Ubuntu 26.04
+- [ ] FOUND-028 · CI runner image for Ubuntu 26.04
   GitHub moves `ubuntu-latest` from Ubuntu 24.04 to 26.04 between 2026-10-19 and 2026-11-19, and every CI job uses `ubuntu-latest`. Run the workflows once on `ubuntu-26.04`, then either move to it explicitly or pin `ubuntu-24.04` until the golden-image suite passes on 26.04, so the image changes only on purpose.
   Done when every job names an explicit Ubuntu version and CI is green on it.
   Depends on FOUND-000.
@@ -943,7 +954,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done in [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md): STACK-039 stands, and STACK-026 stands with tifffile reading OME-TIFF and the worker's own OME-Zarr reader.
   Size: S.
 
-- [ ] INGEST-001 · Upload API with presigned multipart
+- [x] INGEST-001 · Upload API with presigned multipart
   Create upload, get part URLs, list parts, complete, abort. Uploads land in a tenant-scoped quarantine prefix. Per [ADR 0116](adr/0116-resumable-uploads-with-s3-multipart-and-uppy.md) the routes follow Uppy's Companion S3 contract, the browser only sends part `PUT` requests to R2, and the API does create, ListParts with pagination, complete and abort itself, because R2 cannot presign POSTs. The API chooses the key `t/{tenant}/quarantine/{upload}/{name}` and the part size (16 MiB, grown to stay within 10,000 parts), stores both with an upload record, signs one part URL at a time for 15 minutes, and refuses a completion unless the parts run from 1 without gaps and every part but the last has the stored size, since MinIO accepts uneven parts that R2 refuses. A lookup by name, size and last-modified time returns the caller's open upload so a reloaded page can resume. A job aborts uploads with no new part for 24 hours, and an R2 lifecycle rule aborts incomplete uploads under the quarantine prefix after 1 day.
   Done when API tests cover the lifecycle, size limits, the equal part size check, ListParts beyond one page, the open upload lookup, the stale upload job, and that tenant B can neither sign, list, complete nor abort tenant A's upload, and INGEST-028 has confirmed the R2 behaviour the routes rely on.
   Depends on STACK-039. Refs `packages/upload-spike`.

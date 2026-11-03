@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { inPart, parts } from "./parts.ts";
 
 const viewer = (page: Page) => page.getByTestId("full-viewer");
 const panel = (page: Page) => page.getByRole("complementary", { name: "Side panel" });
@@ -56,26 +57,30 @@ const shows: Record<string, string> = {
   "Full viewer · a clinical case": "No review task asks about A1",
 };
 
-test("every full viewer and Visualize scene opens from the prototype index", async ({ page }) => {
-  test.setTimeout(120_000);
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  page.on("response", (response) => {
-    const path = new URL(response.url()).pathname;
-    if (response.status() >= 400 && path !== "/favicon.ico") {
-      errors.push(`${response.status()} ${path}`);
+for (const part of parts) {
+  test(`every full viewer and Visualize scene opens from the prototype index, part ${part}`, async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("response", (response) => {
+      const path = new URL(response.url()).pathname;
+      if (response.status() >= 400 && path !== "/favicon.ico") {
+        errors.push(`${response.status()} ${path}`);
+      }
+    });
+    const links = await viewerLinks(page);
+    expect(links.map((link) => link.name).sort()).toEqual(Object.keys(shows).sort());
+    for (const { name, href } of inPart(links, part)) {
+      await page.goto(href);
+      await expect(viewer(page), name).toBeVisible();
+      await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
+      await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
     }
+    expect(errors).toEqual([]);
   });
-  const links = await viewerLinks(page);
-  expect(links.map((link) => link.name).sort()).toEqual(Object.keys(shows).sort());
-  for (const { name, href } of links) {
-    await page.goto(href);
-    await expect(viewer(page), name).toBeVisible();
-    await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
-    await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
-  }
-  expect(errors).toEqual([]);
-});
+}
 
 test("a row click opens the object, an answer lands in the list and Whole slide goes back", async ({
   page,

@@ -78,19 +78,16 @@ const scenes: { path: string; heading: string; shows: string }[] = [
   { path: "/admin?scene=addmodel", heading: "Connect your own model", shows: "Test connection" },
 ];
 
-test("every sign-in, sign-up, invite, setup and admin scene opens on fake data", async ({
-  page,
-}) => {
-  test.setTimeout(90_000);
-  for (const { path, heading, shows } of scenes) {
+for (const { path, heading, shows } of scenes) {
+  test(`${path} opens on fake data`, async ({ page }) => {
     await page.goto(path);
     if (heading) {
       await expect(page.getByRole("heading", { name: heading, exact: true }).first()).toBeVisible();
     }
     await expect(page.getByText(shows).first()).toBeVisible();
     await expect(badge(page)).toContainText("Fake data");
-  }
-});
+  });
+}
 
 test("sign-in moves between its scenes and lands on the deep link", async ({ page }) => {
   await page.goto("/sign-in");

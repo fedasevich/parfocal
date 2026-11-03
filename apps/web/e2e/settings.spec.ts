@@ -57,13 +57,13 @@ const settingsScenes: { scene: string; section: string; title: string; shows: st
 const dialog = (page: import("@playwright/test").Page) =>
   page.getByRole("dialog", { name: "Settings" });
 
-test("every settings and shortcuts scene opens on fake data", async ({ page }) => {
-  for (const { scene, section, title, shows } of settingsScenes) {
+for (const { scene, section, title, shows } of settingsScenes) {
+  test(`the ${section} ${scene} settings scene opens on fake data`, async ({ page }) => {
     await page.goto(`/settings/${section}?scene=${scene}`);
     await expect(dialog(page).getByRole("heading", { name: title, level: 2 })).toBeVisible();
     await expect(dialog(page).getByText(shows).first()).toBeVisible();
-  }
-});
+  });
+}
 
 test("every developer scene opens", async ({ page }) => {
   const scenes: [string, string][] = [
