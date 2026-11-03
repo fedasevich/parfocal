@@ -25,6 +25,8 @@ function drive(keys: (Key | "blur")[], bindings = viewerKeyBindings()) {
     zoomToMagnification: (magnification) => calls.push(`mag ${magnification}`),
     press: (direction, fast) => calls.push(`press ${direction}${fast ? " fast" : ""}`),
     release: (direction) => calls.push(`release ${direction}`),
+    back: () => calls.push("back"),
+    forward: () => calls.push("forward"),
   };
   let state = idleKeys;
   const consumed: boolean[] = [];
@@ -147,6 +149,18 @@ test("Alt+arrow is left to the brightness keys and does not pan", () => {
   const { calls, consumed } = drive([arrow("Up", { altKey: true })]);
   assert.deepEqual(calls, []);
   assert.deepEqual(consumed, [false]);
+});
+
+test("Alt+Left goes back a view and Alt+Right goes forward without panning", () => {
+  const { calls, consumed } = drive([
+    arrow("Left", { altKey: true }),
+    arrow("Left", { altKey: true, type: "up" }),
+    arrow("Right", { altKey: true }),
+    arrow("Right", { altKey: true, type: "up" }),
+  ]);
+  assert.deepEqual(calls, ["back", "forward"]);
+  assert.equal(consumed[0], true);
+  assert.equal(consumed[2], true);
 });
 
 test("viewer keys do nothing while typing in a field", () => {
