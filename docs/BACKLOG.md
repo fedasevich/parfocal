@@ -1246,7 +1246,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
   Size: M.
 
-- [ ] VIEW-015 · Leica SCN multi-pyramid
+- [x] VIEW-015 · Leica SCN multi-pyramid
   Done when the main pyramid opens, not the decoy.
   Size: S.
 
