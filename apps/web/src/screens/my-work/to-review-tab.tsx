@@ -63,7 +63,7 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
       />
       <div className="grid gap-1.5">
         <SectionLabel>Continue where you left off</SectionLabel>
-        <h3 className="m-0 text-[20px] font-semibold text-fg">{task.name}</h3>
+        <h3 className="m-0 text-title font-semibold text-fg">{task.name}</h3>
         <p className="m-0 text-body-sm text-fg-dim">
           Slide {resume.position + 1} of {resume.slides_assigned} · {timeLeft(left)}
           {task.due_on ? ` · due ${formatDue(task.due_on)}` : ""}

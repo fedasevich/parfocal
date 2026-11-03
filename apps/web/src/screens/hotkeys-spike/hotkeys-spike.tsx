@@ -38,7 +38,7 @@ export function HotkeysSpike() {
   useHotkeys(bindings, onFire, setPending);
   return (
     <main className="grid max-w-xl gap-4 p-8 text-fg">
-      <h1 className="text-lg font-semibold">Hotkeys spike</h1>
+      <h1 className="text-title-sm font-semibold">Hotkeys spike</h1>
       <p className="text-fg-2">
         Press G then 2. Tap Z to open the whole slide, press it again to close, or hold it to peek.
       </p>
@@ -53,7 +53,7 @@ export function HotkeysSpike() {
         data-holds={log.holds}
         data-peek={log.peek ? "open" : "closed"}
         data-pending={pending?.join(" ") ?? ""}
-        className="grid gap-1 font-mono text-sm"
+        className="grid gap-1 font-mono text-body"
       >
         <span>Last: {log.last || "nothing yet"}</span>
         <span>Waiting for: {pending ? `${pending.join(" then ")} then …` : "nothing"}</span>

@@ -112,6 +112,7 @@
 
   --shadow-pop: var(--shadow);
 
+  --text-*: initial;
   --text-label: 11px;
   --text-label--line-height: 16px;
   --text-caption: 12px;
@@ -124,12 +125,16 @@
   --text-lead--line-height: 24px;
   --text-title-sm: 18px;
   --text-title-sm--line-height: 24px;
+  --text-title-sm--font-weight: 600;
   --text-title: 20px;
   --text-title--line-height: 28px;
+  --text-title--font-weight: 600;
   --text-page-title: 24px;
   --text-page-title--line-height: 32px;
+  --text-page-title--font-weight: 600;
   --text-display: 28px;
   --text-display--line-height: 36px;
+  --text-display--font-weight: 600;
 
   --ease-standard: var(--motion-ease-standard);
   --ease-enter: var(--motion-ease-enter);

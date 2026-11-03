@@ -25,7 +25,7 @@ function FakeDataBadge({ scope, queryClient }: { scope: FakeScope; queryClient: 
     <output
       data-testid="fake-data-badge"
       title="This screen is served by MSW in the dev build. Staging and production never show it."
-      className="pointer-events-none fixed right-3 bottom-3 z-50 rounded-full border border-warn bg-chrome px-3 py-1 font-medium text-warn text-xs shadow"
+      className="pointer-events-none fixed right-3 bottom-3 z-50 rounded-full border border-warn bg-chrome px-3 py-1 font-medium text-warn text-caption shadow"
     >
       {label}
       {persona ? <span data-testid="fake-persona"> · {persona}</span> : null}

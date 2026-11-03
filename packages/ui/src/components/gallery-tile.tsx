@@ -113,7 +113,7 @@ function GalleryTile({
         <span
           data-slot="gallery-tile-label"
           className={
-            crop ? "sr-only" : "block truncate px-1.25 py-0.75 text-[10px] leading-3.5 text-fg-dim"
+            crop ? "sr-only" : "block truncate px-1.25 py-0.75 text-label leading-3.5 text-fg-dim"
           }
         >
           {label}

@@ -11,10 +11,10 @@ export function Placeholder({ title, builtBy, route, children }: PlaceholderProp
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
       <header className="flex flex-col gap-1">
-        <h1 className="font-semibold text-2xl text-fg">{title}</h1>
-        <p className="text-fg-dim text-sm">Placeholder. The screen is built by {builtBy}.</p>
+        <h1 className="font-semibold text-page-title text-fg">{title}</h1>
+        <p className="text-fg-dim text-body">Placeholder. The screen is built by {builtBy}.</p>
       </header>
-      <pre className="rounded-md border border-line bg-chrome p-3 text-fg-dim text-xs">
+      <pre className="rounded-md border border-line bg-chrome p-3 text-fg-dim text-caption">
         {JSON.stringify(route, null, 2)}
       </pre>
       {children}
@@ -30,10 +30,10 @@ type QueryStateProps = {
 };
 
 export function QueryState({ label, isPending, error, children }: QueryStateProps) {
-  if (isPending) return <p className="text-fg-dim text-sm">Loading {label}…</p>;
+  if (isPending) return <p className="text-fg-dim text-body">Loading {label}…</p>;
   if (error) {
     return (
-      <p role="alert" className="text-bad text-sm">
+      <p role="alert" className="text-bad text-body">
         Could not load {label}.
       </p>
     );

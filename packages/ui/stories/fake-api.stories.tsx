@@ -6,9 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 function SignedInAs() {
   const me = useGetMe();
   const jobs = useListMyJobs();
-  if (me.data?.status !== 200) return <p className="text-fg-dim text-sm">Loading…</p>;
+  if (me.data?.status !== 200) return <p className="text-fg-dim text-body">Loading…</p>;
   return (
-    <div className="flex flex-col gap-1 text-sm">
+    <div className="flex flex-col gap-1 text-body">
       <p className="text-fg" data-testid="signed-in-as">
         {me.data.data.display_name}
       </p>

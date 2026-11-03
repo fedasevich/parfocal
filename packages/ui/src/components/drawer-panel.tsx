@@ -43,7 +43,7 @@ function DrawerPanel({
           scrim ? "px-6 py-4" : "px-4.5 py-3.5",
         )}
       >
-        <b className={scrim ? "text-[18px]" : "text-body"}>{title}</b>
+        <b className={scrim ? "text-title-sm" : "text-body"}>{title}</b>
         {hint ? <span className="text-body-sm text-fg-dim">{hint}</span> : null}
         <span className="flex-1" />
         <Button size="icon" variant="ghost" aria-label="Close" onClick={onClose}>

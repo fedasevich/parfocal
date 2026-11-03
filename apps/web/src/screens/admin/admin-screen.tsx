@@ -81,7 +81,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
               ]}
               renderLink={renderLink}
             />
-            <h1 className="m-0 text-[18px] font-semibold text-fg">{head.title}</h1>
+            <h1 className="m-0 text-title-sm font-semibold text-fg">{head.title}</h1>
             <p className="m-0 text-body-sm text-fg-dim">{head.sub}</p>
           </header>
           <TemplateEditor
@@ -178,7 +178,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
       <main className="flex min-h-full flex-col gap-(--space-zone) bg-surf-panel px-(--pad-modal) pb-(--pad-modal)">
         <header className="sticky top-0 z-2 flex items-center justify-between gap-4 bg-surf-panel pt-5 pb-1">
           <div>
-            <h1 className="m-0 text-[18px] font-semibold text-fg">{info?.label}</h1>
+            <h1 className="m-0 text-title-sm font-semibold text-fg">{info?.label}</h1>
             <p className="mt-0.75 mb-0 text-body-sm text-fg-dim">
               {section === "overview" ? `${workspaceName} at a glance` : info?.sub}
             </p>

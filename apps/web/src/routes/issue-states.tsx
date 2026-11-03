@@ -100,14 +100,14 @@ function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined })
       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-line border-t py-2 first-of-type:border-t-0"
       data-issue-state={`${row.screen}:${row.scene}`}
     >
-      <span className="inline-flex items-center gap-[7px] font-semibold text-[13px] text-fg">
+      <span className="inline-flex items-center gap-[7px] font-semibold text-body-sm text-fg">
         <i
           aria-hidden="true"
           className={cn("size-[7px] flex-none rounded-full", row.plain ? "bg-ok" : "bg-warn")}
         />
         {row.label}
       </span>
-      <small className="col-start-1 pl-3.5 text-[13px] text-fg-dim leading-[18px]">
+      <small className="col-start-1 pl-3.5 text-body-sm text-fg-dim leading-[18px]">
         {row.detail}
       </small>
       <span className="col-start-2 row-span-2 row-start-1 inline-flex gap-1.5">
@@ -131,8 +131,10 @@ function IssueStatesPage() {
     <main className="min-h-screen bg-page px-6 pt-[18px] pb-8">
       <header className="flex flex-wrap items-start gap-3">
         <div className="flex-1">
-          <h1 className="m-0 font-semibold text-[22px] text-fg leading-7">{issueStatesTitle}</h1>
-          <p className="mt-1.5 mb-[18px] max-w-[860px] text-[14px] text-fg-dim leading-5">
+          <h1 className="m-0 font-semibold text-page-title text-fg leading-7">
+            {issueStatesTitle}
+          </h1>
+          <p className="mt-1.5 mb-[18px] max-w-[860px] text-body text-fg-dim leading-5">
             {issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and
             Show opens that screen in that state with its fix ready to try. Back to the index sits
             above the frame.
@@ -149,7 +151,7 @@ function IssueStatesPage() {
             aria-label={group.flow}
             className="mb-5 break-inside-avoid rounded-zone border border-line bg-surf-section px-3.5 pt-3 pb-1.5"
           >
-            <h2 className="m-0 mb-1.5 font-semibold text-[14px] text-fg leading-5">{group.flow}</h2>
+            <h2 className="m-0 mb-1.5 font-semibold text-body text-fg leading-5">{group.flow}</h2>
             {group.rows.map((row) => (
               <StateRow key={`${row.screen}:${row.scene}`} row={row} ids={ids} />
             ))}

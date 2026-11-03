@@ -104,7 +104,7 @@ export function MyWorkScreen({
   return (
     <main className="flex min-h-0 flex-col gap-4 px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-[24px] font-semibold tracking-[-0.01em] text-fg">My work</h1>
+        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">My work</h1>
         <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">{subtitle}</p>
       </header>
       <Tabs
