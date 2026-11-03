@@ -1771,7 +1771,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Depends on CASES-009, CMD-002. Refs mock 1 scene D, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] HOME-009 · Announcements
+- [x] HOME-009 · Announcements
   Researchers with admin rights post announcements, shown on Home with a coloured dot by kind (a new model, a slow server, a change).
   Done when component tests cover create, list and expiry.
   Depends on HOME-011. The API moved to HOME-011 by [ADR 0085](adr/0085-home-aggregate-api.md).
