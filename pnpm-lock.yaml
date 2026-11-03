@@ -574,6 +574,12 @@ importers:
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
+      '@types/pngjs':
+        specifier: 6.0.5
+        version: 6.0.5
+      pngjs:
+        specifier: 7.0.0
+        version: 7.0.0
       vite:
         specifier: 8.3.3
         version: 8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1)

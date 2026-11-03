@@ -13,6 +13,7 @@ export {
   type Manifest,
   parseManifest,
   type RemoteFixture,
+  referenceTilesDir,
   type SyntheticFixture,
   selectFixtures,
   syntheticDir,

@@ -1,0 +1,24 @@
+{
+  "fixture": "synthetic-big-endian.tiff",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 832,
+      "y": 608,
+      "width": 64,
+      "height": 64,
+      "file": "level-0-832-608.png"
+    },
+    {
+      "level": 1,
+      "downsample": 2,
+      "x": 64,
+      "y": 32,
+      "width": 64,
+      "height": 64,
+      "file": "level-1-64-32.png"
+    }
+  ]
+}

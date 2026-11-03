@@ -1,4 +1,5 @@
 export { recoverLadder, type StoredLevel, tileColumns, tileRows, tileWindow } from "./geometry.ts";
+export * from "./reader-check.ts";
 export {
   createDefaultPixelSourceRegistry,
   createPixelSourceRegistry,
