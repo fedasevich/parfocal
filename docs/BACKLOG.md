@@ -1659,7 +1659,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs mock: admin/people, mock: project/slides, mock: layers/table, mock: disagree/queue, mock: creport/deposits.
   Size: M.
 
-- [ ] DS-027 · Before you list with Go to links
+- [x] DS-027 · Before you list with Go to links
   The list that names everything that blocks a primary action, one row per blocker with a Go to link that opens the object, the first open cell, the field or the question. It reads "Before you submit" on the Slide done card, "Before you can sign out" on the clinical report and "Before you can" in small modals and on flow pages. With a single blocker there is no list, and the reason sits under the disabled primary instead.
   Done when stories cover one blocker and several, a test checks that Go to moves focus to its target and that the disabled primary's description names the reason, and axe passes.
   Depends on PROTO-011. Refs kit: submit and Slide done, mock: guided/skipped, mock: signoff/blocked, mock: creport/missing.
