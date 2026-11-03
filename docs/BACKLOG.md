@@ -1496,7 +1496,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
 
-- [ ] LAB-005 · Debug handle
+- [x] LAB-005 · Debug handle
   A typed `window.__parfocal` handle in non-production builds for tests and debugging, starting from the 20 members the mock lists for `window.__wsi`. The drawer's reference text changes to the new name ([ADR 0189](adr/0189-developer-drawer-control-list.md)).
   Done when E2E tests use it to read camera state.
   Size: S.
@@ -2272,6 +2272,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a result file records the clusters, the firm share and every wrong firm answer, and a test replays the fixture.
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
   Size: M.
+
+- [ ] REVIEW-021 · Comment tool pins a thread on click
+  REVIEW-001 (review rail) routes the Comment tool (C) to the comments tab, but clicking the slide in comment mode does not pin a new thread there yet.
+  Done when a test clicks the slide in comment mode and a new thread opens pinned at that point, and Esc leaves comment mode without a thread.
+  Depends on REVIEW-001.
+  Size: S.
 
 ---
 
