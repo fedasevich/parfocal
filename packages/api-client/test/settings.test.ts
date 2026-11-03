@@ -12,6 +12,7 @@ import {
   endAnnouncement,
   endOtherSessions,
   getGetMySettingsQueryOptions,
+  getMyAvailability,
   getMySettingLayers,
   getMySettings,
   getSessionPolicy,
@@ -22,6 +23,7 @@ import {
   listSessions,
   resetModelTier,
   setModelTier,
+  setMyAvailability,
   setMySettingLayers,
   setWorkspaceSettings,
   updateSessionPolicy,
@@ -168,6 +170,23 @@ test("lock times, tiers and announcements change on save and come back on reset"
     assert.equal(
       remaining.data.some((item) => item.id === posted.data.id),
       false,
+    );
+  }
+});
+
+test("my availability starts available and keeps an away status with its note", async () => {
+  assert.equal((await getMyAvailability()).data.status, "available");
+  await setMyAvailability({ status: "away", until: "2026-11-04T15:00:00+01:00", note: "Course" });
+  const away = await getMyAvailability();
+  assert.equal(away.status, 200);
+  if (away.status === 200) assert.deepEqual([away.data.status, away.data.note], ["away", "Course"]);
+  await setMyAvailability({ status: "available" });
+  const back = await getMyAvailability();
+  assert.equal(back.status, 200);
+  if (back.status === 200) {
+    assert.deepEqual(
+      [back.data.status, back.data.until, back.data.note],
+      ["available", null, null],
     );
   }
 });

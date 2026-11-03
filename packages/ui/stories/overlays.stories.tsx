@@ -352,33 +352,53 @@ export const CommandPaletteNothingMatches: Story = {
   render: () => <PaletteStage query="zzz" list={[]} current={0} />,
 };
 
-const accountEntries: AccountEntry[] = [
-  { icon: "gear", label: "Settings", keys: "⌘," },
-  { icon: "keyboard", label: "Keyboard shortcuts", keys: "?" },
-  { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
-];
-
 function AccountStage({ initialsOnly, jobTitle }: { initialsOnly: boolean; jobTitle: string }) {
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [only, setOnly] = useState(initialsOnly);
+  const [away, setAway] = useState(false);
+  const [chosen, setChosen] = useState("Nothing yet");
+  const entry = (icon: AccountEntry["icon"], label: string, keys?: string): AccountEntry => ({
+    icon,
+    label,
+    ...(keys ? { keys } : {}),
+    onSelect: () => setChosen(label),
+  });
+  const accountEntries: AccountEntry[] = [
+    entry("gear", "Settings", "⌘,"),
+    entry("keyboard", "Keyboard shortcuts", "?"),
+    entry("pen", "Profile and signature"),
+    { icon: "help", label: "Help and what's new", disabledReason: "Not written yet" },
+  ];
   return (
-    <div className="h-110 w-90 text-right">
+    <div className="h-130 w-90 text-right">
+      <output aria-label="Last chosen" className="sr-only">
+        {chosen}
+      </output>
       <AccountMenu
         defaultOpen
-        person={{ ...people.LM, role: jobTitle }}
-        organisation="Institute of Pathology, University Hospital"
-        presence={{
-          key: "available",
-          label: "Available",
-          hint: "Researchers can give you review tasks",
-          tone: "bg-ok",
+        person={{
+          ...people.LM,
+          name: only ? people.LM.initials : people.LM.name,
+          role: jobTitle,
         }}
-        onNextPresence={none}
+        organisation="Institute of Pathology, University Hospital"
+        presence={
+          away
+            ? { key: "away", label: "Away", hint: "Team shows you as away", tone: "bg-fg-faint" }
+            : {
+                key: "available",
+                label: "Available",
+                hint: "Researchers can give you review tasks",
+                tone: "bg-ok",
+              }
+        }
+        onNextPresence={() => setAway(!away)}
         theme={theme}
         onThemeChange={setTheme}
         initialsOnly={only}
         onInitialsOnlyChange={setOnly}
         entries={accountEntries}
+        onLogOut={() => setChosen("Log out")}
       />
     </div>
   );
