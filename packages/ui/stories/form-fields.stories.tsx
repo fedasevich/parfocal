@@ -236,7 +236,7 @@ export const RadioStates: Story = {
       </RadioField>
       <RadioField legend="Locked order" defaultValue="ai" disabled>
         {orders.map((item) => (
-          <RadioRow key={item.value} {...item} disabled />
+          <RadioRow key={item.value} {...item} />
         ))}
       </RadioField>
     </div>
