@@ -137,4 +137,6 @@ test("the engine keeps brightness between 20% and 140%", async ({ page }) => {
   const frame = await render(page, { brightness: 5 });
   const everyPixel = Array.from({ length: bare.width * bare.height }, (_, pixel) => pixel);
   expect(scaledMismatches(bare, frame, everyPixel, 0.2)).toBe(0);
+  const bright = await render(page, { brightness: 500 });
+  expect(scaledMismatches(bare, bright, everyPixel, 1.4)).toBe(0);
 });
