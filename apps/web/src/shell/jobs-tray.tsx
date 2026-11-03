@@ -16,6 +16,7 @@ import { now } from "../clock.ts";
 import {
   finishedJobs,
   type JobTarget,
+  jobIcon,
   jobTarget,
   runningJobs,
   trayDetail,
@@ -119,7 +120,7 @@ export function ShellJobs() {
   const row = (job: MyJob) => (
     <JobRow
       key={job.id}
-      icon={job.kind === "model-run" ? "smart" : "upload"}
+      icon={jobIcon(job)}
       title={job.title}
       detail={trayDetail(job, today)}
       percent={job.percent}
