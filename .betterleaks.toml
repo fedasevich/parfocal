@@ -12,3 +12,14 @@ regexes = ['''Sign with password''']
 description = "The public test key for slide capability tokens, the bytes 0 to 31 in base64"
 regexTarget = "match"
 regexes = ['''AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=''']
+
+[[allowlists]]
+description = "Made-up passwords and codes the fake sign-in API accepts or rejects, and the tests that type them"
+condition = "AND"
+paths = [
+  '''^packages/api-client/src/fake/scenario-admin\.ts$''',
+  '''^packages/api-client/test/sign-in\.test\.ts$''',
+  '''^apps/web/e2e/sign-in\.spec\.ts$''',
+]
+regexTarget = "line"
+regexes = ['''(correct-horse|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|signInSecrets|secrets\.)''']

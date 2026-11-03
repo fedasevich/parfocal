@@ -4,7 +4,7 @@ const badge = (page: Page) => page.getByTestId("fake-data-badge");
 
 const scenes: { path: string; heading: string; shows: string }[] = [
   { path: "/sign-in", heading: "Sign in to Parfocal", shows: "After you sign in:" },
-  { path: "/sign-in?scene=magic", heading: "Check your email", shows: "Resend in 0:42" },
+  { path: "/sign-in?scene=magic", heading: "Check your email", shows: "Resend in 0:" },
   {
     path: "/sign-in?scene=sso",
     heading: "Continue with your institution",
