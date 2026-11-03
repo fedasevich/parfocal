@@ -21,6 +21,8 @@ import {
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useEffect, useState } from "react";
+import { destinations } from "../../shell/destinations.ts";
+import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { ReviewTop } from "../review/review-top.tsx";
 import { hpfSize, regionShapes } from "../review/slide-geometry.ts";
@@ -60,6 +62,7 @@ type AnnotateViewProps = {
 
 export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewProps) {
   const { session, counts } = tools;
+  const goTo = useGoTo();
   const layers = okData(useListAnnotationLayers(session.slideId).data);
   const tierList = tiersFor(okData(useListModelTiers().data) ?? [], "outline");
   const [tool, setTool] = useState("auto");
@@ -98,6 +101,12 @@ export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewPro
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, [role=dialog]")) return;
+      const projectId = session.task?.project_id;
+      if ((event.metaKey || event.ctrlKey) && event.key === "\\" && projectId) {
+        event.preventDefault();
+        void goTo(destinations.focus(projectId, session.slideId, session.task?.id));
+        return;
+      }
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key === "Escape") {
         if (pickerOpen) onScene("auto");
