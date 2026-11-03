@@ -4010,7 +4010,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Depends on OBJ-003.
   Size: M.
 
-- [ ] OBJ-005 · IDs on the slide and in lists
+- [x] OBJ-005 · IDs on the slide and in lists
   ID labels on the slide (switchable in Layers), the object ID tag in every list (DS-008) and copy of the full ID.
   Done when component tests cover labels on and off and copying, and a golden test places labels without overlap on the fixture.
   Depends on OBJ-001, DS-008, VIEW-026.
