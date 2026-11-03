@@ -3841,6 +3841,7 @@ export const getGetTileAccessResponseMock = (
   lifetime_seconds: faker.number.int(),
   base_path: faker.string.alpha({ length: { min: 10, max: 20 } }),
   original: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  format: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   ...overrideResponse,
 });
 

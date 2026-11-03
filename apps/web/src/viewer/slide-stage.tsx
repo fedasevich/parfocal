@@ -29,6 +29,7 @@ type Grant = {
   readonly lifetimeSeconds: number;
   readonly basePath: string;
   readonly original: string;
+  readonly format: string | null;
 };
 
 async function grantFor(slideId: string, previous: string | null): Promise<Grant> {
@@ -43,6 +44,7 @@ async function grantFor(slideId: string, previous: string | null): Promise<Grant
     lifetimeSeconds: access.lifetime_seconds,
     basePath: access.base_path,
     original: access.original,
+    format: access.format,
   };
 }
 
@@ -101,6 +103,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
             access: access.access,
             basePath: grant.basePath,
             original: grant.original,
+            identifiedFormat: grant.format ?? null,
           });
         },
       });

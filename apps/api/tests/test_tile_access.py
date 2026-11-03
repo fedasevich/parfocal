@@ -99,6 +99,7 @@ def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
     join_project(database, project, people["colleague"], "owner")
     join_project(database, project, people["unassigned"], "reviewer")
     slide = stored_slide(database, workspace.tenant_id, project, "A1")
+    owner(database, f"UPDATE slides SET format = 'generic-tiff' WHERE id = '{slide}'")
     bare = stored_slide(database, workspace.tenant_id, project, "A2")
     unstored = make_slide(database, workspace.tenant_id, project, "A3")
     body = json.dumps({"ranges": RANGES}).encode()
@@ -134,6 +135,7 @@ def test_a_reader_gets_a_short_lived_token_for_the_slide(lab: Lab) -> None:
     body = response.json()
     assert body["base_path"] == f"/tiles/{lab.slide}/"
     assert body["original"] == "original.svs"
+    assert body["format"] == "generic-tiff"
     assert body["lifetime_seconds"] == TOKEN_SECONDS
     claims = claims_of(body["token"])
     assert {key: claims[key] for key in "tsond"} == {
@@ -144,6 +146,13 @@ def test_a_reader_gets_a_short_lived_token_for_the_slide(lab: Lab) -> None:
         "d": RANGES,
     }
     assert started + TOKEN_SECONDS <= claims["e"] <= int(time.time()) + TOKEN_SECONDS
+
+
+@pytest.mark.db
+def test_a_slide_ingest_never_identified_has_no_format(lab: Lab) -> None:
+    response = lab.api(lab.people["owner"]).get(lab.path(lab.bare))
+    assert response.status_code == 200, response.text
+    assert response.json()["format"] is None
 
 
 @pytest.mark.db

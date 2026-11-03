@@ -38926,6 +38926,17 @@
           "original": {
             "type": "string",
             "title": "Original"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
           }
         },
         "type": "object",
@@ -38934,7 +38945,8 @@
           "expires_at",
           "lifetime_seconds",
           "base_path",
-          "original"
+          "original",
+          "format"
         ],
         "title": "TileAccess"
       },
