@@ -88,6 +88,15 @@ ADR 0176 keeps each slide's last camera only while its case is open (CASE-003 bu
 
 Your choice:
 
+## 37. Primary button hover, from DS-006 (buttons and icon buttons)
+
+The mock lightens the filled primary button on hover with white, which drops its text below 4.5:1 contrast. DS-006 darkens it instead (12% black on hover, 24% on press), so axe passes without an exclusion.
+
+- a. Keep the darker hover. (recommended, meets contrast)
+- b. Keep the mock's lighter hover and accept the contrast exclusion.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

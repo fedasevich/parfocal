@@ -1526,7 +1526,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-006 · Buttons and icon buttons
+- [x] DS-006 · Buttons and icon buttons
   Primary, secondary, ghost. One filled primary button per screen, so the top bar's Upload is a normal button (doc 40 D2). States are default, hover, pressed, focus and disabled. Inline key hints. 32 px height, 24 px minimum target.
   Done when stories, interaction tests and axe pass.
   Depends on PROTO-011.
@@ -1663,6 +1663,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when stories cover each style in both sizes and themes, a test checks that the keys come from the key registry and match the style, and axe passes.
   Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
   Size: M.
+
+- [ ] DS-029 · Visible focus ring on every control
+  DS-006 (buttons and icon buttons) found that `outline-none` next to `focus-visible:outline-2` left the button focus ring invisible. Other kit components combine the same classes. Check every interactive component in packages/ui and apps/web and make the ring draw.
+  Done when a test tabs through the kit stories and asserts a visible outline on each focused control, and axe passes.
+  Depends on DS-006.
+  Size: S.
 
 ---
 
