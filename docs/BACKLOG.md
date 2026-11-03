@@ -2182,7 +2182,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] REVIEW-017 · Tumor share result for cellularity cases
+- [x] REVIEW-017 · Tumor share result for cellularity cases
   The doc 33 result (tumor share against a cutoff, range, firm, open, settled) for specimen types where the lab asks for tumor cellularity, for example a block chosen for molecular testing. Off for sentinel nodes, set per specimen type in lab settings. Shown as the result chip in the number line (REVIEW-005), worded "Above 20% whatever the unsure cells are" or "Could be either side of 20%, check the unsure cells".
   Done when unit tests reproduce doc 33's examples and a test confirms the result is hidden for a sentinel node case.
   Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
