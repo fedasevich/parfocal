@@ -4,7 +4,7 @@ import type { ViewerModule } from "./magnification-control.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { applyViewerKey, type ViewerKeyTarget, viewerKeyBindings } from "./viewer-keys.ts";
 
-type KeyModule = Pick<ViewerModule, "createKeyPan" | "keyZoomOctaves">;
+type KeyModule = Pick<ViewerModule, "createKeyPan" | "keyZoomOctaves" | "bindViewHistory">;
 
 export function useViewerKeys(engine: ViewerEngine, module: KeyModule) {
   const shift = useRef(false);
@@ -44,6 +44,16 @@ export function useViewerKeys(engine: ViewerEngine, module: KeyModule) {
     };
   }, [pan]);
 
+  const history = useRef<ReturnType<KeyModule["bindViewHistory"]> | null>(null);
+  useEffect(() => {
+    const bound = module.bindViewHistory(engine);
+    history.current = bound;
+    return () => {
+      bound.dispose();
+      if (history.current === bound) history.current = null;
+    };
+  }, [engine, module]);
+
   const target = useMemo<ViewerKeyTarget>(
     () => ({
       zoomOctaves: module.keyZoomOctaves,
@@ -52,6 +62,8 @@ export function useViewerKeys(engine: ViewerEngine, module: KeyModule) {
       zoomToMagnification: (magnification) => engine.zoomToMagnification(magnification),
       press: (direction, fast) => pan.press(direction, fast),
       release: (direction) => pan.release(direction),
+      back: () => void history.current?.back(),
+      forward: () => void history.current?.forward(),
     }),
     [engine, module, pan],
   );

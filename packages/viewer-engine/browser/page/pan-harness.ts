@@ -1,9 +1,12 @@
 import {
+  type BoundViewHistory,
+  bindViewHistory,
   type Camera,
   createDefaultPixelSourceRegistry,
   createViewerEngine,
   type SlideFormatId,
   type ViewerEngine,
+  viewRestMs,
   zoomForMagnification,
 } from "../../src/index.ts";
 import {
@@ -62,6 +65,10 @@ export interface PanHarness {
   jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport>;
   pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<PanReport>;
   close(): void;
+  rest(): Promise<Camera>;
+  flyTo(target: Camera): Promise<Camera>;
+  back(): Promise<Camera | null>;
+  forward(): Promise<Camera | null>;
 }
 
 declare global {
@@ -73,6 +80,7 @@ declare global {
 const errors: string[] = [];
 let engine: ViewerEngine | null = null;
 let route: VivRoute | null = null;
+let history: BoundViewHistory | null = null;
 
 globalThis.addEventListener("unhandledrejection", (event) => {
   errors.push(String(event.reason));
@@ -121,6 +129,7 @@ async function open(slide: PanSlide): Promise<Opened> {
           },
   });
   engine = current;
+  history = bindViewHistory(current);
   current.mount(viewer());
   const opened = await current.openSlide({ id: slide.url });
   if (slide.magnification !== null) {
@@ -183,11 +192,39 @@ async function pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<Pa
   };
 }
 
+async function rest(): Promise<Camera> {
+  const { engine: current } = mounted();
+  while (current.getMotion() !== "idle") await nextFrame();
+  await new Promise((resolve) => setTimeout(resolve, viewRestMs + 100));
+  return current.getCamera();
+}
+
+async function flyTo(target: Camera): Promise<Camera> {
+  await mounted().engine.flyTo(target);
+  return rest();
+}
+
+async function step(move: (bound: BoundViewHistory) => boolean): Promise<Camera | null> {
+  if (history === null) throw new Error("No slide is open");
+  return move(history) ? rest() : null;
+}
+
 function close(): void {
+  history?.dispose();
+  history = null;
   engine?.dispose();
   engine = null;
   route = null;
   errors.length = 0;
 }
 
-window.panHarness = { open, jump, pan, close };
+window.panHarness = {
+  open,
+  jump,
+  pan,
+  close,
+  rest,
+  flyTo,
+  back: () => step((bound) => bound.back()),
+  forward: () => step((bound) => bound.forward()),
+};

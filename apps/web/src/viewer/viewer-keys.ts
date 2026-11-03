@@ -12,9 +12,19 @@ export type ViewerKeyTarget = {
   zoomToMagnification: (magnification: number) => void;
   press: (direction: PanDirection, fast: boolean) => void;
   release: (direction: PanDirection) => void;
+  back: () => void;
+  forward: () => void;
 };
 
-export const viewerKeyIds = ["zoomin", "zoomout", "fit", "mag", "pan"] as const;
+export const viewerKeyIds = [
+  "zoomin",
+  "zoomout",
+  "fit",
+  "mag",
+  "pan",
+  "viewback",
+  "viewforward",
+] as const;
 
 const directions = new Set<string>(["up", "down", "left", "right"]);
 
@@ -34,6 +44,8 @@ export function applyViewerKey(fired: Fired, target: ViewerKeyTarget, shift: boo
   if (id === "zoomin") target.zoomBy(target.zoomOctaves);
   else if (id === "zoomout") target.zoomBy(-target.zoomOctaves);
   else if (id === "fit") target.fit();
+  else if (id === "viewback") target.back();
+  else if (id === "viewforward") target.forward();
   else if (id === "mag") {
     const preset = presetForDigit(Number(suffix));
     if (preset !== null) target.zoomToMagnification(preset);

@@ -38,6 +38,8 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["mag", "Objective 1.25× to 40×", ["⌥1 … ⌥6"], "clin", { range: true }],
       ["pan", "Pan, faster with Shift", ["Arrows"], "clin", { direction: true, sustain: true }],
       ["peek", "Whole slide", ["Z"], "new", { hold: true }],
+      ["viewback", "Back to the previous view", ["⌥←"], "new"],
+      ["viewforward", "Forward to the next view", ["⌥→"], "new"],
       ["prevslide", "Previous slide", ["Q"], "clin"],
       [
         "nextslide",
