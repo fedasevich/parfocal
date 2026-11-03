@@ -188,6 +188,14 @@ test("the staging cards show only in a project with the sentinel node template",
   await expect(staging).toBeVisible();
   await expect(staging).toContainText("Metastasis likely, largest about");
   await expect(staging).toContainText("if confirmed");
+  const templateLine = panel(page).locator('[data-slot="template-line"]');
+  await expect(templateLine).toContainText("Sentinel node staging");
+  for (const name of ["Objects", "Display", "Comments"])
+    await expect(
+      panel(page)
+        .getByRole("tab", { name: new RegExp(`^${name}`) })
+        .locator('[data-slot="tab-count"]'),
+    ).toBeVisible();
   const projectId = href.match(/projects\/([^/?]+)/)?.[1] ?? "";
   const cellReview = "00000000-0000-4000-8003-000000000009";
   const noTemplate = "00000000-0000-4000-8003-000000000011";
@@ -196,6 +204,9 @@ test("the staging cards show only in a project with the sentinel node template",
     await expect(viewer(page)).toBeVisible();
     await expect(panel(page).getByRole("tab", { name: /Objects/ })).toBeVisible();
     await expect(panel(page).getByRole("region", { name: "Staging" })).toHaveCount(0);
+    await expect(panel(page).locator('[data-slot="template-line"]')).toContainText(
+      other === noTemplate ? "No analysis template" : "Cell review",
+    );
   }
 });
 
