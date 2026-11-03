@@ -2062,7 +2062,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on CASE-001, OBJ-001, GUIDE-001. Refs mock: case, mock: layers, doc 37 "Viewer".
   Size: M.
 
-- [ ] CASE-015 · Progress ring in the slide top bar
+- [x] CASE-015 · Progress ring in the slide top bar
   One ring split by decision colour (agree, disagree, not sure, open) with this slide's percentage. Clicking it opens a popover with the task, slide n of N, the due date, time left and a button for the next slide.
   Done when component tests cover an empty, a partial and a finished slide, and E2E opens the next slide from the popover.
   Depends on DS-019, TASK-003. Refs doc 38 answer 3, mock: case.
