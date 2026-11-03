@@ -63,6 +63,9 @@ import {
   modelsForTask,
   NO_TEMPLATE,
   NOT_CHOSEN,
+  type PatientBannerChange,
+  patientBannerChange,
+  patientBannerOf,
   privacyOptions,
   sessionHourChoices,
   type TumorShareKey,
@@ -390,6 +393,104 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   );
 }
 
+function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const queryClient = useQueryClient();
+  const save = useSetWorkspaceSettings();
+  const current = patientBannerOf(lab);
+  const apply = (change: PatientBannerChange, said: string, undo: PatientBannerChange) =>
+    save.mutate(
+      { data: patientBannerChange(lab, change) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(said, () =>
+            save.mutate(
+              { data: patientBannerChange(lab, undo) },
+              {
+                onSuccess: () => {
+                  void queryClient.invalidateQueries({
+                    queryKey: getGetMySettingLayersQueryKey(),
+                  });
+                  notify("Setting restored.");
+                },
+                onError: (error) => notify(failure(error)),
+              },
+            ),
+          );
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+  return (
+    <Zone
+      title="Patient banner"
+      sub="In clinical projects every case screen shows the patient's name, sex, age and record number. Only the lab changes this."
+    >
+      <div className={rows}>
+        <Labelled label="Banner" help="Research projects never show it.">
+          <SegmentedControl
+            aria-label="Patient banner"
+            value={current.shown ? "shown" : "hidden"}
+            onValueChange={(value) => {
+              const next = value === "shown";
+              if (next === current.shown) return;
+              apply(
+                { key: "shown", value: next },
+                next ? "The patient banner is shown." : "The patient banner is hidden.",
+                { key: "shown", value: current.shown },
+              );
+            }}
+            options={[
+              { value: "shown", label: "Shown" },
+              { value: "hidden", label: "Hidden" },
+            ]}
+          />
+        </Labelled>
+        <Labelled label="Patient names" help="Initials show only the first letter of each name.">
+          <SegmentedControl
+            aria-label="Patient names"
+            value={current.names}
+            onValueChange={(value) => {
+              const next = value === "initials" ? "initials" : "full";
+              if (next === current.names) return;
+              apply(
+                { key: "names", value: next },
+                next === "initials" ? "Patients show as initials." : "Patients show full names.",
+                { key: "names", value: current.names },
+              );
+            }}
+            options={[
+              { value: "full", label: "Full name" },
+              { value: "initials", label: "Initials" },
+            ]}
+          />
+        </Labelled>
+        <Labelled label="Who chooses names" help="Locked keeps the lab's choice for everyone.">
+          <SegmentedControl
+            aria-label="Who chooses patient names"
+            value={current.namesLocked ? "lab" : "person"}
+            onValueChange={(value) => {
+              const next = value === "lab";
+              if (next === current.namesLocked) return;
+              apply(
+                { key: "namesLocked", value: next },
+                next
+                  ? "Patient names are locked by the lab."
+                  : "Each person chooses patient names.",
+                { key: "namesLocked", value: current.namesLocked },
+              );
+            }}
+            options={[
+              { value: "lab", label: "Locked by the lab" },
+              { value: "person", label: "Each person" },
+            ]}
+          />
+        </Labelled>
+      </div>
+    </Zone>
+  );
+}
+
 function Tiers({ notify }: { notify: Notify }) {
   const mappings = okData(useListModelTiers().data) ?? [];
   const queryClient = useQueryClient();
@@ -595,6 +696,7 @@ export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
       <LockTimes notify={notify} />
       <Defaults lab={lab} notify={notify} />
       <TumorShare lab={lab} notify={notify} />
+      <PatientBannerZone lab={lab} notify={notify} />
       <Tiers notify={notify} />
       <Announcements notify={notify} />
     </>
