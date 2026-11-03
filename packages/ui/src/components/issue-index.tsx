@@ -30,7 +30,7 @@ function IssueIndex({ groups, onOpen, className, ...props }: IssueIndexProps) {
                 title={state.ready === false ? "Its screen is not built yet" : undefined}
                 onClick={() => (state.ready === false ? undefined : onOpen?.(state.id))}
                 className={cn(
-                  "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)_16px] items-center gap-2.5 rounded-ctl border border-line bg-surf-section px-3 py-2 text-left text-body-sm text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-accent",
+                  "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)_16px] items-center gap-2.5 rounded-ctl border border-line bg-surf-section px-3 py-2 text-left text-body-sm text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                   state.ready === false && "cursor-not-allowed opacity-45",
                 )}
               >

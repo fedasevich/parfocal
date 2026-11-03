@@ -54,7 +54,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex cursor-pointer items-center justify-center gap-1.5 border-0 bg-transparent font-medium whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative inline-flex cursor-pointer items-center justify-center gap-1.5 border-0 bg-transparent font-medium whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "group-data-[variant=default]/tabs-list:h-full group-data-[variant=default]/tabs-list:flex-1 group-data-[variant=default]/tabs-list:rounded-md group-data-[variant=default]/tabs-list:px-3 group-data-[variant=default]/tabs-list:text-caption group-data-[variant=default]/tabs-list:text-fg-dim group-data-[variant=default]/tabs-list:hover:text-fg group-data-[variant=default]/tabs-list:data-active:bg-accent-soft group-data-[variant=default]/tabs-list:data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:text-fg group-data-[variant=default]/tabs-list:data-active:shadow-[inset_0_0_0_1.5px_var(--accent)]",
         "group-data-[variant=line]/tabs-list:h-full group-data-[variant=line]/tabs-list:px-2 group-data-[variant=line]/tabs-list:text-body-sm group-data-[variant=line]/tabs-list:hover:text-fg group-data-[variant=line]/tabs-list:data-active:text-fg group-data-[variant=line]/tabs-list:data-active:shadow-[inset_0_-2px_0_var(--accent)]",
         "group-data-[variant=page]/tabs-list:-mb-px group-data-[variant=page]/tabs-list:border-b-2 group-data-[variant=page]/tabs-list:border-transparent group-data-[variant=page]/tabs-list:px-3 group-data-[variant=page]/tabs-list:py-2.5 group-data-[variant=page]/tabs-list:text-body group-data-[variant=page]/tabs-list:font-normal group-data-[variant=page]/tabs-list:text-fg-dim group-data-[variant=page]/tabs-list:hover:text-fg group-data-[variant=page]/tabs-list:data-active:border-accent group-data-[variant=page]/tabs-list:data-active:font-semibold group-data-[variant=page]/tabs-list:data-active:text-fg",
@@ -84,7 +84,10 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("flex-1 text-body-sm outline-none", className)}
+      className={cn(
+        "flex-1 rounded-ctl text-body-sm outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent",
+        className,
+      )}
       {...props}
     />
   );

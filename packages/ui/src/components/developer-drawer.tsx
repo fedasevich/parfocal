@@ -98,7 +98,7 @@ function DeveloperNav({ groups, value, onValueChange, className, ...props }: Dev
               aria-current={item.value === value ? "true" : undefined}
               onClick={() => onValueChange(item.value)}
               className={cn(
-                "cursor-pointer rounded-md border-0 bg-transparent px-2.5 py-1.75 text-left text-body-sm leading-tight text-fg-dim outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-accent",
+                "cursor-pointer rounded-md border-0 bg-transparent px-2.5 py-1.75 text-left text-body-sm leading-tight text-fg-dim outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                 item.value === value && "bg-chrome-3 font-medium text-fg",
               )}
             >

@@ -64,7 +64,7 @@ function CommentItem({ message, reply = false, onReply, className, ...props }: C
           <button
             type="button"
             onClick={onReply}
-            className="w-fit cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+            className="w-fit cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
             Reply
           </button>

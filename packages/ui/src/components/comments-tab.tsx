@@ -61,7 +61,7 @@ function ThreadCardRow({
         type="button"
         aria-pressed={selected}
         onClick={onSelect}
-        className="grid min-w-0 cursor-pointer gap-1.5 rounded-ctl border-0 bg-transparent p-1.5 text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        className="grid min-w-0 cursor-pointer gap-1.5 rounded-ctl border-0 bg-transparent p-1.5 text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
       >
         <span className="flex items-center gap-2.5">
           <ObjectIdTag>{thread.anchor}</ObjectIdTag>

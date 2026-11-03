@@ -221,7 +221,7 @@ function SlideDoneCard({
           aria-describedby={describedBy}
           onClick={onSubmit}
           className={cn(
-            "group/button flex cursor-pointer items-center justify-center gap-2.5 border-0 bg-accent-fill font-semibold text-on-accent outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] disabled:text-fg-dim",
+            "group/button flex cursor-pointer items-center justify-center gap-2.5 border-0 bg-accent-fill font-semibold text-on-accent outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] disabled:text-fg-dim",
             panel ? "h-10 rounded-ctl text-body" : "h-13.5 rounded-zone text-lead",
           )}
           data-variant="primary"

@@ -108,7 +108,7 @@ function Stepper({ steps, current, onStepSelect, className, ...props }: StepperP
                 type="button"
                 title={step.why}
                 onClick={() => onStepSelect?.(index)}
-                className="inline-flex cursor-pointer items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
+                className="inline-flex cursor-pointer items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
               >
                 {mark}
                 {step.label}
@@ -120,7 +120,7 @@ function Stepper({ steps, current, onStepSelect, className, ...props }: StepperP
                     <button
                       type="button"
                       aria-disabled="true"
-                      className="inline-flex cursor-not-allowed items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-accent"
+                      className="inline-flex cursor-not-allowed items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
                     />
                   }
                 >

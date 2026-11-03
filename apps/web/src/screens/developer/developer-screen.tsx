@@ -281,7 +281,7 @@ export function DeveloperScreen({
         <label
           key={name}
           className={cn(
-            "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-center gap-2.25 rounded-md px-2 py-1.5 text-left hover:bg-[color-mix(in_srgb,var(--fg)_5%,transparent)] has-focus-visible:outline-2 has-focus-visible:outline-(--accent)",
+            "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-center gap-2.25 rounded-md px-2 py-1.5 text-left hover:bg-[color-mix(in_srgb,var(--fg)_5%,transparent)] has-focus-visible:outline-2 has-focus-visible:outline-solid has-focus-visible:outline-(--accent)",
             sample === name && "bg-surf-hl hover:bg-surf-hl",
           )}
         >

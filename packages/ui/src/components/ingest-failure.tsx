@@ -63,7 +63,7 @@ function IngestFailure({
         {failureClass === "permanent" && supportHref ? (
           <a
             href={supportHref}
-            className="mt-1 w-fit font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+            className="mt-1 w-fit font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
             Contact support
           </a>

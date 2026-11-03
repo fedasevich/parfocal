@@ -80,7 +80,7 @@ function QueueRow({
           onClick={onSelect}
           className={cn(
             grid,
-            "min-h-11 cursor-pointer border-0 bg-transparent p-0 text-body-sm text-fg focus-visible:outline-2 focus-visible:outline-accent",
+            "min-h-11 cursor-pointer border-0 bg-transparent p-0 text-body-sm text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
             done && "text-fg-dim",
           )}
         >
@@ -205,7 +205,8 @@ function ProgressDots({ items, current, onJump, summary, className, ...props }: 
           className={cn(
             "grid size-5 cursor-pointer place-items-center rounded-full border-2 border-line-strong bg-transparent p-0 text-label font-bold",
             item.value ? dotTone[item.value] : "",
-            index === current && "outline-2 outline-offset-2 outline-accent",
+            "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-accent",
+            index === current && "outline-2 outline-solid outline-offset-2 outline-accent",
           )}
         >
           {item.value === "agree" ? (

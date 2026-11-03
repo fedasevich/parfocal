@@ -80,7 +80,7 @@ function FilterChip({
         tabIndex={on || (value === undefined && optionValue === undefined) ? 0 : -1}
         onClick={() => choose(optionValue)}
         className={cn(
-          "flex w-full cursor-pointer items-center gap-2 rounded-ctl border-0 bg-transparent px-2 py-1.5 text-left text-body-sm text-fg outline-none hover:bg-chrome-3 focus-visible:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-accent",
+          "flex w-full cursor-pointer items-center gap-2 rounded-ctl border-0 bg-transparent px-2 py-1.5 text-left text-body-sm text-fg outline-none hover:bg-chrome-3 focus-visible:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
           on && "bg-accent-soft",
         )}
       >
@@ -104,7 +104,7 @@ function FilterChip({
         data-active={value === undefined ? undefined : true}
         aria-label={`${label}: ${shown}`}
         className={cn(
-          "inline-flex h-7 cursor-pointer items-center gap-1 whitespace-nowrap rounded-ctl border border-line-strong bg-btn-bg px-2.5 text-caption font-medium text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-expanded:border-fg-faint data-active:border-accent data-active:bg-accent-soft",
+          "inline-flex h-7 cursor-pointer items-center gap-1 whitespace-nowrap rounded-ctl border border-line-strong bg-btn-bg px-2.5 text-caption font-medium text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent aria-expanded:border-fg-faint data-active:border-accent data-active:bg-accent-soft",
           className,
         )}
       >

@@ -128,7 +128,7 @@ function ReportBlock({
           aria-label={`Select the block ${typeof title === "string" ? title : ""}`.trim()}
           aria-pressed={selected}
           onClick={onSelect}
-          className="absolute -inset-1 cursor-pointer border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-[#1a56be]"
+          className="absolute -inset-1 cursor-pointer border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#1a56be]"
         />
       ) : null}
     </section>

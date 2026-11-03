@@ -139,7 +139,7 @@ function SettingsNavItem({
       data-slot="settings-nav-item"
       aria-current={current ? "true" : undefined}
       className={cn(
-        "flex h-8.5 cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 text-left text-body-sm text-fg-dim outline-none hover:bg-[color-mix(in_srgb,var(--chrome-3)_60%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-accent",
+        "flex h-8.5 cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 text-left text-body-sm text-fg-dim outline-none hover:bg-[color-mix(in_srgb,var(--chrome-3)_60%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         current && "cursor-default bg-chrome-3 font-medium text-fg hover:bg-chrome-3",
         className,
       )}

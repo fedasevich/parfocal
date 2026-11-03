@@ -86,7 +86,7 @@ function JobsButton({ running, percent, open = false, className, ...props }: Job
       aria-expanded={open}
       title={`Jobs: ${running} running. Uploads and model runs`}
       className={cn(
-        "grid size-8 cursor-pointer place-items-center rounded-ctl border border-transparent bg-transparent p-0 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-accent",
+        "grid size-8 cursor-pointer place-items-center rounded-ctl border border-transparent bg-transparent p-0 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         open && "bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]",
         className,
       )}
@@ -132,7 +132,7 @@ function JobRow({
     <div
       data-slot="job-row"
       className={cn(
-        "relative -mx-2 grid grid-cols-[16px_minmax(0,1fr)] items-start gap-3 rounded-ctl px-2 py-2 focus-within:outline-2 focus-within:outline-accent hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)]",
+        "relative -mx-2 grid grid-cols-[16px_minmax(0,1fr)] items-start gap-3 rounded-ctl px-2 py-2 focus-within:outline-2 focus-within:outline-solid focus-within:outline-accent hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)]",
         className,
       )}
       {...props}
@@ -170,7 +170,7 @@ function JobRowLink({ className, ...props }: React.ComponentProps<"button">) {
     <button
       type="button"
       className={cn(
-        "inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent px-1 text-body-sm text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent",
+        "inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent px-1 text-body-sm text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         className,
       )}
       {...props}

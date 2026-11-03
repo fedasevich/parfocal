@@ -278,7 +278,7 @@ function TierPicker({
               onPointerLeave={() => setPointed(null)}
               onFocus={() => setPointed(tier.name)}
               onBlur={() => setPointed(null)}
-              className="grid cursor-pointer grid-cols-[22px_1fr_auto] items-start gap-2.5 rounded-ctl px-2.5 py-2.25 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-accent aria-checked:bg-accent-soft"
+              className="grid cursor-pointer grid-cols-[22px_1fr_auto] items-start gap-2.5 rounded-ctl px-2.5 py-2.25 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-checked:bg-accent-soft"
             >
               <i
                 aria-hidden="true"
@@ -493,7 +493,7 @@ function PanePicker({
               onPick(slide.key);
             }
           }}
-          className="grid cursor-pointer grid-cols-[64px_1fr_16px] items-center gap-3 rounded-ctl p-2 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-accent aria-selected:bg-accent-soft"
+          className="grid cursor-pointer grid-cols-[64px_1fr_16px] items-center gap-3 rounded-ctl p-2 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-selected:bg-accent-soft"
         >
           <SlideThumb slide={slide} large />
           <span className="grid">

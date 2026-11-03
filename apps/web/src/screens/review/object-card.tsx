@@ -138,7 +138,7 @@ export function NoteEditor({
         onChange={(event) => onText(event.target.value)}
         placeholder="Add a note, type @ to mention someone"
         aria-label={`Note on your decision for ${object}`}
-        className="min-h-13.5 w-full resize-y rounded-ctl border border-accent bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint"
+        className="min-h-13.5 w-full resize-y rounded-ctl border border-accent bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint focus-visible:shadow-[0_0_0_3px_var(--accent-soft)]"
       />
       <div className="flex items-center gap-2">
         <span className="flex-1 text-caption text-fg-dim">Optional</span>
