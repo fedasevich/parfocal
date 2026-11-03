@@ -35,6 +35,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["zoomin", "Zoom in", ["+"], "clin"],
       ["zoomout", "Zoom out", ["-"], "clin"],
       ["fit", "Fit the slide", ["0"], "new"],
+      ["zoomsel", "Zoom to the selection", ["⇧F"], "new"],
       ["mag", "Objective 1.25× to 40×", ["⌥1 … ⌥6"], "clin", { range: true }],
       ["pan", "Pan, faster with Shift", ["Arrows"], "clin", { direction: true, sustain: true }],
       ["peek", "Whole slide", ["Z"], "new", { hold: true }],

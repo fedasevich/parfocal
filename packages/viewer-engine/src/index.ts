@@ -41,6 +41,8 @@ export {
   sameCamera,
   screenScale,
   screenToSlide,
+  selectionCamera,
+  selectionMarginPx,
   slideToScreen,
   tissueArea,
   tissueMarginShare,

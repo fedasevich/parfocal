@@ -11,6 +11,7 @@ import {
   type SlideArea,
   sameCamera,
   screenToSlide,
+  selectionCamera,
 } from "../camera/camera.ts";
 import { createCameraController, type FlightEnd, type ScreenOffset } from "../camera/controller.ts";
 import { zoomForMagnification } from "../camera/magnification.ts";
@@ -261,6 +262,17 @@ export function createViewerEngine<Slide extends EngineSlide>(
     const target =
       viewport && viewport.width > 0 && viewport.height > 0
         ? areaCamera(area, viewport, currentBounds())
+        : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
+    return controller.flyTo(target);
+  };
+
+  const flyToSelection = (area: SlideArea, marginPx?: number) => {
+    assertAlive();
+    fitPending = false;
+    const viewport = mounted ? measure(mounted.container) : null;
+    const target =
+      viewport && viewport.width > 0 && viewport.height > 0
+        ? selectionCamera(area, viewport, currentBounds(), marginPx)
         : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
     return controller.flyTo(target);
   };
@@ -533,6 +545,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       return controller.flyTo(target);
     },
     flyToArea,
+    flyToSelection,
     subscribeCamera: (listener) => {
       assertAlive();
       cameraListeners.add(listener);
