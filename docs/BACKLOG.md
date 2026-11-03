@@ -1659,7 +1659,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs mock: worklist, mock: case/objects, mock: guided/comments, mock: guided/display.
   Size: M.
 
-- [ ] DS-026 · Table
+- [x] DS-026 · Table
   One table for lists of rows across the app: the admin sections, the project's slides, the object table, the disagreement queue and the deposits of the clinical report. Header cells in the 12 px label style, numbers in tabular figures and IDs in monospace, row hover and a selected row, an optional checkbox column for picking several rows, sortable columns that say their order, and one empty row that says why the table is empty.
   Done when stories cover selection, sorting and the empty row in both themes, keyboard tests reach every row and its actions, and axe passes.
   Depends on PROTO-011. Refs mock: admin/people, mock: project/slides, mock: layers/table, mock: disagree/queue, mock: creport/deposits.
@@ -1705,6 +1705,17 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-017 (density modes) put table rows, the inspector and the My work to-review rows on the `--density-*` variables, but page gaps (the mock's `.wl-main` 22 to 14 px) and the other list rows still use fixed spacing.
   Done when every list row and page gap reads a density variable, and the density spec checks a page gap and one more list in both modes.
   Depends on DS-017.
+  Size: S.
+
+- [ ] DS-034 · App tables on the shared table
+  DS-026 (table) added sortable headers, a checkbox column, `selected` rows, number and ID cells and an empty row in packages/ui. Move the admin sections, project slides, object table, disagreement queue and clinical report deposits onto them. The object table picks a row by mouse click only, so its rows cannot be reached by keyboard.
+  Done when each of those tables uses the shared table, a test tabs to an object table row and opens it with Enter, and axe passes on each screen.
+  Depends on DS-026.
+  Size: M.
+
+- [ ] DS-035 · Warn tag contrast in the light theme
+  DS-026 (table) found the amber "warn" status tag at 4.3:1 against the light page background, below the 4.5:1 axe needs.
+  Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
   Size: S.
 
 ---
