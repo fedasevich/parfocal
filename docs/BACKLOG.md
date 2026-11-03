@@ -2243,7 +2243,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 33.
   Size: M.
 
-- [ ] REVIEW-014 · Model warnings
+- [x] REVIEW-014 · Model warnings
   Typer under 70% on its own test set, uncalibrated, out of distribution (confident share far below the test set's), not validated for this specimen.
   Done when unit tests trigger each warning from model metadata and slide statistics.
   Refs docs 28, 29.
@@ -2295,6 +2295,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   REVIEW-011 (AI wording modes) added `confidence-words.ts` with plain, percent and frequency modes, but nothing on screen uses it, and the personal setting `confidence_wording` (words, numbers, colour, hidden) has no frequency option.
   Done when the inspector and the gallery tile read their AI wording through the module, the setting offers frequency, and component tests cover each mode and the percent fallback for an uncalibrated typer.
   Depends on REVIEW-011.
+  Size: S.
+
+- [ ] REVIEW-023 · Model warnings in the inspector
+  REVIEW-014 (model warnings) added `modelWarnings` and `slideStatistics` in packages/ui lib/model-warnings.ts, but nothing shows them. Show them in the inspector's Model warnings block (the mock's `blkWarn` toggle).
+  Done when component tests cover no warning, one and several, and the block's toggle.
+  Depends on REVIEW-014.
   Size: S.
 
 ---
@@ -3044,6 +3050,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] AINUC-006 · Calibration
   Temperature scaling per typer and test-time augmentation setting, fitted on a separate split, stored in the registry, never vector scaling.
+  Store `testSetAccuracy`, `testSetConfidentShare`, `testSetUnsureShare` and `validatedSites` for each typer, which REVIEW-014 (model warnings) reads.
   Done when MLEVAL reports ECE under 0.05 for the active typer.
   Refs docs 28, 29.
   The least sure first order applies the temperature before it rates objects, when a task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide).
