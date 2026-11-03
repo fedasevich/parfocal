@@ -167,3 +167,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0159](0159-tier-mapping-per-workspace.md) | Each workspace maps Best, Good and Fast to an exact model per task in its own table | Accepted | 2026-11-03 |
 | [0160](0160-search-matches-stored-lowercase-labels.md) | Search matches stored lowercase copies of labels with LIKE instead of ILIKE, because row-level security keeps ILIKE off any index | Accepted | 2026-11-03 |
 | [0161](0161-derived-overview-levels-sidecar.md) | Ingest writes the missing coarse power-of-two levels as a lossless TIFF sidecar that the pixel source appends to the slide's levels | Accepted | 2026-11-03 |
+| [0162](0162-ingest-failure-classes-and-upload-refused-notification.md) | Ingest failures have two classes, set by the server, and a refused file sends an upload refused notification | Accepted | 2026-11-03 |

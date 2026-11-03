@@ -1,4 +1,4 @@
-# XXXX. Ingest failures have two classes, set by the server, and a refused file sends an upload refused notification
+# 0162. Ingest failures have two classes, set by the server, and a refused file sends an upload refused notification
 
 - Date: 2026-11-03
 - Status: Accepted
