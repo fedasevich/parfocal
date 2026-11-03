@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../src/components/button.tsx";
-import { Icon, type IconSize, iconNames } from "../src/components/icon.tsx";
 import { Keycap } from "../src/components/keycap.tsx";
 
 const meta = {
@@ -17,38 +16,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const sizes: IconSize[] = ["xs", "sm", "md", "lg", "xl"];
-
-export const IconSet: Story = {
-  render: () => (
-    <div className="grid w-[880px] grid-cols-8 gap-3 text-fg">
-      {iconNames.map((name) => (
-        <div key={name} className="grid justify-items-center gap-1.5 text-caption text-fg-dim">
-          <Icon name={name} size="md" className="text-fg" />
-          <span>{name}</span>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const IconSizes: Story = {
-  render: () => (
-    <div className="flex items-end gap-6 text-fg">
-      {sizes.map((size) => (
-        <div key={size} className="grid justify-items-center gap-2 text-caption text-fg-dim">
-          <Icon name="check" size={size} className="text-fg" />
-          <b>{size}</b>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const IconWithName: Story = {
-  render: () => <Icon name="lock" size="md" label="Locked by the task" className="text-fg" />,
-};
 
 export const Keycaps: Story = {
   render: () => (
