@@ -4367,7 +4367,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-001, DS-020. Refs mock: runmodel, doc 39.
   Size: M.
 
-- [ ] JOBS-003 · Jobs tray
+- [x] JOBS-003 · Jobs tray
   A ring in the top bar with the number running opens a list of running and finished uploads and runs. Each row opens its steps.
   Done when component tests cover the states and E2E opens an upload and a run from the tray.
   Depends on JOBS-001, DS-019. Refs mock: upload/tray, doc 41.
