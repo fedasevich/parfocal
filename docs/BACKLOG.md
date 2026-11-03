@@ -1938,7 +1938,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
 
 The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-direction.md)). The inspector has Objects, Layers, Comments and Opinion tabs (CASE-014). Sentinel-node staging is a project analysis template (PROJ-005), so the staging tasks here and in REVIEW apply only in projects that turn it on.
 
-- [ ] CASE-000 · Research check
+- [x] CASE-000 · Research check
   Done when the case view state model (slide, workspace, inspector tab, area, review position) is captured in an ADR.
   Size: S.
 

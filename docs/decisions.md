@@ -79,6 +79,15 @@ ADR 0173 picks Lingui 6 with ICU messages, PO catalogues and the en-XA pseudo lo
 
 Your choice:
 
+## 36. Remember a slide's camera across visits, from CASE-000 (case view state model)
+
+ADR 0176 keeps each slide's last camera only while its case is open (CASE-003 built that). The mock does not ask for more.
+
+- a. No, forget it when the case closes. (recommended, matches the mock)
+- b. Yes, remember it per device across visits.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
