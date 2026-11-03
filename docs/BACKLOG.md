@@ -403,7 +403,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 ## 01 FOUND · Repository and engineering foundations
 
-- [ ] FOUND-000 · Research check for monorepo, CI and developer experience
+- [x] FOUND-000 · Research check for monorepo, CI and developer experience
   Re-check STACK-013, STACK-018 and STACK-038 against current releases and record anything that changed.
   Done when an ADR exists or the existing ADRs are confirmed.
   Size: S.
