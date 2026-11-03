@@ -186,3 +186,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0187](0187-motion-tokens-scale-and-global-reduced-motion.md) | Motion tokens scale with one variable, and reduced motion is a global cut in CSS | Accepted | 2026-11-03 |
 | [0189](0189-developer-drawer-control-list.md) | The developer drawer keeps the ten sections of the mock, and the debug handle is `window.__parfocal` | Proposed | 2026-11-03 |
 | [0191](0191-home-layout-as-a-personal-setting.md) | The home layout is a personal setting that setup writes from the chosen role and settings change | Proposed | 2026-11-03 |
+| [0194](0194-confidence-display-rules-and-evidence.md) | Confidence display rules are written over calibrated probabilities and are re-checked per typer | Proposed | 2026-11-03 |

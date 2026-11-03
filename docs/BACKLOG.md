@@ -2208,7 +2208,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] REVIEW-011 · AI wording modes
   Plain words (default), percent, frequency, with the validated phrases "tumor", "probably tumor", "tumor or immune".
-  Done when unit tests map calibrated probabilities to phrases with the doc 28 band thresholds.
+  Done when unit tests map calibrated probabilities to phrases with the four band thresholds of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) (confidence display rules), read per typer.
   Size: S.
 
 - [ ] REVIEW-012 · Outline display modes
