@@ -13,6 +13,7 @@ import {
   isConnectModelScene,
 } from "../onboarding/scenes.ts";
 import { okData } from "../placeholder.tsx";
+import { type AdminAccess, adminAccessOf, refusalOf } from "./admin-access.ts";
 import { AdminShell, adminHref, adminSectionList } from "./admin-shell.tsx";
 import { ConnectModelScreen } from "./connect-model.tsx";
 import { OverviewSection } from "./overview.tsx";
@@ -50,6 +51,22 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
     me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? "The workspace";
   const open = (next: AdminSection) =>
     change({ section: next, scene: undefined, modal: undefined });
+
+  if (me === undefined) {
+    return (
+      <AdminShell section={section} folded>
+        <p className="p-8 text-body-sm text-fg-dim">Checking your access…</p>
+      </AdminShell>
+    );
+  }
+  const access = adminAccessOf(me);
+  if (access !== "granted") {
+    return (
+      <AdminShell section={section} folded>
+        <AdminRefusal access={access} />
+      </AdminShell>
+    );
+  }
 
   if (isConnectModelScene(scene)) {
     return (
@@ -189,5 +206,30 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
       </main>
       {notice}
     </AdminShell>
+  );
+}
+
+export function AdminRefusal({ access }: { access: Exclude<AdminAccess, "granted"> }) {
+  const renderLink = useRouterLink();
+  const refusal = refusalOf(access);
+  return (
+    <main
+      aria-labelledby="admin-refusal-title"
+      className="mx-auto flex max-w-xl flex-col gap-3 px-(--pad-modal) py-16"
+    >
+      <h1 id="admin-refusal-title" className="m-0 text-title-sm font-semibold text-fg">
+        {refusal.title}
+      </h1>
+      <p role="alert" className="m-0 text-body text-fg-dim">
+        {refusal.body}
+      </p>
+      <div>
+        {renderLink({
+          href: destinations.home(),
+          className: "text-body-sm font-medium text-accent hover:underline",
+          children: "Back to Parfocal",
+        })}
+      </div>
+    </main>
   );
 }

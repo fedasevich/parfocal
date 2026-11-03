@@ -11,6 +11,7 @@ import type { PersonInfo } from "@parfocal/ui/components/person";
 import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { canOpenAdmin } from "../screens/admin/admin-access.ts";
 import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "./account-menu.tsx";
@@ -99,7 +100,9 @@ export function GlobalShell({ children }: { children: ReactNode }) {
       title: "Workspace",
       items: [
         { id: "team", href: destinations.team(), label: "Team", icon: "users" },
-        { id: "admin", href: destinations.admin(), label: "Admin", icon: "sliders" },
+        ...(canOpenAdmin(me)
+          ? [{ id: "admin", href: destinations.admin(), label: "Admin", icon: "sliders" as const }]
+          : []),
       ],
     },
   ];
