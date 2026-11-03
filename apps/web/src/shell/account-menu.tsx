@@ -110,6 +110,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
       organisation={workspace?.organisation_name ?? workspace?.name}
       presence={presenceOf(availability, now())}
       onNextPresence={() => setAvailability.mutate({ data: nextAvailability(availability, now()) })}
+      presenceBusy={setAvailability.isPending}
       theme={theme}
       onThemeChange={chooseTheme}
       initialsOnly={initialsOnly}

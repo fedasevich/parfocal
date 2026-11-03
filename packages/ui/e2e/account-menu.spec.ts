@@ -19,6 +19,14 @@ test("the status row switches availability and keeps the menu open", async ({ pa
   await expect(page.getByRole("menuitem", { name: /Available/ })).toBeVisible();
 });
 
+test("the status row waits while the change is saving", async ({ page }) => {
+  await page.goto(story("components-overlays--account-menu-saving"));
+  await expect(page.getByRole("menuitem", { name: /Available/ })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+});
+
 test("theme and initials only apply at once", async ({ page }) => {
   await page.goto(story(open));
   await page.getByRole("menuitemradio", { name: "Light" }).click();
