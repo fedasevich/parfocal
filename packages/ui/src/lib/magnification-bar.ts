@@ -40,6 +40,15 @@ function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+export function formatReadout(
+  magnification: number,
+  digital: boolean,
+  micronsPerPixel: number,
+): string {
+  const objective = formatMagnification(magnification, "objective");
+  return `${objective}${digital ? " digital" : ""} · ${micronsPerPixel.toFixed(2)} µm/px`;
+}
+
 export function formatMagnification(
   value: number,
   label: MagnificationLabel = "objective",

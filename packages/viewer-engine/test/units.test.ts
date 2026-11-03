@@ -241,6 +241,47 @@ test("the scale bar width equals its microns over the microns per screen pixel a
   }
 });
 
+test("at the viewer's 96 pixel width a 0.25 slide picks one nice length per zoom", () => {
+  const expected: ReadonlyArray<readonly [number, string]> = [
+    [2, "10 µm"],
+    [1, "10 µm"],
+    [0, "20 µm"],
+    [-1, "20 µm"],
+    [-2, "50 µm"],
+    [-3, "100 µm"],
+    [-4, "200 µm"],
+    [-5, "500 µm"],
+    [-6, "1 mm"],
+    [-7, "2 mm"],
+    [-8, "5 mm"],
+    [-9, "5 mm"],
+    [-12, "5 mm"],
+  ];
+  for (const [zoom, label] of expected) {
+    assert.equal(
+      scaleBar({ zoom, micronsPerPixel: 0.25, maxWidthPx: 96 })?.label,
+      label,
+      `zoom ${zoom}`,
+    );
+  }
+});
+
+test("zooming out never shortens the bar and every length from 10 µm to 5 mm is shown on the way", () => {
+  for (const { micronsPerPixel } of slides) {
+    const seen = new Set<number>();
+    let previous = 0;
+    for (let zoom = 4; zoom >= -14; zoom -= 0.125) {
+      const bar = scaleBar({ zoom, micronsPerPixel, maxWidthPx: 96 });
+      assert.ok(bar);
+      assert.ok(bar.microns >= previous, `zoom ${zoom} on ${micronsPerPixel}`);
+      previous = bar.microns;
+      seen.add(bar.microns);
+      assert.equal(bar.label.endsWith(" mm"), bar.microns >= 1000);
+    }
+    assert.deepEqual([...seen], [...niceScaleBarMicrons]);
+  }
+});
+
 test("a bar that cannot fit falls back to the shortest length with its true width", () => {
   const bar = scaleBar({ zoom: 4, micronsPerPixel: 0.499, maxWidthPx: 100 });
   assert.equal(bar?.microns, 10);
