@@ -99,7 +99,7 @@ function FoldingZone({ title, summary, className, children, ...props }: FoldingZ
       )}
       {...props}
     >
-      <CollapsiblePrimitive.Trigger className="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-zone border-0 bg-transparent p-(--pad-zone) text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-accent">
+      <CollapsiblePrimitive.Trigger className="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-zone border-0 bg-transparent p-(--pad-zone) text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent">
         <span className="grid min-w-0 gap-0.5">
           <span className="text-body font-semibold">{title}</span>
           <small className="hidden truncate text-caption text-fg-dim group-data-closed/fold:block">

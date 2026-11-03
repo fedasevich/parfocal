@@ -135,7 +135,7 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "minimap",
       "Minimap",
       "personal",
-      "When useful shows it once you zoom past the whole slide.",
+      "When useful shows it once you zoom in until half of the tissue or less is on screen. Never still lets you hold Z for the whole slide.",
     ),
     row(
       "strip",

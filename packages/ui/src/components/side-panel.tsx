@@ -55,9 +55,17 @@ function SidePanel({
         </TabsList>
         {tabs.map((tab) => (
           <TabsContent key={tab.value} value={tab.value} className="flex min-h-0 flex-1 flex-col">
-            <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-auto p-5">{tab.body}</div>
+            <div
+              data-slot="side-panel-body"
+              className="flex min-h-0 flex-1 flex-col gap-(--density-panel-gap) overflow-auto p-(--density-panel-pad)"
+            >
+              {tab.body}
+            </div>
             {tab.foot ? (
-              <div className="grid gap-2.5 border-t border-line bg-chrome px-5 pt-3.5 pb-4.5">
+              <div
+                data-slot="side-panel-foot"
+                className="grid gap-2.5 border-t border-line bg-chrome px-(--density-foot-x) pt-(--density-foot-top) pb-(--density-foot-bottom)"
+              >
                 {tab.foot}
               </div>
             ) : null}

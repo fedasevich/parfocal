@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const keyBindingVariants = cva(
-  "inline-grid h-6.5 min-w-7 shrink-0 cursor-pointer place-items-center rounded-md border border-b-2 border-line-strong bg-chrome-2 px-2 font-mono text-caption font-medium text-fg outline-none hover:not-disabled:border-fg-dim focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+  "inline-grid h-6.5 min-w-7 shrink-0 cursor-pointer place-items-center rounded-md border border-b-2 border-line-strong bg-chrome-2 px-2 font-mono text-caption font-medium text-fg outline-none hover:not-disabled:border-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
   {
     variants: {
       state: {
@@ -12,8 +12,7 @@ const keyBindingVariants = cva(
         mine: "border-accent bg-accent-soft text-accent",
         conflict: "border-bad text-bad",
         off: "text-fg-faint line-through",
-        recording:
-          "min-w-[110px] border-accent text-fg motion-safe:animate-[pulse_1.2s_ease-in-out_infinite]",
+        recording: "min-w-[110px] border-accent text-fg motion-safe:animate-pulse",
       },
       size: { md: "", sm: "pointer-events-none h-5 min-w-5 text-label" },
     },
@@ -221,7 +220,7 @@ function KeyFinder({ listening, found, onClear, className, ...props }: KeyFinder
         data-slot="key-finder"
         data-listening={listening || undefined}
         className={cn(
-          "flex h-8 min-w-0 flex-1 cursor-text items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 text-left text-body-sm text-fg-dim outline-none focus-visible:outline-2 focus-visible:outline-accent",
+          "flex h-8 min-w-0 flex-1 cursor-text items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 text-left text-body-sm text-fg-dim outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
           listening && "border-accent text-fg shadow-[0_0_0_3px_var(--accent-soft)]",
         )}
         {...props}

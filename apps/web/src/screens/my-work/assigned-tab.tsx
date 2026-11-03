@@ -26,7 +26,15 @@ function statusOf(task: AssignedTask, signedOn: string | null): [string, StatusT
   }
 }
 
-function AssignedRow({ task }: { task: AssignedTask }) {
+function AssignedRow({
+  task,
+  selected,
+  onSelect,
+}: {
+  task: AssignedTask;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const goTo = useGoTo();
   const people = usePeople();
   const detail = okData(useGetReviewTask(task.id).data);
@@ -50,7 +58,14 @@ function AssignedRow({ task }: { task: AssignedTask }) {
   const teamRow = (scene: "nudge" | "reassign") =>
     destinations.team({ scene, task: task.id, focus: behindmost });
   return (
-    <tr className="border-line border-b">
+    <tr
+      aria-selected={selected}
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest("button, a")) return;
+        onSelect();
+      }}
+      className={`cursor-pointer border-line border-b ${selected ? "bg-accent-soft" : ""}`}
+    >
       <td className="px-2 py-2 align-middle">
         <b className="font-mono font-medium text-fg">{task.code}</b>{" "}
         <b className="font-medium text-fg">{task.name}</b>
@@ -124,7 +139,15 @@ function AssignedRow({ task }: { task: AssignedTask }) {
   );
 }
 
-export function AssignedTab({ tasks }: { tasks: AssignedTask[] }) {
+export function AssignedTab({
+  tasks,
+  selected,
+  onSelect,
+}: {
+  tasks: AssignedTask[];
+  selected: string | undefined;
+  onSelect: (key: string | undefined) => void;
+}) {
   const goTo = useGoTo();
   const firstProject = tasks[0]?.project.id;
   return (
@@ -155,7 +178,12 @@ export function AssignedTab({ tasks }: { tasks: AssignedTask[] }) {
         </thead>
         <tbody>
           {tasks.map((task) => (
-            <AssignedRow key={task.id} task={task} />
+            <AssignedRow
+              key={task.id}
+              task={task}
+              selected={task.id === selected}
+              onSelect={() => onSelect(task.id)}
+            />
           ))}
         </tbody>
       </table>

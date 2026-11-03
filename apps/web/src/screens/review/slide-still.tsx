@@ -66,8 +66,11 @@ export function homeCamera(view: StillView, size: Size): Camera {
   };
 }
 
+export const magnificationOf = (view: StillView, camera: Camera) =>
+  camera.scale * readoutPerScale[imageOf(view)];
+
 export const readout = (view: StillView, camera: Camera) => {
-  const value = camera.scale * readoutPerScale[imageOf(view)];
+  const value = magnificationOf(view, camera);
   return `${value >= 10 ? value.toFixed(0) : value >= 1 ? value.toFixed(1) : value.toFixed(2)}×`;
 };
 

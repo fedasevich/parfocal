@@ -45,6 +45,7 @@ export interface RendererRoute<Slide extends EngineSlide = EngineSlide> {
   setCamera(camera: Camera): void;
   setOverlays(overlays: readonly OverlayLayer[]): void;
   invalidateOverlay(id: string): void;
+  setSlideBrightness(factor: number): void;
   destroy(): void;
 }
 
@@ -148,11 +149,14 @@ export interface ViewerEngine {
   readonly endDrag: () => void;
   readonly flyTo: (target: Camera) => Promise<FlightEnd>;
   readonly flyToArea: (area: SlideArea) => Promise<FlightEnd>;
+  readonly flyToSelection: (area: SlideArea, marginPx?: number) => Promise<FlightEnd>;
   readonly subscribeCamera: (listener: () => void) => Unsubscribe;
   readonly on: <Name extends keyof EngineEvents>(
     name: Name,
     listener: (event: EngineEvents[Name]) => void,
   ) => Unsubscribe;
   readonly registerOverlay: (layer: OverlayLayer) => OverlayRegistration;
+  readonly getSlideBrightness: () => number;
+  readonly setSlideBrightness: (percent: number) => void;
   readonly dispose: () => void;
 }

@@ -25,13 +25,13 @@ import { Slider } from "@parfocal/ui/components/slider";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
+import { debugHandleName } from "../../debug-handle.ts";
 import { SlideStill } from "../review/slide-still.tsx";
+import { BenchSection } from "./bench-section.tsx";
 import {
   benchParameters,
-  benchRuns,
   bigSlides,
   colourMaps,
-  csvColumns,
   type DeveloperSection,
   debugHandle,
   developerNav,
@@ -281,7 +281,7 @@ export function DeveloperScreen({
         <label
           key={name}
           className={cn(
-            "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-center gap-2.25 rounded-md px-2 py-1.5 text-left hover:bg-[color-mix(in_srgb,var(--fg)_5%,transparent)] has-focus-visible:outline-2 has-focus-visible:outline-(--accent)",
+            "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-center gap-2.25 rounded-md px-2 py-1.5 text-left hover:bg-[color-mix(in_srgb,var(--fg)_5%,transparent)] has-focus-visible:outline-2 has-focus-visible:outline-solid has-focus-visible:outline-(--accent)",
             sample === name && "bg-surf-hl hover:bg-surf-hl",
           )}
         >
@@ -756,75 +756,7 @@ export function DeveloperScreen({
         </DevZone>
       </>
     ),
-    bench: () => (
-      <>
-        <DevZone
-          title="Pan sweep"
-          note="Pans a 180-step ellipse at this zoom, then waits 600 ms for tiles to settle."
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="primary">
-              Run pan sweep
-            </Button>
-            <DevStatus>Last run 14:02 · {route} · 100k nuclei · zoom 2</DevStatus>
-          </div>
-          <DevFigures
-            items={[
-              ["6.2 ms", "frame p50"],
-              ["11.8 ms", "frame p95"],
-              ["60", "fps"],
-              ["412", "tiles resident"],
-            ]}
-          />
-        </DevZone>
-        <DevZone
-          title="Runs"
-          end={
-            <Button size="sm">
-              <Icon name="download" />
-              Export CSV, 12 runs
-            </Button>
-          }
-        >
-          <table className="w-full border-collapse text-body-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-caption text-fg-faint">
-                <th className="py-1.5 font-semibold">Renderer</th>
-                {["Nuclei", "Zoom", "p50", "p95", "fps"].map((name) => (
-                  <th key={name} className="py-1.5 text-right font-semibold">
-                    {name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="font-mono">
-              {benchRuns.map(([name, nuclei, zoom, p50, p95, fps]) => (
-                <tr key={name} className="border-b border-line last:border-b-0">
-                  <td className="py-1.5 font-semibold text-fg">{name}</td>
-                  <td className="py-1.5 text-right">{nuclei}</td>
-                  <td className="py-1.5 text-right">{zoom}</td>
-                  <td className="py-1.5 text-right">{p50} ms</td>
-                  <td className="py-1.5 text-right">{p95} ms</td>
-                  <td className="py-1.5 text-right">{fps}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DevZone>
-        <DevZone title="CSV columns">
-          <div className="flex flex-wrap gap-1.5">
-            {csvColumns.map((column) => (
-              <code
-                key={column}
-                className="rounded-sm bg-chrome-3 px-1.5 py-0.5 font-mono text-caption"
-              >
-                {column}
-              </code>
-            ))}
-          </div>
-        </DevZone>
-      </>
-    ),
+    bench: () => <BenchSection route={route} />,
     hud: () => (
       <>
         <DevZone title="HUD">
@@ -886,7 +818,7 @@ export function DeveloperScreen({
           title="Debug handle"
           note={
             <>
-              In the browser console as <code className="font-mono">window.__wsi</code>.
+              In the browser console as <code className="font-mono">{debugHandleName}</code>.
             </>
           }
         >

@@ -156,6 +156,78 @@ Clinical case screens now show the patient banner (name, sex, age, record number
 
 Your choice:
 
+## 44. Pathologist check of zone names and type hints, from REVIEW-000 (review research check)
+
+ADR 0013 asked REVIEW-000 for a pathologist to confirm the zone names ("tumor or immune") and the type hints. No doctor has done that yet. ADR 0194 confirms the confidence display rules for HoVer-NeXt only, because no typer is chosen yet (AINUC-000).
+
+- a. Fold it into the round 4 pilot. (recommended)
+- b. Add a separate task for a pathologist wording review.
+- c. Drop it.
+
+Your choice:
+
+## 45. Annotate key map and geometry libraries, from ANN-000 (annotate research check)
+
+ADR 0197 (proposed) keeps the kit key map, adds hold Space to pan and Alt as a second brush erase key, and picks Clipper2 (`clipper2-ts`), earcut (`@math.gl/polygon`) and `flatbush` with our own planar measures. Turf is rejected because its measures are geodesic. QuPath uses M for move, and the kit uses M for the count marker.
+
+- a. Keep M only for markers, and accept ADR 0197. (recommended)
+- b. Also accept QuPath's "." for markers.
+
+Your choice:
+
+## 46. The Add a note key, from DS-030 (every key hint from the key registry)
+
+N is No in the yes or no decision style, so "Add a note" moved from N to ⇧N. People can rebind it.
+
+- a. Keep ⇧N. (recommended, one key in every style)
+- b. Use C, the same key as Comment.
+- c. N in every style except yes or no.
+
+Your choice:
+
+## 47. The v1 model line-up, from AIP-000 (AI pipeline research check)
+
+ADR 0202 (proposed) sets PathoSAM AIS for outlines, HoVer-NeXt for typing, the MONAI CAMELYON ResNet18 for the tumor map and PathoSAM ViT-L and ViT-B for click and box. Every v1 model is non-commercial or has an unconfirmed licence. Hugging Face, Zenodo and arXiv were unreachable, so those licences are copied from ADR 0042 and marked not re-read.
+
+- a. Accept ADR 0202 as the v1 starting line-up. (recommended for the thesis and pilot, which are non-commercial)
+- b. Change rows first. Write which here.
+
+AIP-002 also requires a licence block, which conflicts with STACK-031 (licence policy) being on hold:
+
+- c. Record licences only and block nothing while STACK-031 is on hold. (recommended)
+- d. Drop that condition from AIP-002.
+- e. Keep the block.
+
+Your choice:
+
+## 48. The zoom to selection key, from NAV-012 (zoom to selection)
+
+NAV-012 asks for Shift+2, but the approved mock and kit give Shift+1 to Shift+4 to display presets, and the default keymap must have no clashes. It is built on ⇧F for now, and people can rebind it.
+
+- a. Keep ⇧F. (recommended, F already means fit)
+- b. Use Shift+2 and move the display presets, which changes the mock.
+- c. Another key, such as "." or ⇧0.
+
+Your choice:
+
+## 49. A manual Lock the screen in the account menu, from SHELL-012 (account menu)
+
+The account menu shows "Lock the screen" disabled. Building it needs LockCard wording for a manual lock instead of "after N minutes" (IAM-021, in review).
+
+- a. Yes, build a manual lock in the menu. (recommended, quick to leave a workstation safely)
+- b. Drop it from the menu.
+
+Your choice:
+
+## 50. How many class keys, from ANN-011 (classes and keys 1 to 4)
+
+The task title says keys 1 to 4, but its note says keys follow the project taxonomy up to 9 (PROJ-004). It is built with 1 to 9 in the annotate scope only, so it never clashes with the decision digits in review.
+
+- a. Keep 1 to 9. (recommended, matches the taxonomy limit)
+- b. Narrow to 1 to 4 as the title says.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

@@ -1,35 +1,28 @@
-import { type Me, useListTenantMembers } from "@parfocal/api-client";
 import {
-  AccountMenu as AccountMenuView,
-  type AccountPresence,
-} from "@parfocal/ui/components/account-menu";
+  getGetMyAvailabilityQueryKey,
+  type Me,
+  useGetMyAvailability,
+  useListTenantMembers,
+  useSetMyAvailability,
+} from "@parfocal/api-client";
+import { AccountMenu as AccountMenuView } from "@parfocal/ui/components/account-menu";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@parfocal/ui/components/dropdown-menu";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { now } from "../clock.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
 import { destinations } from "./destinations.ts";
 import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
+import { shellStore, useShell } from "./shell-store.ts";
 import { applyTheme, readTheme, type ThemeChoice } from "./theme.ts";
 
-const presences: AccountPresence[] = [
-  {
-    key: "available",
-    label: "Available",
-    hint: "Researchers can give you review tasks",
-    tone: "bg-ok",
-  },
-  { key: "busy", label: "Busy until 15:00", hint: "Nudges wait until then", tone: "bg-warn" },
-  {
-    key: "away",
-    label: "Away",
-    hint: "Team shows you as away, so tasks can be reassigned",
-    tone: "bg-fg-faint",
-  },
-];
+export const logOutUrl = "/api/auth/logout";
 
 const entries = [
   { icon: "gear", label: "Settings", href: destinations.settings("display"), keys: "⌘," },
@@ -40,9 +33,20 @@ const entries = [
     keys: "?",
   },
   { icon: "pen", label: "Profile and signature", href: destinations.settings("account") },
-  { icon: "lock", label: "Lock the screen", keys: "⌃⌘Q" },
-  { icon: "help", label: "Help and what's new" },
-] satisfies { icon: IconName; label: string; href?: string; keys?: string }[];
+  {
+    icon: "lock",
+    label: "Lock the screen",
+    keys: "⌃⌘Q",
+    disabledReason: "Locks after a quiet spell for now",
+  },
+  { icon: "help", label: "Help and what's new", disabledReason: "Not written yet" },
+] satisfies {
+  icon: IconName;
+  label: string;
+  href?: string;
+  keys?: string;
+  disabledReason?: string;
+}[];
 
 const viewAs: PersonaKey[] = ["DH", "LM", "AK", "TB"];
 
@@ -83,32 +87,39 @@ function ViewAs({ current }: { current: string | undefined }) {
 }
 
 export function AccountMenu({ me, person }: { me: Me | undefined; person: PersonInfo }) {
-  const [presence, setPresence] = useState(0);
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
-  const [initialsOnly, setInitialsOnly] = useState(false);
+  const initialsOnly = useShell((state) => state.initialsOnly);
   const goTo = useGoTo();
-  const current = presences[presence] ?? presences[0];
+  const queryClient = useQueryClient();
+  const availability = okData(useGetMyAvailability().data);
+  const setAvailability = useSetMyAvailability({
+    mutation: {
+      onSuccess: (response) => {
+        queryClient.setQueryData(getGetMyAvailabilityQueryKey(), response);
+      },
+    },
+  });
   const workspace = me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id);
   const chooseTheme = (choice: ThemeChoice) => {
     setTheme(choice);
     applyTheme(choice);
   };
-  if (!current) return null;
   return (
     <AccountMenuView
-      person={person}
+      person={shownPerson(person, initialsOnly)}
       organisation={workspace?.organisation_name ?? workspace?.name}
-      presence={current}
-      onNextPresence={() => setPresence((presence + 1) % presences.length)}
+      presence={presenceOf(availability, now())}
+      onNextPresence={() => setAvailability.mutate({ data: nextAvailability(availability, now()) })}
       theme={theme}
       onThemeChange={chooseTheme}
       initialsOnly={initialsOnly}
-      onInitialsOnlyChange={setInitialsOnly}
+      onInitialsOnlyChange={(value) => shellStore.setState({ initialsOnly: value })}
       entries={entries.map(({ href, ...entry }) => ({
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
       }))}
       extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
+      onLogOut={() => window.location.assign(logOutUrl)}
     />
   );
 }

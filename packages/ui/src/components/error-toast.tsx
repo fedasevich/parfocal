@@ -41,7 +41,7 @@ function ErrorToast({ notice, onAction, onDismiss, className, ...props }: ErrorT
           <button
             type="button"
             onClick={onAction}
-            className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+            className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
             {actionLabels[notice.action]}
           </button>
@@ -52,7 +52,7 @@ function ErrorToast({ notice, onAction, onDismiss, className, ...props }: ErrorT
           type="button"
           aria-label="Dismiss"
           onClick={onDismiss}
-          className="-mt-0.5 -mr-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
+          className="-mt-0.5 -mr-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
         >
           <Icon name="close" />
         </button>

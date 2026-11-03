@@ -31,7 +31,7 @@ function ToolRailButton({
             data-state={state}
             aria-label={keyHint ? `${label} (${keyHint})` : label}
             className={cn(
-              "group relative grid size-9.5 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent text-fg-dim outline-none hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-accent data-[state=hover]:bg-chrome-2 data-[state=hover]:text-fg data-pressed:bg-accent-fill data-pressed:text-on-accent",
+              "group relative grid size-9.5 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent text-fg-dim outline-none hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-[state=hover]:bg-chrome-2 data-[state=hover]:text-fg data-pressed:bg-accent-fill data-pressed:text-on-accent",
               ai &&
                 "before:absolute before:top-0.75 before:left-0.75 before:size-1.25 before:rounded-full before:bg-(--accent) before:content-[''] data-pressed:before:bg-on-accent",
               className,

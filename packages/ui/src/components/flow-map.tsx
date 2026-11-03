@@ -132,7 +132,7 @@ function FlowMap({ nodes, edges, width, height, onOpen, className, ...props }: F
               aria-disabled={node.dim || undefined}
               onClick={() => (node.dim ? undefined : onOpen?.(node.id))}
               className={cn(
-                "absolute grid cursor-pointer content-center gap-0.5 rounded-zone border px-2.5 text-left text-body-sm font-medium outline-none hover:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                "absolute grid cursor-pointer content-center gap-0.5 rounded-zone border px-2.5 text-left text-body-sm font-medium outline-none hover:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent",
                 nodeStyles[node.kind],
                 node.dim && "cursor-not-allowed opacity-45 hover:shadow-none",
               )}

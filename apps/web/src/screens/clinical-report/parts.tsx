@@ -105,4 +105,4 @@ export function useReportData(projectId: string, slideId: string, scene: ReportS
 }
 
 export const linkButton =
-  "cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent";
+  "cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";

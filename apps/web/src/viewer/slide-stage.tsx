@@ -117,6 +117,10 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
     };
   }, [slideId]);
 
+  useEffect(() => {
+    session?.engine.setSlideBrightness(brightness);
+  }, [session, brightness]);
+
   return (
     <div
       data-testid="slide-stage"
@@ -125,11 +129,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       data-tool={measuring ? "ruler" : "hand"}
       className="relative size-full min-h-0 bg-chrome data-[tool=ruler]:**:cursor-crosshair!"
     >
-      <div
-        ref={hostRef}
-        className="absolute inset-0"
-        style={brightness === 100 ? undefined : { filter: `brightness(${brightness / 100})` }}
-      />
+      <div ref={hostRef} className="absolute inset-0" />
       {session && hostNode ? (
         <>
           <RulerLayer

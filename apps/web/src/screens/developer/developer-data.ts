@@ -1,4 +1,5 @@
 import type { DeveloperNavGroup, HudBox } from "@parfocal/ui/components/developer-drawer";
+import { benchmarkColumns } from "../../lab/pan-sweep.ts";
 import type { SceneOf } from "../scenes.ts";
 
 export type DeveloperScene = SceneOf<"developer">;
@@ -280,21 +281,4 @@ export const benchRuns: [string, string, number, string, string, number][] = [
   ["deck webgl2", "100k", 2, "8.9", "16.1", 58],
 ];
 
-export const csvColumns = [
-  "renderer",
-  "nuclei",
-  "zoom",
-  "cullMode",
-  "frameP50",
-  "frameP95",
-  "renderMs",
-  "fps",
-  "drawn",
-  "cullMs",
-  "cullGpuMs",
-  "indexBuildMs",
-  "tilesResident",
-  "gpuBytes",
-  "networkMs",
-  "decodeMs",
-];
+export const csvColumns = benchmarkColumns;

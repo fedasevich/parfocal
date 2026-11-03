@@ -2,19 +2,38 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { type MySettings, mySettingsSchema } from "../draft/get-my-settings.ts";
 import {
   getEndOtherSessionsMockHandler,
+  getGetMyAvailabilityMockHandler,
   getListNotificationPreferencesMockHandler,
   getListSessionsMockHandler,
+  getSetMyAvailabilityMockHandler,
 } from "../generated/api.msw.ts";
-import type { NotificationKind, Preference, SessionSummary } from "../generated/api.ts";
+import type {
+  AvailabilityChange,
+  MemberAvailability,
+  NotificationKind,
+  Preference,
+  SessionSummary,
+} from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
+import { people } from "./scenario.ts";
 import { sessionPolicy } from "./scenario-admin.ts";
 import { mySettings, noticeChannels, sessions } from "./scenario-settings.ts";
+import { fakeView } from "./view.ts";
 
 let othersEnded = false;
+let myAvailability: AvailabilityChange = { status: "available" };
 
 export const resetSettingsActions = () => {
   othersEnded = false;
+  myAvailability = { status: "available" };
 };
+
+export const toMyAvailability = (): MemberAvailability => ({
+  user_id: people[fakeView().viewer].id,
+  status: myAvailability.status,
+  until: myAvailability.status === "away" ? (myAvailability.until ?? null) : null,
+  note: myAvailability.status === "away" ? (myAvailability.note ?? null) : null,
+});
 
 const hoursAfter = (at: string, hours: number) =>
   new Date(new Date(at).getTime() + hours * 3_600_000).toISOString();
@@ -60,6 +79,11 @@ export function settingsHandlers(): RequestHandler[] {
   return [
     getListSessionsMockHandler(() => toSessions()),
     getListNotificationPreferencesMockHandler(() => toPreferences()),
+    getGetMyAvailabilityMockHandler(() => toMyAvailability()),
+    getSetMyAvailabilityMockHandler(async ({ request }) => {
+      myAvailability = (await request.json()) as AvailabilityChange;
+      return toMyAvailability();
+    }),
     getEndOtherSessionsMockHandler(() => {
       const ended = othersEnded ? 0 : sessions.filter((session) => !session.current).length;
       othersEnded = true;

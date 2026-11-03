@@ -221,17 +221,11 @@ export function ProjectPage({
           <TabsList variant="page">
             <TabsTrigger value="slides">
               Slides
-              {overview ? (
-                <TabCount className="bg-transparent px-0 text-caption text-fg-faint">
-                  {overview.slides}
-                </TabCount>
-              ) : null}
+              {overview ? <TabCount>{overview.slides}</TabCount> : null}
             </TabsTrigger>
             <TabsTrigger value="tasks">
               Review tasks
-              <TabCount className="bg-transparent px-0 text-caption text-fg-faint">
-                {tasks.length}
-              </TabCount>
+              <TabCount>{tasks.length}</TabCount>
             </TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>

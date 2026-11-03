@@ -39,8 +39,6 @@ export const areaTwoCells: [number, number][] = [
   [1108.7, 1087.0],
 ];
 
-export const distanceMm = { T1: 12.0, T3: 13.2 } as const;
-
 export const cellsUnderReview = [
   { x: 634, y: 510, tumor: true },
   { x: 597, y: 487, tumor: true },

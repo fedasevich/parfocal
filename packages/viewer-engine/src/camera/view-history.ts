@@ -9,18 +9,18 @@ export const sameViewPixels = 2;
 
 export const sameViewOctaves = 0.01;
 
-export interface ViewHistoryEntries {
-  readonly back: readonly Camera[];
-  readonly forward: readonly Camera[];
-  readonly rest: Camera | null;
+export interface ViewHistoryEntries<View = Camera> {
+  readonly back: readonly View[];
+  readonly forward: readonly View[];
+  readonly rest: View | null;
 }
 
-export interface ViewHistory {
-  readonly settle: (camera: Camera) => void;
-  readonly back: (current?: Camera) => Camera | null;
-  readonly forward: (current?: Camera) => Camera | null;
+export interface ViewHistory<View = Camera> {
+  readonly settle: (view: View) => void;
+  readonly back: (current?: View) => View | null;
+  readonly forward: (current?: View) => View | null;
   readonly clear: () => void;
-  readonly entries: () => ViewHistoryEntries;
+  readonly entries: () => ViewHistoryEntries<View>;
 }
 
 export function sameView(a: Camera, b: Camera): boolean {
@@ -29,13 +29,21 @@ export function sameView(a: Camera, b: Camera): boolean {
   return Math.hypot((a.x - b.x) * scale, (a.y - b.y) * scale) <= sameViewPixels;
 }
 
-export function createViewHistory(limit = viewHistoryLimit): ViewHistory {
-  const backStack: Camera[] = [];
-  const forwardStack: Camera[] = [];
-  let rest: Camera | null = null;
+export function createViewHistory(limit?: number): ViewHistory;
+export function createViewHistory<View>(
+  limit: number,
+  same: (a: View, b: View) => boolean,
+): ViewHistory<View>;
+export function createViewHistory<View>(
+  limit = viewHistoryLimit,
+  same: (a: View, b: View) => boolean = sameView as unknown as (a: View, b: View) => boolean,
+): ViewHistory<View> {
+  const backStack: View[] = [];
+  const forwardStack: View[] = [];
+  let rest: View | null = null;
 
-  const settle = (camera: Camera) => {
-    if (rest !== null && sameView(rest, camera)) return;
+  const settle = (camera: View) => {
+    if (rest !== null && same(rest, camera)) return;
     if (rest !== null) {
       backStack.push(rest);
       if (backStack.length > limit) backStack.splice(0, backStack.length - limit);
@@ -44,7 +52,7 @@ export function createViewHistory(limit = viewHistoryLimit): ViewHistory {
     rest = camera;
   };
 
-  const step = (from: Camera[], to: Camera[], current: Camera | undefined) => {
+  const step = (from: View[], to: View[], current: View | undefined) => {
     if (current !== undefined) settle(current);
     const target = from.pop();
     if (target === undefined) return null;

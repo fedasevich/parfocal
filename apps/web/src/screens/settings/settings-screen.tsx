@@ -32,6 +32,7 @@ import { Toast } from "@parfocal/ui/components/undo-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
+import { applyDensity } from "../../shell/density.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { applyTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
@@ -312,7 +313,10 @@ function LoadedSettings({
           ["comfortable", "Comfortable"],
           ["compact", "Compact"],
         ]}
-        onChange={(value) => setP("density", value as Personal["density"])}
+        onChange={(value) => {
+          setP("density", value as Personal["density"]);
+          applyDensity(value as Personal["density"]);
+        }}
       />
     ),
     lengths: () => (

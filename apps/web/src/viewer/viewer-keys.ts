@@ -1,7 +1,10 @@
 import { presetForDigit } from "@parfocal/ui/lib/magnification-bar";
+import type { Extent } from "../annotations/shapes.ts";
 import { actionOf, type Resolve } from "../keys/actions.ts";
 import { keyRegistry } from "../keys/catalogue.ts";
 import type { Binding, Fired } from "../keys/registry.ts";
+
+export type SelectionArea = { x: number; y: number; width: number; height: number };
 
 export type PanDirection = "up" | "down" | "left" | "right";
 
@@ -9,6 +12,7 @@ export type ViewerKeyTarget = {
   zoomOctaves: number;
   zoomBy: (octaves: number) => void;
   fit: () => void;
+  zoomToSelection: () => void;
   zoomToMagnification: (magnification: number) => void;
   press: (direction: PanDirection, fast: boolean) => void;
   release: (direction: PanDirection) => void;
@@ -20,6 +24,7 @@ export const viewerKeyIds = [
   "zoomin",
   "zoomout",
   "fit",
+  "zoomsel",
   "mag",
   "pan",
   "viewback",
@@ -44,10 +49,21 @@ export function applyViewerKey(fired: Fired, target: ViewerKeyTarget, shift: boo
   if (id === "zoomin") target.zoomBy(target.zoomOctaves);
   else if (id === "zoomout") target.zoomBy(-target.zoomOctaves);
   else if (id === "fit") target.fit();
+  else if (id === "zoomsel") target.zoomToSelection();
   else if (id === "viewback") target.back();
   else if (id === "viewforward") target.forward();
   else if (id === "mag") {
     const preset = presetForDigit(Number(suffix));
     if (preset !== null) target.zoomToMagnification(preset);
   }
+}
+
+export function selectionArea(bounds: readonly Extent[]): SelectionArea | null {
+  const finite = bounds.filter((extent) => extent.every(Number.isFinite));
+  if (finite.length === 0) return null;
+  const left = Math.min(...finite.map((extent) => extent[0]));
+  const top = Math.min(...finite.map((extent) => extent[1]));
+  const right = Math.max(...finite.map((extent) => extent[2]));
+  const bottom = Math.max(...finite.map((extent) => extent[3]));
+  return { x: left, y: top, width: right - left, height: bottom - top };
 }

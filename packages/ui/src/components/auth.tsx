@@ -690,7 +690,7 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
           <label className="sr-only" htmlFor="lock-password">
             Password
           </label>
-          <span className="flex h-9 items-center gap-2 rounded-ctl border border-accent bg-surf-field px-2.5 shadow-[0_0_0_3px_var(--accent-soft)]">
+          <span className="flex h-9 items-center gap-2 rounded-ctl border border-line bg-surf-field px-2.5 focus-within:border-accent focus-within:shadow-[0_0_0_3px_var(--accent-soft)]">
             <Icon name="lock" className="text-fg-faint" />
             <input
               id="lock-password"

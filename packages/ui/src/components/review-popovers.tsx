@@ -279,7 +279,7 @@ function SlideRowView({
         title={row.disabledReason}
         onClick={() => onPick?.(row.id)}
         className={cn(
-          "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+          "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
           offersSideBySide && "pb-7",
           row.current &&
             "bg-surf-hl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
@@ -475,7 +475,7 @@ function PinnedSlideStrip({ slides, onPick, className }: PinnedSlideStripProps) 
           title={slide.disabledReason ?? slide.status.label}
           onClick={() => onPick?.(slide.id)}
           className={cn(
-            "flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent py-1 pr-2.5 pl-1 text-body-sm text-fg-dim outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+            "flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent py-1 pr-2.5 pl-1 text-body-sm text-fg-dim outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
             slide.current &&
               "bg-surf-hl text-fg shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
           )}

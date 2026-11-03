@@ -32,6 +32,7 @@ import {
   type GuidedTab,
   guidedSetup,
 } from "./guided-scenes.ts";
+import { noteAction, useNoteKey } from "./note-key.ts";
 import {
   answerLabel,
   type LockLine,
@@ -286,6 +287,10 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     void toSubmitted();
   };
 
+  useNoteKey(() => {
+    if (!showDone && !noResults && answer(currentId)) openNote();
+  });
+
   useEffect(() => {
     const keys = new Map(
       answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
@@ -299,11 +304,6 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
       if (raw && !event.shiftKey) {
         event.preventDefault();
         answerWith(raw);
-      } else if (event.key === "n" || event.key === "N") {
-        if (answer(currentId)) {
-          event.preventDefault();
-          openNote();
-        }
       } else if (event.key === "ArrowRight") {
         goTo(index + 1);
       } else if (event.key === "ArrowLeft") {
@@ -422,7 +422,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
       >
         <Icon name="comment" />
         Add a note
-        <Keycap keys="N" size="sm" />
+        <Keycap action={noteAction} size="sm" />
       </button>
     ) : null;
 

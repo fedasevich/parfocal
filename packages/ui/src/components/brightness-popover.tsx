@@ -36,7 +36,7 @@ function BrightnessPopover({
         aria-label={`Slide brightness ${value}%`}
         title="Slide brightness (Alt+↑ / Alt+↓)"
         className={cn(
-          "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-ctl border border-line-strong bg-btn-bg px-2 text-body-sm text-fg outline-none hover:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-accent",
+          "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-ctl border border-line-strong bg-btn-bg px-2 text-body-sm text-fg outline-none hover:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
           changed && "border-accent text-accent",
         )}
       >

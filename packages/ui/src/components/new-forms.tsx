@@ -3,7 +3,7 @@ import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group";
+import { RadioGroup, RadioRow } from "@parfocal/ui/components/radio-group";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import {
   type AnalysisChoice,
@@ -19,18 +19,6 @@ import {
   type TaxonomyOption,
 } from "@parfocal/ui/lib/new-forms";
 import { useState } from "react";
-
-function RadioRow({ value, title, text }: { value: string; title: string; text?: string }) {
-  return (
-    <label className="flex cursor-pointer items-start gap-2.5">
-      <RadioGroupItem value={value} className="mt-0.5" />
-      <span className="grid gap-0.5">
-        <b className="text-body-sm font-semibold text-fg">{title}</b>
-        {text ? <small className="text-body-sm text-fg-dim">{text}</small> : null}
-      </span>
-    </label>
-  );
-}
 
 function Failure({ message }: { message: string | undefined }) {
   return message ? (

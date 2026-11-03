@@ -109,10 +109,6 @@
   --c-prop: #0b0b0b;
   --c-prop-casing: #ffffff;
   --space: 4px;
-  --space-zone: 28px;
-  --space-in: 10px;
-  --pad-zone: 18px;
-  --pad-modal: 24px;
   --pad-small-modal: 20px;
   --r-sm: 4px;
   --r-md: 7px;
@@ -156,6 +152,39 @@
 
 [data-motion="reduced"] {
   --motion-scale: 0;
+}
+
+:root,
+[data-density="comfortable"] {
+  --density-list-row-y: 12px;
+  --density-cell-y: 8px;
+  --density-head-h: 32px;
+  --density-head-y: 7px;
+  --density-panel-gap: 22px;
+  --density-panel-pad: 20px;
+  --density-foot-x: 20px;
+  --density-foot-top: 14px;
+  --density-foot-bottom: 18px;
+  --space-zone: 28px;
+  --space-in: 10px;
+  --pad-zone: 18px;
+  --pad-modal: 24px;
+}
+
+[data-density="compact"] {
+  --density-list-row-y: 7px;
+  --density-cell-y: 4px;
+  --density-head-h: 28px;
+  --density-head-y: 4px;
+  --density-panel-gap: 14px;
+  --density-panel-pad: 14px;
+  --density-foot-x: 14px;
+  --density-foot-top: 10px;
+  --density-foot-bottom: 12px;
+  --space-zone: 24px;
+  --space-in: 8px;
+  --pad-zone: 14px;
+  --pad-modal: 24px;
 }
 
 [data-motion="reduced"] *,

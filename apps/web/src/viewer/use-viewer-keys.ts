@@ -2,12 +2,23 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
-import { applyViewerKey, type ViewerKeyTarget, viewerKeyBindings } from "./viewer-keys.ts";
+import {
+  applyViewerKey,
+  type SelectionArea,
+  type ViewerKeyTarget,
+  viewerKeyBindings,
+} from "./viewer-keys.ts";
 
 type KeyModule = Pick<ViewerModule, "createKeyPan" | "keyZoomOctaves" | "bindViewHistory">;
 
-export function useViewerKeys(engine: ViewerEngine, module: KeyModule) {
+export function useViewerKeys(
+  engine: ViewerEngine,
+  module: KeyModule,
+  selection?: () => SelectionArea | null,
+) {
   const shift = useRef(false);
+  const selected = useRef(selection);
+  selected.current = selection;
   const pan = useMemo(
     () =>
       module.createKeyPan({
@@ -59,6 +70,10 @@ export function useViewerKeys(engine: ViewerEngine, module: KeyModule) {
       zoomOctaves: module.keyZoomOctaves,
       zoomBy: (octaves) => engine.zoomBy(octaves),
       fit: () => void engine.flyToFit(),
+      zoomToSelection: () => {
+        const area = selected.current?.() ?? null;
+        if (area !== null) void engine.flyToSelection(area);
+      },
       zoomToMagnification: (magnification) => engine.zoomToMagnification(magnification),
       press: (direction, fast) => pan.press(direction, fast),
       release: (direction) => pan.release(direction),

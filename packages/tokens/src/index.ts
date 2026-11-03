@@ -82,11 +82,37 @@ export const spaceUnitPx = 4;
 
 export const radiiPx = { sm: 4, md: 7, lg: 10, ctl: 8, zone: 12 } as const;
 
+export const surfaceLevels = ["page", "panel", "section", "highlight"] as const;
+
+export type SurfaceLevel = (typeof surfaceLevels)[number];
+
+export const surfaceLevelTokens = {
+  page: "surf-page",
+  panel: "surf-panel",
+  section: "surf-section",
+  highlight: "surf-hl",
+} as const satisfies Record<SurfaceLevel, string>;
+
+export const surfaceSpacingPx = {
+  "space-zone": { comfortable: 28, compact: 24 },
+  "space-in": { comfortable: 10, compact: 8 },
+  "pad-zone": { comfortable: 18, compact: 14 },
+  "pad-modal": { comfortable: 24, compact: 24 },
+} as const satisfies Record<string, Record<DensityMode, number>>;
+
+export type SurfaceSpacing = keyof typeof surfaceSpacingPx;
+
+export const surfaceSpacingRulesPx = {
+  "space-zone": { min: 24, max: 32 },
+  "space-in": { min: 8, max: 12 },
+  "pad-modal": { min: 24, max: Number.POSITIVE_INFINITY },
+} as const satisfies Partial<Record<SurfaceSpacing, { min: number; max: number }>>;
+
 export const spacingPx = {
-  zone: 28,
-  in: 10,
-  padZone: 18,
-  padModal: 24,
+  zone: surfaceSpacingPx["space-zone"].comfortable,
+  in: surfaceSpacingPx["space-in"].comfortable,
+  padZone: surfaceSpacingPx["pad-zone"].comfortable,
+  padModal: surfaceSpacingPx["pad-modal"].comfortable,
   padSmallModal: 20,
 } as const;
 
@@ -149,4 +175,26 @@ export function motionMs(duration: MotionDuration, mode: MotionMode = "normal"):
 
 export function cubicBezierCss(easing: MotionEasing): string {
   return `cubic-bezier(${motionEasings[easing].join(", ")})`;
+}
+
+export const densityModes = ["comfortable", "compact"] as const;
+
+export type DensityMode = (typeof densityModes)[number];
+
+export const densitySpacingPx = {
+  "list-row-y": { comfortable: 12, compact: 7 },
+  "cell-y": { comfortable: 8, compact: 4 },
+  "head-h": { comfortable: 32, compact: 28 },
+  "head-y": { comfortable: 7, compact: 4 },
+  "panel-gap": { comfortable: 22, compact: 14 },
+  "panel-pad": { comfortable: 20, compact: 14 },
+  "foot-x": { comfortable: 20, compact: 14 },
+  "foot-top": { comfortable: 14, compact: 10 },
+  "foot-bottom": { comfortable: 18, compact: 12 },
+} as const satisfies Record<string, Record<DensityMode, number>>;
+
+export type DensitySpacing = keyof typeof densitySpacingPx;
+
+export function densityMode(value: unknown): DensityMode {
+  return value === "compact" ? "compact" : "comfortable";
 }

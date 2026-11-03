@@ -30,7 +30,7 @@ Option 2.
 ## Consequences
 
 - New components get reduced motion for free and should use `duration-(--motion-*)` so presenting mode slows them too.
-- Components with fixed durations (`duration-100` in dialogs and menus, 280 ms in the magnification bar) are cut under reduced motion but do not slow down for presenting until they move to the tokens. TODO: a later DS task moves them.
+- DS-031 (fixed durations onto the motion tokens) moved every fixed duration in packages/ui and apps/web onto the tokens: `duration-100` and `duration-150` became `--motion-fast`, 200 ms `--motion-base`, and 280 and 300 ms `--motion-slow`. A source test fails on any new fixed duration.
 - A spinner stops under reduced motion and shows as a static ring.
 - The camera keeps its own reduced motion switch in the viewer engine. Its cubic in and out matches `--motion-ease-in-out`, so ADR 0104's open item is met without changing the controller.
 - The setting that writes `data-motion` on the document (presenting mode, or a forced reduced mode) belongs to the settings tasks.

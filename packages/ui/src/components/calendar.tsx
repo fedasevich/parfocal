@@ -25,16 +25,16 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: D
         caption_label: "select-none",
         nav: "absolute inset-x-0 top-0 flex items-center justify-between",
         button_previous:
-          "grid size-8 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
+          "grid size-8 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
         button_next:
-          "grid size-8 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
+          "grid size-8 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-chrome-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
         month_grid: "border-collapse",
         weekdays: "",
         weekday: "size-8 text-center text-caption font-medium text-fg-dim",
         week: "",
         day: "size-8 p-0 text-center text-body-sm",
         day_button:
-          "grid size-8 cursor-pointer place-items-center rounded-ctl border border-transparent bg-transparent p-0 text-fg hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-accent",
+          "grid size-8 cursor-pointer place-items-center rounded-ctl border border-transparent bg-transparent p-0 text-fg hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         selected:
           "[&>button]:bg-accent-fill [&>button]:text-on-accent [&>button:hover]:bg-accent-fill",
         today: "[&>button]:border-accent [&>button]:font-semibold",

@@ -35,6 +35,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["zoomin", "Zoom in", ["+"], "clin"],
       ["zoomout", "Zoom out", ["-"], "clin"],
       ["fit", "Fit the slide", ["0"], "new"],
+      ["zoomsel", "Zoom to the selection", ["⇧F"], "new"],
       ["mag", "Objective 1.25× to 40×", ["⌥1 … ⌥6"], "clin", { range: true }],
       ["pan", "Pan, faster with Shift", ["Arrows"], "clin", { direction: true, sustain: true }],
       ["peek", "Whole slide", ["Z"], "new", { hold: true }],
@@ -49,8 +50,11 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         { note: "full viewer only. Guided review opens the next slide after Submit" },
       ],
       ["area", "Go to AI area n", ["G then 1 … 9"], "new", { sequence: true }],
+      ["prevarea", "Previous area, by size", ["["], "new"],
+      ["nextarea", "Next area, by size", ["]"], "new"],
       ["brightup", "Slide brighter", ["⌥↑"], "new", { inInputs: true }],
       ["brightdown", "Slide dimmer", ["⌥↓"], "new", { inInputs: true }],
+      ["brightreset", "Slide brightness back to 100%", ["⌥0"], "new"],
     ],
   ],
   [
@@ -84,6 +88,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "new",
         { note: "the open cells in the cells panel" },
       ],
+      ["dnote", "Add a note", ["⇧N"], "new", { note: "once the object has a decision" }],
       ["dnext", "Skip for now, next object", ["J"], "new"],
       ["dprev", "Previous object", ["⇧J"], "new"],
       [
@@ -116,6 +121,16 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["ttext", "Text", ["T"], "fig"],
       ["tcomment", "Comment", ["C"], "fig"],
       ["tbrush", "Brush", ["B"], "qp"],
+      [
+        "aclass",
+        "Class n for new shapes, or re-class the selection",
+        ["1 … 9"],
+        "qp",
+        {
+          range: true,
+          note: "in Annotate, in the project's class order. In review the digits answer the decision",
+        },
+      ],
     ],
   ],
   [

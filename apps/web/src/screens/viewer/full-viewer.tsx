@@ -21,6 +21,7 @@ import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/vis
 import { Zone } from "@parfocal/ui/components/zone";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
@@ -41,8 +42,15 @@ import {
 import { type DisplayLock, DisplayTab, displaySettings } from "../review/display-tab.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
+import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
+import {
+  routeReviewTool,
+  type StayTool,
+  shownReviewTool,
+  useReviewToolKeys,
+} from "../review/review-rail.ts";
 import {
   type Answer,
   type Answers,
@@ -51,7 +59,13 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
-import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
+import {
+  type Camera,
+  imageOf,
+  magnificationOf,
+  SlideStill,
+  type StillView,
+} from "../review/slide-still.tsx";
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import {
@@ -65,6 +79,7 @@ import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx"
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
 import { reviewRail } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
+import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
 import {
@@ -75,6 +90,7 @@ import {
   TellMeWhenReady,
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
+import { useAreaNav } from "./use-area-nav.ts";
 import {
   isNavigatorScene,
   type LayerView,
@@ -90,7 +106,7 @@ export type ViewerSearch = CameraSearch & {
   scene?: ViewerScene | undefined;
   tab?: ViewerTab | undefined;
   modal?: "preset" | undefined;
-  tool?: "ruler" | undefined;
+  tool?: StayTool | undefined;
   peek?: boolean | undefined;
   focus?: boolean | undefined;
 };
@@ -118,7 +134,8 @@ export function FullViewer(props: FullViewerProps) {
 function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
   const session = useReviewSession(props.taskId, props.slideId);
   const project = okData(useGetProject(props.projectId).data);
-  if (!session.ready || project === undefined) return loading;
+  const progress = useGetSlideAiProgress(props.slideId);
+  if (!session.ready || project === undefined || progress.isPending) return loading;
   return (
     <ViewerBody
       key={`${props.search.scene ?? "objects"}-${props.slideId}`}
@@ -145,6 +162,7 @@ function addedSize(note: string | null) {
 }
 
 const cameraWriteDelayMs = 250;
+const aiProgressPollMs = 3000;
 
 function ViewerBody({
   projectId,
@@ -169,7 +187,14 @@ function ViewerBody({
   const person = usePeople();
   const saveVerdict = useSaveVerdict();
   const submitReview = useSubmitSlideReview();
-  const progress = okData(useGetSlideAiProgress(slideId).data);
+  const progress = okData(
+    useGetSlideAiProgress(slideId, {
+      query: {
+        refetchInterval: (query) =>
+          okData(query.state.data)?.state === "running" ? aiProgressPollMs : false,
+      },
+    }).data,
+  );
   const stats = okData(useGetSlideResultStats(session.taskId, slideId).data);
   const slideSets = okData(useListSlideResultSets(slideId).data) ?? [];
   const setName = useSetName(session);
@@ -326,6 +351,32 @@ function ViewerBody({
     setNote({ ...note, open: false });
   };
 
+  const pickTool = (next: string) => {
+    const route = routeReviewTool(next);
+    if (route === null) return;
+    if (route.kind === "annotate") {
+      void navigate({
+        to: "/projects/$projectId/slides/$slideId/annotate",
+        params: { projectId, slideId },
+        search: { task: session.taskId, tool: route.tool },
+      });
+      return;
+    }
+    onSearch({
+      tool: route.tool,
+      ...(route.tool === "ruler" ? { object: undefined, scene: undefined } : {}),
+      ...(route.tab ? { tab: route.tab } : {}),
+    });
+  };
+
+  useReviewToolKeys(pickTool, !peekOpen);
+
+  useNoteKey(() => {
+    if (current === undefined || tab !== "objects") return;
+    const kept = answer(current.object);
+    if (kept) setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
+  });
+
   useEffect(() => {
     const keys = new Map(
       answersOf(style, session.classes, current).map((item) => [item.key.toLowerCase(), item.raw]),
@@ -338,13 +389,7 @@ function ViewerBody({
         onSearch({ focus: true, scene: undefined, tool: undefined });
         return;
       }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "]" && navigator && navigator !== "overview") {
-        event.preventDefault();
-        if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
-        else onSearch({ scene: "travel" });
-        return;
-      }
+      if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
       if (event.key === "Escape" && peekOpen) return;
       if (event.key === "Escape" && selected) {
         pick(undefined);
@@ -355,10 +400,6 @@ function ViewerBody({
       if (raw && !event.shiftKey) {
         event.preventDefault();
         decide(raw);
-      } else if ((event.key === "n" || event.key === "N") && answer(current.object)) {
-        event.preventDefault();
-        const kept = answer(current.object);
-        setNote({ open: true, reasons: kept?.reasons ?? [], text: kept?.note ?? "" });
       }
     };
     window.addEventListener("keydown", onKey);
@@ -381,8 +422,43 @@ function ViewerBody({
       : { kind: "whole" };
   const cameraImage = imageOf(stillView);
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
+  const ranked = areaRows(areas, (object) => answer(object)?.value);
+  const areaNav = useAreaNav({
+    order: areaOrder(ranked),
+    spot: {
+      object: selected ?? null,
+      ...(camera ? cameraToSearch(cameraImage, camera) : { x: search.x, y: search.y, z: search.z }),
+    },
+    magnification: shownCamera ? magnificationOf(stillView, shownCamera) : 0,
+    goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
+    restore: (spot) => {
+      setCamera(null);
+      onSearch({ object: spot.object ?? undefined, x: spot.x, y: spot.y, z: spot.z });
+    },
+    intercept: (fired) => {
+      if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
+      if (fired.phase !== "press") return true;
+      if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
+      else onSearch({ scene: "travel" });
+      return true;
+    },
+  });
+  const areaRole = (object: string) => {
+    const role = ranked.find((row) => row.object === object)?.role;
+    return role ? areaRoleText[role] : undefined;
+  };
   const writeSearch = useRef(onSearch);
   writeSearch.current = onSearch;
+  const debugCamera = useRef(shownCamera);
+  debugCamera.current = shownCamera;
+  useEffect(
+    () =>
+      provideDebug({
+        getCamera: () => debugCamera.current,
+        setCamera: (next) => setCamera({ x: next.x, y: next.y, scale: next.scale }),
+      }),
+    [],
+  );
   const caseKey = caseMemoryKey(session.task?.project_id, session.caseLabel);
   useEffect(() => {
     openCaseMemory(caseKey);
@@ -840,13 +916,21 @@ function ViewerBody({
       <ViewerFrame
         session={session}
         counts={counts}
-        tool={measuring ? "ruler" : running || nothing ? "hand" : "select"}
+        tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
-        panelHead={nothing ? null : <AnalysisCards parts={viewerParts} areas={areas} />}
-        onToolChange={(next) => {
-          if (next === "ruler") onSearch({ tool: "ruler", object: undefined, scene: undefined });
-          if (next === "select") onSearch({ tool: undefined });
-        }}
+        panelHead={
+          nothing ? null : (
+            <AnalysisCards
+              parts={viewerParts}
+              areas={ranked}
+              current={selected}
+              visited={areaNav.visited}
+              roleOf={areaRole}
+              onGoTo={areaNav.goTo}
+            />
+          )
+        }
+        onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
           peekOpen ? (
@@ -920,7 +1004,7 @@ function ViewerBody({
         ) : navigator ? (
           <NavigatorCanvas
             scene={navigator}
-            areas={areas}
+            areas={ranked}
             decided={decidedRegions}
             current="T2"
             onPeek={() => onSearch({ peek: true })}
@@ -1025,7 +1109,15 @@ function ViewerBody({
                 <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
                   {tileHint}
                   <MagnificationBar
-                    magnification={stillView.kind === "cell" ? 40 : whole ? 1.25 : 2.5}
+                    magnification={
+                      camera
+                        ? magnificationOf(stillView, camera)
+                        : stillView.kind === "cell"
+                          ? 40
+                          : whole
+                            ? 1.25
+                            : 2.5
+                    }
                     scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
                     scalePx={92}
                     micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}

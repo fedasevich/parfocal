@@ -1507,7 +1507,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
 
-- [ ] LAB-005 · Debug handle
+- [x] LAB-005 · Debug handle
   A typed `window.__parfocal` handle in non-production builds for tests and debugging, starting from the 20 members the mock lists for `window.__wsi`. The drawer's reference text changes to the new name ([ADR 0189](adr/0189-developer-drawer-control-list.md)).
   Done when E2E tests use it to read camera state.
   Size: S.
@@ -1556,7 +1556,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-007 · Segmented control, toggle, slider, stepper
+- [x] DS-007 · Segmented control, toggle, slider, stepper
   A segmented control for 2 to 4 short options, a select for more, and plain radio rows with a sentence when an option needs one. No bordered radio or checkbox cards. The chosen segment has the accent fill and an accent ring (doc 39, doc 40 D1). The small number stepper is the one the Counts as line of the decision styles uses. Every control has a locked state that reads as dim text with a lock icon and the reason under it, such as "Locked by RT-14: confidence hidden this round".
   Done when stories, keyboard tests and axe pass.
   Depends on PROTO-011.
@@ -1604,7 +1604,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-015 · Skeletons and placeholders that hold space
+- [x] DS-015 · Skeletons and placeholders that hold space
   Nothing jumps when data arrives.
   Done when a layout-shift test on the case inspector reports a CLS of zero while findings stream in.
   Depends on PROTO-011. Refs kit W18.
@@ -1616,13 +1616,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit motion page.
   Size: M.
 
-- [ ] DS-017 · Density modes
+- [x] DS-017 · Density modes
   Comfortable and compact.
   Done when visual tests cover both densities for lists and inspector.
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-018 · Surfaces and zones
+- [x] DS-018 · Surfaces and zones
   Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding. A zone can fold to a one-line summary of its settings, such as "Outline 2 px · by class · IDs on" in the Display panel.
   Done when stories show each level in both themes and a visual test covers a modal with three zones.
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
@@ -1658,19 +1658,19 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
   Size: M.
 
-- [ ] DS-024 · Form fields with labels, hints and inline errors
+- [x] DS-024 · Form fields with labels, hints and inline errors
   The text field, the textarea with a character count, the select, the checkbox and the radio row, each with a label, an optional help line, a Required mark where it applies and the one inline error style of SHELL-010 (error and issue states in every flow) under the field. The error names what is wrong and how to fix it, and typed text is never cleared by an error.
   Done when stories cover each control in its default, focus, filled, error and disabled states in both themes, a test checks that every label, help line and error is tied to its control for assistive technology, and axe passes.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: signin/email, mock: task/send, mock: admin/addmodel.
   Size: M.
 
-- [ ] DS-025 · Tabs
+- [x] DS-025 · Tabs
   Three kinds of tabs: the page tabs of My work, the project page, Team and Admin, the side panel tabs of the full viewer with their counts (Objects, Display, Comments, Opinion), and the quiet tabs of guided review's right column (Review, Comments, Display).
   Done when stories cover each kind with and without counts in both themes, keyboard tests move between tabs with the arrow keys and Home and End, and axe passes.
   Depends on PROTO-011. Refs mock: worklist, mock: case/objects, mock: guided/comments, mock: guided/display.
   Size: M.
 
-- [ ] DS-026 · Table
+- [x] DS-026 · Table
   One table for lists of rows across the app: the admin sections, the project's slides, the object table, the disagreement queue and the deposits of the clinical report. Header cells in the 12 px label style, numbers in tabular figures and IDs in monospace, row hover and a selected row, an optional checkbox column for picking several rows, sortable columns that say their order, and one empty row that says why the table is empty.
   Done when stories cover selection, sorting and the empty row in both themes, keyboard tests reach every row and its actions, and axe passes.
   Depends on PROTO-011. Refs mock: admin/people, mock: project/slides, mock: layers/table, mock: disagree/queue, mock: creport/deposits.
@@ -1688,22 +1688,45 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
   Size: M.
 
-- [ ] DS-029 · Visible focus ring on every control
+- [x] DS-029 · Visible focus ring on every control
   DS-006 (buttons and icon buttons) found that `outline-none` next to `focus-visible:outline-2` left the button focus ring invisible. Other kit components combine the same classes. Check every interactive component in packages/ui and apps/web and make the ring draw.
   Done when a test tabs through the kit stories and asserts a visible outline on each focused control, and axe passes.
   Depends on DS-006.
   Size: S.
 
-- [ ] DS-030 · Every key hint from the key registry
+- [x] DS-030 · Every key hint from the key registry
   DS-009 (keycap component) moved keycaps onto the key registry, but the tool rail key badges still come from hard-coded keys in `apps/web/src/screens/viewer-tools/rails.ts`, and "Add a note" shows N from a hard-coded handler while N is also No in the yes or no decision style. Register the note action, settle the N clash, and read the rail badges from the registry.
   Done when a test changes a binding and the rail badge and the note hint follow it, and a test proves no two actions in one decision style share a key.
   Depends on DS-009, DS-010.
   Size: S.
 
-- [ ] DS-031 · Fixed durations onto the motion tokens
+- [x] DS-031 · Fixed durations onto the motion tokens
   DS-016 (motion tokens and reduced motion) added the duration and easing tokens, but the dialog, small modal and dropdown still use `duration-100` and the magnification bar a fixed 280 ms, so they do not slow down in presenting mode ([ADR 0187](adr/0187-motion-tokens-scale-and-global-reduced-motion.md)).
   Done when no component in packages/ui or apps/web uses a fixed transition duration, and a test checks a dialog's duration in presenting mode.
   Depends on DS-016.
+  Size: S.
+
+- [ ] DS-032 · Steady axe run on animated stories
+  DS-029 (visible focus ring) found that axe reads `components-settings--key-states` mid-way through the pulsing shortcut key animation, so its contrast check passes or fails from run to run in both themes. Run the axe spec with reduced motion or stop the pulse before the check, without excluding the story.
+  Done when the axe spec passes `components-settings--key-states` ten runs in a row in both themes.
+  Depends on DS-029.
+  Size: S.
+
+- [ ] DS-033 · Density for page gaps and every list row
+  DS-017 (density modes) put table rows, the inspector and the My work to-review rows on the `--density-*` variables, but page gaps (the mock's `.wl-main` 22 to 14 px) and the other list rows still use fixed spacing.
+  Done when every list row and page gap reads a density variable, and the density spec checks a page gap and one more list in both modes.
+  Depends on DS-017.
+  Size: S.
+
+- [ ] DS-034 · App tables on the shared table
+  DS-026 (table) added sortable headers, a checkbox column, `selected` rows, number and ID cells and an empty row in packages/ui. Move the admin sections, project slides, object table, disagreement queue and clinical report deposits onto them. The object table picks a row by mouse click only, so its rows cannot be reached by keyboard.
+  Done when each of those tables uses the shared table, a test tabs to an object table row and opens it with Enter, and axe passes on each screen.
+  Depends on DS-026.
+  Size: M.
+
+- [ ] DS-035 · Warn tag contrast in the light theme
+  DS-026 (table) found the amber "warn" status tag at 4.3:1 against the light page background, below the 4.5:1 axe needs.
+  Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
   Size: S.
 
 ---
@@ -1722,6 +1745,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-002 · Global top bar and sidebar
   One top bar outside a slide, with the Parfocal logo and the workspace's name and logo with its switcher (IAM-008), search that opens the palette and accepts object IDs, New project, Upload as a normal button, the jobs ring (JOBS-003), the bell (NOTIF-002) and the account menu (SHELL-012). The sidebar holds Home, My work with its count, the projects with their slide counts, New project and, for admins, Admin under Workspace. Mentions live only behind the bell. Settings and theme are reached through the account menu and Cmd+comma.
+  Replace the hand-written `apps/web/src/shell/shell-store.ts` (SHELL-012, built on useSyncExternalStore) with the Zustand shell store ADR 0182 asks for.
   Done when component and E2E tests cover each control, every control is reachable by keyboard, and a test confirms the sidebar has no Mentions entry.
   Refs mock: home, doc 39, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: M.
@@ -1755,7 +1779,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs kit motion table.
   Size: M.
 
-- [ ] SHELL-008 · Focus mode
+- [x] SHELL-008 · Focus mode
   Cmd+\ hides the top bar, rail and inspector, shows the focus pill and the area card, keeps the minimap and magnification bar.
   Done when E2E covers enter and exit and the screen-coverage measurement drops to the expected value.
   Refs mock 16, kit W23.
@@ -1763,6 +1787,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-009 · Screen coverage measurement
   A test utility that measures the share of the canvas covered by chrome at 1280, 1440 and 1920 widths.
+  SHELL-008 (focus mode) measures the chrome share in place in apps/web/e2e/viewer-tools.spec.ts (chromeShare over 0.2 before focus, 0 in focus). Replace it with this utility and its expected value.
   Done when CI enforces under 35% in Review at 1440×900 (KPI).
   Refs doc 35.
   Size: M.
@@ -1784,6 +1809,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when component tests cover each item, axe passes, keyboard users reach every item, and E2E logs out and back in with a draft intact.
   Depends on IAM-002, IAM-015. Refs mock 1, kit W35, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
+
+- [ ] SHELL-013 · Help and what's new
+  The account menu (SHELL-012) shows "Help and what's new" disabled. Build the page it opens: short help per screen, the keyboard map link and release notes from the release versioning (FOUND-017).
+  Done when the menu item opens the page, a component test covers it, and axe passes.
+  Depends on SHELL-012.
+  Size: S.
 
 ---
 
@@ -1894,7 +1925,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Refs mock: worklist/review.
   Size: M.
 
-- [ ] WL-006 · Keyboard navigation in the worklist
+- [x] WL-006 · Keyboard navigation in the worklist
   Arrow keys and J and K move the selection in each tab, Enter opens the task or slide and Esc clears the selection.
   Done when E2E drives the whole list by keyboard.
   Size: S.
@@ -1936,6 +1967,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
 
 - [ ] WL-013 · Hide names
   Swap names for initials across the app for screen sharing and teaching.
+  Read `useShell((s) => s.initialsOnly)` from the shell store, which the account menu already sets (SHELL-012).
   Done when E2E confirms no full name appears anywhere in the DOM with the toggle on.
   Size: M.
 
@@ -2066,7 +2098,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on CASE-001, OBJ-001, GUIDE-001. Refs mock: case, mock: layers, doc 37 "Viewer".
   Size: M.
 
-- [ ] CASE-015 · Progress ring in the slide top bar
+- [x] CASE-015 · Progress ring in the slide top bar
   One ring split by decision colour (agree, disagree, not sure, open) with this slide's percentage. Clicking it opens a popover with the task, slide n of N, the due date, time left and a button for the next slide.
   Done when component tests cover an empty, a partial and a finished slide, and E2E opens the next slide from the popover.
   Depends on DS-019, TASK-003. Refs doc 38 answer 3, mock: case.
@@ -2110,6 +2142,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 - [ ] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
+  Read the minimap setting through `shownMinimap` in packages/ui/src/lib/minimap-box.ts (NAV-009).
   Done when model-based tests drive every transition.
   Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
@@ -2126,7 +2159,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md). [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
-- [ ] NAV-009 · Minimap settings
+- [x] NAV-009 · Minimap settings
   When useful, always, never. The settings catalogue still says corner or hidden, and the help text must match the half of the tissue rule, see [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md).
   Done when tests cover each mode.
   Size: S.
@@ -2148,18 +2181,30 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when a test confirms the selection is fitted with margin.
   Size: S.
 
+- [ ] NAV-013 · Feed the selection to zoom to selection
+  NAV-012 (zoom to selection) added the `zoomsel` action and `engine.flyToSelection`, but the live slide stage passes no selection, so the key does nothing there. Feed the selected shapes, or the focused AI area, into `useViewerKeys` once a select tool or area focus reaches the live stage.
+  Done when a browser test selects a shape on the live stage, presses the key and the camera fits it with the 48 px margin.
+  Depends on NAV-012, ANN-004.
+  Size: S.
+
+- [ ] NAV-014 · Area navigation in the engine viewer
+  NAV-004 (area list and go to area) built the list, G then n, [ and ], row clicks and visited marks on the prototype full viewer. On the live route the area keys do not reach the engine. Fly to each area's bounds through the engine, which records view history itself, and mark visits from the engine's magnification.
+  Done when a browser test on a real slide steps through the areas with ] and [, marks one visited past 10x and goes back with Alt+Left.
+  Depends on NAV-004.
+  Size: S.
+
 ---
 
 ## 14 REVIEW · Review workspace
 
 Cell findings and node staging run in the Objects tab of the slide view (CASE-014). Decisions on whole objects come from GUIDE-001 and use K, X and U in both modes ([ADR 0053](adr/0053-ai-results-review-direction.md)). Node staging applies only with the sentinel node template (PROJ-005).
 
-- [ ] REVIEW-000 · Research check
+- [x] REVIEW-000 · Research check
   Re-read docs 28 and 33 and confirm the confidence rules below still hold for the typer chosen in AINUC.
   Done when an ADR lists the display rules and their evidence.
   Size: S.
 
-- [ ] REVIEW-001 · Review rail
+- [x] REVIEW-001 · Review rail
   Five tools: select V, hand H, ruler L, comment C, smart select S (routes to Annotate).
   Done when component tests cover each tool and routing.
   Size: S.
@@ -2187,8 +2232,8 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-006 · Cells to check selection
-  Per zone (REVIEW-018), contested-first order (tumor probability nearest 50%), excluding reviewed cells. Zones are ranked by unsure cells, and the scattered unsure cells come last.
+- [x] REVIEW-006 · Cells to check selection
+  Per zone (REVIEW-018), contested-first order (tumor probability nearest 50%), excluding reviewed cells. Every cell is walked, not only the unsure ones ([ADR 0194](adr/0194-confidence-display-rules-and-evidence.md), confidence display rules). Zones are ranked by unsure cells, and the cells outside every zone come last. Built in `packages/ui/src/lib/cells-to-check.ts`.
   Done when unit tests confirm ordering within and across zones on a seeded result.
   Refs doc 33, mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: S.
@@ -2217,9 +2262,9 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Decisions are stored per reviewer in the reviewed layer (RSET-007).
   Size: M.
 
-- [ ] REVIEW-011 · AI wording modes
+- [x] REVIEW-011 · AI wording modes
   Plain words (default), percent, frequency, with the validated phrases "tumor", "probably tumor", "tumor or immune".
-  Done when unit tests map calibrated probabilities to phrases with the doc 28 band thresholds.
+  Done when unit tests map calibrated probabilities to phrases with the four band thresholds of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) (confidence display rules), read per typer.
   Size: S.
 
 - [ ] REVIEW-012 · Outline display modes
@@ -2234,7 +2279,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 33.
   Size: M.
 
-- [ ] REVIEW-014 · Model warnings
+- [x] REVIEW-014 · Model warnings
   Typer under 70% on its own test set, uncalibrated, out of distribution (confident share far below the test set's), not validated for this specimen.
   Done when unit tests trigger each warning from model metadata and slide statistics.
   Refs docs 28, 29.
@@ -2276,11 +2321,29 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
   Size: M.
 
+- [ ] REVIEW-021 · Comment tool pins a thread on click
+  REVIEW-001 (review rail) routes the Comment tool (C) to the comments tab, but clicking the slide in comment mode does not pin a new thread there yet.
+  Done when a test clicks the slide in comment mode and a new thread opens pinned at that point, and Esc leaves comment mode without a thread.
+  Depends on REVIEW-001.
+  Size: S.
+
+- [ ] REVIEW-022 · AI wording on screen with a frequency option
+  REVIEW-011 (AI wording modes) added `confidence-words.ts` with plain, percent and frequency modes, but nothing on screen uses it, and the personal setting `confidence_wording` (words, numbers, colour, hidden) has no frequency option.
+  Done when the inspector and the gallery tile read their AI wording through the module, the setting offers frequency, and component tests cover each mode and the percent fallback for an uncalibrated typer.
+  Depends on REVIEW-011.
+  Size: S.
+
+- [ ] REVIEW-023 · Model warnings in the inspector
+  REVIEW-014 (model warnings) added `modelWarnings` and `slideStatistics` in packages/ui lib/model-warnings.ts, but nothing shows them. Show them in the inspector's Model warnings block (the mock's `blkWarn` toggle).
+  Done when component tests cover no warning, one and several, and the block's toggle.
+  Depends on REVIEW-014.
+  Size: S.
+
 ---
 
 ## 15 ANN · Annotate workspace
 
-- [ ] ANN-000 · Research check
+- [x] ANN-000 · Research check
   Compare current tooling conventions (QuPath, CVAT, Figma, the SAM-based QuPath extension) with the kit key map and confirm the geometry library choice for the client (for example earcut, clipper2, turf).
   Done when an ADR exists.
   Size: S.
@@ -2293,12 +2356,14 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-002 · Annotate rail with five families
   Navigate (V, H), AI (S, U), draw (P, Shift+P, R, O, M), note (L, Shift+L, T, C), paint (B).
+  Holding Space pans in any tool ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the key map check).
   Done when component tests cover every tool and its key from the registry.
   Refs mock §2.2.
   Size: M.
 
 - [ ] ANN-003 · Context bar
   One floating bar with the active tool's options and Discard and Accept, replacing conditional rows.
+  Wire the class swatch strip and `useClassKeys` (apps/web/src/annotations/class-keys.ts, ANN-011) into the Annotate workspace.
   Done when component tests render the context bar for every tool per the mock CTX table.
   Refs mock §2.9.
   Size: M.
@@ -2336,11 +2401,11 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: S.
 
 - [ ] ANN-010 · Brush tool on heatmaps
-  Paint and erase (Shift) on a heatmap layer, size 4 to 160 px.
+  Paint and erase (Shift, or Alt as in QuPath) on a heatmap layer, size 4 to 160 px. Boolean and offset work uses Clipper2 ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the geometry library choice).
   Done when tests cover painting, erasing and undo, and the painted map persists.
   Size: M.
 
-- [ ] ANN-011 · Classes and keys 1 to 4
+- [x] ANN-011 · Classes and keys 1 to 4
   With nothing selected, sets the class for new shapes. With a selection, re-classes it. In review contexts it also marks reviewed and teaches. The swatch click and the key behave the same (fixes the POC inconsistency).
   Done when tests confirm identical behaviour for key and swatch.
   Refs doc 34 inconsistencies.
@@ -2886,6 +2951,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-005, MLEVAL-008, SEC-023. Refs kit W69, kit Flow 28.
   Size: L.
 
+- [ ] AIP-019 · Model catalogue matches the v1 line-up
+  AIP-000 (research check) set the v1 line-up in [ADR 0202](adr/0202-v1-model-line-up-per-tier.md), but `model_catalogue.py` and the tier defaults of ADR 0159 still point the Good tiers at HoVer-Net, which ADR 0202 drops from v1. Bring the catalogue and the tier defaults in line once the owner accepts ADR 0202.
+  Done when a test proves every tier default names a model in ADR 0202's line-up, and the catalogue lists each model's licence.
+  Depends on AIP-000.
+  Size: S.
+
 ---
 
 ## 22 AISEG · Interactive segmentation
@@ -2983,7 +3054,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] AINUC-000 · Research check
   Pick the detector and typer per tier from current models (PathoSAM AIS, HoVer-NeXt, CellViT++, NuLite, InstanSeg) under the STACK-031 licence policy.
-  Done when an ADR names them with MLEVAL numbers.
+  Done when an ADR names them with MLEVAL numbers and the confidence display table of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) is rerun for the chosen typer.
   Size: M.
 
 - [ ] AINUC-001 · Detector runner
@@ -3016,6 +3087,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] AINUC-006 · Calibration
   Temperature scaling per typer and test-time augmentation setting, fitted on a separate split, stored in the registry, never vector scaling.
+  Store `testSetAccuracy`, `testSetConfidentShare`, `testSetUnsureShare` and `validatedSites` for each typer, which REVIEW-014 (model warnings) reads.
   Done when MLEVAL reports ECE under 0.05 for the active typer.
   Refs docs 28, 29.
   The least sure first order applies the temperature before it rates objects, when a task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide).
@@ -3310,6 +3382,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when E2E rebinds J and the review HUD shows the new key, and tests cover a conflict swap, a reserved key, the modifier rule, a set, the single-letter switch and position matching on a Czech layout.
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
+
+- [ ] CMD-007 · Every shortcut fires on the person's own keys
+  DS-030 (every key hint from the key registry) made every hint follow the person's keys, but the decision answer keys (K, X, Y, N and the digits) and the note key still fire on the defaults, and the rail's Annotate (P), AI tools (A, the same key as overlays) and hide panel (]) buttons are not registry actions. Route them all through the registry and settle the A clash.
+  Done when a test rebinds an answer key, the note key and Annotate, and each fires on the new key and not the old one, and a test proves no two actions in one scope share a default key.
+  Depends on DS-030.
+  Size: S.
 
 ---
 

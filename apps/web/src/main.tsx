@@ -5,12 +5,17 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
+import { installDebugHandle, provideDebug } from "./debug-handle.ts";
+import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 
 const config = readBuildConfig();
+
+installDebugHandle(window, config.appEnv);
+provideDebug(benchmarkDebug(window));
 
 export const clients = selectWebClients(config, {});
 

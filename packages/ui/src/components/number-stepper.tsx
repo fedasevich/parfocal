@@ -22,7 +22,7 @@ function NumberStepper({ label, className, ...props }: NumberStepperProps) {
         </NumberFieldPrimitive.Decrement>
         <NumberFieldPrimitive.Input
           aria-label={label}
-          className="w-6 border-0 bg-transparent p-0 text-center text-body-sm font-semibold text-fg outline-none focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
+          className="w-6 border-0 bg-transparent p-0 text-center text-body-sm font-semibold text-fg outline-none focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
         />
         <NumberFieldPrimitive.Increment
           aria-label={`Raise ${label}`}

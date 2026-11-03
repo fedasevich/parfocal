@@ -77,3 +77,15 @@ test("under prefers-reduced-motion an open dialog has no animation", async ({ pa
   expect(await runningAnimations(page)).toBe(0);
   expect(await longestTiming(page)).toBe(0);
 });
+
+test("an open dialog runs on the motion tokens and slows down in presenting mode", async ({
+  page,
+}) => {
+  await page.goto(story("controls-dialog--open"));
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toHaveCSS("animation-duration", "0.12s");
+  await page.evaluate(() => {
+    document.documentElement.dataset.motion = "presenting";
+  });
+  await expect(dialog).toHaveCSS("animation-duration", "0.36s");
+});

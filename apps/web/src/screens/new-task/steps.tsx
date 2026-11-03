@@ -96,7 +96,7 @@ function TextLink({ children, onClick }: { children: ReactNode; onClick?: () => 
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+      className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
     >
       {children}
     </button>

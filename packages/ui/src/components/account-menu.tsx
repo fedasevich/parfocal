@@ -14,7 +14,13 @@ import type { ReactNode } from "react";
 
 type AccountPresence = { key: Presence; label: string; hint: string; tone: string };
 
-type AccountEntry = { icon: IconName; label: string; keys?: string; onSelect?: () => void };
+type AccountEntry = {
+  icon: IconName;
+  label: string;
+  keys?: string;
+  onSelect?: () => void;
+  disabledReason?: string;
+};
 
 type AccountTheme = "dark" | "light" | "system";
 
@@ -140,9 +146,20 @@ function AccountMenu({
         </MenuPrimitive.CheckboxItem>
         <DropdownMenuSeparator />
         {entries.map((entry) => (
-          <DropdownMenuItem key={entry.label} onClick={entry.onSelect} className={rowClass}>
+          <DropdownMenuItem
+            key={entry.label}
+            onClick={entry.onSelect}
+            disabled={entry.disabledReason !== undefined}
+            title={entry.disabledReason}
+            className={rowClass}
+          >
             <Icon name={entry.icon} />
-            <span>{entry.label}</span>
+            <span>
+              {entry.label}
+              {entry.disabledReason ? (
+                <small className="block text-caption text-fg-faint">{entry.disabledReason}</small>
+              ) : null}
+            </span>
             {entry.keys ? <Keycap keys={entry.keys} /> : <span />}
           </DropdownMenuItem>
         ))}
