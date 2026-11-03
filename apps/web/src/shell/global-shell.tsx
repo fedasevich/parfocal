@@ -8,7 +8,7 @@ import {
 } from "@parfocal/api-client";
 import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/components/app-shell";
 import type { PersonInfo } from "@parfocal/ui/components/person";
-import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
+import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { projectColour } from "../screens/palette.ts";
@@ -24,12 +24,7 @@ import { ShellSidebarContext } from "./sidebar-toggle.tsx";
 import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
 
 export function personOf(me: Me | undefined): PersonInfo {
-  return {
-    name: me?.display_name ?? "",
-    initials: me?.initials ?? "",
-    color: avatarColour(me?.avatar_colour ?? 0),
-    ...(me?.title ? { role: me.title } : {}),
-  };
+  return personFromProfile(me ?? { display_name: "", initials: "", avatar_colour: 0 });
 }
 
 export function useToReviewCount(): number {

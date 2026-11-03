@@ -22,6 +22,7 @@ All are set by the web app for features the user uses, hold no identifier of the
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |
 | `parfocal.uploads.interrupted` | sessionStorage | Project and case ids, file name, size and modification time of unfinished uploads | Offers to resume an upload after a reload. File names may identify a patient, so this stays in `sessionStorage`, which the browser clears when the tab closes |
+| `parfocal.drafts` | sessionStorage | Unsent comment drafts, keyed by the user id and the thread | Keeps a draft through log out and back in. Comments may describe a patient, so this stays in `sessionStorage`, which the browser clears when the tab closes, and a draft shows only to the user who wrote it |
 | `parfocal.prototype.origin` | sessionStorage | Where a prototype flow started, with the ids of its demo project, task and slides | Returns to the flow map in the prototype screens |
 
 ## Third parties
