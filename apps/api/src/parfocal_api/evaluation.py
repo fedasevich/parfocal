@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.types import Integer, Uuid
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.disagreements import choice_value
 from parfocal_api.opinions import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
@@ -156,7 +157,7 @@ async def ai_objects(
 ) -> list[engine.AiObject]:
     regions = await region_classes(connection, task_id, names)
     decisions = {
-        (row.slide_id, row.kind, row.number): row.decision
+        (row.slide_id, row.kind, row.number): choice_value(row)
         for row in await connection.execute(
             select(disagreement_decisions).where(disagreement_decisions.c.task_id == task_id)
         )

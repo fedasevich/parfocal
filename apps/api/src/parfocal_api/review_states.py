@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import first_read_open
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.disagreements import open_by_slide, open_count, queue_of
+from parfocal_api.disagreements import left_open_count, open_by_slide, open_count, queue_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -213,6 +213,7 @@ class TaskStates(BaseModel):
     task_id: uuid.UUID
     signed_off_at: datetime | None
     slides: list[SlideState]
+    left_open: int = 0
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}", tags=["review-tasks"])
@@ -278,7 +279,8 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
             .order_by(review_task_slides.c.position)
         )
     ).all()
-    open_disagreements = open_by_slide(await queue_of(connection, task.id))
+    queue = await queue_of(connection, task.id)
+    open_disagreements = open_by_slide(queue)
     by_slide: dict[uuid.UUID, list[Any]] = {}
     for row in await assignment_rows(connection, task.id):
         by_slide.setdefault(row.slide_id, []).append(row)
@@ -309,7 +311,12 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
                 ],
             )
         )
-    return TaskStates(task_id=task.id, signed_off_at=task.signed_off_at, slides=slides)
+    return TaskStates(
+        task_id=task.id,
+        signed_off_at=task.signed_off_at,
+        slides=slides,
+        left_open=left_open_count(queue),
+    )
 
 
 async def actor_for(

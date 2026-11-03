@@ -83,6 +83,24 @@ def test_the_consensus_follows_unanimity_then_the_decision() -> None:
     assert by_number[("cell", 4)] is Consensus.UNDECIDED
 
 
+@pytest.mark.parametrize(
+    ("decision", "expected"),
+    [
+        ("agree", Consensus.AGREE),
+        ("disagree", Consensus.DISAGREE),
+        ("unsure", Consensus.UNSURE),
+        ("left-open", Consensus.UNDECIDED),
+        (None, Consensus.DISAGREE),
+    ],
+)
+def test_a_queue_decision_counts_as_its_mapped_value(
+    decision: str | None, expected: Consensus
+) -> None:
+    both_against = {"a": Verdict("disagree"), "b": Verdict("disagree")}
+    item = AiObject("s", "region", 1, "Tumor", both_against, decision)
+    assert consensus(item) is expected
+
+
 def test_kappa_between_the_two_reviewers_matches_the_hand_value() -> None:
     (pair,) = pairwise_kappa(objects())
     numerator, denominator, shared = EXPECTED["kappa"]

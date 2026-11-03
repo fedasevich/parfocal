@@ -34,6 +34,7 @@ from parfocal_api.tables import (
     DecisionStyle,
     VerdictReason,
     VerdictValue,
+    disagreement_decisions,
     result_objects,
     result_set_classes,
     review_edits,
@@ -110,6 +111,8 @@ class Verdict(BaseModel):
     reason_class_id: uuid.UUID | None
     note: str | None
     updated_at: datetime
+    reopened_at: datetime | None = None
+    reopened_note: str | None = None
 
 
 class ReasonNotForAnswerError(BadRequestError):
@@ -142,6 +145,8 @@ def verdict_of(row: Any) -> Verdict:
         reason_class_id=row.reason_class_id,
         note=row.note,
         updated_at=row.updated_at,
+        reopened_at=row.reopened_at,
+        reopened_note=row.reopened_note,
     )
 
 
@@ -307,7 +312,23 @@ async def recount(
                 slide_id=row.slide_id,
             )
             await undo_retype(connection, layer, row.user_id, kind, row.number, row.reason_class_id)
+    await recount_queue_decisions(connection, task.id, counts_as)
     return changed, dropped
+
+
+async def recount_queue_decisions(
+    connection: AsyncConnection, task_id: uuid.UUID, counts_as: Sequence[str]
+) -> None:
+    for position, value in enumerate(counts_as, start=1):
+        await connection.execute(
+            update(disagreement_decisions)
+            .where(
+                disagreement_decisions.c.task_id == task_id,
+                disagreement_decisions.c.style == DecisionStyle.CERTAINTY,
+                disagreement_decisions.c.answer == str(position),
+            )
+            .values(value=value)
+        )
 
 
 @router.put("/{object_id}", operation_id="saveVerdict", **require(Permission.REVIEW, write=True))
@@ -353,6 +374,8 @@ async def save_verdict(
         "reasons": [reason.value for reason in draft.reasons],
         "reason_class_id": draft.reason_class_id,
         "note": draft.note or None,
+        "reopened_at": None,
+        "reopened_note": None,
     }
     await connection.execute(
         upsert(verdicts)

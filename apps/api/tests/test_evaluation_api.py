@@ -48,7 +48,7 @@ def scenario(api: ApiAs, database: str) -> Review:
         assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
     decided = api(r.people["owner"]).put(
         f"/api/review-tasks/{r.task}/disagreements/{r.slide}/C1",
-        json={"decision": "go-with-reviewers"},
+        json={"answer": "disagree"},
     )
     assert decided.status_code == 200, decided.text
     return r

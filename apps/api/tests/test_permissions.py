@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,7 @@ from parfocal_api.tables import (
     result_objects,
     result_sets,
     review_assignments,
+    review_edits,
     review_task_slides,
     review_tasks,
     service_accounts,
@@ -518,10 +520,21 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "decideDisagreement": lambda w: Call(
         "PUT",
         f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1",
-        {"decision": "keep-ai"},
+        {"answer": "4"},
     ),
     "clearDisagreementDecision": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1"
+    ),
+    "leaveDisagreementOpen": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1/left-open", {}
+    ),
+    "askReviewersToLookAgain": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T2/look-again",
+        {"note": "Redrawn"},
+    ),
+    "keepReviewerDecisions": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T3/keep-decisions"
     ),
     "importCases": lambda w: Call(
         "POST", f"/api/projects/{w.project}/case-imports", {"csv": "case\nMatrix", "dry_run": True}
@@ -1202,19 +1215,40 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             assert isinstance(reassignment, uuid.UUID)
             assert isinstance(nudge, uuid.UUID)
             await connection.execute(
-                insert(verdicts).values(
-                    tenant_id=tenant_id,
-                    project_id=case.project_id,
-                    task_id=queued_task,
-                    slide_id=case.loose_slide_id,
-                    user_id=people[lead],
-                    kind="region",
-                    number=1,
-                    value="disagree",
-                    style="agree",
-                    answer="disagree",
-                    reasons=["not_class"],
-                )
+                insert(verdicts),
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "project_id": case.project_id,
+                        "task_id": queued_task,
+                        "slide_id": case.loose_slide_id,
+                        "user_id": people[lead],
+                        "kind": "region",
+                        "number": number,
+                        "value": "disagree",
+                        "style": "certainty",
+                        "answer": "1",
+                        "reasons": ["not_class"],
+                    }
+                    for number in (1, 2, 3)
+                ],
+            )
+            await connection.execute(
+                insert(review_edits),
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "project_id": case.project_id,
+                        "task_id": queued_task,
+                        "slide_id": case.loose_slide_id,
+                        "user_id": people[lead],
+                        "kind": "region",
+                        "number": number,
+                        "geometry": "SRID=0;POLYGON((0 0,8 0,8 8,0 8,0 0))",
+                        "updated_at": datetime(2999, 1, 1, tzinfo=UTC),
+                    }
+                    for number in (2, 3)
+                ],
             )
             await connection.execute(
                 insert(slide_counters).values(
