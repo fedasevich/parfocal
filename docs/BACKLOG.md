@@ -584,7 +584,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on VIEW-002, TILES-001.
   Size: M.
 
-- [ ] SKEL-007 · Draw and save one polygon
+- [x] SKEL-007 · Draw and save one polygon
   Polygon tool only, stored in PostGIS through the API.
   Done when an E2E test draws, reloads and sees the same polygon.
   Depends on ANN-001, ANN-020.
