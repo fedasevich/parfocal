@@ -22,7 +22,7 @@ test("the prototype index links to every screen", async ({ page }) => {
   await screens.getByRole("link", { name: "Slide · S26-04812 A1" }).click();
   await expect(page.getByTestId("full-viewer")).toBeVisible();
   const url = new URL(page.url());
-  expect(url.searchParams.get("object")).toBe("T2·C145");
+  expect(url.searchParams.get("object")).toBe("T5");
   await page.goBack();
   await screens.getByRole("link", { name: "Shortcuts · key already used" }).click();
   await expect(page).toHaveURL(/\/settings\/shortcuts\?scene=conflict$/);
