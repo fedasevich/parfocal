@@ -260,3 +260,7 @@ luma.gl 9.4.2 listens for `webglcontextlost` without calling `preventDefault`, a
 ## Playwright sees the requests of a dedicated worker
 
 `page.on("request")` in Chromium lists the module imports and the WebAssembly fetch made by a dedicated decode worker, so a request listing can show what a worker downloaded. Always run a positive control with it, because a listing that cannot see worker requests passes every "never downloaded" check. Source: VIEW-011.
+
+## The tissue box arrives from tissue.json, not from the tile index
+
+Ingest writes the tile index in its index step and `tissue.json` in the later derive step, so the box cannot live in the index. A resolver gives `createPixelSlideOpener` either `tissue` (a box it already holds, or `null` for none) or `tissueUrl` (the `tissue.json` beside the slide). The opener fetches the file while the pixel source opens and reads its `box`. A missing file, a broken one, a null box (older slides have none until re-ingested) or a failed fetch all open the slide fitted to the whole scan. Source: VIEW-049.

@@ -51,6 +51,7 @@ export {
   createPixelSlideOpener,
   type OpenRequestResolver,
   type PixelSlide,
+  type PixelSlideRequest,
   pixelSlide,
 } from "./pixel-slide.ts";
 export {
@@ -58,6 +59,12 @@ export {
   type SlideViewport,
   type SlideViewportOptions,
 } from "./slide-viewport.ts";
+export {
+  fetchTissueBox,
+  readTissueBox,
+  TISSUE_FILE,
+  type TissueFetchOptions,
+} from "./tissue-box.ts";
 export {
   boxDownsamplePlane,
   type ChannelDisplay,
