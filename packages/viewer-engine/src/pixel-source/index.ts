@@ -10,6 +10,7 @@ export {
   type PixelSourceRegistry,
   tiffTileGridFormats,
 } from "./registry.ts";
+export { MultiRegionScnError } from "./tiff/leica-scn.ts";
 export {
   browserTileDecoder,
   nativeAgreementThreshold,

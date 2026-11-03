@@ -247,6 +247,11 @@
       "file": "synthetic-mxif-uint16-be.ome.tiff",
       "sha256": "c590c9ab8b2b67e86e213610e0355ebbf8605fd41a10040ca442985a8b3e8dc1",
       "bytes": 445430
+    },
+    {
+      "file": "synthetic-decoy.scn",
+      "sha256": "ede30f9519ee369d62eee86096b8d1e5d003ef7ad621abf638b11e4969a239a3",
+      "bytes": 175257
     }
   ]
 }

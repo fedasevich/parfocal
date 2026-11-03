@@ -31,6 +31,7 @@ import {
   type TiffPage,
 } from "./directory.ts";
 import { frameLayout, rawWindow, resample, sampleAxis } from "./frame-stitching.ts";
+import { scnMainPyramid } from "./leica-scn.ts";
 import {
   browserTileDecoder,
   chooseProbeTile,
@@ -175,6 +176,20 @@ function indexedPage(pages: readonly TiffPage[], level: SlideIndexLevel): TiffPa
   return sized;
 }
 
+async function leicaPyramid(pages: readonly TiffPage[]): Promise<TiffPage[] | null> {
+  const first = pages.find((page) => page.ifd === 0 && page.subIfd === null);
+  if (first === undefined) return null;
+  const description = await loadTag(first.image, "ImageDescription");
+  const ifds = typeof description === "string" ? scnMainPyramid(description) : null;
+  if (ifds === null) return null;
+  return ifds.map((ifd) => {
+    const page = pages.find((candidate) => candidate.ifd === ifd && candidate.subIfd === null);
+    if (page === undefined || !page.image.isTiled)
+      throw new Error(`The Leica SCN header names IFD ${ifd}, which is not a tiled page`);
+    return page;
+  });
+}
+
 async function chooseLevels(
   pages: readonly TiffPage[],
   request: OpenRequest,
@@ -188,7 +203,7 @@ async function chooseLevels(
       }),
     );
   }
-  const pyramid = largestPyramid(pages);
+  const pyramid = (await leicaPyramid(pages)) ?? largestPyramid(pages);
   if (pyramid.length === 0) throw new Error("The TIFF holds no tiled pyramid");
   const steps = recoverLadder(
     pyramid.map((page) => ({
