@@ -2,6 +2,7 @@ import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { useId } from "react";
 
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
@@ -41,6 +42,7 @@ type RadioRowProps = Omit<React.ComponentProps<"label">, "title"> & {
 };
 
 function RadioRow({ value, title, text, disabled, className, ...props }: RadioRowProps) {
+  const id = useId();
   return (
     <label
       data-slot="radio-row"
@@ -51,10 +53,22 @@ function RadioRow({ value, title, text, disabled, className, ...props }: RadioRo
       )}
       {...props}
     >
-      <RadioGroupItem value={value} disabled={disabled ?? false} className="mt-0.5" />
+      <RadioGroupItem
+        value={value}
+        disabled={disabled ?? false}
+        aria-labelledby={`${id}-title`}
+        aria-describedby={text ? `${id}-text` : undefined}
+        className="mt-0.5"
+      />
       <span className="grid gap-0.5 group-data-disabled/radio-row:opacity-40">
-        <b className="text-body-sm font-semibold text-fg">{title}</b>
-        {text ? <small className="text-body-sm text-fg-dim">{text}</small> : null}
+        <b id={`${id}-title`} className="text-body-sm font-semibold text-fg">
+          {title}
+        </b>
+        {text ? (
+          <small id={`${id}-text`} className="text-body-sm text-fg-dim">
+            {text}
+          </small>
+        ) : null}
       </span>
     </label>
   );
