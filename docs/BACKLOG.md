@@ -1653,7 +1653,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: signin/email, mock: task/send, mock: admin/addmodel.
   Size: M.
 
-- [ ] DS-025 · Tabs
+- [x] DS-025 · Tabs
   Three kinds of tabs: the page tabs of My work, the project page, Team and Admin, the side panel tabs of the full viewer with their counts (Objects, Display, Comments, Opinion), and the quiet tabs of guided review's right column (Review, Comments, Display).
   Done when stories cover each kind with and without counts in both themes, keyboard tests move between tabs with the arrow keys and Home and End, and axe passes.
   Depends on PROTO-011. Refs mock: worklist, mock: case/objects, mock: guided/comments, mock: guided/display.
