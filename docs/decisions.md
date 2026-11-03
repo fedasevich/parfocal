@@ -156,6 +156,16 @@ Clinical case screens now show the patient banner (name, sex, age, record number
 
 Your choice:
 
+## 44. Pathologist check of zone names and type hints, from REVIEW-000 (review research check)
+
+ADR 0013 asked REVIEW-000 for a pathologist to confirm the zone names ("tumor or immune") and the type hints. No doctor has done that yet. ADR 0194 confirms the confidence display rules for HoVer-NeXt only, because no typer is chosen yet (AINUC-000).
+
+- a. Fold it into the round 4 pilot. (recommended)
+- b. Add a separate task for a pathologist wording review.
+- c. Drop it.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

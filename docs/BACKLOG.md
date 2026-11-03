@@ -2143,7 +2143,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 Cell findings and node staging run in the Objects tab of the slide view (CASE-014). Decisions on whole objects come from GUIDE-001 and use K, X and U in both modes ([ADR 0053](adr/0053-ai-results-review-direction.md)). Node staging applies only with the sentinel node template (PROJ-005).
 
-- [ ] REVIEW-000 · Research check
+- [x] REVIEW-000 · Research check
   Re-read docs 28 and 33 and confirm the confidence rules below still hold for the typer chosen in AINUC.
   Done when an ADR lists the display rules and their evidence.
   Size: S.
@@ -2972,7 +2972,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] AINUC-000 · Research check
   Pick the detector and typer per tier from current models (PathoSAM AIS, HoVer-NeXt, CellViT++, NuLite, InstanSeg) under the STACK-031 licence policy.
-  Done when an ADR names them with MLEVAL numbers.
+  Done when an ADR names them with MLEVAL numbers and the confidence display table of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) is rerun for the chosen typer.
   Size: M.
 
 - [ ] AINUC-001 · Detector runner
