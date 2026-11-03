@@ -3,6 +3,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorCard, RegionRow, StagingHero } from "@parfocal/ui/components/inspector";
 import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
+import { NoTumorCard } from "@parfocal/ui/components/systematic-scan";
 import {
   type AiArea,
   type AiState,
@@ -25,6 +26,7 @@ import {
 } from "@parfocal/ui/lib/analysis-parts";
 import type { TyperEvidence, WordingMode } from "@parfocal/ui/lib/confidence-words";
 import type { ModelWarning } from "@parfocal/ui/lib/model-warnings";
+import type { ScanSummary } from "@parfocal/ui/lib/systematic-scan";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -76,6 +78,8 @@ type StagingCardsProps = React.ComponentProps<"section"> &
     warnings?: readonly ModelWarning[];
     onStart?: (object: string) => void;
     onSubmit?: () => void;
+    scan?: ScanSummary | null;
+    onScan?: () => void;
   };
 
 function rowKind(area: RankedArea, settled: boolean) {
@@ -201,6 +205,8 @@ function StagingCards({
   warnings = [],
   onStart,
   onSubmit,
+  scan,
+  onScan,
   current,
   visited,
   roleOf,
@@ -265,7 +271,7 @@ function StagingCards({
           />
         )
       ) : (
-        <p className="m-0 text-body-sm text-fg-dim">No tumor areas found on this slide.</p>
+        <NoTumorCard scan={scan} onScan={onScan} onSubmit={onSubmit} />
       )}
       <ModelWarningsBlock warnings={warnings} />
       {showList && (state.areas.length || state.kind === "running") ? (

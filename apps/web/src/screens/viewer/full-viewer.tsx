@@ -20,6 +20,15 @@ import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/sli
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
+import {
+  advanceScan,
+  currentField,
+  fieldCentre,
+  type Scan,
+  scanPath,
+  scanSummary,
+  startScan,
+} from "@parfocal/ui/lib/systematic-scan";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
@@ -72,6 +81,7 @@ import {
 } from "../review/slide-still.tsx";
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
+import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
 import {
   AiSays,
   type ListFilter,
@@ -242,6 +252,17 @@ function ViewerBody({
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [scan, setScan] = useState<Scan | null>(null);
+  const noTumor = regions.length === 0 && !running;
+  const scanStep = () => {
+    const next = scan ? advanceScan(scan) : startScan(scanPath(overviewTissue, scanField));
+    setScan(next);
+    const field = currentField(next);
+    if (field === null) return;
+    const [x, y] = fieldCentre(field);
+    if (search.object !== undefined) onSearch({ object: undefined });
+    setCamera({ x, y, scale: scanScale });
+  };
   const [pin, setPin] = useState<Pin | null>(null);
   const shownPin = search.tool === "comment" ? pin : null;
   const leaveComment = () => {
@@ -465,6 +486,10 @@ function ViewerBody({
       });
     },
     intercept: (fired) => {
+      if (fired.action === "nextarea" && !navigator && noTumor && scan !== null) {
+        if (fired.phase === "press") scanStep();
+        return true;
+      }
       if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
       if (fired.phase !== "press") return true;
       if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
@@ -973,6 +998,8 @@ function ViewerBody({
               onGoTo={areaNav.goTo}
               onStart={areaNav.goTo}
               onSubmit={() => onSearch({ tab: "opinion" })}
+              scan={noTumor ? scanSummary(overviewTissue, scan) : null}
+              onScan={scanStep}
             />
           )
         }
