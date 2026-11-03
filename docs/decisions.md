@@ -97,6 +97,17 @@ The mock lightens the filled primary button on hover with white, which drops its
 
 Your choice:
 
+## 38. Smart minimap, from NAV-000 (minimap state machine and placement)
+
+ADR 0185 (proposed) makes the minimap one state machine with size modes hidden, reading, area, locator and travel, a fade flag and the Z peek, placed by the mock's corner scoring. Three choices the kit leaves open:
+
+- a. Should G then n also start travel from area or locator mode, not only from reading? (recommended: yes, from any visible mode)
+- b. Should guided review drop its own fixed 136 px minimap and use the smart minimap? (recommended: yes)
+- c. Weights for an open thread, the floating cells panel, proposals and pins in corner scoring are not in the kit. (recommended: NAV-007 picks them and records them in ADR 0185)
+- d. Accept ADR 0185.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

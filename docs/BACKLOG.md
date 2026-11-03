@@ -2053,7 +2053,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 13 NAV · Navigation aids
 
-- [ ] NAV-000 · Research check
+- [x] NAV-000 · Research check
   Done when the minimap state machine and placement algorithm are written as an ADR from kit and mock specs.
   Size: S.
 
