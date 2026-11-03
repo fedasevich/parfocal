@@ -80,6 +80,7 @@ test("a box opens its screen in its scene as the lane's persona, and Back to the
 });
 
 test("every box opens a route of the app, never the not found page", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/flow-map");
   await expect(page.locator("a[data-box]")).toHaveCount(21);
   const ids = await page

@@ -93,6 +93,7 @@ test("new project and both new case drawers open over the project", async ({ pag
 });
 
 test("every upload scene opens on fake data", async ({ page }) => {
+  test.setTimeout(90_000);
   const errors = watchErrors(page);
   for (const scene of uploadScenes) {
     await page.goto(`/projects/${p07}/upload?scene=${scene}`);

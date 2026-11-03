@@ -110,6 +110,7 @@ test("switching slides keeps the camera each slide had", async ({ page }) => {
   await page.keyboard.press("e");
   await expect.poll(() => slideOf(page.url())).not.toBe(a1);
   expect(new URL(page.url()).searchParams.get("z")).toBeNull();
+  await expect(page.getByRole("button", { name: /^A2/ }).first()).toBeVisible();
   await page.keyboard.press("q");
   await expect.poll(() => slideOf(page.url())).toBe(a1);
   const after = new URL(page.url()).searchParams;
