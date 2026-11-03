@@ -346,7 +346,9 @@ function AiRunningSteps({ steps, className, ...props }: AiRunningStepsProps) {
             >
               <i className="block h-full bg-accent-fill" style={{ width: `${step.percent}%` }} />
             </div>
-          ) : null}
+          ) : (
+            <div aria-hidden="true" data-slot="ai-step-bar-space" className="ml-6.5 h-1" />
+          )}
         </div>
       ))}
     </div>

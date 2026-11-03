@@ -126,7 +126,8 @@ export function FullViewer(props: FullViewerProps) {
 function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
   const session = useReviewSession(props.taskId, props.slideId);
   const project = okData(useGetProject(props.projectId).data);
-  if (!session.ready || project === undefined) return loading;
+  const progress = useGetSlideAiProgress(props.slideId);
+  if (!session.ready || project === undefined || progress.isPending) return loading;
   return (
     <ViewerBody
       key={`${props.search.scene ?? "objects"}-${props.slideId}`}
@@ -153,6 +154,7 @@ function addedSize(note: string | null) {
 }
 
 const cameraWriteDelayMs = 250;
+const aiProgressPollMs = 3000;
 
 function ViewerBody({
   projectId,
@@ -177,7 +179,14 @@ function ViewerBody({
   const person = usePeople();
   const saveVerdict = useSaveVerdict();
   const submitReview = useSubmitSlideReview();
-  const progress = okData(useGetSlideAiProgress(slideId).data);
+  const progress = okData(
+    useGetSlideAiProgress(slideId, {
+      query: {
+        refetchInterval: (query) =>
+          okData(query.state.data)?.state === "running" ? aiProgressPollMs : false,
+      },
+    }).data,
+  );
   const stats = okData(useGetSlideResultStats(session.taskId, slideId).data);
   const slideSets = okData(useListSlideResultSets(slideId).data) ?? [];
   const setName = useSetName(session);

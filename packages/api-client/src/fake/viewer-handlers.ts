@@ -13,7 +13,7 @@ import {
   reviewerAgainstReviewer,
   scoreBins,
 } from "./scenario-viewer.ts";
-import { fakeViewerScene } from "./viewer-scene.ts";
+import { fakeViewerScene, nextFakeProgressRead } from "./viewer-scene.ts";
 
 const setId = (key: string) => resultSets.find((set) => set.key === key)?.id ?? key;
 
@@ -46,6 +46,11 @@ export const toSlideResultStats = (taskId: string, slideId: string): SlideResult
   });
 };
 
+const foundAfter = (reads: number) => [
+  ...aiStillReading.found,
+  ...aiStillReading.later.slice(0, Math.max(0, reads - 1)),
+];
+
 export const toSlideAiProgress = (slideId: string): SlideAiProgress =>
   slideAiProgressSchema.parse(
     fakeViewerScene() === "running"
@@ -53,7 +58,7 @@ export const toSlideAiProgress = (slideId: string): SlideAiProgress =>
           slide_id: slideId,
           state: "running",
           steps: aiStillReading.steps,
-          found: aiStillReading.found,
+          found: foundAfter(nextFakeProgressRead()),
         }
       : { slide_id: slideId, state: "ready", steps: [], found: [] },
   );
