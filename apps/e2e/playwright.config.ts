@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
@@ -9,6 +10,7 @@ if (existsSync(envFile)) {
 }
 process.env.EMAIL_BACKEND = "file";
 process.env.EMAIL_OUTBOX = `${root}.outbox/e2e-email.jsonl`;
+process.env.TILE_TOKEN_KEY ||= randomBytes(32).toString("base64");
 
 export default defineConfig({
   testDir: "tests",

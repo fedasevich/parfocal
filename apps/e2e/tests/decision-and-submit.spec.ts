@@ -1,50 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
-import { readSession, signIn, sql } from "./support.ts";
-
-interface Reply {
-  status: number;
-  json: unknown;
-}
-
-async function call(page: Page, method: string, path: string, body?: unknown): Promise<Reply> {
-  return page.evaluate(
-    async ({ method, path, body }) => {
-      const response = await fetch(
-        path,
-        body === undefined
-          ? { method }
-          : { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) },
-      );
-      const text = await response.text();
-      return { status: response.status, json: text ? (JSON.parse(text) as unknown) : null };
-    },
-    { method, path, body },
-  );
-}
-
-function field(reply: Reply, name: string): string {
-  const { json } = reply;
-  if (typeof json === "object" && json !== null && name in json) {
-    const value: unknown = Reflect.get(json, name);
-    if (typeof value === "string") return value;
-  }
-  throw new Error(`No ${name} in ${JSON.stringify(json)}`);
-}
-
-const idOf = (reply: Reply) => field(reply, "id");
-
-function researcherWorkspace(userId: string): string {
-  const slug = `e2e-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-  return (
-    sql(
-      `WITH organisation AS (INSERT INTO organisations (slug, name) VALUES ('${slug}', 'E2E ${slug}') RETURNING id), ` +
-        `tenant AS (INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) ` +
-        `SELECT id, '${slug}', 'E2E ${slug}', 'research', 'eu', 'pilot' FROM organisation RETURNING id) ` +
-        `INSERT INTO memberships (tenant_id, user_id, role) SELECT id, '${userId}', 'researcher' FROM tenant ` +
-        `RETURNING tenant_id`,
-    ).split("\n")[0] ?? ""
-  );
-}
+import { expect, test } from "@playwright/test";
+import { call, field, idOf, readSession, researcherWorkspace, signIn, sql } from "./support.ts";
 
 test("a reviewer decides on an AI region, submits, and the slide shows as submitted", async ({
   page,

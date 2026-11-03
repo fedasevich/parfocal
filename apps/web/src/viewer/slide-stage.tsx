@@ -3,8 +3,9 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createDocument } from "../annotations/document.ts";
+import { PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
+import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
@@ -20,7 +21,13 @@ type Phase =
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
-type ViewerTool = "hand" | "ruler" | "select";
+type ViewerTool = "hand" | "ruler" | "select" | "polygon";
+
+const toolOfAction: Readonly<Record<string, ViewerTool>> = {
+  tselect: "select",
+  truler: "ruler",
+  tpoly: "polygon",
+};
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
@@ -68,11 +75,10 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
     setHostNode(node);
   }, []);
   const [tool, setTool] = useState<ViewerTool>("hand");
-  const [annotations, setAnnotations] = useState(createDocument);
-  const toolBindings = useBindings(["annotate"], ["truler", "tselect"]);
+  const toolBindings = useBindings(["annotate"], ["truler", "tselect", "tpoly"]);
   const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
-    if (phase !== "press") return;
-    const pressed = action === "tselect" ? "select" : "ruler";
+    const pressed = toolOfAction[action];
+    if (phase !== "press" || pressed === undefined) return;
     setTool((current) => (current === pressed ? "hand" : pressed));
   }, []);
   useHotkeys(toolBindings, onToolKey);
@@ -80,6 +86,9 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
+  const saved = useSavedAnnotations(slideId, session !== null);
+  const annotations = saved.document;
+  const setAnnotations = saved.setDocument;
 
   useEffect(() => {
     const container = host.current;
@@ -133,7 +142,9 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       data-state={phase.state}
       data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
       data-tool={tool}
-      className="relative size-full min-h-0 bg-chrome data-[tool=ruler]:**:cursor-crosshair!"
+      data-annotations={saved.loaded ? "loaded" : "loading"}
+      data-save-state={saved.saveState}
+      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
       {session && hostNode ? (
@@ -144,6 +155,14 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
             active={tool === "ruler"}
             document={annotations}
             onDocumentChange={setAnnotations}
+            onLeave={leaveTool}
+          />
+          <PolygonLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "polygon"}
+            document={annotations}
+            onClose={saved.savePolygon}
             onLeave={leaveTool}
           />
           <SelectLayer
@@ -161,6 +180,13 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
               action="tselect"
               pressed={tool === "select"}
               onPressedChange={(on) => setTool(on ? "select" : "hand")}
+            />
+            <ToolRailButton
+              icon="poly"
+              label="Polygon"
+              action="tpoly"
+              pressed={tool === "polygon"}
+              onPressedChange={(on) => setTool(on ? "polygon" : "hand")}
             />
             <ToolRailButton
               icon="ruler"
@@ -186,6 +212,11 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
       {phase.state === "loading" ? (
         <p role="status" className="absolute top-4 left-4 text-body-sm text-fg-dim">
           Loading the slide
+        </p>
+      ) : null}
+      {saved.saveState === "failed" ? (
+        <p role="alert" className="absolute top-4 right-4 text-bad text-body-sm">
+          The polygon was not saved
         </p>
       ) : null}
       {phase.state === "failed" ? (

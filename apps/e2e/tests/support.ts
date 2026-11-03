@@ -77,3 +77,53 @@ export async function readSession(page: Page): Promise<SessionBody> {
   }
   return body;
 }
+
+export interface Reply {
+  status: number;
+  json: unknown;
+}
+
+export async function call(
+  page: Page,
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<Reply> {
+  return page.evaluate(
+    async ({ method, path, body }) => {
+      const response = await fetch(
+        path,
+        body === undefined
+          ? { method }
+          : { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) },
+      );
+      const text = await response.text();
+      return { status: response.status, json: text ? (JSON.parse(text) as unknown) : null };
+    },
+    { method, path, body },
+  );
+}
+
+export function field(reply: Reply, name: string): string {
+  const { json } = reply;
+  if (typeof json === "object" && json !== null && name in json) {
+    const value: unknown = Reflect.get(json, name);
+    if (typeof value === "string") return value;
+  }
+  throw new Error(`No ${name} in ${JSON.stringify(json)}`);
+}
+
+export const idOf = (reply: Reply) => field(reply, "id");
+
+export function researcherWorkspace(userId: string): string {
+  const slug = `e2e-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+  return (
+    sql(
+      `WITH organisation AS (INSERT INTO organisations (slug, name) VALUES ('${slug}', 'E2E ${slug}') RETURNING id), ` +
+        `tenant AS (INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) ` +
+        `SELECT id, '${slug}', 'E2E ${slug}', 'research', 'eu', 'pilot' FROM organisation RETURNING id) ` +
+        `INSERT INTO memberships (tenant_id, user_id, role) SELECT id, '${userId}', 'researcher' FROM tenant ` +
+        `RETURNING tenant_id`,
+    ).split("\n")[0] ?? ""
+  );
+}
