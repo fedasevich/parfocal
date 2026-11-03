@@ -7,6 +7,7 @@ import {
   type PixelSourceRegistry,
 } from "../pixel-source/registry.ts";
 import type { OpenRequest, PixelSource } from "../pixel-source/types.ts";
+import { fetchTissueBox } from "./tissue-box.ts";
 
 export interface PixelSlide extends EngineSlide {
   readonly source: PixelSource;
@@ -14,7 +15,10 @@ export interface PixelSlide extends EngineSlide {
   readonly bytes: RangeCache | null;
 }
 
-export type PixelSlideRequest = OpenRequest & { readonly tissue?: SlideArea | null };
+export type PixelSlideRequest = OpenRequest & {
+  readonly tissue?: SlideArea | null;
+  readonly tissueUrl?: string | URL;
+};
 
 export type OpenRequestResolver = (ref: SlideRef) => PixelSlideRequest | Promise<PixelSlideRequest>;
 
@@ -48,13 +52,25 @@ export function createPixelSlideOpener(
   registry: PixelSourceRegistry = createDefaultPixelSourceRegistry(),
 ): SlideOpener<PixelSlide> {
   return async (ref, signal) => {
-    const { tissue, ...request } = await resolve(ref);
+    const { tissue, tissueUrl, ...request } = await resolve(ref);
     const bytes = createRangeCache(request.fetch === undefined ? {} : { fetch: request.fetch });
-    const source = await registry.open({ ...request, fetch: cachedFetch(bytes), signal });
+    const stored =
+      tissue !== undefined || tissueUrl === undefined
+        ? Promise.resolve(tissue ?? null)
+        : fetchTissueBox({
+            url: tissueUrl,
+            signal,
+            ...(request.baseUrl === undefined ? {} : { baseUrl: request.baseUrl }),
+            ...(request.fetch === undefined ? {} : { fetch: request.fetch }),
+          });
+    const [source, box] = await Promise.all([
+      registry.open({ ...request, fetch: cachedFetch(bytes), signal }),
+      stored,
+    ]);
     if (signal.aborted) {
       source.close();
       signal.throwIfAborted();
     }
-    return pixelSlide(ref.id, source, request, bytes, tissue ?? null);
+    return pixelSlide(ref.id, source, request, bytes, box);
   };
 }
