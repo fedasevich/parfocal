@@ -407,6 +407,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Re-check STACK-013, STACK-018 and STACK-038 against current releases and record anything that changed.
   Done when an ADR exists or the existing ADRs are confirmed.
   Size: S.
+  Confirmed ADR 0006, ADR 0007 and ADR 0011 on 2026-11-03 in [the tooling re-check](results/2026-11-03-tooling-recheck.md). Python 3.15 is out but onnxruntime, scikit-image and numcodecs have no wheels for it yet.
 
 - [x] FOUND-001 · Monorepo skeleton
   Create `apps/web`, `apps/api`, `apps/edge` (router Worker and Durable Objects), `workers/ingest`, `workers/ml`, `packages/viewer-engine`, `packages/ui`, `packages/api-client`, `packages/tokens`, `packages/test-fixtures`, `infra/`, `docs/adr/`. Root README explains the layout.
@@ -521,6 +522,18 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten.
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
+
+- [ ] FOUND-025 · Refresh the tooling pins
+  [The tooling re-check](results/2026-11-03-tooling-recheck.md) found Ruff 0.17 and uv 0.13 outside the ranges in `pyproject.toml` and the exact JavaScript pins (pnpm, Turborepo, Biome, Oxlint, oxlint-tsgolint, Lefthook, commitlint, Playwright) behind by minor or patch releases. Raise them together, widen `uv_build` to 0.13, fix what new Biome and Ruff rules report, and keep TypeScript on 7.
+  Done when the lockfiles carry the new versions and `pnpm verify` and the golden-image suite are green.
+  Depends on FOUND-000.
+  Size: S.
+
+- [ ] FOUND-026 · CI runner image for Ubuntu 26.04
+  GitHub moves `ubuntu-latest` from Ubuntu 24.04 to 26.04 between 2026-10-19 and 2026-11-19, and every CI job uses `ubuntu-latest`. Run the workflows once on `ubuntu-26.04`, then either move to it explicitly or pin `ubuntu-24.04` until the golden-image suite passes on 26.04, so the image changes only on purpose.
+  Done when every job names an explicit Ubuntu version and CI is green on it.
+  Depends on FOUND-000.
+  Size: S.
 
 ---
 
