@@ -39,6 +39,16 @@ Threads are built on a task slide only, and at sign-off new threads stop while r
 
 Your choice:
 
+## 32. The support address on refused uploads, from INGEST-018 (ingest failure UX)
+
+A file refused for good shows a "Contact support" link. It points at `support@parfocal.eu`, a placeholder in `apps/web/src/upload/ingest-failure.ts`, and that mailbox does not exist yet.
+
+- a. Keep `support@parfocal.eu` and route it to your inbox with Cloudflare Email Routing, which is free and which an agent sets up. (recommended)
+- b. Use your own address directly. Write it here.
+- c. Hide the link until the pilot.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
@@ -50,6 +60,7 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | CASES-009 (search API) | The latency test, which missed 100 ms only on the shared CI runner | An agent reruns it on your Mac with `PARFOCAL_PERF=1` |
 | IAM-021 (lock screen) | Your answer 28a | The session already working on it |
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
+| TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed
