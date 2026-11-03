@@ -1752,6 +1752,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] SHELL-005 · Inspector panel with resize and hide
   Default 340 px, drag between 280 and 560, drag below 220 hides it, I toggles it, a floating tab shows the active section and count when hidden. Option "hides while panning".
+  The rail's Hide the side panel button already fires the `panel` action on I (CMD-007), but ViewerFrame has no hidden state, so I does nothing on the viewer yet.
   Done when interaction tests cover resize, hide, restore and persistence per user.
   Refs kit W10, mock §2.3.
   Size: M.
@@ -3372,7 +3373,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] CMD-007 · Every shortcut fires on the person's own keys
+- [x] CMD-007 · Every shortcut fires on the person's own keys
   DS-030 (every key hint from the key registry) made every hint follow the person's keys, but the decision answer keys (K, X, Y, N and the digits) and the note key still fire on the defaults, and the rail's Annotate (P), AI tools (A, the same key as overlays) and hide panel (]) buttons are not registry actions. Route them all through the registry and settle the A clash.
   Done when a test rebinds an answer key, the note key and Annotate, and each fires on the new key and not the old one, and a test proves no two actions in one scope share a default key.
   Depends on DS-030.
