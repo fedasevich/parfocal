@@ -1689,7 +1689,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-009, DS-010.
   Size: S.
 
-- [ ] DS-031 · Fixed durations onto the motion tokens
+- [x] DS-031 · Fixed durations onto the motion tokens
   DS-016 (motion tokens and reduced motion) added the duration and easing tokens, but the dialog, small modal and dropdown still use `duration-100` and the magnification bar a fixed 280 ms, so they do not slow down in presenting mode ([ADR 0187](adr/0187-motion-tokens-scale-and-global-reduced-motion.md)).
   Done when no component in packages/ui or apps/web uses a fixed transition duration, and a test checks a dialog's duration in presenting mode.
   Depends on DS-016.
