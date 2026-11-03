@@ -25,6 +25,7 @@ import { Slider } from "@parfocal/ui/components/slider";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
+import { debugHandleName } from "../../debug-handle.ts";
 import { SlideStill } from "../review/slide-still.tsx";
 import {
   benchParameters,
@@ -886,7 +887,7 @@ export function DeveloperScreen({
           title="Debug handle"
           note={
             <>
-              In the browser console as <code className="font-mono">window.__wsi</code>.
+              In the browser console as <code className="font-mono">{debugHandleName}</code>.
             </>
           }
         >
