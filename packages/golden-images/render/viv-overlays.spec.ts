@@ -8,6 +8,7 @@ import {
 import { expect, type Page, test } from "@playwright/test";
 import type { ViteDevServer } from "vite";
 import type {
+  LabelReport,
   OverlayChange,
   OverlayHarness,
   OverlayRenderRequest,
@@ -124,6 +125,10 @@ async function inHarness<Result>(page: Page, call: string, argument?: string): P
   );
 }
 
+async function labelReport(page: Page): Promise<LabelReport> {
+  return inHarness<LabelReport>(page, "labels");
+}
+
 function changedFraction(frame: Frame, base: Frame): number {
   return compareFrames(frame, base, EXACT).differingFraction;
 }
@@ -157,7 +162,7 @@ for (const kind of overlayStack) {
   });
 }
 
-test("all seven layers stacked match their golden image", async ({ page }, testInfo) => {
+test("all eight layers stacked match their golden image", async ({ page }, testInfo) => {
   const { result, frame } = await render(page, overlayStack);
   expect(result.errors).toEqual([]);
   const outcome = checkGolden(frame, {
@@ -367,4 +372,44 @@ test("invalidating a layer rebuilds it and draws the same frame", async ({ page 
   const { frame } = await render(page, overlayStack);
   const again = await change(page, { kind: "invalidate", id: "nuclei" });
   expectSame(again, frame, "after invalidating the nuclei");
+});
+
+test("the ID labels sit apart from each other and from every object they name", async ({
+  page,
+}) => {
+  const { result } = await render(page, ["id-labels"]);
+  expect(result.errors).toEqual([]);
+  const { boxes, anchors, hidden, viewport } = await labelReport(page);
+  expect(boxes.length).toBeGreaterThanOrEqual(anchors.length - 2);
+  expect(hidden.length + boxes.length).toBe(anchors.length);
+  for (let one = 0; one < boxes.length; one++) {
+    const a = boxes[one];
+    if (a === undefined) throw new Error("no box");
+    expect(a.left).toBeGreaterThanOrEqual(0);
+    expect(a.top).toBeGreaterThanOrEqual(0);
+    expect(a.right).toBeLessThanOrEqual(viewport.width);
+    expect(a.bottom).toBeLessThanOrEqual(viewport.height);
+    for (const anchor of anchors) {
+      const covers =
+        anchor.x > a.left && anchor.x < a.right && anchor.y > a.top && anchor.y < a.bottom;
+      expect(covers, `${a.id} covers ${anchor.id}`).toBe(false);
+    }
+    for (let two = one + 1; two < boxes.length; two++) {
+      const b = boxes[two];
+      if (b === undefined) throw new Error("no box");
+      const apart =
+        a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top;
+      expect(apart, `${a.id} and ${b.id}`).toBe(true);
+    }
+  }
+});
+
+test("the ID labels draw on the slide, hide with their layer and come back", async ({ page }) => {
+  const base = await baseFrame(page);
+  const { frame } = await render(page, ["id-labels"]);
+  expect(changedFraction(frame, base)).toBeGreaterThan(0.002);
+  const off = await change(page, { kind: "visible", id: "id-labels", visible: false });
+  expectSame(off, base, "labels off");
+  const on = await change(page, { kind: "visible", id: "id-labels", visible: true });
+  expectSame(on, frame, "labels on");
 });

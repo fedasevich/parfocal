@@ -140,6 +140,17 @@ export const ObjectIdTags: Story = {
   ),
 };
 
+export const CopyableObjectIdTags: Story = {
+  render: () => (
+    <Row>
+      <ObjectIdTag copyText="P07/S26-04812/A1/T2.C145">T2·C145</ObjectIdTag>
+      <ObjectIdTag size="lg" copyText="P07/~/tcga-0042/T2">
+        T2
+      </ObjectIdTag>
+    </Row>
+  ),
+};
+
 export const ResultSetTags: Story = {
   render: () => (
     <Row>

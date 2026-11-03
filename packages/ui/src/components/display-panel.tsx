@@ -169,14 +169,28 @@ function RangeRow({
   );
 }
 
-function SwitchRow({ label, sub, checked }: { label: string; sub: string; checked: boolean }) {
+function SwitchRow({
+  label,
+  sub,
+  checked,
+  onChange,
+}: {
+  label: string;
+  sub: string;
+  checked: boolean;
+  onChange?: ((checked: boolean) => void) | undefined;
+}) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4">
       <span>
         <span className="block text-caption font-semibold text-fg-dim">{label}</span>
         <small className="mt-0.5 block text-caption text-fg-dim">{sub}</small>
       </span>
-      <Switch defaultChecked={checked} />
+      {onChange ? (
+        <Switch checked={checked} onCheckedChange={onChange} />
+      ) : (
+        <Switch defaultChecked={checked} />
+      )}
     </label>
   );
 }
@@ -278,6 +292,7 @@ type DisplayPanelProps = React.ComponentProps<"div"> & {
   viewer?: boolean;
   resultSets?: React.ReactNode;
   after?: React.ReactNode;
+  onIdsChange?: (on: boolean) => void;
 };
 
 function DisplayPanel({
@@ -288,6 +303,7 @@ function DisplayPanel({
   viewer = false,
   resultSets,
   after,
+  onIdsChange,
   className,
   ...props
 }: DisplayPanelProps) {
@@ -312,7 +328,12 @@ function DisplayPanel({
           format={(value) => `${value}%`}
         />
         <SegRow label="Color by" name="colorBy" value={settings.colorBy} lock={locks.colorBy} />
-        <SwitchRow label="ID labels" sub="The ID tags on the slide" checked={settings.ids} />
+        <SwitchRow
+          label="ID labels"
+          sub="The ID tags on the slide"
+          checked={settings.ids}
+          onChange={onIdsChange}
+        />
       </FoldingZone>
       <FoldingZone
         title="What the AI shows"

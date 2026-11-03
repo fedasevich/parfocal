@@ -5,6 +5,7 @@ export const overlayStack = [
   "ai-proposals",
   "human-annotations",
   "measurements",
+  "id-labels",
   "comment-pins",
 ] as const;
 

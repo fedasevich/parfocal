@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import {
+  createLabelOverlay,
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
@@ -230,4 +231,39 @@ test("no layer can be picked", () => {
   const builder = createOverlayLayerBuilder();
   const layers = builder.build([vectors("a"), heat("h"), pins("p", [0, 1])]);
   for (const layer of layers) assert.equal(propsOf(layer).pickable, false);
+});
+
+test("a label overlay becomes one text layer that offsets each label by its placement and padding", () => {
+  const builder = createOverlayLayerBuilder();
+  const overlay = createLabelOverlay({
+    id: "id-labels",
+    placed: [
+      {
+        id: "T1",
+        text: "T1",
+        x: 10,
+        y: 20,
+        offsetX: 8,
+        offsetY: -30,
+        widthPx: 30,
+        heightPx: 18,
+        color: [255, 0, 0, 255],
+      },
+    ],
+  });
+  const layers = builder.build([overlay]);
+  assert.deepEqual(ids(layers), ["overlay:id-labels:text"]);
+  const props = propsOf(layers[0]);
+  const entries = props.data as { text: string; position: number[]; offset: number[] }[];
+  assert.equal(entries[0]?.text, "T1");
+  assert.deepEqual(entries[0]?.position, [10, 20]);
+  assert.deepEqual(entries[0]?.offset, [14, -27]);
+  const hidden = builder.build([withOverlayState(overlay, { visible: false })]);
+  assert.equal(propsOf(hidden[0]).visible, false);
+  assert.equal(propsOf(hidden[0]).data, props.data);
+});
+
+test("a label overlay with nothing placed draws no layer", () => {
+  const builder = createOverlayLayerBuilder();
+  assert.deepEqual(builder.build([createLabelOverlay({ id: "id-labels", placed: [] })]), []);
 });

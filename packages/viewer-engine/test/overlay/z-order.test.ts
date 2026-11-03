@@ -12,6 +12,7 @@ test("the stack runs from the coverage raster at the bottom to comment pins on t
       "ai-proposals",
       "human-annotations",
       "measurements",
+      "id-labels",
       "comment-pins",
     ],
   );
@@ -27,8 +28,9 @@ test("every kind has its own order, rising up the stack and above a bare engine 
   assert.ok((orders[0] ?? 0) >= overlayOrderStep);
 });
 
-test("only the seven kinds are recognised", () => {
+test("only the eight kinds are recognised", () => {
   for (const kind of overlayStack) assert.equal(isOverlayKind(kind), true);
+  assert.equal(isOverlayKind("id-labels"), true);
   assert.equal(isOverlayKind("labels"), false);
   assert.equal(isOverlayKind(undefined), false);
 });

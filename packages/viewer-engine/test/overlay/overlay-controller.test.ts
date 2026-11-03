@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  createLabelOverlay,
   createOverlayController,
   createPinOverlay,
   createRasterOverlay,
@@ -67,7 +68,9 @@ test("a layer takes its order from its kind, whatever the caller does", () => {
         ? heatmap("r", kind)
         : kind === "comment-pins"
           ? pins("p")
-          : createVectorOverlay({ id: "v", kind, shapes: {} });
+          : kind === "id-labels"
+            ? createLabelOverlay({ id: "l", placed: [] })
+            : createVectorOverlay({ id: "v", kind, shapes: {} });
     assert.equal(layer.order, overlayOrder(kind));
   }
 });

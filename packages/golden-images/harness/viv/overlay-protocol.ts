@@ -30,7 +30,23 @@ export interface ResourceWatch {
   readonly destroyed: number;
 }
 
+export interface LabelBox {
+  readonly id: string;
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+
+export interface LabelReport {
+  readonly boxes: readonly LabelBox[];
+  readonly anchors: readonly { readonly id: string; readonly x: number; readonly y: number }[];
+  readonly hidden: readonly string[];
+  readonly viewport: { readonly width: number; readonly height: number };
+}
+
 export interface OverlayHarness {
+  labels(): LabelReport;
   render(request: OverlayRenderRequest): Promise<OverlayRenderResult>;
   watch(id: string): ResourceWatch;
   watched(): ResourceWatch;

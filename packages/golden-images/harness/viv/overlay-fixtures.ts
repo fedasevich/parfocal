@@ -1,15 +1,19 @@
 import {
   classColors,
   createHeatmapOverlay,
+  createLabelOverlay,
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
   type HeatmapLook,
+  type LabelAnchor,
+  type LabelPlacement,
   type OutlineMode,
   type OverlayDescription,
   type OverlayKind,
   outlineModeOverlays,
   pathBatchFromLines,
+  placeLabels,
   pointBatchFromPoints,
   polygonBatchFromRings,
   type Rgba,
@@ -257,6 +261,56 @@ function commentPins(geometry: OverlayGeometry): OverlayDescription {
   });
 }
 
+const labelSpots: readonly (readonly [id: string, dx: number, dy: number, color: Rgba])[] = [
+  ["T1", -55, -15, immune],
+  ["T2", 110, -70, immune],
+  ["T3", -150, -90, tumor],
+  ["T4", 160, 100, tumor],
+  ["R1", -60, 30, tumor],
+  ["M1", -85, 95, white],
+  ["M2", 115, 0, white],
+  ["Z1", 100, 60, other],
+  ["C101", 72, -18, stroma],
+  ["C102", 80, -12, stroma],
+  ["C103", 88, -20, stroma],
+  ["C104", 76, -6, stroma],
+  ["C105", 66, -10, stroma],
+  ["C3021", 8, 4, immune],
+];
+
+export function labelAnchors(geometry: OverlayGeometry): LabelAnchor[] {
+  return labelSpots.map(([id, dx, dy, color]) => ({
+    id,
+    text: id,
+    x: geometry.centre.x + dx * geometry.slidePerScreen,
+    y: geometry.centre.y + dy * geometry.slidePerScreen,
+    color,
+  }));
+}
+
+export function labelOrigin(geometry: OverlayGeometry) {
+  return {
+    x: geometry.centre.x - (geometry.viewport.width / 2) * geometry.slidePerScreen,
+    y: geometry.centre.y - (geometry.viewport.height / 2) * geometry.slidePerScreen,
+  };
+}
+
+export function idLabelPlacement(geometry: OverlayGeometry): LabelPlacement {
+  const origin = labelOrigin(geometry);
+  return placeLabels(labelAnchors(geometry), {
+    slidePerScreen: geometry.slidePerScreen,
+    view: {
+      ...origin,
+      width: geometry.viewport.width * geometry.slidePerScreen,
+      height: geometry.viewport.height * geometry.slidePerScreen,
+    },
+  });
+}
+
+function idLabels(geometry: OverlayGeometry): OverlayDescription {
+  return createLabelOverlay({ id: "id-labels", placed: idLabelPlacement(geometry).placed });
+}
+
 const builders: Readonly<
   Record<
     OverlayKind,
@@ -269,6 +323,7 @@ const builders: Readonly<
   "ai-proposals": aiProposals,
   "human-annotations": humanAnnotations,
   measurements,
+  "id-labels": idLabels,
   "comment-pins": commentPins,
 };
 

@@ -1,9 +1,12 @@
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { copyObjectId } from "@parfocal/ui/lib/object-id";
 import type { CategoryTone, ResultSetSource, StatusTone } from "@parfocal/ui/lib/tag-sets";
 import { cn } from "@parfocal/ui/lib/utils";
 import { cva } from "class-variance-authority";
-import type * as React from "react";
+import * as React from "react";
+
+const copiedForMs = 1600;
 
 const tagBase =
   "inline-flex h-5 shrink-0 items-center gap-1.25 whitespace-nowrap text-label leading-none select-none";
@@ -62,18 +65,81 @@ function CategoryTag({ icon, tone = "neutral", className, children, ...props }: 
   );
 }
 
-type ObjectIdTagProps = React.ComponentProps<"span"> & { size?: "md" | "lg" };
+type ObjectIdTagProps = React.ComponentProps<"span"> & { size?: "md" | "lg"; copyText?: string };
 
-function ObjectIdTag({ size = "md", className, ...props }: ObjectIdTagProps) {
+const objectIdTagLook =
+  "inline-flex shrink-0 items-center whitespace-nowrap border border-line-strong bg-chrome-3 font-mono font-semibold leading-none text-fg";
+
+const objectIdTagSize = {
+  lg: "h-7 rounded-md px-2.25 text-body",
+  md: "h-5 rounded-sm px-1.5 text-label",
+} as const;
+
+function CopyableObjectIdTag({
+  size,
+  copyText,
+  className,
+  children,
+  onClick,
+  ...props
+}: Omit<React.ComponentProps<"button">, "size"> & { size: "md" | "lg"; copyText: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+  const copy = async () => {
+    const done = await copyObjectId(copyText, globalThis.navigator?.clipboard);
+    setCopied(done);
+    clearTimeout(timer.current);
+    if (done) timer.current = setTimeout(() => setCopied(false), copiedForMs);
+  };
+  return (
+    <span className="inline-flex shrink-0">
+      <button
+        type="button"
+        data-slot="object-id-tag"
+        data-size={size}
+        data-copyable=""
+        data-copied={copied || undefined}
+        title={`Copy ${copyText}`}
+        aria-label={`Copy ID ${copyText}`}
+        onClick={(event) => {
+          onClick?.(event);
+          void copy();
+        }}
+        className={cn(
+          objectIdTagLook,
+          objectIdTagSize[size],
+          "cursor-pointer outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent data-copied:border-ok data-copied:text-ok",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </button>
+      <span role="status" className="sr-only">
+        {copied ? `Copied ${copyText}` : ""}
+      </span>
+    </span>
+  );
+}
+
+function ObjectIdTag({ size = "md", copyText, className, onClick, ...props }: ObjectIdTagProps) {
+  if (copyText !== undefined) {
+    return (
+      <CopyableObjectIdTag
+        size={size}
+        copyText={copyText}
+        {...(className === undefined ? {} : { className })}
+        {...(onClick === undefined ? {} : { onClick })}
+        {...(props as React.ComponentProps<"button">)}
+      />
+    );
+  }
   return (
     <span
       data-slot="object-id-tag"
       data-size={size}
-      className={cn(
-        "inline-flex shrink-0 items-center whitespace-nowrap border border-line-strong bg-chrome-3 font-mono font-semibold leading-none text-fg",
-        size === "lg" ? "h-7 rounded-md px-2.25 text-body" : "h-5 rounded-sm px-1.5 text-label",
-        className,
-      )}
+      className={cn(objectIdTagLook, objectIdTagSize[size], className)}
       {...props}
     />
   );

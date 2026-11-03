@@ -60,6 +60,15 @@ export interface PinBatch {
   readonly resolved: Uint8Array;
 }
 
+export interface LabelBatch {
+  readonly count: number;
+  readonly positions: Float32Array;
+  readonly offsets: Float32Array;
+  readonly sizes: Float32Array;
+  readonly colors: Uint8Array;
+  readonly texts: readonly string[];
+}
+
 export type VectorKind = Extract<
   OverlayKind,
   "human-annotations" | "ai-proposals" | "nuclei" | "measurements"
@@ -68,6 +77,8 @@ export type VectorKind = Extract<
 export type RasterKind = Extract<OverlayKind, "heatmap" | "coverage">;
 
 export type PinKind = Extract<OverlayKind, "comment-pins">;
+
+export type LabelKind = Extract<OverlayKind, "id-labels">;
 
 export interface OverlayState {
   readonly visible: boolean;
@@ -120,4 +131,9 @@ export interface PinOverlay extends OverlayBase {
   readonly pins: PinBatch;
 }
 
-export type OverlayDescription = VectorOverlay | RasterOverlay | PinOverlay;
+export interface LabelOverlay extends OverlayBase {
+  readonly kind: LabelKind;
+  readonly labels: LabelBatch;
+}
+
+export type OverlayDescription = VectorOverlay | RasterOverlay | PinOverlay | LabelOverlay;

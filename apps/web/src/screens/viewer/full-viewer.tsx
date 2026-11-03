@@ -18,10 +18,12 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
+import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import { inspectorCounts } from "@parfocal/ui/lib/inspector-tabs";
+import { objectIdPath } from "@parfocal/ui/lib/object-id";
 import {
   advanceScan,
   currentField,
@@ -276,6 +278,7 @@ function ViewerBody({
   };
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
+  const [idLabels, setIdLabels] = useState<boolean | null>(null);
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
   const [failed, setFailed] = useState(setup.submitFail);
   const [tellMe, setTellMe] = useState(false);
@@ -316,7 +319,8 @@ function ViewerBody({
         presets: [...session.display.presets, ...saved.map((item) => ({ ...item, settings: {} }))],
       }
     : undefined;
-  const settings = displaySettings(display, preset, extraLocks);
+  const pickedSettings = displaySettings(display, preset, extraLocks);
+  const settings = idLabels === null ? pickedSettings : { ...pickedSettings, ids: idLabels };
   const confidence = settings.confidence as Confidence;
   const readOnly = setup.readOnly;
   const buttonsOff = readOnly
@@ -327,6 +331,8 @@ function ViewerBody({
         ? netOff
         : undefined;
   const slideLabel = session.slideName.split(" ")[0] ?? "";
+  const pathOfObject = (object: string) =>
+    objectIdPath({ project: projectCode, caseLabel: session.caseLabel, slide: slideLabel, object });
   const current = objects.find((item) => item.object === selected);
   const addedCurrent = added.find((item) => item.object === selected);
   const people = (session.task?.slides[0]?.reviewer_ids ?? []).flatMap((id) => {
@@ -768,7 +774,7 @@ function ViewerBody({
             size={current.size_mm}
             sets={[setA, setB]}
             answer={answer(current.object)}
-            fullId={`${projectCode}/${session.caseLabel ?? ""}/${slideLabel}/${current.object}`}
+            fullId={pathOfObject(current.object)}
             comments={thread ? thread.replies + 1 : 0}
             onComments={() => onSearch({ tab: "comments" })}
           />
@@ -786,6 +792,7 @@ function ViewerBody({
         onSaveAs={() => onSearch({ modal: "preset" })}
         resultSets={resultSetRows}
         after={viewZone}
+        idLabels={{ on: settings.ids, onChange: setIdLabels }}
       />
     );
 
@@ -1060,6 +1067,7 @@ function ViewerBody({
           view === "table" ? (
             <ObjectTablePanel
               slideLabel={slideLabel}
+              pathOf={pathOfObject}
               rows={tableRows(
                 objects,
                 added.map((item) => ({
@@ -1341,9 +1349,9 @@ function TableObjectFacts({
     ["Preset", answer ? "Task default" : "None yet"],
     [
       "Full ID",
-      <span key="f" className="font-mono">
+      <ObjectIdTag key="f" copyText={fullId}>
         {fullId}
-      </span>,
+      </ObjectIdTag>,
     ],
   ];
   return (

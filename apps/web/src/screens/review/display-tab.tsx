@@ -55,6 +55,7 @@ type DisplayTabProps = {
   presetOpen?: boolean;
   onPresetPick?: (name: string | null) => void;
   onSaveAs?: () => void;
+  idLabels?: { on: boolean; onChange: (on: boolean) => void };
 };
 
 export function DisplayTab({
@@ -67,8 +68,10 @@ export function DisplayTab({
   presetOpen,
   onPresetPick,
   onSaveAs,
+  idLabels,
 }: DisplayTabProps) {
-  const settings = displaySettings(display, preset, extraLocks);
+  const picked = displaySettings(display, preset, extraLocks);
+  const settings = idLabels ? { ...picked, ids: idLabels.on } : picked;
   return (
     <div className="grid gap-3">
       <p className="m-0 text-body-sm text-fg-dim">
@@ -82,6 +85,7 @@ export function DisplayTab({
         viewer={viewer}
         resultSets={resultSets}
         after={after}
+        {...(idLabels ? { onIdsChange: idLabels.onChange } : {})}
         preset={{
           current: preset ?? "Task default",
           presets: (display?.presets ?? []).map((item) => ({ name: item.name, key: item.key })),
