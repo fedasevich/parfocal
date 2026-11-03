@@ -1,4 +1,5 @@
 import {
+  type AnalysisTemplate,
   type SlideAiProgress,
   useGetMyHome,
   useGetProject,
@@ -9,17 +10,18 @@ import {
   useSubmitSlideReview,
   type ViewerPart,
 } from "@parfocal/api-client";
-import { AnalysisCards } from "@parfocal/ui/components/analysis-cards";
 import { Banner } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
 import { Icon } from "@parfocal/ui/components/icon";
+import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
+import { inspectorCounts } from "@parfocal/ui/lib/inspector-tabs";
 import {
   advanceScan,
   currentField,
@@ -160,6 +162,7 @@ function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
       projectCode={project.code}
       projectName={project.name}
       viewerParts={project.viewer_parts}
+      template={project.template}
     />
   );
 }
@@ -170,6 +173,7 @@ type BodyProps = FullViewerProps & {
   projectCode: string;
   projectName: string;
   viewerParts: ViewerPart[];
+  template: AnalysisTemplate;
 };
 
 function addedSize(note: string | null) {
@@ -189,6 +193,7 @@ function ViewerBody({
   projectCode,
   projectName,
   viewerParts,
+  template,
 }: BodyProps) {
   const format = useFormat();
   const scene = search.scene;
@@ -979,6 +984,45 @@ function ViewerBody({
     />
   );
 
+  const tabCounts = inspectorCounts({
+    objects: running ? (progress?.found.length ?? 0) : counts.total,
+    resultSets: slideSets.length + 1,
+    threads: nothing ? [] : session.threads,
+    questions: questions.map((question) => ({ answered: Boolean(question.answer) })),
+  });
+  const inspector = (
+    <InspectorPanel
+      width={340}
+      value={tab}
+      onValueChange={(next) => onSearch({ tab: next as ViewerTab })}
+      template={template}
+      parts={viewerParts}
+      counts={tabCounts}
+      bodies={{
+        objects: { body: objectsBody, foot: objectsFoot },
+        display: { body: displayBody },
+        comments: { body: commentsBody },
+        opinion: { body: opinionBody },
+      }}
+      staging={
+        nothing
+          ? undefined
+          : {
+              areas: stagingAreas,
+              running,
+              current: selected,
+              visited: areaNav.visited,
+              roleOf: running ? undefined : areaRole,
+              onGoTo: areaNav.goTo,
+              onStart: areaNav.goTo,
+              onSubmit: () => onSearch({ tab: "opinion" }),
+              scan: noTumor ? scanSummary(overviewTissue, scan) : null,
+              onScan: scanStep,
+            }
+      }
+    />
+  );
+
   return (
     <>
       <ViewerFrame
@@ -987,23 +1031,7 @@ function ViewerBody({
         tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
         railKeys={reviewRailKeys}
-        panelHead={
-          nothing ? null : (
-            <AnalysisCards
-              parts={viewerParts}
-              areas={stagingAreas}
-              running={running}
-              current={selected}
-              visited={areaNav.visited}
-              roleOf={running ? undefined : areaRole}
-              onGoTo={areaNav.goTo}
-              onStart={areaNav.goTo}
-              onSubmit={() => onSearch({ tab: "opinion" })}
-              scan={noTumor ? scanSummary(overviewTissue, scan) : null}
-              onScan={scanStep}
-            />
-          )
-        }
+        panel={inspector}
         onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
@@ -1056,23 +1084,6 @@ function ViewerBody({
             />
           ) : null
         }
-        tabs={[
-          {
-            value: "objects",
-            label: "Objects",
-            count: running ? (progress?.found.length ?? 0) : counts.total,
-            body: objectsBody,
-            ...(objectsFoot ? { foot: objectsFoot } : {}),
-          },
-          { value: "display", label: "Display", body: displayBody },
-          {
-            value: "comments",
-            label: "Comments",
-            ...(nothing ? {} : { count: session.threads.filter((item) => !item.resolved).length }),
-            body: commentsBody,
-          },
-          { value: "opinion", label: "Opinion", body: opinionBody },
-        ]}
       >
         {navigator === "overview" ? (
           <OverviewCanvas areas={areas} checked={["T1"]} />

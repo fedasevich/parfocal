@@ -68,8 +68,9 @@ type ViewerFrameProps = {
   overlay?: ReactNode;
   tab: string;
   onTabChange: (tab: string) => void;
-  tabs: SidePanelTab[];
+  tabs?: SidePanelTab[];
   panelHead?: ReactNode;
+  panel?: ReactNode;
   children: ReactNode;
   banner?: ReactNode;
   below?: ReactNode;
@@ -85,8 +86,9 @@ export function ViewerFrame({
   tool,
   tab,
   onTabChange,
-  tabs,
+  tabs = [],
   panelHead,
+  panel,
   children,
   banner,
   below,
@@ -161,13 +163,15 @@ export function ViewerFrame({
           </div>
           {below}
         </div>
-        <SidePanel
-          width={340}
-          value={tab}
-          onValueChange={onTabChange}
-          tabs={tabs}
-          head={panelHead}
-        />
+        {panel ?? (
+          <SidePanel
+            width={340}
+            value={tab}
+            onValueChange={onTabChange}
+            tabs={tabs}
+            head={panelHead}
+          />
+        )}
         {overlay}
       </div>
     </main>

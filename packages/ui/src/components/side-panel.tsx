@@ -17,6 +17,7 @@ type SidePanelProps = Omit<React.ComponentProps<"aside">, "defaultValue"> & {
   onValueChange?: ((value: string) => void) | undefined;
   width?: number;
   variant?: "panel" | "quiet";
+  dense?: boolean;
   head?: React.ReactNode;
 };
 
@@ -27,6 +28,7 @@ function SidePanel({
   onValueChange,
   width = 340,
   variant = "panel",
+  dense = false,
   head,
   className,
   ...props
@@ -45,7 +47,12 @@ function SidePanel({
         onValueChange={(next) => onValueChange?.(String(next))}
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
-        <TabsList variant={variant}>
+        <TabsList
+          variant={variant}
+          className={cn(
+            dense && "px-1 [&_[data-slot=tabs-trigger]]:gap-1! [&_[data-slot=tabs-trigger]]:px-1!",
+          )}
+        >
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
