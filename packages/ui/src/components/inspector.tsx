@@ -32,13 +32,20 @@ function WarnBar({ className, children, ...props }: React.ComponentProps<"div">)
   );
 }
 
-type RegionRowProps = React.ComponentProps<"div"> & {
+type RegionRowProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   objectId: string;
   kind: string;
   size: string;
   category?: string;
   selected?: boolean;
+  note?: string | undefined;
+  visited?: boolean;
+  onSelect?: () => void;
+  label?: string;
 };
+
+const regionRowClass =
+  "grid w-full grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-2.5 rounded-md px-2 py-1.5 text-left text-body-sm text-fg-dim";
 
 function RegionRow({
   objectId,
@@ -46,24 +53,51 @@ function RegionRow({
   size,
   category,
   selected = false,
+  note,
+  visited = false,
+  onSelect,
+  label,
   className,
   ...props
 }: RegionRowProps) {
-  return (
-    <div
-      data-slot="region-row"
-      data-selected={selected || undefined}
-      className={cn(
-        "grid grid-cols-[auto_1fr_auto_auto] items-center gap-2.5 rounded-md px-2 py-1.5 text-body-sm text-fg-dim",
-        selected && "bg-accent-soft",
-        className,
-      )}
-      {...props}
-    >
+  const cells = (
+    <>
       <ObjectIdTag>{objectId}</ObjectIdTag>
       <span className="truncate text-fg">{kind}</span>
       <span className="font-mono tabular-nums">{size}</span>
       {category ? <CategoryTag>{category}</CategoryTag> : <span />}
+      {visited ? (
+        <span className="inline-flex items-center gap-1 text-ok" data-visited>
+          <Icon name="check" />
+          <span className="sr-only">visited</span>
+        </span>
+      ) : (
+        <span />
+      )}
+      {note ? <span className="col-span-full pt-0.5 text-caption text-fg-dim">{note}</span> : null}
+    </>
+  );
+  const look = cn(regionRowClass, selected && "bg-accent-soft", className);
+  if (onSelect)
+    return (
+      <div data-slot="region-row" data-selected={selected || undefined} {...props}>
+        <button
+          type="button"
+          aria-current={selected || undefined}
+          aria-label={label}
+          className={cn(
+            look,
+            "cursor-pointer hover:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+          )}
+          onClick={onSelect}
+        >
+          {cells}
+        </button>
+      </div>
+    );
+  return (
+    <div data-slot="region-row" data-selected={selected || undefined} className={look} {...props}>
+      {cells}
     </div>
   );
 }

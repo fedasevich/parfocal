@@ -59,7 +59,13 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
-import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
+import {
+  type Camera,
+  imageOf,
+  magnificationOf,
+  SlideStill,
+  type StillView,
+} from "../review/slide-still.tsx";
 import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import {
@@ -73,6 +79,7 @@ import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx"
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
 import { reviewRail } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
+import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
 import {
@@ -83,6 +90,7 @@ import {
   TellMeWhenReady,
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
+import { useAreaNav } from "./use-area-nav.ts";
 import {
   isNavigatorScene,
   type LayerView,
@@ -381,13 +389,7 @@ function ViewerBody({
         onSearch({ focus: true, scene: undefined, tool: undefined });
         return;
       }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "]" && navigator && navigator !== "overview") {
-        event.preventDefault();
-        if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
-        else onSearch({ scene: "travel" });
-        return;
-      }
+      if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
       if (event.key === "Escape" && peekOpen) return;
       if (event.key === "Escape" && selected) {
         pick(undefined);
@@ -420,6 +422,31 @@ function ViewerBody({
       : { kind: "whole" };
   const cameraImage = imageOf(stillView);
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
+  const ranked = areaRows(areas, (object) => answer(object)?.value);
+  const areaNav = useAreaNav({
+    order: areaOrder(ranked),
+    spot: {
+      object: selected ?? null,
+      ...(camera ? cameraToSearch(cameraImage, camera) : { x: search.x, y: search.y, z: search.z }),
+    },
+    magnification: shownCamera ? magnificationOf(stillView, shownCamera) : 0,
+    goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
+    restore: (spot) => {
+      setCamera(null);
+      onSearch({ object: spot.object ?? undefined, x: spot.x, y: spot.y, z: spot.z });
+    },
+    intercept: (fired) => {
+      if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
+      if (fired.phase !== "press") return true;
+      if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
+      else onSearch({ scene: "travel" });
+      return true;
+    },
+  });
+  const areaRole = (object: string) => {
+    const role = ranked.find((row) => row.object === object)?.role;
+    return role ? areaRoleText[role] : undefined;
+  };
   const writeSearch = useRef(onSearch);
   writeSearch.current = onSearch;
   const debugCamera = useRef(shownCamera);
@@ -891,7 +918,18 @@ function ViewerBody({
         counts={counts}
         tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
-        panelHead={nothing ? null : <AnalysisCards parts={viewerParts} areas={areas} />}
+        panelHead={
+          nothing ? null : (
+            <AnalysisCards
+              parts={viewerParts}
+              areas={ranked}
+              current={selected}
+              visited={areaNav.visited}
+              roleOf={areaRole}
+              onGoTo={areaNav.goTo}
+            />
+          )
+        }
         onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
@@ -966,7 +1004,7 @@ function ViewerBody({
         ) : navigator ? (
           <NavigatorCanvas
             scene={navigator}
-            areas={areas}
+            areas={ranked}
             decided={decidedRegions}
             current="T2"
             onPeek={() => onSearch({ peek: true })}
@@ -1071,7 +1109,15 @@ function ViewerBody({
                 <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
                   {tileHint}
                   <MagnificationBar
-                    magnification={stillView.kind === "cell" ? 40 : whole ? 1.25 : 2.5}
+                    magnification={
+                      camera
+                        ? magnificationOf(stillView, camera)
+                        : stillView.kind === "cell"
+                          ? 40
+                          : whole
+                            ? 1.25
+                            : 2.5
+                    }
                     scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
                     scalePx={92}
                     micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}

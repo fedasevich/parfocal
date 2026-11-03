@@ -210,3 +210,16 @@ test("a zoom to the selection records the view it left, so back returns there", 
   rest();
   assert.deepEqual(engine.getCamera(), fitted);
 });
+
+test("a history of other views uses the sameness it is given", () => {
+  type Spot = { object: string | null; z?: number };
+  const history = createViewHistory<Spot>(2, (a, b) => a.object === b.object && a.z === b.z);
+  history.settle({ object: null });
+  history.settle({ object: null });
+  history.settle({ object: "T1" });
+  history.settle({ object: "T2" });
+  history.settle({ object: "T3" });
+  assert.deepEqual(history.entries().back, [{ object: "T1" }, { object: "T2" }]);
+  assert.deepEqual(history.back({ object: "T3", z: 4 }), { object: "T3" });
+  assert.deepEqual(history.forward(), { object: "T3", z: 4 });
+});

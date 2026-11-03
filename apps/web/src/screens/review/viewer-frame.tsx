@@ -143,7 +143,7 @@ export function ViewerFrame({
                 onPressedChange={onCompare}
               />
             ) : null}
-            <ToolRailButton icon="panel" label="Hide the side panel" keyHint="]" />
+            <ToolRailButton icon="panel" label="Hide the side panel" keyHint="I" />
           </ToolRailGroup>
         </ToolRail>
         <div className="flex min-w-0 flex-1 flex-col">
