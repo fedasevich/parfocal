@@ -215,3 +215,26 @@ test("an admin posts an announcement, sees it first with its end, and ends it", 
   await expect(card).not.toContainText("Lab server restarts at 16:00");
   await expect(card.getByRole("button", { name: /^End announcement/ })).toHaveCount(3);
 });
+
+test("To review continues into guided review at the next open object in one action", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto("/my-work?tab=review");
+  const tasks = page.getByRole("listbox", { name: "Your tasks" });
+  await expect(tasks).toContainText("Continue where you left off");
+  await expect(tasks).toContainText("Sentinel node AI evaluation · Tumor regions: all · due");
+  await expect(tasks.getByText("Blind").first()).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=[0-9a-f-]+&object=T5$/);
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible({
+    timeout: 60_000,
+  });
+  await page.goBack();
+  await page.getByRole("button", { name: /^Continue reviewing/ }).click();
+  await expect(page).toHaveURL(/&object=T5$/);
+  const url = new URL(page.url());
+  url.searchParams.set("object", "T3");
+  await page.goto(url.toString());
+  await expect(page.getByText(/The AI says T3 is tumor/)).toBeVisible({ timeout: 60_000 });
+});

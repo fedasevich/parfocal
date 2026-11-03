@@ -43,8 +43,8 @@ export const destinations = {
     `/projects/${projectId}/slides/${slideId}/live${query({ task: taskId })}`,
   coSign: (projectId: string, slideId: string) =>
     `/projects/${projectId}/slides/${slideId}/co-sign`,
-  guided: (taskId: string, slideId?: string | null) =>
-    `/tasks/${taskId}/guided${query({ slide: slideId ?? undefined })}`,
+  guided: (taskId: string, slideId?: string | null, objectId?: string | null) =>
+    `/tasks/${taskId}/guided${query({ slide: slideId ?? undefined, object: objectId ?? undefined })}`,
   disagreements: (taskId: string, scene?: string) =>
     `/tasks/${taskId}/disagreements${query({ scene })}`,
   signOff: (taskId: string) => `/tasks/${taskId}/sign-off`,
