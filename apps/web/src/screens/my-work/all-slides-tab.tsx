@@ -165,6 +165,7 @@ function SlideLine({
       data-index={index}
       aria-rowindex={index + 2}
       aria-selected={on}
+      data-vt-source=""
       onClick={() => onSelect(row.id)}
       onDoubleClick={() => onOpen(row)}
       className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}

@@ -58,7 +58,10 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
   const open = () => void goTo(continuePath(task, resume));
   const left = task.slides_assigned - task.slides_submitted;
   return (
-    <div className="grid grid-cols-[180px_1fr_auto] items-center gap-4.5 rounded-[14px] border border-accent bg-accent-soft p-4">
+    <div
+      data-vt-source=""
+      className="grid grid-cols-[180px_1fr_auto] items-center gap-4.5 rounded-[14px] border border-accent bg-accent-soft p-4"
+    >
       <i
         aria-hidden="true"
         className="block h-27.5 rounded-[10px] bg-cover bg-center"
@@ -99,6 +102,7 @@ function TaskRow({ selected, colour, title, sub, progress, tags, action, onSelec
     <div
       role="option"
       aria-selected={selected}
+      data-vt-source=""
       tabIndex={0}
       onClick={onSelect}
       onKeyDown={(event) => (event.key === " " ? onSelect() : undefined)}

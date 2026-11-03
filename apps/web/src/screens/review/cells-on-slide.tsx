@@ -5,6 +5,8 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
+import { flushSync } from "react-dom";
+import { viewTransitions } from "../../shell/view-transitions.ts";
 import { okData } from "../placeholder.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { CellsGrid } from "./cells-grid.tsx";
@@ -210,10 +212,16 @@ function CellsBody({
                 claimHidden={!showsClaim(style)}
                 folded={folded}
                 confirming={confirming}
-                onPick={(picked) => {
-                  setCurrent(picked);
-                  setCamera(null);
-                }}
+                onPick={(picked) =>
+                  void viewTransitions.run(
+                    () =>
+                      flushSync(() => {
+                        setCurrent(picked);
+                        setCamera(null);
+                      }),
+                    "focus",
+                  )
+                }
                 onAgreeRest={() => setConfirming(true)}
                 onCancelRest={() => setConfirming(false)}
                 onApplyRest={() => {
