@@ -1992,7 +1992,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
   Size: M.
 
-- [ ] WL-019 · All slides tab
+- [x] WL-019 · All slides tab
   Every slide the person can see, with project and case, result sets, reviews by person and status, a search that filters as you type and the filters of WL-017. A row opens the slide.
   Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.
   Depends on WL-001, WL-017. Refs mock: worklist/all.
