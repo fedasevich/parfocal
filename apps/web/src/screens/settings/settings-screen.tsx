@@ -312,7 +312,7 @@ function LoadedSettings({
     presetKeys: () =>
       presetNames.map((name, index) => (
         <span key={name} className="inline-flex items-center gap-1.5 text-body-sm">
-          <Keycap keys={`⇧${index + 1}`} />
+          <Keycap action={`preset:${index + 1}`} keys={`⇧${index + 1}`} />
           {presetName(name)}
         </span>
       )),

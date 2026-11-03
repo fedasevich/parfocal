@@ -143,7 +143,7 @@ export function NoteEditor({
       <div className="flex items-center gap-2">
         <span className="flex-1 text-caption text-fg-dim">Optional</span>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel <Keycap keys="Esc" size="sm" />
+          Cancel <Keycap action="esc" keys="Esc" size="sm" />
         </Button>
         <Button
           variant="primary"
