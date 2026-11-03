@@ -953,7 +953,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 06.
   Size: M.
 
-- [ ] INGEST-009 · Seams and correctness check
+- [x] INGEST-009 · Seams and correctness check
   Render a sample of tiles at two levels through the server reader and compare with the browser reader output. Flag seams, colour space errors (YCbCr shown as RGB) and offset errors.
   Done when the check catches each of the POC's known failures re-introduced as test cases.
   Refs [`poc/scripts/probe-seams.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/probe-seams.mjs), doc 06.
