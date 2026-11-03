@@ -11,6 +11,7 @@ const kinds = [
   { id: "quiet-with-counts", tabs: ["Review", "Comments", "Display"] },
 ] as const;
 
+const livePanel = (page: Page) => page.locator('[role="tabpanel"]:not([inert])');
 for (const kind of kinds) {
   test(`${kind.id} tabs move with the arrow keys, Home and End`, async ({ page }) => {
     await page.goto(story(kind.id));
@@ -33,8 +34,8 @@ for (const kind of kinds) {
     await expect(tab(page, last)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(tab(page, last)).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByRole("tabpanel")).toBeVisible();
-    await expect(page.getByRole("tabpanel")).toHaveAttribute(
+    await expect(livePanel(page)).toBeVisible();
+    await expect(livePanel(page)).toHaveAttribute(
       "aria-labelledby",
       (await tab(page, last).getAttribute("id")) ?? "",
     );
@@ -49,14 +50,14 @@ test("a disabled tab can take focus but never opens", async ({ page }) => {
   await expect(tab(page, "Notes")).toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("Enter");
   await expect(tab(page, "Cells")).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel")).toHaveText("1,204 cells in view.");
+  await expect(livePanel(page)).toHaveText("1,204 cells in view.");
 });
 
 test("a tab panel takes focus from the tab list with a visible ring", async ({ page }) => {
   await page.goto(story("quiet"));
   await tab(page, "Review").focus();
   await page.keyboard.press("Tab");
-  const panel = page.getByRole("tabpanel");
+  const panel = livePanel(page);
   await expect(panel).toBeFocused();
   const ring = await panel.evaluate((element) => {
     const style = getComputedStyle(element);
