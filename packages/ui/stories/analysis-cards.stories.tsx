@@ -24,7 +24,15 @@ const settledAreas: AiArea[] = areas.map((area) =>
   area.object === "T1" ? { ...area, call: "agree", measured: 8.0 } : area,
 );
 
-function Panel({ parts, staged = areas }: { parts: ViewerPartName[]; staged?: AiArea[] }) {
+function Panel({
+  parts,
+  staged = areas,
+  running = false,
+}: {
+  parts: ViewerPartName[];
+  staged?: AiArea[];
+  running?: boolean;
+}) {
   return (
     <div className="flex h-[640px] bg-page text-fg">
       <SidePanel
@@ -32,6 +40,7 @@ function Panel({ parts, staged = areas }: { parts: ViewerPartName[]; staged?: Ai
           <AnalysisCards
             parts={parts}
             areas={staged}
+            running={running}
             onStart={(object) => {
               document.body.dataset.started = object;
             }}
@@ -77,5 +86,15 @@ export const StagingWithoutAreas: Story = {
 export const LargeDepositSettled: Story = {
   render: () => (
     <Panel parts={[...base, "staging-hero", "area-list", "measure-step"]} staged={settledAreas} />
+  ),
+};
+
+export const StagingStillRunning: Story = {
+  render: () => (
+    <Panel
+      parts={[...base, "staging-hero", "area-list", "measure-step"]}
+      staged={areas.slice(0, 2)}
+      running
+    />
   ),
 };

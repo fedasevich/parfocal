@@ -106,6 +106,19 @@ test("a streaming running scene finds one more region on every later read and st
   assert.deepEqual((await getSlideAiProgress(a1.id)).data.found, ["T1", "T2"]);
 });
 
+test("a streaming running scene moves the regions step forward and stops short of done", async () => {
+  setFakeAiStreaming(true);
+  setFakeViewerScene("ready");
+  setFakeViewerScene("running");
+  const percents = [];
+  for (let read = 0; read < 7; read += 1) {
+    const { steps } = (await getSlideAiProgress(a1.id)).data;
+    percents.push(steps.find((step) => step.key === "regions")?.percent);
+  }
+  assert.deepEqual(percents, [55, 65, 75, 85, 95, 95, 95]);
+  setFakeAiStreaming(false);
+});
+
 test("the annotate workspace's layers on A1 add the two child layers up to their parent", async () => {
   const { data } = await listAnnotationLayers(a1.id);
   const parent = data.layers.find((layer) => layer.key === data.new_shapes_go_to);

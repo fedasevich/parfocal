@@ -1,6 +1,7 @@
 import { Button } from "@parfocal/ui/components/button";
 import { InspectorCard, RegionRow, StagingHero } from "@parfocal/ui/components/inspector";
 import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
+import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
 import {
   type AiArea,
   aiState,
@@ -58,6 +59,7 @@ type AreaListProps = {
 type StagingCardsProps = React.ComponentProps<"section"> &
   AreaListProps & {
     areas: readonly AiArea[];
+    running?: boolean;
     showList?: boolean;
     wording?: WordingMode;
     typer?: TyperEvidence;
@@ -73,8 +75,23 @@ function rowKind(area: RankedArea, settled: boolean) {
   return area.canChangeCategory ? "Tumor region" : "Cannot change the category";
 }
 
+function AreaPlaceholder() {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="next-area"
+      className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2.5 px-2 py-1.5 text-body-sm"
+    >
+      <Skeleton className="h-(--tag-h) w-8 rounded-sm" />
+      <SkeletonLine width="6em" />
+      <SkeletonLine width="5ch" className="font-mono" />
+    </div>
+  );
+}
+
 function StagingCards({
   areas,
+  running = false,
   showList = true,
   wording = "plain",
   typer,
@@ -88,7 +105,7 @@ function StagingCards({
   className,
   ...props
 }: StagingCardsProps) {
-  const state = aiState({ areas });
+  const state = aiState({ areas, running });
   const settled = state.kind === "pre-read" && state.phase === "settled";
   return (
     <section
@@ -99,7 +116,16 @@ function StagingCards({
       className={cn("grid gap-3 border-b border-line bg-chrome p-5", className)}
       {...props}
     >
-      {state.kind === "pre-read" ? (
+      {state.kind === "running" ? (
+        <div data-slot="staging-hero" className="grid gap-2">
+          <h3 className="m-0 mt-0.5 text-title leading-tight font-semibold">
+            Still reading, {areaWord(state.areas.length)} so far
+          </h3>
+          <p className="m-0 text-body-sm leading-normal text-fg-dim">
+            Areas join the list as they are found. The category waits until the whole slide is read.
+          </p>
+        </div>
+      ) : state.kind === "pre-read" ? (
         settled ? (
           <StagingHero
             title={`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
@@ -133,9 +159,12 @@ function StagingCards({
         <p className="m-0 text-body-sm text-fg-dim">No tumor areas found on this slide.</p>
       )}
       <ModelWarningsBlock warnings={warnings} />
-      {showList && state.areas.length ? (
+      {showList && (state.areas.length || state.kind === "running") ? (
         <InspectorCard
-          className="grid max-h-40 gap-1 overflow-auto"
+          className={cn(
+            "grid content-start gap-1 overflow-auto",
+            state.kind === "running" ? "h-40" : "max-h-40",
+          )}
           aria-label="Areas, largest first"
         >
           {state.areas.map((area) => (
@@ -157,6 +186,7 @@ function StagingCards({
                 : {})}
             />
           ))}
+          {state.kind === "running" ? <AreaPlaceholder key={`next-${state.areas.length}`} /> : null}
         </InspectorCard>
       ) : null}
       {state.kind === "pre-read" ? (

@@ -66,7 +66,7 @@ export function rankAreas(areas: readonly AiArea[]): AiArea[] {
 }
 
 export function aiState({ areas, running = false }: AiStateInput): AiState {
-  const ordered = rankAreas(areas);
+  const ordered = running ? [...areas] : rankAreas(areas);
   const leadIndex = ordered.findIndex((area) => area.call !== "disagree");
   const leadArea = ordered[leadIndex];
   const settled = leadArea !== undefined && leadArea.call === "agree" && leadArea.measured != null;
@@ -87,7 +87,7 @@ export function aiState({ areas, running = false }: AiStateInput): AiState {
       canChangeCategory: !(settled && below && area.call !== "disagree"),
     };
   });
-  if (running) return { kind: "running", areas: ranked };
+  if (running) return { kind: "running", areas: ranked.map((area) => ({ ...area, lead: false })) };
   const lead = ranked[leadIndex];
   if (!lead) return { kind: "no-tumor", areas: ranked };
   return {

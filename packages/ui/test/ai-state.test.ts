@@ -70,3 +70,16 @@ test("finding words follow the confidence band and the wording mode", () => {
   const uncalibrated = { name: "X", calibrated: false, checkedOnHeldOut: false, bandAccuracy: {} };
   assert.equal(findingWords("Metastasis", 0.68, "plain", uncalibrated), "Metastasis 68%");
 });
+
+test("a running job keeps areas in the order they were found so rows never move", () => {
+  const state = aiState({ areas, running: true });
+  assert.equal(state.kind, "running");
+  assert.deepEqual(
+    state.areas.map((area) => [area.number, area.object, area.lead]),
+    [
+      [1, "T2", false],
+      [2, "T1", false],
+      [3, "T3", false],
+    ],
+  );
+});
