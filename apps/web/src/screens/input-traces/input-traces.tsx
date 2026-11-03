@@ -191,7 +191,7 @@ export function InputTraces() {
   if (session === null) {
     return (
       <main className="grid max-w-3xl gap-6 p-8 text-fg">
-        <h1 className="text-lg font-semibold">Input trace recorder</h1>
+        <h1 className="text-title-sm font-semibold">Input trace recorder</h1>
         <p className="text-fg-2">
           Each device has a short list of gestures. For every gesture the page names it, counts down{" "}
           {timing.countdownMs / 1000} seconds, records {timing.recordMs / 1000} seconds of raw
@@ -244,8 +244,8 @@ export function InputTraces() {
   if (finished) {
     return (
       <main className="grid max-w-3xl gap-4 p-8 text-fg">
-        <h1 className="text-lg font-semibold">{session.profile.title} recorded</h1>
-        <ul aria-label="Recorded steps" className="grid gap-1 font-mono text-sm">
+        <h1 className="text-title-sm font-semibold">{session.profile.title} recorded</h1>
+        <ul aria-label="Recorded steps" className="grid gap-1 font-mono text-body">
           {session.profile.steps.map((step, index) => {
             const gesture = session.gestures[index];
             const total = (gesture?.events.length ?? 0) + (gesture?.gestureEvents?.length ?? 0);
@@ -289,7 +289,7 @@ export function InputTraces() {
   const progress = moment.kind === "recording" ? moment.elapsedMs / timing.recordMs : 0;
   return (
     <main className="grid max-w-3xl gap-4 p-8 text-fg">
-      <h1 className="text-lg font-semibold">
+      <h1 className="text-title-sm font-semibold">
         {session.profile.title}, step {session.index + 1} of {session.profile.steps.length}
       </h1>
       <h2 className="font-semibold">{step?.title}</h2>
@@ -300,7 +300,7 @@ export function InputTraces() {
         data-step={step?.id ?? ""}
         data-index={session.index}
         data-events={count}
-        className="grid gap-1 font-mono text-sm"
+        className="grid gap-1 font-mono text-body"
       >
         <span>
           {moment.kind === "countdown"

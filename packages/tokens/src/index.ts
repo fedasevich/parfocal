@@ -179,6 +179,14 @@ export const typeScale = {
 
 export type TypeStyle = keyof typeof typeScale;
 
+export const typeStyles = Object.keys(typeScale) as TypeStyle[];
+
+export const minRunningTextPx = 12;
+
+export const fontFamilies = { ui: "IBM Plex Sans", data: "IBM Plex Mono" } as const;
+
+export const fontWeights = { ui: [400, 500, 600, 700], data: [400, 500, 600] } as const;
+
 export const smallModalWidthsPx = [480, 560] as const;
 
 export const flowPageMainMaxPx = 760;

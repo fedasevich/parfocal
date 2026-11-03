@@ -17,7 +17,7 @@ function DropOverlay({ projectCode, slides, results, onDrop }: DropOverlayProps)
     >
       <span className="grid max-w-110 justify-items-center gap-2 rounded-[14px] border border-line bg-chrome px-8.5 py-6.5 text-center shadow-pop">
         <Icon name="upload" size="lg" className="text-accent" />
-        <b className="text-[18px] text-fg">Drop to upload into {projectCode}</b>
+        <b className="text-title-sm text-fg">Drop to upload into {projectCode}</b>
         <span className="text-body-sm text-fg-dim">
           {slides} slides and {results} result files. The upload page opens with them, so you can
           check the match before anything starts.

@@ -63,7 +63,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           <span className="rounded-[5px] border border-line-strong px-1.75 py-0.5 font-mono text-caption text-fg-dim">
             {resume.task_code}
           </span>
-          <b className="text-[18px] font-semibold text-fg">{resume.task_name}</b>
+          <b className="text-title-sm font-semibold text-fg">{resume.task_name}</b>
         </div>
         <span className="text-body text-fg">
           {resume.slide_label} · {resume.case_label} · {resume.project.name}
@@ -126,7 +126,7 @@ function SampleHero({
       <div className="grid content-center gap-2 px-5 py-4.5">
         <div className="flex items-center gap-2.5">
           <StatusTag tone="accent">Sample</StatusTag>
-          <b className="text-[18px] font-semibold text-fg">{sample.name}</b>
+          <b className="text-title-sm font-semibold text-fg">{sample.name}</b>
         </div>
         <span className="text-body text-fg">
           {sample.slides} slides with AI results, made for trying things out
@@ -239,7 +239,7 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
         ))}
         {more > 0 ? (
           <span className="grid aspect-square place-content-center justify-items-center gap-px rounded-lg bg-surf-section text-fg-dim">
-            <b className="font-mono text-[16px] font-semibold text-fg">+{more}</b>
+            <b className="font-mono text-lead font-semibold text-fg">+{more}</b>
             <small className="text-caption">slides</small>
           </span>
         ) : null}
@@ -348,7 +348,7 @@ function ThisWeek({
     >
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <b className="block font-mono text-[24px] leading-[1.1] font-semibold text-fg">
+          <b className="block font-mono text-page-title leading-[1.1] font-semibold text-fg">
             {week.objects_checked}
           </b>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
@@ -356,7 +356,7 @@ function ThisWeek({
           </small>
         </div>
         <div>
-          <b className="block font-mono text-[24px] leading-[1.1] font-semibold text-v-agree">
+          <b className="block font-mono text-page-title leading-[1.1] font-semibold text-v-agree">
             {Math.round((week.agree_share ?? 0) * 100)}%
           </b>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
@@ -367,7 +367,7 @@ function ThisWeek({
           <button
             type="button"
             onClick={() => (taskId ? void goTo(destinations.disagreements(taskId)) : undefined)}
-            className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-[24px] leading-[1.1] font-semibold text-v-disagree"
+            className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-page-title leading-[1.1] font-semibold text-v-disagree"
           >
             {week.open_disagreements ?? 0}
           </button>
@@ -433,7 +433,7 @@ function HomeWithoutData({
   return (
     <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-[24px] font-semibold text-fg">
+        <h1 className="m-0 text-page-title font-semibold text-fg">
           {greeting(now())}, {firstName}
         </h1>
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">{formatLongDay(now())}</p>
@@ -576,7 +576,7 @@ export function HomeScreen() {
   return (
     <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-[24px] font-semibold text-fg">
+        <h1 className="m-0 text-page-title font-semibold text-fg">
           {firstWeek ? `Welcome to Parfocal, ${firstName}` : `${greeting(today)}, ${firstName}`}
         </h1>
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">

@@ -20,7 +20,7 @@ function WalkthroughIndex() {
       <Link to="/flow-map" className="text-accent text-body-sm underline">
         Back to the map
       </Link>
-      <h1 className="font-semibold text-2xl text-fg">Walkthrough, nine chapters</h1>
+      <h1 className="font-semibold text-page-title text-fg">Walkthrough, nine chapters</h1>
       <p className="text-body-sm text-fg-dim">
         The walkthrough follows the map from upload to the co-signed clinical report. Play all runs
         the chapters in order, and each chapter also starts on its own.

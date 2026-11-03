@@ -30,7 +30,7 @@ function ChapterPage() {
         Back to the map
       </Link>
       <WalkBar current={index} />
-      <h1 className="font-semibold text-2xl text-fg">
+      <h1 className="font-semibold text-page-title text-fg">
         {index + 1} · {chapter.title}
       </h1>
       <p className="text-body-sm text-fg-dim">{chapter.shows}</p>

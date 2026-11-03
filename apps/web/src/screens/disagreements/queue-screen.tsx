@@ -199,7 +199,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               { label: "Disagreements" },
             ]}
           />
-          <h1 className="m-0 text-[24px] font-semibold tracking-[-0.01em] text-fg">
+          <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
             Disagreements in {taskCode}
           </h1>
           <p className="m-0 flex items-center gap-1.5 text-body-sm text-fg-dim">

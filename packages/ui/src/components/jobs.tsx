@@ -98,7 +98,7 @@ function JobsButton({ running, percent, open = false, className, ...props }: Job
         stroke={3}
         text={String(running)}
         label={`${running} running, ${percent}%`}
-        className="[&_b]:text-[11px]"
+        className="[&_b]:text-label"
       />
     </button>
   );

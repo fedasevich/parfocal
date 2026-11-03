@@ -153,7 +153,7 @@ export function PreviewPanel({
         style={{ backgroundImage: `url(${lookUrl("overview")})` }}
       />
       <div>
-        <h3 className="m-0 text-[18px] font-semibold text-fg">{title}</h3>
+        <h3 className="m-0 text-title-sm font-semibold text-fg">{title}</h3>
         {subtitle ? (
           <small className="mt-0.5 block text-caption text-fg-dim">{subtitle}</small>
         ) : null}

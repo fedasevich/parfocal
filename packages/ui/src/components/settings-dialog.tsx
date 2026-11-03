@@ -60,7 +60,7 @@ function SettingsDialog({
           className="flex min-h-0 flex-col gap-4 overflow-y-auto px-8 pb-8 [scrollbar-gutter:stable]"
         >
           <div className="sticky top-0 z-[2] flex items-center gap-3 bg-chrome pt-5.5 pb-3">
-            <h2 className="m-0 text-[20px] font-semibold">{title}</h2>
+            <h2 className="m-0 text-title font-semibold">{title}</h2>
             {hint ? <span className="text-caption text-fg-faint">{hint}</span> : null}
             <span className="flex-1" />
             <DialogClose render={<Button variant="ghost" size="icon" aria-label={closeLabel} />}>
