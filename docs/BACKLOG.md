@@ -3130,7 +3130,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs [`poc/src/segment/paged-result.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/paged-result.ts), [`poc/src/app/paged-loader.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/paged-loader.ts).
   Size: L.
 
-- [ ] AINUC-006 · Calibration
+- [x] AINUC-006 · Calibration
   Temperature scaling per typer and test-time augmentation setting, fitted on a separate split, stored in the registry, never vector scaling.
   Store `testSetAccuracy`, `testSetConfidentShare`, `testSetUnsureShare` and `validatedSites` for each typer, which REVIEW-014 (model warnings) reads.
   Done when MLEVAL reports ECE under 0.05 for the active typer.
