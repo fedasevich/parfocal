@@ -46,6 +46,12 @@ import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
+  routeReviewTool,
+  type StayTool,
+  shownReviewTool,
+  useReviewToolKeys,
+} from "../review/review-rail.ts";
+import {
   type Answer,
   type Answers,
   answerOf,
@@ -92,7 +98,7 @@ export type ViewerSearch = CameraSearch & {
   scene?: ViewerScene | undefined;
   tab?: ViewerTab | undefined;
   modal?: "preset" | undefined;
-  tool?: "ruler" | undefined;
+  tool?: StayTool | undefined;
   peek?: boolean | undefined;
   focus?: boolean | undefined;
 };
@@ -327,6 +333,26 @@ function ViewerBody({
       put(current.object, { ...kept, reasons: note.reasons, note: note.text.trim() || null });
     setNote({ ...note, open: false });
   };
+
+  const pickTool = (next: string) => {
+    const route = routeReviewTool(next);
+    if (route === null) return;
+    if (route.kind === "annotate") {
+      void navigate({
+        to: "/projects/$projectId/slides/$slideId/annotate",
+        params: { projectId, slideId },
+        search: { task: session.taskId, tool: route.tool },
+      });
+      return;
+    }
+    onSearch({
+      tool: route.tool,
+      ...(route.tool === "ruler" ? { object: undefined, scene: undefined } : {}),
+      ...(route.tab ? { tab: route.tab } : {}),
+    });
+  };
+
+  useReviewToolKeys(pickTool, !peekOpen);
 
   useNoteKey(() => {
     if (current === undefined || tab !== "objects") return;
@@ -854,13 +880,10 @@ function ViewerBody({
       <ViewerFrame
         session={session}
         counts={counts}
-        tool={measuring ? "ruler" : running || nothing ? "hand" : "select"}
+        tool={shownReviewTool(search.tool, running || nothing)}
         railGroups={reviewRail}
         panelHead={nothing ? null : <AnalysisCards parts={viewerParts} areas={areas} />}
-        onToolChange={(next) => {
-          if (next === "ruler") onSearch({ tool: "ruler", object: undefined, scene: undefined });
-          if (next === "select") onSearch({ tool: undefined });
-        }}
+        onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
           peekOpen ? (
