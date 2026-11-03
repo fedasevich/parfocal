@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import {
   CaseDetails,
   ReviewProgressPopover,
@@ -153,6 +154,57 @@ export const TopBarWithPopovers: Story = {
     />
   ),
 };
+
+const ringStates = {
+  empty: { split: { agree: 0, disagree: 0, unsure: 0, open: 12 }, position: 1 },
+  partial: { split: { agree: 5, disagree: 2, unsure: 1, open: 4 }, position: 8 },
+  finished: { split: { agree: 7, disagree: 3, unsure: 2, open: 0 }, position: 12 },
+} as const;
+
+function RingTopBar({ state }: { state: keyof typeof ringStates }) {
+  const { split: ring, position } = ringStates[state];
+  const [opened, setOpened] = useState<number | null>(null);
+  const current = opened ?? position;
+  const decided = ring.agree + ring.disagree + ring.unsure;
+  const total = decided + ring.open;
+  return (
+    <div className="grid gap-3">
+      <ReviewTopBar
+        mode="full"
+        backHref="#my-work"
+        taskName="Round 2 · CAMELYON v1.0"
+        taskSub="Sentinel node AI evaluation · due 23 Oct"
+        slideName={`Slide ${current}`}
+        progress={ring}
+        progressTitle={`Slide ${current} of 12`}
+        progressSub="about 1 h 20 min left"
+        progressPopover={
+          <ReviewProgressPopover
+            taskCode="RT-14"
+            taskName="Round 2 · CAMELYON v1.0"
+            taskSub="Sentinel node AI evaluation"
+            slideName={`Slide ${current}`}
+            slide={{ ...ring, decided, total }}
+            position={current}
+            slideTotal={12}
+            submittedCount={current - 1}
+            dueText="Fri 23 Oct"
+            timeLeft="about 1 h 20 min"
+            onPrevious={current > 1 ? () => setOpened(current - 1) : undefined}
+            onNext={current < 12 ? () => setOpened(current + 1) : undefined}
+          />
+        }
+      />
+      <output aria-label="Opened slide">{opened === null ? "" : `Slide ${opened}`}</output>
+    </div>
+  );
+}
+
+export const TopBarRingEmpty: Story = { render: () => <RingTopBar state="empty" /> };
+
+export const TopBarRingPartial: Story = { render: () => <RingTopBar state="partial" /> };
+
+export const TopBarRingFinished: Story = { render: () => <RingTopBar state="finished" /> };
 
 const manySlides = Array.from({ length: 14 }, (_, index) => index + 1).map((n) => ({
   id: `m${n}`,
