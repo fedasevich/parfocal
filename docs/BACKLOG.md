@@ -3685,7 +3685,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001, WL-001. Refs mock: project, doc 38 "Project", doc 40 R5.
   Size: M.
 
-- [ ] PROJ-007 · New project and new case
+- [x] PROJ-007 · New project and new case
   New project asks for a name, the privacy mode as plain radio rows with a sentence each, a template and a class list. New case inside a project asks for its ID and specimen, and patient fields only in a clinical project.
   Done when component tests cover both forms in each privacy mode and E2E creates a project and a case.
   Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
