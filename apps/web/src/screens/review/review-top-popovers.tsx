@@ -1,4 +1,5 @@
 import {
+  getGetSlideAiProgressQueryOptions,
   useGetCase,
   useListCases,
   useListMySlides,
@@ -6,10 +7,18 @@ import {
   useListProjects,
 } from "@parfocal/api-client";
 import type { MoreItem, SlideRowData } from "@parfocal/ui/components/review-popovers";
-import { ReviewProgressPopover, SlidesPopover } from "@parfocal/ui/components/review-popovers";
+import {
+  PinnedSlideStrip,
+  ReviewProgressPopover,
+  SlidesPopover,
+} from "@parfocal/ui/components/review-popovers";
 import type { ReviewMode } from "@parfocal/ui/components/review-top-bar";
-import type { ReactNode } from "react";
+import { useQueries } from "@tanstack/react-query";
+import { type ReactNode, useMemo } from "react";
+import { keyRegistry } from "../../keys/catalogue.ts";
+import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { destinations } from "../../shell/destinations.ts";
+import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
 import { okData } from "../placeholder.tsx";
@@ -17,11 +26,17 @@ import { lookUrl } from "../thumbnails.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { SlideCounts } from "./review-top.tsx";
 import { timeLeft } from "./review-top.tsx";
+import { recallSlideCamera, stepSlideId } from "./slide-switch.ts";
+
+const slideStepKeys = ["prevslide", "nextslide"];
+const processingStates = new Set(["uploaded", "ai-running"]);
+const submittedStates = new Set(["submitted", "disagreement-queue", "signed-off", "exported"]);
 
 const seenPercentInPrototype = 38;
 
 export type ReviewTopPopovers = {
   slidesPopover: ReactNode;
+  pinnedStrip: ReactNode;
   progressPopover: ReactNode;
   moreItems: MoreItem[] | undefined;
 };
@@ -57,24 +72,74 @@ export function useReviewTopPopovers({
   const thumb = lookUrl("overview");
   const pick = (slideId: string) => {
     if (!projectId) return;
-    void goTo(destinations.slide(projectId, slideId, task?.id));
+    void goTo(
+      destinations.slide(projectId, slideId, task?.id, undefined, recallSlideCamera(slideId)),
+    );
   };
+  const blockOf = (blockId: string | null) => {
+    if (blockId === null) return undefined;
+    for (const specimen of caseDetail?.specimens ?? []) {
+      const block = specimen.blocks.find((item) => item.id === blockId);
+      if (block) return `${specimen.letter}${block.number}`;
+    }
+    return undefined;
+  };
+  const rowOf = (slideId: string) => mySlides.find((slide) => slide.id === slideId);
+  const isProcessing = (slideId: string) => processingStates.has(rowOf(slideId)?.status ?? "");
+
+  const processingIds = [...(caseDetail?.slides ?? []).map((slide) => slide.id), ...inTask].filter(
+    (slideId, index, all) => isProcessing(slideId) && all.indexOf(slideId) === index,
+  );
+  const processingPercents = useQueries({
+    queries: processingIds.map((slideId) => getGetSlideAiProgressQueryOptions(slideId)),
+  });
+  const processingOf = (slideId: string) => {
+    const at = processingIds.indexOf(slideId);
+    const progress = okData(processingPercents[at]?.data);
+    if (progress === undefined) return { percent: 0, label: "Waiting for the AI" };
+    const percent =
+      progress.state === "ready"
+        ? 100
+        : Math.round(
+            progress.steps.reduce((sum, step) => sum + step.percent, 0) /
+              Math.max(1, progress.steps.length),
+          );
+    return { percent, label: "The AI is reading" };
+  };
+
+  const statusOf = (slideId: string, current: boolean, queued: boolean): SlideRowData["status"] => {
+    if (current) return { label: "In review", tone: "accent" };
+    if (isProcessing(slideId)) return { label: "Processing", tone: "neutral" };
+    const state = rowOf(slideId)?.reviews.find((review) => review.task_id === task?.id)?.state;
+    if (state !== undefined && submittedStates.has(state))
+      return { label: "Submitted", tone: "ok" };
+    return queued
+      ? { label: "To review", tone: "neutral" }
+      : { label: "Not in task", tone: "neutral" };
+  };
+  const progressOf = (slideId: string) =>
+    isProcessing(slideId) ? { progress: processingOf(slideId) } : {};
+  const decidedText = counts ? `${counts.decided} of ${counts.total} decided` : undefined;
 
   const caseSlides: SlideRowData[] = (caseDetail?.slides ?? []).map((slide) => {
     const current = slide.id === session.slideId;
     const queued = inTask.has(slide.id);
+    const block = blockOf(slide.block_id);
+    const detail = current
+      ? decidedText
+      : queued || isProcessing(slide.id)
+        ? undefined
+        : "Not part of this task";
+    const sub = [block ? `Block ${block}` : undefined, detail].filter(Boolean).join(" · ");
     return {
       id: slide.id,
       name: `${slide.label} · ${slide.stain}`,
       thumb,
       resultSets: setsOf(slide.id),
       current,
-      status: current
-        ? { label: "In review", tone: "accent" }
-        : queued
-          ? { label: "To review", tone: "neutral" }
-          : { label: "Not in task", tone: "neutral" },
-      ...(current ? {} : queued ? {} : { sub: "Not part of this task" }),
+      status: statusOf(slide.id, current, queued),
+      ...(sub ? { sub } : {}),
+      ...progressOf(slide.id),
     };
   });
   if (caseSlides.length === 0 && session.slideName) {
@@ -85,24 +150,46 @@ export function useReviewTopPopovers({
       resultSets: setsOf(session.slideId),
       current: true,
       status: { label: "In review", tone: "accent" },
+      ...(decidedText ? { sub: decidedText } : {}),
     });
   }
   const inCase = new Set(caseSlides.map((slide) => slide.id));
   const looseSlides: SlideRowData[] = [...inTask]
     .filter((slideId) => !inCase.has(slideId))
     .map((slideId) => {
-      const row = mySlides.find((slide) => slide.id === slideId);
+      const row = rowOf(slideId);
       return {
         id: slideId,
         name: row?.label ?? slideId,
         thumb,
         resultSets: setsOf(slideId),
-        status: { label: "To review", tone: "neutral" as const },
+        status: statusOf(slideId, false, true),
         sub: "No case attached",
+        ...progressOf(slideId),
       };
     });
 
+  const stepBindings = useMemo(
+    () => keyRegistry.bindings({ scopes: ["viewer"], only: slideStepKeys }),
+    [],
+  );
+  const stepIds =
+    (caseDetail?.slides.length ?? 0) > 0
+      ? [...caseSlides, ...looseSlides].map((slide) => slide.id)
+      : [...inTask];
+  useHotkeys(stepBindings, ({ action }) => {
+    if (mode === "guided") return;
+    const target = stepSlideId(stepIds, session.slideId, action === "nextslide" ? 1 : -1);
+    if (target !== undefined) pick(target);
+  });
+
   const caseTitle = session.caseLabel ? `Case ${session.caseLabel}` : undefined;
+  const compareStub = "Opens the compare view. Picking the exact slide arrives with side by side.";
+  const compareTo = (scene: "picking" | "picked") => {
+    if (!projectId) return undefined;
+    return () => void goTo(destinations.compareSlides(projectId, session.slideId, task?.id, scene));
+  };
+  const openSideBySide = compareTo("picked");
   const slidesPopover = (
     <SlidesPopover
       caseTitle={caseTitle}
@@ -112,16 +199,27 @@ export function useReviewTopPopovers({
       looseHeading={task ? `Loose slides in task ${task.code}` : undefined}
       looseSlides={looseSlides}
       onPick={pick}
+      onSideBySide={openSideBySide ? () => openSideBySide() : undefined}
+      sideBySideTitle={compareStub}
       footer={{
         resultSetsLabel: `Result sets of ${session.slideName.split(" ")[0] ?? ""}`,
         onResultSets: projectId
           ? () => void goTo(destinations.slide(projectId, session.slideId, task?.id))
           : undefined,
-        onCompare: () => undefined,
+        onCompare: compareTo("picking"),
+        compareTitle: compareStub,
         onAddSlides: projectId ? () => void goTo(destinations.upload(projectId)) : undefined,
+        addSlidesTitle: "Add slides to this case",
       }}
     />
   );
+
+  const [stripPinned] = usePinnedStrip();
+  const stripSlides = [...caseSlides, ...looseSlides];
+  const pinnedStrip =
+    stripPinned && mode !== "guided" && stripSlides.length > 1 ? (
+      <PinnedSlideStrip slides={stripSlides} onPick={pick} />
+    ) : null;
 
   const neighbours = session.neighbours;
   const progressPopover =
@@ -195,5 +293,5 @@ export function useReviewTopPopovers({
         ]
       : undefined;
 
-  return { slidesPopover, progressPopover, moreItems };
+  return { slidesPopover, pinnedStrip, progressPopover, moreItems };
 }

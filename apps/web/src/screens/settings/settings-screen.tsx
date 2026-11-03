@@ -30,6 +30,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
 import { personOf } from "../../shell/global-shell.tsx";
+import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { applyTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import { andJoin } from "../format.ts";
 import { okData } from "../placeholder.tsx";
@@ -198,6 +199,7 @@ function LoadedSettings({
   const endOthers = useEndOtherSessions();
   const [personal, setPersonal] = useState<Personal>(settings.personal);
   const [device, setDevice] = useState<Device>(deviceDefaults);
+  const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const [channels, setChannels] = useState<Partial<Record<RowKey, Channel>>>({});
   const [signedOutAt, setSignedOutAt] = useState<{ count: number; at: Date } | null>(null);
@@ -379,10 +381,7 @@ function LoadedSettings({
         onChange={(value) => setP("minimap", value as Personal["minimap"])}
       />
     ),
-    strip: () =>
-      toggle("Pinned slide strip", personal.pinned_slide_strip, (value) =>
-        setP("pinned_slide_strip", value),
-      ),
+    strip: () => toggle("Pinned slide strip", pinnedStrip, setPinnedStrip),
     defaultPreset: () => (
       <Segments
         label="Default preset"
