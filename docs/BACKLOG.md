@@ -2877,6 +2877,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-005, MLEVAL-008, SEC-023. Refs kit W69, kit Flow 28.
   Size: L.
 
+- [ ] AIP-019 · Model catalogue matches the v1 line-up
+  AIP-000 (research check) set the v1 line-up in [ADR 0202](adr/0202-v1-model-line-up-per-tier.md), but `model_catalogue.py` and the tier defaults of ADR 0159 still point the Good tiers at HoVer-Net, which ADR 0202 drops from v1. Bring the catalogue and the tier defaults in line once the owner accepts ADR 0202.
+  Done when a test proves every tier default names a model in ADR 0202's line-up, and the catalogue lists each model's licence.
+  Depends on AIP-000.
+  Size: S.
+
 ---
 
 ## 22 AISEG · Interactive segmentation

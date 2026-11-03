@@ -185,6 +185,21 @@ N is No in the yes or no decision style, so "Add a note" moved from N to ⇧N. P
 
 Your choice:
 
+## 47. The v1 model line-up, from AIP-000 (AI pipeline research check)
+
+ADR 0202 (proposed) sets PathoSAM AIS for outlines, HoVer-NeXt for typing, the MONAI CAMELYON ResNet18 for the tumor map and PathoSAM ViT-L and ViT-B for click and box. Every v1 model is non-commercial or has an unconfirmed licence. Hugging Face, Zenodo and arXiv were unreachable, so those licences are copied from ADR 0042 and marked not re-read.
+
+- a. Accept ADR 0202 as the v1 starting line-up. (recommended for the thesis and pilot, which are non-commercial)
+- b. Change rows first. Write which here.
+
+AIP-002 also requires a licence block, which conflicts with STACK-031 (licence policy) being on hold:
+
+- c. Record licences only and block nothing while STACK-031 is on hold. (recommended)
+- d. Drop that condition from AIP-002.
+- e. Keep the block.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
