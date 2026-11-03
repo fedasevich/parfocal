@@ -23,6 +23,10 @@ The POC needed a middleware plugin for COOP and COEP because `server.headers` sk
 
 Zarr readers probe `zarr.json` and expect 404 when it is missing, and the model cache must not store a web page under a model's name (POC docs 06 and 15). Paths under `/tiles/`, `/data/` and `/models/` answer a missing file with 404 `application/problem+json`, code `not-found`. In dev and preview the `noAppPageForMissingData` plugin in `apps/web/vite/data-paths.ts` does it, and in the edge Worker `DATA_PATH_PREFIXES` in `apps/edge/src/index.ts` does. The Worker only sees these paths when the assets config lists them in `run_worker_first`, otherwise `single-page-application` handling answers with HTML. That list belongs to OPS-002 (deploy definitions).
 
+## Slide bytes stay on the app origin and skip the HTTP cache
+
+The capability token travels in `Authorization`, which is not CORS-safelisted, so bytes on any other origin would cost a preflight per read and double the open. `signedOpenRequest` throws `CrossOriginSlideBytesError` before any request when the base path resolves to another origin than the page, and the edge sends no CORS grant. `TileAccess.fetch` asks for `cache: "no-store"` unless the caller sets a mode, because Chrome lets one request at a time write a URL's cache entry and parallel ranges of one file then queue. `packages/viewer-engine/browser/same-origin.spec.ts` checks both in Chrome through the real `handleTiles` ([result](../results/2026-11-03-same-origin-slide-bytes.md)). Source: TILES-003 (same-origin data path).
+
 ## Headless Chrome on a Mac has real WebGPU
 
 playwright-core with `channel: "chrome"` drives the installed Chrome without downloading a browser, and with `--enable-unsafe-webgpu` headless pages get the `apple metal-3` adapter. Hosted Linux CI does not, which is why golden images use SwiftShader there ([ADR 0011](../adr/0011-hosted-ci-only.md)).

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
+  CrossOriginSlideBytesError,
   createSlideAccess,
   LevelTableError,
   parseLevelTable,
@@ -170,6 +171,35 @@ describe("signedOpenRequest", () => {
       UnsupportedFormatError,
     );
     assert.equal(seen.length, 0);
+  });
+
+  test("never sends the token to an origin other than the app's", async () => {
+    const seen: { url: string; authorization: string | null }[] = [];
+    await assert.rejects(
+      signedOpenRequest({
+        access: access(),
+        basePath: "https://tiles.elsewhere.test/tiles/s/",
+        baseUrl: "https://app.test/projects/p/slides/s",
+        original: "a.svs",
+        fetcher: tableFetcher(seen),
+      }),
+      (error: unknown) =>
+        error instanceof CrossOriginSlideBytesError &&
+        error.url === "https://tiles.elsewhere.test/tiles/s/",
+    );
+    assert.equal(seen.length, 0);
+  });
+
+  test("accepts an absolute base path on the app origin", async () => {
+    const seen: { url: string; authorization: string | null }[] = [];
+    await signedOpenRequest({
+      access: access(),
+      basePath: "https://app.test/tiles/s/",
+      baseUrl: "https://app.test/projects/p/slides/s",
+      original: "a.svs",
+      fetcher: tableFetcher(seen),
+    });
+    assert.equal(seen[0]?.url, "https://app.test/tiles/s/levels.json");
   });
 
   test("lets the caller name the format", async () => {

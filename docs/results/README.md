@@ -63,3 +63,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-03 | [Search on 100,000 cases drops from a p95 of 48 to 59 ms to 24 to 25 ms with LIKE on stored lowercase labels](2026-11-03-search-latency-lower-labels.md) | CASES-009 | benchmark |
 | 2026-11-03 | [The browser reader agrees with the server reader within 1 to 2 grey levels with seam ratios of 1.1 to 1.7, except BIF, which ignores stitch positions](2026-11-03-reader-seams-and-agreement.md) | INGEST-009 | check |
 | 2026-11-03 | [Derived overview levels bring coarse-zoom tile reads on Aperio slides from 25 to 45 times a full ladder to 0.4 to 0.6 times](2026-11-03-derived-overview-levels.md) | INGEST-013 | benchmark |
+| 2026-11-03 | [Signed slide bytes on the app origin open without a preflight in Chrome in 0.63 s at 100 ms RTT, and another origin preflights every read and doubles the open](2026-11-03-same-origin-slide-bytes.md) | TILES-003 | comparison |
