@@ -31,6 +31,7 @@ import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
+import { escapeComment, type Pin, pinForClick } from "../review/comment-pin.ts";
 import {
   answersOf,
   type Confidence,
@@ -45,6 +46,7 @@ import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
+import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
   routeReviewTool,
@@ -238,6 +240,12 @@ function ViewerBody({
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [pin, setPin] = useState<Pin | null>(null);
+  const shownPin = search.tool === "comment" ? pin : null;
+  const leaveComment = () => {
+    setPin(null);
+    onSearch({ tool: undefined });
+  };
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
@@ -395,6 +403,10 @@ function ViewerBody({
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
       if (event.key === "Escape" && peekOpen) return;
+      if (event.key === "Escape" && escapeComment({ tool: search.tool, pin: shownPin })) {
+        leaveComment();
+        return;
+      }
       if (event.key === "Escape" && selected) {
         pick(undefined);
         return;
@@ -728,7 +740,20 @@ function ViewerBody({
       />
     );
 
-  const commentsBody = selected ? (
+  const commentsBody = shownPin ? (
+    <PinnedThread
+      key={`${shownPin.x},${shownPin.y}`}
+      pin={shownPin}
+      taskId={session.taskId}
+      slideId={session.slideId}
+      offReason={setup.connLost ? netOff : undefined}
+      onCancel={leaveComment}
+      onPosted={() => {
+        setPin(null);
+        setToast({ id: Date.now(), text: "Thread pinned on the slide." });
+      }}
+    />
+  ) : selected ? (
     <ObjectComments
       object={selected}
       threads={session.threads}
@@ -1034,9 +1059,18 @@ function ViewerBody({
             regionStyle={drawing.regionStyle}
             tags={running || nothing ? [] : drawing.tags}
             underlay={running ? () => <RunningHeat /> : drawing.underlay}
-            overlay={() => (
+            onPointPick={(point) => {
+              const placed = pinForClick(search.tool, point);
+              if (placed === null) return;
+              setPin(placed);
+              onSearch({ object: undefined, tab: "comments" });
+            }}
+            overlay={(still) => (
               <>
                 {canvasNotice}
+                {shownPin ? (
+                  <PinMark pin={shownPin} camera={still.camera} size={still.size} />
+                ) : null}
                 {drawing.legend ? (
                   <div className="absolute top-4 left-4">{drawing.legend}</div>
                 ) : null}
