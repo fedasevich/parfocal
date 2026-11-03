@@ -63,7 +63,7 @@ function AssignedRow({
       onClick={onSelect}
       className={`cursor-pointer border-line border-b ${selected ? "bg-accent-soft" : ""}`}
     >
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-(--density-cell-y) align-middle">
         <b className="font-mono font-medium text-fg">{task.code}</b>{" "}
         <b className="font-medium text-fg">{task.name}</b>
         <small className="block text-caption text-fg-dim">
@@ -71,10 +71,10 @@ function AssignedRow({
           {detail ? ` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
         </small>
       </td>
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-(--density-cell-y) align-middle">
         {set?.label ? <SetChip label={set.label} source={set.source} /> : null}
       </td>
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-(--density-cell-y) align-middle">
         <div className="grid gap-1">
           {task.reviewers.map((reviewer) => (
             <div key={reviewer.user_id} className="flex items-center gap-2 text-caption">
@@ -91,13 +91,13 @@ function AssignedRow({
           ))}
         </div>
       </td>
-      <td className="px-2 py-2 align-middle text-fg-dim">
+      <td className="px-2 py-(--density-cell-y) align-middle text-fg-dim">
         {task.due_on ? formatDue(task.due_on) : "No due date"}
       </td>
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-(--density-cell-y) align-middle">
         <StatusTag tone={tone}>{label}</StatusTag>
       </td>
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-(--density-cell-y) align-middle">
         <div className="flex justify-end gap-1.5">
           {task.status === "disagreements" ? (
             <Button

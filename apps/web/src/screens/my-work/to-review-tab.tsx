@@ -140,7 +140,7 @@ function MentionRow({ item }: { item: InboxItem }) {
     <button
       type="button"
       onClick={() => void goTo(item.link)}
-      className="grid cursor-pointer grid-cols-[26px_1fr] gap-2.5 rounded-[10px] border border-line bg-chrome px-3 py-2.5 text-left text-body-sm text-fg-dim"
+      className="grid cursor-pointer grid-cols-[26px_1fr] gap-2.5 rounded-[10px] border border-line bg-chrome px-3 py-(--density-item-y) text-left text-body-sm text-fg-dim"
     >
       <PersonAvatar person={actor} size={26} />
       <div>
@@ -178,7 +178,7 @@ function AsksForYou() {
         return (
           <div
             key={ask.id}
-            className="grid grid-cols-[26px_1fr_auto] items-center gap-2.5 rounded-[10px] border border-line bg-chrome px-3 py-2.5 text-body-sm text-fg-dim"
+            className="grid grid-cols-[26px_1fr_auto] items-center gap-2.5 rounded-[10px] border border-line bg-chrome px-3 py-(--density-item-y) text-body-sm text-fg-dim"
           >
             <PersonAvatar person={from} size={26} />
             <div>
