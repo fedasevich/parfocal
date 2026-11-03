@@ -81,6 +81,6 @@ Hosted runners: the search result reports a GitHub changelog entry of 2026-09-17
 ## Follow-ups
 
 - Existing ADRs confirmed, no new ADR.
-- FOUND-025 added: refresh the tooling pins.
-- FOUND-026 added: pin or verify the CI runner image for Ubuntu 26.04.
+- FOUND-027 added: refresh the tooling pins.
+- FOUND-028 added: pin or verify the CI runner image for Ubuntu 26.04.
 - TODO: re-check Python 3.15 when onnxruntime, scikit-image and numcodecs publish `cp315` wheels.

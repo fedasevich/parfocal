@@ -10,12 +10,50 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 env:
   TURBO_TELEMETRY_DISABLED: "1"
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          TO: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          FROM="$BASE"
+          if [ -z "$FROM" ]; then
+            FROM=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci --branch main --event push --status success --limit 1 --json headSha --jq '.[0].headSha // ""')
+          fi
+          if [ -z "$FROM" ] || ! git cat-file -e "$FROM^{commit}" 2>/dev/null; then
+            echo "No base to compare with, running everything"
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Comparing $FROM..$TO"
+          code=false
+          while IFS= read -r file; do
+            case "$file" in
+              docs/design/*) code=true ;;
+              docs/*|*.md) ;;
+              *) code=true ;;
+            esac
+          done < <(git diff --name-only "$FROM" "$TO")
+          echo "code=$code"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -74,6 +112,8 @@ jobs:
           test -z "$(git status --porcelain -- packages/api-client)"
 
   db:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -86,13 +126,15 @@ jobs:
           key: fixtures-small-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
       - run: pnpm fixtures small
       - run: docker compose up -d --wait
-      - run: uv run pytest -m db
+      - run: uv run pytest -m db --durations=25
         env:
           PARFOCAL_REQUIRE_FIXTURES: small
       - if: failure()
         run: docker compose logs
 
   formats:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -109,6 +151,8 @@ jobs:
           PARFOCAL_REQUIRE_FIXTURES: small,formats
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -143,25 +187,32 @@ jobs:
         run: docker compose logs
 
   browser:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ui, viewer-engine, golden-images, web, latency-proxy]
+    name: browser (${{ matrix.package }})
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
         with:
-          cache-key: browser
+          cache-key: browser-${{ matrix.package }}
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
           key: fixtures-browser-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
       - run: pnpm fixtures small viewer
       - run: google-chrome --version
-      - run: pnpm test:browser
+      - run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
 
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, db, formats, e2e, browser]
+    needs: [changes, lint, typecheck, test, db, formats, e2e, browser]
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"
+      - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { chromeBudget, chromeShare } from "./chrome-share.ts";
+import { inPart, parts } from "./parts.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -53,25 +54,27 @@ const shows: Record<string, string> = {
   "Whole-slide peek": "26% of tissue seen",
 };
 
-test("every viewer tool scene opens from the prototype index", async ({ page }) => {
-  test.setTimeout(120_000);
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  page.on("response", (response) => {
-    const path = new URL(response.url()).pathname;
-    if (response.status() >= 400 && path !== "/favicon.ico") {
-      errors.push(`${response.status()} ${path}`);
+for (const part of parts) {
+  test(`every viewer tool scene opens from the prototype index, part ${part}`, async ({ page }) => {
+    test.setTimeout(60_000);
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("response", (response) => {
+      const path = new URL(response.url()).pathname;
+      if (response.status() >= 400 && path !== "/favicon.ico") {
+        errors.push(`${response.status()} ${path}`);
+      }
+    });
+    const links = await toolLinks(page);
+    expect(links.map((link) => link.name).sort()).toEqual(Object.keys(shows).sort());
+    for (const { name, href } of inPart(links, part)) {
+      await page.goto(href);
+      await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
+      await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
     }
+    expect(errors).toEqual([]);
   });
-  const links = await toolLinks(page);
-  expect(links.map((link) => link.name).sort()).toEqual(Object.keys(shows).sort());
-  for (const { name, href } of links) {
-    await page.goto(href);
-    await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
-    await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
-  }
-  expect(errors).toEqual([]);
-});
+}
 
 test("the minimap leaves the corner the ruler is in, and travel shows the route", async ({
   page,
