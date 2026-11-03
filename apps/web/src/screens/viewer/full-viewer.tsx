@@ -21,6 +21,7 @@ import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/vis
 import { Zone } from "@parfocal/ui/components/zone";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
@@ -386,6 +387,16 @@ function ViewerBody({
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
   const writeSearch = useRef(onSearch);
   writeSearch.current = onSearch;
+  const debugCamera = useRef(shownCamera);
+  debugCamera.current = shownCamera;
+  useEffect(
+    () =>
+      provideDebug({
+        getCamera: () => debugCamera.current,
+        setCamera: (next) => setCamera({ x: next.x, y: next.y, scale: next.scale }),
+      }),
+    [],
+  );
   const caseKey = caseMemoryKey(session.task?.project_id, session.caseLabel);
   useEffect(() => {
     openCaseMemory(caseKey);
