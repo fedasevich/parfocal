@@ -11,8 +11,8 @@ const pitchIds = [
   { id: "R2⁺", text: "ROI by a reviewer", x: 320, y: 360 },
 ];
 
-export function useSignInOptions(): SignInOptions | undefined {
-  return useGetSignInOptions().data?.data;
+export function useSignInOptions(returnTo: string | null = null): SignInOptions | undefined {
+  return useGetSignInOptions(returnTo).data?.data;
 }
 
 export function workspaceOf(options: SignInOptions | undefined): AuthWorkspace {

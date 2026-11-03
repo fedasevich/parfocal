@@ -5,6 +5,7 @@ import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
+import { authDraftOperations } from "./auth-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
@@ -51,6 +52,14 @@ export {
   getListWebhooksMockHandler,
   getRequestProjectAccessMockHandler,
 } from "./admin-handlers.ts";
+export {
+  getRequestPasswordResetMockHandler,
+  getRequestSignInLinkMockHandler,
+  getResetPasswordMockHandler,
+  getSignInWithCodeMockHandler,
+  getSignInWithPasswordMockHandler,
+  getStartSsoMockHandler,
+} from "./auth-handlers.ts";
 export {
   getAmendClinicalReportMockHandler,
   getCosignClinicalReportMockHandler,
@@ -223,6 +232,7 @@ export const draftOperations: DraftOperation[] = [
   ...projectDraftOperations,
   ...teamDraftOperations,
   ...adminDraftOperations,
+  ...authDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
   ...settingsDraftOperations,

@@ -15,6 +15,7 @@ export const signInOptionsSchema = z.object({
     z.object({
       workspace_id: z.string(),
       name: z.string(),
+      short_name: z.string(),
       logo: z.string(),
       colour: z.string(),
       protocol: z.string(),
@@ -33,8 +34,9 @@ export const signInOptionsSchema = z.object({
   session_hours: z.number().int().positive(),
   deep_link: z
     .object({
-      task_id: z.string(),
-      task_code: z.string(),
+      path: z.string(),
+      task_id: z.string().nullable(),
+      task_code: z.string().nullable(),
       project_id: z.string(),
       slide_id: z.string(),
       slide_label: z.string(),
@@ -46,7 +48,10 @@ export const signInOptionsSchema = z.object({
 
 export type SignInOptions = z.infer<typeof signInOptionsSchema>;
 
-export const getGetSignInOptionsUrl = () => "/api/auth/sign-in-options";
+export const getGetSignInOptionsUrl = (returnTo: string | null = null) =>
+  returnTo === null
+    ? "/api/auth/sign-in-options"
+    : `/api/auth/sign-in-options?${new URLSearchParams({ return_to: returnTo }).toString()}`;
 
 const draft = defineDraftQuery("getSignInOptions", getGetSignInOptionsUrl, signInOptionsSchema);
 
@@ -54,15 +59,19 @@ export type getSignInOptionsResponse = Awaited<ReturnType<typeof draft.fetcher>>
 export type GetSignInOptionsQueryResult = getSignInOptionsResponse;
 export type GetSignInOptionsQueryError = Problem;
 
-export const getSignInOptions = (options?: DraftRequest) => draft.fetcher([], options);
+export const getSignInOptions = (returnTo: string | null = null, options?: DraftRequest) =>
+  draft.fetcher([returnTo], options);
 
-export const getGetSignInOptionsQueryKey = () => draft.queryKey();
+export const getGetSignInOptionsQueryKey = (returnTo: string | null = null) =>
+  draft.queryKey(returnTo);
 
 export const getGetSignInOptionsQueryOptions = <TData = getSignInOptionsResponse, TError = Problem>(
+  returnTo: string | null = null,
   options?: DraftQueryOptions<getSignInOptionsResponse, TData, TError>,
-) => draft.queryOptions<TData, TError>([], options);
+) => draft.queryOptions<TData, TError>([returnTo], options);
 
 export const useGetSignInOptions = <TData = getSignInOptionsResponse, TError = Problem>(
+  returnTo: string | null = null,
   options?: DraftQueryOptions<getSignInOptionsResponse, TData, TError>,
   queryClient?: QueryClient,
-) => draft.useDraftQuery<TData, TError>([], options, queryClient);
+) => draft.useDraftQuery<TData, TError>([returnTo], options, queryClient);

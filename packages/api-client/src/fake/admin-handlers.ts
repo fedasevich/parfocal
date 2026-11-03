@@ -50,6 +50,7 @@ import {
   reviewTasks,
   scenarioNow,
   slideOf,
+  slides,
   workspaces,
 } from "./scenario.ts";
 import {
@@ -230,7 +231,41 @@ const brandOf = (index: number) => {
   };
 };
 
-export const toSignInOptions = (): SignInOptions =>
+const slideTarget = /^\/projects\/([^/?#]+)\/slides\/([^/?#]+)(?:\?(.*))?$/;
+
+export const isSafeReturnPath = (value: string) =>
+  value.startsWith("/") &&
+  !value.startsWith("//") &&
+  !value.includes("\\") &&
+  !value.split("").some((character) => character.charCodeAt(0) < 0x20);
+
+export const defaultReturnPath = () => {
+  const slide = slideOf("P07", signInDeepLink.caseLabel, signInDeepLink.slide);
+  const task = reviewTasks.find((item) => item.code === signInDeepLink.task);
+  return `/projects/${projectByCode("P07").id}/slides/${slide.id}?task=${task?.id ?? ""}`;
+};
+
+const deepLinkOf = (returnTo: string | null): SignInOptions["deep_link"] => {
+  const path = returnTo === null ? defaultReturnPath() : returnTo;
+  if (!isSafeReturnPath(path)) return null;
+  const match = slideTarget.exec(path);
+  const project = projects.find((item) => item.id === match?.[1]);
+  const slide = slides.find((item) => item.id === match?.[2] && item.project === project?.code);
+  if (project === undefined || slide === undefined) return null;
+  const taskId = new URLSearchParams(match?.[3] ?? "").get("task");
+  const task = reviewTasks.find((item) => item.id === taskId);
+  return {
+    path,
+    task_id: task?.id ?? null,
+    task_code: task?.code ?? null,
+    project_id: project.id,
+    slide_id: slide.id,
+    slide_label: slide.label,
+    case_label: slide.caseLabel ?? "Standalone",
+  };
+};
+
+export const toSignInOptions = (returnTo: string | null = null): SignInOptions =>
   signInOptionsSchema.parse({
     workspace: (({ domain: _domain, ...rest }) => rest)(brandOf(0)),
     email: people.LM.email,
@@ -239,6 +274,7 @@ export const toSignInOptions = (): SignInOptions =>
       return {
         workspace_id: brand.id,
         name: brand.name,
+        short_name: workspaces[item.workspace]?.organisation ?? brand.name,
         logo: brand.logo,
         colour: brand.colour,
         protocol: item.protocol,
@@ -250,14 +286,7 @@ export const toSignInOptions = (): SignInOptions =>
     link_minutes: 15,
     idle_lock_minutes: sessionPolicy.idleLockMinutes,
     session_hours: expiredSession.hours,
-    deep_link: {
-      task_id: reviewTasks.find((task) => task.code === signInDeepLink.task)?.id ?? "",
-      task_code: signInDeepLink.task,
-      project_id: projectByCode("P07").id,
-      slide_id: slideOf("P07", signInDeepLink.caseLabel, signInDeepLink.slide).id,
-      slide_label: signInDeepLink.slide,
-      case_label: signInDeepLink.caseLabel,
-    },
+    deep_link: deepLinkOf(returnTo),
     last_decision: expiredSession.lastDecision,
   });
 
@@ -519,8 +548,10 @@ export const getGetInvitePreviewMockHandler = (overrideResponse?: InvitePreview)
   );
 
 export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions) =>
-  http.get("*/api/auth/sign-in-options", () =>
-    HttpResponse.json(overrideResponse ?? toSignInOptions()),
+  http.get("*/api/auth/sign-in-options", ({ request }) =>
+    HttpResponse.json(
+      overrideResponse ?? toSignInOptions(new URL(request.url).searchParams.get("return_to")),
+    ),
   );
 
 export const getListJoinableWorkspacesMockHandler = (overrideResponse?: JoinableWorkspace[]) =>

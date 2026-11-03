@@ -610,6 +610,16 @@ export const sampleProjectSetup = {
   task: "RT-S1",
 };
 
+export const signInSecrets = {
+  password: "correct-horse-staple",
+  code: "481726",
+  minPasswordLength: 12,
+  previousPasswords: ["spring-meadow-2025", "correct-horse-battery"],
+  leakedPasswords: ["password1234", "qwertyuiop12"],
+  linkMinutes: 15,
+  resendSeconds: 42,
+};
+
 export const signInDeepLink = { task: "RT-14", slide: "A1", caseLabel: "S26-04812" };
 
 export const workspaceBrands = [
