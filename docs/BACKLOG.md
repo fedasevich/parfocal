@@ -2220,7 +2220,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Decisions are stored per reviewer in the reviewed layer (RSET-007).
   Size: M.
 
-- [ ] REVIEW-011 · AI wording modes
+- [x] REVIEW-011 · AI wording modes
   Plain words (default), percent, frequency, with the validated phrases "tumor", "probably tumor", "tumor or immune".
   Done when unit tests map calibrated probabilities to phrases with the four band thresholds of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) (confidence display rules), read per typer.
   Size: S.
@@ -2283,6 +2283,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   REVIEW-001 (review rail) routes the Comment tool (C) to the comments tab, but clicking the slide in comment mode does not pin a new thread there yet.
   Done when a test clicks the slide in comment mode and a new thread opens pinned at that point, and Esc leaves comment mode without a thread.
   Depends on REVIEW-001.
+  Size: S.
+
+- [ ] REVIEW-022 · AI wording on screen with a frequency option
+  REVIEW-011 (AI wording modes) added `confidence-words.ts` with plain, percent and frequency modes, but nothing on screen uses it, and the personal setting `confidence_wording` (words, numbers, colour, hidden) has no frequency option.
+  Done when the inspector and the gallery tile read their AI wording through the module, the setting offers frequency, and component tests cover each mode and the percent fallback for an uncalibrated typer.
+  Depends on REVIEW-011.
   Size: S.
 
 ---
