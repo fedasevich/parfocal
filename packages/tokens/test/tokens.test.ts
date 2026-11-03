@@ -7,6 +7,8 @@ import {
   controlHeightsPx,
   countHeightPx,
   cubicBezierCss,
+  densityMode,
+  densitySpacingPx,
   effectiveMotionMode,
   iconSizesPx,
   motionDurationsMs,
@@ -184,4 +186,16 @@ test("Tailwind transitions default to the motion tokens", () => {
   assert.ok(theme.includes("--default-transition-duration: var(--motion-fast);"));
   assert.ok(theme.includes("--default-transition-timing-function: var(--motion-ease-standard);"));
   assert.ok(theme.includes("--ease-standard: var(--motion-ease-standard);"));
+});
+
+test("every density spacing matches its CSS variable in both modes", () => {
+  const comfortable = motionBlock(':root,\n[data-density="comfortable"]');
+  const compact = motionBlock('[data-density="compact"]');
+  for (const [name, px] of Object.entries(densitySpacingPx)) {
+    assert.ok(comfortable.includes(`--density-${name}: ${px.comfortable}px;`), name);
+    assert.ok(compact.includes(`--density-${name}: ${px.compact}px;`), name);
+    assert.ok(px.compact < px.comfortable, name);
+  }
+  assert.equal(densityMode("compact"), "compact");
+  assert.equal(densityMode(undefined), "comfortable");
 });

@@ -2,6 +2,7 @@ import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-route
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
 import { CommandPalette } from "../shell/command-palette.tsx";
+import { useAppliedDensity } from "../shell/density.ts";
 import { GlobalShell } from "../shell/global-shell.tsx";
 import { overlaySearch } from "../shell/overlays.ts";
 import { inGlobalShell } from "../shell/shell-routes.ts";
@@ -16,6 +17,7 @@ function Root() {
   const inShell = useMatches({
     select: (matches) => matches.some(inGlobalShell),
   });
+  useAppliedDensity();
   return (
     <SessionLock>
       <KeyBindingsProvider>

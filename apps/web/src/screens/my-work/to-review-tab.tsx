@@ -99,7 +99,7 @@ function TaskRow({ selected, colour, title, sub, progress, tags, action, onSelec
       tabIndex={0}
       onClick={onSelect}
       onKeyDown={(event) => (event.key === " " ? onSelect() : undefined)}
-      className={`grid cursor-pointer grid-cols-[6px_1fr_auto_auto] items-center gap-3.5 rounded-xl border px-3.5 py-3 ${selected ? "border-accent bg-accent-soft" : "border-line bg-chrome hover:border-line-strong"}`}
+      className={`grid cursor-pointer grid-cols-[6px_1fr_auto_auto] items-center gap-3.5 rounded-xl border px-3.5 py-(--density-list-row-y) ${selected ? "border-accent bg-accent-soft" : "border-line bg-chrome hover:border-line-strong"}`}
     >
       <span aria-hidden="true" className="h-10 rounded-[3px]" style={{ background: colour }} />
       <div className="min-w-0">
