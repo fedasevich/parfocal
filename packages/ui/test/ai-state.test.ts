@@ -83,3 +83,71 @@ test("a running job keeps areas in the order they were found so rows never move"
     ],
   );
 });
+
+const cluster: AiArea[] = [
+  { object: "T6", size: 0.12, cells: { low: 20, high: 60 } },
+  { object: "T5", size: 0.18, probability: 0.71 },
+];
+
+const stepsOf = (state: ReturnType<typeof aiState>) =>
+  state.kind === "small-cluster" ? state.steps.map((step) => [step.step, step.done]) : null;
+
+test("a largest area at or under 0.2 mm reads as a small cluster with every step open", () => {
+  const state = aiState({ areas: cluster });
+  assert.equal(state.kind, "small-cluster");
+  if (state.kind !== "small-cluster") return;
+  assert.equal(state.phase, "open");
+  assert.equal(state.lead.object, "T5");
+  assert.equal(state.category, "ITC");
+  assert.deepEqual(stepsOf(state), [
+    ["confirm", false],
+    ["measure", false],
+    ["count", false],
+  ]);
+});
+
+test("the cluster steps follow the staging state and settle only with a firm count", () => {
+  const lead = (patch: Partial<AiArea>) =>
+    cluster.map((area) => (area.object === "T5" ? { ...area, ...patch } : area));
+  const measured = aiState({ areas: lead({ call: "agree", measured: 0.17 }) });
+  assert.deepEqual(stepsOf(measured), [
+    ["confirm", true],
+    ["measure", true],
+    ["count", false],
+  ]);
+  assert.equal(measured.kind === "small-cluster" && measured.phase, "open");
+  const crossing = aiState({
+    areas: lead({ call: "agree", measured: 0.17, cells: { low: 150, high: 240 } }),
+  });
+  assert.equal(crossing.kind === "small-cluster" && crossing.phase, "open");
+  const under = aiState({
+    areas: lead({ call: "agree", measured: 0.17, cells: { low: 150, high: 190 } }),
+  });
+  assert.equal(under.kind, "small-cluster");
+  if (under.kind !== "small-cluster") return;
+  assert.equal(under.phase, "settled");
+  assert.equal(under.pn, "pN0(i+)(sn)");
+  assert.deepEqual(
+    under.areas.map((area) => area.canChangeCategory),
+    [true, false],
+  );
+});
+
+test("a firm count over 200 cells makes a small cluster a micrometastasis", () => {
+  const state = aiState({
+    areas: [
+      { object: "T5", size: 0.18, call: "agree", measured: 0.19, cells: { low: 210, high: 260 } },
+    ],
+  });
+  assert.equal(state.kind, "small-cluster");
+  if (state.kind !== "small-cluster") return;
+  assert.equal(state.phase, "settled");
+  assert.equal(state.category, "micro");
+  assert.equal(state.pn, "pN1mi(sn)");
+});
+
+test("measuring a small cluster over 0.2 mm turns it back into a pre-read", () => {
+  const state = aiState({ areas: [{ object: "T5", size: 0.18, call: "agree", measured: 0.25 }] });
+  assert.equal(state.kind, "pre-read");
+  assert.equal(state.kind === "pre-read" && state.phase, "settled");
+});

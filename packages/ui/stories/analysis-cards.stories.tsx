@@ -98,3 +98,30 @@ export const StagingStillRunning: Story = {
     />
   ),
 };
+
+const clusterAreas: AiArea[] = [
+  { object: "T5", size: 0.18, probability: 0.71 },
+  { object: "T6", size: 0.12, probability: 0.58, cells: { low: 20, high: 60 } },
+];
+
+const clusterMeasured: AiArea[] = clusterAreas.map((area) =>
+  area.object === "T5" ? { ...area, call: "agree", measured: 0.17 } : area,
+);
+
+const clusterSettled: AiArea[] = clusterMeasured.map((area) =>
+  area.object === "T5" ? { ...area, cells: { low: 150, high: 190 } } : area,
+);
+
+const stagingParts: ViewerPartName[] = [...base, "staging-hero", "area-list", "measure-step"];
+
+export const OnlyASmallCluster: Story = {
+  render: () => <Panel parts={stagingParts} staged={clusterAreas} />,
+};
+
+export const SmallClusterMeasured: Story = {
+  render: () => <Panel parts={stagingParts} staged={clusterMeasured} />,
+};
+
+export const SmallClusterSettled: Story = {
+  render: () => <Panel parts={stagingParts} staged={clusterSettled} />,
+};
