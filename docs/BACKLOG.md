@@ -579,6 +579,18 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] SKEL-010 · Skeleton retrospective
   Done when an ADR lists what the skeleton revealed (latency, memory, gaps) and the backlog is edited to reflect it.
+  Recorded in [ADR 0169](adr/0169-walking-skeleton-retrospective.md), which added SKEL-011 and SKEL-012 and edited TEST-004 and TEST-007.
+  Size: S.
+
+- [ ] SKEL-011 · Skeleton numbers from staging and hosted runners
+  Every latency number of the skeleton so far is local ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). Measure the fitted view and the sharp view after a jump on `CMU-1.svs` against staging, warm tile fetch p95 from the same region over HTTP/2 or HTTP/3 with the gateway's cache layer on, and the performance budget suite on the hosted runner.
+  Done when a result file records those numbers with the machine, browser and network, and `perf-budgets.json` time limits are set from the hosted-runner numbers instead of twice the local baseline.
+  Depends on SKEL-009, TILES-002.
+  Size: S.
+
+- [ ] SKEL-012 · Viewer takes the slide format from ingest
+  The live viewer route of SKEL-006 picks the reader from the original's file extension, although INGEST-004 already identifies the format from the bytes. The slide read returns the identified format and the viewer uses it.
+  Done when an API test sees the format on the slide read and a viewer test opens a slide whose stored name has the wrong extension.
   Size: S.
 
 ---
@@ -3516,8 +3528,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on IAM-004.
 
 - [ ] TEST-004 · E2E harness
-  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure.
-  Done when the skeleton suite runs locally and in CI.
+  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure. Each run removes the workspace and project it created, since the SKEL-008 test leaves one of each behind per run ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
+  Done when the skeleton suite runs locally and in CI, and the local database holds no more workspaces after a run than before it.
   Size: M.
 
 - [x] TEST-005 · Golden-image rendering tests
@@ -3533,7 +3545,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: M.
 
 - [ ] TEST-007 · Memory and leak suite
-  Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots.
+  Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots. Includes `CMU-1.svs` from the `formats` fixture group, which VIEW-030 left untested ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
   Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
   Size: M.
 
