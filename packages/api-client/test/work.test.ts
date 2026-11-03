@@ -158,7 +158,7 @@ test("the bell lists, filters, counts and marks notifications read", async () =>
   const mentions = body(await listNotifications({ kind: ["mention", "reply"] })).notifications;
   assert.equal(mentions.length, 2);
   assert.equal(mentions[0]?.payload["object_id"], "T2");
-  assert.match(mentions[0]?.link ?? "", /^\/projects\/.+\/slides\/.+\?task=.+&object=T2$/);
+  assert.match(mentions[0]?.link ?? "", /^\/tasks\/.+\/comments\?slide=.+&thread=T2$/);
   const counts = body(await getNotificationCounts());
   assert.equal(counts.unread, 5);
   const marked = body(await markNotificationsRead({ ids: [all[0]?.id ?? ""] }));

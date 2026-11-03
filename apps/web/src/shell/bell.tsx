@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { destinations } from "./destinations.ts";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 
@@ -97,6 +98,10 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
       items={inbox.map(toNotification)}
       onOpen={(item) => void open(item)}
       onMarkAllRead={() => void markAll()}
+      onSeeAll={() => {
+        onClose();
+        void goTo(destinations.myWork());
+      }}
       onClose={onClose}
     />
   );
