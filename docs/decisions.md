@@ -237,6 +237,15 @@ The inspector's Model warnings block lists what the rules of ADR 0194 find.
 
 Your choice:
 
+## 61. Flow pages and density, from DS-023 (flow page with the shared stepper)
+
+Flow pages keep the mock's fixed 20 px gap in the main column (`.fp-main`), while other pages now tighten in compact density (DS-033).
+
+- a. Keep the mock's fixed 20 px.
+- b. Add a flow page density token, 20 px comfortable and 14 px compact. (recommended, matches the rest of compact mode)
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

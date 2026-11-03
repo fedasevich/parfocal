@@ -1641,7 +1641,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: team/nudge, mock: disagree/sendadj, mock: signoff/ready, POC doc 44 (the round 6 working mock) section 1.
   Size: M.
 
-- [ ] DS-023 · Flow page with the shared stepper
+- [x] DS-023 · Flow page with the shared stepper
   One page shape for every long form: New review task, upload, the clinical report, Connect a model, sign-up, setup and the invite landing. A breadcrumb, a 24 px title and a 13 px subtitle, then one stepper row where every visited step can be clicked and opens that step and a step that cannot be reached yet says why in its tooltip. The main column, up to 760 px, holds the step's zones, with no summary panel, and the last step is the one place that sums everything up, with a Change link on each row. A sticky bottom bar has Back, the reason or hint and Next or the primary, a disabled Next names its reason, a shadow over the bar shows when more content follows, and leaving with a draft keeps it.
   Done when stories cover a flow at its first, a middle and its last step, a test opens a visited step from the stepper and finds an unreached step refused with its reason, keyboard tests move through the stepper, and axe passes.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
@@ -1724,6 +1724,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a browser test on a throttled first load sees Plex rendered, and the preload names files that exist in the build.
   Depends on DS-003.
   Size: S.
+
+- [ ] DS-037 · Flow screens keep their step and draft
+  DS-023 (flow page with the shared stepper) added a furthest-step `reached` value and the `useFlowSteps` hook, but the app's flow screens do not pass `reached` and lose the draft and step when you leave. Use `useFlowSteps` with the web app's `useKeptDraft` on every flow screen.
+  Done when a test on each flow screen visits a later step, leaves, comes back to the same step with the draft kept, and reopens a visited step from the stepper.
+  Depends on DS-023.
+  Size: M.
 
 ---
 
