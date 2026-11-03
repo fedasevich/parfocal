@@ -1605,7 +1605,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit motion page.
   Size: M.
 
-- [ ] DS-017 · Density modes
+- [x] DS-017 · Density modes
   Comfortable and compact.
   Done when visual tests cover both densities for lists and inspector.
   Depends on PROTO-011.
@@ -1699,6 +1699,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-029 (visible focus ring) found that axe reads `components-settings--key-states` mid-way through the pulsing shortcut key animation, so its contrast check passes or fails from run to run in both themes. Run the axe spec with reduced motion or stop the pulse before the check, without excluding the story.
   Done when the axe spec passes `components-settings--key-states` ten runs in a row in both themes.
   Depends on DS-029.
+  Size: S.
+
+- [ ] DS-033 · Density for page gaps and every list row
+  DS-017 (density modes) put table rows, the inspector and the My work to-review rows on the `--density-*` variables, but page gaps (the mock's `.wl-main` 22 to 14 px) and the other list rows still use fixed spacing.
+  Done when every list row and page gap reads a density variable, and the density spec checks a page gap and one more list in both modes.
+  Depends on DS-017.
   Size: S.
 
 ---
