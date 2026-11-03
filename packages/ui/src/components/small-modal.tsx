@@ -61,6 +61,10 @@ function SmallModal({
   const blocked = blockers.length > 0;
   const off = primaryDisabled || blocked || primaryBusy;
   const reason = blockerReason(blockers);
+  const whyId = React.useId();
+  const listId = `${whyId}-list`;
+  const reasonId = `${whyId}-reason`;
+  const describedBy = blockers.length > 1 ? listId : reason ? reasonId : undefined;
   const bodyRef = React.useRef<HTMLDivElement>(null);
   const primaryRef = React.useRef<HTMLButtonElement>(null);
 
@@ -118,13 +122,13 @@ function SmallModal({
           <div className="border-t border-line">
             {blockers.length > 1 ? (
               <div className="px-5 pt-3.5">
-                <BeforeYouList title={blockersTitle} blockers={blockers} />
+                <BeforeYouList id={listId} title={blockersTitle} blockers={blockers} />
               </div>
             ) : null}
             <div className="flex flex-wrap items-center gap-2 px-5 py-3.5">
               <div className="grid min-w-0 flex-1 gap-2 text-body-sm leading-[1.45] text-fg-dim">
                 {footerStart}
-                {reason ?? hint}
+                {reason ? <span id={reasonId}>{reason}</span> : hint}
               </div>
               {showCancel && onCancel ? (
                 <Button variant="ghost" onClick={onCancel}>
@@ -137,7 +141,13 @@ function SmallModal({
                 </DialogPrimitive.Close>
               ) : null}
               {secondaryAction}
-              <Button ref={primaryRef} variant="primary" disabled={off} onClick={onPrimary}>
+              <Button
+                ref={primaryRef}
+                variant="primary"
+                disabled={off}
+                aria-describedby={describedBy}
+                onClick={onPrimary}
+              >
                 {primaryBusy ? (
                   <span
                     aria-hidden="true"

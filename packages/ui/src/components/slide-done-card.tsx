@@ -6,7 +6,7 @@ import { ProgressRing } from "@parfocal/ui/components/progress-meter";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { FilterChip } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
-import type * as React from "react";
+import * as React from "react";
 
 type OpinionQuestion = {
   id: string;
@@ -137,14 +137,28 @@ function SlideDoneCard({
 }: SlideDoneCardProps) {
   const done = counts.open === 0;
   const off = Boolean(lockedReason) || blockers.length > 0;
+  const whyId = React.useId();
+  const listId = `${whyId}-list`;
+  const reasonId = `${whyId}-reason`;
+  const describedBy = failed
+    ? undefined
+    : lockedReason || blockers.length === 1
+      ? reasonId
+      : blockers.length
+        ? listId
+        : undefined;
   const under = failed ? (
     <InlineError>
       The review could not be submitted. Nothing was lost, every decision is saved.
     </InlineError>
   ) : lockedReason ? (
-    <span className="text-center text-body-sm text-fg-dim">{lockedReason}</span>
+    <span id={reasonId} className="text-center text-body-sm text-fg-dim">
+      {lockedReason}
+    </span>
   ) : blockers.length === 1 ? (
-    <span className="text-center text-body-sm text-fg-dim">{blockers[0]?.text}.</span>
+    <span id={reasonId} className="text-center text-body-sm text-fg-dim">
+      {blockers[0]?.text}.
+    </span>
   ) : blockers.length ? null : (
     <span className="text-center text-body-sm text-fg-dim">
       Saved as you go. You can change it until the researcher signs off.
@@ -199,11 +213,12 @@ function SlideDoneCard({
           </div>
         ))}
       </div>
-      <BeforeYouList title="Before you submit" blockers={blockers} />
+      <BeforeYouList id={listId} title="Before you submit" blockers={blockers} />
       <div className="mt-auto grid gap-2.5">
         <button
           type="button"
           disabled={off}
+          aria-describedby={describedBy}
           onClick={onSubmit}
           className={cn(
             "group/button flex cursor-pointer items-center justify-center gap-2.5 border-0 bg-accent-fill font-semibold text-on-accent outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--accent-fill)_35%,transparent)] disabled:text-fg-dim",
