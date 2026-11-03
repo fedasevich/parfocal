@@ -1909,7 +1909,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Refs mock 2 caption.
   Size: S.
 
-- [ ] WL-005 · To review tab
+- [x] WL-005 · To review tab
   One Continue card for the task in progress with the slide image, progress and time left, then each of my tasks with its project, scope, due date, blinding, my progress and a status tag, with Continue or Start. A side column shows mentions and replies. Opening the next slide is one action.
   Done when component tests cover a task in progress, a new task and a finished one, and E2E continues from My work into guided review at the next object.
   Refs mock: worklist/review.
