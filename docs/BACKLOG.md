@@ -2100,6 +2100,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
 
 - [ ] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
+  Read the minimap setting through `shownMinimap` in packages/ui/src/lib/minimap-box.ts (NAV-009).
   Done when model-based tests drive every transition.
   Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
@@ -2116,7 +2117,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md). [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
-- [ ] NAV-009 · Minimap settings
+- [x] NAV-009 · Minimap settings
   When useful, always, never. The settings catalogue still says corner or hidden, and the help text must match the half of the tissue rule, see [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md).
   Done when tests cover each mode.
   Size: S.
