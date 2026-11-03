@@ -90,6 +90,8 @@ One exclusion stays, by story and selector in `knownExclusions` in `e2e/axe.spec
 |---|---|---|---|
 | `kit-pages--design-system` | the primary button forced into its hover state | The mock's hover mixes 14% white into the fill, so white text drops under 4.5:1 in both themes. Only this specimen forces the state | DS-006 (buttons and icon buttons) |
 
+Update 2026-11-03: DS-006 (buttons and icon buttons) mixes 12% black into the fill on hover and 24% on press, so white text keeps its contrast, and the exclusion is gone. `kit-pages--design-system` and every `controls-button` story pass axe in both themes with none.
+
 Interpretation: the round 6 tokens pass where a component uses the token that means the same thing. The two timeouts passed on rerun and match the load-related timeouts above.
 
 ## Interpretation
