@@ -2026,7 +2026,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests check it against the coverage raster.
   Size: S.
 
-- [ ] CASE-010 · Patient banner
+- [x] CASE-010 · Patient banner
   Only in clinical projects (PROJ-002). A lab-locked setting that keeps name, sex, age and record number visible on every case screen.
   Done when tests cover the setting and initials mode.
   Size: S.

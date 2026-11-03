@@ -146,6 +146,16 @@ SEC-018 wrote the runbook (`docs/compliance/incident-response.md`), an empty bre
 
 Your choice:
 
+## 43. Record number in initials mode, from CASE-010 (patient banner)
+
+Clinical case screens now show the patient banner (name, sex, age, record number), and the lab can lock initials mode for names. The record number is also a direct identifier, and today it stays visible in initials mode.
+
+- a. Keep it visible (current build).
+- b. Hide it in initials mode. (recommended, initials mode is meant to hide identity)
+- c. Show only its last 3 digits.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
