@@ -25,12 +25,10 @@ test("opening a slide from My work animates, the pointer reaches the page and a 
   await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=/);
   const waiting = await page.waitForFunction(
     () => {
-      if (document.documentElement.dataset["vt"] === undefined) return null;
       const target = document.querySelector("[data-vt-target]");
-      const box = target?.getBoundingClientRect();
-      const hit = box
-        ? document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-        : null;
+      if (document.documentElement.dataset["vt"] === undefined || target === null) return null;
+      const box = target.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
       return {
         vt: document.documentElement.dataset["vt"] ?? null,
         reachesPage: hit !== null && hit !== document.documentElement,
