@@ -266,7 +266,7 @@ function SmartMinimap({
       data-size={size}
       data-faded={faded || pointer || undefined}
       className={cn(
-        "absolute z-3 rounded-zone border border-line bg-chrome p-1.5 shadow-pop transition-[left,top,opacity] duration-300 data-faded:opacity-28 motion-reduce:transition-none",
+        "absolute z-3 rounded-zone border border-line bg-chrome p-1.5 shadow-pop transition-[left,top,opacity] duration-(--motion-slow) data-faded:opacity-28 motion-reduce:transition-none",
         className,
       )}
       style={{ width: sizes.width, ...style }}

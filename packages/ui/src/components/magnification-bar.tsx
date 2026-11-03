@@ -33,7 +33,7 @@ type MagnificationBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 const nearestPreset = nearestMagnificationPreset;
 
 const slide =
-  "flex items-center gap-2.5 overflow-hidden whitespace-nowrap motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-[280ms] motion-safe:ease-out";
+  "flex items-center gap-2.5 overflow-hidden whitespace-nowrap motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow) motion-safe:ease-out";
 
 function useBarSignals(
   {
@@ -120,7 +120,7 @@ function MagnificationBar({
       tabIndex={tabIndex}
       aria-label={`Magnification ${current}, scale ${scaleLabel}. Hover or Alt+1 to Alt+6 for the presets`}
       className={cn(
-        "inline-flex min-h-9 items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-[280ms]",
+        "inline-flex min-h-9 items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
         shown ? "pl-1.5" : "pl-2.5",
         className,
       )}
@@ -166,7 +166,7 @@ function MagnificationBar({
       <span
         data-part="current"
         className={cn(
-          "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-[280ms]",
+          "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
           shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[60px] opacity-100",
         )}
       >

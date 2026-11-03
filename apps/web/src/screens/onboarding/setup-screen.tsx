@@ -479,7 +479,7 @@ export function SetupScreen({ step, change }: Props) {
         onClick={() => setZoom(!zoom)}
         title="Click to zoom in and out"
         className={cn(
-          "relative h-42.5 cursor-zoom-in rounded-xl border-0 bg-center p-0 transition-[background-size] duration-300",
+          "relative h-42.5 cursor-zoom-in rounded-xl border-0 bg-center p-0 transition-[background-size] duration-(--motion-slow)",
           zoom ? "bg-[length:400%] cursor-zoom-out" : "bg-cover",
         )}
         style={{ backgroundImage: `url(${slideImage})` }}
