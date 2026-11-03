@@ -16,6 +16,7 @@ import {
   type ReferenceWindow,
   rgbFromInterleaved,
   type SlideFormatId,
+  type SlideIndex,
 } from "../../src/index.ts";
 import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
@@ -27,6 +28,7 @@ interface Slide {
   readonly name: string;
   readonly formatId: SlideFormatId;
   readonly cached: boolean;
+  readonly indexed?: boolean;
 }
 
 const slides: readonly Slide[] = [
@@ -36,6 +38,7 @@ const slides: readonly Slide[] = [
   { name: "CMU-1-Small-Region.svs", formatId: "aperio-svs", cached: true },
   { name: "JP2K-33003-1.svs", formatId: "aperio-svs", cached: true },
   { name: "CMU-1.svs", formatId: "aperio-svs", cached: true },
+  { name: "OS-1.bif", formatId: "ventana-bif", cached: true, indexed: true },
 ];
 
 function slide(name: string): Slide {
@@ -52,9 +55,16 @@ function skipUnless(entry: Slide): { skip?: string } {
   return available(entry) ? {} : { skip: `${entry.name} is not downloaded` };
 }
 
-async function open(entry: Slide): Promise<PixelSource> {
+function sidecar(name: string): SlideIndex {
+  return JSON.parse(
+    readFileSync(join(referenceTilesDir, name, "tile-index.json"), "utf8"),
+  ) as SlideIndex;
+}
+
+async function open(entry: Slide, withIndex = true): Promise<PixelSource> {
   const url = served.url(`/${entry.cached ? "cache" : "synthetic"}/${entry.name}`);
-  return openTiffSource({ formatId: entry.formatId, url, nativeJpeg: "off" });
+  const index = entry.indexed && withIndex ? { index: sidecar(entry.name) } : {};
+  return openTiffSource({ formatId: entry.formatId, url, nativeJpeg: "off", ...index });
 }
 
 function reference(name: string): ReferenceWindow[] {
@@ -266,6 +276,74 @@ describe("reader check: a misread pyramid ladder is caught", () => {
       source.close();
     });
   }
+});
+
+describe("reader check: BIF camera frames", () => {
+  const bif = slide("OS-1.bif");
+
+  it(
+    "frames drawn as a plain tile grid disagree with the server reader (OS-1.bif)",
+    skipUnless(bif),
+    async () => {
+      const source = await open(bif, false);
+      const found = await kinds(source, bif.name);
+      assert.ok(found.length >= 1);
+      for (const value of found) assert.notEqual(value, null);
+      source.close();
+    },
+  );
+
+  it(
+    "frames placed by the sidecar's stitching agree within 2 grey levels (OS-1.bif)",
+    skipUnless(bif),
+    async () => {
+      const source = await open(bif);
+      const checks = await checkAgainstReference(source, reference(bif.name));
+      assert.equal(checks.length, 2);
+      for (const check of checks)
+        assert.ok(check.meanError !== null && check.meanError <= 2, `error ${check.meanError}`);
+      source.close();
+    },
+  );
+
+  it(
+    "frames placed by the sidecar's stitching show no seams (OS-1.bif)",
+    skipUnless(bif),
+    async () => {
+      const source = await open(bif);
+      const check = await checkSeams(source);
+      if (process.env.READER_CHECK_MEASURE === "1") console.log(check);
+      assert.equal(check.finding, null);
+      for (const score of [check.vertical, check.horizontal])
+        assert.ok(score.ratio !== null && score.ratio < 2, `ratio ${score.ratio}`);
+      source.close();
+    },
+  );
+
+  it("measures the seams at the stitched frame edges", {
+    skip: process.env.READER_CHECK_MEASURE !== "1",
+  }, async () => {
+    const stitching = sidecar(bif.name).stitching;
+    assert.ok(stitching?.advanceX !== undefined && stitching.advanceY !== undefined);
+    const starts = (count: number, advance: number) =>
+      Array.from({ length: count - 1 }, (_, index) => Math.ceil((index + 1) * advance));
+    const source = await open(bif);
+    console.log(
+      await checkSeams(source, 0, {
+        across: starts(stitching.columns, stitching.advanceX),
+        down: starts(stitching.rows, stitching.advanceY),
+      }),
+    );
+    source.close();
+  });
+
+  it("measures the unstitched seams", {
+    skip: process.env.READER_CHECK_MEASURE !== "1",
+  }, async () => {
+    const source = await open(bif, false);
+    console.log(await checkSeams(source));
+    source.close();
+  });
 });
 
 describe("reader check: seams", () => {

@@ -164,6 +164,8 @@ def test_bif_frames_get_a_stitching_layout_from_the_level_zero_packet() -> None:
     assert stitching["width"] < 116 * 1024
     assert stitching["height"] < 75 * 1360
     assert stitching["columnX"] == sorted(stitching["columnX"])
+    assert stitching["advanceX"] == pytest.approx(1024 - 112.797423, abs=1e-5)
+    assert stitching["advanceY"] == pytest.approx(1360 - 108.778251, abs=1e-5)
 
 
 def test_frames_are_numbered_from_the_bottom_left_in_a_serpentine() -> None:
@@ -191,6 +193,7 @@ def test_overlaps_are_weighted_by_confidence_per_boundary() -> None:
     assert stitching is not None
     assert stitching["columnX"] == [0.0, 85.0]
     assert stitching["rowY"] == [0.0, 72.0]
+    assert (stitching["advanceX"], stitching["advanceY"]) == (85.0, 72.0)
     assert (stitching["width"], stitching["height"]) == (185, 152)
 
 

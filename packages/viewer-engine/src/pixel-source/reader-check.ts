@@ -380,7 +380,16 @@ export interface SeamCheck {
   readonly finding: ReaderFinding | null;
 }
 
-export async function checkSeams(source: PixelSource, level = 0): Promise<SeamCheck> {
+export interface SeamEdges {
+  readonly across: readonly number[];
+  readonly down: readonly number[];
+}
+
+export async function checkSeams(
+  source: PixelSource,
+  level = 0,
+  edges?: SeamEdges,
+): Promise<SeamCheck> {
   const pyramidLevel = source.levels[level];
   if (pyramidLevel === undefined) throw new Error(`no level ${level}`);
   const { width, height, tileWidth, tileHeight } = pyramidLevel;
@@ -395,9 +404,11 @@ export async function checkSeams(source: PixelSource, level = 0): Promise<SeamCh
   const down = await readRgb(source, level, [spot.x, downY, spot.x + depthX, downY + spanY]);
   const empty: SeamScore = { boundaries: 0, edge: 0, control: 0, ratio: null };
   const vertical = across
-    ? seamScore(columnSteps(across), acrossX, gridEdges(tileWidth, width))
+    ? seamScore(columnSteps(across), acrossX, edges?.across ?? gridEdges(tileWidth, width))
     : empty;
-  const horizontal = down ? seamScore(rowSteps(down), downY, gridEdges(tileHeight, height)) : empty;
+  const horizontal = down
+    ? seamScore(rowSteps(down), downY, edges?.down ?? gridEdges(tileHeight, height))
+    : empty;
   const worst = Math.max(vertical.ratio ?? 0, horizontal.ratio ?? 0);
   const finding: ReaderFinding | null =
     worst >= SEAM_THRESHOLD

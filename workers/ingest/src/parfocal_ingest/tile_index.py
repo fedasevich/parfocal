@@ -168,6 +168,8 @@ def bif_stitching(xmp: str, frame_width: int, frame_height: int) -> dict[str, An
         "frameHeight": frame_height,
         "columnX": [round(x, 3) for x in column_x],
         "rowY": [round(y, 3) for y in row_y],
+        "advanceX": round(frame_width - mean_across, 6),
+        "advanceY": round(frame_height - mean_down, 6),
         "width": width,
         "height": height,
     }
