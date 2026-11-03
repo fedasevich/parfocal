@@ -2043,7 +2043,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock §2.6.
   Size: M.
 
-- [ ] NAV-002 · Scale bar and readout
+- [x] NAV-002 · Scale bar and readout
   Nice values from 10 µm to 5 mm, mm at 1000 µm and above, readout with objective and microns per pixel, "digital" above the scan objective.
   Done when unit tests cover the scale bar choice at every zoom.
   Size: S.
