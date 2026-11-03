@@ -177,6 +177,7 @@ type SlideRowData = {
   thumb?: string | undefined;
   resultSets: number;
   status: SlideStatus;
+  progress?: { percent: number; label: string } | undefined;
   current?: boolean;
   disabledReason?: string | undefined;
 };
@@ -191,54 +192,95 @@ type SlidesPopoverProps = {
   looseSlides?: SlideRowData[];
   showKeys?: boolean;
   onPick?: ((id: string) => void) | undefined;
+  onSideBySide?: ((id: string) => void) | undefined;
+  sideBySideTitle?: string | undefined;
   footer?: {
     onResultSets?: (() => void) | undefined;
     resultSetsLabel?: string;
     onCompare?: (() => void) | undefined;
+    compareTitle?: string | undefined;
     onAddSlides?: (() => void) | undefined;
+    addSlidesTitle?: string | undefined;
   };
   ariaLabel?: string;
   className?: string;
 };
 
-function SlideRowView({ row, onPick }: { row: SlideRowData; onPick?: (id: string) => void }) {
+type SideBySide = { onOpen?: ((id: string) => void) | undefined; title?: string | undefined };
+
+function SlideRowView({
+  row,
+  onPick,
+  sideBySide,
+}: {
+  row: SlideRowData;
+  onPick?: (id: string) => void;
+  sideBySide?: SideBySide | undefined;
+}) {
+  const offersSideBySide = sideBySide !== undefined && !row.current && !row.disabledReason;
   return (
-    <button
-      type="button"
-      data-slot="slide-row"
-      data-current={row.current || undefined}
-      disabled={row.disabledReason !== undefined}
-      title={row.disabledReason}
-      onClick={() => onPick?.(row.id)}
-      className={cn(
-        "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
-        row.current &&
-          "bg-surf-hl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="h-10 w-14 rounded-[5px] border border-line bg-[#f1eef2] bg-cover bg-center"
-        style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined}
-      />
-      <span className="grid min-w-0 gap-1">
-        <b className="truncate text-body-sm font-semibold">{row.name}</b>
-        {row.sub ? <small className="truncate text-caption text-fg-faint">{row.sub}</small> : null}
-      </span>
-      <span
+    <div className="relative" data-slot="slide-row-group">
+      <button
+        type="button"
+        data-slot="slide-row"
+        data-current={row.current || undefined}
+        disabled={row.disabledReason !== undefined}
+        title={row.disabledReason}
+        onClick={() => onPick?.(row.id)}
         className={cn(
-          "inline-flex items-center gap-1 text-caption text-fg-dim",
-          row.resultSets === 0 && "opacity-50",
+          "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+          offersSideBySide && "pb-7",
+          row.current &&
+            "bg-surf-hl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
         )}
-        title={`${row.resultSets} result set${row.resultSets === 1 ? "" : "s"}`}
       >
-        <Icon name="layers" size="xs" />
-        <span className="tabular-nums">{row.resultSets}</span>
-      </span>
-      <StatusTag tone={row.status.tone} className="justify-self-end">
-        {row.status.label}
-      </StatusTag>
-    </button>
+        <span
+          aria-hidden="true"
+          className="h-10 w-14 rounded-[5px] border border-line bg-[#f1eef2] bg-cover bg-center"
+          style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined}
+        />
+        <span className="grid min-w-0 gap-1">
+          <b className="truncate text-body-sm font-semibold">{row.name}</b>
+          {row.sub ? (
+            <small className="truncate text-caption text-fg-faint">{row.sub}</small>
+          ) : null}
+          {row.progress ? (
+            <ProgressBar
+              value={row.progress.percent}
+              label={row.progress.label}
+              valueText={`${row.progress.percent}%`}
+            />
+          ) : null}
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-caption text-fg-dim",
+            row.resultSets === 0 && "opacity-50",
+          )}
+          title={`${row.resultSets} result set${row.resultSets === 1 ? "" : "s"}`}
+        >
+          <Icon name="layers" size="xs" />
+          <span className="tabular-nums">{row.resultSets}</span>
+        </span>
+        <StatusTag tone={row.status.tone} className="justify-self-end">
+          {row.status.label}
+        </StatusTag>
+      </button>
+      {offersSideBySide ? (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="absolute right-2 bottom-1.5"
+          aria-label={`Side by side with ${row.name}`}
+          title={sideBySide.title}
+          disabled={sideBySide.onOpen === undefined}
+          onClick={() => sideBySide.onOpen?.(row.id)}
+        >
+          <Icon name="slides" />
+          Side by side
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -252,12 +294,16 @@ function SlidesPopover({
   looseSlides = [],
   showKeys = true,
   onPick,
+  onSideBySide,
+  sideBySideTitle,
   footer,
   ariaLabel = "Slides in this case and task",
   className,
 }: SlidesPopoverProps) {
   const heading =
     "flex items-center justify-between px-2 pt-3 pb-1.5 text-caption font-semibold text-fg-dim";
+  const sideBySide =
+    onSideBySide || sideBySideTitle ? { onOpen: onSideBySide, title: sideBySideTitle } : undefined;
   return (
     <div
       role="dialog"
@@ -288,7 +334,12 @@ function SlidesPopover({
           ) : null}
         </div>
         {caseSlides.map((row) => (
-          <SlideRowView key={row.id} row={row} {...(onPick ? { onPick } : {})} />
+          <SlideRowView
+            key={row.id}
+            row={row}
+            sideBySide={sideBySide}
+            {...(onPick ? { onPick } : {})}
+          />
         ))}
         {looseHeading && looseSlides.length > 0 ? (
           <>
@@ -296,7 +347,12 @@ function SlidesPopover({
               <span>{looseHeading}</span>
             </div>
             {looseSlides.map((row) => (
-              <SlideRowView key={row.id} row={row} {...(onPick ? { onPick } : {})} />
+              <SlideRowView
+                key={row.id}
+                row={row}
+                sideBySide={sideBySide}
+                {...(onPick ? { onPick } : {})}
+              />
             ))}
           </>
         ) : null}
@@ -314,14 +370,22 @@ function SlidesPopover({
             </Button>
           ) : null}
           <span className="flex-1" />
-          {footer.onCompare ? (
-            <Button onClick={footer.onCompare}>
+          {footer.onCompare || footer.compareTitle ? (
+            <Button
+              onClick={footer.onCompare}
+              disabled={footer.onCompare === undefined}
+              title={footer.compareTitle}
+            >
               <Icon name="slides" />
-              Compare
+              Compare slides
             </Button>
           ) : null}
-          {footer.onAddSlides ? (
-            <Button onClick={footer.onAddSlides}>
+          {footer.onAddSlides || footer.addSlidesTitle ? (
+            <Button
+              onClick={footer.onAddSlides}
+              disabled={footer.onAddSlides === undefined}
+              title={footer.addSlidesTitle}
+            >
               <Icon name="upload" />
               Add slides
             </Button>
@@ -329,6 +393,49 @@ function SlidesPopover({
         </div>
       ) : null}
     </div>
+  );
+}
+
+type PinnedSlideStripProps = {
+  slides: SlideRowData[];
+  onPick?: ((id: string) => void) | undefined;
+  className?: string;
+};
+
+function PinnedSlideStrip({ slides, onPick, className }: PinnedSlideStripProps) {
+  return (
+    <nav
+      aria-label="Slides of this case"
+      data-slot="pinned-slide-strip"
+      className={cn(
+        "flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-line bg-chrome px-3 py-1.5",
+        className,
+      )}
+    >
+      {slides.map((slide) => (
+        <button
+          key={slide.id}
+          type="button"
+          data-current={slide.current || undefined}
+          aria-current={slide.current ? "true" : undefined}
+          disabled={slide.disabledReason !== undefined}
+          title={slide.disabledReason ?? slide.status.label}
+          onClick={() => onPick?.(slide.id)}
+          className={cn(
+            "flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent py-1 pr-2.5 pl-1 text-body-sm text-fg-dim outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+            slide.current &&
+              "bg-surf-hl text-fg shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className="h-7 w-10 rounded-[4px] border border-line bg-[#f1eef2] bg-cover bg-center"
+            style={slide.thumb ? { backgroundImage: `url(${slide.thumb})` } : undefined}
+          />
+          <span className="whitespace-nowrap">{slide.name}</span>
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -344,6 +451,8 @@ type MoreItem = {
 export {
   DecisionLegend,
   type MoreItem,
+  PinnedSlideStrip,
+  type PinnedSlideStripProps,
   type ProgressPopoverProps,
   ReviewProgressPopover,
   type SlideRowData,

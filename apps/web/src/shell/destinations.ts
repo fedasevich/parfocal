@@ -17,8 +17,26 @@ export const destinations = {
   upload: (projectId: string) => `/projects/${projectId}/upload`,
   runModel: (projectId: string) => `/projects/${projectId}/run-model`,
   newReviewTask: (projectId: string) => `/projects/${projectId}/tasks/new`,
-  slide: (projectId: string, slideId: string, taskId?: string, object?: string) =>
-    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, object })}`,
+  slide: (
+    projectId: string,
+    slideId: string,
+    taskId?: string,
+    object?: string,
+    view: { x?: number | undefined; y?: number | undefined; z?: number | undefined } = {},
+  ) =>
+    `/projects/${projectId}/slides/${slideId}${query({
+      task: taskId,
+      object,
+      x: view.x?.toString(),
+      y: view.y?.toString(),
+      z: view.z?.toString(),
+    })}`,
+  compareSlides: (
+    projectId: string,
+    slideId: string,
+    taskId: string | undefined,
+    scene: "picking" | "picked",
+  ) => `/projects/${projectId}/slides/${slideId}${query({ task: taskId, scene })}`,
   openSlide: (projectId: string, slideId: string, taskId?: string) =>
     `/projects/${projectId}/slides/${slideId}/live${query({ task: taskId })}`,
   coSign: (projectId: string, slideId: string) =>

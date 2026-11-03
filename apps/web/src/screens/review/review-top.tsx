@@ -58,47 +58,50 @@ export function ReviewTop({
     ? `Slide ${session.neighbours.position} of ${session.neighbours.total}`
     : "";
   return (
-    <ReviewTopBar
-      mode={mode}
-      taskName={session.taskName}
-      taskSub={session.taskSub}
-      slideName={session.slideName}
-      slideThumb={lookUrl("overview")}
-      progress={nothingToDecide ? undefined : counts}
-      progressTitle={position}
-      progressSub={progressSub ?? (nothingToDecide ? "Nothing to decide" : timeLeft(session))}
-      {...(primaryLabel ? { primaryLabel } : {})}
-      primaryDisabledReason={submitReason}
-      primaryTitle={
-        primaryTitle ??
-        (mode === "full"
-          ? "Open the Slide done card in the Opinion tab"
-          : "Open the Slide done card")
-      }
-      onPrimary={onSubmit}
-      slidesPopover={popovers.slidesPopover}
-      progressPopover={popovers.progressPopover}
-      moreItems={popovers.moreItems}
-      backHref={destinations.myWork()}
-      renderLink={renderLink}
-      onModeChange={(next) => {
-        const projectId = session.task?.project_id;
-        if (next === "full" && projectId) {
-          void navigate({
-            to: "/projects/$projectId/slides/$slideId",
-            params: { projectId, slideId: session.slideId },
-            search: { task: session.taskId },
-          });
+    <>
+      <ReviewTopBar
+        mode={mode}
+        taskName={session.taskName}
+        taskSub={session.taskSub}
+        slideName={session.slideName}
+        slideThumb={lookUrl("overview")}
+        progress={nothingToDecide ? undefined : counts}
+        progressTitle={position}
+        progressSub={progressSub ?? (nothingToDecide ? "Nothing to decide" : timeLeft(session))}
+        {...(primaryLabel ? { primaryLabel } : {})}
+        primaryDisabledReason={submitReason}
+        primaryTitle={
+          primaryTitle ??
+          (mode === "full"
+            ? "Open the Slide done card in the Opinion tab"
+            : "Open the Slide done card")
         }
-        if (next === "guided") {
-          void navigate({
-            to: "/tasks/$taskId/guided",
-            params: { taskId: session.taskId },
-            search: { slide: session.slideId },
-          });
-        }
-      }}
-      accountSlot={<AccountMenu me={me} person={personOf(me)} />}
-    />
+        onPrimary={onSubmit}
+        slidesPopover={popovers.slidesPopover}
+        progressPopover={popovers.progressPopover}
+        moreItems={popovers.moreItems}
+        backHref={destinations.myWork()}
+        renderLink={renderLink}
+        onModeChange={(next) => {
+          const projectId = session.task?.project_id;
+          if (next === "full" && projectId) {
+            void navigate({
+              to: "/projects/$projectId/slides/$slideId",
+              params: { projectId, slideId: session.slideId },
+              search: { task: session.taskId },
+            });
+          }
+          if (next === "guided") {
+            void navigate({
+              to: "/tasks/$taskId/guided",
+              params: { taskId: session.taskId },
+              search: { slide: session.slideId },
+            });
+          }
+        }}
+        accountSlot={<AccountMenu me={me} person={personOf(me)} />}
+      />
+      {popovers.pinnedStrip}
+    </>
   );
 }

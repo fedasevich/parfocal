@@ -49,6 +49,7 @@ import {
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
 import { type Camera, imageOf, SlideStill, type StillView } from "../review/slide-still.tsx";
+import { rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import {
   AiSays,
@@ -375,6 +376,9 @@ function ViewerBody({
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
   const writeSearch = useRef(onSearch);
   writeSearch.current = onSearch;
+  useEffect(() => {
+    if (camera !== null) rememberSlideCamera(slideId, cameraToSearch(cameraImage, camera));
+  }, [camera, cameraImage, slideId]);
   useEffect(() => {
     if (camera === null) return;
     const timer = setTimeout(

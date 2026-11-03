@@ -64,3 +64,73 @@ test("the adjudicator's slide chip lists the slides queued for them", async ({ p
   await queued.getByRole("button", { name: /^A1/ }).click();
   await expect(queued).toHaveCount(0);
 });
+
+async function openSlidesPopover(page: Page) {
+  await page.getByRole("button", { name: /^A1/ }).first().click();
+  return page.getByRole("dialog", { name: "Slides in this case and task" });
+}
+
+test("the slides popover shows block, status and the compare buttons, and picking a row switches slides", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto(await fullViewerUrl(page));
+  const slides = await openSlidesPopover(page);
+  const rows = slides.locator("[data-slot=slide-row]");
+  await expect(rows.first()).toHaveAttribute("data-current", "true");
+  await expect(slides.getByRole("button", { name: /Side by side with/ }).first()).toBeVisible();
+  await expect(slides.getByRole("button", { name: "Compare slides" })).toBeVisible();
+  await expect(slides.getByRole("button", { name: /Add slides/ })).toBeVisible();
+  await rows.nth(1).click();
+  await expect(page).not.toHaveURL(new RegExp(`slides/${a1}`));
+});
+
+const slideOf = (url: string) => /slides\/([^/?]+)/.exec(url)?.[1] ?? "";
+
+test("Q and E step through the slides of the case", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto(await fullViewerUrl(page));
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await page.keyboard.press("e");
+  await expect.poll(() => slideOf(page.url())).not.toBe(a1);
+  await expect(page.getByRole("button", { name: /^A2/ }).first()).toBeVisible();
+  await page.keyboard.press("q");
+  await expect.poll(() => slideOf(page.url())).toBe(a1);
+});
+
+test("switching slides keeps the camera each slide had", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto(await fullViewerUrl(page));
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await page.getByRole("img", { name: "The whole slide" }).hover();
+  await page.mouse.wheel(0, -300);
+  await expect.poll(() => new URL(page.url()).searchParams.get("z")).not.toBeNull();
+  const before = new URL(page.url()).searchParams;
+  const zoomed = { x: before.get("x"), y: before.get("y"), z: before.get("z") };
+  await page.keyboard.press("e");
+  await expect.poll(() => slideOf(page.url())).not.toBe(a1);
+  expect(new URL(page.url()).searchParams.get("z")).toBeNull();
+  await page.keyboard.press("q");
+  await expect.poll(() => slideOf(page.url())).toBe(a1);
+  const after = new URL(page.url()).searchParams;
+  expect({ x: after.get("x"), y: after.get("y"), z: after.get("z") }).toEqual(zoomed);
+});
+
+test("the pinned slide strip is off until the setting turns it on", async ({ page }) => {
+  test.setTimeout(90_000);
+  const url = await fullViewerUrl(page);
+  await page.goto(url);
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Slides of this case" })).toHaveCount(0);
+  await page.goto("/settings/layout");
+  await page.getByRole("switch", { name: "Pinned slide strip" }).click();
+  await page.goto(url);
+  const strip = page.getByRole("navigation", { name: "Slides of this case" });
+  await expect(strip).toBeVisible();
+  await strip.getByRole("button").nth(1).click();
+  await expect.poll(() => slideOf(page.url())).not.toBe(a1);
+  await page.goto("/settings/layout");
+  await page.getByRole("switch", { name: "Pinned slide strip" }).click();
+  await page.goto(url);
+  await expect(page.getByRole("navigation", { name: "Slides of this case" })).toHaveCount(0);
+});
