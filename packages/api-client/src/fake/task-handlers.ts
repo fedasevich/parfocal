@@ -22,12 +22,19 @@ import type {
   MemberAvailability,
   ReviewTaskDetail,
   StudyTemplateSummary,
+  TaskChange,
   TaskDraft,
 } from "../generated/api.ts";
-import { toDecisionSettings } from "./decision-settings.ts";
+import {
+  changeCountsAs,
+  decisionSettingsFor,
+  keepsAgreeAndDisagree,
+  toDecisionSettings,
+} from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { people, projects } from "./scenario.ts";
+import { people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
+import { rt13 } from "./scenario-review.ts";
 import {
   away,
   displayDefault,
@@ -42,6 +49,7 @@ import {
   taskToday,
   unsureZones,
 } from "./scenario-task.ts";
+import { toReviewTaskDetail } from "./work-handlers.ts";
 
 const isTaskProject = (projectId: string) =>
   projects.some(
@@ -262,8 +270,35 @@ export const taskDraftOperations: DraftOperation[] = [
   },
 ];
 
+const problem = (status: number, code: string, title: string) =>
+  HttpResponse.json({ type: "about:blank", title, status, code }, { status });
+
+const changeTask = http.patch<{ taskId: string }>(
+  "*/api/review-tasks/:taskId",
+  async ({ params, request }) => {
+    const task = [...reviewTasks, rt13].find((candidate) => candidate.id === params.taskId);
+    if (task === undefined) return undefined;
+    const body = (await request.json()) as TaskChange;
+    const after = body.decision?.counts_as;
+    if (after === undefined || after === null) return HttpResponse.json(toReviewTaskDetail(task));
+    if (task.status === "signed")
+      return problem(409, "counts-as-signed-off", "Counts as cannot change after sign-off");
+    if (!keepsAgreeAndDisagree(after))
+      return problem(422, "counts-as-incomplete", "Counts as needs an agree and a disagree answer");
+    if (decisionSettingsFor(task.code).style === "certainty")
+      changeCountsAs(
+        task.code,
+        after,
+        people[projectByCode(task.project).owner].id,
+        new Date().toISOString(),
+      );
+    return HttpResponse.json(toReviewTaskDetail(task));
+  },
+);
+
 export function taskHandlers(): RequestHandler[] {
   return [
+    changeTask,
     getListStudyTemplatesMockHandler(toStudyTemplates()),
     getListAvailabilityMockHandler(toAvailability()),
     getCreateReviewTaskMockHandler(async ({ request, params }) =>

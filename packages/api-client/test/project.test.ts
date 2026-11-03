@@ -3,9 +3,12 @@ import { after, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import { fakeApiHandlers, scenario } from "../src/fake/index.ts";
 import {
+  changeReviewTask,
   getOpinionForm,
   getProjectImports,
   getProjectOverview,
+  getReviewTask,
+  getTaskEvaluation,
   getUploadBatch,
   listClassMappings,
   listMySlides,
@@ -92,7 +95,7 @@ test("P07's review tasks, classes, mappings and opinion form come from the scena
   const tasks = await listReviewTasks(p07.id);
   assert.deepEqual(
     (tasks.status === 200 ? tasks.data : []).map((task) => task.code),
-    ["RT-14", "RT-15", "RT-09"],
+    ["RT-14", "RT-15", "RT-09", "RT-13"],
   );
   const classes = await listProjectClasses(p07.id);
   const names = (classes.status === 200 ? classes.data : []).map((item) => item.name);
@@ -126,4 +129,41 @@ test("a source listing and the automatic imports answer for the project", async 
   const imports = (await getProjectImports(p07.id)).data;
   assert.equal(imports.arrivals.length, 4);
   assert.equal(imports.webhook.on, true);
+});
+
+test("Counts as changes on RT-13, recounts its answers, logs the change and locks after sign-off", async () => {
+  const tasks = await listReviewTasks(p07.id);
+  const rt13 = (tasks.status === 200 ? tasks.data : []).find((task) => task.code === "RT-13");
+  assert.ok(rt13);
+  const edit = await changeReviewTask(rt13.id, {
+    decision: {
+      style: "certainty",
+      counts_as: ["disagree", "disagree", "unsure", "unsure", "agree"],
+    },
+  });
+  assert.equal(edit.status, 200);
+  const detail = await getReviewTask(rt13.id);
+  assert.equal(detail.status === 200 ? detail.data.counts_as_changes[0]?.recounted : -1, 8);
+  const evaluation = await getTaskEvaluation(rt13.id);
+  assert.deepEqual(evaluation.status === 200 ? evaluation.data.decisions.counted : {}, {
+    agree: 9,
+    disagree: 6,
+    unsure: 13,
+  });
+  await assert.rejects(
+    changeReviewTask(rt13.id, {
+      decision: {
+        style: "certainty",
+        counts_as: ["unsure", "unsure", "unsure", "unsure", "agree"],
+      },
+    }),
+    { kind: "validation" },
+  );
+  const rt09 = scenario.reviewTasks.find((task) => task.code === "RT-09");
+  await assert.rejects(
+    changeReviewTask(rt09?.id ?? "", {
+      decision: { style: "agree", counts_as: ["disagree", "disagree", "unsure", "agree", "agree"] },
+    }),
+    { kind: "conflict" },
+  );
 });

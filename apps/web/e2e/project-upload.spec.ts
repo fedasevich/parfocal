@@ -47,7 +47,7 @@ test("every project scene opens on fake data", async ({ page }) => {
   await page.goto(`/projects/${p07}?scene=results`);
   await expect(page.getByTestId("result-sets")).toContainText("CAMELYON tumor model");
   await page.goto(`/projects/${p07}?scene=tasks`);
-  await expect(page.getByTestId("task-row")).toHaveCount(3);
+  await expect(page.getByTestId("task-row")).toHaveCount(4);
   await page.goto(`/projects/${p07}?scene=importfail`);
   await expect(page.getByRole("alert")).toContainText("lab_model_v3.geojson was not imported");
   expect(errors).toEqual([]);

@@ -29,6 +29,7 @@ import {
   lenkaOpinion,
   opinionQuestions,
   reviewObjects,
+  rt13,
   rt16,
   sentinelClasses,
   slideOrder,
@@ -36,7 +37,7 @@ import {
   visibleComments,
 } from "./scenario-review.ts";
 import { fakeView } from "./view.ts";
-import { toReviewTaskDetail } from "./work-handlers.ts";
+import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
 
 const taskById = (taskId: string) => [...reviewTasks, rt16].find((task) => task.id === taskId);
 
@@ -241,8 +242,12 @@ export const reviewDraftOperations: DraftOperation[] = [
 
 export function reviewHandlers(): RequestHandler[] {
   return [
-    http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) =>
-      params.taskId === rt16.id ? HttpResponse.json(toReviewTaskDetail(rt16)) : undefined,
+    http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
+      const extra = [rt13, rt16].find((task) => task.id === params.taskId);
+      return extra ? HttpResponse.json(toReviewTaskDetail(extra)) : undefined;
+    }),
+    http.get<{ taskId: string }>("*/api/review-tasks/:taskId/states", ({ params }) =>
+      params.taskId === rt13.id ? HttpResponse.json(toTaskStates(rt13)) : undefined,
     ),
     getGetOpinionMockHandler(() => toOpinion()),
     getListThreadsMockHandler(({ params, request }) => {

@@ -19,7 +19,7 @@ import type {
   ReviewTask,
   Template,
 } from "../generated/api.ts";
-import { decisionSettingsFor } from "./decision-settings.ts";
+import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   cases,
@@ -55,6 +55,7 @@ import {
   uploadStorage,
   uploadUnscored,
 } from "./scenario-project.ts";
+import { rt13 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
 import { toSlideRow } from "./work-handlers.ts";
 
@@ -161,7 +162,7 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
     study_template_id: null,
     study_template_version: null,
     decision: decisionSettingsFor(task.code),
-    counts_as_changes: [],
+    counts_as_changes: countsAsChangesFor(task.code),
     created_by_user_id: people[project.owner].id,
     created_at: `${task.sentOn}T09:00:00+02:00`,
     slide_count: task.slides,
@@ -171,7 +172,7 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
 
 export const toProjectReviewTasks = (idOrCode: string): ReviewTask[] => {
   const project = projectOf(idOrCode);
-  return reviewTasks.filter((task) => task.project === project.code).map(toReviewTask);
+  return [...reviewTasks, rt13].filter((task) => task.project === project.code).map(toReviewTask);
 };
 
 export const toSlideResultSets = (slideId: string): ResultSet[] => {

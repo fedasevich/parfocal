@@ -40,7 +40,7 @@ export const opinionRows = (evaluation: Evaluation) => {
     .map((score) => ({ label: scoreLabel[score] ?? score, count: counts[score] ?? 0 }));
 };
 
-const styleName = {
+export const styleName = {
   certainty: "5-point certainty",
   agree: "Agree with the AI",
   yesno: "Yes or no",
