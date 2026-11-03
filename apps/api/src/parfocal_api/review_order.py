@@ -20,6 +20,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.model_catalogue import calibration_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError
 from parfocal_api.reviewed_layer import KINDS, task_slide
@@ -27,8 +28,10 @@ from parfocal_api.tables import (
     AnnotationKind,
     ResultObjectKind,
     annotations,
+    model_runs,
     result_chunks,
     result_objects,
+    result_sets,
     review_order,
 )
 from parfocal_common.cell_chunks import ChunkError
@@ -46,6 +49,7 @@ from parfocal_common.jobs import (
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import MissingObjectError, ResultStore
 from parfocal_common.review_order import (
+    UNCALIBRATED,
     CellChunk,
     CellPool,
     Rated,
@@ -259,12 +263,38 @@ async def inside_cells(
     return {int(number) for number in found}
 
 
+async def temperature_of(connection: AsyncConnection, set_id: uuid.UUID) -> float:
+    run = (
+        await connection.execute(
+            select(
+                model_runs.c.detector,
+                model_runs.c.detector_version,
+                model_runs.c.typer,
+                model_runs.c.typer_version,
+                model_runs.c.test_time_views,
+            )
+            .join(result_sets, result_sets.c.job_id == model_runs.c.job_id)
+            .where(result_sets.c.id == set_id)
+        )
+    ).first()
+    if run is None:
+        return UNCALIBRATED
+    typed_by = (
+        (run.typer, run.typer_version)
+        if run.typer is not None and run.typer_version is not None
+        else (run.detector, run.detector_version)
+    )
+    calibration = calibration_of(*typed_by, run.test_time_views)
+    return calibration.temperature if calibration is not None else UNCALIBRATED
+
+
 async def ordered_cells(
     connection: AsyncConnection,
     store: ResultStore,
     scope: Scope,
     slide_id: uuid.UUID,
     set_id: uuid.UUID,
+    temperature: float = UNCALIBRATED,
 ) -> list[Rated]:
     if scope.kind is ScopeKind.ALL_REGIONS:
         return []
@@ -275,19 +305,23 @@ async def ordered_cells(
             raise ValueError("A random sample needs a count and a seed")
         pool = CellPool()
         for object_key in keys:
-            pool.add(await read_chunk(store, object_key))
+            pool.add(await read_chunk(store, object_key), temperature)
         return pool.sample(scope.count, scope.seed, slide_key)
     found: list[Rated] = []
     for object_key in keys:
         chunk = await read_chunk(store, object_key)
         if scope.kind is ScopeKind.CELLS_BELOW_SCORE:
-            found += scoped_cells(scope, chunk, slide_key)
+            found += scoped_cells(scope, chunk, slide_key, temperature=temperature)
             continue
         inside = await inside_cells(connection, scope, slide_id, set_id, chunk)
         if scope.kind is ScopeKind.INSIDE_ROIS:
-            found += scoped_cells(scope, chunk, slide_key, inside_roi=inside)
+            found += scoped_cells(
+                scope, chunk, slide_key, inside_roi=inside, temperature=temperature
+            )
         else:
-            found += scoped_cells(scope, chunk, slide_key, inside_zone=inside)
+            found += scoped_cells(
+                scope, chunk, slide_key, inside_zone=inside, temperature=temperature
+            )
     return found
 
 
@@ -300,9 +334,10 @@ async def order_of_slide(
     seed: int,
 ) -> list[ObjectKey]:
     rated: dict[ObjectKey, Rated] = {}
+    temperature = await temperature_of(connection, set_id)
     for scope in scopes:
         regions = await ordered_regions(connection, scope, slide_id, set_id)
-        cells = await ordered_cells(connection, store, scope, slide_id, set_id)
+        cells = await ordered_cells(connection, store, scope, slide_id, set_id, temperature)
         for item in [*regions, *cells]:
             rated.setdefault(item.key, item)
     return least_sure_first(list(rated.values()), seed, str(slide_id))

@@ -1,5 +1,5 @@
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 import pytest
@@ -81,6 +81,7 @@ def result_set(
     slide: uuid.UUID,
     regions: list[Region],
     cells: bool = False,
+    job: uuid.UUID | None = None,
 ) -> uuid.UUID:
     set_id = uuid.UUID(
         str(
@@ -112,8 +113,8 @@ def result_set(
             put_chunk(chunk_key(prefix, chunk), chunk_bytes(rows, probs))
     owner(
         database,
-        f"UPDATE result_sets SET status = 'ready', region_count = {len(regions)}, zone_count = 1 "
-        f"WHERE id = '{set_id}'",
+        f"UPDATE result_sets SET status = 'ready', region_count = {len(regions)}, zone_count = 1, "
+        f"job_id = {sql(job and str(job))} WHERE id = '{set_id}'",
     )
     return set_id
 
@@ -453,3 +454,36 @@ def test_the_queued_plan_matches_the_worker_workflow() -> None:
         [step.name for step in REVIEW_ORDER.steps],
     )
     assert "parfocal_api.review_order_job:REVIEW_ORDER" in DEFAULT_WORKFLOWS
+
+
+def typer_run(database: str, o: Ordered, typer: str, version: str, views: int) -> uuid.UUID:
+    job = owner(
+        database,
+        "INSERT INTO jobs (tenant_id, project_id, kind) "
+        f"VALUES ('{o.tenant}', '{o.project}', 'model-run') RETURNING id",
+    )[0][0]
+    owner(
+        database,
+        "INSERT INTO model_runs (job_id, tenant_id, project_id, slide_id, batch_id, scope_kind, "
+        "detector, detector_version, test_time_views, ordering) "
+        f"VALUES ('{job}', '{o.tenant}', '{o.project}', '{o.slides[0]}', '{uuid.uuid4()}', "
+        f"'slide', '{typer}', '{version}', {views}, 'raster')",
+    )
+    return uuid.UUID(str(job))
+
+
+def test_the_typer_temperature_reorders_cells_when_a_task_is_made(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    job = typer_run(database, o, "pathosam-hovernext", "v1.2", 1)
+    typed = result_set(database, o.tenant, o.project, o.slides[0], SCORED, cells=True, job=job)
+    run = replace(o, sets=[typed, o.sets[1]])
+    three_classes = chunk_bytes(TYPED, [170, 85, 0, 38, 180, 37, 255, 0, 0, 0, 0, 0], classes=3)
+    put_chunk(o.key(0), three_classes)
+    put_chunk(run.key(0), three_classes)
+    every_cell = {"kind": "random-cells", "count": 6}
+    raw, calibrated = made(api, o, every_cell), made(api, run, every_cell)
+    run_orders(database, o.tenant)
+    assert shared(api, o, raw)[:3] == ["C1", "C2", "C3"]
+    assert shared(api, o, calibrated)[:3] == ["C2", "C1", "C3"]

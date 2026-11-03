@@ -1,3 +1,4 @@
+import math
 import random
 import struct
 from array import array
@@ -11,6 +12,9 @@ from parfocal_common.scope import Candidate, ObjectKey, Scope, in_scope, sample
 
 UNCLASSIFIED = 255
 NO_CERTAINTY = -1
+UNCALIBRATED = 1.0
+PROBABILITY_FLOOR = 1e-7
+BYTE = 255
 PACKED = struct.Struct("<cI")
 
 
@@ -20,11 +24,25 @@ class Rated:
     certainty: int | None
 
 
+def calibrated(probabilities: Sequence[int], class_index: int, temperature: float) -> int:
+    if temperature == UNCALIBRATED:
+        return probabilities[class_index]
+    logits = [
+        math.log(max(value / BYTE, PROBABILITY_FLOOR)) / temperature for value in probabilities
+    ]
+    top = max(logits)
+    weights = [math.exp(value - top) for value in logits]
+    return round(BYTE * weights[class_index] / sum(weights))
+
+
 def certainty_of(
-    class_index: int | None, score: int | None, probabilities: Sequence[int] | None
+    class_index: int | None,
+    score: int | None,
+    probabilities: Sequence[int] | None,
+    temperature: float = UNCALIBRATED,
 ) -> int | None:
     if probabilities and class_index is not None and 0 <= class_index < len(probabilities):
-        return probabilities[class_index]
+        return calibrated(probabilities, class_index, temperature)
     return score
 
 
@@ -73,11 +91,14 @@ class CellChunk:
     def __len__(self) -> int:
         return len(self.numbers)
 
-    def certainty(self, index: int) -> int | None:
+    def certainty(self, index: int, temperature: float = UNCALIBRATED) -> int | None:
         ai_class = self.classes[index]
         if self.probs is None or ai_class == UNCLASSIFIED or ai_class >= self.class_count:
             return None
-        return self.probs[index * self.class_count + ai_class]
+        start = index * self.class_count
+        if temperature == UNCALIBRATED:
+            return self.probs[start + ai_class]
+        return calibrated(self.probs[start : start + self.class_count], ai_class, temperature)
 
     def centre(self, index: int) -> tuple[float, float] | None:
         start, end = 2 * self.offsets[index], 2 * self.offsets[index + 1]
@@ -100,10 +121,10 @@ class CellChunk:
             for index, number in enumerate(self.numbers)
         ]
 
-    def rated(self, keys: Iterable[ObjectKey]) -> list[Rated]:
+    def rated(self, keys: Iterable[ObjectKey], temperature: float = UNCALIBRATED) -> list[Rated]:
         wanted = {number for letter, number in keys if letter is Letter.CELL}
         return [
-            Rated((Letter.CELL, number), self.certainty(index))
+            Rated((Letter.CELL, number), self.certainty(index, temperature))
             for index, number in enumerate(self.numbers)
             if number in wanted
         ]
@@ -115,8 +136,11 @@ def scoped_cells(
     slide_key: str,
     inside_roi: Collection[int] = (),
     inside_zone: Collection[int] = (),
+    temperature: float = UNCALIBRATED,
 ) -> list[Rated]:
-    return chunk.rated(in_scope(scope, chunk.candidates(inside_roi, inside_zone), slide_key))
+    return chunk.rated(
+        in_scope(scope, chunk.candidates(inside_roi, inside_zone), slide_key), temperature
+    )
 
 
 @dataclass
@@ -124,10 +148,10 @@ class CellPool:
     numbers: array[int] = field(default_factory=lambda: array("I"))
     certainty: array[int] = field(default_factory=lambda: array("h"))
 
-    def add(self, chunk: CellChunk) -> None:
+    def add(self, chunk: CellChunk, temperature: float = UNCALIBRATED) -> None:
         self.numbers.extend(chunk.numbers)
         for index in range(len(chunk)):
-            value = chunk.certainty(index)
+            value = chunk.certainty(index, temperature)
             self.certainty.append(NO_CERTAINTY if value is None else value)
 
     def sample(self, count: int, seed: int, slide_key: str) -> list[Rated]:
