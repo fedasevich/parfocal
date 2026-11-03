@@ -1,4 +1,5 @@
 import {
+  useGetMe,
   useListMyAdjudications,
   useListMyReviewTasks,
   useListMySlides,
@@ -13,6 +14,7 @@ import { formatLongDay, plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { AllSlidesTab } from "./all-slides-tab.tsx";
 import { AssignedTab } from "./assigned-tab.tsx";
+import { assignedOpenPath, ignoresListKeys, listMove, slideOpenPath } from "./list-keys.ts";
 import type { MyWorkState, MyWorkTab } from "./scenes.ts";
 import { slideQuery } from "./slide-filters.ts";
 import { activeTasks, adjudicationKey, ToReviewTab } from "./to-review-tab.tsx";
@@ -34,12 +36,27 @@ export function MyWorkScreen({
   const adjudications = useListMyAdjudications().data?.data ?? [];
   const assigned = okData(useListTasksAssignedByMe().data) ?? [];
   const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
+  const me = okData(useGetMe().data);
   const everySlide = okData(useListMySlides().data)?.slides ?? [];
   const active = activeTasks(tasks);
   const toReview = active.length + adjudications.length;
-  const reviewKeys = [...adjudications.map(adjudicationKey), ...active.map((task) => task.id)];
-  const rowKeys =
-    state.tab === "all" ? slides.map((row) => row.id) : state.tab === "review" ? reviewKeys : [];
+  const reviewRows = [
+    ...adjudications.map((item) => ({
+      key: adjudicationKey(item),
+      path: destinations.disagreements(item.task_id, "adjudicate"),
+    })),
+    ...active.map((task) => ({
+      key: task.id,
+      path: destinations.guided(task.id, task.next_slide_id),
+    })),
+  ];
+  const rows =
+    state.tab === "all"
+      ? slides.map((row) => ({ key: row.id, path: slideOpenPath(row, me?.user_id) }))
+      : state.tab === "assigned"
+        ? assigned.map((task) => ({ key: task.id, path: assignedOpenPath(task) }))
+        : reviewRows;
+  const rowKeys = rows.map((row) => row.key);
   const firstKey = rowKeys[0];
   const wantsPreview = state.scene === "preview" || state.scene === "allpreview";
   useEffect(() => {
@@ -48,25 +65,27 @@ export function MyWorkScreen({
     }
   });
   useEffect(() => {
-    if (state.sel === undefined) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement) return;
-      const at = rowKeys.indexOf(state.sel ?? "");
-      if (event.key === "Escape") change({ sel: undefined });
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        event.preventDefault();
-        const step = event.key === "ArrowDown" ? 1 : -1;
-        const next = rowKeys[Math.max(0, Math.min(rowKeys.length - 1, at + step))];
-        if (next) change({ sel: next });
-      }
-      if (event.key === "Enter") {
-        const task = active.find((candidate) => candidate.id === state.sel);
-        if (task) void goTo(destinations.guided(task.id, task.next_slide_id));
+      if (event.defaultPrevented || ignoresListKeys(event.target, event.key)) return;
+      const move = listMove(event, rowKeys, state.sel);
+      if (move === undefined) return;
+      event.preventDefault();
+      if (move.kind === "clear") change({ sel: undefined });
+      if (move.kind === "select") change({ sel: move.sel });
+      if (move.kind === "open") {
+        const row = rows.find((candidate) => candidate.key === state.sel);
+        if (row) void goTo(row.path);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
+  useEffect(() => {
+    if (state.sel === undefined) return;
+    document
+      .querySelector("main [aria-selected='true']:not([role='tab'])")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [state.sel]);
   const today = formatLongDay(now());
   const waiting = assigned.filter(
     (task) => task.status === "disagreements" || task.status === "ready-to-sign-off",
@@ -113,7 +132,9 @@ export function MyWorkScreen({
             onSelect={(sel) => change({ sel })}
           />
         ) : null}
-        {state.tab === "assigned" ? <AssignedTab tasks={assigned} /> : null}
+        {state.tab === "assigned" ? (
+          <AssignedTab tasks={assigned} selected={state.sel} onSelect={(sel) => change({ sel })} />
+        ) : null}
         {state.tab === "all" ? (
           <AllSlidesTab
             rows={slides}
