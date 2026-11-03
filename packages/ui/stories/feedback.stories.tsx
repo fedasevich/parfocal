@@ -185,6 +185,45 @@ export const BeforeYouSubmit: Story = {
   ),
 };
 
+export const BeforeYouGoTo: Story = {
+  render: () => (
+    <div className="grid w-96 gap-3">
+      <label className="grid gap-1 text-body-sm">
+        Task name
+        <input id="goto-name" className="rounded-ctl border border-line bg-surf-panel px-2 py-1" />
+      </label>
+      <section
+        id="goto-question"
+        aria-label="Question 2"
+        className="rounded-ctl border border-line p-2 text-body-sm"
+      >
+        Question 2 · Was the AI useful on this slide?
+      </section>
+      <BeforeYouList
+        id="goto-list"
+        title="Before you can send"
+        blockers={[
+          {
+            id: "name",
+            text: "The task has no name",
+            goTo: "Go to the field",
+            target: "#goto-name",
+          },
+          {
+            id: "q2",
+            text: "Question 2 is not answered",
+            goTo: "Go to the question",
+            target: "#goto-question",
+          },
+        ]}
+      />
+      <Button variant="primary" disabled aria-describedby="goto-list">
+        Send the task
+      </Button>
+    </div>
+  ),
+};
+
 export const BeforeYouSendOne: Story = {
   render: () => (
     <BeforeYouList
