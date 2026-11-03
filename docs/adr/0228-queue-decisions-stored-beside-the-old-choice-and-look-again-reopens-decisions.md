@@ -1,4 +1,4 @@
-# XXXX. A queue decision keeps the old choice column beside the new answer, and Ask both to look again marks the reviewers' decisions reopened instead of deleting them
+# 0228. A queue decision keeps the old choice column beside the new answer, and Ask both to look again marks the reviewers' decisions reopened instead of deleting them
 
 - Date: 2026-11-03
 - Status: Accepted
