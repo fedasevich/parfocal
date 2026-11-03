@@ -10,9 +10,12 @@ import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
+import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 
 const config = readBuildConfig();
+
+installTheme();
 
 installDebugHandle(window, config.appEnv);
 provideDebug(benchmarkDebug(window));

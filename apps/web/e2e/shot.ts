@@ -52,7 +52,7 @@ const mockContext = await browser.newContext({
 
 for (const context of [appContext, mockContext]) {
   await context.addInitScript((choice) => {
-    window.localStorage.setItem("parfocal-theme", choice);
+    window.localStorage.setItem("parfocal.device-settings", JSON.stringify({ theme: choice }));
     window.localStorage.setItem("mock-theme", choice);
   }, theme);
 }

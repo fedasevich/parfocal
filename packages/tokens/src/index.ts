@@ -78,6 +78,45 @@ export type Theme = (typeof themes)[number];
 
 export const defaultTheme: Theme = "dark";
 
+export const themeChoices = ["system", "dark", "light"] as const;
+
+export type ThemeChoice = (typeof themeChoices)[number];
+
+export const defaultThemeChoice: ThemeChoice = "system";
+
+export const lightSchemeQuery = "(prefers-color-scheme: light)";
+
+export function themeChoice(value: unknown): ThemeChoice {
+  return themeChoices.find((choice) => choice === value) ?? defaultThemeChoice;
+}
+
+export function effectiveTheme(choice: ThemeChoice, prefersLight: boolean): Theme {
+  if (choice === "system") return prefersLight ? "light" : defaultTheme;
+  return choice;
+}
+
+export const neutralChromeTokens = [
+  "surf-page",
+  "surf-panel",
+  "surf-section",
+  "surf-field",
+  "surf-edge",
+  "page",
+  "chrome",
+  "chrome-2",
+  "chrome-3",
+  "canvas",
+  "tl-a",
+  "tl-b",
+  "line",
+  "line-strong",
+  "fg",
+  "fg-dim",
+  "fg-faint",
+  "seg-on",
+  "btn-bg",
+] as const;
+
 export const spaceUnitPx = 4;
 
 export const radiiPx = { sm: 4, md: 7, lg: 10, ctl: 8, zone: 12 } as const;

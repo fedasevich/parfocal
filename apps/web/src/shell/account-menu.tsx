@@ -20,7 +20,7 @@ import { destinations } from "./destinations.ts";
 import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 import { shellStore, useShell } from "./shell-store.ts";
-import { applyTheme, readTheme, type ThemeChoice } from "./theme.ts";
+import { readTheme, chooseTheme as storeTheme, type ThemeChoice } from "./theme.ts";
 
 export const logOutUrl = "/api/auth/logout";
 
@@ -102,7 +102,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
   const workspace = me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id);
   const chooseTheme = (choice: ThemeChoice) => {
     setTheme(choice);
-    applyTheme(choice);
+    storeTheme(choice);
   };
   return (
     <AccountMenuView
