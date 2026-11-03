@@ -92,10 +92,9 @@ test("new project and both new case drawers open over the project", async ({ pag
   expect(errors).toEqual([]);
 });
 
-test("every upload scene opens on fake data", async ({ page }) => {
-  test.setTimeout(90_000);
-  const errors = watchErrors(page);
-  for (const scene of uploadScenes) {
+for (const scene of uploadScenes) {
+  test(`the ${scene} upload scene opens on fake data`, async ({ page }) => {
+    const errors = watchErrors(page);
     await page.goto(`/projects/${p07}/upload?scene=${scene}`);
     if (scene === "drop") await expect(page.getByTestId("drop-overlay")).toBeVisible();
     else if (scene === "tray") await expect(page.getByTestId("project-page")).toBeVisible();
@@ -105,7 +104,12 @@ test("every upload scene opens on fake data", async ({ page }) => {
       await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", scene);
       await expect(page.getByRole("heading", { name: "Upload slides and results" })).toBeVisible();
     }
-  }
+    expect(errors).toEqual([]);
+  });
+}
+
+test("the formats drawer opens as help and as a check on fake data", async ({ page }) => {
+  const errors = watchErrors(page);
   for (const formats of ["help", "check"]) {
     await page.goto(`/projects/${p07}/upload?scene=files&formats=${formats}`);
     await expect(page.getByTestId("formats-drawer")).toBeVisible();

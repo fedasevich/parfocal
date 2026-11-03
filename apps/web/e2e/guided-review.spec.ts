@@ -33,17 +33,16 @@ const guided: { scene: string; shows: string | RegExp; slide?: string }[] = [
   { scene: "signedoff", shows: "Signed off. Ask the researcher to amend." },
 ];
 
-test("every guided review scene opens on fake data", async ({ page }) => {
-  test.setTimeout(120_000);
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  for (const { scene, shows, slide } of guided) {
+for (const { scene, shows, slide } of guided) {
+  test(`the ${scene} guided review scene opens on fake data`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`/tasks/${rt14}/guided?slide=${slide ?? a1}&scene=${scene}`);
     await expect(page.getByText("Round 2 · CAMELYON v1.0")).toBeVisible();
     await expect(page.getByText(shows).first()).toBeVisible();
-  }
-  expect(errors).toEqual([]);
-});
+    expect(errors).toEqual([]);
+  });
+}
 
 test("the mention scene offers only people who may see the comment", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=mention`);

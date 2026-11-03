@@ -132,13 +132,13 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
   const [confirmRest, setConfirmRest] = useState(setup.cellsPreview);
   const [whole, setWhole] = useState(setup.whole || setup.done);
   const [camera, setCamera] = useState<Camera | null>(null);
-  const [opinion, setOpinion] = useState<Record<string, string>>(() => {
-    const answers = Object.fromEntries(
-      Object.entries(session.opinion?.answers ?? {}).map(([key, value]) => [key, String(value)]),
-    );
-    for (const key of setup.dropAnswers) delete answers[key];
-    return answers;
-  });
+  const [opinionEdits, setOpinionEdits] = useState<Record<string, string>>({});
+  const savedOpinion = Object.fromEntries(
+    Object.entries(session.opinion?.answers ?? {})
+      .filter(([key]) => !setup.dropAnswers.includes(key))
+      .map(([key, value]) => [key, String(value)]),
+  );
+  const opinion: Record<string, string> = { ...savedOpinion, ...opinionEdits };
   const [failed, setFailed] = useState(setup.submitFail);
   const tabNow: GuidedTab = setup.coach ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
@@ -500,7 +500,7 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
       submitLabel={nextLabel}
       failed={failed}
       onSubmit={submit}
-      onAnswerChange={(id, value) => setOpinion({ ...opinion, [id]: value })}
+      onAnswerChange={(id, value) => setOpinionEdits({ ...opinionEdits, [id]: value })}
     />
   ) : current ? (
     <div className="flex min-h-full flex-col gap-5">
