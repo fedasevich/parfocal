@@ -1695,7 +1695,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-016.
   Size: S.
 
-- [ ] DS-032 · Steady axe run on animated stories
+- [x] DS-032 · Steady axe run on animated stories
   DS-029 (visible focus ring) found that axe reads `components-settings--key-states` mid-way through the pulsing shortcut key animation, so its contrast check passes or fails from run to run in both themes. Run the axe spec with reduced motion or stop the pulse before the check, without excluding the story.
   Done when the axe spec passes `components-settings--key-states` ten runs in a row in both themes.
   Depends on DS-029.
