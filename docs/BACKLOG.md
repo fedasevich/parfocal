@@ -2031,7 +2031,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Only in projects with the sentinel node staging template (PROJ-005).
   Size: M.
 
-- [ ] CASE-005 · AI state: still running
+- [x] CASE-005 · AI state: still running
   The map fills in as computed, with a dashed line where the AI has reached. Stage progress card. Areas appear as found, with placeholders. The view never moves.
   Done when E2E with a simulated job stream shows areas appearing and zero layout shift.
   Refs kit W18.
