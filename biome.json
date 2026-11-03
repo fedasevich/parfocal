@@ -60,6 +60,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/tokens/src/tokens.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
     }
   ]
 }

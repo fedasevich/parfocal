@@ -86,6 +86,10 @@ The kit's nine type sizes are Tailwind theme sizes named `text-label`, `text-cap
 
 `tokens.css` has three blocks. The dark block (`:root, [data-theme="dark"]`) and the light block (`[data-theme="light"]`) hold exactly `themedTokens` from `src/index.ts`, which is every colour plus `shadow`, and `tokens.test.ts` fails if a theme block gains or loses one. The aliases `page`, `chrome` and `chrome-2` are written out in both blocks instead of `var(--surf-page)` on `:root`, because a custom property that refers to another one is resolved where it is declared, so a nested `data-theme` scope would keep the outer theme's value. Class colours, the proposal colour and every size live once in the plain `:root` block, because they do not change with the theme. The kit's research status tone uses `--res` (`#a78bfa` dark) for its tint and `research-fg` (`#c4b5fd`) for its text, so both exist. Source: PROTO-011.
 
+## Motion tokens and reduced motion
+
+Time a transition with `duration-(--motion-fast)` up to `--motion-slower` and `ease-standard`, never a fixed `duration-100`, so presenting mode (`data-motion="presenting"`, three times slower) reaches it. The durations are redeclared on every `[data-motion]` element because a custom property resolves where it is declared. Reduced motion needs no class: one rule in `tokens.css` zeroes every transition and animation under the media query or `data-motion="reduced"`. `e2e/motion.spec.ts` checks it by reading every computed duration and `document.getAnimations()`. Source: DS-016, [ADR 0187](../adr/0187-motion-tokens-scale-and-global-reduced-motion.md).
+
 ## Never type a bare bg-accent
 
 The adopt script renames the exact class `bg-accent` to `bg-chrome-2` (shadcn's hover surface), also in hand-written files, and `adopt.test.ts` then fails because the file changes. For a fill in the kit's accent write `bg-(--accent)`, and use `bg-accent-fill` or `bg-accent-soft` where those are meant. Source: PROTO-011.

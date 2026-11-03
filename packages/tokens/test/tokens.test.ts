@@ -6,7 +6,12 @@ import {
   colorTokens,
   controlHeightsPx,
   countHeightPx,
+  cubicBezierCss,
+  effectiveMotionMode,
   iconSizesPx,
+  motionDurationsMs,
+  motionEasings,
+  motionMs,
   proposalColor,
   radiiPx,
   spaceUnitPx,
@@ -125,4 +130,58 @@ test("the Tailwind theme exposes every colour token", () => {
       `--color-${token} is not mapped`,
     );
   }
+});
+
+function motionBlock(selector: string): string {
+  const start = css.indexOf(`${selector} {`);
+  assert.notEqual(start, -1, `missing ${selector}`);
+  return css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start));
+}
+
+test("motion durations run from 120 to 400 ms and match the constants", () => {
+  const body = motionBlock(":root,\n[data-motion]");
+  const values = Object.values(motionDurationsMs);
+  assert.equal(Math.min(...values), 120);
+  assert.equal(Math.max(...values), 400);
+  for (const [name, ms] of Object.entries(motionDurationsMs)) {
+    assert.ok(body.includes(`--motion-${name}: calc(${ms}ms * var(--motion-scale));`), name);
+  }
+  for (const name of Object.keys(motionEasings)) {
+    assert.ok(
+      body.includes(
+        `--motion-ease-${name}: ${cubicBezierCss(name as keyof typeof motionEasings)};`,
+      ),
+      name,
+    );
+  }
+});
+
+test("presenting runs at one third speed and reduced motion is a cut", () => {
+  assert.match(motionBlock('[data-motion="presenting"]'), /--motion-scale: 3;/);
+  assert.match(motionBlock('[data-motion="reduced"]'), /--motion-scale: 0;/);
+  assert.equal(motionMs("slow", "presenting"), 900);
+  assert.equal(motionMs("slower", "reduced"), 0);
+  assert.equal(motionMs("fast"), 120);
+  assert.equal(effectiveMotionMode("presenting", true), "reduced");
+  assert.equal(effectiveMotionMode("presenting", false), "presenting");
+});
+
+test("the reduced motion query zeroes every transition and animation", () => {
+  const media = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.ok(media.length > 0);
+  for (const rule of [
+    "--motion-scale: 0;",
+    "animation-duration: 0s !important;",
+    "transition-duration: 0s !important;",
+    "transition-delay: 0s !important;",
+    "::view-transition-group(*)",
+  ]) {
+    assert.ok(media.includes(rule), rule);
+  }
+});
+
+test("Tailwind transitions default to the motion tokens", () => {
+  assert.ok(theme.includes("--default-transition-duration: var(--motion-fast);"));
+  assert.ok(theme.includes("--default-transition-timing-function: var(--motion-ease-standard);"));
+  assert.ok(theme.includes("--ease-standard: var(--motion-ease-standard);"));
 });
