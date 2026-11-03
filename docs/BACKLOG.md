@@ -2311,7 +2311,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
   Size: M.
 
-- [ ] REVIEW-021 · Comment tool pins a thread on click
+- [x] REVIEW-021 · Comment tool pins a thread on click
   REVIEW-001 (review rail) routes the Comment tool (C) to the comments tab, but clicking the slide in comment mode does not pin a new thread there yet.
   Done when a test clicks the slide in comment mode and a new thread opens pinned at that point, and Esc leaves comment mode without a thread.
   Depends on REVIEW-001.
@@ -2333,6 +2333,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   REVIEW-023 (model warnings in the inspector) built `ModelWarningsBlock`, but no screen has the typer metadata (calibration, test set accuracy and shares, validated sites) or the personal `model_warnings` setting to pass in. Add the metadata to the fake result set and the API contract, call `slideStatistics` on the slide's cells, and put the block under AiSays in full-viewer.tsx, gated by `model_warnings`.
   Done when a component test shows the block on a slide whose typer trips a rule and hides it when the setting is off.
   Depends on REVIEW-023.
+  Size: S.
+
+- [ ] REVIEW-025 · Fake keeps posted threads
+  REVIEW-021 (comment pin) posts a pinned thread through `useCreateThread`, but the api-client fake has no POST threads override, so a posted thread comes back as random mock data and never appears in the fake list.
+  Done when an api-client fake test posts a thread with a point anchor and lists it back, and the comment pin E2E sees the new thread in the Comments tab.
+  Depends on REVIEW-021.
   Size: S.
 
 ---
