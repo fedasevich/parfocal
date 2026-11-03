@@ -6,6 +6,7 @@ export type Binding = {
   keys: string[];
   hold?: boolean;
   holdMs?: number;
+  sustain?: boolean;
   inInputs?: boolean;
 };
 
@@ -24,18 +25,19 @@ export type KeyInput =
     }
   | { type: "blur"; at: number };
 
-export type Phase = "press" | "hold-start" | "tap" | "hold-end";
+export type Phase = "press" | "hold-start" | "tap" | "hold-end" | "release";
 
 export type Fired = { action: string; phase: Phase };
 
 export type KeyState = {
   pending: { keys: string[]; at: number } | null;
   holding: { action: string; key: string; at: number; holdMs: number } | null;
+  sustained: readonly { action: string; key: string }[];
 };
 
 export type Step = { state: KeyState; fired: Fired[]; consumed: boolean };
 
-export const idleKeys: KeyState = { pending: null, holding: null };
+export const idleKeys: KeyState = { pending: null, holding: null, sustained: [] };
 
 const modifierKeys = new Set(["Shift", "Meta", "Control", "Alt", "CapsLock", "Fn", "OS"]);
 
@@ -46,6 +48,7 @@ const namedKeys: Record<string, string> = {
   ArrowDown: "↓",
   ArrowLeft: "←",
   ArrowRight: "→",
+  "=": "+",
   " ": "Space",
 };
 
@@ -60,7 +63,7 @@ export function comboOf(input: Extract<KeyInput, { type: "down" | "up" }>): stri
   const mods = [
     input.ctrlKey && input.metaKey ? "⌃" : "",
     input.altKey ? "⌥" : "",
-    input.shiftKey && input.key !== "?" ? "⇧" : "",
+    input.shiftKey && input.key !== "?" && input.key !== "+" ? "⇧" : "",
     input.metaKey || input.ctrlKey ? "⌘" : "",
   ].join("");
   return mods + baseKey(input.key, input.code);
@@ -107,13 +110,29 @@ export function resolveBindings(
   });
 }
 
-function startHolding(binding: Binding, key: string, at: number): Step {
+function startHolding(state: KeyState, binding: Binding, key: string, at: number): Step {
   return {
     state: {
+      ...state,
       pending: null,
       holding: { action: binding.action, key, at, holdMs: binding.holdMs ?? tapMs },
     },
     fired: [{ action: binding.action, phase: "hold-start" }],
+    consumed: true,
+  };
+}
+
+function startSustain(state: KeyState, binding: Binding, key: string): Step {
+  return {
+    state: {
+      ...state,
+      pending: null,
+      sustained: [
+        ...state.sustained.filter((held) => held.key !== key),
+        { action: binding.action, key },
+      ],
+    },
+    fired: [{ action: binding.action, phase: "press" }],
     consumed: true,
   };
 }
@@ -126,7 +145,8 @@ function press(
   at: number,
 ): Step | null {
   const exact = bindings.find((binding) => sameKeys(binding.keys, sequence));
-  if (exact?.hold) return startHolding(exact, key, at);
+  if (exact?.sustain) return startSustain(state, exact, key);
+  if (exact?.hold) return startHolding(state, exact, key, at);
   if (exact)
     return {
       state: { ...state, pending: null },
@@ -143,11 +163,22 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
     const fired: Fired[] = state.holding
       ? [{ action: state.holding.action, phase: "hold-end" }]
       : [];
+    for (const held of state.sustained) fired.push({ action: held.action, phase: "release" });
     return { state: idleKeys, fired, consumed: false };
   }
   if (modifierKeys.has(input.key)) return { state, fired: [], consumed: false };
   const combo = comboOf(input);
   const key = baseKey(input.key, input.code);
+
+  const sustained = state.sustained.find((held) => held.key === key);
+  if (input.type === "up" && sustained !== undefined)
+    return {
+      state: { ...state, sustained: state.sustained.filter((held) => held !== sustained) },
+      fired: [{ action: sustained.action, phase: "release" }],
+      consumed: true,
+    };
+  if (input.type === "down" && input.repeat && sustained !== undefined)
+    return { state, fired: [], consumed: true };
 
   if (input.type === "up") {
     const holding = state.holding;
@@ -177,9 +208,12 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
       ? { state: cleared, fired: [{ action: single.action, phase: "press" }], consumed: true }
       : { state: cleared, fired: [], consumed: false };
   }
-  return (
-    press(live, cleared, [combo], key, input.at) ?? { state: cleared, fired: [], consumed: false }
-  );
+  const exact = press(live, cleared, [combo], key, input.at);
+  if (exact) return exact;
+  const unshifted = input.shiftKey ? comboOf({ ...input, shiftKey: false }) : null;
+  const fast = live.find((binding) => binding.sustain && sameKeys(binding.keys, [unshifted ?? ""]));
+  if (fast) return startSustain(cleared, fast, key);
+  return { state: cleared, fired: [], consumed: false };
 }
 
 export function isTyping(target: EventTarget | null): boolean {

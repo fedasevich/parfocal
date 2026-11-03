@@ -58,7 +58,7 @@ The per-event cap is half an octave because VIEW-021 says so. The POC capped an 
 ## Consequences
 
 - VIEW-021 (wheel, trackpad and pinch handling) reads the rates and the cap from `engine.getCameraProfile()` through `wheelZoomOctaves` and calls `zoomBy`. The controller's method names are unchanged, and it gained `profile` and `setProfile`. The controller host's `limits` field became `bounds`, a function.
-- VIEW-022 (keyboard navigation) takes its pan step from `keyPanStepPx`. The held-key easing it asks for is not in the profile yet.
+- VIEW-022 (keyboard navigation) takes its pan step from `keyPanStepPx`. Its held-key easing reads `keyPanRampMs` (120 ms in Smooth, 60 in Precise, 0 in Instant), and a held arrow cruises at eight steps a second, three times that with Shift.
 - SET-006 (navigation and devices section) maps the settings onto a `CameraProfile` and calls `setCameraProfile`.
 - VIEW-033 (hidden tab and background scheduling) can settle through the existing `settle()`. Inputs already catch a motion up to their own time.
 - VIEW-046 (objective detents on wheel zoom) adds its hold length to the profile.

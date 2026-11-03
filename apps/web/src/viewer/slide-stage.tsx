@@ -11,6 +11,7 @@ import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
+import { useViewerKeys } from "./use-viewer-keys.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 type Phase =
@@ -40,6 +41,11 @@ async function grantFor(slideId: string, previous: string | null): Promise<Grant
     basePath: access.base_path,
     original: access.original,
   };
+}
+
+function ViewerKeys({ session }: { session: Session }) {
+  useViewerKeys(session.engine, session.module);
+  return null;
 }
 
 export function SlideStage({ slideId }: { slideId: string }) {
@@ -145,6 +151,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
           </div>
         </>
       ) : null}
+      {session ? <ViewerKeys session={session} /> : null}
       {session ? (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           <MagnificationControl
