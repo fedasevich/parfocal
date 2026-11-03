@@ -902,7 +902,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when unit tests cover each formatter, including tabular figures for measurements.
   Size: S.
 
-- [ ] I18N-003 · Backend messages and report templates are locale-ready
+- [x] I18N-003 · Backend messages and report templates are locale-ready
   Report templates and emails take a locale parameter even though only English ships.
   Done when a pseudo-locale test renders a report and an email with every string translated.
   Size: M.
