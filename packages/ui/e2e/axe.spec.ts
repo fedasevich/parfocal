@@ -21,6 +21,8 @@ const knownExclusions: Record<string, { selector: string; fixedBy: string }> = {
   },
 };
 
+test.use({ reducedMotion: "reduce" });
+
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 test("the catalogue holds a story for every control in ADR 0130", () => {
