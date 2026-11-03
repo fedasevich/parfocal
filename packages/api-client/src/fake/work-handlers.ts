@@ -28,7 +28,7 @@ import type {
   TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
-import { decisionSettingsFor } from "./decision-settings.ts";
+import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
 import {
@@ -210,7 +210,7 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
     study_template_id: null,
     study_template_version: null,
     decision: decisionSettingsFor(task.code),
-    counts_as_changes: [],
+    counts_as_changes: countsAsChangesFor(task.code),
     created_by_user_id: people[project.owner].id,
     created_at: `${task.sentOn}T09:00:00+02:00`,
     slide_count: task.slides,

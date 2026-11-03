@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { CountsAsChange, Evaluation, Verdict } from "@parfocal/api-client";
 import { methodsLines } from "../src/screens/evaluation/numbers.ts";
+import { recountOf, recountText, splitOf } from "../src/screens/project/task-settings-model.ts";
 import {
   countsAsList,
   decisionBody,
@@ -125,4 +126,25 @@ test("the Methods lines name the style, the counts and each Counts as change", (
   assert.match(lines[2] ?? "", /Daniel Hruška changed Counts as on 3 November 2026/);
   assert.match(lines[2] ?? "", /8 recounted/);
   assert.equal(methodsLines(evaluation, [], () => "").length, 2);
+});
+
+test("a Counts as edit recounts only the answers whose value changes", () => {
+  const answers = { "1": 2, "2": 4, "3": 5, "4": 8, "5": 9 };
+  const from = { agreeFrom: 4, disagreeTo: 2 };
+  assert.deepEqual(recountOf(answers, from, { agreeFrom: 5, disagreeTo: 2 }), {
+    total: 28,
+    changed: 8,
+  });
+  assert.deepEqual(recountOf(answers, from, { agreeFrom: 4, disagreeTo: 1 }), {
+    total: 28,
+    changed: 4,
+  });
+  assert.deepEqual(recountOf(answers, from, from), { total: 28, changed: 0 });
+  assert.deepEqual(splitOf(answers, { agreeFrom: 5, disagreeTo: 2 }), {
+    agree: 9,
+    unsure: 13,
+    disagree: 6,
+  });
+  assert.equal(recountText({ total: 28, changed: 8 }), "Recounts 8 of 28 answers.");
+  assert.match(recountText({ total: 0, changed: 0 }), /nothing is recounted/);
 });

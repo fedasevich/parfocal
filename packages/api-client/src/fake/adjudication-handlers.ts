@@ -23,6 +23,7 @@ import {
   getSignOffReviewTaskMockHandler,
 } from "../generated/api.msw.ts";
 import type { Evaluation } from "../generated/api.ts";
+import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   fakeQueueScene,
@@ -65,6 +66,7 @@ import {
   signature,
   worstObjects,
 } from "./scenario-adjudication.ts";
+import { rt13 } from "./scenario-review.ts";
 import { studyTemplates } from "./scenario-task.ts";
 import { toTaskStates } from "./work-handlers.ts";
 
@@ -245,6 +247,26 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
   });
 };
 
+const decisionsOf = (taskId: string): Evaluation["decisions"] => {
+  const code = [...reviewTasks, rt13].find((candidate) => candidate.id === taskId)?.code ?? "";
+  const answers = answersFor(code);
+  if (answers === null) {
+    return {
+      style: "agree",
+      counts_as: ["disagree", "disagree", "unsure", "agree", "agree"],
+      counted: { agree: 0, disagree: 0, unsure: 2 },
+      answers: { unsure: 2 },
+    };
+  }
+  const settings = decisionSettingsFor(code);
+  return {
+    style: settings.style,
+    counts_as: settings.counts_as,
+    counted: countedFromAnswers(answers, settings.counts_as),
+    answers,
+  };
+};
+
 export const toTaskEvaluation = (taskId: string): Evaluation => {
   const numbers = evaluationNumbers;
   const tumor = {
@@ -265,12 +287,7 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
   return {
     task_id: taskId,
     sample: false,
-    decisions: {
-      style: "agree",
-      counts_as: ["disagree", "disagree", "unsure", "agree", "agree"],
-      counted: { agree: 0, disagree: 0, unsure: 2 },
-      answers: { unsure: 2 },
-    },
+    decisions: decisionsOf(taskId),
     classes: [tumor],
     overall: [tumor],
     dice: { Tumor: numbers.dice },

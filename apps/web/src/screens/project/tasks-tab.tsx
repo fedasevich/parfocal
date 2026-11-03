@@ -11,9 +11,11 @@ import { Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Link } from "@tanstack/react-router";
+import { type ReactNode, useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { reviewerProgress, taskStatus } from "./model.ts";
 import { usePeople } from "./people.ts";
+import { TaskSettingsDrawer } from "./task-settings-drawer.tsx";
 
 const dueText = (iso: string | null) =>
   iso
@@ -24,32 +26,60 @@ const dueText = (iso: string | null) =>
       })
     : "No due date";
 
-export function TasksTab({ project, tasks }: { project: Project; tasks: ReviewTask[] }) {
+export function TasksTab({
+  project,
+  tasks,
+  toast,
+}: {
+  project: Project;
+  tasks: ReviewTask[];
+  toast: (message: ReactNode) => void;
+}) {
+  const [settingsOf, setSettingsOf] = useState<string | null>(null);
+  const opened = tasks.find((task) => task.id === settingsOf);
   return (
-    <div className="flex-none overflow-auto rounded-zone border border-line bg-surf-panel">
-      <table className="w-full border-collapse text-body-sm">
-        <thead>
-          <tr className="[&>th]:border-b [&>th]:border-line [&>th]:bg-surf-panel [&>th]:px-4 [&>th]:py-2.75 [&>th]:text-left [&>th]:text-caption [&>th]:font-semibold [&>th]:text-fg-dim">
-            <th>Task</th>
-            <th>Reviewers</th>
-            <th>Due</th>
-            <th>Status</th>
-            <th>
-              <span className="sr-only">Action</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => (
-            <TaskRow key={task.id} project={project} task={task} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="flex-none overflow-auto rounded-zone border border-line bg-surf-panel">
+        <table className="w-full border-collapse text-body-sm">
+          <thead>
+            <tr className="[&>th]:border-b [&>th]:border-line [&>th]:bg-surf-panel [&>th]:px-4 [&>th]:py-2.75 [&>th]:text-left [&>th]:text-caption [&>th]:font-semibold [&>th]:text-fg-dim">
+              <th>Task</th>
+              <th>Reviewers</th>
+              <th>Due</th>
+              <th>Status</th>
+              <th>
+                <span className="sr-only">Action</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                project={project}
+                task={task}
+                onSettings={() => setSettingsOf(task.id)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {opened ? (
+        <TaskSettingsDrawer task={opened} onClose={() => setSettingsOf(null)} toast={toast} />
+      ) : null}
+    </>
   );
 }
 
-function TaskRow({ project, task }: { project: Project; task: ReviewTask }) {
+function TaskRow({
+  project,
+  task,
+  onSettings,
+}: {
+  project: Project;
+  task: ReviewTask;
+  onSettings: () => void;
+}) {
   const states = okData(useGetReviewTaskStates(task.id).data);
   const detail = okData(useGetReviewTask(task.id).data);
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
@@ -105,26 +135,37 @@ function TaskRow({ project, task }: { project: Project; task: ReviewTask }) {
         <StatusTag tone={status.tone}>{status.label}</StatusTag>
       </td>
       <td className="w-px text-right whitespace-nowrap">
-        {status.label === "Signed off" ? null : status.label === "Ready to sign off" ? (
+        <span className="inline-flex items-center gap-2">
           <Button
-            size="sm"
-            variant="primary"
-            nativeButton={false}
-            render={<Link to="/tasks/$taskId/sign-off" params={{ taskId: task.id }} />}
+            size="icon-sm"
+            variant="ghost"
+            aria-label={`Settings for ${task.code}`}
+            title="Task settings"
+            onClick={onSettings}
           >
-            Sign off
+            <Icon name="gear" />
           </Button>
-        ) : (
-          <Button
-            size="sm"
-            title={behind ? `Nudge ${people.byId(behind.userId).name}` : "Nudge"}
-            nativeButton={false}
-            render={<Link to="/team" search={{ scene: "nudge" }} />}
-          >
-            <Icon name="bell" />
-            Nudge
-          </Button>
-        )}
+          {status.label === "Signed off" ? null : status.label === "Ready to sign off" ? (
+            <Button
+              size="sm"
+              variant="primary"
+              nativeButton={false}
+              render={<Link to="/tasks/$taskId/sign-off" params={{ taskId: task.id }} />}
+            >
+              Sign off
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              title={behind ? `Nudge ${people.byId(behind.userId).name}` : "Nudge"}
+              nativeButton={false}
+              render={<Link to="/team" search={{ scene: "nudge" }} />}
+            >
+              <Icon name="bell" />
+              Nudge
+            </Button>
+          )}
+        </span>
       </td>
     </tr>
   );

@@ -24,6 +24,24 @@ export const rt16: ScenarioReviewTask = {
   status: "assigned",
 };
 
+export const rt13: ScenarioReviewTask = {
+  code: "RT-13",
+  id: uuid(7, 13),
+  name: "Certainty re-read · CAMELYON v1.0",
+  project: "P07",
+  resultSet: "cam",
+  reviewers: ["AK"],
+  scope: "all-regions",
+  scopeText: "Tumor regions: all",
+  dueOn: "2026-10-30",
+  sentOn: "2026-10-16",
+  slides: 12,
+  split: "all",
+  progress: { AK: 5 },
+  blinded: true,
+  status: "review",
+};
+
 export type DecisionStyleKind = "certainty" | "agree" | "yesno" | "blind";
 
 export type ScenarioDecisionStyle = {
@@ -34,6 +52,7 @@ export type ScenarioDecisionStyle = {
 };
 
 export const decisionStyles: Record<string, ScenarioDecisionStyle> = {
+  "RT-13": { kind: "certainty", question: null, agreeFrom: 4, disagreeTo: 2 },
   "RT-14": { kind: "agree", question: null, agreeFrom: 4, disagreeTo: 2 },
   "RT-16": { kind: "certainty", question: null, agreeFrom: 4, disagreeTo: 2 },
 };

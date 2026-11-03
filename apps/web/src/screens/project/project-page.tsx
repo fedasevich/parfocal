@@ -237,7 +237,7 @@ export function ProjectPage({
           {view.tab === "slides" ? (
             <SlidesTab project={project} open={view.open} toast={toast.show} />
           ) : view.tab === "tasks" ? (
-            <TasksTab project={project} tasks={tasks} />
+            <TasksTab project={project} tasks={tasks} toast={toast.show} />
           ) : (
             <SettingsTab project={project} addClass={view.addClass ?? false} toast={toast.show} />
           )}
