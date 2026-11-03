@@ -1593,7 +1593,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-015 · Skeletons and placeholders that hold space
+- [x] DS-015 · Skeletons and placeholders that hold space
   Nothing jumps when data arrives.
   Done when a layout-shift test on the case inspector reports a CLS of zero while findings stream in.
   Depends on PROTO-011. Refs kit W18.
