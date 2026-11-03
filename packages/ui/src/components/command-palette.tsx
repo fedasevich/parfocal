@@ -9,6 +9,7 @@ type PaletteCommand = {
   icon: IconName;
   label: string;
   keys?: string | undefined;
+  matched?: readonly number[] | undefined;
   run: () => void;
 };
 
@@ -22,7 +23,39 @@ type CommandPaletteViewProps = {
   onKeyDown: KeyboardEventHandler<HTMLInputElement>;
 };
 
-function Highlight({ text, query }: { text: string; query: string }) {
+function Highlight({
+  text,
+  query,
+  matched,
+}: {
+  text: string;
+  query: string;
+  matched?: readonly number[] | undefined;
+}) {
+  if (matched !== undefined) {
+    if (matched.length === 0) return <span>{text}</span>;
+    const marked = new Set(matched);
+    const runs: { at: number; text: string; on: boolean }[] = [];
+    Array.from(text).forEach((char, at) => {
+      const on = marked.has(at);
+      const last = runs[runs.length - 1];
+      if (last && last.on === on) last.text += char;
+      else runs.push({ at, text: char, on });
+    });
+    return (
+      <span>
+        {runs.map((run) =>
+          run.on ? (
+            <mark key={run.at} className="bg-transparent font-semibold text-fg">
+              {run.text}
+            </mark>
+          ) : (
+            <span key={run.at}>{run.text}</span>
+          ),
+        )}
+      </span>
+    );
+  }
   const at = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
   if (at < 0) return <span>{text}</span>;
   return (
@@ -95,7 +128,7 @@ function CommandPaletteView({
                     )}
                   >
                     <Icon name={command.icon} />
-                    <Highlight text={command.label} query={trimmed} />
+                    <Highlight text={command.label} query={trimmed} matched={command.matched} />
                     {command.keys ? <Keycap keys={command.keys} /> : <span />}
                   </div>
                 );

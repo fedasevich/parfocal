@@ -412,11 +412,19 @@ const fold = (text: string) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
+const pathOf = (hit: SearchHit): string =>
+  hit.kind === "object"
+    ? hit.id
+    : [hit.project?.code, hit.case_label, hit.label].filter(Boolean).join("/");
+
 export const searchScenario = (query: string): SearchHit[] => {
-  const needle = fold(query.trim());
-  if (needle.length < 2) return [];
+  const tokens = fold(query.trim()).split(/\s+/).filter(Boolean);
+  if (tokens.join("").length < 2) return [];
   return searchIndex()
-    .filter((hit) => fold(hit.label).includes(needle))
+    .filter((hit) => {
+      const haystack = fold(`${hit.label} ${pathOf(hit)}`);
+      return tokens.every((token) => haystack.includes(token));
+    })
     .slice(0, 8);
 };
 

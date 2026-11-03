@@ -1,22 +1,18 @@
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
-import { CommandPaletteView } from "@parfocal/ui/components/command-palette";
+import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components/command-palette";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
 import type { IconName } from "@parfocal/ui/components/icon";
-import { useParams } from "@tanstack/react-router";
-import { type KeyboardEvent, useEffect, useState } from "react";
+import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
+import { type KeyboardEvent, useCallback, useMemo, useRef, useState } from "react";
+import { keyRegistry } from "../keys/catalogue.ts";
+import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
+import { setDeveloperMode, useDeveloperMode } from "./developer-mode.ts";
 import { useOverlay } from "./overlays.ts";
+import { type PaletteGroup, paletteEntries, paletteGroups } from "./palette-commands.ts";
+import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
-
-type Command = {
-  id: string;
-  group: "Actions" | "Go to" | "Settings";
-  icon: IconName;
-  label: string;
-  keys?: string;
-  run: () => void;
-};
 
 const hitIcons: Record<SearchHit["kind"], IconName> = {
   project: "folder",
@@ -37,139 +33,115 @@ function hitHref(hit: SearchHit): string | null {
   return null;
 }
 
-function useCommands(close: () => void): Command[] {
+type Row = PaletteCommand & { group: PaletteGroup; score: number };
+
+const perGroupLimit = 8;
+
+function hitRow(hit: SearchHit, query: string, run: () => void): Row {
+  const label =
+    hit.project && hit.kind !== "project" ? `${hit.label} · ${hit.project.code}` : hit.label;
+  const keywords = [hit.id, hit.case_label ?? "", hit.project?.code ?? ""];
+  const found = query ? matchCommand(label, keywords, query) : null;
+  return {
+    id: `hit-${hit.kind}-${hit.id}`,
+    group: "Go to",
+    icon: hitIcons[hit.kind],
+    label,
+    matched: found?.indices ?? [],
+    score: found?.score ?? 1,
+    run,
+  };
+}
+
+function usePlaces(query: string, close: () => void): Row[] {
   const goTo = useGoTo();
-  const overlay = useOverlay();
-  const params = useParams({ strict: false });
   const projects = okData(useListProjects().data) ?? [];
-  const projectId = params.projectId ?? projects[0]?.id ?? "";
-  const to = (href: string) => () => {
+  const hits =
+    okData(useSearch({ q: query }, { query: { enabled: query.length >= 2 } }).data)?.hits ?? [];
+  if (query.length < 2) return [];
+  const open = (href: string) => () => {
     close();
     void goTo(href);
   };
-  return [
-    { id: "measure", group: "Actions", icon: "ruler", label: "Measure", keys: "L", run: close },
-    {
-      id: "measurements",
-      group: "Actions",
-      icon: "search",
-      label: "Measurements in this case",
-      run: close,
-    },
-    {
-      id: "upload",
-      group: "Actions",
-      icon: "upload",
-      label: "Upload slides and results",
-      run: to(destinations.upload(projectId)),
-    },
-    {
-      id: "run-model",
-      group: "Actions",
-      icon: "smart",
-      label: "Run a model",
-      run: to(destinations.runModel(projectId)),
-    },
-    {
-      id: "new-task",
-      group: "Actions",
-      icon: "users",
-      label: "New review task",
-      run: to(destinations.newReviewTask(projectId)),
-    },
-    {
-      id: "my-work",
-      group: "Actions",
-      icon: "slides",
-      label: "Open My work",
-      run: to(destinations.myWork()),
-    },
-    {
-      id: "home",
-      group: "Actions",
-      icon: "home",
-      label: "Open Home",
-      run: to(destinations.home()),
-    },
-    {
-      id: "bell",
-      group: "Actions",
-      icon: "bell",
-      label: "Notifications",
-      run: () => void overlay.set("notifications"),
-    },
-    {
-      id: "brightness",
-      group: "Settings",
-      icon: "sun",
-      label: "Slide brightness",
-      keys: "Alt+↑ ↓",
-      run: to(destinations.settings("display")),
-    },
-    {
-      id: "units",
-      group: "Settings",
-      icon: "gear",
-      label: "Units and measurement display",
-      run: to(destinations.settings("display")),
-    },
-    {
-      id: "wheel",
-      group: "Settings",
-      icon: "gear",
-      label: "Mouse wheel",
-      run: to(destinations.settings("navigation")),
-    },
-    {
-      id: "theme",
-      group: "Settings",
-      icon: "sun",
-      label: "Theme",
-      run: to(destinations.settings("display")),
-    },
-    {
-      id: "shortcuts",
-      group: "Settings",
-      icon: "keyboard",
-      label: "Keyboard shortcuts",
-      keys: "?",
-      run: to(destinations.settings("shortcuts")),
-    },
-  ];
+  const fromServer = hits.flatMap((hit) => {
+    const href = hitHref(hit);
+    return href === null ? [] : [hitRow(hit, query, open(href))];
+  });
+  const known = new Set(fromServer.map((row) => row.id));
+  const fromList = projects.flatMap((project) => {
+    const hit: SearchHit = {
+      kind: "project",
+      id: project.id,
+      label: `${project.code} · ${project.name}`,
+    };
+    if (matchText(hit.label, query) === null) return [];
+    const row = hitRow(hit, query, open(destinations.project(project.id)));
+    return known.has(row.id) ? [] : [row];
+  });
+  return [...fromServer, ...fromList];
 }
-
-const groups = ["Actions", "Go to", "Settings"] as const;
 
 function PaletteBody({ initial, close }: { initial: string; close: () => void }) {
   const [query, setQuery] = useState(initial);
   const [active, setActive] = useState(0);
   const goTo = useGoTo();
+  const router = useRouter();
+  const overlay = useOverlay();
+  const params = useParams({ strict: false });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const developerMode = useDeveloperMode();
+  const projects = okData(useListProjects().data) ?? [];
   const trimmed = query.trim();
-  const hits =
-    okData(useSearch({ q: trimmed }, { query: { enabled: trimmed.length >= 2 } }).data)?.hits ?? [];
-  const local = useCommands(close).filter(
-    (command) => !trimmed || command.label.toLowerCase().includes(trimmed.toLowerCase()),
-  );
-  const found: Command[] = hits.flatMap((hit) => {
-    const href = hitHref(hit);
-    if (href === null) return [];
-    return [
-      {
-        id: `hit-${hit.kind}-${hit.id}`,
-        group: "Go to" as const,
-        icon: hitIcons[hit.kind],
-        label:
-          hit.project && hit.kind !== "project" ? `${hit.label} · ${hit.project.code}` : hit.label,
-        run: () => {
-          close();
-          void goTo(href);
-        },
-      },
-    ];
+  const places = usePlaces(trimmed, close);
+  const entries = paletteEntries({
+    projectId: params.projectId ?? projects[0]?.id ?? "",
+    onSlide: /^\/projects\/[^/]+\/slides\/[^/]+$/.test(pathname),
+    developerMode,
+    go: (href) => {
+      close();
+      void goTo(href);
+    },
+    measure: () =>
+      void router.navigate({
+        to: ".",
+        search: (previous: Record<string, unknown>) => ({
+          ...previous,
+          tool: "ruler" as const,
+          open: undefined,
+          find: undefined,
+        }),
+      }),
+    openNotifications: () => void overlay.set("notifications"),
+    setDeveloperMode: (on) => {
+      setDeveloperMode(on);
+      close();
+    },
   });
-  const commands = groups.flatMap((group) =>
-    [...local, ...found].filter((command) => command.group === group),
-  );
+  const local = entries.flatMap((entry): Row[] => {
+    if (!trimmed) {
+      return entry.group === "Settings" && !entry.featured
+        ? []
+        : [{ ...entry, matched: [], score: 0 }];
+    }
+    const found = matchCommand(entry.label, entry.keywords, trimmed);
+    return found === null ? [] : [{ ...entry, matched: found.indices, score: found.score }];
+  });
+  const rows = [...local, ...places];
+  const byGroup = paletteGroups.map((group, order) => ({
+    group,
+    order,
+    rows: rows
+      .filter((row) => row.group === group)
+      .map((row, position) => ({ row, position }))
+      .sort((a, b) => b.row.score - a.row.score || a.position - b.position)
+      .slice(0, perGroupLimit)
+      .map(({ row }) => row),
+  }));
+  const commands = byGroup
+    .filter((entry) => entry.rows.length > 0)
+    .sort((a, b) => (b.rows[0]?.score ?? 0) - (a.rows[0]?.score ?? 0) || a.order - b.order)
+    .flatMap((entry) => entry.rows);
+  const groupOrder = [...new Set(commands.map((command) => command.group))];
   const current = Math.min(active, Math.max(0, commands.length - 1));
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -190,7 +162,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
         setActive(0);
       }}
       commands={commands}
-      groups={groups}
+      groups={groupOrder}
       current={current}
       onCurrentChange={setActive}
       onKeyDown={onKeyDown}
@@ -201,16 +173,11 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
 export function CommandPalette() {
   const overlay = useOverlay();
   const isOpen = overlay.open === "palette";
-  useEffect(() => {
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        void overlay.set(isOpen ? undefined : "palette");
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
+  const toggle = useRef(() => {});
+  toggle.current = () => void overlay.set(isOpen ? undefined : "palette");
+  const bindings = useMemo(() => keyRegistry.bindings({ only: ["search"] }), []);
+  const onFire = useCallback(() => toggle.current(), []);
+  useHotkeys(bindings, onFire);
   const close = () => void overlay.set(undefined);
   return (
     <Dialog open={isOpen} onOpenChange={(next) => (next ? undefined : close())}>
