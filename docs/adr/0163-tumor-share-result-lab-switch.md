@@ -1,6 +1,9 @@
-# XXXX. Tumor share result is a lab switch per kind of case
+# 0163. Tumor share result is a lab switch per kind of case
 
-Status: Accepted
+- Date: 2026-11-03
+- Status: Accepted
+- Deciders: Yurii Fedas (owner standing approval, ADR 0151)
+- Backlog: REVIEW-017 (tumor share result for cellularity cases)
 
 ## Context
 

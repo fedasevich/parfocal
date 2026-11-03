@@ -168,3 +168,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0160](0160-search-matches-stored-lowercase-labels.md) | Search matches stored lowercase copies of labels with LIKE instead of ILIKE, because row-level security keeps ILIKE off any index | Accepted | 2026-11-03 |
 | [0161](0161-derived-overview-levels-sidecar.md) | Ingest writes the missing coarse power-of-two levels as a lossless TIFF sidecar that the pixel source appends to the slide's levels | Accepted | 2026-11-03 |
 | [0162](0162-ingest-failure-classes-and-upload-refused-notification.md) | Ingest failures have two classes, set by the server, and a refused file sends an upload refused notification | Accepted | 2026-11-03 |
+| [0163](0163-tumor-share-result-lab-switch.md) | Tumor share result is a lab switch per kind of case | Accepted | 2026-11-03 |
