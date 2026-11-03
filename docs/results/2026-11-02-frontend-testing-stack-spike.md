@@ -30,7 +30,12 @@ Can hosted GitHub runners render one Viv tile and one WebGPU frame with software
 | Viv CMU-1.svs goldens at fit, 10x and 40x, written on the M4 | CI run 41485331959 | passed under the JPEG row |
 | Synthetic WebGL goldens and the 1:1 exact tile check, written on the M4 | CI run 41485331959 | passed |
 | Golden-images suite in total | CI run 41485331959 | 61 passed, 8 skipped in 2.6 min |
-| WebGPU adapter and WebGPU tile on hosted Linux | CI | TODO: first completed `browser` run after commit dd81b8c |
+| WebGPU tile on hosted Linux with the first flags | CI run 41580162173 | adapter found, both draw tests fail at `onSubmittedWorkDone` with "A valid external Instance reference no longer exists", Chrome 156 |
+| WebGPU tile with the first flags | Linux arm64 container, Playwright 1.64.0 Chromium | same error, reproduced |
+| WebGPU tile with `--use-vulkan=swiftshader --enable-features=Vulkan` added | Linux arm64 container | 3 passed, max delta 0, 0, 0, differing fraction 0 |
+| WebGPU tile with those flags added | M4 | 3 passed, max delta 0, 0, 0 |
+| WebGPU tile with `--enable-features=Vulkan` alone, or `--use-vulkan=swiftshader` alone | Linux arm64 container | same error |
+| WebGPU spec on hosted Linux with the Vulkan flags | CI | TODO: first completed `browser` run after the fix |
 
 The CI evidence is job 125414049630 of run 41485331959 on commit e08504d, which finished green on 2026-11-02. The Viv specs print pass or fail, not the measured delta, so the exact M4 to x86 difference on Viv frames is not known. It is inside the JPEG row (4 levels, 0.5% of pixels, mean 1.0).
 
@@ -38,9 +43,8 @@ The CI evidence is job 125414049630 of run 41485331959 on commit e08504d, which 
 
 - The Viv tile spike the backlog asks for already runs in CI on every push, through the harness of ADR 0101. Goldens written on the M4 pass on hosted x86 SwiftShader, which closes the open assumption in [the tolerance result](2026-10-23-golden-image-tolerances.md) and [the Viv route result](2026-10-23-viv-route-goldens.md) for every scene that passed.
 - WebGPU on SwiftShader draws the same bytes as WebGL on SwiftShader for an unfiltered 1:1 draw on the M4, so a WebGPU renderer can share the WebGL goldens and the element screenshot path.
-- WebGPU in headless Chrome needs two extra flags and a secure origin. Without them a WebGPU test silently has no adapter.
+- WebGPU in headless Chrome needs two extra flags and a secure origin. Without them a WebGPU test silently has no adapter. On Linux it also needs `--use-vulkan=swiftshader --enable-features=Vulkan`, or the adapter is found but the first queue wait fails.
 
 ## Follow-ups
 
-- TODO: record the hosted Linux numbers of the WebGPU spec here from the first completed `browser` run that includes it.
 - TEST-008 (visual regression for UI) decides Playwright `toHaveScreenshot` for UI chrome, as ADR 0146 proposes.

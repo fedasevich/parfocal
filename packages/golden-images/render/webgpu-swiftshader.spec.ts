@@ -16,6 +16,8 @@ const WEBGPU_SWIFTSHADER_ARGS = [
   ...SWIFTSHADER_ARGS,
   "--enable-unsafe-webgpu",
   "--use-webgpu-adapter=swiftshader",
+  "--use-vulkan=swiftshader",
+  "--enable-features=Vulkan",
 ];
 
 const goldenDirectory = fileURLToPath(new URL("../goldens", import.meta.url));
