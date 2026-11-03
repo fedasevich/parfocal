@@ -24,6 +24,7 @@ import {
   threads,
 } from "./scenario.ts";
 import { settingsDraftOperations } from "./settings-handlers.ts";
+import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
@@ -93,6 +94,11 @@ export {
   getListThreadCommentsMockHandler,
 } from "./review-handlers.ts";
 export { getGetMySettingsMockHandler } from "./settings-handlers.ts";
+export {
+  getConfirmEmailMockHandler,
+  getCreateAccountMockHandler,
+  getResendEmailCodeMockHandler,
+} from "./sign-up-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
@@ -233,6 +239,7 @@ export const draftOperations: DraftOperation[] = [
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...authDraftOperations,
+  ...signUpDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
   ...settingsDraftOperations,

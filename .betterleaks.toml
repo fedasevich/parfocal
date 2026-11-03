@@ -20,6 +20,9 @@ paths = [
   '''^packages/api-client/src/fake/scenario-admin\.ts$''',
   '''^packages/api-client/test/sign-in\.test\.ts$''',
   '''^apps/web/e2e/sign-in\.spec\.ts$''',
+  '''^packages/api-client/test/sign-up\.test\.ts$''',
+  '''^apps/web/e2e/sign-up\.spec\.ts$''',
+  '''^apps/web/test/sign-up-rules\.test\.ts$''',
 ]
 regexTarget = "line"
-regexes = ['''(correct-horse|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|signInSecrets|secrets\.)''']
+regexes = ['''(correct-horse|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|password: "short"|twelve-chars|signInSecrets|secrets\.)''']

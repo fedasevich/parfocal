@@ -1,4 +1,6 @@
+export * from "./confirm-email.ts";
 export * from "./connect-lab-model.ts";
+export * from "./create-account.ts";
 export * from "./get-admin-overview.ts";
 export * from "./get-invite-preview.ts";
 export * from "./get-lab-model-connection.ts";
@@ -11,8 +13,10 @@ export * from "./list-webhooks.ts";
 export * from "./request-password-reset.ts";
 export * from "./request-project-access.ts";
 export * from "./request-sign-in-link.ts";
+export * from "./resend-email-code.ts";
 export * from "./reset-password.ts";
 export * from "./sign-in-session.ts";
 export * from "./sign-in-with-code.ts";
 export * from "./sign-in-with-password.ts";
+export * from "./sign-up-session.ts";
 export * from "./start-sso.ts";

@@ -18,7 +18,6 @@ import {
   AuthLink,
   type AuthWorkspace,
   ChoiceOption,
-  CodeBoxes,
   DeepLinkNote,
   DotSeparator,
   OrDivider,
@@ -33,14 +32,14 @@ import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { StatusTag } from "@parfocal/ui/components/tag";
-import { type KeyboardEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
+import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
 import type { SignInScene } from "./scenes.ts";
 import {
   checkPassword,
   clock,
-  codeDigits,
   codeLength,
   defaultResendSeconds,
   flagsOf,
@@ -60,57 +59,6 @@ export type Flow = {
   land: (session: SignInSession) => void;
   toast: (text: string) => void;
 };
-
-const handled = { mutation: { onError: () => undefined } };
-
-const onEnter = (action: () => void) => (event: KeyboardEvent) => {
-  if (event.key !== "Enter") return;
-  event.preventDefault();
-  action();
-};
-
-const problemText = (error: unknown, fallback: string) =>
-  error instanceof ApiError && error.problem?.title ? error.problem.title : fallback;
-
-function PasswordInput({
-  label,
-  id,
-  value,
-  onChange,
-  onSubmit,
-  fresh = false,
-}: {
-  fresh?: boolean;
-  label: string;
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit?: () => void;
-}) {
-  const [shown, setShown] = useState(false);
-  return (
-    <span className="relative flex items-center">
-      <Input
-        id={id}
-        aria-label={label}
-        type={shown ? "text" : "password"}
-        value={value}
-        autoComplete={`${fresh ? "new" : "current"}-password`}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={onSubmit ? onEnter(onSubmit) : undefined}
-        className="h-9 pr-9 font-mono"
-      />
-      <button
-        type="button"
-        aria-label={shown ? "Hide what you typed" : "Show what you typed"}
-        onClick={() => setShown(!shown)}
-        className="absolute right-2 cursor-pointer border-0 bg-transparent p-0 text-fg-faint"
-      >
-        <Icon name={shown ? "eye-off" : "eye"} />
-      </button>
-    </span>
-  );
-}
 
 function EmailField({ flow }: { flow: Flow }) {
   return (
@@ -267,14 +215,9 @@ export function MagicForm({ flow }: { flow: Flow }) {
   const { options, email } = flow;
   const [code, setCode] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(defaultResendSeconds);
+  const [secondsLeft, setSecondsLeft] = useCountdown(defaultResendSeconds);
   const send = useRequestSignInLink(handled);
   const signIn = useSignInWithCode(handled);
-  useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const timer = setTimeout(() => setSecondsLeft(secondsLeft - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [secondsLeft]);
   const resend = () => {
     send.mutate(
       { data: { email } },
@@ -309,19 +252,7 @@ export function MagicForm({ flow }: { flow: Flow }) {
         We sent a sign-in link and a code to <b>{email}</b>. Both work once, for{" "}
         {options?.link_minutes ?? 15} minutes.
       </AuthHeading>
-      <div className="relative">
-        <CodeBoxes digits={code} aria-hidden="true" />
-        <input
-          aria-label="Sign-in code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={codeLength}
-          value={code}
-          onChange={(event) => setCode(codeDigits(event.target.value))}
-          onKeyDown={onEnter(() => code.length === codeLength && submit())}
-          className="absolute inset-0 h-full w-full cursor-text opacity-0"
-        />
-      </div>
+      <CodeInput label="Sign-in code" value={code} onChange={setCode} onSubmit={submit} />
       {failure === null ? null : (
         <Banner inline tone="bad" icon="warn">
           {failure}
