@@ -174,3 +174,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0166](0166-viewer-parts-from-the-analysis-template.md) | Viewer parts from the analysis template | Accepted | 2026-11-03 |
 | [0167](0167-task-invitations.md) | Task invitations ride on workspace invitations, and their email may name the project and task | Accepted | 2026-11-03 |
 | [0168](0168-one-formatting-module.md) | One formatting module that reads the user's settings | Accepted | 2026-11-03 |
+| [0172](0172-backend-message-catalogues-and-pseudo-locale.md) | Backend messages live in keyed catalogues with a pseudo locale | Accepted | 2026-11-03 |

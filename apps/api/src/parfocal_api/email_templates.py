@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from html import escape
 from string import Formatter
 
+from parfocal_api.locales import DEFAULT_LOCALE, Locale, translated
 from parfocal_api.notification_catalogue import CATALOGUE
 from parfocal_api.tables import NotificationKind
 
@@ -98,9 +99,35 @@ def fields_of(template: Template) -> set[str]:
     } | {"link"}
 
 
-def render(name: str, values: Mapping[str, str]) -> RenderedEmail:
+def keys_of(template: Template) -> dict[str, str]:
+    return {
+        f"{template.name}.subject": template.subject,
+        **{f"{template.name}.line.{index}": line for index, line in enumerate(template.lines)},
+        f"{template.name}.action": template.action,
+    }
+
+
+MESSAGES: Mapping[str, str] = {
+    key: text for template in TEMPLATES.values() for key, text in keys_of(template).items()
+}
+
+
+def localised(name: str, locale: Locale) -> Template:
     template = TEMPLATES[name]
-    needed = fields_of(template)
+    messages = translated(MESSAGES, locale)
+    return Template(
+        name=name,
+        subject=messages[f"{name}.subject"],
+        lines=tuple(messages[f"{name}.line.{index}"] for index in range(len(template.lines))),
+        action=messages[f"{name}.action"],
+    )
+
+
+def render(name: str, values: Mapping[str, str], locale: Locale = DEFAULT_LOCALE) -> RenderedEmail:
+    template = localised(name, locale)
+    needed = fields_of(TEMPLATES[name])
+    if fields_of(template) != needed:
+        raise TemplateParameterError(f"{name} in {locale} does not take {sorted(needed)}")
     unknown = set(values) - PARAMETERS
     if unknown or not needed <= set(values):
         raise TemplateParameterError(f"{name} takes {sorted(needed)}, got {sorted(values)}")
