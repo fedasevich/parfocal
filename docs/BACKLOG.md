@@ -1953,7 +1953,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock 5, kit W33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] CASE-003 · Per-slide view memory
+- [x] CASE-003 · Per-slide view memory
   Each slide remembers its camera while the case is open.
   Done when tests switch slides and come back to the same view.
   Size: S.
