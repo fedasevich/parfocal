@@ -2269,7 +2269,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 ## 15 ANN · Annotate workspace
 
-- [ ] ANN-000 · Research check
+- [x] ANN-000 · Research check
   Compare current tooling conventions (QuPath, CVAT, Figma, the SAM-based QuPath extension) with the kit key map and confirm the geometry library choice for the client (for example earcut, clipper2, turf).
   Done when an ADR exists.
   Size: S.

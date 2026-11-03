@@ -166,6 +166,15 @@ ADR 0013 asked REVIEW-000 for a pathologist to confirm the zone names ("tumor or
 
 Your choice:
 
+## 45. Annotate key map and geometry libraries, from ANN-000 (annotate research check)
+
+ADR 0197 (proposed) keeps the kit key map, adds hold Space to pan and Alt as a second brush erase key, and picks Clipper2 (`clipper2-ts`), earcut (`@math.gl/polygon`) and `flatbush` with our own planar measures. Turf is rejected because its measures are geodesic. QuPath uses M for move, and the kit uses M for the count marker.
+
+- a. Keep M only for markers, and accept ADR 0197. (recommended)
+- b. Also accept QuPath's "." for markers.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
