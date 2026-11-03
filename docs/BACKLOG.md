@@ -932,7 +932,7 @@ Formats in scope, all read natively: Aperio SVS (JPEG and JPEG 2000), generic ti
 
 Conversion policy: the original is never altered. A conversion to OME-Zarr is produced only when a trigger fires, and the viewer then reads the converted copy while the original remains the record. Triggers are an unreadable format, a reader correctness failure that cannot be worked around, or a performance budget failure from VIEW-040. Each trigger has an ADR.
 
-- [ ] INGEST-000 · Research check for upload and server readers
+- [x] INGEST-000 · Research check for upload and server readers
   Done when STACK-026 and STACK-039 are confirmed or revised in an ADR.
   Done in [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md): STACK-039 stands, and STACK-026 stands with tifffile reading OME-TIFF and the worker's own OME-Zarr reader.
   Size: S.
