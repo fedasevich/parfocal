@@ -3213,7 +3213,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests cover chords, hold and tap, scope precedence and typing in inputs.
   Size: M.
 
-- [ ] CMD-002 · Command palette
+- [x] CMD-002 · Command palette
   Cmd+K from everywhere, fuzzy search over actions, places (projects, slides, areas, object IDs by any part of the full path) and settings, grouped results with keys shown, Enter runs the first, lab actions only in developer mode.
   Done when E2E finds and runs an action, a place and a setting.
   Refs mock 18.
