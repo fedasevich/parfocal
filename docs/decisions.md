@@ -49,6 +49,15 @@ A file refused for good shows a "Contact support" link. It points at `support@pa
 
 Your choice:
 
+## 33. How the browser places BIF camera frames, from VIEW-057 (BIF frame placement)
+
+Ventana BIF slides are stitched from camera frames. The browser now places them like OpenSlide does, on one even pitch, so the server and the browser agree within 0.6 grey levels. The seams at the real frame edges stay as visible as in OpenSlide (ratio about 2.8). ADR 0164 (BIF frames placed like OpenSlide) records it.
+
+- a. Keep OpenSlide's even pitch. (recommended, because server tiles, AI results and annotations share one set of coordinates)
+- b. Use the per-boundary positions the file stores. Seams drop to about 1.5, but the reference is no longer OpenSlide and stored BIF annotations would need remapping.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
