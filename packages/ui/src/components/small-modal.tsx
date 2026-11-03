@@ -89,14 +89,14 @@ function SmallModal({
     <DialogPrimitive.Root {...props}>
       {trigger ? <DialogPrimitive.Trigger render={trigger} /> : null}
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim duration-100 data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0" />
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0" />
         <DialogPrimitive.Popup
           data-slot="small-modal"
           data-width={width}
           style={{ width }}
           initialFocus={focusStart}
           onKeyDown={runPrimaryOnEnter}
-          className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[14px] border border-line bg-surf-panel text-body-sm text-fg shadow-pop outline-none duration-100 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95"
+          className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[14px] border border-line bg-surf-panel text-body-sm text-fg shadow-pop outline-none duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95"
         >
           <div className="flex items-start gap-3 px-5 pt-5">
             <div className="grid min-w-0 flex-1 gap-1">

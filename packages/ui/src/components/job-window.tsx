@@ -25,12 +25,12 @@ function JobWindow({
   return (
     <DialogPrimitive.Root {...props}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim duration-100 data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0" />
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0" />
         <DialogPrimitive.Popup
           data-slot="job-window"
           style={{ width }}
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100%-56px)] max-w-[calc(100%-56px)] -translate-x-1/2 -translate-y-1/2 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-line bg-surf-panel text-body-sm text-fg shadow-pop outline-none duration-100 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
+            "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100%-56px)] max-w-[calc(100%-56px)] -translate-x-1/2 -translate-y-1/2 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-line bg-surf-panel text-body-sm text-fg shadow-pop outline-none duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
             className,
           )}
         >
