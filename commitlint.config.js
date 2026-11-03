@@ -1,6 +1,6 @@
 export default {
   extends: ["@commitlint/config-conventional"],
-  ignores: [(message) => /^Merge /.test(message)],
+  ignores: [(message) => String(message).startsWith("Merge ")],
   rules: {
     "scope-case": [0],
     "subject-case": [0],
