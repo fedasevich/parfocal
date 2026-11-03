@@ -17,7 +17,9 @@ function NewCaseRoute() {
     <ProjectPage
       projectId={projectId}
       view={{ tab: "slides" }}
-      overlay={project ? <NewCaseDrawer project={project} onClose={close} /> : null}
+      overlay={
+        project ? <NewCaseDrawer project={project} onClose={close} onCreated={close} /> : null
+      }
     />
   );
 }

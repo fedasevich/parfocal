@@ -5,6 +5,7 @@ import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
+import { createdRecordHandlers } from "./create-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
@@ -35,6 +36,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adminHandlers(),
     ...adjudicationHandlers(),
     ...caseHandlers(),
+    ...createdRecordHandlers(),
     ...settingsHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),
@@ -65,6 +67,7 @@ export {
   liveWorkspaceSettings,
   resetConsoleActions,
 } from "./console-handlers.ts";
+export { resetCreatedRecords } from "./create-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export {
   type FakeJobsScene,

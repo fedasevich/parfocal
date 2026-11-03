@@ -21,7 +21,9 @@ export type ScenarioWorkspace = {
   kind: "diagnostic" | "research";
 };
 
-export type ProjectCode = "P07" | "P03" | "P09" | "P11";
+export type SeededProjectCode = "P07" | "P03" | "P09" | "P11";
+
+export type ProjectCode = SeededProjectCode | `P${number}`;
 
 export type ScenarioProject = {
   code: ProjectCode;

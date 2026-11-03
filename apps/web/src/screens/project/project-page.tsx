@@ -172,6 +172,14 @@ export function ProjectPage({
               <DropdownMenuContent align="end" className="w-65">
                 <DropdownMenuItem
                   onClick={() =>
+                    void navigate({ to: "/projects/$projectId/cases/new", params: { projectId } })
+                  }
+                >
+                  <Icon name="folder" />
+                  New case
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
                     void navigate({ to: "/projects/$projectId/run-model", params: { projectId } })
                   }
                 >
