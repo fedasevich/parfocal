@@ -1593,7 +1593,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit W18.
   Size: M.
 
-- [ ] DS-016 · Motion tokens and reduced motion
+- [x] DS-016 · Motion tokens and reduced motion
   Durations 120 to 400 ms, easing tokens, a slow presenting mode at one third speed, reduced motion turns every transition into a cut.
   Done when tests run with `prefers-reduced-motion` and assert no animation.
   Depends on PROTO-011. Refs kit motion page.
@@ -1681,6 +1681,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   DS-009 (keycap component) moved keycaps onto the key registry, but the tool rail key badges still come from hard-coded keys in `apps/web/src/screens/viewer-tools/rails.ts`, and "Add a note" shows N from a hard-coded handler while N is also No in the yes or no decision style. Register the note action, settle the N clash, and read the rail badges from the registry.
   Done when a test changes a binding and the rail badge and the note hint follow it, and a test proves no two actions in one decision style share a key.
   Depends on DS-009, DS-010.
+  Size: S.
+
+- [ ] DS-031 · Fixed durations onto the motion tokens
+  DS-016 (motion tokens and reduced motion) added the duration and easing tokens, but the dialog, small modal and dropdown still use `duration-100` and the magnification bar a fixed 280 ms, so they do not slow down in presenting mode ([ADR 0187](adr/0187-motion-tokens-scale-and-global-reduced-motion.md)).
+  Done when no component in packages/ui or apps/web uses a fixed transition duration, and a test checks a dialog's duration in presenting mode.
+  Depends on DS-016.
   Size: S.
 
 ---
