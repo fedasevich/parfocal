@@ -4484,7 +4484,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Done when the admin sections and their permissions are listed in an ADR. Who opens the page is settled by [ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md).
   Size: S.
 
-- [ ] ADMIN-001 · Admin page shell
+- [x] ADMIN-001 · Admin page shell
   A sidebar with Back to Parfocal, the workspace and the sections (overview, people and roles, projects, AI models, report templates, storage and sources, API and webhooks, audit log, security), and flat content.
   Done when component tests cover navigation and permission tests refuse reviewers and researchers without admin rights.
   Depends on SHELL-001, IAM-024. Refs mock: admin.
