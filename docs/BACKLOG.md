@@ -1775,7 +1775,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock 16, kit W23.
   Size: S.
 
-- [ ] SHELL-009 · Screen coverage measurement
+- [x] SHELL-009 · Screen coverage measurement
   A test utility that measures the share of the canvas covered by chrome at 1280, 1440 and 1920 widths.
   SHELL-008 (focus mode) measures the chrome share in place in apps/web/e2e/viewer-tools.spec.ts (chromeShare over 0.2 before focus, 0 in focus). Replace it with this utility and its expected value.
   Done when CI enforces under 35% in Review at 1440×900 (KPI).
