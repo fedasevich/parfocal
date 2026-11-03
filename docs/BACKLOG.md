@@ -798,6 +798,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on PROJ-002, TILES-001. Split from PROJ-002 (privacy modes) on 2026-11-02. Refs [ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md).
   Size: L.
 
+- [ ] SEC-029 · Security contact for each workspace
+  SEC-018 (incident response runbook) tells workspaces about a breach within 24 hours, but a workspace has no security contact to tell. Add a security contact address to the workspace settings, shown to workspace admins and required before a workspace holds clinical data, and point the runbook at it.
+  Done when API tests cover setting, reading and requiring the contact with isolation and audit, and a component test covers the admin field.
+  Depends on SEC-018.
+  Size: S.
+
 - [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.

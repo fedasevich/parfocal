@@ -135,6 +135,17 @@ ADR 0189 (proposed) confirms the developer drawer's ten sections in four groups,
 
 Your choice:
 
+## 42. Incident response facts, from SEC-018 (incident response and breach notification runbook)
+
+SEC-018 wrote the runbook (`docs/compliance/incident-response.md`), an empty breach register, a ready tabletop scenario with an empty record, and ADR 0186 (proposed). Every alert channel today is about cost only. It stays in review until these are settled.
+
+- a. Confirm 24 hours as the deadline for telling workspaces (DPA clause 4.6), or give counsel's number.
+- b. Name the incident lead, deputy, privacy contact, counsel, the supervisory authority (depends on the legal entity in 34a) and one security contact address.
+- c. Choose a private place for full breach records, because this repository is public.
+- d. Run the tabletop exercise and record it.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
