@@ -297,7 +297,7 @@ export function AnnotateView({ tools, scene, onScene, onLeave }: AnnotateViewPro
                     {proposals} found
                   </span>
                   <Button size="sm" onClick={discard} disabled={proposals === 0}>
-                    Discard <Keycap keys="Esc" size="sm" />
+                    Discard <Keycap action="esc" keys="Esc" size="sm" />
                   </Button>
                   <Button size="sm" variant="primary" onClick={accept} disabled={proposals === 0}>
                     Accept as tumor <Keycap keys="↵" size="sm" />

@@ -141,7 +141,7 @@ export function FocusView({
                   aria-label="Show the interface"
                   className="cursor-pointer border-0 bg-transparent p-0"
                 >
-                  <Keycap keys="⌘\" size="sm" />
+                  <Keycap action="hideui" keys="⌘\" size="sm" />
                 </button>
               </FloatingPill>
               {current ? (

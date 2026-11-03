@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { GlobalShell } from "../shell/global-shell.tsx";
@@ -17,14 +18,16 @@ function Root() {
   });
   return (
     <SessionLock>
-      {inShell ? (
-        <GlobalShell>
+      <KeyBindingsProvider>
+        {inShell ? (
+          <GlobalShell>
+            <Outlet />
+          </GlobalShell>
+        ) : (
           <Outlet />
-        </GlobalShell>
-      ) : (
-        <Outlet />
-      )}
-      <CommandPalette />
+        )}
+        <CommandPalette />
+      </KeyBindingsProvider>
     </SessionLock>
   );
 }

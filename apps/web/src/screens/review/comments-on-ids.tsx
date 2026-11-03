@@ -196,7 +196,7 @@ function CommentsBody({
               <b className="text-fg">Whole slide</b> ·{" "}
               {session.threads.filter((item) => !item.resolved).length} threads
             </span>
-            <Keycap keys="Z" size="sm" />
+            <Keycap action="peek" keys="Z" size="sm" />
           </span>
           <div
             aria-hidden="true"
