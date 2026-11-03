@@ -2282,6 +2282,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-002 · Annotate rail with five families
   Navigate (V, H), AI (S, U), draw (P, Shift+P, R, O, M), note (L, Shift+L, T, C), paint (B).
+  Holding Space pans in any tool ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the key map check).
   Done when component tests cover every tool and its key from the registry.
   Refs mock §2.2.
   Size: M.
@@ -2325,7 +2326,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: S.
 
 - [ ] ANN-010 · Brush tool on heatmaps
-  Paint and erase (Shift) on a heatmap layer, size 4 to 160 px.
+  Paint and erase (Shift, or Alt as in QuPath) on a heatmap layer, size 4 to 160 px. Boolean and offset work uses Clipper2 ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the geometry library choice).
   Done when tests cover painting, erasing and undo, and the painted map persists.
   Size: M.
 
