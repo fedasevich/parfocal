@@ -1000,7 +1000,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when an E2E test sees the slide go from uploading to processing to ready with live status.
   Built as [ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md) (the slide row appears only when it is ready) says, with the polled `getUploadStatus` route as the live status until STACK-024 (realtime transport). Paired result files wait for RSET-004 (pairing results with slides), because the upload metadata cannot mark a result file yet.
 
-- [ ] INGEST-018 · Ingest failure UX
+- [x] INGEST-018 · Ingest failure UX
   Readable errors per failure class, retry for transient failures, support contact for permanent ones. A refused file sends the uploader an in-app notification of a new kind, upload refused, with its own line, as the owner chose on 2026-11-02.
   Done when component tests cover each failure class.
   Size: M.
