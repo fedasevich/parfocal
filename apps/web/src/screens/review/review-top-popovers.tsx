@@ -21,8 +21,10 @@ import { destinations } from "../../shell/destinations.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
+import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
+import { caseDetailsOf } from "./case-details.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { SlideCounts } from "./review-top.tsx";
 import { timeLeft } from "./review-top.tsx";
@@ -184,6 +186,15 @@ export function useReviewTopPopovers({
   });
 
   const caseTitle = session.caseLabel ? `Case ${session.caseLabel}` : undefined;
+  const person = usePeople();
+  const details = caseDetailsOf({
+    projectName: project?.name,
+    clinical: project?.privacy_mode === "clinical",
+    caseLabel: session.caseLabel ?? undefined,
+    specimens: caseDetail?.specimens,
+    taskTitle: task ? `${task.code} · ${task.name}` : undefined,
+    researcher: person(task?.created_by_user_id)?.name,
+  });
   const compareStub = "Opens the compare view. Picking the exact slide arrives with side by side.";
   const compareTo = (scene: "picking" | "picked") => {
     if (!projectId) return undefined;
@@ -195,6 +206,7 @@ export function useReviewTopPopovers({
       caseTitle={caseTitle}
       caseSub={project?.name}
       onOpenCase={projectId ? () => void goTo(destinations.project(projectId)) : undefined}
+      details={details}
       caseSlides={caseSlides}
       looseHeading={task ? `Loose slides in task ${task.code}` : undefined}
       looseSlides={looseSlides}
