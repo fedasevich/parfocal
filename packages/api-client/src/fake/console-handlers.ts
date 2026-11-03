@@ -19,10 +19,13 @@ const seededPolicy = { ...sessionPolicy };
 const copyOfTiers = () => modelTiers.map((mapping) => ({ ...mapping }));
 
 let lab: LabSettings = { values: {}, locked: [] };
+const seededPersonal = { home_layout: "both" };
+let personal: Record<string, unknown> = { ...seededPersonal };
 let tiers: TierMapping[] = copyOfTiers();
 
 export const resetConsoleActions = () => {
   lab = { values: {}, locked: [] };
+  personal = { ...seededPersonal };
   tiers = copyOfTiers();
   resetAnnouncementBoard();
   Object.assign(sessionPolicy, seededPolicy);
@@ -68,8 +71,36 @@ const fits = (key: SettingKey, value: unknown) => {
 export function consoleHandlers(): RequestHandler[] {
   return [
     http.get("*/api/me/setting-layers", () =>
-      HttpResponse.json<MySettingLayers>({ lab: liveWorkspaceSettings(), personal: {} }),
+      HttpResponse.json<MySettingLayers>({
+        lab: liveWorkspaceSettings(),
+        personal: { ...personal },
+      }),
     ),
+    http.put("*/api/me/setting-layers", async ({ request }) => {
+      const body = (await request.json()) as { values: Record<string, unknown> };
+      for (const [key, value] of Object.entries(body.values)) {
+        if (!isKey(key) || !catalogue[key].layers.includes("personal")) {
+          return problem(
+            400,
+            "unknown-setting",
+            "There is no such setting, or it cannot be set here",
+          );
+        }
+        if (value !== null && !fits(key, value)) {
+          return problem(400, "invalid-setting", "A setting's value does not fit it");
+        }
+        if (lab.locked.includes(key) && value !== null) {
+          return problem(409, "setting-locked", "Your workspace locked this setting");
+        }
+      }
+      personal = Object.fromEntries(
+        Object.entries({ ...personal, ...body.values }).filter(([, value]) => value !== null),
+      );
+      return HttpResponse.json<MySettingLayers>({
+        lab: liveWorkspaceSettings(),
+        personal: { ...personal },
+      });
+    }),
     http.put("*/api/tenant/settings", async ({ request }) => {
       const body = (await request.json()) as { values: Record<string, unknown>; locked?: string[] };
       for (const [key, value] of Object.entries(body.values)) {

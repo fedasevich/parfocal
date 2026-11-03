@@ -183,3 +183,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0182](0182-shell-routing-and-state-confirmed.md) | The shell keeps TanStack Router with Zod search params and the one-home state rule, with no upgrade due | Accepted | 2026-11-03 |
 | [0185](0185-smart-minimap-state-machine-and-placement.md) | The smart minimap is one XState machine with a size mode, a fade flag and a peek overlay, placed by scoring the four corners | Proposed | 2026-11-03 |
 | [0187](0187-motion-tokens-scale-and-global-reduced-motion.md) | Motion tokens scale with one variable, and reduced motion is a global cut in CSS | Accepted | 2026-11-03 |
+| [0191](0191-home-layout-as-a-personal-setting.md) | The home layout is a personal setting that setup writes from the chosen role and settings change | Proposed | 2026-11-03 |

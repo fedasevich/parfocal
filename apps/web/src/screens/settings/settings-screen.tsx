@@ -1,13 +1,16 @@
 import {
+  getGetMySettingLayersQueryKey,
   getListSessionsQueryKey,
   type MySettings,
   type Preference,
   useEndOtherSessions,
   useGetMe,
+  useGetMySettingLayers,
   useGetMySettings,
   useGetSessionPolicy,
   useListNotificationPreferences,
   useListSessions,
+  useSetMySettingLayers,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -33,6 +36,7 @@ import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { applyTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import { andJoin } from "../format.ts";
+import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
 import {
   matchCount,
@@ -197,6 +201,14 @@ function LoadedSettings({
   const preferences = okData(useListNotificationPreferences().data) ?? [];
   const queryClient = useQueryClient();
   const endOthers = useEndOtherSessions();
+  const layers = okData(useGetMySettingLayers().data);
+  const saveLayers = useSetMySettingLayers({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
+    },
+  });
+  const [homeLayout, setHomeLayout] = useState<HomeLayoutChoice | null>(null);
   const [personal, setPersonal] = useState<Personal>(settings.personal);
   const [device, setDevice] = useState<Device>(deviceDefaults);
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
@@ -253,6 +265,22 @@ function LoadedSettings({
   const workspace = me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id);
 
   const controls: Record<RowKey, () => ReactNode> = {
+    homeLayout: () => (
+      <Segments
+        label="Home"
+        value={
+          homeLayout ?? (layers?.personal.home_layout as HomeLayoutChoice | undefined) ?? "role"
+        }
+        pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
+        onChange={(value) => {
+          const choice = value as HomeLayoutChoice;
+          setHomeLayout(choice);
+          saveLayers.mutate({
+            data: { values: { home_layout: choice === "role" ? null : choice } },
+          });
+        }}
+      />
+    ),
     theme: () => (
       <Segments
         label="Theme"
