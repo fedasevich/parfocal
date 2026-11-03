@@ -23,17 +23,23 @@ test("opening a slide from My work animates, the pointer reaches the page and a 
   await watchTransitions(page);
   await page.getByRole("button", { name: /Continue reviewing/ }).click();
   await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=/);
-  const during = await page.evaluate(() => {
-    const target = document.querySelector("[data-vt-target]");
-    const box = target?.getBoundingClientRect();
-    const hit = box
-      ? document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-      : null;
-    return {
-      vt: document.documentElement.dataset["vt"] ?? null,
-      reachesPage: hit !== null && hit !== document.documentElement,
-    };
-  });
+  const waiting = await page.waitForFunction(
+    () => {
+      if (document.documentElement.dataset["vt"] === undefined) return null;
+      const target = document.querySelector("[data-vt-target]");
+      const box = target?.getBoundingClientRect();
+      const hit = box
+        ? document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+        : null;
+      return {
+        vt: document.documentElement.dataset["vt"] ?? null,
+        reachesPage: hit !== null && hit !== document.documentElement,
+      };
+    },
+    null,
+    { polling: "raf" },
+  );
+  const during = (await waiting.jsonValue()) as { vt: string | null; reachesPage: boolean };
   expect(during.vt).toBe("open");
   expect(during.reachesPage).toBe(true);
   await page.keyboard.press("Shift");
