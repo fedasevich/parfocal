@@ -432,6 +432,30 @@ export const reviewOrderOf = reviewOrderFor;
 
 export const verdictsOf = verdictsFor;
 
+let bulkSlideCount = 0;
+
+export function setFakeBulkSlides(count: number): void {
+  bulkSlideCount = Math.max(0, Math.floor(count));
+}
+
+const padded = (value: number, width: number) => String(value).padStart(width, "0");
+
+export const bulkSlideRows = (base: SlideRow[], count: number): SlideRow[] =>
+  base.length === 0
+    ? []
+    : Array.from({ length: count }, (_, index) => {
+        const like = base[index % base.length] as SlideRow;
+        const number = padded(index + 1, 5);
+        return {
+          ...like,
+          id: `00000000-0000-4000-8019-${padded(index + 1, 12)}`,
+          label: `bulk_${number}`,
+          case_id:
+            like.case_id === null ? null : `00000000-0000-4000-8020-${padded(index + 1, 12)}`,
+          case_label: like.case_label === null ? null : `B-${number}`,
+        };
+      });
+
 export function workHandlers(): RequestHandler[] {
   const inbox = createInbox();
   resetAnnouncementBoard();
@@ -444,7 +468,8 @@ export function workHandlers(): RequestHandler[] {
       const status = params.get("status");
       const resultSet = params.get("result_set");
       const reviewer = params.get("reviewer_id");
-      const rows = myWorkSlideIds.map(toSlideRow);
+      const scenarioRows = myWorkSlideIds.map(toSlideRow);
+      const rows = [...scenarioRows, ...bulkSlideRows(scenarioRows, bulkSlideCount)];
       return {
         slides: rows.filter(
           (row) =>

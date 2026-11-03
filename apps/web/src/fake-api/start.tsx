@@ -3,6 +3,7 @@ import {
   scenario,
   sessionLockHandlers,
   setFakeAiStreaming,
+  setFakeBulkSlides,
   setFakeConnectModelScene,
   setFakeJobsScene,
   setFakeQueueScene,
@@ -50,6 +51,7 @@ export async function startFakeApi(
   const search = Object.fromEntries(new URLSearchParams(window.location.search));
   applyFakeState(window.location.pathname, search);
   setFakeAiStreaming(search["stream"] === "1");
+  setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];
   await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);
   mountFakeDataBadge(scope, queryClient);
