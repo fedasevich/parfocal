@@ -150,3 +150,25 @@ export function motionMs(duration: MotionDuration, mode: MotionMode = "normal"):
 export function cubicBezierCss(easing: MotionEasing): string {
   return `cubic-bezier(${motionEasings[easing].join(", ")})`;
 }
+
+export const densityModes = ["comfortable", "compact"] as const;
+
+export type DensityMode = (typeof densityModes)[number];
+
+export const densitySpacingPx = {
+  "list-row-y": { comfortable: 12, compact: 7 },
+  "cell-y": { comfortable: 8, compact: 4 },
+  "head-h": { comfortable: 32, compact: 28 },
+  "head-y": { comfortable: 7, compact: 4 },
+  "panel-gap": { comfortable: 22, compact: 14 },
+  "panel-pad": { comfortable: 20, compact: 14 },
+  "foot-x": { comfortable: 20, compact: 14 },
+  "foot-top": { comfortable: 14, compact: 10 },
+  "foot-bottom": { comfortable: 18, compact: 12 },
+} as const satisfies Record<string, Record<DensityMode, number>>;
+
+export type DensitySpacing = keyof typeof densitySpacingPx;
+
+export function densityMode(value: unknown): DensityMode {
+  return value === "compact" ? "compact" : "comfortable";
+}

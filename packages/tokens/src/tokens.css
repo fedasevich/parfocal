@@ -158,6 +158,31 @@
   --motion-scale: 0;
 }
 
+:root,
+[data-density="comfortable"] {
+  --density-list-row-y: 12px;
+  --density-cell-y: 8px;
+  --density-head-h: 32px;
+  --density-head-y: 7px;
+  --density-panel-gap: 22px;
+  --density-panel-pad: 20px;
+  --density-foot-x: 20px;
+  --density-foot-top: 14px;
+  --density-foot-bottom: 18px;
+}
+
+[data-density="compact"] {
+  --density-list-row-y: 7px;
+  --density-cell-y: 4px;
+  --density-head-h: 28px;
+  --density-head-y: 4px;
+  --density-panel-gap: 14px;
+  --density-panel-pad: 14px;
+  --density-foot-x: 14px;
+  --density-foot-top: 10px;
+  --density-foot-bottom: 12px;
+}
+
 [data-motion="reduced"] *,
 [data-motion="reduced"] *::before,
 [data-motion="reduced"] *::after {
