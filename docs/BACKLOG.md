@@ -577,7 +577,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on OPS-005.
   Size: L.
 
-- [ ] SKEL-010 · Skeleton retrospective
+- [x] SKEL-010 · Skeleton retrospective
   Done when an ADR lists what the skeleton revealed (latency, memory, gaps) and the backlog is edited to reflect it.
   Recorded in [ADR 0169](adr/0169-walking-skeleton-retrospective.md), which added SKEL-011 and SKEL-012 and edited TEST-004 and TEST-007.
   Size: S.
