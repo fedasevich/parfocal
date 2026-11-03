@@ -170,6 +170,11 @@ export interface SlideStitching {
   readonly height: number;
 }
 
+export interface OverviewLevelsRef {
+  readonly path: string;
+  readonly downsamples: readonly number[];
+}
+
 export interface SlideIndex {
   readonly formatId: SlideFormatId;
   readonly levels?: readonly SlideIndexLevel[];
@@ -180,6 +185,7 @@ export interface SlideIndex {
   readonly littleEndian?: boolean;
   readonly bigTiff?: boolean;
   readonly stitching?: SlideStitching | null;
+  readonly overviewLevels?: OverviewLevelsRef;
 }
 
 export interface OpenRequest {

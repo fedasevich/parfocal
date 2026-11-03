@@ -1,3 +1,4 @@
+import { withOverviewLevels } from "./overview-levels.ts";
 import { openTiffSource } from "./tiff/tiff-source.ts";
 import {
   type OpenRequest,
@@ -6,6 +7,7 @@ import {
   type SlideFormatId,
   UnsupportedFormatError,
 } from "./types.ts";
+import { absoluteUrl } from "./url.ts";
 import { openOmeZarrSource } from "./zarr/ome-zarr-source.ts";
 
 export interface PixelSourceRegistry {
@@ -31,9 +33,36 @@ export function createPixelSourceRegistry(): PixelSourceRegistry {
       }
       const opener = openers.get(request.formatId);
       if (opener === undefined) throw new UnsupportedFormatError(request.formatId);
-      return opener(request);
+      const main = await opener(request);
+      return withOverviewLevelsIfIndexed(main, request);
     },
   };
+}
+
+async function withOverviewLevelsIfIndexed(
+  main: PixelSource,
+  request: OpenRequest,
+): Promise<PixelSource> {
+  const reference = request.index?.overviewLevels;
+  if (reference === undefined) return main;
+  let overview: PixelSource | null = null;
+  try {
+    overview = await openTiffSource({
+      formatId: "generic-tiff",
+      url: absoluteUrl(reference.path, absoluteUrl(request.url, request.baseUrl)),
+      nativeJpeg: "off",
+      ...(request.fetch ? { fetch: request.fetch } : {}),
+      ...(request.signal ? { signal: request.signal } : {}),
+    });
+    return withOverviewLevels(main, overview, reference);
+  } catch (error) {
+    overview?.close();
+    if (request.signal?.aborted) {
+      main.close();
+      throw error;
+    }
+    return main;
+  }
 }
 
 export const tiffTileGridFormats = [

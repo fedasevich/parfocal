@@ -37,6 +37,7 @@ from parfocal_common.settings import load_settings
 from parfocal_ingest.associated import associated_images
 from parfocal_ingest.identify import Format, Identified, Refusal, identify
 from parfocal_ingest.integrity import check_integrity
+from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
 from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
@@ -244,6 +245,14 @@ async def index(context: Context) -> Mapping[str, Any]:
     prefix = slide_prefix(context.upload.tenant_id, slide_id_of(results))
     await context.store.put_object(f"{prefix}levels.json", level_table(found), "application/json")
     tiles = await asyncio.to_thread(tile_index, path, identified, found)
+    derived = None
+    if tiles is not None and identified.format is not None:
+        derived = await asyncio.to_thread(overview_levels, path, identified.format, found)
+    if tiles is not None and derived is not None:
+        await context.store.put_object(
+            f"{prefix}{OVERVIEW_LEVELS_NAME}", derived.data, "image/tiff"
+        )
+        tiles["overviewLevels"] = derived.reference()
     if tiles is not None:
         await context.store.put_object(
             f"{prefix}{TILE_INDEX_NAME}",
@@ -251,7 +260,11 @@ async def index(context: Context) -> Mapping[str, Any]:
             "application/json",
             content_encoding="gzip",
         )
-    return {"levels": len(found.levels), "tile_index": tiles is not None}
+    return {
+        "levels": len(found.levels),
+        "tile_index": tiles is not None,
+        "overview_levels": None if derived is None else list(derived.downsamples),
+    }
 
 
 async def derive(context: Context) -> Mapping[str, Any]:
