@@ -26,6 +26,7 @@ function GuidedRoute() {
     <GuidedReview
       taskId={taskId}
       slideId={search.slide ?? ""}
+      objectId={search.object}
       scene={search.scene}
       submitted={search.submitted ?? false}
       tab={search.tab}

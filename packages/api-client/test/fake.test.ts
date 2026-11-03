@@ -66,7 +66,7 @@ test("seeded operations tell the scenario's story ahead of generated fake data",
   );
   const home = body(await getMyHome());
   assert.equal(home.resume?.task_code, "RT-14");
-  assert.equal(home.resume?.object_id, "T2·C145");
+  assert.equal(home.resume?.object_id, "T5");
   const tasks = body(await listMyReviewTasks());
   assert.deepEqual(
     tasks.map((task) => task.code),

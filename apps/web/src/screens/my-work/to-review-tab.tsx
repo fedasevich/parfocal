@@ -37,6 +37,9 @@ import {
   ThreadsValue,
   useOpenThreads,
 } from "./parts.tsx";
+import { activeTasks, continuePath, reviewRow } from "./to-review-rows.ts";
+
+export { activeTasks };
 
 export const adjudicationKey = (item: MyAdjudication) => `adj-${item.id}`;
 
@@ -52,7 +55,7 @@ const timeLeft = (slides: number) => {
 
 function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) {
   const goTo = useGoTo();
-  const open = () => void goTo(destinations.guided(task.id, resume.slide_id));
+  const open = () => void goTo(continuePath(task, resume));
   const left = task.slides_assigned - task.slides_submitted;
   return (
     <div className="grid grid-cols-[180px_1fr_auto] items-center gap-4.5 rounded-[14px] border border-accent bg-accent-soft p-4">
@@ -230,7 +233,8 @@ function TaskPreview({
   const slideId = here?.slide_id ?? task.next_slide_id ?? undefined;
   const progress = useSlideProgress(task.id, slideId);
   const threads = useOpenThreads(here ? slideId : undefined);
-  const guided = () => void goTo(destinations.guided(task.id, slideId));
+  const guided = () =>
+    void goTo(here ? continuePath(task, here) : destinations.guided(task.id, slideId));
   return (
     <PreviewPanel
       title={here ? `${here.slide_label}` : task.code}
@@ -288,10 +292,6 @@ function AdjudicationPreview({ item, onClose }: { item: MyAdjudication; onClose:
       onClose={onClose}
     />
   );
-}
-
-export function activeTasks(tasks: MyTask[]) {
-  return tasks.filter((task) => task.status === "in-review" || task.status === "not-started");
 }
 
 export function ToReviewTab({
@@ -356,31 +356,25 @@ export function ToReviewTab({
           );
         })}
         {active.map((task) => {
-          const started = task.slides_submitted > 0;
-          const owner = people(task.created_by_user_id)?.name ?? "the researcher";
+          const row = reviewRow(task, people(task.created_by_user_id)?.name, resume);
+          if (!row) return null;
           return (
             <TaskRow
               key={task.id}
               selected={selected === task.id}
               colour={colourOf(task.project.id)}
-              title={task.name}
-              sub={`${task.project.name}${task.due_on ? ` · due ${formatDue(task.due_on)}` : ""}`}
-              progress={{
-                value: percent(task.slides_submitted, task.slides_assigned),
-                label: `${task.slides_submitted} of ${task.slides_assigned} slides`,
-              }}
-              tags={
-                <>
-                  {task.blinded ? <StatusTag>Blind</StatusTag> : null}
-                  <StatusTag tone={started ? "accent" : "warn"}>
-                    {started ? "In progress" : `New from ${owner}`}
-                  </StatusTag>
-                </>
-              }
+              title={row.title}
+              sub={row.sub}
+              progress={row.progress}
+              tags={row.tags.map((tag) => (
+                <StatusTag key={tag.label} tone={tag.tone}>
+                  {tag.label}
+                </StatusTag>
+              ))}
               action={{
-                label: started ? "Continue" : "Start",
-                primary: !started,
-                run: () => void goTo(destinations.guided(task.id, task.next_slide_id)),
+                label: row.action.label,
+                primary: row.action.primary,
+                run: () => void goTo(row.action.path),
               }}
               onSelect={() => onSelect(task.id)}
             />

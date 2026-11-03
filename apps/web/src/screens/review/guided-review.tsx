@@ -53,6 +53,7 @@ import { ThreadsTab } from "./threads-tab.tsx";
 type GuidedReviewProps = {
   taskId: string;
   slideId: string;
+  objectId?: string | undefined;
   scene: GuidedScene | undefined;
   submitted: boolean;
   tab: GuidedTab | undefined;
@@ -75,7 +76,7 @@ type BodyProps = GuidedReviewProps & { session: ReviewSession };
 
 const netOff = "The connection is lost. It saves when the connection is back.";
 
-function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) {
+function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: BodyProps) {
   const setup = guidedSetup(scene);
   const navigate = useNavigate();
   const person = usePeople();
@@ -118,6 +119,8 @@ function GuidedBody({ session, scene, submitted, tab, onTabChange }: BodyProps) 
     return at < 0 ? regions.length : at;
   };
   const [index, setIndex] = useState(() => {
+    const asked = objectId ? objects.findIndex((item) => item.object === objectId) : -1;
+    if (asked >= 0) return asked;
     if (setup.focus === "first-open-cell") return firstOpenCell();
     return Math.max(
       0,
