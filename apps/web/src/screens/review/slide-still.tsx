@@ -24,7 +24,7 @@ type Size = { width: number; height: number };
 const regionMaxScale = 3.3;
 const regionFill = 0.55;
 const cellScale = 3.5;
-const readoutPerScale = { overview: 1 / 1.52, mid: 10, hpf: 25 } as const;
+export const readoutPerScale = { overview: 1 / 1.52, mid: 10, hpf: 25 } as const;
 
 export const imageOf = (view: StillView) => (view.kind === "cell" ? "hpf" : "overview");
 

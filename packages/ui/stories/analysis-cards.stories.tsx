@@ -1,8 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { AnalysisCards } from "../src/components/analysis-cards.tsx";
 import { SidePanel } from "../src/components/side-panel.tsx";
 import type { AiArea } from "../src/lib/ai-state.ts";
 import type { ViewerPartName } from "../src/lib/analysis-parts.ts";
+import {
+  advanceScan,
+  type Scan,
+  scanPath,
+  scanSummary,
+  startScan,
+  type TissueMask,
+} from "../src/lib/systematic-scan.ts";
 
 const meta = {
   title: "Components/Analysis cards",
@@ -63,15 +72,37 @@ export const NoTemplate: Story = {
   render: () => <Panel parts={base} />,
 };
 
-export const StagingWithoutAreas: Story = {
-  render: () => (
+const tissue: TissueMask = {
+  cell: 10,
+  rows: ["........", "..###...", ".#####..", "..##....", "........", "......##", "......##"],
+};
+
+const tissuePath = scanPath(tissue, { width: 25, height: 15 });
+
+function NoTumorPanel() {
+  const [scan, setScan] = useState<Scan | null>(null);
+  return (
     <div className="flex h-[640px] bg-page text-fg">
       <SidePanel
-        head={<AnalysisCards parts={[...base, "staging-hero", "area-list"]} areas={[]} />}
+        head={
+          <AnalysisCards
+            parts={[...base, "staging-hero", "area-list"]}
+            areas={[]}
+            scan={scanSummary(tissue, scan)}
+            onScan={() => setScan(scan ? advanceScan(scan) : startScan(tissuePath))}
+            onSubmit={() => {
+              document.body.dataset.submitted = "yes";
+            }}
+          />
+        }
         tabs={[{ value: "objects", label: "Objects", body: <p>Objects list</p> }]}
       />
     </div>
-  ),
+  );
+}
+
+export const StagingWithoutAreas: Story = {
+  render: () => <NoTumorPanel />,
 };
 
 export const LargeDepositSettled: Story = {

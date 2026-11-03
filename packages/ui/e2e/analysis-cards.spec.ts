@@ -36,10 +36,29 @@ for (const [name, id] of [
   });
 }
 
-test("the staging template with no areas says none were found", async ({ page }) => {
+test("the staging template with no areas asks for a systematic scan", async ({ page }) => {
   await page.goto(story("components-analysis-cards--staging-without-areas"));
-  await expect(staging(page)).toContainText("No tumor areas found on this slide.");
+  await expect(staging(page)).toHaveAttribute("data-state", "no-tumor");
+  await expect(staging(page)).toContainText("Needs review");
+  await expect(staging(page)).toContainText("No tumor flagged");
+  await expect(staging(page)).not.toContainText(/negative/i);
   await expect(staging(page).locator('[data-slot="region-row"]')).toHaveCount(0);
+  const card = staging(page).locator('[data-slot="no-tumor"]');
+  await expect(card).toHaveAttribute("data-coverage", "0");
+  await staging(page).getByRole("button", { name: "Start systematic scan" }).click();
+  await expect(card).toHaveAttribute("data-scan", "scanning");
+  await expect(card).toContainText("Field 1 of 6");
+  const first = Number(await card.getAttribute("data-coverage"));
+  expect(first).toBeGreaterThan(0);
+  await staging(page).getByRole("button", { name: "Next field" }).click();
+  await expect(card).toContainText("Field 2 of 6");
+  expect(Number(await card.getAttribute("data-coverage"))).toBeGreaterThan(first);
+  for (let step = 3; step <= 6; step += 1)
+    await staging(page).getByRole("button", { name: "Next field" }).click();
+  await expect(card).toHaveAttribute("data-scan", "done");
+  await expect(card).toHaveAttribute("data-coverage", "100");
+  await staging(page).getByRole("button", { name: "Submit" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-submitted", "yes");
 });
 
 test("the open pre-read shows the size scale and starts with area 1", async ({ page }) => {
