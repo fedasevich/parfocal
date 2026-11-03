@@ -1384,7 +1384,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when unit tests replay mouse and trackpad traces through each detent and check the stop and the release, and a test confirms nothing changes when the setting is off.
   Depends on VIEW-021, VIEW-045.
   Size: S.
-- [ ] VIEW-047 · View history
+- [x] VIEW-047 · View history
   Jumps (fly-to, presets, fit, minimap clicks, area and object navigation) record the view they left. Continuous pans and zooms count as one entry once the camera rests. Back and forward keys from the key registry move through the last 50 views with a fly-to, and the history is per slide and cleared on a slide switch.
   Done when unit tests cover recording, coalescing a pan into one entry, back and forward, and the cap, and a browser test goes back after a minimap jump and lands on the old view.
   Depends on VIEW-020, CMD-001.

@@ -108,6 +108,15 @@ ADR 0185 (proposed) makes the minimap one state machine with size modes hidden, 
 
 Your choice:
 
+## 39. Keys for view history back and forward, from VIEW-047 (view history)
+
+The viewer now flies back and forward through the views you left. The default keys are Alt+Left and Alt+Right, which override the browser's own back and forward keys while the viewer has focus (on Windows and Linux).
+
+- a. Keep Alt+Left and Alt+Right. (recommended, they match browser habit and people can rebind them)
+- b. Use [ and ] instead and leave the browser keys alone.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
