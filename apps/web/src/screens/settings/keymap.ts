@@ -119,6 +119,16 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["ttext", "Text", ["T"], "fig"],
       ["tcomment", "Comment", ["C"], "fig"],
       ["tbrush", "Brush", ["B"], "qp"],
+      [
+        "aclass",
+        "Class n for new shapes, or re-class the selection",
+        ["1 … 9"],
+        "qp",
+        {
+          range: true,
+          note: "in Annotate, in the project's class order. In review the digits answer the decision",
+        },
+      ],
     ],
   ],
   [
