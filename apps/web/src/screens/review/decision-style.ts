@@ -4,6 +4,7 @@ import {
   type DecisionAnswer,
   type ProjectClass,
 } from "@parfocal/ui/components/decision-buttons";
+import { sureText } from "./ai-wording.ts";
 import type { Confidence, Count, ReviewStyle } from "./decision-mapping.ts";
 
 export * from "./decision-mapping.ts";
@@ -34,23 +35,7 @@ export const countWord: Record<Count, string> = {
   unsure: "Not sure",
 };
 
-export const confidenceWord = (score: number) =>
-  score >= 0.9
-    ? "very sure"
-    : score >= 0.7
-      ? "fairly sure"
-      : score >= 0.5
-        ? "not very sure"
-        : "unsure";
-
 const anA = (word: string) => (/^[aeiou]/i.test(word) ? "an" : "a");
-
-function sureText(object: ReviewObject, confidence: Confidence) {
-  const percent = Math.round(object.score * 100);
-  if (confidence === "number") return `, ${object.kind === "cell" ? "only " : ""}${percent}% sure`;
-  if (confidence === "word") return `, ${confidenceWord(object.score)}`;
-  return "";
-}
 
 export type CardText = {
   hiddenNote: string | null;

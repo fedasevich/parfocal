@@ -1,6 +1,12 @@
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
+import {
+  aiWording,
+  type TypeCall,
+  type TyperEvidence,
+  type WordingSetting,
+} from "@parfocal/ui/lib/confidence-words";
 import { resultChipText, type TumorShareResult } from "@parfocal/ui/lib/tumor-share";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -440,7 +446,31 @@ function FactList({ rows, tight = false, className, ...props }: FactListProps) {
   );
 }
 
+type AiCallLineProps = Omit<React.ComponentProps<"p">, "children"> & {
+  calls: readonly TypeCall[];
+  typer: TyperEvidence;
+  wording: WordingSetting;
+};
+
+function AiCallLine({ calls, typer, wording, className, ...props }: AiCallLineProps) {
+  const shown = aiWording(calls, wording, typer);
+  if (shown.text === null) return null;
+  return (
+    <p
+      data-slot="ai-call"
+      data-wording={shown.mode ?? shown.setting}
+      data-band={shown.band}
+      className={cn("m-0 text-lead text-fg", className)}
+      {...props}
+    >
+      {shown.text}
+    </p>
+  );
+}
+
 export {
+  AiCallLine,
+  type AiCallLineProps,
   BackLink,
   CellCrop,
   ClassBars,
