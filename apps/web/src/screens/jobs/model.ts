@@ -1,7 +1,7 @@
 import type { ModelRun, MyJob, ProjectModel, RunStage } from "@parfocal/api-client";
 import { daysBetween, formatClock, formatDayMonth } from "../format.ts";
 
-export type ProgressTone = "accent" | "ok" | "warn";
+export type ProgressTone = "accent" | "ok" | "warn" | "bad";
 
 export type JobStep = {
   label: string;
@@ -35,7 +35,9 @@ export function trayPercent(jobs: MyJob[]): number {
 }
 
 export function trayValueText(job: MyJob): string {
-  if (isFinished(job)) return "Done";
+  if (job.status === "failed") return "Failed";
+  if (job.status === "cancelled") return "Cancelled";
+  if (job.status === "done") return "Done";
   if (job.status === "paused") return `Paused at ${job.percent}%`;
   if (job.percent < 5 && job.minutes_left !== null) return `Starting · ${job.minutes_left} min`;
   return job.minutes_left === null
@@ -66,9 +68,15 @@ export function trayDetail(job: MyJob, today: Date): string {
 }
 
 export function trayTone(job: MyJob): ProgressTone {
-  if (isFinished(job)) return "ok";
-  return job.status === "paused" ? "warn" : "accent";
+  if (job.status === "failed") return "bad";
+  if (job.status === "cancelled" || job.status === "paused") return "warn";
+  return job.status === "done" ? "ok" : "accent";
 }
+
+export type JobIcon = "smart" | "upload" | "link";
+
+export const jobIcon = (job: MyJob): JobIcon =>
+  job.kind === "model-run" ? "smart" : job.kind === "import" ? "link" : "upload";
 
 export type JobTarget =
   | { kind: "job"; projectId: string; jobId: string }

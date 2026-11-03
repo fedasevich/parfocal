@@ -127,6 +127,84 @@ export const TrayNothingRunning: Story = {
   ),
 };
 
+export const TrayWithProblems: Story = {
+  render: () => (
+    <JobsTray
+      className="rounded-zone border border-line-strong bg-popover"
+      running={[
+        <JobRow
+          key="import"
+          icon="link"
+          title="Import from the lab share"
+          detail="3 slides from a link"
+          percent={12}
+          valueText="12% · 9 min left"
+        />,
+      ]}
+      finished={[
+        <JobRow
+          key="failed"
+          icon="upload"
+          title="Upload into P07"
+          detail="tumor_044.czi is not supported · today 09:40"
+          percent={46}
+          valueText="Failed"
+          tone="bad"
+        />,
+        <JobRow
+          key="cancelled"
+          icon="smart"
+          title="HoVer-Net v2.1"
+          detail="2 slides in P09 · yesterday"
+          percent={50}
+          valueText="Cancelled"
+          tone="warn"
+        />,
+      ]}
+    />
+  ),
+};
+
+function OpeningTray() {
+  const [opened, setOpened] = useState("nothing");
+  return (
+    <div className="grid gap-3">
+      <JobsTray
+        className="rounded-zone border border-line-strong bg-popover"
+        running={[
+          <JobRow
+            key="up"
+            icon="upload"
+            title="Upload into P07"
+            detail="6 slides and 4 result files"
+            percent={46}
+            valueText="46% · 3 min left"
+            onOpen={() => setOpened("upload")}
+          />,
+        ]}
+        finished={[
+          <JobRow
+            key="hov"
+            icon="smart"
+            title="HoVer-Net v2.1"
+            detail="4 slides in P09 · yesterday"
+            percent={100}
+            valueText="Done"
+            tone="ok"
+            onOpen={() => setOpened("run")}
+            action={<JobRowLink onClick={() => setOpened("project")}>Open</JobRowLink>}
+          />,
+        ]}
+      />
+      <output aria-label="Opened">{opened}</output>
+    </div>
+  );
+}
+
+export const TrayOpening: Story = {
+  render: () => <OpeningTray />,
+};
+
 function SlideRows() {
   const [open, setOpen] = useState<Record<number, boolean>>({ 0: true, 1: false });
   const toggle = (index: number) => (next: boolean) => setOpen({ ...open, [index]: next });

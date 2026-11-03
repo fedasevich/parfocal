@@ -5,6 +5,7 @@ import { scenarioJobs } from "@parfocal/api-client/fake";
 import { fakeJobsSceneFor } from "../src/fake-api/jobs-scene-rules.ts";
 import { fakeViewFor } from "../src/fake-api/view-rules.ts";
 import {
+  jobIcon,
   jobTarget,
   runEstimate,
   runSummary,
@@ -13,6 +14,7 @@ import {
   stepsOf,
   trayDetail,
   trayPercent,
+  trayTone,
   trayValueText,
 } from "../src/screens/jobs/model.ts";
 import { startedRunJobId } from "../src/screens/jobs/prototype-scenes.ts";
@@ -136,6 +138,32 @@ test("tray rows read like the mock for running, starting, paused and finished jo
     "4 slides in P09 · yesterday",
   );
   assert.equal(trayPercent([job({ percent: 46 }), job({ percent: 38, status: "paused" })]), 42);
+});
+
+test("failed and cancelled jobs say so in their own tone and leave the ring", () => {
+  const failed = job({
+    kind: "upload",
+    status: "failed",
+    percent: 46,
+    finished_at: local(15, 14, 0),
+  });
+  const cancelled = job({ status: "cancelled", percent: 12, finished_at: local(15, 14, 0) });
+  assert.equal(trayValueText(failed), "Failed");
+  assert.equal(trayTone(failed), "bad");
+  assert.equal(trayDetail(failed, today), "tumor_052 and tumor_060 in P07 · today 14:00");
+  assert.equal(trayValueText(cancelled), "Cancelled");
+  assert.equal(trayTone(cancelled), "warn");
+  assert.equal(trayTone(job({ status: "done" })), "ok");
+  assert.equal(trayTone(job({ status: "paused" })), "warn");
+  assert.equal(trayTone(job({})), "accent");
+  assert.equal(trayPercent([failed, cancelled]), 0);
+  assert.equal(trayPercent([failed, job({ percent: 30 })]), 30);
+});
+
+test("each kind of job has its own icon", () => {
+  assert.equal(jobIcon(job({})), "smart");
+  assert.equal(jobIcon(job({ kind: "upload" })), "upload");
+  assert.equal(jobIcon(job({ kind: "import" })), "link");
 });
 
 test("a row opens the job window, the newest upload's page or the project", () => {
