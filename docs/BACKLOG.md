@@ -1593,7 +1593,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-015 · Skeletons and placeholders that hold space
+- [x] DS-015 · Skeletons and placeholders that hold space
   Nothing jumps when data arrives.
   Done when a layout-shift test on the case inspector reports a CLS of zero while findings stream in.
   Depends on PROTO-011. Refs kit W18.
@@ -1611,7 +1611,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: M.
 
-- [ ] DS-018 · Surfaces and zones
+- [x] DS-018 · Surfaces and zones
   Three surface levels and one highlight: the page, a panel or modal body one step up, a section inside it one more step up, and the accent tint for the part that needs attention now. Information is split into zones by background, with 8 to 12 px inside a zone, 24 to 32 px between zones and at least 24 px of modal padding. A zone can fold to a one-line summary of its settings, such as "Outline 2 px · by class · IDs on" in the Display panel.
   Done when stories show each level in both themes and a visual test covers a modal with three zones.
   Depends on PROTO-011. Refs doc 38 "Surfaces and spacing".
@@ -1647,7 +1647,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: task, mock: upload, mock: creport, POC doc 44 (the round 6 working mock) section 2.
   Size: M.
 
-- [ ] DS-024 · Form fields with labels, hints and inline errors
+- [x] DS-024 · Form fields with labels, hints and inline errors
   The text field, the textarea with a character count, the select, the checkbox and the radio row, each with a label, an optional help line, a Required mark where it applies and the one inline error style of SHELL-010 (error and issue states in every flow) under the field. The error names what is wrong and how to fix it, and typed text is never cleared by an error.
   Done when stories cover each control in its default, focus, filled, error and disabled states in both themes, a test checks that every label, help line and error is tied to its control for assistive technology, and axe passes.
   Depends on PROTO-011. Refs kit: small modals and flow pages, mock: signin/email, mock: task/send, mock: admin/addmodel.
@@ -2335,6 +2335,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-003 · Context bar
   One floating bar with the active tool's options and Discard and Accept, replacing conditional rows.
+  Wire the class swatch strip and `useClassKeys` (apps/web/src/annotations/class-keys.ts, ANN-011) into the Annotate workspace.
   Done when component tests render the context bar for every tool per the mock CTX table.
   Refs mock §2.9.
   Size: M.
@@ -2376,7 +2377,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover painting, erasing and undo, and the painted map persists.
   Size: M.
 
-- [ ] ANN-011 · Classes and keys 1 to 4
+- [x] ANN-011 · Classes and keys 1 to 4
   With nothing selected, sets the class for new shapes. With a selection, re-classes it. In review contexts it also marks reviewed and teaches. The swatch click and the key behave the same (fixes the POC inconsistency).
   Done when tests confirm identical behaviour for key and swatch.
   Refs doc 34 inconsistencies.

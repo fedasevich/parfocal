@@ -219,6 +219,15 @@ The account menu shows "Lock the screen" disabled. Building it needs LockCard wo
 
 Your choice:
 
+## 50. How many class keys, from ANN-011 (classes and keys 1 to 4)
+
+The task title says keys 1 to 4, but its note says keys follow the project taxonomy up to 9 (PROJ-004). It is built with 1 to 9 in the annotate scope only, so it never clashes with the decision digits in review.
+
+- a. Keep 1 to 9. (recommended, matches the taxonomy limit)
+- b. Narrow to 1 to 4 as the title says.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

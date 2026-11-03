@@ -46,4 +46,5 @@ export const aiStillReading = {
     { key: "cells", state: "queued", percent: 0, seconds: null, fragments: null },
   ],
   found: ["T1", "T2"],
+  later: ["T3", "T4", "T5"],
 } as const;

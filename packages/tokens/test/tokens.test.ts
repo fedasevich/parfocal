@@ -18,6 +18,10 @@ import {
   radiiPx,
   spaceUnitPx,
   spacingPx,
+  surfaceLevels,
+  surfaceLevelTokens,
+  surfaceSpacingPx,
+  surfaceSpacingRulesPx,
   tagHeightPx,
   themedTokens,
   typeScale,
@@ -94,10 +98,6 @@ test("unsure keeps the kit values", () => {
 });
 
 test("sizes match the constants", () => {
-  assert.equal(shared.get("space-zone"), `${spacingPx.zone}px`);
-  assert.equal(shared.get("space-in"), `${spacingPx.in}px`);
-  assert.equal(shared.get("pad-zone"), `${spacingPx.padZone}px`);
-  assert.equal(shared.get("pad-modal"), `${spacingPx.padModal}px`);
   assert.equal(shared.get("pad-small-modal"), `${spacingPx.padSmallModal}px`);
   assert.equal(shared.get("h-sm"), `${controlHeightsPx.sm}px`);
   assert.equal(shared.get("h-md"), `${controlHeightsPx.md}px`);
@@ -198,4 +198,33 @@ test("every density spacing matches its CSS variable in both modes", () => {
   }
   assert.equal(densityMode("compact"), "compact");
   assert.equal(densityMode(undefined), "comfortable");
+});
+
+test("zone spacing sits beside density and follows it in both modes", () => {
+  const comfortable = motionBlock(':root,\n[data-density="comfortable"]');
+  const compact = motionBlock('[data-density="compact"]');
+  for (const [name, px] of Object.entries(surfaceSpacingPx)) {
+    assert.ok(comfortable.includes(`--${name}: ${px.comfortable}px;`), name);
+    assert.ok(compact.includes(`--${name}: ${px.compact}px;`), name);
+    assert.equal(shared.get(name), undefined, `${name} is also in the shared block`);
+  }
+  assert.equal(spacingPx.zone, surfaceSpacingPx["space-zone"].comfortable);
+  assert.equal(spacingPx.padModal, surfaceSpacingPx["pad-modal"].comfortable);
+});
+
+test("zone spacing keeps the surface rules in both modes", () => {
+  for (const [name, rule] of Object.entries(surfaceSpacingRulesPx)) {
+    for (const px of Object.values(surfaceSpacingPx[name as keyof typeof surfaceSpacingRulesPx])) {
+      assert.ok(px >= rule.min && px <= rule.max, `${name} ${px}px is outside the rule`);
+    }
+  }
+});
+
+test("each surface level has its own colour in both themes", () => {
+  assert.deepEqual([...surfaceLevels], ["page", "panel", "section", "highlight"]);
+  for (const theme of [dark, light]) {
+    const colours = surfaceLevels.map((level) => theme.get(surfaceLevelTokens[level]));
+    assert.ok(colours.every(Boolean));
+    assert.equal(new Set(colours).size, surfaceLevels.length);
+  }
 });

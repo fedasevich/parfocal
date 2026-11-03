@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
-import { fakeApiHandlers, scenario, setFakeViewerScene } from "../src/fake/index.ts";
+import {
+  fakeApiHandlers,
+  scenario,
+  setFakeAiStreaming,
+  setFakeViewerScene,
+} from "../src/fake/index.ts";
 import {
   getSlideAiProgress,
   getSlideResultStats,
@@ -78,6 +83,27 @@ test("the AI is still reading only in the running scene", async () => {
     data.steps.map((step) => step.state),
     ["done", "running", "queued"],
   );
+});
+
+test("a streaming running scene finds one more region on every later read and starts over with the scene", async () => {
+  setFakeAiStreaming(true);
+  setFakeViewerScene("ready");
+  setFakeViewerScene("running");
+  const reads = [];
+  for (let read = 0; read < 5; read += 1) reads.push((await getSlideAiProgress(a1.id)).data.found);
+  assert.deepEqual(reads, [
+    ["T1", "T2"],
+    ["T1", "T2", "T3"],
+    ["T1", "T2", "T3", "T4"],
+    ["T1", "T2", "T3", "T4", "T5"],
+    ["T1", "T2", "T3", "T4", "T5"],
+  ]);
+  setFakeViewerScene("ready");
+  setFakeViewerScene("running");
+  assert.deepEqual((await getSlideAiProgress(a1.id)).data.found, ["T1", "T2"]);
+  setFakeAiStreaming(false);
+  await getSlideAiProgress(a1.id);
+  assert.deepEqual((await getSlideAiProgress(a1.id)).data.found, ["T1", "T2"]);
 });
 
 test("the annotate workspace's layers on A1 add the two child layers up to their parent", async () => {
