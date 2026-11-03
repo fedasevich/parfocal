@@ -29,7 +29,7 @@ test("a slide row on the project page opens the slide fitted with its case loade
   const header = page.getByTestId("case-header");
   await expect(header).toContainText("tumor_044");
   await expect(header).toContainText("result set");
-  await expect(page.getByTestId("case-patient")).toHaveCount(0);
+  await expect(page.getByTestId("patient-banner")).toHaveCount(0);
 });
 
 test("the Open button of a slide in My work opens the slide fitted", async ({ page }) => {
@@ -49,5 +49,5 @@ test("a slide of a case in a clinical project shows its patient", async ({ page 
   await page.getByTestId("slide-row").first().click();
   await expectFitted(page);
   await expect(page.getByTestId("case-header")).toBeVisible();
-  await expect(page.getByTestId("case-patient")).toBeVisible();
+  await expect(page.getByTestId("patient-banner")).toBeVisible();
 });

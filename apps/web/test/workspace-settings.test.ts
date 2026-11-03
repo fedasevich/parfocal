@@ -10,6 +10,8 @@ import {
   isAnnouncementText,
   modelsForTask,
   NOT_CHOSEN,
+  patientBannerChange,
+  patientBannerOf,
   tierCell,
   tumorShareChange,
   tumorShareOf,
@@ -110,6 +112,35 @@ test("a workspace with nothing saved shows the tumor share result at 20% for cel
 test("saving one tumor share setting sends only it and keeps every lock", () => {
   assert.deepEqual(tumorShareChange(lab, "tumor_share_result_sentinel_node", true), {
     values: { tumor_share_result_sentinel_node: true },
+    locked: ["lock_after_minutes"],
+  });
+});
+
+test("the patient banner starts shown with full names that each person may change", () => {
+  assert.deepEqual(patientBannerOf({ values: {}, locked: [] }), {
+    shown: true,
+    names: "full",
+    namesLocked: false,
+  });
+});
+
+test("locking patient names saves the lab's value and keeps the other locks", () => {
+  const clinicalLab: LabSettings = {
+    values: { patient_names: "initials", patient_banner: false },
+    locked: ["lock_after_minutes"],
+  };
+  assert.deepEqual(patientBannerChange(clinicalLab, { key: "namesLocked", value: true }), {
+    values: { patient_names: "initials" },
+    locked: ["lock_after_minutes", "patient_names"],
+  });
+  const lockedLab = { ...clinicalLab, locked: ["lock_after_minutes", "patient_names"] };
+  assert.equal(patientBannerOf(lockedLab).namesLocked, true);
+  assert.deepEqual(patientBannerChange(lockedLab, { key: "shown", value: true }), {
+    values: { patient_banner: true },
+    locked: ["lock_after_minutes", "patient_names"],
+  });
+  assert.deepEqual(patientBannerChange(lockedLab, { key: "namesLocked", value: false }), {
+    values: { patient_names: "initials" },
     locked: ["lock_after_minutes"],
   });
 });
