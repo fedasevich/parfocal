@@ -41,7 +41,7 @@ export const idleKeys: KeyState = { pending: null, holding: null, sustained: [] 
 
 const modifierKeys = new Set(["Shift", "Meta", "Control", "Alt", "CapsLock", "Fn", "OS"]);
 
-const namedKeys: Record<string, string> = {
+export const keyNames: Record<string, string> = {
   Enter: "↵",
   Escape: "Esc",
   ArrowUp: "↑",
@@ -52,10 +52,12 @@ const namedKeys: Record<string, string> = {
   " ": "Space",
 };
 
+export const unshifted = (key: string) => key === "?" || key === "+";
+
 function baseKey(key: string, code: string | undefined): string {
   if (code?.startsWith("Digit")) return code.slice(5);
   if (code?.startsWith("Key")) return code.slice(3);
-  if (namedKeys[key] !== undefined) return namedKeys[key];
+  if (keyNames[key] !== undefined) return keyNames[key];
   return key.length === 1 ? key.toUpperCase() : key;
 }
 
@@ -63,7 +65,7 @@ export function comboOf(input: Extract<KeyInput, { type: "down" | "up" }>): stri
   const mods = [
     input.ctrlKey && input.metaKey ? "⌃" : "",
     input.altKey ? "⌥" : "",
-    input.shiftKey && input.key !== "?" && input.key !== "+" ? "⇧" : "",
+    input.shiftKey && !unshifted(input.key) ? "⇧" : "",
     input.metaKey || input.ctrlKey ? "⌘" : "",
   ].join("");
   return mods + baseKey(input.key, input.code);
@@ -210,8 +212,8 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
   }
   const exact = press(live, cleared, [combo], key, input.at);
   if (exact) return exact;
-  const unshifted = input.shiftKey ? comboOf({ ...input, shiftKey: false }) : null;
-  const fast = live.find((binding) => binding.sustain && sameKeys(binding.keys, [unshifted ?? ""]));
+  const bare = input.shiftKey ? comboOf({ ...input, shiftKey: false }) : null;
+  const fast = live.find((binding) => binding.sustain && sameKeys(binding.keys, [bare ?? ""]));
   if (fast) return startSustain(cleared, fast, key);
   return { state: cleared, fired: [], consumed: false };
 }

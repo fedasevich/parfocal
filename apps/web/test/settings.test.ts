@@ -80,6 +80,16 @@ test("a key already used in the same place offers to swap or take it", () => {
   assert.deepEqual(keysOf(taken.state, "tmarker"), []);
 });
 
+test("the plain and shifted plus record as + and clash with zoom in", () => {
+  assert.deepEqual(comboOf({ key: "=", code: "Equal" }, true), { mods: "", key: "+" });
+  assert.deepEqual(comboOf({ key: "+", code: "Equal", shiftKey: true }, true), {
+    mods: "",
+    key: "+",
+  });
+  const asked = capture(startRecording(freshShortcuts(), "fit", 0), { key: "=", code: "Equal" });
+  assert.deepEqual(asked.state.pending, { kind: "conflict", combo: "+", other: "zoomin" });
+});
+
 test("the same key in another place is fine", () => {
   const next = capture(startRecording(freshShortcuts(), "dnext", 0), { key: "l", code: "KeyL" });
   assert.equal(next.state.pending, null);

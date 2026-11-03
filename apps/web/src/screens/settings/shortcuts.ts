@@ -1,3 +1,4 @@
+import { keyNames, unshifted } from "../../keys/registry.ts";
 import { type KeyAction, keyAction, keyActions, reservedKeys } from "./keymap.ts";
 
 export type ShortcutFilter = "all" | "changed" | "conflicts";
@@ -70,19 +71,13 @@ export function conflicts(state: ShortcutState): [string, string, string][] {
   return found;
 }
 
-export const isSingleCharacter = (key: string) => /^[A-Z0-9=\-?]$/.test(key);
+export const isSingleCharacter = (key: string) => /^[A-Z0-9+\-?]$/.test(key);
 
 const namedKeys: Record<string, string> = {
-  ArrowUp: "↑",
-  ArrowDown: "↓",
-  ArrowLeft: "←",
-  ArrowRight: "→",
-  Enter: "↵",
-  " ": "Space",
+  ...keyNames,
   Tab: "⇥",
   Backspace: "⌫",
   Delete: "⌦",
-  Escape: "Esc",
 };
 
 const modifierKeys = ["Meta", "Control", "Alt", "Shift"];
@@ -107,7 +102,7 @@ export function comboOf(
         : press.key.length === 1
           ? press.key.toUpperCase()
           : press.key);
-  return { mods: press.key === "?" ? mods.replace("⇧", "") : mods, key };
+  return { mods: unshifted(press.key) ? mods.replace("⇧", "") : mods, key };
 }
 
 export const foundBy = (keys: string[], findKey: string) =>
