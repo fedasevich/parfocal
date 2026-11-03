@@ -1681,7 +1681,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ## 09 SHELL · Application shell and layout
 
-- [ ] SHELL-000 · Research check
+- [x] SHELL-000 · Research check
   Done when STACK-003 and STACK-005 are confirmed for the shell.
   Confirmed in [ADR 0182](adr/0182-shell-routing-and-state-confirmed.md): no upgrade due.
   Size: S.
