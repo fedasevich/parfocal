@@ -117,6 +117,15 @@ The viewer now flies back and forward through the views you left. The default ke
 
 Your choice:
 
+## 40. The clinical note in case details, from CASE-011 (case header details)
+
+The slide picker's case details now show project, case, specimen, blocks, the task and its researcher, and in clinical projects a clinical note row. ADR 0054 removed `cases.clinical_note`, so that row always reads "No clinical note".
+
+- a. Add a backlog task to store an encrypted clinical note per case, with a migration. (recommended if clinical projects need the note on screen)
+- b. Drop the clinical note row from the picker.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
