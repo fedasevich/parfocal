@@ -66,3 +66,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-03 | [Signed slide bytes on the app origin open without a preflight in Chrome in 0.63 s at 100 ms RTT, and another origin preflights every read and doubles the open](2026-11-03-same-origin-slide-bytes.md) | TILES-003 | comparison |
 | 2026-11-03 | [The browser reader places BIF frames like OpenSlide and agrees within 0.6 grey levels, down from 52 to 65](2026-11-03-bif-frame-placement.md) | VIEW-057 | check |
 | 2026-11-03 | [Monorepo, CI and Python tooling still match ADR 0006, ADR 0007 and ADR 0011, with Ruff, uv and Ubuntu runner upgrades due](2026-11-03-tooling-recheck.md) | FOUND-000 | check |
+| 2026-11-04 | [Range coalescing brings a 64-chunk viewport of a sharded OME-Zarr 0.5 store from 72 requests to 12, as doc 32 went from 194 to 39](2026-11-04-zarr-range-coalescing.md) | TILES-005 | benchmark |
