@@ -4,6 +4,7 @@ import {
   createViewerEngine,
   isHeatmapOverlay,
   type OverlayController,
+  placedLabelBox,
   type ViewerEngine,
   withHeatmapLook,
   zoomForMagnification,
@@ -14,8 +15,15 @@ import {
   type VivRoute,
   vivRendererFactory,
 } from "@parfocal/viewer-engine/viv";
-import { type OverlayGeometry, overlayFixture } from "./overlay-fixtures.ts";
 import {
+  idLabelPlacement,
+  labelAnchors,
+  labelOrigin,
+  type OverlayGeometry,
+  overlayFixture,
+} from "./overlay-fixtures.ts";
+import {
+  type LabelReport,
   type OverlayChange,
   type OverlayHarness,
   type OverlayRenderRequest,
@@ -52,6 +60,7 @@ let watching: Destroyable[] = [];
 let engine: ViewerEngine | null = null;
 let route: VivRoute | null = null;
 let layers: OverlayController | null = null;
+let shown: OverlayGeometry | null = null;
 const errors: string[] = [];
 
 globalThis.addEventListener("error", (event) => {
@@ -66,6 +75,7 @@ const reset = () => {
   engine = null;
   route = null;
   layers = null;
+  shown = null;
   watching = [];
   errors.length = 0;
 };
@@ -125,6 +135,7 @@ const render = async (request: OverlayRenderRequest): Promise<OverlayRenderResul
     slidePerScreen: 2 ** -zoom,
     viewport: request.viewport,
   };
+  shown = geometry;
   const ordered = request.reverse ? [...request.layers].reverse() : request.layers;
   const register = () => {
     for (const kind of ordered) controller.set(overlayFixture(kind, geometry, request.heatmap));
@@ -153,5 +164,25 @@ const change = async (operation: OverlayChange): Promise<OverlayRenderResult> =>
   return settle();
 };
 
-const harness: OverlayHarness = { render, watch, watched, change, reset };
+const labels = (): LabelReport => {
+  const geometry = shown;
+  if (geometry === null) throw new Error("Nothing is rendered yet");
+  const placement = idLabelPlacement(geometry);
+  const origin = labelOrigin(geometry);
+  return {
+    boxes: placement.placed.map((label) => ({
+      id: label.id,
+      ...placedLabelBox(label, geometry.slidePerScreen, origin),
+    })),
+    anchors: labelAnchors(geometry).map((anchor) => ({
+      id: anchor.id,
+      x: (anchor.x - origin.x) / geometry.slidePerScreen,
+      y: (anchor.y - origin.y) / geometry.slidePerScreen,
+    })),
+    hidden: placement.hidden,
+    viewport: geometry.viewport,
+  };
+};
+
+const harness: OverlayHarness = { render, watch, watched, change, reset, labels };
 Object.assign(globalThis, { [overlayHarnessGlobal]: harness });

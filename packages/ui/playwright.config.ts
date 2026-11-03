@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-const port = 6007;
+const port = Number(process.env["PARFOCAL_E2E_PORT"] ?? 6007);
 
 export default defineConfig({
   testDir: "e2e",

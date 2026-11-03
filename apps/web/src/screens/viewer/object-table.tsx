@@ -82,6 +82,7 @@ export function tableRows(
 
 type ObjectTablePanelProps = {
   slideLabel: string;
+  pathOf: (object: string) => string;
   rows: TableRowItem[];
   stats: SlideResultStats | undefined;
   classColour: (name: string) => string;
@@ -94,6 +95,7 @@ type ObjectTablePanelProps = {
 
 export function ObjectTablePanel({
   slideLabel,
+  pathOf,
   rows,
   stats,
   classColour,
@@ -151,7 +153,12 @@ export function ObjectTablePanel({
                   onClick={() => onPick(row.object)}
                 >
                   <TableCell>
-                    <ObjectIdTag>{row.object}</ObjectIdTag>
+                    <ObjectIdTag
+                      copyText={pathOf(row.object)}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {row.object}
+                    </ObjectIdTag>
                   </TableCell>
                   <TableCell>{row.kind}</TableCell>
                   {showScore ? (

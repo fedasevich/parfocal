@@ -11,6 +11,7 @@ import { type Look, lookUrl } from "../thumbnails.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
 import { cellShapes, hpfSize, overviewSize, regionShapes } from "./slide-geometry.ts";
+import { placeSlideTags } from "./tag-placement.ts";
 
 export type StillView =
   | { kind: "region"; object: string }
@@ -204,6 +205,17 @@ export function SlideStill({
             return cell ? toScreen(cell.x + 18, cell.y - 22) : null;
           })()
         : null;
+  const placedTags =
+    view.kind === "whole" && showIds && !bare
+      ? placeSlideTags(
+          tags,
+          (object) => {
+            const box = regionShapes[shapeKey(object)]?.box;
+            return box === undefined ? null : toScreen(box[2], box[1]);
+          },
+          size,
+        )
+      : [];
   return (
     <div
       ref={ref}
@@ -320,23 +332,25 @@ export function SlideStill({
           className="absolute inset-0 bg-[repeating-conic-gradient(rgb(255_255_255/0.04)_0_25%,transparent_0_50%)] bg-size-[32px_32px]"
         />
       ) : null}
-      {view.kind === "whole" && showIds && !bare
-        ? tags.map((tag) => {
-            const box = regionShapes[shapeKey(tag.object)]?.box;
-            if (box === undefined) return null;
-            const at = toScreen(box[2], box[1]);
-            return (
-              <span
-                key={tag.object}
-                data-tag={tag.object}
-                className="pointer-events-none absolute rounded-full border-2 bg-[#1d1d1d] px-2 py-px font-mono text-caption font-semibold whitespace-nowrap text-white"
-                style={{ left: at.left + 8, top: at.top - 10, borderColor: tag.color }}
-              >
-                {tag.text}
-              </span>
-            );
-          })
-        : null}
+      {placedTags.map((tag) => {
+        const color = tags.find((item) => item.object === tag.object)?.color;
+        return (
+          <span
+            key={tag.object}
+            data-tag={tag.object}
+            className="pointer-events-none absolute inline-flex items-center justify-center rounded-full border-2 bg-[#1d1d1d] font-mono text-caption leading-none font-semibold whitespace-nowrap text-white"
+            style={{
+              left: tag.left,
+              top: tag.top,
+              width: tag.width,
+              height: tag.height,
+              borderColor: color,
+            }}
+          >
+            {tag.text}
+          </span>
+        );
+      })}
       {failed ? (
         <div
           aria-hidden="true"

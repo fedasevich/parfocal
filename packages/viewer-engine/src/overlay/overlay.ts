@@ -1,6 +1,9 @@
 import type { OverlayLayer } from "../engine/types.ts";
+import type { PlacedLabel } from "./labels.ts";
 import { nearBlack, proposalDash, white } from "./outline-style.ts";
 import type {
+  LabelBatch,
+  LabelOverlay,
   LineCasing,
   OverlayDescription,
   OverlayState,
@@ -79,6 +82,10 @@ export interface PinOverlayOptions extends OverlayOptions {
   readonly pins: PinBatch;
 }
 
+export interface LabelOverlayOptions extends OverlayOptions {
+  readonly placed: readonly PlacedLabel[];
+}
+
 function checkedOpacity(opacity: number): number {
   if (Number.isNaN(opacity)) throw new RangeError("Overlay opacity must be a number");
   return Math.min(1, Math.max(0, opacity));
@@ -133,6 +140,37 @@ export function createPinOverlay(options: PinOverlayOptions): PinOverlay {
   };
 }
 
+export function labelBatchFromPlaced(placed: readonly PlacedLabel[]): LabelBatch {
+  const positions = new Float32Array(placed.length * 2);
+  const offsets = new Float32Array(placed.length * 2);
+  const sizes = new Float32Array(placed.length * 2);
+  const colors = new Uint8Array(placed.length * 4);
+  placed.forEach((label, index) => {
+    positions.set([label.x, label.y], index * 2);
+    offsets.set([label.offsetX, label.offsetY], index * 2);
+    sizes.set([label.widthPx, label.heightPx], index * 2);
+    colors.set(label.color, index * 4);
+  });
+  return {
+    count: placed.length,
+    positions,
+    offsets,
+    sizes,
+    colors,
+    texts: placed.map((label) => label.text),
+  };
+}
+
+export function createLabelOverlay(options: LabelOverlayOptions): LabelOverlay {
+  return {
+    id: options.id,
+    kind: "id-labels",
+    order: overlayOrder("id-labels"),
+    ...stateOf(options),
+    labels: labelBatchFromPlaced(options.placed),
+  };
+}
+
 export function withOverlayState<Description extends OverlayDescription>(
   overlay: Description,
   change: Partial<OverlayState>,
@@ -146,6 +184,10 @@ export function isOverlayDescription(layer: OverlayLayer): layer is OverlayDescr
 
 export function isRasterOverlay(overlay: OverlayDescription): overlay is RasterOverlay {
   return overlay.kind === "heatmap" || overlay.kind === "coverage";
+}
+
+export function isLabelOverlay(overlay: OverlayDescription): overlay is LabelOverlay {
+  return overlay.kind === "id-labels";
 }
 
 export function isPinOverlay(overlay: OverlayDescription): overlay is PinOverlay {

@@ -350,6 +350,18 @@ export {
   withHeatmapLook,
 } from "./overlay/heatmap.ts";
 export {
+  defaultLabelMetrics,
+  type LabelAnchor,
+  type LabelMetrics,
+  type LabelPlacement,
+  type LabelPlacementOptions,
+  labelBoxSize,
+  labelsOverlap,
+  type PlacedLabel,
+  placedLabelBox,
+  placeLabels,
+} from "./overlay/labels.ts";
+export {
   bandAlphas,
   type ConfidenceBand,
   closeCallMargin,
@@ -376,15 +388,19 @@ export {
   white,
 } from "./overlay/outline-style.ts";
 export {
+  createLabelOverlay,
   createPinOverlay,
   createRasterOverlay,
   createVectorOverlay,
   defaultOverlayState,
   defaultRasterSmoothing,
   defaultVectorStyles,
+  isLabelOverlay,
   isOverlayDescription,
   isPinOverlay,
   isRasterOverlay,
+  type LabelOverlayOptions,
+  labelBatchFromPlaced,
   type OverlayOptions,
   type PinOverlayOptions,
   type RasterOverlayOptions,
@@ -405,6 +421,9 @@ export type {
   HeatmapGrid,
   HeatmapLook,
   HeatmapSource,
+  LabelBatch,
+  LabelKind,
+  LabelOverlay,
   LineCasing,
   OverlayDescription,
   OverlayState,

@@ -6,12 +6,14 @@ import {
   PathLayer,
   ScatterplotLayer,
   SolidPolygonLayer,
+  TextLayer,
 } from "@deck.gl/layers";
 import type { OverlayLayer } from "../../engine/types.ts";
-import { nearBlack } from "../outline-style.ts";
-import { isOverlayDescription, isPinOverlay, isRasterOverlay } from "../overlay.ts";
+import { nearBlack, white } from "../outline-style.ts";
+import { isLabelOverlay, isOverlayDescription, isPinOverlay, isRasterOverlay } from "../overlay.ts";
 import { createPinAtlas, type PinIconName } from "../pin-icons.ts";
 import type {
+  LabelOverlay,
   OverlayDescription,
   PinOverlay,
   RasterOverlay,
@@ -32,6 +34,10 @@ import {
 } from "./binary-data.ts";
 
 export const pinSizePx = 28;
+
+export const labelFontSizePx = 12;
+
+export const labelPadding = [6, 3] as const;
 
 export interface OverlayLayerBuilder {
   readonly build: (overlays: readonly OverlayLayer[]) => Layer[];
@@ -54,6 +60,17 @@ interface PinParts {
   readonly resolved: BinaryData | null;
 }
 
+interface LabelParts {
+  readonly entries: readonly LabelEntry[];
+}
+
+interface LabelEntry {
+  readonly text: string;
+  readonly position: readonly [number, number];
+  readonly offset: readonly [number, number];
+  readonly color: readonly [number, number, number, number];
+}
+
 interface RasterParts {
   readonly image: ImageData;
 }
@@ -61,7 +78,7 @@ interface RasterParts {
 interface CacheEntry {
   readonly source: object;
   readonly generation: number;
-  readonly parts: VectorParts | PinParts | RasterParts;
+  readonly parts: VectorParts | PinParts | RasterParts | LabelParts;
 }
 
 const unpickable = { pickable: false } as const;
@@ -252,9 +269,58 @@ function pinLayers(overlay: PinOverlay, parts: PinParts, suffix: string): Layer[
   return layers;
 }
 
+function labelEntries(overlay: LabelOverlay): LabelEntry[] {
+  const { count, positions, offsets, colors, texts } = overlay.labels;
+  return Array.from({ length: count }, (_, index) => ({
+    text: texts[index] ?? "",
+    position: [positions[index * 2] ?? 0, positions[index * 2 + 1] ?? 0],
+    offset: [
+      (offsets[index * 2] ?? 0) + labelPadding[0],
+      (offsets[index * 2 + 1] ?? 0) + labelPadding[1],
+    ],
+    color: [
+      colors[index * 4] ?? 0,
+      colors[index * 4 + 1] ?? 0,
+      colors[index * 4 + 2] ?? 0,
+      colors[index * 4 + 3] ?? 255,
+    ],
+  }));
+}
+
+function labelLayers(overlay: LabelOverlay, parts: LabelParts, suffix: string): Layer[] {
+  if (parts.entries.length === 0) return [];
+  return [
+    construct(TextLayer, {
+      id: `overlay:${overlay.id}:text${suffix}`,
+      data: parts.entries,
+      getText: (entry: LabelEntry) => entry.text,
+      getPosition: (entry: LabelEntry) => entry.position,
+      getPixelOffset: (entry: LabelEntry) => entry.offset,
+      getColor: white,
+      getSize: labelFontSizePx,
+      sizeUnits: "pixels",
+      getTextAnchor: "start",
+      getAlignmentBaseline: "top",
+      fontFamily: "monospace",
+      fontWeight: 600,
+      fontSettings: { sdf: false },
+      background: true,
+      backgroundPadding: labelPadding,
+      getBackgroundColor: nearBlack,
+      getBorderColor: (entry: LabelEntry) => entry.color,
+      getBorderWidth: 2,
+      billboard: true,
+      opacity: overlay.opacity,
+      visible: overlay.visible,
+      ...unpickable,
+    }),
+  ];
+}
+
 function sourceOf(overlay: OverlayDescription): object {
   if (isRasterOverlay(overlay)) return overlay.raster;
   if (isPinOverlay(overlay)) return overlay.pins;
+  if (isLabelOverlay(overlay)) return overlay.labels;
   return overlay.shapes;
 }
 
@@ -263,6 +329,7 @@ function partsOf(overlay: OverlayDescription): CacheEntry["parts"] {
   if (isPinOverlay(overlay)) {
     return { open: pinData(overlay.pins, false), resolved: pinData(overlay.pins, true) };
   }
+  if (isLabelOverlay(overlay)) return { entries: labelEntries(overlay) };
   return vectorParts(overlay.shapes);
 }
 
@@ -285,6 +352,7 @@ export function createOverlayLayerBuilder(): OverlayLayerBuilder {
     const suffix = generation === 0 ? "" : `:${generation}`;
     if (isRasterOverlay(overlay)) return rasterLayers(overlay, parts as RasterParts, suffix);
     if (isPinOverlay(overlay)) return pinLayers(overlay, parts as PinParts, suffix);
+    if (isLabelOverlay(overlay)) return labelLayers(overlay, parts as LabelParts, suffix);
     return vectorLayers(overlay, parts as VectorParts, suffix);
   };
 
