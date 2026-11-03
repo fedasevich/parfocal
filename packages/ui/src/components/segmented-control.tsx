@@ -41,7 +41,7 @@ function SegmentedControl({
           value={option.value}
           disabled={option.disabled ?? false}
           className={cn(
-            "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-transparent px-3 text-center leading-tight font-medium whitespace-nowrap text-fg-dim outline-none hover:not-data-checked:not-data-disabled:text-fg focus-visible:outline-2 focus-visible:outline-accent data-checked:bg-accent-soft data-checked:font-semibold data-checked:text-fg data-checked:shadow-[inset_0_0_0_1.5px_var(--accent)] data-disabled:cursor-not-allowed data-disabled:opacity-40",
+            "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-transparent px-3 text-center leading-tight font-medium whitespace-nowrap text-fg-dim outline-none hover:not-data-checked:not-data-disabled:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-checked:bg-accent-soft data-checked:font-semibold data-checked:text-fg data-checked:shadow-[inset_0_0_0_1.5px_var(--accent)] data-disabled:cursor-not-allowed data-disabled:opacity-40",
             size === "lg" ? "min-h-9.5 text-body" : "min-h-6.5 text-caption",
             fill && "flex-auto px-2.5 py-1",
           )}
