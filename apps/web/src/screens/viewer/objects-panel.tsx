@@ -9,6 +9,7 @@ import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { AiRunningSteps, type AiStep } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
+import { useFormat } from "../../format.ts";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
 import { answerLabel, NoteEditor, noteReasonsFor, SavedNote } from "../review/object-card.tsx";
 import type { Answer } from "../review/review-state.ts";
@@ -135,10 +136,11 @@ export function ObjectFoot({
   onAnswer,
   onClose,
 }: ObjectFootProps) {
+  const format = useFormat();
   const sub =
     object.kind === "cell"
       ? "Cell in your sample"
-      : `Tumor region · ${object.size_mm?.toFixed(object.size_mm < 1 ? 2 : 1)} mm`;
+      : `Tumor region · ${object.size_mm == null ? "" : format.size(object.size_mm)}`;
   let noteBlock: ReactNode = null;
   if (note.open) {
     noteBlock = (

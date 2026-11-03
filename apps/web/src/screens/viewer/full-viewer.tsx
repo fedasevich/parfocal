@@ -21,6 +21,7 @@ import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/vis
 import { Zone } from "@parfocal/ui/components/zone";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useFormat } from "../../format.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { usePeople } from "../people.ts";
@@ -156,6 +157,7 @@ function ViewerBody({
   projectName,
   viewerParts,
 }: BodyProps) {
+  const format = useFormat();
   const scene = search.scene;
   const setup = viewerSetup(scene);
   const navigator = isNavigatorScene(scene) ? scene : null;
@@ -875,6 +877,7 @@ function ViewerBody({
                   note: item.note,
                 })),
                 answer,
+                format,
               )}
               stats={stats}
               classColour={(name) =>
@@ -1115,6 +1118,7 @@ function TableObjectFacts({
   comments: number;
   onComments: () => void;
 }) {
+  const format = useFormat();
   const rows: [string, ReactNode][] = [
     ...(score === null
       ? []
@@ -1122,11 +1126,11 @@ function TableObjectFacts({
           [
             "Score",
             <span key="s" className="font-mono">
-              {score.toFixed(2)}
+              {format.number(score, { decimals: 2 })}
             </span>,
           ] as [string, ReactNode],
         ]),
-    ["Size", `${size?.toFixed(1) ?? ""} mm across`],
+    ["Size", size === null ? "" : `${format.size(size)} across`],
     ["In sets", sets.join(", ")],
     [
       "Your decision",
