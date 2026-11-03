@@ -72,3 +72,4 @@ The fixture column names the file in `packages/test-fixtures/fixtures.json` (or 
 - The viewer stays on its own readers. This ADR does not touch the browser path.
 - The backlog entry for STACK-026 can be ticked on this ADR. The edit and the tick are left to the owner of the backlog.
 - Open items, all TODO: the failure of `Ventana-1.bif` in OpenSlide, an OME-Zarr reader and fixture, a real OME-TIFF slide, range reads from R2, TIAToolbox in the ML workers, and the cause of the JPEG 2000 YCbCr difference.
+- Revised on 2026-11-03 by [ADR 0179](0179-upload-and-server-readers-rechecked.md) (upload and server readers rechecked): tifffile reads OME-TIFF instead of tiffslide, and the ingest worker reads unsharded OME-Zarr with its own reader.
