@@ -1787,7 +1787,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs kit W9, decision D6.
   Size: M.
 
-- [ ] SHELL-007 · View transitions
+- [x] SHELL-007 · View transitions
   My work to slide (the row grows into the canvas), tile to focus review, submit back to My work. Built on the View Transitions API, with a new key press cancelling the current transition.
   Done when tests confirm input is never blocked during a transition and reduced motion cuts.
   Refs kit motion table.
@@ -2143,18 +2143,18 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when unit tests cover the scale bar choice at every zoom.
   Size: S.
 
-- [ ] NAV-003 · Slide brightness dial
+- [x] NAV-003 · Slide brightness dial
   Popover with slider from 20 to 140%, Alt+Up, Alt+Down, Alt+0 reset. Affects the slide only, never the UI or overlays. Remembered per device. Accent colour when not 100%.
   Done when golden tests confirm only slide pixels change and overlays keep their colour.
   Refs mock §2.7, kit D11.
   Size: M.
 
-- [ ] NAV-004 · Area list and go to area
+- [x] NAV-004 · Area list and go to area
   Areas sorted by size with real dimensions and category (macro, micro, ITC size), G then n flies to area n, `[` and `]` go to previous and next. Each row says its role: "Largest, sets the category" for the lead area and, once the category is settled, "Can't change the category" for the others.
   Done when E2E flies to each area and marks it visited at 10× or more.
   Size: M.
 
-- [ ] NAV-005 · Edge cues
+- [x] NAV-005 · Edge cues
   Pills at the screen edge pointing to off-screen areas with their distance, clickable to fly there.
   Done when unit tests cover cue placement and distance, and E2E clicks a cue.
   Refs mock §2.8, NaviPath evidence.
@@ -2184,7 +2184,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests cover each mode.
   Size: S.
 
-- [ ] NAV-010 · Whole-slide peek
+- [x] NAV-010 · Whole-slide peek
   Hold Z for the whole slide over a dimmed case and release to return. A tap under 350 ms keeps it open until Z, Esc or a click. It also opens from the viewed ring and from a click on the minimap. Click a place to go there. Seen trail, AI areas, checked ticks, you-are-here box, and a "return" hint while latched.
   Done when E2E covers hold, tap-to-latch, opening from the ring and the minimap, click-to-go and release.
   Superseded behaviour: the earlier "tap toggles the last two magnifications" is dropped, see [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
