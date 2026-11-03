@@ -9,6 +9,18 @@ export function stepSlideId(ids: readonly string[], currentId: string, delta: 1 
 type RememberedCamera = Required<CameraSearch>;
 
 const cameras = new Map<string, RememberedCamera>();
+let openCase: string | null = null;
+
+export function caseMemoryKey(projectId: string | undefined, caseLabel: string | null) {
+  if (!projectId || caseLabel === null) return null;
+  return `${projectId}/${caseLabel}`;
+}
+
+export function openCaseMemory(caseKey: string | null) {
+  if (caseKey === null || caseKey === openCase) return;
+  openCase = caseKey;
+  cameras.clear();
+}
 
 export function rememberSlideCamera(slideId: string, search: CameraSearch) {
   if (search.x === undefined || search.y === undefined || search.z === undefined) return;
@@ -20,5 +32,6 @@ export function recallSlideCamera(slideId: string): CameraSearch {
 }
 
 export function forgetSlideCameras() {
+  openCase = null;
   cameras.clear();
 }
