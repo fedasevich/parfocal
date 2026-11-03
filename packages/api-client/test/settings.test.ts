@@ -22,6 +22,7 @@ import {
   listSessions,
   resetModelTier,
   setModelTier,
+  setMySettingLayers,
   setWorkspaceSettings,
   updateSessionPolicy,
 } from "../src/index.ts";
@@ -110,6 +111,25 @@ test("the workspace keeps its defaults and locks, and refuses a lock without a v
   await assert.rejects(setWorkspaceSettings({ values: { lock_after_minutes: 9000 } }), {
     status: 400,
   });
+});
+
+test("a personal setting is kept, cleared with null and refused when unknown", async () => {
+  const seeded = await getMySettingLayers();
+  if (seeded.status !== 200) throw new Error("no layers");
+  assert.deepEqual(seeded.data.personal, { home_layout: "both" });
+  const saved = await setMySettingLayers({ values: { home_layout: "research" } });
+  if (saved.status !== 200) throw new Error("not saved");
+  assert.deepEqual(saved.data.personal, { home_layout: "research" });
+  const layers = await getMySettingLayers();
+  if (layers.status !== 200) throw new Error("no layers");
+  assert.deepEqual(layers.data.personal, { home_layout: "research" });
+  const cleared = await setMySettingLayers({ values: { home_layout: null } });
+  if (cleared.status !== 200) throw new Error("not cleared");
+  assert.deepEqual(cleared.data.personal, {});
+  await assert.rejects(setMySettingLayers({ values: { home_layout: "anywhere" } }), {
+    status: 400,
+  });
+  await assert.rejects(setMySettingLayers({ values: { decision_cutoff: 10 } }), { status: 400 });
 });
 
 test("lock times, tiers and announcements change on save and come back on reset", async () => {
