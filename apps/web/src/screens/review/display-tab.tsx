@@ -39,16 +39,23 @@ export function displaySettings(
   display: TaskDisplay | undefined,
   preset: string | null,
   locks: DisplayLock[] = [],
+  confidence?: string,
 ): DisplaySettings {
   const picked = display?.presets.find((item) => item.name === preset)?.settings ?? {};
   const locked = Object.fromEntries(locks.map((lock) => [lock.setting, lock.value]));
-  return { ...defaultDisplaySettings, ...picked, ...locked };
+  return {
+    ...defaultDisplaySettings,
+    ...(confidence === undefined ? {} : { confidence }),
+    ...picked,
+    ...locked,
+  };
 }
 
 type DisplayTabProps = {
   display: TaskDisplay | undefined;
   preset: string | null;
   extraLocks: DisplayLock[];
+  confidence?: string;
   viewer?: boolean;
   resultSets?: ReactNode;
   after?: ReactNode;
@@ -62,6 +69,7 @@ export function DisplayTab({
   display,
   preset,
   extraLocks,
+  confidence,
   viewer = false,
   resultSets,
   after,
@@ -70,7 +78,7 @@ export function DisplayTab({
   onSaveAs,
   idLabels,
 }: DisplayTabProps) {
-  const picked = displaySettings(display, preset, extraLocks);
+  const picked = displaySettings(display, preset, extraLocks, confidence);
   const settings = idLabels ? { ...picked, ids: idLabels.on } : picked;
   return (
     <div className="grid gap-3">
