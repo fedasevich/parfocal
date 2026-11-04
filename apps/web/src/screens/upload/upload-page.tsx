@@ -16,14 +16,14 @@ import {
 import { Icon } from "@parfocal/ui/components/icon";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useOpenJobsTray } from "../../shell/jobs-tray.tsx";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
 import { ProjectPage } from "../project/project-page.tsx";
 import { CheckStep } from "./check-step.tsx";
 import { FilesStep } from "./files-step.tsx";
-import { FormatsDrawer, ImportsModal } from "./overlays.tsx";
+import { ImportsModal } from "./overlays.tsx";
 import { useCrumbLink } from "./parts.tsx";
 import { DoneStep, ProgressStep } from "./progress-step.tsx";
 import {
@@ -36,6 +36,8 @@ import {
   type UploadState,
 } from "./state.ts";
 import { ViewerFlow } from "./viewer-flow.tsx";
+
+const FormatsDrawer = lazy(() => import("./formats-drawer.tsx"));
 
 export type FormatsScene = "help" | "check";
 
@@ -119,14 +121,16 @@ function UploadFlow({
 
   const background = formats && behindFormats.includes(scene) ? "files" : scene;
   const drawer = formats ? (
-    <FormatsDrawer
-      batch={batch}
-      checking={formats === "check"}
-      onCheck={() => openFormats("check")}
-      onClear={() => openFormats("help")}
-      onClose={closeFormats}
-      toast={toast.show}
-    />
+    <Suspense fallback={null}>
+      <FormatsDrawer
+        batch={batch}
+        checking={formats === "check"}
+        onCheck={() => openFormats("check")}
+        onClear={() => openFormats("help")}
+        onClose={closeFormats}
+        toast={toast.show}
+      />
+    </Suspense>
   ) : null;
 
   if (background === "drop" || background === "tray") {

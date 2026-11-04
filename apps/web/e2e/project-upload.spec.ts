@@ -118,6 +118,49 @@ test("the formats drawer opens as help and as a check on fake data", async ({ pa
   expect(errors).toEqual([]);
 });
 
+test("the formats drawer opens from the upload and from an import error and lists what works", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await page.goto(`/projects/${p07}/upload?scene=files`);
+  await page.getByRole("button", { name: "What files work?" }).first().click();
+  const drawer = page.getByTestId("formats-drawer");
+  await expect(drawer).toBeVisible();
+  for (const format of [
+    "Aperio SVS",
+    "Hamamatsu NDPI",
+    "3DHISTECH MRXS",
+    "OME-TIFF",
+    "Zeiss CZI",
+    "Philips iSyntax",
+    "DICOM WSI",
+    "Parfocal JSON",
+    "GeoJSON or a QuPath export",
+    "CSV or TSV",
+    "Masks or heatmaps",
+  ]) {
+    await expect(drawer).toContainText(format);
+  }
+  await expect(drawer.getByRole("link", { name: "Parfocal JSON" })).toHaveAttribute(
+    "href",
+    "/api/result-formats/parfocal-json/template",
+  );
+  await expect(drawer.getByRole("link", { name: "JSON Schema" })).toHaveAttribute(
+    "href",
+    "/api/result-formats/parfocal-json/schema",
+  );
+  await expect(drawer.getByTestId("error-code")).toHaveCount(10);
+  await expect(drawer).toContainText("missing-field");
+
+  await page.goto(`/projects/${p07}/upload?scene=check`);
+  await page
+    .getByTestId("upload-problem")
+    .getByRole("button", { name: "What files work?" })
+    .click();
+  await expect(page.getByTestId("formats-drawer")).toContainText("bad-pattern");
+  expect(errors).toEqual([]);
+});
+
 test("an upload goes from the drop through Check to the end", async ({ page }) => {
   await page.goto(`/projects/${p07}/upload?scene=drop`);
   await page.getByTestId("drop-overlay").click();
