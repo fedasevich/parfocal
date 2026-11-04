@@ -113,7 +113,7 @@ def read_window(path: Path, found: Format, pyramid: Pyramid, window: Window) -> 
     match pyramid.reader:
         case Reader.OPENSLIDE:
             return openslide_window(path, found, window)
-        case Reader.TIFFSLIDE:
+        case Reader.TIFFFILE:
             return tifffile_window(path, window)
         case Reader.WSIDICOM:
             raise ValueError(

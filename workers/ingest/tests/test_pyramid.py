@@ -312,7 +312,7 @@ TABLES = {
         ESTIMATED,
     ),
     "synthetic-zlib.ome.tiff": Expected(
-        Reader.TIFFSLIDE,
+        Reader.TIFFFILE,
         [
             "1 1024x768 256x256 deflate rgb",
             "2 512x384 256x256 deflate rgb",
@@ -359,6 +359,12 @@ def test_every_supported_fixture_has_its_level_table(name: str, tmp_path: Path) 
         expected.notices,
         expected.planes,
     )
+
+
+def test_the_ome_tiff_reader_is_stored_as_tifffile(tmp_path: Path) -> None:
+    found = read("synthetic-zlib.ome.tiff", tmp_path)
+    assert isinstance(found, Pyramid), found
+    assert found.reader.value == "tifffile"
 
 
 def test_the_leica_decoy_is_not_taken_for_the_slide(tmp_path: Path) -> None:

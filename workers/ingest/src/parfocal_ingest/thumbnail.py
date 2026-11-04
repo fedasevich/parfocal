@@ -95,7 +95,7 @@ def level_image(path: Path, found: Format, pyramid: Pyramid, level: Level) -> Im
     match pyramid.reader:
         case Reader.WSIDICOM:
             return dicom_region(path, level)
-        case Reader.TIFFSLIDE:
+        case Reader.TIFFFILE:
             return ome_region(path, level)
         case Reader.OPENSLIDE:
             return openslide_region(path, found, pyramid, level)

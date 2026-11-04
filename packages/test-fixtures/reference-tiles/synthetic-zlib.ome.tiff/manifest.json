@@ -1,6 +1,6 @@
 {
   "fixture": "synthetic-zlib.ome.tiff",
-  "reader": "tiffslide",
+  "reader": "tifffile",
   "windows": [
     {
       "level": 0,

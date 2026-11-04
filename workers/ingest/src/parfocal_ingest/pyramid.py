@@ -54,7 +54,7 @@ OME_MICRONS = {"µm": 1.0, "um": 1.0, "nm": 0.001, "mm": 1000.0}
 
 class Reader(StrEnum):
     OPENSLIDE = "openslide"
-    TIFFSLIDE = "tiffslide"
+    TIFFFILE = "tifffile"
     WSIDICOM = "wsidicom"
 
 
@@ -301,7 +301,7 @@ def tiff_pyramid(path: Path, found: Format) -> Pyramid | Refusal:
         return Refusal.DAMAGED_TIFF
     levels, skipped = ladder(stored)
     if ome is not None:
-        return pyramid(Reader.TIFFSLIDE, levels, ome, planes, skipped)
+        return pyramid(Reader.TIFFFILE, levels, ome, planes, skipped)
     slide = open_slide(path)
     if slide is None:
         return Refusal.UNREADABLE
