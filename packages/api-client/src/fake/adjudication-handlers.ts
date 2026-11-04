@@ -53,6 +53,8 @@ import {
 import {
   adjudicator,
   changesAfterSignOff,
+  comparisonNumbers,
+  comparisonTask,
   confusion,
   editedRow,
   evaluationNumbers,
@@ -85,6 +87,9 @@ const task = () => {
   if (found === undefined) throw new Error(`no scenario task ${queueTask}`);
   return found;
 };
+
+const comparisonId = () =>
+  reviewTasks.find((candidate) => candidate.code === comparisonTask.code)?.id;
 
 const idOf = (key: PersonKey) => people[key].id;
 
@@ -278,7 +283,7 @@ const decisionsOf = (taskId: string): Evaluation["decisions"] => {
 };
 
 export const toTaskEvaluation = (taskId: string): Evaluation => {
-  const numbers = evaluationNumbers;
+  const numbers = taskId === comparisonId() ? comparisonNumbers : evaluationNumbers;
   const tumor = {
     kind: "region",
     class_name: "Tumor",
@@ -328,11 +333,12 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
   const current = task();
   const project = projectByCode(current.project);
   const template = studyTemplates.find((item) => item.key === "sn");
+  const other = taskId === comparisonId();
   return evaluationReportSchema.parse({
     task_id: taskId,
-    task_code: current.code,
-    round_name: "Round 2",
-    model: "CAMELYON tumor model v1.0",
+    task_code: other ? comparisonTask.code : current.code,
+    round_name: other ? "Round 1" : "Round 2",
+    model: other ? comparisonTask.model : "CAMELYON tumor model v1.0",
     project: { id: project.id, code: project.code, name: project.name },
     lab: { name: "Fakultní nemocnice Vltava", short: "FV" },
     slides: current.slides,

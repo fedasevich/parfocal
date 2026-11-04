@@ -189,6 +189,17 @@ export const evaluationNumbers = {
   cellsBetweenReviewers: { value: 0.94, numerator: 1147, denominator: 1220 },
 };
 
+export const comparisonNumbers = {
+  sensitivity: { value: 0.84, numerator: 42, denominator: 50 },
+  precision: { value: 0.91, numerator: 42, denominator: 46 },
+  dice: { value: 0.88, numerator: 44, denominator: 50 },
+  kappa: 0.66,
+  cellsAgreed: { value: 0.87, numerator: 1061, denominator: 1220 },
+  cellsBetweenReviewers: { value: 0.9, numerator: 1098, denominator: 1220 },
+};
+
+export const comparisonTask = { code: "RT-15", model: "PathoSAM v1.2" };
+
 export const reasonCounts: [string, number][] = [
   ["wrong_class", 38],
   ["boundary_off", 21],

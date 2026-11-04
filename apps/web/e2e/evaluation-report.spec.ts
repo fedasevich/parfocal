@@ -63,6 +63,31 @@ test("the side panel offers the template, the PDF preview, arrange and the downl
   ).toBeVisible();
 });
 
+test("comparing with a second task puts its numbers next to this one", async ({ page }) => {
+  await page.goto(url("report"));
+  await page.getByRole("button", { name: /Compare and share/ }).click();
+  await page.getByRole("button", { name: "Compare with RT-15, PathoSAM v1.2" }).click();
+  const block = page.locator('[data-kind="comparison"]');
+  await expect(block).toBeVisible();
+  const table = block.locator('[data-slot="comparison"] table');
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Measure",
+    "RT-14, CAMELYON tumor model v1.0",
+    "RT-15, PathoSAM v1.2",
+    "Change",
+  ]);
+  const sensitivity = table.getByRole("row", { name: /Sensitivity, regions/ });
+  await expect(sensitivity.getByRole("cell")).toHaveText([
+    "Sensitivity, regions",
+    "0.92",
+    "0.84",
+    "-0.08",
+  ]);
+  const cells = table.getByRole("row", { name: /Cells agreed/ });
+  await expect(cells.getByRole("cell")).toHaveText(["Cells agreed", "91%", "87%", "-4 points"]);
+  await expect(block).toContainText("Change is RT-15 minus RT-14.");
+});
+
 const titlesOn = (page: Page, name: string) =>
   page
     .getByRole("article", { name })

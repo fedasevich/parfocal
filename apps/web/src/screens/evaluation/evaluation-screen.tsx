@@ -38,6 +38,8 @@ import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 
 export type EvaluationScene = "report" | "arrange" | "pdf" | "retiredtpl" | "exportfail";
 
+const comparisonTaskId = "00000000-0000-4000-8007-000000000015";
+
 type BlockKind = PageBlock["kind"];
 
 const fromTemplate = (report: EvaluationReport): PageBlock[] =>
@@ -133,6 +135,25 @@ function EvaluationBody({
     next.splice(at, 1);
     next.splice(to, 0, current);
     change(next);
+  };
+  const compare = () => {
+    const shown = blocks.find((block) => block.kind === "comparison" && block.task_id);
+    if (shown) {
+      setSelected(shown.id);
+      return;
+    }
+    const block: PageBlock = {
+      id: `comparison-${Date.now()}`,
+      kind: "comparison",
+      title: blockCopy.comparison.name,
+      width: "full",
+      show_title: true,
+      page_break: false,
+      task_id: comparisonTaskId,
+    };
+    change([...blocks, block]);
+    setSelected(block.id);
+    toast.show("RT-15, PathoSAM v1.2, is now next to this one", () => setBlocks(blocks));
   };
   const remove = () => {
     if (!current) return;
@@ -475,7 +496,7 @@ function EvaluationBody({
               ) : null}
             </FoldingZone>
             <FoldingZone title="Compare and share" summary="RT-15 or a read-only link">
-              <Button onClick={() => toast.show("Puts RT-15, PathoSAM v1.2, next to this one")}>
+              <Button onClick={compare}>
                 <Icon name="slides" />
                 Compare with RT-15, PathoSAM v1.2
               </Button>

@@ -115,3 +115,59 @@ export function methodsLines(
   }
   return lines;
 }
+
+export type ComparisonRow = { label: string; left: string; right: string; change: string };
+
+const percent = (value: number | null | undefined) =>
+  value == null ? "n/a" : `${Math.round(value * 100)}%`;
+
+const points = (left: number | null | undefined, right: number | null | undefined) => {
+  if (left == null || right == null) return "n/a";
+  const diff = Math.round((right - left) * 100);
+  return diff === 0 ? "same" : `${diff > 0 ? "+" : "-"}${Math.abs(diff)} points`;
+};
+
+const signed = (
+  left: number | null | undefined,
+  right: number | null | undefined,
+  decimals: number,
+) => {
+  if (left == null || right == null) return "n/a";
+  const diff = right - left;
+  const text = Math.abs(diff).toFixed(decimals);
+  if (Number(text) === 0) return "same";
+  return `${diff > 0 ? "+" : "-"}${text}`;
+};
+
+export function comparisonRows(left: Evaluation, right: Evaluation, decimals = 2): ComparisonRow[] {
+  const region = (evaluation: Evaluation) =>
+    evaluation.overall.find((row) => row.kind === "region") ?? evaluation.overall[0];
+  const dice = (evaluation: Evaluation) => Object.values(evaluation.dice)[0]?.value;
+  const numeric: [string, number | null | undefined, number | null | undefined][] = [
+    ["Sensitivity, regions", region(left)?.sensitivity.value, region(right)?.sensitivity.value],
+    ["Precision, regions", region(left)?.precision.value, region(right)?.precision.value],
+    ["Dice, regions", dice(left), dice(right)],
+    ["Cohen's κ, reviewers", left.mean_kappa, right.mean_kappa],
+  ];
+  const rows = numeric.map(([label, a, b]) => ({
+    label,
+    left: fixed(a, decimals),
+    right: fixed(b, decimals),
+    change: signed(a, b, decimals),
+  }));
+  const cells = [left, right].map((item) => item.cell_agreement_with_ai.value);
+  rows.push({
+    label: "Cells agreed",
+    left: percent(cells[0]),
+    right: percent(cells[1]),
+    change: points(cells[0], cells[1]),
+  });
+  const disagreed = [left.decisions.counted.disagree, right.decisions.counted.disagree];
+  rows.push({
+    label: "Counted as disagree",
+    left: String(disagreed[0]),
+    right: String(disagreed[1]),
+    change: signed(disagreed[0], disagreed[1], 0),
+  });
+  return rows;
+}
