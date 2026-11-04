@@ -1,5 +1,6 @@
 import re
 import uuid
+from dataclasses import replace
 from datetime import date
 
 import pytest
@@ -15,9 +16,11 @@ from parfocal_api.locales import (
     pseudo_catalogue,
 )
 from parfocal_api.report_template import (
+    EVERY_BLOCK,
     REPORT_MESSAGES,
     ReportClass,
     ReportData,
+    ReportOpinion,
     render_report,
     report_data,
 )
@@ -41,16 +44,29 @@ REPORT = ReportData(
     project_name="PROJECT-SENTINEL",
     task_name="TASK-SENTINEL",
     version=3,
+    checksum="sha256:0123abcd",
     signed_off_on=date(2026, 11, 3),
     sample=True,
     classes=(
-        ReportClass(name="CLASS-SENTINEL", sensitivity=0.8333, precision=None),
-        ReportClass(name="OTHER-SENTINEL", sensitivity=1.0, precision=0.5),
+        ReportClass(kind="region", name="CLASS-SENTINEL", sensitivity=0.8333, precision=None),
+        ReportClass(kind="cell", name="OTHER-SENTINEL", sensitivity=1.0, precision=0.5),
     ),
     fleiss_kappa=0.41,
     decisions={"agree": 7, "disagree": 2, "unsure": 1},
+    reasons=(("REASON-SENTINEL", 2),),
+    opinions=(ReportOpinion(key="QUESTION-SENTINEL", count=2, mean=3.0),),
 )
-REPORT_VALUES = ("PROJECT-SENTINEL", "TASK-SENTINEL", "CLASS-SENTINEL", "OTHER-SENTINEL")
+REPORT_VALUES = (
+    "PROJECT-SENTINEL",
+    "TASK-SENTINEL",
+    "CLASS-SENTINEL",
+    "OTHER-SENTINEL",
+    "REASON-SENTINEL",
+    "QUESTION-SENTINEL",
+    "METHODS-SENTINEL",
+    "sha256:0123abcd",
+    *(block.title for block in EVERY_BLOCK),
+)
 
 
 def without(text: str, values: tuple[str, ...]) -> str:
@@ -103,6 +119,8 @@ def test_the_report_renders_with_every_string_translated_in_the_pseudo_locale() 
     assert not any(LETTERS.search(text) for text in shown), shown
     outside = LITERAL.sub("", report.source)
     assert set(LETTERS.findall(outside.replace("table", "").replace("columns", ""))) == set()
+    draft = render_report(replace(REPORT, signed_off_on=None, reasons=()), Locale.PSEUDO)
+    literals += LITERAL.findall(draft.source)
     for message in pseudo_catalogue(REPORT_MESSAGES).values():
         assert message in literals, message
     assert "0.83" in literals
@@ -130,6 +148,7 @@ def test_report_values_cannot_break_out_of_their_text() -> None:
         project_name='a"] #panic("x") \\',
         task_name="t",
         version=1,
+        checksum="",
         signed_off_on=date(2026, 1, 2),
         sample=False,
         classes=(),
@@ -166,9 +185,18 @@ def test_report_data_comes_from_the_evaluation() -> None:
             )
         ],
         fleiss_kappa=None,
+        overall=[],
+        dice={},
+        mean_kappa=None,
+        cell_agreement_with_ai=rate,
+        cell_agreement_between_reviewers=rate,
+        reasons=[("not_a_cell", 2)],
+        opinions=[],
     )
     data = report_data(evaluation, "P", "T", 2, date(2026, 11, 3))
-    assert data.classes == (ReportClass(name="tumour", sensitivity=None, precision=0.75),)
+    assert data.classes == (
+        ReportClass(kind="cell", name="tumour", sensitivity=None, precision=0.75),
+    )
     assert data.decisions == {"agree": 4, "unsure": 1}
 
 

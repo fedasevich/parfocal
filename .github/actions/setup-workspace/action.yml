@@ -22,5 +22,5 @@ runs:
         restore-keys: turbo-${{ inputs.cache-key }}-${{ runner.os }}-
     - run: pnpm install --frozen-lockfile
       shell: bash
-    - run: uv sync --all-packages --locked
+    - run: uv sync --all-packages --all-extras --locked
       shell: bash

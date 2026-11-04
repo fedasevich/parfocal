@@ -1005,6 +1005,10 @@ GET_ROUTES = {
     "getTaskEvaluation": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation"
     ),
+    "exportTaskEvaluation": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/exports/objects.csv",
+    ),
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",

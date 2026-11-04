@@ -18,6 +18,7 @@ from parfocal_api import (
     disagreements,
     emergency,
     evaluation,
+    evaluation_exports,
     first_reads,
     hidden_models,
     home,
@@ -211,6 +212,7 @@ def create_app(
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)
     app.include_router(evaluation.router)
+    app.include_router(evaluation_exports.router)
     app.include_router(study_templates.router)
     app.include_router(my_work.router)
     app.include_router(case_creation.router)

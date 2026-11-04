@@ -1198,6 +1198,16 @@ export const ExportFormat = {
   parfocal: "parfocal",
 } as const;
 
+export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
+
+export const ExportKind = {
+  reportpdf: "report.pdf",
+  decisionscsv: "decisions.csv",
+  objectscsv: "objects.csv",
+  annotationsjson: "annotations.json",
+  annotationsgeojson: "annotations.geojson",
+} as const;
+
 export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
 
 export const TaskScope = {
@@ -1731,6 +1741,13 @@ export const ListKind = {
   task: "task",
   "all-slides": "all-slides",
   list: "list",
+} as const;
+
+export type Locale = (typeof Locale)[keyof typeof Locale];
+
+export const Locale = {
+  en: "en",
+  "en-XA": "en-XA",
 } as const;
 
 export interface MappingChange {
@@ -3991,6 +4008,10 @@ export type GetOpinionParams = {
 
 export type GetFirstReadParams = {
   reviewer_id?: string | null;
+};
+
+export type ExportTaskEvaluationParams = {
+  locale?: Locale;
 };
 
 export type ListMySlidesParams = {
@@ -31703,6 +31724,242 @@ export function useGetTaskEvaluation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTaskEvaluationQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportTaskEvaluationResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type exportTaskEvaluationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportTaskEvaluationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportTaskEvaluationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportTaskEvaluationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportTaskEvaluationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportTaskEvaluationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportTaskEvaluationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportTaskEvaluationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportTaskEvaluationResponseSuccess = exportTaskEvaluationResponse200 & {
+  headers: Headers;
+};
+export type exportTaskEvaluationResponseError = (
+  | exportTaskEvaluationResponse400
+  | exportTaskEvaluationResponse401
+  | exportTaskEvaluationResponse403
+  | exportTaskEvaluationResponse404
+  | exportTaskEvaluationResponse409
+  | exportTaskEvaluationResponse422
+  | exportTaskEvaluationResponse429
+  | exportTaskEvaluationResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportTaskEvaluationResponse =
+  | exportTaskEvaluationResponseSuccess
+  | exportTaskEvaluationResponseError;
+
+export const getExportTaskEvaluationUrl = (
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/evaluation/exports/${kind}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/evaluation/exports/${kind}`;
+};
+
+/**
+ * @summary Export Task Evaluation
+ */
+export const exportTaskEvaluation = async (
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportTaskEvaluationResponse> => {
+  return apiFetch<exportTaskEvaluationResponse>(getExportTaskEvaluationUrl(taskId, kind, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportTaskEvaluationQueryKey = (
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/evaluation/exports/${kind}`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getExportTaskEvaluationQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportTaskEvaluationQueryKey(taskId, kind, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTaskEvaluation>>> = ({ signal }) =>
+    exportTaskEvaluation(taskId, kind, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && kind !== null && kind !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportTaskEvaluationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportTaskEvaluation>>
+>;
+export type ExportTaskEvaluationQueryError = Problem;
+
+export function useExportTaskEvaluation<
+  TData = Awaited<ReturnType<typeof exportTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  kind: ExportKind,
+  params: undefined | ExportTaskEvaluationParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof exportTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTaskEvaluation<
+  TData = Awaited<ReturnType<typeof exportTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof exportTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTaskEvaluation<
+  TData = Awaited<ReturnType<typeof exportTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Task Evaluation
+ */
+
+export function useExportTaskEvaluation<
+  TData = Awaited<ReturnType<typeof exportTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  kind: ExportKind,
+  params?: ExportTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportTaskEvaluationQueryOptions(taskId, kind, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
