@@ -1730,7 +1730,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-017.
   Size: S.
 
-- [ ] DS-034 · App tables on the shared table
+- [x] DS-034 · App tables on the shared table
   DS-026 (table) added sortable headers, a checkbox column, `selected` rows, number and ID cells and an empty row in packages/ui. Move the admin sections, project slides, object table, disagreement queue and clinical report deposits onto them. The object table picks a row by mouse click only, so its rows cannot be reached by keyboard.
   Also put the project and My work table headers on `--density-head-y`, and the project slide set rows (9 px) and the Team reviewer rows on the density variables, which DS-033 left out.
   Done when each of those tables uses the shared table, a test tabs to an object table row and opens it with Enter, and axe passes on each screen.
