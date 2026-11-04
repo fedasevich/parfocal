@@ -73,14 +73,57 @@ function OriginMark({ origin, author, className, ...props }: OriginMarkProps) {
 
 type HistoryEntry = { id: string; who: PersonInfo | null; what: string; when: string };
 
+type ModelInfo = { name: string; version?: string | null | undefined };
+
 type OriginCardProps = React.ComponentProps<"section"> & {
   objectId: string;
   classLabel: string;
   classColour: string;
   origin: Origin;
   author?: PersonInfo | undefined;
+  model?: ModelInfo | undefined;
   history: HistoryEntry[];
 };
+
+const modelLabel = (model: ModelInfo) =>
+  model.version ? `${model.name} ${model.version}` : model.name;
+
+const authorVerbs: Record<Origin, string> = {
+  ai: "Made by",
+  "ai-edited": "Edited by",
+  "ai-confirmed": "Kept as it is by",
+  human: "Drawn by",
+};
+
+function OriginLines({
+  origin,
+  author,
+  model,
+}: Pick<OriginCardProps, "origin" | "author" | "model">) {
+  const made =
+    model && origin !== "human" ? (
+      <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
+        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>
+      </p>
+    ) : null;
+  if (!author) {
+    return model ? (
+      <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
+        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>, nobody has changed it.
+      </p>
+    ) : (
+      <p className="m-0 text-body-sm text-fg-dim">Made by the model, nobody has changed it.</p>
+    );
+  }
+  return (
+    <>
+      <p data-slot="origin-author" className="m-0 text-body-sm text-fg-dim">
+        {authorVerbs[origin]} <b className="font-semibold text-fg">{author.name}</b>
+      </p>
+      {made}
+    </>
+  );
+}
 
 function OriginCard({
   objectId,
@@ -88,6 +131,7 @@ function OriginCard({
   classColour,
   origin,
   author,
+  model,
   history,
   className,
   ...props
@@ -111,14 +155,7 @@ function OriginCard({
         </span>
         <OriginMark origin={origin} author={author} />
       </header>
-      {author ? (
-        <p className="m-0 text-body-sm text-fg-dim">
-          {origin === "human" ? "Drawn by" : "Last changed by"}{" "}
-          <b className="font-semibold text-fg">{author.name}</b>
-        </p>
-      ) : (
-        <p className="m-0 text-body-sm text-fg-dim">Made by the model, nobody has changed it.</p>
-      )}
+      <OriginLines origin={origin} author={author} model={model} />
       <ol aria-label="History" className="m-0 grid list-none gap-2 p-0">
         {history.map((entry) => (
           <li key={entry.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
@@ -838,6 +875,7 @@ export {
   CheckStateTag,
   checkedOf,
   type HistoryEntry,
+  type ModelInfo,
   type Origin,
   OriginCard,
   OriginMark,
