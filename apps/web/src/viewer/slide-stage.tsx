@@ -5,6 +5,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { removeShape } from "../annotations/document.ts";
+import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
@@ -31,12 +32,13 @@ type Phase =
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
-type ViewerTool = "hand" | "ruler" | "select" | "polygon";
+type ViewerTool = "hand" | "ruler" | "select" | "polygon" | "freehand";
 
 const toolOfAction: Readonly<Record<string, ViewerTool>> = {
   tselect: "select",
   truler: "ruler",
   tpoly: "polygon",
+  tfree: "freehand",
 };
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
@@ -175,7 +177,7 @@ function OpenedSlide({
     setHostNode(node);
   }, []);
   const [tool, setTool] = useState<ViewerTool>("hand");
-  const toolBindings = useBindings(["annotate"], ["truler", "tselect", "tpoly"]);
+  const toolBindings = useBindings(["annotate"], ["truler", "tselect", "tpoly", "tfree"]);
   const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
     const pressed = toolOfAction[action];
     if (phase !== "press" || pressed === undefined) return;
@@ -262,7 +264,7 @@ function OpenedSlide({
       data-coverage-seen={coverage?.share.seen}
       data-coverage-pending={coverage?.pending}
       data-coverage-basis={coverage?.share.basis}
-      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
+      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
       {session && hostNode ? (
@@ -280,6 +282,13 @@ function OpenedSlide({
             stage={hostNode}
             active={tool === "polygon"}
             document={annotations}
+            onClose={saved.savePolygon}
+            onLeave={leaveTool}
+          />
+          <FreehandLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "freehand"}
             onClose={saved.savePolygon}
             onLeave={leaveTool}
           />
@@ -305,6 +314,13 @@ function OpenedSlide({
               action="tpoly"
               pressed={tool === "polygon"}
               onPressedChange={(on) => setTool(on ? "polygon" : "hand")}
+            />
+            <ToolRailButton
+              icon="free"
+              label="Freehand"
+              action="tfree"
+              pressed={tool === "freehand"}
+              onPressedChange={(on) => setTool(on ? "freehand" : "hand")}
             />
             <ToolRailButton
               icon="ruler"
