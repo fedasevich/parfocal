@@ -317,7 +317,9 @@ function FlowPage({
         className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent"
       >
         <div className="mx-auto grid w-full max-w-208 grid-cols-[minmax(0,760px)] justify-center px-9 pt-6 pb-10">
-          <div className="grid min-w-0 gap-5">{children}</div>
+          <div data-slot="flow-main" className="grid min-w-0 gap-(--density-flow-page-gap)">
+            {children}
+          </div>
         </div>
       </div>
       <div

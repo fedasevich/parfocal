@@ -1,3 +1,4 @@
+import type { DensityMode } from "@parfocal/tokens";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { BeforeYouList } from "../src/components/before-you-list.tsx";
@@ -273,76 +274,84 @@ function TaskFlow({
   reached = start,
   blocked = false,
   long = false,
+  density = "comfortable",
 }: {
   start: number;
   reached?: number;
   blocked?: boolean;
   long?: boolean;
+  density?: DensityMode;
 }) {
   const flow = useFlowSteps(taskSteps.length, { current: start, reached });
   const extra = long ? moreZones : [];
   return (
-    <FlowPage
-      className="h-[720px]"
-      crumbs={[
-        { label: "P07 · Sentinel nodes" },
-        { label: "Review tasks" },
-        { label: "New review task" },
-      ]}
-      title="New review task"
-      subtitle="Ask reviewers to check one result set on the slides you pick."
-      steps={taskSteps}
-      current={flow.current}
-      reached={flow.reached}
-      onStepSelect={flow.go}
-      bar={
-        <FlowBar
-          back={
-            flow.first ? null : (
-              <Button onClick={flow.back}>
-                <Icon name="back" />
-                Back
-              </Button>
-            )
-          }
-          hint={flow.last ? "Reviewers get it in My work." : "Leaving keeps the draft."}
-          primary={{
-            label: flow.last ? "Send to 3 reviewers" : "Next",
-            onClick: flow.next,
-            ...(blocked ? { disabled: true, reason: "Pick at least one reviewer first." } : {}),
-          }}
-        />
-      }
-    >
-      {flow.last ? (
-        <Zone title="Check and send">
-          <SummaryRows
-            rows={taskSteps.slice(0, -1).map((step, index) => ({
-              label: step.label,
-              value: taskSummary[index],
-              onChange: () => flow.go(index),
-            }))}
+    <div data-density={density}>
+      <FlowPage
+        className="h-[720px]"
+        crumbs={[
+          { label: "P07 · Sentinel nodes" },
+          { label: "Review tasks" },
+          { label: "New review task" },
+        ]}
+        title="New review task"
+        subtitle="Ask reviewers to check one result set on the slides you pick."
+        steps={taskSteps}
+        current={flow.current}
+        reached={flow.reached}
+        onStepSelect={flow.go}
+        bar={
+          <FlowBar
+            back={
+              flow.first ? null : (
+                <Button onClick={flow.back}>
+                  <Icon name="back" />
+                  Back
+                </Button>
+              )
+            }
+            hint={flow.last ? "Reviewers get it in My work." : "Leaving keeps the draft."}
+            primary={{
+              label: flow.last ? "Send to 3 reviewers" : "Next",
+              onClick: flow.next,
+              ...(blocked ? { disabled: true, reason: "Pick at least one reviewer first." } : {}),
+            }}
           />
-        </Zone>
-      ) : (
-        <>
-          <Zone title={taskSteps[flow.current]?.label} sub="Every reviewer sees the same slides.">
-            <Hint>The zones of this step go here.</Hint>
+        }
+      >
+        {flow.last ? (
+          <Zone title="Check and send">
+            <SummaryRows
+              rows={taskSteps.slice(0, -1).map((step, index) => ({
+                label: step.label,
+                value: taskSummary[index],
+                onChange: () => flow.go(index),
+              }))}
+            />
           </Zone>
-          <Zone title="Study template">
-            <Hint>Sentinel node AI evaluation v3</Hint>
-          </Zone>
-          {extra.map((name) => (
-            <Zone key={name} title={name}>
-              <Hint>{"A longer step keeps going below the bar. ".repeat(4)}</Hint>
+        ) : (
+          <>
+            <Zone title={taskSteps[flow.current]?.label} sub="Every reviewer sees the same slides.">
+              <Hint>The zones of this step go here.</Hint>
             </Zone>
-          ))}
-        </>
-      )}
-    </FlowPage>
+            <Zone title="Study template">
+              <Hint>Sentinel node AI evaluation v3</Hint>
+            </Zone>
+            {extra.map((name) => (
+              <Zone key={name} title={name}>
+                <Hint>{"A longer step keeps going below the bar. ".repeat(4)}</Hint>
+              </Zone>
+            ))}
+          </>
+        )}
+      </FlowPage>
+    </div>
   );
 }
 
+export const FlowComfortable: Story = {
+  render: () => <TaskFlow start={2} density="comfortable" />,
+};
+export const FlowCompact: Story = { render: () => <TaskFlow start={2} density="compact" /> };
 export const FlowFirstStep: Story = { render: () => <TaskFlow start={0} /> };
 export const FlowMiddleStep: Story = { render: () => <TaskFlow start={2} /> };
 export const FlowMiddleStepRevisited: Story = { render: () => <TaskFlow start={1} reached={3} /> };
