@@ -6,6 +6,14 @@ export type ApiResponse<Data> = {
   headers: Headers;
 };
 
+export type ResponseTransform = (data: unknown) => unknown;
+
+let responseTransform: ResponseTransform | undefined;
+
+export function setResponseTransform(transform: ResponseTransform | undefined): void {
+  responseTransform = transform;
+}
+
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -14,7 +22,8 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
     throw networkError();
   }
   if (!response.ok) throw await toApiError(response);
-  const data: unknown = await bodyOf(response);
+  const body: unknown = await bodyOf(response);
+  const data = responseTransform && !(body instanceof Blob) ? responseTransform(body) : body;
   const result: ApiResponse<unknown> = { data, status: response.status, headers: response.headers };
   return result as T;
 }

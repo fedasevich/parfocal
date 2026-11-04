@@ -10,6 +10,7 @@ import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
+import { installNameMask } from "./shell/hide-names.ts";
 import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 import { viewTransitions } from "./shell/view-transitions.ts";
@@ -24,6 +25,7 @@ provideDebug(benchmarkDebug(window));
 export const clients = selectWebClients(config, {});
 
 const queryClient = createQueryClient(showErrorToast);
+installNameMask(queryClient);
 
 const prototypeFrame = import.meta.env.DEV
   ? (await import("./flow-map/prototype-bar.tsx")).PrototypeFrame
