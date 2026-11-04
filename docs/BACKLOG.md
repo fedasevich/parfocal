@@ -4337,7 +4337,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-001, EVAL-006. Refs mock: evaluation, doc 40 D8 and E1.
   Size: M.
 
-- [ ] EVAL-003 · Exports
+- [x] EVAL-003 · Exports
   PDF in the task's block order, decisions per object as CSV with full IDs, the objects as CSV, and annotations as JSON and GeoJSON (RSET-008), each with the checksum of the evaluation version.
   Done when tests check every export's columns and counts and the PDF text.
   Depends on EVAL-002, RSET-008.

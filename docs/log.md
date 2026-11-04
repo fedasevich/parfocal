@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- EVAL-003 (exports) added GET /api/review-tasks/{id}/evaluation/exports/{kind} for report.pdf (Typst, block order), decisions.csv, objects.csv, annotations.json and annotations.geojson, each with a sha256 evaluation checksum in a header and the file. ADR 0231 records the checksum and the optional pdf extra. No web download buttons yet.
 - CASE-017 (slide camera across visits) moved the per-slide camera into localStorage under parfocal.slide-cameras, keyed by user and slide, with a 30-day expiry and a 200-slide cap, and dropped the open-case memory. Browser specs need a longer expect timeout on a loaded 4-CPU cloud container.
 - OBJ-005 (ID labels) CI fixes: the inspector side panel body now scrolls in the shared ScrollArea for axe, slide progress queries wait for real IDs, and Vite runs with --no-turbo-fast-api-calls after a V8 crash on CI (unproven). TODO: the Linux goldens for viv-overlay-id-labels and viv-overlay-stack, which depend on the runner's monospace font.
 - LAB-000 (lab research check) ticked: the decisions agent read POC doc 34 with the owner's leave, it matched, and ADR 0189 (developer drawer) is accepted.
