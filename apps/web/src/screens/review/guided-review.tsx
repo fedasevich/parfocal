@@ -11,6 +11,7 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
+import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
@@ -56,6 +57,7 @@ type GuidedReviewProps = {
   taskId: string;
   slideId: string;
   objectId?: string | undefined;
+  camera?: Camera | undefined;
   scene: GuidedScene | undefined;
   submitted: boolean;
   tab: GuidedTab | undefined;
@@ -78,7 +80,15 @@ type BodyProps = GuidedReviewProps & { session: ReviewSession };
 
 const netOff = "The connection is lost. It saves when the connection is back.";
 
-function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: BodyProps) {
+function GuidedBody({
+  session,
+  objectId,
+  camera: startCamera,
+  scene,
+  submitted,
+  tab,
+  onTabChange,
+}: BodyProps) {
   const setup = guidedSetup(scene);
   const navigate = useNavigate();
   const person = usePeople();
@@ -137,7 +147,9 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(setup.cellsPreview);
   const [whole, setWhole] = useState(setup.whole || setup.done);
-  const [camera, setCamera] = useState<Camera | null>(null);
+  const [camera, setCamera] = useState<Camera | null>(() =>
+    objectId !== undefined && startCamera !== undefined ? startCamera : null,
+  );
   const [opinionEdits, setOpinionEdits] = useState<Record<string, string>>({});
   const savedOpinion = Object.fromEntries(
     Object.entries(session.opinion?.answers ?? {})
@@ -149,6 +161,17 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   const tabNow: GuidedTab = setup.coach ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
   const currentId = current?.object ?? "";
+  useRememberResume(
+    scene === undefined && session.slideId
+      ? {
+          task_id: session.taskId,
+          slide_id: session.slideId,
+          mode: "guided",
+          object_id: currentId || null,
+          camera: camera ? { x: camera.x, y: camera.y, z: camera.scale } : null,
+        }
+      : null,
+  );
   const counts = countAnswers(objects, answer);
   const settings = displaySettings(
     session.display,

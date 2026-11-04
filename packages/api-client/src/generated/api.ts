@@ -1632,7 +1632,18 @@ export const HitKind = {
   "patient-case": "patient-case",
 } as const;
 
-export type ResumeTargetCamera = { [key: string]: number } | null;
+export type ResumeMode = (typeof ResumeMode)[keyof typeof ResumeMode];
+
+export const ResumeMode = {
+  guided: "guided",
+  viewer: "viewer",
+} as const;
+
+export interface ResumeCamera {
+  x: number;
+  y: number;
+  z: number;
+}
 
 export interface ResumeTarget {
   task_id: string;
@@ -1648,7 +1659,8 @@ export interface ResumeTarget {
   verdicts_on_slide: number;
   due_on: string | null;
   blinded: boolean;
-  camera: ResumeTargetCamera;
+  mode: ResumeMode;
+  camera: ResumeCamera | null;
 }
 
 export type StartMode = (typeof StartMode)[keyof typeof StartMode];
@@ -3279,6 +3291,23 @@ export interface ResultSetDraft {
 export interface ResultsFile {
   /** @maxLength 20000000 */
   content: string;
+}
+
+export interface ResumeChange {
+  task_id: string;
+  slide_id: string;
+  mode: ResumeMode;
+  object_id?: string | null;
+  camera?: ResumeCamera | null;
+}
+
+export interface ResumeState {
+  task_id: string;
+  slide_id: string;
+  mode: ResumeMode;
+  object_id?: string | null;
+  camera?: ResumeCamera | null;
+  updated_at: string;
 }
 
 export interface RetentionPolicy {
@@ -23211,6 +23240,170 @@ export function useGetMyHome<TData = Awaited<ReturnType<typeof getMyHome>>, TErr
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type setMyResumeResponse200 = {
+  data: ResumeState;
+  status: 200;
+};
+
+export type setMyResumeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setMyResumeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setMyResumeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setMyResumeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setMyResumeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setMyResumeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setMyResumeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setMyResumeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setMyResumeResponseSuccess = setMyResumeResponse200 & {
+  headers: Headers;
+};
+export type setMyResumeResponseError = (
+  | setMyResumeResponse400
+  | setMyResumeResponse401
+  | setMyResumeResponse403
+  | setMyResumeResponse404
+  | setMyResumeResponse409
+  | setMyResumeResponse422
+  | setMyResumeResponse429
+  | setMyResumeResponse500
+) & {
+  headers: Headers;
+};
+
+export type setMyResumeResponse = setMyResumeResponseSuccess | setMyResumeResponseError;
+
+export const getSetMyResumeUrl = () => {
+  return `/api/me/resume`;
+};
+
+/**
+ * @summary Set My Resume
+ */
+export const setMyResume = async (
+  resumeChange: ResumeChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setMyResumeResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setMyResumeResponse>(getSetMyResumeUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(resumeChange),
+  });
+};
+
+export const getSetMyResumeMutationKey = () => ["setMyResume"] as const;
+
+export const getSetMyResumeMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setMyResume>>,
+    TError,
+    SetMyResumeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setMyResume>>,
+  TError,
+  SetMyResumeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetMyResumeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setMyResume>>,
+    SetMyResumeMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setMyResume(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetMyResumeMutationResult = NonNullable<Awaited<ReturnType<typeof setMyResume>>>;
+export type SetMyResumeMutationBody = ResumeChange;
+export type SetMyResumeMutationError = Problem;
+export type SetMyResumeMutationVariables = { data: ResumeChange };
+
+/**
+ * @summary Set My Resume
+ */
+export const useSetMyResume = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setMyResume>>,
+      TError,
+      SetMyResumeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setMyResume>>,
+  TError,
+  SetMyResumeMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetMyResumeMutationOptions(options), queryClient);
+};
 
 export type getRetentionPolicyResponse200 = {
   data: RetentionPolicy;

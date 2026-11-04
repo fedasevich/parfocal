@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 33 |
-| `personal` | 70 |
+| `personal` | 74 |
 | `secret` | 9 |
-| `operational` | 598 |
+| `operational` | 603 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -619,6 +619,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## resume_states
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `mode` | personal |
+| `object_id` | personal |
+| `camera` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## retention_policies
 
