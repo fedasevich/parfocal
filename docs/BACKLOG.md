@@ -1804,7 +1804,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock: case, doc 38 "Viewer".
   Size: M.
 
-- [ ] SHELL-004 · Workspaces Review and Annotate
+- [x] SHELL-004 · Workspaces Review and Annotate
   Guided review (GUIDE-002), Review and Annotate save to one review, and an annotate task opens in Annotate. Switching between Review and Annotate changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
   Done when tests assert the camera is unchanged across a switch.
   Size: M.
