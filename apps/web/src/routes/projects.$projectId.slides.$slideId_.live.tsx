@@ -2,6 +2,7 @@ import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
+import { readBuildConfig } from "../config.ts";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
@@ -16,6 +17,8 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live
   loader: loadViewerEngine,
   component: LiveSlide,
 });
+
+const fakeOutlines = readBuildConfig().fakeApi !== "off";
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -76,7 +79,7 @@ function LiveSlide() {
           slideId={slideId}
           areas={areas}
           viewed={viewed}
-          outlines={task !== undefined}
+          outlines={fakeOutlines && task !== undefined}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>
