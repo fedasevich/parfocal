@@ -9,6 +9,7 @@ import { msw } from "msw/vite";
 import { defineConfig, type Plugin } from "vite";
 import { noAppPageForMissingData } from "./vite/data-paths.ts";
 import { fixtureTilesInDevOnly } from "./vite/dev-tiles.ts";
+import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
 import { publicEnvOnly, publicEnvPrefix } from "./vite/public-env.ts";
 
 const crossOriginIsolation = {
@@ -59,6 +60,7 @@ export default defineConfig({
     tailwindcss(),
     fakeApiWorkerInDevOnly(),
     mockAssetsInDevOnly(),
+    fontPreloadInBuildOnly(),
     fixtureTilesInDevOnly(),
     noAppPageForMissingData(),
   ],
