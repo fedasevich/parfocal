@@ -196,6 +196,68 @@ function AreaPlaceholder() {
   );
 }
 
+type AreaRowsProps = AreaListProps & {
+  areas: readonly RankedArea[];
+  settled: boolean;
+  running?: boolean;
+  className?: string | undefined;
+};
+
+function AreaRows({
+  areas,
+  settled,
+  running = false,
+  current,
+  visited,
+  roleOf,
+  onGoTo,
+  className,
+}: AreaRowsProps) {
+  return (
+    <InspectorCard
+      className={cn(
+        "grid content-start gap-1 overflow-auto",
+        running ? "h-40" : "max-h-40",
+        className,
+      )}
+      aria-label="Areas, largest first"
+    >
+      {areas.map((area) => (
+        <RegionRow
+          key={area.object}
+          data-area={area.object}
+          objectId={area.object}
+          kind={rowKind(area, settled)}
+          size={formatMm(area.shownSize)}
+          category={area.category}
+          selected={onGoTo ? current === area.object : area.lead}
+          note={roleOf?.(area.object)}
+          visited={visited?.has(area.object) ?? false}
+          {...(onGoTo
+            ? {
+                onSelect: () => onGoTo(area.object),
+                label: areaLabel(area, roleOf?.(area.object), visited),
+              }
+            : {})}
+        />
+      ))}
+      {running ? <AreaPlaceholder key={`next-${areas.length}`} /> : null}
+    </InspectorCard>
+  );
+}
+
+type AreaListOwnProps = AreaListProps & {
+  areas: readonly AiArea[];
+  className?: string | undefined;
+};
+
+function AreaList({ areas, ...props }: AreaListOwnProps) {
+  const state = aiState({ areas });
+  const settled =
+    (state.kind === "pre-read" || state.kind === "small-cluster") && state.phase === "settled";
+  return <AreaRows areas={state.areas} settled={settled} {...props} />;
+}
+
 function StagingCards({
   areas,
   running = false,
@@ -275,34 +337,15 @@ function StagingCards({
       )}
       <ModelWarningsBlock warnings={warnings} />
       {showList && (state.areas.length || state.kind === "running") ? (
-        <InspectorCard
-          className={cn(
-            "grid content-start gap-1 overflow-auto",
-            state.kind === "running" ? "h-40" : "max-h-40",
-          )}
-          aria-label="Areas, largest first"
-        >
-          {state.areas.map((area) => (
-            <RegionRow
-              key={area.object}
-              data-area={area.object}
-              objectId={area.object}
-              kind={rowKind(area, settled)}
-              size={formatMm(area.shownSize)}
-              category={area.category}
-              selected={onGoTo ? current === area.object : area.lead}
-              note={roleOf?.(area.object)}
-              visited={visited?.has(area.object) ?? false}
-              {...(onGoTo
-                ? {
-                    onSelect: () => onGoTo(area.object),
-                    label: areaLabel(area, roleOf?.(area.object), visited),
-                  }
-                : {})}
-            />
-          ))}
-          {state.kind === "running" ? <AreaPlaceholder key={`next-${state.areas.length}`} /> : null}
-        </InspectorCard>
+        <AreaRows
+          areas={state.areas}
+          settled={settled}
+          running={state.kind === "running"}
+          current={current}
+          visited={visited}
+          roleOf={roleOf}
+          onGoTo={onGoTo}
+        />
       ) : null}
       {staged ? (
         <div data-slot="staging-footer" className="flex items-center justify-between gap-2">
@@ -337,4 +380,11 @@ function AnalysisCards({ parts, ...props }: AnalysisCardsProps) {
   return <StagingCards showList={parts.includes("area-list")} {...props} />;
 }
 
-export { AnalysisCards, type AnalysisCardsProps, StagingCards, type StagingCardsProps };
+export {
+  AnalysisCards,
+  type AnalysisCardsProps,
+  AreaList,
+  type AreaListOwnProps as AreaListProps,
+  StagingCards,
+  type StagingCardsProps,
+};
