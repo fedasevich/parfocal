@@ -97,11 +97,6 @@ export function cardText(
   };
 }
 
-export const disagreeReasons: Record<ReviewObject["kind"], string[]> = {
-  region: ["Not tumor", "Boundary is off", "Two regions, not one", "Artefact or fold"],
-  cell: ["Not a cell", "It is an immune cell", "It is stroma", "Artefact"],
-};
-
 export const unsureReasons = [
   "Need a deeper level",
   "Need IHC",

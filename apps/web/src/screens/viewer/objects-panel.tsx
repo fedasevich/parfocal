@@ -162,7 +162,7 @@ export function ObjectFoot({
     noteBlock = (
       <NoteEditor
         object={object.object}
-        reasons={noteReasonsFor(object.kind, answer?.value)}
+        reasons={noteReasonsFor(object, answer?.value, classes)}
         chosen={note.reasons}
         text={note.text}
         offReason={saveOffReason}
