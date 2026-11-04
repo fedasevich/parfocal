@@ -1,7 +1,7 @@
 # 0237. Annotate tasks on one shared layer
 
 - Date: 2026-11-04
-- Status: Accepted
+- Status: Accepted, amended by [ADR 0238](0238-check-options-and-presets-on-annotate-tasks.md) (check options and presets on annotate tasks)
 - Deciders: owner, Claude
 - Backlog: TASK-013, TASK-014, ANN-030, ANN-031, ANN-028, ANN-022, COLLAB-016, COLLAB-017, EVAL-013, EVAL-014, EVAL-015, AINUC-013, AINUC-014, AISEG-015, AISEG-016, JOBS-007, TASK-005, SHELL-004, PILOT-005
 
