@@ -59,7 +59,7 @@ The owner's Claude plan has a 5-hour and a weekly limit. The status line records
 
 Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready task that passes, in this order:
 
-1. The annotation path (milestone MA), in the order [ADR 0237](../adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists, with TASK-015 (check options) after TASK-013 and ANN-032 (check state) and GUIDE-019 (guided check) after ANN-031 as [ADR 0238](../adr/0238-check-options-and-presets-on-annotate-tasks.md) adds, since 2026-11-04.
+1. The annotation path (milestone MA), in the order [ADR 0237](../adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists, with TASK-015 (check options) after TASK-013, PROTO-020 (annotate task screens over fake data) before SHELL-004 and ANN-032 (check state) and GUIDE-019 (guided check) after ANN-031 as [ADR 0238](../adr/0238-check-options-and-presets-on-annotate-tasks.md) adds, since 2026-11-04.
 2. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).
 3. An open task that a path or slice task depends on.
 4. Else the highest "unblocks" count from `board.py ready --agent-only`, the smaller `Size` winning a tie.

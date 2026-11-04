@@ -2563,8 +2563,9 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-023 · Import GeoJSON and own JSON
   Merge into a new group by default, never replace silently. Undoable. Reads QuPath GeoJSON and the app's own export.
-  Done when round-trip tests export and re-import with no loss, including groups, comments and review state.
-  Refs doc 25 import defects.
+  In an annotate task the import lands on the task's shared layer, where each object gets the origin `human`, the importing expert as author and the file name in its history, so colleagues see where it came from ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md)).
+  Done when round-trip tests export and re-import with no loss, including groups, comments and review state, and an API test imports a file into an annotate task and finds the objects on the shared layer with their origin and history.
+  Depends on ANN-030. Refs doc 25 import defects.
   Importing a file as a result set goes through RSET. This task covers importing a file as editable annotations in Annotate.
   Size: M.
 
@@ -2605,14 +2606,14 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] ANN-031 · Annotate task on screen
   A slide opened from an annotate task shows the Annotate workspace with the task's classes on keys 1 to 9, the shared layer, the AI result set shown by default with a toggle, origin marks on objects, counts per class, progress across the task's slides and the checked card.
   Done when component tests cover the class strip from the snapshot, the AI toggle, the origin marks and a slide with no result set, and E2E draws a polygon and a count marker, fixes an AI object and marks the slide checked.
-  Depends on ANN-030, ANN-002, ANN-005, ANN-008, ANN-021, SHELL-004, TASK-014. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Depends on ANN-030, ANN-002, ANN-005, ANN-008, ANN-021, SHELL-004, TASK-014, PROTO-020. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: L.
 
 
 - [ ] ANN-032 · Check state on AI objects
   Each AI object on an annotate slide is unchecked, confirmed, edited or deleted. One key confirms the selected object, which keeps its geometry and gets the origin `ai-confirmed`, and editing or deleting it also counts as checked. The slide shows how many objects in the check scope are checked.
   Done when API tests cover confirm, undo of a confirm and the counts, and component tests cover the key, the mark on a confirmed object and the progress line.
-  Depends on ANN-030, TASK-015. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
+  Depends on ANN-030, TASK-015, PROTO-020. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 ## 16 MEAS · Measurements
 
@@ -2757,7 +2758,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] COLLAB-017 · Blind first switch on annotate tasks
   A task switch, off by default, keeps an expert's new objects from colleagues until that expert marks the slide checked, so first opinions stay independent.
   Done when API tests hide and then show another expert's objects around the check, and component tests cover the switch in the task stepper.
-  Depends on ANN-030, TASK-014. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Depends on ANN-030, TASK-014, PROTO-020. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
 ## 18 CMP · Compare slides
@@ -3274,7 +3275,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AINUC-013 · Stream a whole-slide run onto the open slide
   While a run on the open slide is going, each new chunk is appended to the result layer without rebuilding earlier ones, keyed by run lineage, with a full rebuild at most every 3 s. Finished tiles are marked on the slide, with progress and an estimate, and cancel keeps what is finished. This follows the POC's streamed whole-slide job.
   Done when a test proves a streamed scene equals one built from scratch, a perf test streams 250,000 nuclei with no frame over 33 ms, and E2E starts a run, sees objects appear before it ends, cancels it and keeps them.
-  Depends on AIP-011, AINUC-005. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Depends on AIP-011, AINUC-005, PROTO-020. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
 - [ ] AINUC-014 · Type one-click accepts with the server typer
@@ -4169,7 +4170,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
 - [ ] TASK-005 · New review task stepper
   A flow page that starts with the kind, review AI results or annotate, then Slides, Reviewers, What to check (review tasks only), How it runs, and Send. For an annotate task, the first step offers the presets of TASK-015, Slides may include slides with no result set, What to check holds the check options, and How it runs holds the blind first switch (COLLAB-017), where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
   Done when component tests cover each step, the estimate, each decision style with its Counts as line and a refused mapping with no agree or no disagree answer, and E2E creates a task from the project page and from the end of an upload.
-  Depends on TASK-001, TASK-013, TASK-015, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
+  Depends on TASK-001, TASK-013, TASK-015, DS-020, DS-022, GUIDE-015, PROTO-020. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
   Size: L.
 
 - [x] TASK-006 · Invitations to a task
@@ -5270,6 +5271,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The smart minimap in each of its states, measuring, the annotate workspace with the auto region and its model picker, compare slides with the pane picker, focus mode and the whole-slide peek. The slide canvas is a static image of the mock's slide until the viewer tasks put Viv there. Wired later by NAV-006 (smart minimap state machine), NAV-007 (minimap placement scoring), NAV-008 (minimap content), NAV-010 (whole-slide peek), NAV-011 (travel animation and route line), MEAS-001 (ruler tool), MEAS-003 (measurement list in the inspector), ANN-002 (annotate rail with five families), AISEG-010 (auto region tool), AIP-004 (model tier picker), CMP-001 (split viewer layouts), CMP-004 (pane slide picker) and SHELL-008 (focus mode).
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: navigator, mock: measure, mock: annotate, mock: compare, mock: focus, mock: peek.
+
+- [ ] PROTO-020 · Annotate task screens over fake data
+  The new parts of annotate tasks drawn in the app and its Storybook before they are built, because the frozen mock has none of them. They are the origin marks on objects (`ai`, `ai-edited`, `ai-confirmed` and `human`) with author and history, the AI result toggle, the check state and its progress line, the checked card with "nothing to mark", the owner's sign-off with the open threads warning, the presets and check options in the new task stepper, the blind first switch, the streamed whole-slide run with finished tiles, progress, estimate and cancel, and the calm live update marks for colleagues' changes. They reuse the kit and the mock's annotate workspace, and the slide is the static mock image. Wired later by ANN-031 (annotate task on screen), ANN-032 (check state on AI objects), TASK-005 (new task stepper), TASK-014 (check and sign off a slide), COLLAB-016 (calm live updates), COLLAB-017 (blind first switch) and AINUC-013 (stream a run onto the slide). PILOT-005 (second usability round) tests the screens built from these.
+  Done when every part has a Storybook story and opens at a route on fake data, a Playwright smoke test opens every route, and the owner has looked at the screens and their notes are folded in.
+  Depends on PROTO-019. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md), [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), mock: annotate.
 
 ---
 
