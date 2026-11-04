@@ -78,6 +78,7 @@ function LiveSlide() {
           key={slideId}
           slideId={slideId}
           projectId={projectId}
+          {...(task === undefined ? {} : { taskId: task })}
           areas={areas}
           viewed={viewed}
           outlines={fakeOutlines && task !== undefined}

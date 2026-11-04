@@ -12,6 +12,7 @@ import { CountPanel } from "../annotations/count-panel.tsx";
 import { removeShape } from "../annotations/document.ts";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
+import { PinLayer } from "../annotations/pin-layer.tsx";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
@@ -58,6 +59,7 @@ const liveTools = new Set([
   "rectangle",
   "ellipse",
   "marker",
+  "comment",
 ]);
 
 const toolOfAction: Readonly<Record<string, ViewerTool>> = Object.fromEntries(
@@ -175,6 +177,7 @@ function ScanKeys({
 export function SlideStage({
   slideId,
   projectId,
+  taskId,
   areas = [],
   viewed,
   systematicScan = false,
@@ -182,6 +185,7 @@ export function SlideStage({
 }: {
   slideId: string;
   projectId?: string;
+  taskId?: string;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
   systematicScan?: boolean;
@@ -193,6 +197,7 @@ export function SlideStage({
       key={attempt}
       slideId={slideId}
       projectId={projectId}
+      taskId={taskId}
       areas={areas}
       viewed={viewed}
       systematicScan={systematicScan}
@@ -205,6 +210,7 @@ export function SlideStage({
 function OpenedSlide({
   slideId,
   projectId,
+  taskId,
   areas,
   viewed,
   systematicScan,
@@ -213,6 +219,7 @@ function OpenedSlide({
 }: {
   slideId: string;
   projectId: string | undefined;
+  taskId: string | undefined;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
@@ -382,7 +389,7 @@ function OpenedSlide({
       data-coverage-seen={coverage?.share.seen}
       data-coverage-pending={coverage?.pending}
       data-coverage-basis={coverage?.share.basis}
-      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
+      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
       {session && hostNode ? (
@@ -442,6 +449,17 @@ function OpenedSlide({
             stage={hostNode}
             active={tool === "select"}
             document={annotations}
+            onDocumentChange={setAnnotations}
+            onCommit={saved.commit}
+            onLeave={leaveTool}
+          />
+          <PinLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "comment"}
+            document={annotations}
+            taskId={taskId}
+            slideId={slideId}
             onDocumentChange={setAnnotations}
             onCommit={saved.commit}
             onLeave={leaveTool}

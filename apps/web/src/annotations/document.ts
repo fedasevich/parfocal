@@ -30,8 +30,14 @@ export interface AnnotationDocument {
   readonly runs: ReadonlyMap<RunId, ModelRun>;
   readonly promoted: ReadonlyMap<string, ShapeId>;
   readonly dismissed: ReadonlySet<string>;
+  readonly pins: ReadonlyMap<string, PinPlacement>;
   readonly nextShapeId: ShapeId;
   readonly nextGroupId: GroupId;
+}
+
+export interface PinPlacement {
+  readonly shapeId: ShapeId | null;
+  readonly offset: { readonly x: number; readonly y: number };
 }
 
 export interface NewShape {
@@ -87,6 +93,7 @@ export function createDocument(): AnnotationDocument {
     runs: new Map(),
     promoted: new Map(),
     dismissed: new Set(),
+    pins: new Map(),
     nextShapeId: 1,
     nextGroupId: 1,
   };
