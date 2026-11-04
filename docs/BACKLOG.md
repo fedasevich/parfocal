@@ -1748,7 +1748,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-003.
   Size: S.
 
-- [ ] DS-037 · Flow screens keep their step and draft
+- [x] DS-037 · Flow screens keep their step and draft
   DS-023 (flow page with the shared stepper) added a furthest-step `reached` value and the `useFlowSteps` hook, but the app's flow screens do not pass `reached` and lose the draft and step when you leave. Use `useFlowSteps` with the web app's `useKeptDraft` on every flow screen.
   Done when a test on each flow screen visits a later step, leaves, comes back to the same step with the draft kept, and reopens a visited step from the stepper.
   Depends on DS-023.

@@ -7,6 +7,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { QueryState } from "../placeholder.tsx";
 import { decisionSettings } from "../review/decision-style.ts";
@@ -57,6 +58,7 @@ type NewTaskScreenProps = {
   step: PageKey | undefined;
   modal: TaskModal | undefined;
   onNavigate: (to: NewTaskNavigation) => void;
+  keep?: boolean;
 };
 
 const reveal: Partial<Record<TaskScene, string>> = {
@@ -84,6 +86,7 @@ function useLinkRenderer(): LinkRenderer {
 }
 
 export function NewTaskScreen(props: NewTaskScreenProps) {
+  const owner = useFlowOwner();
   const { data, pending, failed } = useTaskData(props.projectId);
   if (!data) {
     return (
@@ -94,7 +97,7 @@ export function NewTaskScreen(props: NewTaskScreenProps) {
       </main>
     );
   }
-  return <NewTaskFlow key={props.scene} data={data} {...props} />;
+  return <NewTaskFlow key={`${props.scene}|${owner}`} owner={owner} data={data} {...props} />;
 }
 
 const scopeOf = (draft: Draft): TaskDraft["scope"] => {
@@ -136,13 +139,23 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
 }
 
 function NewTaskFlow({
+  owner,
   data,
   scene,
   step,
   modal,
   onNavigate,
-}: NewTaskScreenProps & { data: TaskData }) {
-  const [draft, setDraft] = useState(() => sceneDraft(data, scene));
+  keep = false,
+}: NewTaskScreenProps & { data: TaskData; owner: string | undefined }) {
+  const flow = useKeptFlow({
+    owner,
+    id: `new-task:${data.projectId}`,
+    count: stepKeys.length,
+    draft: sceneDraft(data, scene),
+    at: step === undefined || step === "sent" ? undefined : stepKeys.indexOf(step),
+    keep,
+  });
+  const { draft, setDraft, forget } = flow;
   const [focus, setFocus] = useState<{ field: string; move: boolean } | null>(() => {
     const field = reveal[scene];
     return field ? { field, move: false } : null;
@@ -152,16 +165,21 @@ function NewTaskFlow({
   const create = useCreateReviewTask();
   const invite = useInviteTaskReviewer();
   const renderLink = useLinkRenderer();
-  const page: PageKey = step ?? sceneStep[scene];
+  const kept = keep ? stepKeys[flow.kept?.current ?? -1] : undefined;
+  const page: PageKey = step ?? kept ?? sceneStep[scene];
   const all = issues(draft, data);
   const errors = fieldErrors(draft, data);
+
+  useEffect(() => {
+    if (page === "sent") forget();
+  }, [page, forget]);
 
   useEffect(() => {
     if (page === "sent") return;
     setDraft((current) =>
       current.seen.includes(page) ? current : { ...current, seen: [...current.seen, page] },
     );
-  }, [page]);
+  }, [page, setDraft]);
 
   useEffect(() => {
     if (!focus) return;
@@ -376,6 +394,7 @@ function NewTaskFlow({
         subtitle={sent ? undefined : <span className="font-mono">{data.code}</span>}
         steps={steps}
         current={Math.min(index, stepKeys.length - 1)}
+        reached={Math.max(flow.reached, Math.min(index, stepKeys.length - 1))}
         onStepSelect={(chosen) => {
           const key = stepKeys[chosen];
           if (key && draft.seen.includes(key)) go(key);
