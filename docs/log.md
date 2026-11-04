@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-05
 
+- ANN-030 (shared layer API for annotate tasks) adds endpoints under /api/review-tasks/{task}/slides/{slide}/shared-layer to read, draw, change and delete with a version, copy AI objects into the layer on edit or delete and read history. Migration 0091 adds origin and source_number to annotations with one copy per AI object per task slide, a stale save answers 409 annotation-changed with the current object, one layer.object-changed event per change goes to the task room, and AI cell changes must send the outline. Tests in test_annotate_layer.py plus the isolation and permission suites.
 - COLLAB-003 (comment tool and pins) adds a pin model and pin layer in apps/web/src/annotations and the C tool on the live stage. Enter posts, Shift+Enter adds a line, pins show initials, follow and hide with their shape by a stored offset, and drag as one undo step. A dragged pin is session-only until a thread anchor move endpoint exists, and the composer needs a task until COLLAB-015 (threads on any slide).
 
 ## 2026-11-04

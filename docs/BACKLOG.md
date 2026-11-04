@@ -2613,7 +2613,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 ---
 
-- [ ] ANN-030 · Shared layer API for annotate tasks
+- [x] ANN-030 · Shared layer API for annotate tasks
   Every assigned expert reads and edits one layer per task slide. Each object stores who made it and who changed it, with its history. Editing or deleting an AI object copies it into the layer with the origin `ai-edited` or a deletion mark and its source object ID, and new objects have the origin `human`. Saves carry a version, and a stale save answers a conflict with the current object. Changes go out on the realtime channel of the task slide.
   Done when API tests cover two experts editing one layer, an AI object edited and one deleted with the result set unchanged, the history of an object, a stale save refused, a realtime event per change, and the isolation test covers the layer.
   Depends on TASK-013, ANN-020, OBJ-003, COLLAB-001. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
