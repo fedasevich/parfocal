@@ -2436,7 +2436,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [`poc/src/annotations/document.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/document.ts), `runs.ts`, doc 11.
   Size: M.
 
-- [ ] ANN-002 · Annotate rail with five families
+- [x] ANN-002 · Annotate rail with five families
   Navigate (V, H), AI (S, U), draw (P, Shift+P, R, O, M), note (L, Shift+L, T, C), paint (B).
   Holding Space pans in any tool ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the key map check).
   Done when component tests cover every tool and its key from the registry.
@@ -2498,7 +2498,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Moved to PROJ-004, because classes belong to a project ([ADR 0053](adr/0053-ai-results-review-direction.md)).
   Size: S.
 
-- [ ] ANN-013 · Undo and redo
+- [x] ANN-013 · Undo and redo
   Transactions: draft vertex, then prompt point, then committed edit. A model run accept is one step. Async results arriving after accept fold into the accept entry. Group operations and comments are covered.
   Done when unit tests cover the ordering rules and a property test round-trips random edit sequences.
   Refs [`poc/src/annotations/history.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/history.ts), docs 10, 16, 17.
@@ -4434,7 +4434,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002.
   Size: M.
 
-- [ ] EVAL-012 · Share a report link from the report page
+- [x] EVAL-012 · Share a report link from the report page
   EVAL-005 (read-only link for co-authors) built the API: owners create, list and revoke links under /api/review-tasks/{id}/evaluation/links and anyone with the link opens GET /api/shared-reports/{token}. Add the owner's Share button with the link list and revoke on the report page, the public /shared-reports/{token} page that shows only the numbers, and a rate limit on the public route (ADR 0236 TODO).
   Done when E2E creates a link, opens it signed out, sees Reviewer A and B with no names, revokes it and sees it refused, and an API test shows the rate limit.
   Depends on EVAL-005.
