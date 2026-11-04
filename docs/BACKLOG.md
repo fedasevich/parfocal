@@ -2471,7 +2471,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when interaction tests cover both.
   Size: S.
 
-- [ ] ANN-008 · Count marker tool
+- [x] ANN-008 · Count marker tool
   Click drops a marker of the active class, counts per class in the context bar and layers.
   Done when tests cover counting and deletion.
   Size: S.

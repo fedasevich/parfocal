@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ANN-008 (count marker tool) turns on M a click-to-count tool that saves a cell Point annotation of the active project class (1 to 9 picks it), with a Counts panel per class and Shift-click deleting the nearest marker on the server too. Markers cannot yet be moved or reclassed with the select tool.
 - ANN-007 (rectangle and ellipse tools) draws on R and O by dragging corner to corner with Shift for a square or circle, saved as polygon annotations (4 vertices, or 64 for an ellipse), so they reload as plain polygons.
 - ADJ-002 (disagreement queue) makes the decide panel, row tags, evidence and keys follow the task's decision style with the project's classes, and sends the raw answer with counts_as. E2E resolves the 7-row mock queue with 2 decisions, 3 sent to an adjudicator and 2 left open, where the Done-when line counted 6 rows.
 - REVIEW-027 (outline modes in the review viewer) adds an Outline display switch (Fade, Mark unsure, Bands) on the live slide stage through outlineModeOverlays, kept in localStorage parfocal.outline-mode and shared with the Settings AI row, tested on tumor_044. No API serves outline geometry yet, so stand-in outlines from apps/web/src/viewer/sample-outlines.ts show only under the fake API, a gate the lead added.
