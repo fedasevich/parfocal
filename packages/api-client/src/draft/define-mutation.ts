@@ -16,7 +16,7 @@ export type DraftMutationOptions<Response, Variables, TError, TContext> = {
 };
 
 type DraftMutationShape<Variables> = {
-  method: "POST" | "DELETE";
+  method: "POST" | "PUT" | "DELETE";
   url: (variables: Variables) => string;
   body?: (variables: Variables) => unknown;
 };

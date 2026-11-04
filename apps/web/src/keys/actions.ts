@@ -15,9 +15,14 @@ export type ActionDef = {
   inInputs?: boolean;
 };
 
+export type WholeSlideMode = "both" | "hold" | "tap";
+
 export type Resolve = {
   preset?: Preset;
   personal?: Record<string, string[]>;
+  singleLetter?: boolean;
+  byPosition?: boolean;
+  wholeSlide?: WholeSlideMode;
   scopes?: readonly Scope[];
   only?: readonly string[];
 };
@@ -30,6 +35,10 @@ export const scopeRank: Record<Scope, number> = {
   compare: 3,
   annotate: 4,
 };
+
+const singleLetterKey = /^⇧?[A-Z0-9+\-?[\]=,.;'/\\`]$/;
+
+export const isSingleLetterKey = (key: string) => singleLetterKey.test(key);
 
 const directionKeys: Record<string, [string, string, string, string]> = {
   Arrows: ["↑", "↓", "←", "→"],
@@ -61,7 +70,7 @@ export function slotsOf(def: ActionDef, { preset = "default", personal = {} }: R
   return personal[def.id] ?? named ?? def.keys;
 }
 
-const overlap = (a: string[], b: string[]) => {
+export const keysOverlap = (a: string[], b: string[]) => {
   const shorter = a.length <= b.length ? a : b;
   const longer = a.length <= b.length ? b : a;
   return shorter.every((key, index) => longer[index] === key);
@@ -84,6 +93,7 @@ export function createActionRegistry(defs: readonly ActionDef[]) {
       if (!active.has(def.scope) || (only !== null && !only.has(def.id))) continue;
       for (const slot of slotsOf(def, options))
         for (const [suffix, keys] of expandSlot(slot)) {
+          if (options.singleLetter === false && isSingleLetterKey(keys[0] ?? "")) continue;
           const binding: Binding = { action: `${def.id}${suffix}`, keys };
           if (def.hold) binding.hold = true;
           if (def.sustain) binding.sustain = true;
@@ -96,7 +106,7 @@ export function createActionRegistry(defs: readonly ActionDef[]) {
     const kept: Ranked[] = [];
     for (const entry of ranked) {
       const shadowed = kept.some(
-        (other) => other.rank > entry.rank && overlap(other.binding.keys, entry.binding.keys),
+        (other) => other.rank > entry.rank && keysOverlap(other.binding.keys, entry.binding.keys),
       );
       if (!shadowed) kept.push(entry);
     }

@@ -43,6 +43,7 @@ import {
   SavedNote,
 } from "./object-card.tsx";
 import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
+import { nextObjectAction, previousObjectAction, useObjectKeys } from "./object-keys.ts";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
@@ -288,6 +289,12 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   });
 
   useAnswerKeys(answersOf(style, session.classes, current), answerWith, !showDone && !noResults);
+
+  useObjectKeys(
+    () => goTo(index + 1),
+    () => goTo(index - 1),
+    !showDone && !noResults,
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -547,9 +554,11 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
         >
           <Icon name="back" />
           Previous
+          <Keycap action={previousObjectAction} size="sm" />
         </Button>
         <Button variant="ghost" onClick={() => goTo(index + 1)}>
           {kept ? "Next" : "Skip for now"}
+          <Keycap action={nextObjectAction} size="sm" />
           <Icon name="next" />
         </Button>
       </div>

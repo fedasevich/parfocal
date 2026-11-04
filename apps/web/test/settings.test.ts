@@ -117,7 +117,7 @@ test("sets change as sets", () => {
     key: "Control",
     ctrlKey: true,
   });
-  assert.deepEqual(keysOf(range.state, "mag"), ["⌃1 … ⌃6"]);
+  assert.deepEqual(keysOf(range.state, "mag"), ["⌘1 … ⌘6"]);
   const sequence = capture(startRecording(freshShortcuts(), "area", 0), { key: "j", code: "KeyJ" });
   assert.deepEqual(keysOf(sequence.state, "area"), ["J then 1 … 9"]);
   const clash = pickDirection(startRecording(freshShortcuts(), "pan", 0), "pan", "WASD");
