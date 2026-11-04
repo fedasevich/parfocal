@@ -4594,7 +4594,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026), and how the Display panel's state with its task locks ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks) reaches it.
   Size: S.
 
-- [ ] VIZ-001 · Result sets in the Display panel
+- [x] VIZ-001 · Result sets in the Display panel
   The other result sets are rows in the Display panel's What the AI shows group, each with show or hide, its colour swatch, its version and "imported 12 Oct" or "run here 13 Oct". A set that is on draws its objects dashed in its colour behind the task's set. The person's review is its own row, "Your review". In the full viewer each row keeps a menu to compare, run again or add another. When the task locks the other result sets the rows are read-only and show the reason ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when component tests cover each control and a locked group, and E2E hides a set.
   Depends on RSET-001, VIEW-026, TASK-011. Refs mock: layers/display, doc 38 answer 2, doc 44.
