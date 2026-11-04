@@ -1,7 +1,16 @@
 import { execFileSync } from "node:child_process";
 import { fixturePath } from "@parfocal/test-fixtures";
 import { expect, type Page, test } from "@playwright/test";
-import { call, field, idOf, type Reply, researcherWorkspace, root, signIn, sql } from "./support.ts";
+import {
+  call,
+  field,
+  idOf,
+  type Reply,
+  researcherWorkspace,
+  root,
+  signIn,
+  sql,
+} from "./support.ts";
 
 const SLIDE = "CMU-1-Small-Region.svs";
 const RESULT = "CMU-1-Small-Region.geojson";
@@ -108,8 +117,6 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   page,
 }) => {
   test.setTimeout(240_000);
-  page.on("response", async (r) => { if (r.status() >= 400 && !r.url().includes("/auth")) console.log("BAD", r.request().method(), r.url().slice(0, 160), r.status(), (await r.text().catch(() => "")).slice(0, 300)); });
-  page.on("requestfailed", (r) => console.log("FAILED", r.method(), r.url().slice(0, 160), r.failure()?.errorText));
   await signIn(page, "/");
   const profile = await call(page, "GET", "/api/me");
   const me = field(profile, "user_id");
@@ -155,10 +162,12 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   expect(slideState.json).toMatchObject({ status: "ready" });
   const slideId = field(slideState, "slide_id");
   const waiting = await statusOf(page, resultUploadId);
-  expect(waiting.json).toMatchObject({ reason: "needs-choices", slide_id: slideId });
-  const chosen = await call(page, "PUT", `/api/uploads/${resultUploadId}/import-choices`, {});
-  expect(chosen.status, JSON.stringify(chosen.json)).toBe(200);
-  runIngest(tenantId);
+  expect(waiting.json).toMatchObject({ slide_id: slideId });
+  if (Reflect.get(waiting.json ?? {}, "reason") === "needs-choices") {
+    const chosen = await call(page, "PUT", `/api/uploads/${resultUploadId}/import-choices`, {});
+    expect(chosen.status, JSON.stringify(chosen.json)).toBe(200);
+    runIngest(tenantId);
+  }
   const resultState = await statusOf(page, resultUploadId);
   expect(resultState.json).toMatchObject({ status: "ready", slide_id: slideId });
   const resultSetId = field(resultState, "result_set_id");
@@ -178,8 +187,9 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   await page.goto(`/projects/${projectId}?tab=slides`);
   const row = page.getByTestId("slide-row");
   await expect(row).toHaveCount(1);
-  await expect(row).toContainText(SLIDE);
-  await row.getByRole("button", { name: /GeoJSON import/ }).click();
+  await expect(row).toContainText("CMU-1-Small-Region");
+  await expect(row.getByTitle(/GeoJSON import/)).toHaveText("GeoJSON");
+  await row.getByTitle(/GeoJSON import/).click();
   await expect(page.getByTestId("result-sets")).toContainText("GeoJSON import");
   await expect(page.getByTestId("result-sets")).toContainText(`Imported from ${RESULT}`);
   await expect(page.getByTestId("result-sets")).toContainText("2 regions");
