@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { mockScenes } from "../screens/scenes.ts";
+import { LivePage } from "../screens/upload/live-page.tsx";
 import { UploadPage } from "../screens/upload/upload-page.tsx";
 
 const uploadSearch = z.object({
@@ -17,7 +18,10 @@ export const Route = createFileRoute("/projects/$projectId/upload")({
 function UploadRoute() {
   const { projectId } = Route.useParams();
   const search = Route.useSearch();
-  const scene = search.scene ?? "empty";
+  if (search.scene === undefined || search.flow === "live") {
+    return <LivePage projectId={projectId} scene={search.scene} />;
+  }
+  const scene = search.scene;
   const flow = search.flow ?? scene;
   return (
     <UploadPage

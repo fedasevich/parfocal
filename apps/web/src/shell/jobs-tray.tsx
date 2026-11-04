@@ -24,6 +24,8 @@ import {
   trayTone,
   trayValueText,
 } from "../screens/jobs/model.ts";
+import { formatBytes, type UploadEntry } from "../upload/entries.ts";
+import { useUploads } from "../upload/use-uploads.ts";
 import { showUndoToast } from "./undo-toasts.tsx";
 
 export type JobsTrayControl = {
@@ -95,11 +97,41 @@ function useGoToTarget() {
   };
 }
 
+type BrowserUpload = {
+  projectId: string;
+  count: number;
+  sent: number;
+  total: number;
+  percent: number;
+  finished: boolean;
+};
+
+function browserUploads(entries: readonly UploadEntry[]): BrowserUpload[] {
+  const live = entries.filter((entry) => entry.status !== "interrupted");
+  return [...new Set(live.map((entry) => entry.projectId))].map((projectId) => {
+    const mine = live.filter((entry) => entry.projectId === projectId);
+    const total = mine.reduce((sum, entry) => sum + entry.size, 0);
+    const sent = mine.reduce(
+      (sum, entry) => sum + (entry.status === "done" ? entry.size : entry.bytesUploaded),
+      0,
+    );
+    return {
+      projectId,
+      count: mine.length,
+      sent,
+      total,
+      percent: total ? Math.floor((sent * 100) / total) : 0,
+      finished: sent >= total,
+    };
+  });
+}
+
 export function ShellJobs() {
   const tray = useJobsTray();
   const jobs = useListMyJobs().data?.data ?? [];
   const resume = useResumeJob();
   const goTo = useGoToTarget();
+  const navigate = useNavigate();
   const running = runningJobs(jobs);
   const finished = finishedJobs(jobs);
   const newestUpload = jobs
@@ -114,6 +146,28 @@ export function ShellJobs() {
     tray.setOpen(false);
     void goTo({ kind: "project", projectId: job.project.id });
   };
+  const uploads = browserUploads(useUploads().entries);
+  const uploadRow = (upload: BrowserUpload) => (
+    <JobRow
+      key={`browser-${upload.projectId}`}
+      data-testid="browser-upload-job"
+      icon="upload"
+      title={`${upload.finished ? "Uploaded" : "Uploading"} ${upload.count} ${upload.count === 1 ? "file" : "files"}`}
+      detail={`${formatBytes(upload.sent)} of ${formatBytes(upload.total)}`}
+      percent={upload.percent}
+      valueText={`${upload.percent}%`}
+      onOpen={() => {
+        tray.setOpen(false);
+        void navigate({
+          to: "/projects/$projectId/upload",
+          params: { projectId: upload.projectId },
+          search: { scene: "progress", flow: "live" },
+        });
+      }}
+    />
+  );
+  const uploadsRunning = uploads.filter((upload) => !upload.finished);
+  const uploadsDone = uploads.filter((upload) => upload.finished);
   const resumeFromTray = async (job: MyJob) => {
     tray.notify(resumedMessage(await resume(job)));
   };
@@ -140,11 +194,18 @@ export function ShellJobs() {
     <Popover open={tray.open} onOpenChange={tray.setOpen}>
       <PopoverTrigger
         render={
-          <JobsButton running={running.length} percent={trayPercent(jobs)} open={tray.open} />
+          <JobsButton
+            running={running.length + uploadsRunning.length}
+            percent={trayPercent(jobs)}
+            open={tray.open}
+          />
         }
       />
       <PopoverContent align="end" aria-label="Jobs" className="w-95 gap-0 overflow-hidden p-0">
-        <JobsTray running={running.map(row)} finished={finished.map(row)} />
+        <JobsTray
+          running={[...uploadsRunning.map(uploadRow), ...running.map(row)]}
+          finished={[...uploadsDone.map(uploadRow), ...finished.map(row)]}
+        />
       </PopoverContent>
     </Popover>
   );

@@ -36,7 +36,7 @@ const classColours: Record<string, string> = {
   Other: "var(--c-other)",
 };
 
-function ProblemZone({
+export function ProblemZone({
   icon,
   tag,
   tone,
@@ -75,7 +75,7 @@ function ProblemZone({
   );
 }
 
-function DoneRow({
+export function DoneRow({
   file,
   what,
   out,

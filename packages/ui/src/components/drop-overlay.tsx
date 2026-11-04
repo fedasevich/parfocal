@@ -2,8 +2,8 @@ import { Icon } from "@parfocal/ui/components/icon";
 
 type DropOverlayProps = {
   projectCode: string;
-  slides: number;
-  results: number;
+  slides?: number;
+  results?: number;
   onDrop: () => void;
 };
 
@@ -19,8 +19,10 @@ function DropOverlay({ projectCode, slides, results, onDrop }: DropOverlayProps)
         <Icon name="upload" size="lg" className="text-accent" />
         <b className="text-title-sm text-fg">Drop to upload into {projectCode}</b>
         <span className="text-body-sm text-fg-dim">
-          {slides} slides and {results} result files. The upload page opens with them, so you can
-          check the match before anything starts.
+          {slides === undefined || results === undefined
+            ? "Slides, result files or a whole folder."
+            : `${slides} slides and ${results} result files.`}{" "}
+          The upload page opens with them, so you can check the match before anything starts.
         </span>
       </span>
     </button>
