@@ -28,6 +28,7 @@ class Problem(BaseModel):
     code: str
     detail: str | None = None
     errors: list[FieldError] | None = None
+    current: dict[str, Any] | None = None
 
 
 class ProblemError(Exception):
@@ -39,6 +40,7 @@ class ProblemError(Exception):
         super().__init__(detail or self.title)
         self.detail = detail
         self.headers: dict[str, str] = {}
+        self.current: dict[str, Any] | None = None
 
 
 class BadRequestError(ProblemError):
@@ -110,6 +112,7 @@ def problem_response(
     title: str,
     detail: str | None = None,
     errors: list[FieldError] | None = None,
+    current: dict[str, Any] | None = None,
 ) -> JSONResponse:
     problem = Problem(
         type=f"{PROBLEM_BASE}{code}",
@@ -118,6 +121,7 @@ def problem_response(
         code=code,
         detail=detail,
         errors=errors,
+        current=current,
     )
     return JSONResponse(
         problem.model_dump(exclude_none=True), status_code=status, media_type=PROBLEM_MEDIA_TYPE
@@ -138,7 +142,9 @@ def field_errors(error: RequestValidationError) -> list[FieldError]:
 def install_problem_handlers(app: FastAPI, errors: ErrorReporter) -> None:
     async def known_problem(_: Request, problem: Exception) -> JSONResponse:
         assert isinstance(problem, ProblemError)
-        response = problem_response(problem.status, problem.code, problem.title, problem.detail)
+        response = problem_response(
+            problem.status, problem.code, problem.title, problem.detail, current=problem.current
+        )
         response.headers.update(problem.headers)
         return response
 

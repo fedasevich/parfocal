@@ -286,6 +286,12 @@ export const AgreementPart = {
   form: "form",
 } as const;
 
+export interface AiObjectEdit {
+  geometry?: Geometry | null;
+  class_id?: string | null;
+  deleted?: boolean;
+}
+
 export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
 
 export const AnalysisTemplate = {
@@ -366,6 +372,13 @@ export interface AnnotationEdit {
   geometry?: Geometry | null;
   class_id?: string | null;
 }
+
+export type AnnotationOrigin = (typeof AnnotationOrigin)[keyof typeof AnnotationOrigin];
+
+export const AnnotationOrigin = {
+  human: "human",
+  "ai-edited": "ai-edited",
+} as const;
 
 export interface AnnotationRef {
   id: string;
@@ -1983,6 +1996,26 @@ export const Layer = {
   reviewed: "reviewed",
 } as const;
 
+export type LayerObjectGeometry = { [key: string]: unknown };
+
+export interface LayerObject {
+  id: string;
+  slide_id: string;
+  kind: AnnotationKind;
+  number: number;
+  code: string;
+  origin: AnnotationOrigin;
+  source: string | null;
+  geometry: LayerObjectGeometry;
+  class_id: string | null;
+  version: number;
+  created_by_user_id: string | null;
+  changed_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export interface LayerSummary {
   regions: number | null;
   cells: number | null;
@@ -2728,6 +2761,8 @@ export interface PrivacyChange {
   reason: string;
 }
 
+export type ProblemCurrent = { [key: string]: unknown } | null;
+
 export interface Problem {
   type: string;
   title: string;
@@ -2735,6 +2770,7 @@ export interface Problem {
   code: string;
   detail?: string | null;
   errors?: FieldError[] | null;
+  current?: ProblemCurrent;
 }
 
 /**
@@ -3660,6 +3696,13 @@ export interface SharedEvaluation {
   opinions: SharedOpinion[];
 }
 
+export interface SharedLayer {
+  task_id: string;
+  slide_id: string;
+  result_set_id: string | null;
+  objects: LayerObject[];
+}
+
 export interface SharedReport {
   project_name: string;
   task_name: string;
@@ -4355,6 +4398,13 @@ export type ResolveReviewObjectParams = {
 
 export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
+};
+
+export type DeleteSharedObjectParams = {
+  /**
+   * @minimum 1
+   */
+  version: number;
 };
 
 export type GetReviewOrderParams = {
@@ -21851,6 +21901,1147 @@ export function useGetReviewedLayer<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetReviewedLayerQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSharedLayerResponse200 = {
+  data: SharedLayer;
+  status: 200;
+};
+
+export type getSharedLayerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSharedLayerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSharedLayerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSharedLayerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSharedLayerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSharedLayerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSharedLayerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSharedLayerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSharedLayerResponseSuccess = getSharedLayerResponse200 & {
+  headers: Headers;
+};
+export type getSharedLayerResponseError = (
+  | getSharedLayerResponse400
+  | getSharedLayerResponse401
+  | getSharedLayerResponse403
+  | getSharedLayerResponse404
+  | getSharedLayerResponse409
+  | getSharedLayerResponse422
+  | getSharedLayerResponse429
+  | getSharedLayerResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSharedLayerResponse = getSharedLayerResponseSuccess | getSharedLayerResponseError;
+
+export const getGetSharedLayerUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer`;
+};
+
+/**
+ * @summary Get Shared Layer
+ */
+export const getSharedLayer = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSharedLayerResponse> => {
+  return apiFetch<getSharedLayerResponse>(getGetSharedLayerUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSharedLayerQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/shared-layer`] as const;
+};
+
+export const getGetSharedLayerQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSharedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSharedLayerQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSharedLayer>>> = ({ signal }) =>
+    getSharedLayer(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSharedLayerQueryResult = NonNullable<Awaited<ReturnType<typeof getSharedLayer>>>;
+export type GetSharedLayerQueryError = Problem;
+
+export function useGetSharedLayer<
+  TData = Awaited<ReturnType<typeof getSharedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedLayer<
+  TData = Awaited<ReturnType<typeof getSharedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedLayer>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedLayer>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedLayer<
+  TData = Awaited<ReturnType<typeof getSharedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Shared Layer
+ */
+
+export function useGetSharedLayer<
+  TData = Awaited<ReturnType<typeof getSharedLayer>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedLayer>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSharedLayerQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createSharedObjectResponse201 = {
+  data: LayerObject;
+  status: 201;
+};
+
+export type createSharedObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createSharedObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createSharedObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createSharedObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createSharedObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createSharedObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createSharedObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createSharedObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createSharedObjectResponseSuccess = createSharedObjectResponse201 & {
+  headers: Headers;
+};
+export type createSharedObjectResponseError = (
+  | createSharedObjectResponse400
+  | createSharedObjectResponse401
+  | createSharedObjectResponse403
+  | createSharedObjectResponse404
+  | createSharedObjectResponse409
+  | createSharedObjectResponse422
+  | createSharedObjectResponse429
+  | createSharedObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type createSharedObjectResponse =
+  | createSharedObjectResponseSuccess
+  | createSharedObjectResponseError;
+
+export const getCreateSharedObjectUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects`;
+};
+
+/**
+ * @summary Create Shared Object
+ */
+export const createSharedObject = async (
+  taskId: string,
+  slideId: string,
+  annotationDraft: AnnotationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createSharedObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createSharedObjectResponse>(getCreateSharedObjectUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(annotationDraft),
+  });
+};
+
+export const getCreateSharedObjectMutationKey = () => ["createSharedObject"] as const;
+
+export const getCreateSharedObjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSharedObject>>,
+    TError,
+    CreateSharedObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSharedObject>>,
+  TError,
+  CreateSharedObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateSharedObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSharedObject>>,
+    CreateSharedObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return createSharedObject(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSharedObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSharedObject>>
+>;
+export type CreateSharedObjectMutationBody = AnnotationDraft;
+export type CreateSharedObjectMutationError = Problem;
+export type CreateSharedObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: AnnotationDraft;
+};
+
+/**
+ * @summary Create Shared Object
+ */
+export const useCreateSharedObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createSharedObject>>,
+      TError,
+      CreateSharedObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createSharedObject>>,
+  TError,
+  CreateSharedObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateSharedObjectMutationOptions(options), queryClient);
+};
+
+export type changeAiObjectResponse201 = {
+  data: LayerObject;
+  status: 201;
+};
+
+export type changeAiObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeAiObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeAiObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeAiObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeAiObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeAiObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeAiObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeAiObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeAiObjectResponseSuccess = changeAiObjectResponse201 & {
+  headers: Headers;
+};
+export type changeAiObjectResponseError = (
+  | changeAiObjectResponse400
+  | changeAiObjectResponse401
+  | changeAiObjectResponse403
+  | changeAiObjectResponse404
+  | changeAiObjectResponse409
+  | changeAiObjectResponse422
+  | changeAiObjectResponse429
+  | changeAiObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeAiObjectResponse = changeAiObjectResponseSuccess | changeAiObjectResponseError;
+
+export const getChangeAiObjectUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}`;
+};
+
+/**
+ * @summary Change Ai Object
+ */
+export const changeAiObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  aiObjectEdit: AiObjectEdit,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeAiObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeAiObjectResponse>(getChangeAiObjectUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(aiObjectEdit),
+  });
+};
+
+export const getChangeAiObjectMutationKey = () => ["changeAiObject"] as const;
+
+export const getChangeAiObjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeAiObject>>,
+    TError,
+    ChangeAiObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeAiObject>>,
+  TError,
+  ChangeAiObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeAiObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeAiObject>>,
+    ChangeAiObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return changeAiObject(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeAiObjectMutationResult = NonNullable<Awaited<ReturnType<typeof changeAiObject>>>;
+export type ChangeAiObjectMutationBody = AiObjectEdit;
+export type ChangeAiObjectMutationError = Problem;
+export type ChangeAiObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: AiObjectEdit;
+};
+
+/**
+ * @summary Change Ai Object
+ */
+export const useChangeAiObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeAiObject>>,
+      TError,
+      ChangeAiObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeAiObject>>,
+  TError,
+  ChangeAiObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeAiObjectMutationOptions(options), queryClient);
+};
+
+export type changeSharedObjectResponse200 = {
+  data: LayerObject;
+  status: 200;
+};
+
+export type changeSharedObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeSharedObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeSharedObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeSharedObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeSharedObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeSharedObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeSharedObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeSharedObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeSharedObjectResponseSuccess = changeSharedObjectResponse200 & {
+  headers: Headers;
+};
+export type changeSharedObjectResponseError = (
+  | changeSharedObjectResponse400
+  | changeSharedObjectResponse401
+  | changeSharedObjectResponse403
+  | changeSharedObjectResponse404
+  | changeSharedObjectResponse409
+  | changeSharedObjectResponse422
+  | changeSharedObjectResponse429
+  | changeSharedObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeSharedObjectResponse =
+  | changeSharedObjectResponseSuccess
+  | changeSharedObjectResponseError;
+
+export const getChangeSharedObjectUrl = (taskId: string, slideId: string, annotationId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}`;
+};
+
+/**
+ * @summary Change Shared Object
+ */
+export const changeSharedObject = async (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  annotationEdit: AnnotationEdit,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeSharedObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeSharedObjectResponse>(
+    getChangeSharedObjectUrl(taskId, slideId, annotationId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(annotationEdit),
+    },
+  );
+};
+
+export const getChangeSharedObjectMutationKey = () => ["changeSharedObject"] as const;
+
+export const getChangeSharedObjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeSharedObject>>,
+    TError,
+    ChangeSharedObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeSharedObject>>,
+  TError,
+  ChangeSharedObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeSharedObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeSharedObject>>,
+    ChangeSharedObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, annotationId, data } = props ?? {};
+
+    return changeSharedObject(taskId, slideId, annotationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeSharedObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeSharedObject>>
+>;
+export type ChangeSharedObjectMutationBody = AnnotationEdit;
+export type ChangeSharedObjectMutationError = Problem;
+export type ChangeSharedObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  annotationId: string;
+  data: AnnotationEdit;
+};
+
+/**
+ * @summary Change Shared Object
+ */
+export const useChangeSharedObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeSharedObject>>,
+      TError,
+      ChangeSharedObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeSharedObject>>,
+  TError,
+  ChangeSharedObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeSharedObjectMutationOptions(options), queryClient);
+};
+
+export type deleteSharedObjectResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteSharedObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteSharedObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteSharedObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteSharedObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteSharedObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteSharedObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteSharedObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteSharedObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteSharedObjectResponseSuccess = deleteSharedObjectResponse204 & {
+  headers: Headers;
+};
+export type deleteSharedObjectResponseError = (
+  | deleteSharedObjectResponse400
+  | deleteSharedObjectResponse401
+  | deleteSharedObjectResponse403
+  | deleteSharedObjectResponse404
+  | deleteSharedObjectResponse409
+  | deleteSharedObjectResponse422
+  | deleteSharedObjectResponse429
+  | deleteSharedObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteSharedObjectResponse =
+  | deleteSharedObjectResponseSuccess
+  | deleteSharedObjectResponseError;
+
+export const getDeleteSharedObjectUrl = (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  params: DeleteSharedObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}`;
+};
+
+/**
+ * @summary Delete Shared Object
+ */
+export const deleteSharedObject = async (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  params: DeleteSharedObjectParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteSharedObjectResponse> => {
+  return apiFetch<deleteSharedObjectResponse>(
+    getDeleteSharedObjectUrl(taskId, slideId, annotationId, params),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteSharedObjectMutationKey = () => ["deleteSharedObject"] as const;
+
+export const getDeleteSharedObjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSharedObject>>,
+    TError,
+    DeleteSharedObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSharedObject>>,
+  TError,
+  DeleteSharedObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteSharedObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSharedObject>>,
+    DeleteSharedObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, annotationId, params } = props ?? {};
+
+    return deleteSharedObject(taskId, slideId, annotationId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSharedObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSharedObject>>
+>;
+
+export type DeleteSharedObjectMutationError = Problem;
+export type DeleteSharedObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  annotationId: string;
+  params: DeleteSharedObjectParams;
+};
+
+/**
+ * @summary Delete Shared Object
+ */
+export const useDeleteSharedObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSharedObject>>,
+      TError,
+      DeleteSharedObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSharedObject>>,
+  TError,
+  DeleteSharedObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteSharedObjectMutationOptions(options), queryClient);
+};
+
+export type listSharedObjectHistoryResponse200 = {
+  data: AnnotationVersion[];
+  status: 200;
+};
+
+export type listSharedObjectHistoryResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSharedObjectHistoryResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSharedObjectHistoryResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSharedObjectHistoryResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSharedObjectHistoryResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSharedObjectHistoryResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSharedObjectHistoryResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSharedObjectHistoryResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSharedObjectHistoryResponseSuccess = listSharedObjectHistoryResponse200 & {
+  headers: Headers;
+};
+export type listSharedObjectHistoryResponseError = (
+  | listSharedObjectHistoryResponse400
+  | listSharedObjectHistoryResponse401
+  | listSharedObjectHistoryResponse403
+  | listSharedObjectHistoryResponse404
+  | listSharedObjectHistoryResponse409
+  | listSharedObjectHistoryResponse422
+  | listSharedObjectHistoryResponse429
+  | listSharedObjectHistoryResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSharedObjectHistoryResponse =
+  | listSharedObjectHistoryResponseSuccess
+  | listSharedObjectHistoryResponseError;
+
+export const getListSharedObjectHistoryUrl = (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}/history`;
+};
+
+/**
+ * @summary List Shared Object History
+ */
+export const listSharedObjectHistory = async (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSharedObjectHistoryResponse> => {
+  return apiFetch<listSharedObjectHistoryResponse>(
+    getListSharedObjectHistoryUrl(taskId, slideId, annotationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListSharedObjectHistoryQueryKey = (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}/history`,
+  ] as const;
+};
+
+export const getListSharedObjectHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSharedObjectHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListSharedObjectHistoryQueryKey(taskId, slideId, annotationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSharedObjectHistory>>> = ({
+    signal,
+  }) => listSharedObjectHistory(taskId, slideId, annotationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      taskId !== null &&
+      taskId !== undefined &&
+      slideId !== null &&
+      slideId !== undefined &&
+      annotationId !== null &&
+      annotationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSharedObjectHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSharedObjectHistory>>
+>;
+export type ListSharedObjectHistoryQueryError = Problem;
+
+export function useListSharedObjectHistory<
+  TData = Awaited<ReturnType<typeof listSharedObjectHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSharedObjectHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listSharedObjectHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSharedObjectHistory<
+  TData = Awaited<ReturnType<typeof listSharedObjectHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSharedObjectHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listSharedObjectHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSharedObjectHistory<
+  TData = Awaited<ReturnType<typeof listSharedObjectHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Shared Object History
+ */
+
+export function useListSharedObjectHistory<
+  TData = Awaited<ReturnType<typeof listSharedObjectHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedObjectHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSharedObjectHistoryQueryOptions(
+    taskId,
+    slideId,
+    annotationId,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
