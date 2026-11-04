@@ -4,7 +4,7 @@
 
 The product is called Parfocal and its domain is `parfocal.eu`. The working name during planning was pathviewer. The repository is `fedasevich/parfocal` and lives at `/Users/yuriifedas/WebstormProjects/parfocal`.
 
-Parfocal is a multi-tenant cloud platform where researchers evaluate AI results on whole slides and doctors review them. Researchers import results made elsewhere or run a model, hand slides to doctors as review tasks, resolve disagreements and sign off an evaluation report. Doctors judge each AI object, fix it, comment and give an opinion, in a simple guided mode or in the full viewer. It is built to research and pilot grade with production-quality code and makes no regulatory claims in v1. The direction changed from hospital sign-out on 2026-10-17 ([ADR 0053](../adr/0053-ai-results-review-direction.md)), and the hospital workflow is kept as ideas.
+Parfocal is a multi-tenant cloud platform where researchers evaluate AI results on whole slides, doctors review them and experts annotate slides to prepare training data. Researchers import results made elsewhere or run a model, hand slides to doctors as review tasks, resolve disagreements and sign off an evaluation report. Doctors judge each AI object, fix it, comment and give an opinion, in a simple guided mode or in the full viewer. It is built to research and pilot grade with production-quality code and makes no regulatory claims in v1. The direction changed from hospital sign-out on 2026-10-17 ([ADR 0053](../adr/0053-ai-results-review-direction.md)), and the hospital workflow is kept as ideas.
 
 ## Users
 

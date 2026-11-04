@@ -1,6 +1,6 @@
 # Parfocal backlog
 
-This file takes an empty repository to a production-quality, multi-tenant cloud platform where researchers evaluate AI results on whole slides and doctors review them. It covers whole-slide viewing, importing and running AI results, object IDs, review tasks with decisions and opinions, disagreements and sign-off, the evaluation report, comments and annotation. Since 2026-10-17 it follows the AI results review direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). The earlier hospital sign-out workflow is kept as ideas for consideration. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
+This file takes an empty repository to a production-quality, multi-tenant cloud platform where researchers evaluate AI results on whole slides, doctors review them and experts annotate slides to prepare training data. It covers whole-slide viewing, importing and running AI results, object IDs, review tasks with decisions and opinions, disagreements and sign-off, the evaluation report, comments and annotation. Since 2026-10-17 it follows the AI results review direction ([ADR 0053](adr/0053-ai-results-review-direction.md)). The earlier hospital sign-out workflow is kept as ideas for consideration. Tasks are split by feature and sized so that one task is one pull request of about half a day to two days. Work them top to bottom inside a milestone, respecting the dependencies.
 
 The design source is the approved prototype pair:
 
@@ -116,6 +116,7 @@ Task format:
 | M0 Stack decided | Every STACK task closed with an ADR | `docs/adr/` holds one ADR per slot |
 | M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one decision and submit the review, all on staging | SKEL epic done, E2E green on staging |
 | M2 Viewer parity | Every POC format opens correctly in Viv with POC-level performance, plus alternates behind the interface | VIEW, TILES, INGEST done, perf and golden suites green |
+| MA Annotation path | Experts annotate slides on one shared layer, from scratch or by fixing AI output, with one-click tools, model runs on a selection or the whole slide streamed onto it, threads and calm live updates, then sign-off and a training dataset export ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md)). Taken before every unstarted task outside it | The tasks listed in that ADR done, E2E green |
 | M3 Review loop | Projects, upload with AI results, object IDs, review tasks, My work, guided review and the slide view with decisions and the opinion form, navigation aids, measurement, settings, palette, sign-up and setup | ADAPT, PROJ, RSET, OBJ, TASK, GUIDE, WL, CASE, NAV, REVIEW, MEAS, SET, CMD, ONB done |
 | M4 AI runs and visualization | Model runs and the jobs tray, lab model endpoints, layers, heatmaps, diff and the object table, interactive AI in Annotate | AIP, JOBS, VIZ, AISEG, AINUC, AITUM, MLEVAL core done |
 | M5 Collaboration and evaluation | Threads pinned to IDs, presence, compare, notifications, the disagreement queue and sign-off, the evaluation report, remote sources and webhooks, the admin page | COLLAB, CMP, NOTIF, ADJ, EVAL, REMOTE, ADMIN, CASES done |
@@ -1788,7 +1789,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Size: M.
 
 - [ ] SHELL-004 · Workspaces Review and Annotate
-  Guided review (GUIDE-002), Review and Annotate save to one review. Switching between Review and Annotate changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
+  Guided review (GUIDE-002), Review and Annotate save to one review, and an annotate task opens in Annotate. Switching between Review and Annotate changes the rail, the drag behaviour (pan in Review, marquee in Annotate) and the inspector defaults, without moving the slide.
   Done when tests assert the camera is unchanged across a switch.
   Size: M.
 
@@ -2556,7 +2557,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: M.
 
 - [ ] ANN-022 · Concurrent edit protection
-  Version checks on save, conflict message when two users edit the same shape.
+  Version checks on save, conflict message when two users edit the same shape. On the shared layer of an annotate task (ANN-030) the conflict shows the colleague's version and lets the expert keep either.
   Done when tests cover the conflict path.
   Size: M.
 
@@ -2588,11 +2589,24 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: S.
 
 - [ ] ANN-028 · Annotation audit and provenance display
-  Who created, edited and reviewed each shape, with model name and version for AI output.
+  Who created, edited and reviewed each shape, with model name and version for AI output. On an annotate task the popover shows the origin (AI, AI edited by a named expert, drawn by a named expert) and the object history from ANN-030.
   Done when component tests show provenance in the shape popover.
+  Depends on ANN-030. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: S.
 
 ---
+
+- [ ] ANN-030 · Shared layer API for annotate tasks
+  Every assigned expert reads and edits one layer per task slide. Each object stores who made it and who changed it, with its history. Editing or deleting an AI object copies it into the layer with the origin `ai-edited` or a deletion mark and its source object ID, and new objects have the origin `human`. Saves carry a version, and a stale save answers a conflict with the current object. Changes go out on the realtime channel of the task slide.
+  Done when API tests cover two experts editing one layer, an AI object edited and one deleted with the result set unchanged, the history of an object, a stale save refused, a realtime event per change, and the isolation test covers the layer.
+  Depends on TASK-013, ANN-020, OBJ-003, COLLAB-001. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
+  Size: L.
+
+- [ ] ANN-031 · Annotate task on screen
+  A slide opened from an annotate task shows the Annotate workspace with the task's classes on keys 1 to 9, the shared layer, the AI result set shown by default with a toggle, origin marks on objects, counts per class, progress across the task's slides and the checked card.
+  Done when component tests cover the class strip from the snapshot, the AI toggle, the origin marks and a slide with no result set, and E2E draws a polygon and a count marker, fixes an AI object and marks the slide checked.
+  Depends on ANN-030, ANN-002, ANN-005, ANN-008, ANN-021, SHELL-004, TASK-014. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: L.
 
 ## 16 MEAS · Measurements
 
@@ -2727,6 +2741,18 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: M.
 
 ---
+
+- [ ] COLLAB-016 · Calm live updates on a shared layer
+  Colleagues' changes to an annotate slide arrive in batches when the expert pauses for a few seconds, or at once when they click the "changes by" marker that names who changed what. A change never moves the shape under the pointer or the shape being drawn. Presence shows who is on the slide.
+  Done when component tests hold a batch while the pointer moves, apply it after the pause and on the marker click, and never touch the shape being edited, and E2E with two browsers sees a colleague's polygon appear.
+  Depends on ANN-030, ANN-031, COLLAB-007. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
+
+- [ ] COLLAB-017 · Blind first switch on annotate tasks
+  A task switch, off by default, keeps an expert's new objects from colleagues until that expert marks the slide checked, so first opinions stay independent.
+  Done when API tests hide and then show another expert's objects around the check, and component tests cover the switch in the task stepper.
+  Depends on ANN-030, TASK-014. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
 
 ## 18 CMP · Compare slides
 
@@ -3072,39 +3098,39 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: L.
 
 - [ ] AISEG-002 · Quantised variants per execution provider
-  4-bit MatMulNBits for WebGPU, uint8 for WASM, fp16 attempt through onnxruntime transformers conversion.
+  4-bit MatMulNBits for WebGPU and uint8 for WASM. No fp16, which doc 14 found refused and larger than 4-bit. Never load the uint8 graph on WebGPU, where it ran 43 times slower. Try a quantised AIS decoder (44 MB in fp32).
   Done when the browser test measures encode and decode times per variant and records them.
-  Refs doc 14.
+  Depends on AISEG-001. Refs doc 14.
   Size: L.
 
 - [ ] AISEG-003 · Browser model cache
   Cache Storage, persistent storage request, background revalidation with ETag, protobuf header check before caching, "loaded from cache" or "downloaded N MB" message.
   Done when tests cover first load, cached load and a corrupted cache entry.
-  Refs docs 14, 15.
+  Depends on AISEG-002. Refs docs 14, 15.
   Size: M.
 
 - [ ] AISEG-004 · Inference worker
   Sequential session creation, provider choice by adapter request, inputs driven by graph metadata, serialised prompts that drop stale answers.
   Done when tests confirm stale answers are dropped and two sessions never initialise concurrently.
-  Refs doc 14.
+  Depends on AISEG-003. Refs doc 14.
   Size: M.
 
 - [ ] AISEG-005 · Smart select tool
-  Click is a positive point, Shift+click extends, right-click or Alt+click is a negative point, drag is a box prompt, Backspace removes the last point, Enter accepts, Esc discards. The best of the candidate masks is chosen, never derived boxes.
+  Click is a positive point, Shift+click extends, right-click or Alt+click is a negative point, drag is a box prompt, Backspace removes the last point, Enter accepts, Esc discards. The best of the candidate masks is chosen, never derived boxes. Refinement feeds the previous logits through `mask_input`, and the output stays the best of four.
   Done when interaction tests cover each gesture and an accuracy smoke test on fixtures meets the MLEVAL baseline.
-  Refs docs 13, 14, 20 §2.7.
+  Depends on AISEG-004, AISEG-011, AISEG-015, ANN-002, ANN-017. Refs docs 13, 14, 20 §2.7.
   Size: M.
 
 - [ ] AISEG-006 · Hover preview
-  Dashed outline about 60 ms after the pointer rests, one request in flight, latest position only, cached by prompt, only when the embedding is cached. Can be turned off.
+  Dashed outline on pointer move with no rest delay, about 60 ms from pointer to outline in the POC, one request in flight, latest position only, cached by prompt, only when the embedding is cached. Can be turned off.
   Done when a manual measurement on the owner's Mac, recorded as a result file, shows pointer-to-outline latency under 100 ms ([ADR 0011](adr/0011-hosted-ci-only.md)).
-  Refs doc 15.
+  Depends on AISEG-005, AISEG-007. Refs doc 15.
   Size: M.
 
 - [ ] AISEG-007 · Embedding prewarm
   Encode the view after 350 ms of camera stillness, embedding LRU of 6, pause while moving.
   Done when tests confirm the first click on a prewarmed view is under 150 ms.
-  Refs doc 14.
+  Depends on AISEG-004. Refs doc 14.
   Size: S.
 
 - [ ] AISEG-008 · Server embedding service
@@ -3122,7 +3148,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AISEG-010 · Auto region tool
   Drag a region, the AIS decoder segments every nucleus per tile with watershed and sub-pixel contours. A click does the patch under the cursor. Detect-in-selection runs on one closed shape.
   Done when a test on the TNBC fixture meets the MLEVAL PQ baseline and the region pass finishes under the budget in TEST-006.
-  Refs doc 26.
+  Depends on AISEG-001, AISEG-011, AISEG-015. Refs doc 26.
   Size: M.
 
 - [ ] AISEG-011 · Sub-pixel contour tracing
@@ -3149,6 +3175,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ---
 
+- [ ] AISEG-015 · Browser patch reader in microns
+  Read RGB patches in a worker at the level nearest the preset's microns per pixel, 128 µm wide, with an LRU cache, sparse-region awareness and an edge margin of an eighth of the patch.
+  Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures, a repeat read hits the cache, and a click near the edge moves the patch.
+  Depends on AISEG-012. Refs docs 10, 11, 14, 15.
+  Size: M.
+
+- [ ] AISEG-016 · Prompt-pass fallback for the auto region tool
+  When the AIS decoder cannot load, seed from the stain, decode in batches strongest first, accept masks with stability 0.8 or more and overlap tiles by 96 px. Best quality adds the residual pass and the five-prompt ensemble.
+  Done when a TNBC fixture test is within 0.01 PQ of the POC's stain-seed contour row and the tool falls back when the AIS graph fails.
+  Depends on AISEG-010, AISEG-015. Refs docs 15, 26.
+  Size: M.
+
 ## 23 AINUC · Whole-slide nuclei, typing and confidence
 
 - [ ] AINUC-000 · Research check
@@ -3157,15 +3195,15 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: M.
 
 - [ ] AINUC-001 · Detector runner
-  Tile, infer at the model's microns per pixel, trace instances, write chunks. Must not recreate the POC's quadratic post-processing.
+  Tile, infer at the model's microns per pixel, trace instances, write chunks. Must not recreate the POC's quadratic post-processing. PathoSAM AIS as [ADR 0202](adr/0202-v1-model-line-up-per-tier.md) sets, 512 px windows with a 64 px halo, best 0.25 and fast 0.33 µm/px, smoothed outlines, never HoVer-Net.
   Done when a test on a fixed region matches the reference output and a throughput test records seconds per mm².
-  Refs docs 17, 19, 26.
+  Depends on AIP-006, AIP-009. Refs docs 17, 19, 26.
   Size: M.
 
 - [ ] AINUC-002 · Typer runner
-  Per-nucleus class probabilities and alternative types, with a per-slide tissue default for ambiguous mappings (epithelial is not always tumour).
+  Per-nucleus class probabilities and alternative types, with a per-slide tissue default for ambiguous mappings (epithelial is not always tumour). HoVer-NeXt at 0.25 µm/px, probabilities averaged inside each outline, neoplastic to tumor, connective to stroma, inflammatory to immune, dead and epithelial to other unless the tissue default applies.
   Done when tests confirm probabilities sum to 1 and the tissue default applies.
-  Refs doc 21.
+  Refs docs 21, 29.
   Size: M.
 
 - [x] AINUC-003 · Chunk schema with probabilities
@@ -3198,7 +3236,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: S.
 
 - [ ] AINUC-008 · "May not be a nucleus" flag
-  From the detector's score and the typer's foreground probability.
+  From the detector's score and the typer's foreground probability. It fires when the detector score is under 0.8 or the HoVer-NeXt foreground probability is under 0.5.
   Done when unit tests cover the rule and the review gallery shows the X action on flagged tiles.
   Refs doc 29.
   Size: S.
@@ -3209,8 +3247,9 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: M.
 
 - [ ] AINUC-010 · Whole-slide nuclei job UI
-  Scope view, selection or slide. Defaults fixed for doctors, options for annotators. Find nuclei, cancel, load last run.
+  Scope view, selection or slide. Defaults fixed for doctors, options for annotators. Find nuclei, cancel, load last run. The minimap shades finished tiles. Cancel stops within one window and keeps finished tiles.
   Done when E2E starts, cancels and reloads a job.
+  Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
   Size: M.
 
 - [ ] AINUC-011 · Throughput target
@@ -3225,6 +3264,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: M.
 
 ---
+
+- [ ] AINUC-013 · Stream a whole-slide run onto the open slide
+  While a run on the open slide is going, each new chunk is appended to the result layer without rebuilding earlier ones, keyed by run lineage, with a full rebuild at most every 3 s. Finished tiles are marked on the slide, with progress and an estimate, and cancel keeps what is finished. This follows the POC's streamed whole-slide job.
+  Done when a test proves a streamed scene equals one built from scratch, a perf test streams 250,000 nuclei with no frame over 33 ms, and E2E starts a run, sees objects appear before it ends, cancels it and keeps them.
+  Depends on AIP-011, AINUC-005. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
+
+- [ ] AINUC-014 · Type one-click accepts with the server typer
+  Accepted outlines from smart select and the auto region tool get calibrated types and the doubt flag.
+  Done when a test stores HoVer-NeXt types for seeded accepts, and accepting still works untyped when the typer is offline.
+  Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
+  Size: S.
 
 ## 24 AITUM · Tumor and region maps
 
@@ -3879,12 +3930,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a dry run on staging imports the pilot sample.
   Size: M.
 
-- [ ] PILOT-005 · Moderated usability study (on hold)
-  On hold since 2026-11-02 (decision 29). The thesis topic does not require a new study, and the POC already ran a usability study and a UI review ([poc/study](https://github.com/fedasevich/pathlogy-poc/tree/master/study)). Run it only if the thesis later needs one.
-  Run the kit test plan with 3 to 5 pathologists in study mode. Close decisions D6 and D8 and the wording comprehension check.
-  Done when the results are written up and follow-up tasks are added to this backlog.
+- [ ] PILOT-005 · Moderated usability study, second round
+  The second round of usability testing, on the annotation path, with 3 to 5 participants who are not pathologists. The first round ran on the POC ([poc/study](https://github.com/fedasevich/pathlogy-poc/tree/master/study)). Participants annotate a public slide with a non-medical class list from scratch and by fixing AI output, and the round measures task completion, time per slide and the single ease question, never annotation quality ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md)).
+  Done when the results are written up as a result file and follow-up tasks are added to this backlog.
+  Depends on ANN-031, AISEG-005.
   Size: L.
-
 - [ ] PILOT-006 · Release checklist
   Security sign-off, pen test closed, backups verified, SLOs green for two weeks, compliance packs complete.
   Done when every item is ticked for the pilot release.
@@ -4111,9 +4161,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Display locks, such as confidence hidden for a round, also keep a reviewer blind to part of the AI. They are TASK-011 (display defaults, locks and presets, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
 
 - [ ] TASK-005 · New review task stepper
-  A flow page with Slides, Reviewers, What to check, How it runs, and Send, where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
+  A flow page that starts with the kind, review AI results or annotate, then Slides, Reviewers, What to check (review tasks only), How it runs, and Send. For an annotate task, Slides may include slides with no result set and How it runs holds the blind first switch (COLLAB-017), where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
   Done when component tests cover each step, the estimate, each decision style with its Counts as line and a refused mapping with no agree or no disagree answer, and E2E creates a task from the project page and from the end of an upload.
-  Depends on TASK-001, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
+  Depends on TASK-001, TASK-013, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
   Size: L.
 
 - [x] TASK-006 · Invitations to a task
@@ -4159,6 +4209,18 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   A review task's scope becomes a list, such as all regions plus a random sample of 200 cells, as the mock's sentinel node template shows. The review order, the counts and the evaluation take every part of the list. The owner chose this on 2026-11-02, decision 4b for EVAL-007 (study template model and API).
   Done when API tests create a task with two scope parts, show both kinds in the review order and the counts, and an old single-kind task reads as a list of one.
   Depends on EVAL-007, GUIDE-012. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows).
+
+- [ ] TASK-013 · Annotate task kind
+  A task is `review` (the default) or `annotate` ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), annotate tasks on one shared layer). An annotate task pins one ready result set per slide or none, takes the scope whole slide, snapshots the project classes, stores no review order and refuses decisions, opinion-form answers per object, review edits and the queue with `not-a-review-task`. Ready follows the slide's ingest status. Removing a class that task annotations use is refused.
+  Done when API tests create an annotate task on slides with no result set and with one, refuse a decision in it, derive Ready from the slide alone, list old tasks as `review`, refuse deleting a used class, and the isolation test covers the new columns.
+  Depends on TASK-001, PROJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
+
+- [ ] TASK-014 · Check and sign off an annotate slide
+  Each assigned expert marks a slide checked, or checked with "nothing to mark" when it is empty, and can uncheck it until sign-off. The task owner signs a slide off once every assigned expert has checked it, with a warning for open threads (COLLAB-012). After sign-off the shared layer is locked, and a change by the owner goes to the change log (ADJ-005).
+  Done when API tests cover checking, nothing to mark, unchecking, a refused sign-off with an unchecked expert, sign-off, a refused edit after it and an owner change with its log entry, and E2E checks two slides and signs one off.
+  Depends on TASK-013, ANN-030, ADJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
 
 ## 44 GUIDE · Decisions, guided review and the opinion form
 
@@ -4415,6 +4477,24 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ---
 
+- [ ] EVAL-013 · How the experts changed the AI
+  For an annotate task with result sets, per slide and class: AI objects kept, edited and deleted, objects added, and by whom, with totals, in the evaluation API and as report blocks.
+  Done when unit tests reproduce hand-counted values on a fixture task with two experts and three classes, including a slide with no result set.
+  Depends on ANN-030, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
+
+- [ ] EVAL-014 · Training dataset export
+  Exports the signed-off slides of an annotate task as GeoJSON per slide, each object with its class name, key and colour, origin, pseudonymous author letter and full ID, in the form QuPath reads, plus a manifest with the slides, microns per pixel, level-0 sizes, the class snapshot, the annotators, the sign-off and a checksum per file. AI objects nobody deleted are exported with the origin `ai`.
+  Done when round-trip tests re-import every GeoJSON file with no loss, a schema test validates the manifest, and a test opens an exported file in QuPath's GeoJSON reader or a fixture of its format.
+  Depends on TASK-014, ANN-024. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: M.
+
+- [ ] EVAL-015 · Patch and mask export
+  As a job, tiles of the signed-off slides at a chosen level with a label mask per tile and an index CSV of tile, slide, position and classes.
+  Done when a test exports a small slide and every mask matches the GeoJSON it came from.
+  Depends on EVAL-014, AIP-008. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Size: L.
+
 ## 47 JOBS · Model runs, the jobs tray and lab models
 
 - [ ] JOBS-000 · Research check
@@ -4458,6 +4538,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Size: M.
 
 ---
+
+- [ ] JOBS-007 · Run a model on a selection in Annotate
+  In the Annotate workspace the selection or the current view can be sent to a model run (JOBS-001 already takes both scopes). The result streams onto the slide, and in an annotate task its objects are AI objects the experts can fix in the shared layer.
+  Done when component tests cover the selection and view scopes from the Annotate workspace, and E2E runs a model on a drawn selection and fixes one of its objects.
+  Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.
+  Size: M.
 
 ## 48 REMOTE · Remote sources, webhooks and events
 
