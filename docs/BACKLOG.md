@@ -4382,7 +4382,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when the drafts sit in `docs/decisions.md` for the owner and, after the owner's answer, the built-ins carry the forms with API tests.
   Depends on EVAL-007, GUIDE-006.
 
-- [ ] EVAL-008 · Report from template blocks
+- [x] EVAL-008 · Report from template blocks
   The report page (EVAL-002) and the Typst PDF (EVAL-003) render the task's block list and format from the evaluation JSON, one component and one Typst function per block kind. The page splits the blocks into pages the way the PDF does, honouring half widths, page breaks, the paper, orientation, text size, header, footer, page numbers, watermark, signature, language of labels, decimals and appendices. A block with nothing to show says why. Sign-off (ADJ-004) stores the block list with the evaluation version, so a signed report renders as it was signed.
   Done when component tests and PDF text tests render every block kind on a seeded task, a test shows the PDF and the page list the same blocks in the same order, and a signed report keeps its layout after the template changes.
   Depends on EVAL-007, EVAL-006, STACK-035.
