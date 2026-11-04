@@ -2595,7 +2595,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a unit test checks columns and counts.
   Size: S.
 
-- [ ] ANN-026 · Delete and clear with confirmation
+- [x] ANN-026 · Delete and clear with confirmation
   Clear removes everything as one undoable step with confirmation over a threshold. Deleting a shape removes its orphaned comments.
   Done when tests cover undo of clear and comment cleanup.
   Size: S.
