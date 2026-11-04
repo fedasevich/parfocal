@@ -58,6 +58,7 @@ from parfocal_api import (
     settings_api,
     sign_out,
     site_validations,
+    slide_areas,
     slide_coverage,
     slide_details,
     slide_tissue,
@@ -245,5 +246,6 @@ def create_app(
     app.include_router(security_contact.router)
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
+    app.include_router(slide_areas.router)
 
     return app

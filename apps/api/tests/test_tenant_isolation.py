@@ -486,6 +486,9 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             object_key=f"cells/{set_id}/chunk-00000.pfc",
         )
     )
+    await connection.execute(
+        update(result_sets).where(result_sets.c.id == set_id).values(status="ready", region_count=1)
+    )
     seeded.ids["result_set"] = set_id
     summary_set = await connection.scalar(
         insert(result_sets)
@@ -1101,6 +1104,7 @@ GET_ROUTES = {
         ),
     ),
     "getReviewTask": Route(Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}"),
+    "listSlideAreas": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/areas"),
     "listSlideResultSets": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/result-sets"
     ),

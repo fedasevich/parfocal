@@ -448,6 +448,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"{w.annotations}/{w.deleted_annotation}/restore", {"version": 2}
     ),
     "listSlideResultSets": lambda w: Call("GET", f"/api/slides/{w.slide}/result-sets"),
+    "listSlideAreas": lambda w: Call("GET", f"/api/slides/{w.slide}/areas"),
     "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
     "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
     "getCellSummary": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-summary"),

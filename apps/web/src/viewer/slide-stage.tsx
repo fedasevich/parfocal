@@ -1,14 +1,16 @@
 import { getTileAccess } from "@parfocal/api-client";
+import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
+import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
@@ -68,14 +70,34 @@ function ViewerKeys({ session }: { session: Session }) {
 
 function AreaKeys({ session, areas }: { session: Session; areas: readonly SlideAreaEntry[] }) {
   const nav = useEngineAreaNav(session.engine, session.module, areas);
+  const roles = useMemo(
+    () =>
+      new Map(
+        areaRows(areas, () => undefined).map((row) => [
+          row.object,
+          row.role ? areaRoleText[row.role] : undefined,
+        ]),
+      ),
+    [areas],
+  );
   if (areas.length === 0) return null;
   return (
-    <div
-      hidden
+    <section
+      aria-label="Areas"
       data-testid="area-nav"
       data-current={nav.current ?? ""}
       data-visited={[...nav.visited].sort().join(" ")}
-    />
+      className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
+    >
+      <h2 className="m-0 font-semibold text-body-sm">Areas, largest first</h2>
+      <AreaList
+        areas={areas}
+        current={nav.current}
+        visited={nav.visited}
+        roleOf={(object) => roles.get(object)}
+        onGoTo={nav.goTo}
+      />
+    </section>
   );
 }
 

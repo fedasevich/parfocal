@@ -2,13 +2,12 @@ import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
-import { readBuildConfig } from "../config.ts";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
-import { slideAreasFor } from "../viewer/slide-areas.ts";
 import { SlideStage } from "../viewer/slide-stage.tsx";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
+import { useSlideAreas } from "../viewer/use-slide-areas.ts";
 
 const liveSearch = z.object({ task: z.string().optional() });
 
@@ -17,8 +16,6 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live
   loader: loadViewerEngine,
   component: LiveSlide,
 });
-
-const fakeApi = readBuildConfig().fakeApi !== "off";
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -50,7 +47,8 @@ function LiveSlide() {
   const closePeek = useCallback(() => setPeek(false), []);
   const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
   const flagged = loaded.state === "ready" && loaded.load.resultSets.length > 0;
-  const areas = slideAreasFor(fakeApi && flagged);
+  const slideAreas = useSlideAreas(slideId, flagged);
+  const areas = slideAreas.areas;
   return (
     <main className="flex h-screen flex-col bg-chrome text-fg">
       <header className="flex items-center gap-3 border-line border-b px-4 py-2">
@@ -78,7 +76,7 @@ function LiveSlide() {
           slideId={slideId}
           areas={areas}
           viewed={viewed}
-          systematicScan={loaded.state === "ready" && areas.length === 0}
+          systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>
     </main>

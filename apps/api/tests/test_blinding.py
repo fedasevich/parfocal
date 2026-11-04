@@ -209,6 +209,7 @@ def ai_view(api: ApiAs, s: Study, who: str) -> dict[str, object]:
     client = api(s.people[who])
     one = client.get(f"/api/result-sets/{s.result_set}")
     on_slide = client.get(f"/api/slides/{s.slide}/result-sets")
+    areas = client.get(f"/api/slides/{s.slide}/areas")
     in_project = client.get(f"/api/projects/{s.project}/result-sets")
     client = api(s.people[who])
     export = client.get(f"{s.base}/export")
@@ -218,6 +219,7 @@ def ai_view(api: ApiAs, s: Study, who: str) -> dict[str, object]:
         "listSlideResultSets": len(on_slide.json())
         if on_slide.is_success
         else on_slide.status_code,
+        "listSlideAreas": len(areas.json()) if areas.is_success else areas.status_code,
         "listProjectResultSets": (
             len(in_project.json()) if in_project.is_success else in_project.status_code
         ),
@@ -231,6 +233,7 @@ def ai_view(api: ApiAs, s: Study, who: str) -> dict[str, object]:
 SHOWN = {
     "getResultSet": 200,
     "listSlideResultSets": 1,
+    "listSlideAreas": 2,
     "listProjectResultSets": 1,
     "exportReviewedLayer": 200,
     "getReviewedLayer": 2,
@@ -238,6 +241,7 @@ SHOWN = {
 HIDDEN = {
     "getResultSet": "ai-hidden",
     "listSlideResultSets": 0,
+    "listSlideAreas": 0,
     "listProjectResultSets": 0,
     "exportReviewedLayer": "ai-hidden",
     "getReviewedLayer": None,
@@ -245,6 +249,7 @@ HIDDEN = {
 OUT_OF_PROJECT = {
     "getResultSet": "not-found",
     "listSlideResultSets": 404,
+    "listSlideAreas": 404,
     "listProjectResultSets": 404,
     "exportReviewedLayer": "not-found",
     "getReviewedLayer": 404,

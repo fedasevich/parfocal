@@ -96,7 +96,12 @@ export {
   resetJobsState,
   setFakeJobsScene,
 } from "./jobs-scene.ts";
-export { projectSlideRows, toProjectOverview, toUploadBatch } from "./project-handlers.ts";
+export {
+  projectSlideRows,
+  toProjectOverview,
+  toSlideAreas,
+  toUploadBatch,
+} from "./project-handlers.ts";
 export {
   defaultFakeQueueScene,
   type FakeQueueScene,

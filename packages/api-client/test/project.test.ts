@@ -14,6 +14,7 @@ import {
   listMySlides,
   listProjectClasses,
   listReviewTasks,
+  listSlideAreas,
   listSlideResultSets,
   listSourceFiles,
 } from "../src/index.ts";
@@ -89,6 +90,22 @@ test("A1 lists its imported and run result sets, and the reviewed layer is not o
       ["PathoSAM + HoVer-NeXt", "run"],
     ],
   );
+});
+
+test("A1 serves its area bounds from its first result set with regions", async () => {
+  const response = await listSlideAreas(a1.id);
+  const areas = response.status === 200 ? response.data : [];
+  const sets = await listSlideResultSets(a1.id);
+  const first = (sets.status === 200 ? sets.data : []).find((set) => set.region_count > 0);
+  assert.deepEqual(
+    areas.map((area) => [area.object, area.width, area.height, area.size_mm]),
+    [
+      ["T1", 1024, 768, 6.2],
+      ["T2", 80, 60, 1.6],
+      ["T3", 48, 36, 0.15],
+    ],
+  );
+  assert.ok(areas.every((area) => area.result_set_id === first?.id));
 });
 
 test("P07's review tasks, classes, mappings and opinion form come from the scenario", async () => {

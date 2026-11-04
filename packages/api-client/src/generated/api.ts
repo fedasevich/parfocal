@@ -3629,6 +3629,17 @@ export interface SiteValidation {
   created_at: string;
 }
 
+export interface SlideArea {
+  object: string;
+  number: number;
+  result_set_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  size_mm: number | null;
+}
+
 export interface SlideChoice {
   slide_id?: string | null;
   slide_upload_id?: string | null;
@@ -44668,6 +44679,193 @@ export function useGetSlideTissue<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSlideTissueQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listSlideAreasResponse200 = {
+  data: SlideArea[];
+  status: 200;
+};
+
+export type listSlideAreasResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSlideAreasResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSlideAreasResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSlideAreasResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSlideAreasResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSlideAreasResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSlideAreasResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSlideAreasResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSlideAreasResponseSuccess = listSlideAreasResponse200 & {
+  headers: Headers;
+};
+export type listSlideAreasResponseError = (
+  | listSlideAreasResponse400
+  | listSlideAreasResponse401
+  | listSlideAreasResponse403
+  | listSlideAreasResponse404
+  | listSlideAreasResponse409
+  | listSlideAreasResponse422
+  | listSlideAreasResponse429
+  | listSlideAreasResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSlideAreasResponse = listSlideAreasResponseSuccess | listSlideAreasResponseError;
+
+export const getListSlideAreasUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/areas`;
+};
+
+/**
+ * @summary List Slide Areas
+ */
+export const listSlideAreas = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSlideAreasResponse> => {
+  return apiFetch<listSlideAreasResponse>(getListSlideAreasUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSlideAreasQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/areas`] as const;
+};
+
+export const getListSlideAreasQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSlideAreas>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSlideAreasQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSlideAreas>>> = ({ signal }) =>
+    listSlideAreas(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSlideAreasQueryResult = NonNullable<Awaited<ReturnType<typeof listSlideAreas>>>;
+export type ListSlideAreasQueryError = Problem;
+
+export function useListSlideAreas<
+  TData = Awaited<ReturnType<typeof listSlideAreas>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideAreas>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideAreas>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideAreas<
+  TData = Awaited<ReturnType<typeof listSlideAreas>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideAreas>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideAreas>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideAreas<
+  TData = Awaited<ReturnType<typeof listSlideAreas>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Slide Areas
+ */
+
+export function useListSlideAreas<
+  TData = Awaited<ReturnType<typeof listSlideAreas>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideAreas>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSlideAreasQueryOptions(slideId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
