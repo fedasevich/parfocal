@@ -37,6 +37,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
+import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -448,15 +449,22 @@ function ViewerBody({
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
-      if (event.key === "Escape" && peekOpen) return;
-      if (event.key === "Escape" && escapeComment({ tool: search.tool, pin: shownPin })) {
-        leaveComment();
-        return;
-      }
-      if (event.key === "Escape" && selected) {
-        pick(undefined);
-        return;
-      }
+      if (event.key !== "Escape") return;
+      const layer = escLayer({
+        overlay: peekOpen,
+        comment: escapeComment({ tool: search.tool, pin: shownPin }) !== null,
+        dragging: false,
+        draft: false,
+        run: false,
+        vertex: false,
+        selection: Boolean(selected),
+        focusReview: search.focus === true,
+        tool: false,
+        panel: false,
+      });
+      if (layer === "comment") leaveComment();
+      else if (layer === "selection") pick(undefined);
+      else if (layer === "focus") onSearch({ focus: undefined });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
