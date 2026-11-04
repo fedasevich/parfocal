@@ -99,6 +99,8 @@ class AuditAction(StrEnum):
     REVIEW_OBJECT_LEFT_OPEN = "review.object-left-open"
     REVIEW_LOOK_AGAIN_ASKED = "review.look-again-asked"
     REVIEW_DECISIONS_KEPT = "review.decisions-kept"
+    REVIEW_ADJUDICATION_SENT = "review.adjudication-sent"
+    REVIEW_ADJUDICATION_DECLINED = "review.adjudication-declined"
     REVIEW_OPINION_SAVED = "review.opinion-saved"
     THREAD_CREATED = "thread.created"
     THREAD_REPLIED = "thread.replied"

@@ -30,7 +30,7 @@ export function personOf(me: Me | undefined): PersonInfo {
 
 export function useToReviewCount(): number {
   const tasks = okData(useListMyReviewTasks().data) ?? [];
-  const adjudications = useListMyAdjudications().data?.data ?? [];
+  const adjudications = okData(useListMyAdjudications().data) ?? [];
   const active = tasks.filter(
     (task) => task.status === "in-review" || task.status === "not-started",
   );

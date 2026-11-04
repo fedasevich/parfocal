@@ -12,11 +12,36 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 31 |
-| `personal` | 65 |
+| `phi` | 33 |
+| `personal` | 67 |
 | `secret` | 9 |
-| `operational` | 580 |
+| `operational` | 591 |
 | `public` | 0 |
+
+## adjudication_objects
+
+| Column | Class |
+|---|---|
+| `adjudication_id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `kind` | operational |
+| `number` | operational |
+
+## adjudications
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `adjudicator_user_id` | personal |
+| `sent_by_user_id` | personal |
+| `note` | phi |
+| `sent_at` | operational |
+| `declined_at` | operational |
+| `declined_note` | phi |
 
 ## annotation_versions
 

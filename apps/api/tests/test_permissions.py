@@ -31,6 +31,8 @@ from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     BuiltInTemplate,
     Role,
+    adjudication_objects,
+    adjudications,
     annotations,
     announcements,
     api_tokens,
@@ -210,6 +212,7 @@ class Workspace:
     leftover_result: SeededUpload = field(default_factory=lambda: SeededUpload())
     display_preset: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_preset: uuid.UUID = field(default_factory=uuid.uuid4)
+    declinable: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
     def annotations(self) -> str:
@@ -551,6 +554,25 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "keepReviewerDecisions": lambda w: Call(
         "POST", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T3/keep-decisions"
+    ),
+    "listAdjudicatorCandidates": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.queued_task}/disagreements/adjudicators"
+    ),
+    "sendToAdjudicator": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.queued_task}/disagreements/adjudications",
+        {
+            "adjudicator_user_id": str(w.colleague),
+            "objects": [{"slide_id": str(w.slide), "object": "T4"}],
+        },
+    ),
+    "listMyAdjudications": lambda _: Call("GET", "/api/adjudications"),
+    "listAdjudicationObjects": lambda _: Call("GET", "/api/adjudications/objects"),
+    "decideAsAdjudicator": lambda w: Call(
+        "PUT", f"/api/adjudications/{w.queued_task}/{w.slide}/T10", {"answer": "4"}
+    ),
+    "declineAdjudication": lambda w: Call(
+        "POST", f"/api/adjudications/{w.declinable}/decline", {"note": "Not mine"}
     ),
     "importCases": lambda w: Call(
         "POST", f"/api/projects/{w.project}/case-imports", {"csv": "case\nMatrix", "dry_run": True}
@@ -1288,9 +1310,37 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         "answer": "1",
                         "reasons": ["not_class"],
                     }
-                    for number in (1, 2, 3)
+                    for number in (1, 2, 3, 4, 10, 11)
                 ],
             )
+            sends = [
+                await connection.scalar(
+                    insert(adjudications)
+                    .values(
+                        tenant_id=tenant_id,
+                        task_id=queued_task,
+                        adjudicator_user_id=people[presets_for],
+                    )
+                    .returning(adjudications.c.id)
+                )
+                for _ in (10, 11)
+            ]
+            await connection.execute(
+                insert(adjudication_objects),
+                [
+                    {
+                        "adjudication_id": send,
+                        "tenant_id": tenant_id,
+                        "task_id": queued_task,
+                        "slide_id": case.loose_slide_id,
+                        "kind": "region",
+                        "number": number,
+                    }
+                    for send, number in zip(sends, (10, 11), strict=True)
+                ],
+            )
+            declinable = sends[1]
+            assert isinstance(declinable, uuid.UUID)
             await connection.execute(
                 insert(review_edits),
                 [
@@ -1462,6 +1512,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             *uploads_made,
             display_preset=kept_preset,
             doomed_preset=doomed_preset,
+            declinable=declinable,
         )
     finally:
         await engine.dispose()

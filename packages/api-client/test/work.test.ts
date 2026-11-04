@@ -68,13 +68,13 @@ test("the viewer decides who is signed in and what they review", async () => {
   assert.equal(rt15?.slides_assigned, 12);
   const home = body(await getMyHome());
   assert.equal(home.resume, null);
-  const adjudications = (await listMyAdjudications()).data;
+  const adjudications = body(await listMyAdjudications());
   assert.deepEqual(adjudications[0]?.objects, ["T4", "T5", "T1·C145"]);
   assert.equal(adjudications[0]?.task_code, "RT-14");
 });
 
 test("only Anna has objects to adjudicate and only Lenka has a co-sign ask", async () => {
-  assert.deepEqual((await listMyAdjudications()).data, []);
+  assert.deepEqual(body(await listMyAdjudications()), []);
   const asks = (await listMyCosignRequests()).data;
   assert.equal(asks[0]?.case_label, "S26-04812");
   assert.equal(asks[0]?.project.code, "P03");

@@ -959,6 +959,7 @@ class NotificationKind(StrEnum):
     TASK_DUE_CHANGED = "task-due-changed"
     RESULT_SET_ADDED = "result-set-added"
     INTEGRATION_DOWN = "integration-down"
+    ADJUDICATION_REQUESTED = "adjudication-requested"
 
 
 class EmailStatus(StrEnum):
@@ -1897,6 +1898,72 @@ display_choices = Table(
     ),
     Column("settings", JSONB, nullable=False, info=PERSONAL),
     *timestamps(),
+)
+
+
+adjudications = Table(
+    "adjudications",
+    metadata,
+    *owned_ids(),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "adjudicator_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "sent_by_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=True, info=PERSONAL
+    ),
+    Column("note", String(300), nullable=True, info=PHI),
+    Column(
+        "sent_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("declined_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("declined_note", String(300), nullable=True, info=PHI),
+    CheckConstraint("declined_note IS NULL OR declined_at IS NOT NULL", name="declined_with_note"),
+)
+
+adjudication_objects = Table(
+    "adjudication_objects",
+    metadata,
+    Column(
+        "adjudication_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("adjudications.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("task_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+    ),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
 )
 
 

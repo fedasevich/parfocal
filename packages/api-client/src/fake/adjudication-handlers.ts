@@ -1,7 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import {
   type AdjudicationObject,
-  type AdjudicationSent,
   adjudicationObjectSchema,
   type DisagreementQueue,
   disagreementQueueSchema,
@@ -20,9 +19,16 @@ import {
 } from "../draft/evaluation-report.ts";
 import {
   getGetTaskEvaluationMockHandler,
+  getListMyAdjudicationsMockHandler,
+  getSendToAdjudicatorMockHandler,
   getSignOffReviewTaskMockHandler,
 } from "../generated/api.msw.ts";
-import type { Evaluation } from "../generated/api.ts";
+import type {
+  AdjudicationDraft,
+  Evaluation,
+  MyAdjudication,
+  QueuedObject,
+} from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
@@ -36,6 +42,7 @@ import {
   startNextVersion,
 } from "./queue-scene.ts";
 import {
+  adjudications,
   type PersonKey,
   people,
   projectByCode,
@@ -69,7 +76,9 @@ import {
 } from "./scenario-adjudication.ts";
 import { rt13 } from "./scenario-review.ts";
 import { studyTemplates } from "./scenario-task.ts";
+import { fakeView } from "./view.ts";
 import { toTaskStates } from "./work-handlers.ts";
+import { inScenarioWorkspace } from "./workspace-scene.ts";
 
 const task = () => {
   const found = reviewTasks.find((candidate) => candidate.code === queueTask);
@@ -398,34 +407,45 @@ export const getUpdateQueuedObjectMockHandler = (overrideResponse?: QueueRow) =>
     },
   );
 
-export const getSendToAdjudicatorMockHandler = (overrideResponse?: AdjudicationSent) =>
-  http.post<{ taskId: string }>(`${taskPath}/adjudications`, async ({ request }) => {
-    const body = (await request.json()) as {
-      adjudicator_user_id: string;
-      note: string | null;
-      objects: { slide_id: string; object: string }[];
-    };
-    const who =
-      Object.values(people).find((person) => person.id === body.adjudicator_user_id)?.key ??
-      adjudicator;
-    for (const item of body.objects) {
-      const seed = seedOf(item.slide_id, item.object);
-      if (seed === undefined) continue;
-      Object.assign(liveRow(queueKey(seed)), {
-        state: "with-adjudicator",
-        adjudicator: { by: who, note: body.note },
-        decision: null,
-      });
-    }
-    return HttpResponse.json(
-      overrideResponse ?? {
-        id: "adjudication-rt14-1",
-        adjudicator_user_id: body.adjudicator_user_id,
-        objects: body.objects.length,
-      },
-      { status: 201 },
-    );
-  });
+const sendToAdjudicatorInScene = async (request: Request): Promise<QueuedObject[]> => {
+  const body = (await request.json()) as AdjudicationDraft;
+  const who =
+    Object.values(people).find((person) => person.id === body.adjudicator_user_id)?.key ??
+    adjudicator;
+  for (const item of body.objects) {
+    const seed = seedOf(item.slide_id, item.object);
+    if (seed === undefined) continue;
+    Object.assign(liveRow(queueKey(seed)), {
+      state: "with-adjudicator",
+      adjudicator: { by: who, note: body.note },
+      decision: null,
+    });
+  }
+  return [];
+};
+
+const toMyAdjudications = (): MyAdjudication[] =>
+  adjudications
+    .filter((item) => inScenarioWorkspace() && item.adjudicator === fakeView().viewer)
+    .map((item) => {
+      const task = reviewTasks.find((candidate) => candidate.code === item.task);
+      if (task === undefined) throw new Error(`no scenario task ${item.task}`);
+      const project = projectByCode(task.project);
+      const slide = slideByIndex(item.slide);
+      return {
+        id: item.id,
+        task_id: task.id,
+        task_code: task.code,
+        task_name: task.name,
+        project: { id: project.id, code: project.code, name: project.name },
+        asked_by_user_id: people[item.askedBy].id,
+        slide_id: slide.id,
+        slide_label: slide.label,
+        objects: item.objects,
+        decided: item.decided,
+        sent_at: item.sentAt,
+      };
+    });
 
 export const getGetMyAdjudicationMockHandler = (overrideResponse?: MyAdjudicationTask) =>
   http.get<{ taskId: string }>(`${taskPath}/adjudication`, ({ params }) =>
@@ -488,12 +508,6 @@ export const adjudicationDraftOperations: DraftOperation[] = [
     handler: () => getUpdateQueuedObjectMockHandler(),
   },
   {
-    operationId: "sendToAdjudicator",
-    method: "post",
-    path: `${taskApi}/adjudications`,
-    handler: () => getSendToAdjudicatorMockHandler(),
-  },
-  {
     operationId: "getMyAdjudication",
     method: "get",
     path: `${taskApi}/adjudication`,
@@ -527,6 +541,8 @@ export const adjudicationDraftOperations: DraftOperation[] = [
 
 export function adjudicationHandlers(): RequestHandler[] {
   return [
+    getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
+    getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
     getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),
     getSignOffReviewTaskMockHandler(({ params }) => {
       signQueueTask();
