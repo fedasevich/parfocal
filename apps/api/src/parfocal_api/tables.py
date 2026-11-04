@@ -1591,6 +1591,7 @@ review_tasks = Table(
     ),
     Column("question", String(200), nullable=True, info=OPERATIONAL),
     Column("display", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
+    Column("check_options", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -1617,6 +1618,7 @@ review_tasks = Table(
     one_of("scope", TaskScope),
     CheckConstraint("(kind = 'annotate') = (class_snapshot IS NOT NULL)", name="class_snapshot"),
     CheckConstraint("(kind = 'annotate') = (scope = 'whole-slide')", name="whole_slide"),
+    CheckConstraint("kind = 'annotate' OR check_options IS NULL", name="check_options"),
     one_of("start_mode", StartMode),
     one_of("decision_style", DecisionStyle),
     CheckConstraint(
@@ -1650,10 +1652,18 @@ review_task_slides = Table(
         "kind", String(10), nullable=False, server_default=TaskKind.REVIEW.value, info=OPERATIONAL
     ),
     Column("result_set_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
+    Column(
+        "run_set_ids",
+        ARRAY(Uuid[uuid.UUID]()),
+        nullable=False,
+        server_default=text("'{}'"),
+        info=OPERATIONAL,
+    ),
     UniqueConstraint("task_id", "position"),
     ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
     ForeignKeyConstraint(["task_id", "kind"], ["review_tasks.id", "review_tasks.kind"]),
     CheckConstraint("kind = 'annotate' OR result_set_id IS NOT NULL", name="result_set"),
+    CheckConstraint("kind = 'annotate' OR cardinality(run_set_ids) = 0", name="run_sets"),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
         ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]

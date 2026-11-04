@@ -842,6 +842,73 @@ export const ChartStyle = {
   table: "table",
 } as const;
 
+export type CheckKind = (typeof CheckKind)[keyof typeof CheckKind];
+
+export const CheckKind = {
+  "all-objects": "all-objects",
+  "random-cells": "random-cells",
+  "cells-below-score": "cells-below-score",
+  "inside-rois": "inside-rois",
+  "unsure-zones": "unsure-zones",
+} as const;
+
+export interface CheckPart {
+  kind: CheckKind;
+  count?: number | null;
+  score?: number | null;
+}
+
+/**
+ * @maxItems 4
+ */
+export type CheckScope = CheckPart[];
+
+export type CheckOrder = (typeof CheckOrder)[keyof typeof CheckOrder];
+
+export const CheckOrder = {
+  "least-sure-first": "least-sure-first",
+  position: "position",
+} as const;
+
+export type SignOffRule = (typeof SignOffRule)[keyof typeof SignOffRule];
+
+export const SignOffRule = {
+  "all-checked": "all-checked",
+  warn: "warn",
+} as const;
+
+export type UncheckedExport = (typeof UncheckedExport)[keyof typeof UncheckedExport];
+
+export const UncheckedExport = {
+  "leave-out": "leave-out",
+  include: "include",
+} as const;
+
+export interface CheckChange {
+  scope?: CheckScope | null;
+  order?: CheckOrder | null;
+  sign_off?: SignOffRule | null;
+  unchecked_export?: UncheckedExport | null;
+}
+
+export type CheckPreset = (typeof CheckPreset)[keyof typeof CheckPreset];
+
+export const CheckPreset = {
+  "annotate-by-hand": "annotate-by-hand",
+  "check-whole-slide-run": "check-whole-slide-run",
+  "check-sample": "check-sample",
+  "fix-ai-on-selected-areas": "fix-ai-on-selected-areas",
+  mixed: "mixed",
+} as const;
+
+export interface CheckOptions {
+  preset: CheckPreset | null;
+  scope: CheckPart[];
+  order: CheckOrder;
+  sign_off: SignOffRule;
+  unchecked_export: UncheckedExport;
+}
+
 export type ChoiceQuestionKind = (typeof ChoiceQuestionKind)[keyof typeof ChoiceQuestionKind];
 
 export const ChoiceQuestionKind = {
@@ -3437,6 +3504,7 @@ export interface ReviewTask {
   study_template_version: number | null;
   decision: DecisionSettings;
   display: TaskDisplaySettings;
+  check?: CheckOptions | null;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -3447,6 +3515,7 @@ export interface ReviewTask {
 export interface TaskSlide {
   slide_id: string;
   result_set_id: string | null;
+  run_set_ids?: string[];
   reviewer_ids: string[];
 }
 
@@ -3471,6 +3540,7 @@ export interface ReviewTaskDetail {
   study_template_version: number | null;
   decision: DecisionSettings;
   display: TaskDisplaySettings;
+  check?: CheckOptions | null;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -3540,6 +3610,10 @@ export interface RunAreas {
   areas: RunArea[];
   after: number;
   more: boolean;
+}
+
+export interface RunJoin {
+  result_set_id: string;
 }
 
 export interface SchemaProblem {
@@ -3992,6 +4066,7 @@ export interface TaskChange {
   reminder_days?: Reminders | null;
   decision?: DecisionSettings | null;
   display?: TaskDisplaySettings | null;
+  check?: CheckChange | null;
 }
 
 export interface TaskDraft {
@@ -4024,6 +4099,8 @@ export interface TaskDraft {
   study_template_version?: number | null;
   decision?: DecisionSettings | null;
   display?: TaskDisplaySettings | null;
+  preset?: CheckPreset | null;
+  check?: CheckChange | null;
 }
 
 export interface TaskInvitationDraft {
@@ -23049,6 +23126,179 @@ export function useListSharedObjectHistory<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type addRunToTaskSlideResponse200 = {
+  data: TaskSlide;
+  status: 200;
+};
+
+export type addRunToTaskSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type addRunToTaskSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type addRunToTaskSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type addRunToTaskSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type addRunToTaskSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type addRunToTaskSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type addRunToTaskSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type addRunToTaskSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type addRunToTaskSlideResponseSuccess = addRunToTaskSlideResponse200 & {
+  headers: Headers;
+};
+export type addRunToTaskSlideResponseError = (
+  | addRunToTaskSlideResponse400
+  | addRunToTaskSlideResponse401
+  | addRunToTaskSlideResponse403
+  | addRunToTaskSlideResponse404
+  | addRunToTaskSlideResponse409
+  | addRunToTaskSlideResponse422
+  | addRunToTaskSlideResponse429
+  | addRunToTaskSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type addRunToTaskSlideResponse =
+  | addRunToTaskSlideResponseSuccess
+  | addRunToTaskSlideResponseError;
+
+export const getAddRunToTaskSlideUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/runs`;
+};
+
+/**
+ * @summary Add Run To Task Slide
+ */
+export const addRunToTaskSlide = async (
+  taskId: string,
+  slideId: string,
+  runJoin: RunJoin,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<addRunToTaskSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<addRunToTaskSlideResponse>(getAddRunToTaskSlideUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(runJoin),
+  });
+};
+
+export const getAddRunToTaskSlideMutationKey = () => ["addRunToTaskSlide"] as const;
+
+export const getAddRunToTaskSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addRunToTaskSlide>>,
+    TError,
+    AddRunToTaskSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addRunToTaskSlide>>,
+  TError,
+  AddRunToTaskSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddRunToTaskSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addRunToTaskSlide>>,
+    AddRunToTaskSlideMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return addRunToTaskSlide(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddRunToTaskSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addRunToTaskSlide>>
+>;
+export type AddRunToTaskSlideMutationBody = RunJoin;
+export type AddRunToTaskSlideMutationError = Problem;
+export type AddRunToTaskSlideMutationVariables = { taskId: string; slideId: string; data: RunJoin };
+
+/**
+ * @summary Add Run To Task Slide
+ */
+export const useAddRunToTaskSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addRunToTaskSlide>>,
+      TError,
+      AddRunToTaskSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addRunToTaskSlide>>,
+  TError,
+  AddRunToTaskSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddRunToTaskSlideMutationOptions(options), queryClient);
+};
 
 export type getReviewOrderResponse200 = {
   data: ReviewOrder;

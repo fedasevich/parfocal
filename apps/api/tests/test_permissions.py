@@ -269,6 +269,7 @@ NEEDS_A_TASK = frozenset(
         "deleteThread",
         "createSharedObject",
         "changeAiObject",
+        "addRunToTaskSlide",
         "changeSharedObject",
         "deleteSharedObject",
     }
@@ -498,6 +499,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"{w.shared_layer}/objects", {"kind": "region", "geometry": SQUARE}
     ),
     "changeAiObject": lambda w: Call("PUT", f"{w.shared_layer}/ai/T1", {"deleted": True}),
+    "addRunToTaskSlide": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.annotate_task}/slides/{w.slide}/runs",
+        {"result_set_id": str(w.result_set)},
+    ),
     "changeSharedObject": lambda w: Call(
         "PATCH", f"{w.shared_layer}/objects/{w.layer_object}", {"version": 1, "geometry": SQUARE}
     ),

@@ -1514,6 +1514,9 @@ def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
         api(b.member()).get(layer),
         api(b.member()).post(f"{layer}/objects", json={"kind": "region", "geometry": SQUARE}),
         api(b.member()).put(f"{layer}/ai/T1", json={"deleted": True}),
+        api(b.member()).post(
+            f"{path}/slides/{a.ids['slide']}/runs", json={"result_set_id": str(uuid.uuid4())}
+        ),
         api(b.member()).patch(f"{layer}/objects/{shared}", json={"version": 1, "class_id": None}),
         api(b.member()).delete(f"{layer}/objects/{shared}", params={"version": 1}),
     ):

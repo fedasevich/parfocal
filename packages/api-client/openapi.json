@@ -13744,6 +13744,149 @@
         "x-permission-emergency": true
       }
     },
+    "/api/review-tasks/{task_id}/slides/{slide_id}/runs": {
+      "post": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Add Run To Task Slide",
+        "operationId": "addRunToTaskSlide",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunJoin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSlide"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review",
+        "x-permission-write": true
+      }
+    },
     "/api/review-tasks/{task_id}/slides/{slide_id}/order": {
       "get": {
         "tags": [
@@ -32981,6 +33124,166 @@
           "table"
         ]
       },
+      "CheckChange": {
+        "properties": {
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckScope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckOrder"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sign_off": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SignOffRule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unchecked_export": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UncheckedExport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "CheckChange"
+      },
+      "CheckKind": {
+        "type": "string",
+        "enum": [
+          "all-objects",
+          "random-cells",
+          "cells-below-score",
+          "inside-rois",
+          "unsure-zones"
+        ],
+        "title": "CheckKind"
+      },
+      "CheckOptions": {
+        "properties": {
+          "preset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckPreset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scope": {
+            "items": {
+              "$ref": "#/components/schemas/CheckPart"
+            },
+            "type": "array",
+            "title": "Scope"
+          },
+          "order": {
+            "$ref": "#/components/schemas/CheckOrder"
+          },
+          "sign_off": {
+            "$ref": "#/components/schemas/SignOffRule"
+          },
+          "unchecked_export": {
+            "$ref": "#/components/schemas/UncheckedExport"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preset",
+          "scope",
+          "order",
+          "sign_off",
+          "unchecked_export"
+        ],
+        "title": "CheckOptions"
+      },
+      "CheckOrder": {
+        "type": "string",
+        "enum": [
+          "least-sure-first",
+          "position"
+        ],
+        "title": "CheckOrder"
+      },
+      "CheckPart": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/CheckKind"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "CheckPart"
+      },
+      "CheckPreset": {
+        "type": "string",
+        "enum": [
+          "annotate-by-hand",
+          "check-whole-slide-run",
+          "check-sample",
+          "fix-ai-on-selected-areas",
+          "mixed"
+        ],
+        "title": "CheckPreset"
+      },
+      "CheckScope": {
+        "items": {
+          "$ref": "#/components/schemas/CheckPart"
+        },
+        "type": "array",
+        "maxItems": 4
+      },
       "ChoiceQuestion": {
         "properties": {
           "key": {
@@ -40751,6 +41054,16 @@
           "display": {
             "$ref": "#/components/schemas/TaskDisplaySettings"
           },
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "counts_as_changes": {
             "items": {
               "$ref": "#/components/schemas/CountsAsChange"
@@ -40930,6 +41243,16 @@
           },
           "display": {
             "$ref": "#/components/schemas/TaskDisplaySettings"
+          },
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "counts_as_changes": {
             "items": {
@@ -41491,6 +41814,20 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RunChoices"
+      },
+      "RunJoin": {
+        "properties": {
+          "result_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Set Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result_set_id"
+        ],
+        "title": "RunJoin"
       },
       "RunParameters": {
         "properties": {
@@ -42524,6 +42861,14 @@
           "evaluation"
         ],
         "title": "SharedReport"
+      },
+      "SignOffRule": {
+        "type": "string",
+        "enum": [
+          "all-checked",
+          "warn"
+        ],
+        "title": "SignOffRule"
       },
       "SignOutChange": {
         "properties": {
@@ -44446,6 +44791,16 @@
                 "type": "null"
               }
             ]
+          },
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -44662,6 +45017,26 @@
                 "type": "null"
               }
             ]
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckPreset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -44784,6 +45159,15 @@
               }
             ],
             "title": "Result Set Id"
+          },
+          "run_set_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Run Set Ids",
+            "default": []
           },
           "reviewer_ids": {
             "items": {
@@ -45538,6 +45922,14 @@
         },
         "type": "object",
         "title": "TokenRequest"
+      },
+      "UncheckedExport": {
+        "type": "string",
+        "enum": [
+          "leave-out",
+          "include"
+        ],
+        "title": "UncheckedExport"
       },
       "UploadDraft": {
         "properties": {

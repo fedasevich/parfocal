@@ -33,6 +33,7 @@ from parfocal_api.tables import (
     result_objects,
     result_sets,
     review_order,
+    review_task_slides,
 )
 from parfocal_common.cell_chunks import ChunkError
 from parfocal_common.chunk_store import chunk_of
@@ -310,7 +311,7 @@ async def ordered_cells(
     found: list[Rated] = []
     for object_key in keys:
         chunk = await read_chunk(store, object_key)
-        if scope.kind is ScopeKind.CELLS_BELOW_SCORE:
+        if scope.kind in {ScopeKind.CELLS_BELOW_SCORE, ScopeKind.ALL_CELLS}:
             found += scoped_cells(scope, chunk, slide_key, temperature=temperature)
             continue
         inside = await inside_cells(connection, scope, slide_id, set_id, chunk)
@@ -330,16 +331,20 @@ async def order_of_slide(
     store: ResultStore,
     scopes: Sequence[Scope],
     slide_id: uuid.UUID,
-    set_id: uuid.UUID,
+    set_ids: Sequence[uuid.UUID],
     seed: int,
+    least_sure: bool = True,
 ) -> list[ObjectKey]:
     rated: dict[ObjectKey, Rated] = {}
-    temperature = await temperature_of(connection, set_id)
-    for scope in scopes:
-        regions = await ordered_regions(connection, scope, slide_id, set_id)
-        cells = await ordered_cells(connection, store, scope, slide_id, set_id, temperature)
-        for item in [*regions, *cells]:
-            rated.setdefault(item.key, item)
+    for set_id in set_ids:
+        temperature = await temperature_of(connection, set_id)
+        for scope in scopes:
+            regions = await ordered_regions(connection, scope, slide_id, set_id)
+            cells = await ordered_cells(connection, store, scope, slide_id, set_id, temperature)
+            for item in [*regions, *cells]:
+                rated.setdefault(item.key, item)
+    if not least_sure:
+        return sorted(rated)
     return least_sure_first(list(rated.values()), seed, str(slide_id))
 
 
@@ -370,12 +375,59 @@ async def write_order(
     )
 
 
+async def checked_keys(
+    connection: AsyncConnection, task_id: uuid.UUID
+) -> set[tuple[uuid.UUID, Letter, int]]:
+    rows = await connection.execute(
+        select(annotations.c.slide_id, annotations.c.kind, annotations.c.source_number).where(
+            annotations.c.task_id == task_id, annotations.c.source_number.is_not(None)
+        )
+    )
+    letters = {kind: letter for letter, kind in KINDS.items()}
+    return {
+        (row.slide_id, letters[AnnotationKind(row.kind)], row.source_number)
+        for row in rows
+        if AnnotationKind(row.kind) in letters
+    }
+
+
+async def unchecked_objects(connection: AsyncConnection, task_id: uuid.UUID) -> int:
+    with_sets = set(
+        await connection.scalars(
+            select(review_task_slides.c.slide_id).where(
+                review_task_slides.c.task_id == task_id,
+                review_task_slides.c.result_set_id.is_not(None),
+            )
+        )
+    )
+    orders = (
+        await connection.execute(
+            select(review_order.c.slide_id, review_order.c.objects).where(
+                review_order.c.task_id == task_id
+            )
+        )
+    ).all()
+    if with_sets - {row.slide_id for row in orders}:
+        await order_state(connection, task_id)
+    checked = await checked_keys(connection, task_id)
+    return sum(
+        (row.slide_id, letter, number) not in checked
+        for row in orders
+        for letter, number in unpack(bytes(row.objects))
+    )
+
+
 async def cancel_order_jobs(connection: AsyncConnection, task_id: uuid.UUID) -> None:
     live = await connection.scalars(
         select(jobs.c.id).where(order_jobs(task_id), jobs.c.status.in_(list(CANCELLABLE)))
     )
     for job_id in live.all():
         await move(connection, job_id, JobControl.CANCEL)
+
+
+async def clear_order(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+    await cancel_order_jobs(connection, task_id)
+    await connection.execute(delete(review_order).where(review_order.c.task_id == task_id))
 
 
 async def store_order(
@@ -385,8 +437,9 @@ async def store_order(
     project_id: uuid.UUID,
     task_id: uuid.UUID,
     scopes: Sequence[Scope],
-    sets: Mapping[uuid.UUID, uuid.UUID],
+    sets: Mapping[uuid.UUID, Sequence[uuid.UUID]],
     seeds: Mapping[uuid.UUID, int],
+    least_sure: bool = True,
 ) -> uuid.UUID | None:
     await cancel_order_jobs(connection, task_id)
     if reads_cells(scopes):
@@ -405,8 +458,10 @@ async def store_order(
                 "slides": [[str(slide_id), seeds[slide_id]] for slide_id in sets],
             },
         )
-    for slide_id, set_id in sets.items():
-        keys = await order_of_slide(connection, store, scopes, slide_id, set_id, seeds[slide_id])
+    for slide_id, set_ids in sets.items():
+        keys = await order_of_slide(
+            connection, store, scopes, slide_id, set_ids, seeds[slide_id], least_sure
+        )
         await write_order(
             connection, tenant_id, project_id, task_id, slide_id, seeds[slide_id], keys
         )
