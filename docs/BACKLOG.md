@@ -2526,7 +2526,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 30, kit Interaction spec.
   Size: S.
 
-- [ ] ANN-029 · One Esc owner in the viewer
+- [x] ANN-029 · One Esc owner in the viewer
   ANN-014 (Esc ladder) added the ordered ladder in apps/web/src/keys/esc-ladder.ts but wired only the comment, selection and focus review rungs into the full viewer. The polygon, select, ruler and annotate view layers still handle Esc on the window themselves, so wiring them as well would fire twice. Give the viewer one Esc owner that asks each layer for its rung, and wire the overlay, drag, draft, run, vertex, tool and panel rungs.
   Done when a browser test presses Esc repeatedly while drawing a polygon with a comment open and sees each layer peel in the ladder's order, one per press.
   Depends on ANN-014.
