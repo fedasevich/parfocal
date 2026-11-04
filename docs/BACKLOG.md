@@ -821,11 +821,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-018.
   Size: S.
 
-- [ ] SEC-030 · Legal review of the GDPR documents before the first real tenant
+- [ ] SEC-030 · Legal review of the GDPR documents before the first real tenant (on hold)
   The SEC-021 (GDPR documentation) drafts in `docs/compliance/` use generic defaults the owner accepted on 2026-11-04: the owner as the legal entity, no DPO, retention of 30 days for unaccepted invitations and ended sessions, 90 days for read notifications and 1 year for operator records, analytics without device storage treated as needing no consent ([ADR 0171](adr/0171-analytics-without-device-storage.md)), and no clinical use claimed, so no medical device assessment. Before the first tenant with real patient data, counsel reads the records of processing, the DPIA, the DPA template, the subprocessor list, the cookie and storage policy and the incident response runbook, and the owner fills every TODO they leave: the registered entity and address, whether a DPO is needed, the supervisory authority and national CSIRT, counsel's contact, the DPA notice hours and the consent reading in the first tenants' countries.
   Done when counsel's comments are applied, no TODO about the entity, DPO, authority or counsel remains in `docs/compliance/`, and the log records the review date.
   Depends on SEC-021.
   Needs: owner.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
 - [x] SEC-009 · Slide label and macro image handling
@@ -869,23 +870,26 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when `docs/security/threat-model.md` exists and each high risk links to a mitigation task.
   Refs [threat model](security/threat-model.md).
 
-- [ ] SEC-017 · Access reviews and least privilege for staff
+- [ ] SEC-017 · Access reviews and least privilege for staff (on hold)
   Break-glass access for support with justification and audit, quarterly access review export.
   Done when tests cover break-glass flow and its audit entries.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
 - [x] SEC-018 · Incident response and breach notification runbook
   Done when the runbook exists, a tabletop exercise is recorded, and contacts are configured for alerting.
   Size: M.
 
-- [ ] SEC-019 · Policies for ISO 27001 readiness
+- [ ] SEC-019 · Policies for ISO 27001 readiness (on hold)
   Information security policy, access control, supplier management, change management, business continuity, asset inventory.
   Done when the documents exist in `docs/compliance/` and each references the technical controls implementing it.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
-- [ ] SEC-020 · HIPAA readiness pack
+- [ ] SEC-020 · HIPAA readiness pack (on hold)
   BAA template, list of subprocessors with BAAs, risk analysis, workforce training record.
   Done when the pack exists and every subprocessor in the infrastructure has a BAA status recorded.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
 - [x] SEC-021 · GDPR documentation
@@ -893,9 +897,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the documents exist and the consent banner (if any analytics need consent) is implemented and tested.
   Size: M.
 
-- [ ] SEC-022 · External penetration test
+- [ ] SEC-022 · External penetration test (on hold)
   Done when an external test covers web, API, guest links and tile access, and every high finding is fixed and retested.
   Depends on M5.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
 - [ ] SEC-023 · Idea: Electronic signature record for sign-out
@@ -3327,9 +3332,10 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ## 25 AILEARN · Learning from corrections
 
-- [ ] AILEARN-000 · Research check and data-use policy
+- [ ] AILEARN-000 · Research check and data-use policy (on hold)
   Decide whether one tenant's corrections may improve shared models (default: no, per-tenant only, unless a tenant opts in by contract). Re-check the CellViT++ frozen-backbone recipe.
   Done when an ADR records the policy and the method.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
 - [ ] AILEARN-001 · Correction capture
@@ -3799,10 +3805,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-010.
   Size: L.
 
-- [ ] OPS-013 · Email routing for support and security
+- [ ] OPS-013 · Email routing for support and security (on hold)
   Turn on Cloudflare Email Routing for the `parfocal.eu` zone and forward `support@parfocal.eu` (the Contact support link of INGEST-018, ingest failure UX) and `security@parfocal.eu` (the security contact of the [incident response runbook](compliance/incident-response.md)) to the owner's inbox. Email Routing is free. Adding its MX and SPF records and the two rules is an additive production write under [ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month). Check first that the zone has no MX record of its own, and stop and ask if it does, because replacing one is not additive. The owner verifies the destination address once by opening Cloudflare's verification email, and that step alone needs the owner. Add a `SECURITY.md` that names `security@parfocal.eu`, a row in `knowledge/platform.md`, and log the production change.
   Done when a test email to each address reaches the owner's inbox and the log records the records and rules added.
   Needs: owner.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
 
 ---
@@ -3912,8 +3919,9 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 36 PILOT · Documentation and pilot readiness
 
-- [ ] PILOT-000 · Research check
+- [ ] PILOT-000 · Research check (on hold)
   Done when the pilot scope (sites, users, slide volume, specimens) is written down with the lab.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
 
 - [ ] PILOT-001 · User help and onboarding
@@ -3922,14 +3930,16 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs mock guided walkthrough.
   Size: M.
 
-- [ ] PILOT-002 · Admin documentation
+- [ ] PILOT-002 · Admin documentation (on hold)
   Tenant setup, users, roles, templates, tiers, validation, retention.
   Done when the docs exist and a new admin sets up a test tenant from them alone.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
-- [ ] PILOT-003 · Operations runbooks
+- [ ] PILOT-003 · Operations runbooks (on hold)
   Deploy, rollback, restore, incident, GPU capacity, stuck jobs, ingest failures.
   Done when each runbook is exercised once on staging.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
 - [ ] PILOT-004 · Pilot data onboarding
@@ -3942,9 +3952,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the results are written up as a result file and follow-up tasks are added to this backlog.
   Depends on ANN-031, AISEG-005.
   Size: L.
-- [ ] PILOT-006 · Release checklist
+- [ ] PILOT-006 · Release checklist (on hold)
   Security sign-off, pen test closed, backups verified, SLOs green for two weeks, compliance packs complete.
   Done when every item is ticked for the pilot release.
+  On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
 - [ ] PILOT-007 · Feedback channel
