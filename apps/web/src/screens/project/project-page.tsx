@@ -6,6 +6,7 @@ import {
 } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
+import { DropOverlay } from "@parfocal/ui/components/drop-overlay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,8 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
+import { readDropped } from "../../upload/drop.ts";
+import { dropStore } from "../../upload/drop-store.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "./mock-toast.tsx";
 import { usePeople } from "./people.ts";
@@ -64,6 +67,7 @@ export function ProjectPage({
   const navigate = useNavigate();
   const toast = useMockToast();
   const [bannerShut, setBannerShut] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const failure = view.importFailed && !bannerShut ? overview?.import_failure : null;
   const goTab = (tab: ProjectTab) =>
     void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab } });
@@ -82,6 +86,28 @@ export function ProjectPage({
     <main
       data-testid="project-page"
       className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--page) text-fg"
+      onDragOver={(event) => {
+        if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+        event.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragOver(false);
+      }}
+      onDrop={(event) => {
+        if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+        event.preventDefault();
+        setDragOver(false);
+        void readDropped(event.dataTransfer).then((items) => {
+          if (items.length === 0) return;
+          dropStore.add(projectId, items);
+          void navigate({
+            to: "/projects/$projectId/upload",
+            params: { projectId },
+            search: { scene: "files", flow: "live" },
+          });
+        });
+      }}
     >
       {failure ? (
         <Banner
@@ -142,13 +168,7 @@ export function ProjectPage({
           <div className="flex flex-none items-center gap-2">
             <Button
               nativeButton={false}
-              render={
-                <Link
-                  to="/projects/$projectId/upload"
-                  params={{ projectId }}
-                  search={{ scene: "empty" }}
-                />
-              }
+              render={<Link to="/projects/$projectId/upload" params={{ projectId }} />}
             >
               <Icon name="upload" />
               Upload
@@ -246,6 +266,12 @@ export function ProjectPage({
         </div>
       </div>
       {overlay}
+      {dragOver ? (
+        <DropOverlay
+          projectCode={project.code}
+          onDrop={() => void navigate({ to: "/projects/$projectId/upload", params: { projectId } })}
+        />
+      ) : null}
       {toast.node}
     </main>
   );

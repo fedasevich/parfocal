@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { readBuildConfig } from "../config.ts";
-import { createUploadEngine, type UploadEngine } from "./engine.ts";
+import type { UploadEngine } from "./engine.ts";
+import { createLazyUploadEngine } from "./lazy-engine.ts";
 
 const engines = new Map<string, UploadEngine>();
 
@@ -8,7 +9,7 @@ export function uploadEngineFor(apiBaseUrl: string): UploadEngine {
   const endpoint = `${apiBaseUrl}/uploads`;
   let engine = engines.get(endpoint);
   if (engine === undefined) {
-    engine = createUploadEngine({ endpoint });
+    engine = createLazyUploadEngine({ endpoint });
     engines.set(endpoint, engine);
   }
   return engine;

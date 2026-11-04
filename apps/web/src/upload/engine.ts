@@ -1,10 +1,9 @@
 import AwsS3 from "@uppy/aws-s3";
 import Uppy from "@uppy/core";
 import {
-  decodeHints,
-  encodeHints,
   type FileIdentity,
   interruptedEntry,
+  readHints,
   replaceEntry,
   sameFile,
   startedEntry,
@@ -15,11 +14,11 @@ import {
   withPause,
   withProgress,
   withRetryStarted,
+  writeHints,
 } from "./entries.ts";
 import { partSizeFor } from "./part-size.ts";
 
 const PARALLEL_FILES = 3;
-const HINTS_KEY = "parfocal.uploads.interrupted";
 
 export type UploadMeta = {
   project_id: string;
@@ -64,9 +63,7 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
   const now = options.now ?? Date.now;
   const listeners = new Set<() => void>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
-  let entries: readonly UploadEntry[] = decodeHints(storage.getItem(HINTS_KEY)).map(
-    interruptedEntry,
-  );
+  let entries: readonly UploadEntry[] = readHints(storage);
 
   const uppy = new Uppy<UploadMeta, Record<string, never>>({ autoProceed: false });
   uppy.use(AwsS3, {
@@ -78,7 +75,7 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
 
   function publish(next: readonly UploadEntry[]): void {
     entries = next;
-    storage.setItem(HINTS_KEY, encodeHints(entries));
+    writeHints(storage, entries);
     for (const listener of listeners) listener();
   }
 

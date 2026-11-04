@@ -50,7 +50,7 @@ type StepProps = {
   openFormats: () => void;
 };
 
-function RemoveButton({ name, onClick }: { name: string; onClick: () => void }) {
+export function RemoveButton({ name, onClick }: { name: string; onClick: () => void }) {
   return (
     <Button
       size="icon-xs"
@@ -64,7 +64,7 @@ function RemoveButton({ name, onClick }: { name: string; onClick: () => void }) 
   );
 }
 
-function ResultRow({
+export function ResultRow({
   lead = (
     <span className="grid w-5 place-items-center text-fg-faint">
       <Icon name="file" />
@@ -96,7 +96,7 @@ function ResultRow({
   );
 }
 
-function GroupHead({
+export function GroupHead({
   icon,
   title,
   sub,
@@ -114,7 +114,7 @@ function GroupHead({
   );
 }
 
-function SlideBlock({ slide, nested }: { slide: ReactNode; nested: ReactNode }) {
+export function SlideBlock({ slide, nested }: { slide: ReactNode; nested: ReactNode }) {
   return (
     <div className="border-line [&+&]:border-t [div+&]:border-t">
       {slide}
@@ -123,14 +123,14 @@ function SlideBlock({ slide, nested }: { slide: ReactNode; nested: ReactNode }) 
   );
 }
 
-function FolderShape({
-  batch,
+export function FolderShape({
+  tree,
   open,
   foldable,
   onToggle,
   openFormats,
 }: {
-  batch: UploadBatch;
+  tree: UploadBatch["folder_tree"];
   open: boolean;
   foldable: boolean;
   onToggle: () => void;
@@ -153,7 +153,7 @@ function FolderShape({
     >
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-x-6 gap-y-3.5">
         <div className="grid min-w-0 grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-4 gap-y-0.5 overflow-hidden rounded-[10px] border border-surf-edge bg-surf-panel px-3.5 py-3 font-mono text-caption leading-[1.6] text-fg">
-          {batch.folder_tree.map((entry) => (
+          {tree.map((entry) => (
             <span key={entry.name} className="contents">
               <span className="whitespace-nowrap" style={{ paddingLeft: entry.depth * 18 }}>
                 {entry.name}
@@ -242,7 +242,7 @@ export function FilesStep(props: StepProps) {
             </Button>
           </button>
           <FolderShape
-            batch={batch}
+            tree={batch.folder_tree}
             open
             foldable={false}
             onToggle={() => undefined}
@@ -494,7 +494,7 @@ export function FilesStep(props: StepProps) {
           </span>
         </div>
         <FolderShape
-          batch={batch}
+          tree={batch.folder_tree}
           open={state.shapeOpen}
           foldable
           onToggle={() => set({ shapeOpen: !state.shapeOpen })}

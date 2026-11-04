@@ -16,6 +16,8 @@ export type UploadEntry = FileIdentity & {
   retryAt: number | null;
 };
 
+const HINTS_KEY = "parfocal.uploads.interrupted";
+
 export const retryDelaysMs = [2_000, 5_000, 15_000] as const;
 
 export function sameFile(a: FileIdentity, b: FileIdentity): boolean {
@@ -138,4 +140,12 @@ export function formatBytes(bytes: number): string {
   if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
   if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+export function readHints(storage: Pick<Storage, "getItem">): UploadEntry[] {
+  return decodeHints(storage.getItem(HINTS_KEY)).map(interruptedEntry);
+}
+
+export function writeHints(storage: Pick<Storage, "setItem">, entries: readonly UploadEntry[]) {
+  storage.setItem(HINTS_KEY, encodeHints(entries));
 }
