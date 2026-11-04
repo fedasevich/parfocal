@@ -49,6 +49,17 @@ export function roomEventOf(value: unknown): RoomEvent | null {
   return valid ? { kind, ids: Object.fromEntries(entries) } : null;
 }
 
+export const PRESENCE_JOINED = "presence.joined";
+export const PRESENCE_LEFT = "presence.left";
+
+function presenceEvent(kind: string, user: string): RoomEvent {
+  return { kind, ids: { user } };
+}
+
+function frameOf(event: RoomEvent): string {
+  return JSON.stringify({ type: "event", kind: event.kind, ids: event.ids });
+}
+
 export function roomStub(env: RoomEnv, tenant: string, room: string): DurableObjectStub {
   return env.ROOMS.get(env.ROOMS.idFromName(`${tenant}/${room}`));
 }
@@ -115,17 +126,26 @@ export class Room {
   }
 
   join(server: WebSocket, seat: Seat): void {
+    const present = this.presentUsers(new Set());
     this.ctx.acceptWebSocket(server, [userTag(seat.user)]);
     server.serializeAttachment(seat);
+    for (const user of present) {
+      if (user !== seat.user) {
+        server.send(frameOf(presenceEvent(PRESENCE_JOINED, user)));
+      }
+    }
+    if (!present.has(seat.user)) {
+      this.broadcast(presenceEvent(PRESENCE_JOINED, seat.user), new Set([server]));
+    }
     void this.scheduleExpiry();
   }
 
-  broadcast(event: RoomEvent): number {
-    const frame = JSON.stringify({ type: "event", kind: event.kind, ids: event.ids });
+  broadcast(event: RoomEvent, except: ReadonlySet<WebSocket> = new Set()): number {
+    const frame = frameOf(event);
     const now = this.now();
     let sent = 0;
     for (const socket of this.ctx.getWebSockets()) {
-      if (this.seatOf(socket).expires > now) {
+      if (!except.has(socket) && this.seatOf(socket).expires > now) {
         socket.send(frame);
         sent += 1;
       }
@@ -134,14 +154,37 @@ export class Room {
   }
 
   closeUser(user: string, project: string | null): number {
-    let closed = 0;
-    for (const socket of this.ctx.getWebSockets(userTag(user))) {
-      if (project === null || this.seatOf(socket).project === project) {
-        socket.close(CLOSE_REMOVED, "removed");
-        closed += 1;
+    const closing = this.ctx
+      .getWebSockets(userTag(user))
+      .filter((socket) => project === null || this.seatOf(socket).project === project);
+    this.leave(closing, CLOSE_REMOVED, "removed");
+    return closing.length;
+  }
+
+  private presentUsers(except: ReadonlySet<WebSocket>): Set<string> {
+    const now = this.now();
+    return new Set(
+      this.ctx
+        .getWebSockets()
+        .filter((socket) => !except.has(socket) && this.seatOf(socket).expires > now)
+        .map((socket) => this.seatOf(socket).user),
+    );
+  }
+
+  private leave(closing: readonly WebSocket[], code: number | null, reason: string): void {
+    const gone = new Set(closing);
+    const users = new Set(closing.map((socket) => this.seatOf(socket).user));
+    if (code !== null) {
+      for (const socket of closing) {
+        socket.close(code, reason);
       }
     }
-    return closed;
+    const remaining = this.presentUsers(gone);
+    for (const user of users) {
+      if (!remaining.has(user)) {
+        this.broadcast(presenceEvent(PRESENCE_LEFT, user), gone);
+      }
+    }
   }
 
   async remember(joined: Joined): Promise<void> {
@@ -193,7 +236,7 @@ export class Room {
       verdict.grant.room !== seat.room ||
       verdict.grant.user !== seat.user
     ) {
-      socket.close(CLOSE_EXPIRED, "token-refused");
+      this.leave([socket], CLOSE_EXPIRED, "token-refused");
       return;
     }
     const renewed: Seat = {
@@ -211,6 +254,7 @@ export class Room {
   }
 
   webSocketClose(socket: WebSocket, code: number): void {
+    this.leave([socket], null, "closed");
     try {
       socket.close(code === 1005 ? 1000 : code, "closed");
     } catch {
@@ -220,11 +264,8 @@ export class Room {
 
   async alarm(): Promise<void> {
     const now = this.now();
-    for (const socket of this.ctx.getWebSockets()) {
-      if (this.seatOf(socket).expires <= now) {
-        socket.close(CLOSE_EXPIRED, "token-expired");
-      }
-    }
+    const expired = this.ctx.getWebSockets().filter((socket) => this.seatOf(socket).expires <= now);
+    this.leave(expired, CLOSE_EXPIRED, "token-expired");
     await this.scheduleExpiry();
   }
 

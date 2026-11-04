@@ -232,6 +232,9 @@ importers:
       '@parfocal/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@parfocal/edge':
+        specifier: workspace:*
+        version: link:../edge
       '@parfocal/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

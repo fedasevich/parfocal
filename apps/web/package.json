@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@parfocal/api-client": "workspace:*",
+    "@parfocal/edge": "workspace:*",
     "@parfocal/tokens": "workspace:*",
     "@parfocal/ui": "workspace:*",
     "@parfocal/viewer-engine": "workspace:*",

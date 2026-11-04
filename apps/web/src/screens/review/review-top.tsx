@@ -2,6 +2,7 @@ import { useGetMe } from "@parfocal/api-client";
 import type { DecisionSplit } from "@parfocal/ui/components/progress-meter";
 import { type ReviewMode, ReviewTopBar } from "@parfocal/ui/components/review-top-bar";
 import { useNavigate } from "@tanstack/react-router";
+import { ViewingNow } from "../../presence/viewing-now.tsx";
 import { AccountMenu } from "../../shell/account-menu.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -101,7 +102,12 @@ export function ReviewTop({
             });
           }
         }}
-        accountSlot={<AccountMenu me={me} person={personOf(me)} />}
+        accountSlot={
+          <>
+            <ViewingNow slideId={session.slideId} />
+            <AccountMenu me={me} person={personOf(me)} />
+          </>
+        }
       />
       {popovers.pinnedStrip}
     </>
