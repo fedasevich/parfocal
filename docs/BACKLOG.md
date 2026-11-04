@@ -3258,7 +3258,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when unit tests reproduce the band accuracies reported by MLEVAL.
   Size: S.
 
-- [ ] AINUC-008 · "May not be a nucleus" flag
+- [x] AINUC-008 · "May not be a nucleus" flag
   From the detector's score and the typer's foreground probability. It fires when the detector score is under 0.8 or the HoVer-NeXt foreground probability is under 0.5.
   Done when unit tests cover the rule and the review gallery shows the X action on flagged tiles.
   Refs doc 29.
