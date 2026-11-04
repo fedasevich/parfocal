@@ -1,6 +1,14 @@
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { CategoryTag, StatusTag } from "@parfocal/ui/components/tag";
 import type { ReportDocumentModel } from "@parfocal/ui/lib/report-document";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -49,8 +57,6 @@ type DepositTableProps = React.ComponentProps<"div"> & {
   showSuggestion?: boolean;
 };
 
-const rowGrid = "grid grid-cols-[32px_minmax(0,1.2fr)_150px_minmax(0,1fr)_28px] items-start gap-3";
-
 function DepositSource({ deposit, largest }: { deposit: Deposit; largest: boolean }) {
   return (
     <span className="grid min-w-0 gap-0.5 pt-1">
@@ -96,105 +102,125 @@ function DepositTable({
           No deposit yet. Add one from an object on a slide, or measure one by hand.
         </p>
       ) : (
-        <div className="grid text-body-sm leading-[1.45]">
-          <div className={cn(rowGrid, "pb-1.5 text-caption text-fg-dim")}>
-            <span />
-            <span>Slide and source</span>
-            <span>Size</span>
-            <span>Note</span>
-            <span />
-          </div>
-          {deposits.map((deposit) =>
-            deposit.removed ? (
-              <div
-                key={deposit.id}
-                role="status"
-                data-removed="true"
-                className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-3 border-t border-line py-2.5 text-fg-dim"
-              >
-                <span className="pt-1.5 font-mono font-semibold">{deposit.id}</span>
-                <span className="grid min-w-0 gap-0.5 pt-1">
-                  <b className="font-semibold">{deposit.id} removed</b>
-                  <small className="text-caption">
-                    {deposit.removedText ??
-                      `${deposit.sizeMm === undefined ? "no size" : `${formatMm(deposit.sizeMm)} mm`}, ${deposit.objectId ? `${deposit.objectId} on` : "by hand on"} ${deposit.slide}`}
-                  </small>
-                </span>
-                <Button size="sm" onClick={() => onUndo?.(deposit.id)}>
-                  <Icon name="undo" />
-                  Undo
-                </Button>
-              </div>
-            ) : (
-              <div
-                key={deposit.id}
-                data-deposit={deposit.id}
-                data-largest={deposit.id === largest?.id || undefined}
-                className={cn(rowGrid, "border-t border-line py-2.5")}
-              >
-                <span className="pt-1.5 font-mono font-semibold text-fg">{deposit.id}</span>
-                <DepositSource deposit={deposit} largest={deposit.id === largest?.id} />
-                <div className="grid gap-1">
-                  {onSizeChange ? (
-                    <span className="flex items-center gap-1.5">
-                      <Input
-                        id={inputId(deposit.id)}
-                        inputMode="decimal"
-                        aria-label={`Size of ${deposit.id} in mm`}
-                        aria-invalid={errors[deposit.id] ? true : undefined}
-                        value={
-                          deposit.size ??
-                          (deposit.sizeMm === undefined ? "" : String(deposit.sizeMm))
-                        }
-                        onChange={(event) => onSizeChange(deposit.id, event.target.value)}
-                        onBlur={() => onSizeBlur?.(deposit.id)}
-                        className="w-22 text-center font-mono tabular-nums"
-                      />
-                      <span className="text-body-sm text-fg-dim">mm</span>
-                    </span>
-                  ) : (
-                    <span className="pt-1 font-mono tabular-nums">
-                      {deposit.sizeMm === undefined ? (
-                        <span className="text-warn">No size yet</span>
-                      ) : (
-                        `${formatMm(deposit.sizeMm)} mm`
-                      )}
-                    </span>
-                  )}
-                  {errors[deposit.id] ? (
-                    <span role="alert" className="flex items-start gap-1 text-caption text-bad">
-                      <Icon name="warn" size="xs" className="mt-0.5" />
-                      {errors[deposit.id]}
-                    </span>
-                  ) : sizeHelp[deposit.id] ? (
-                    <span className="text-caption">{sizeHelp[deposit.id]}</span>
-                  ) : null}
-                </div>
-                {onNoteChange ? (
-                  <Input
-                    aria-label={`Note on ${deposit.id}`}
-                    placeholder="Note, optional"
-                    maxLength={120}
-                    value={deposit.note ?? ""}
-                    onChange={(event) => onNoteChange(deposit.id, event.target.value)}
-                  />
-                ) : (
-                  <span className="truncate pt-1 text-fg-dim">{deposit.note ?? ""}</span>
-                )}
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  className="mt-1"
-                  title={`Remove ${deposit.id}`}
-                  aria-label={`Remove ${deposit.id}`}
-                  onClick={() => onRemove?.(deposit.id)}
+        <Table className="leading-[1.45]">
+          <TableHeader>
+            <TableRow className="border-b-0">
+              <TableHead className="w-12">
+                <span className="sr-only">Deposit</span>
+              </TableHead>
+              <TableHead>Slide and source</TableHead>
+              <TableHead className="w-44">Size</TableHead>
+              <TableHead>Note</TableHead>
+              <TableHead className="w-10">
+                <span className="sr-only">Remove</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {deposits.map((deposit) =>
+              deposit.removed ? (
+                <TableRow key={deposit.id} data-removed="true">
+                  <TableCell colSpan={5} className="py-2.5 whitespace-normal">
+                    <div
+                      role="status"
+                      className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-3 text-fg-dim"
+                    >
+                      <span className="pt-1.5 font-mono font-semibold">{deposit.id}</span>
+                      <span className="grid min-w-0 gap-0.5 pt-1">
+                        <b className="font-semibold">{deposit.id} removed</b>
+                        <small className="text-caption">
+                          {deposit.removedText ??
+                            `${deposit.sizeMm === undefined ? "no size" : `${formatMm(deposit.sizeMm)} mm`}, ${deposit.objectId ? `${deposit.objectId} on` : "by hand on"} ${deposit.slide}`}
+                        </small>
+                      </span>
+                      <Button size="sm" onClick={() => onUndo?.(deposit.id)}>
+                        <Icon name="undo" />
+                        Undo
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow
+                  key={deposit.id}
+                  data-deposit={deposit.id}
+                  data-largest={deposit.id === largest?.id || undefined}
+                  className="align-top [&>td]:py-2.5 [&>td]:align-top"
                 >
-                  <Icon name="close" />
-                </Button>
-              </div>
-            ),
-          )}
-        </div>
+                  <TableCell kind="id" className="pt-3.5 font-semibold text-fg">
+                    {deposit.id}
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <DepositSource deposit={deposit} largest={deposit.id === largest?.id} />
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <div className="grid gap-1">
+                      {onSizeChange ? (
+                        <span className="flex items-center gap-1.5">
+                          <Input
+                            id={inputId(deposit.id)}
+                            inputMode="decimal"
+                            aria-label={`Size of ${deposit.id} in mm`}
+                            aria-invalid={errors[deposit.id] ? true : undefined}
+                            value={
+                              deposit.size ??
+                              (deposit.sizeMm === undefined ? "" : String(deposit.sizeMm))
+                            }
+                            onChange={(event) => onSizeChange(deposit.id, event.target.value)}
+                            onBlur={() => onSizeBlur?.(deposit.id)}
+                            className="w-22 text-center font-mono tabular-nums"
+                          />
+                          <span className="text-body-sm text-fg-dim">mm</span>
+                        </span>
+                      ) : (
+                        <span className="pt-1 font-mono tabular-nums">
+                          {deposit.sizeMm === undefined ? (
+                            <span className="text-warn">No size yet</span>
+                          ) : (
+                            `${formatMm(deposit.sizeMm)} mm`
+                          )}
+                        </span>
+                      )}
+                      {errors[deposit.id] ? (
+                        <span role="alert" className="flex items-start gap-1 text-caption text-bad">
+                          <Icon name="warn" size="xs" className="mt-0.5" />
+                          {errors[deposit.id]}
+                        </span>
+                      ) : sizeHelp[deposit.id] ? (
+                        <span className="text-caption">{sizeHelp[deposit.id]}</span>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    {onNoteChange ? (
+                      <Input
+                        aria-label={`Note on ${deposit.id}`}
+                        placeholder="Note, optional"
+                        maxLength={120}
+                        value={deposit.note ?? ""}
+                        onChange={(event) => onNoteChange(deposit.id, event.target.value)}
+                      />
+                    ) : (
+                      <span className="truncate pt-1 text-fg-dim">{deposit.note ?? ""}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      className="mt-1"
+                      title={`Remove ${deposit.id}`}
+                      aria-label={`Remove ${deposit.id}`}
+                      onClick={() => onRemove?.(deposit.id)}
+                    >
+                      <Icon name="close" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ),
+            )}
+          </TableBody>
+        </Table>
       )}
       {showSuggestion && largest?.sizeMm !== undefined ? (
         <p className="m-0 inline-flex items-center gap-2 text-body-sm text-fg-dim">

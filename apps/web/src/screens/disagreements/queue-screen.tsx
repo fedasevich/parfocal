@@ -15,6 +15,7 @@ import {
   EvidenceList,
   EvidenceRow,
   QueueRow as QueueRowView,
+  QueueTable,
   QuotedNote,
 } from "@parfocal/ui/components/disagreements";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
@@ -266,29 +267,31 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               { value: "ai", label: `Both vs AI ${rows.length - nDiffer}` },
             ]}
           />
-          {shown.map((item) => {
-            const tag = rowTag(item, nameOf);
-            return (
-              <QueueRowView
-                key={item.key}
-                object={item.object}
-                slide={item.slide_label}
-                tag={tag.label}
-                tone={tag.tone}
-                locked={Boolean(locked)}
-                selected={!locked && item.key === row?.key}
-                done={isClosed(item)}
-                checkable={canSend(item)}
-                checked={checked.includes(item.key)}
-                onSelect={() => select(item.key)}
-                onCheckedChange={(on) =>
-                  setChecked((now) =>
-                    on ? [...now, item.key] : now.filter((key) => key !== item.key),
-                  )
-                }
-              />
-            );
-          })}
+          <QueueTable aria-label="Queued objects">
+            {shown.map((item) => {
+              const tag = rowTag(item, nameOf);
+              return (
+                <QueueRowView
+                  key={item.key}
+                  object={item.object}
+                  slide={item.slide_label}
+                  tag={tag.label}
+                  tone={tag.tone}
+                  locked={Boolean(locked)}
+                  selected={!locked && item.key === row?.key}
+                  done={isClosed(item)}
+                  checkable={canSend(item)}
+                  checked={checked.includes(item.key)}
+                  onSelect={() => select(item.key)}
+                  onCheckedChange={(on) =>
+                    setChecked((now) =>
+                      on ? [...now, item.key] : now.filter((key) => key !== item.key),
+                    )
+                  }
+                />
+              );
+            })}
+          </QueueTable>
         </section>
         {locked ? (
           <section className="col-span-2 grid min-h-60 place-items-center rounded-zone bg-surf-panel p-8 text-center">

@@ -4,9 +4,16 @@ import type { PickState, SortDirection } from "@parfocal/ui/lib/table-state";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.ComponentProps<"table"> & { containerClassName?: string | undefined }) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    <div
+      data-slot="table-container"
+      className={cn("relative w-full overflow-x-auto", containerClassName)}
+    >
       <table
         data-slot="table"
         className={cn("w-full caption-bottom border-collapse text-body-sm", className)}
@@ -184,11 +191,28 @@ function TablePickCell({
   picked,
   onToggle,
   label,
+  disabled,
+  reason,
+  boxClassName,
   ...props
-}: React.ComponentProps<"td"> & { picked: boolean; onToggle: () => void; label: string }) {
+}: React.ComponentProps<"td"> & {
+  picked: boolean;
+  onToggle: () => void;
+  label: string;
+  disabled?: boolean | undefined;
+  reason?: string | undefined;
+  boxClassName?: string | undefined;
+}) {
   return (
     <TableCell data-slot="table-pick-cell" className={cn("w-8", className)} {...props}>
-      <Checkbox aria-label={label} checked={picked} onCheckedChange={onToggle} />
+      <Checkbox
+        aria-label={label}
+        checked={picked}
+        disabled={disabled}
+        title={disabled ? reason : undefined}
+        className={boxClassName}
+        onCheckedChange={onToggle}
+      />
     </TableCell>
   );
 }
