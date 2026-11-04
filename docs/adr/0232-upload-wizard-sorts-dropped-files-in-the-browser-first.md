@@ -19,7 +19,7 @@ The upload wizard of [ADR 0095](0095-ux-round-5-upload-by-slide-and-decision-not
 
 The wizard sorts in the browser with `apps/web/src/upload/drop.ts`, which follows the rules of the Files step: a folder is a case, a result sits next to its slide with the same name or in a folder named like the slide, and a result that matches no slide waits in "Not matched yet". The module is pure, reads dropped folders through `webkitGetAsEntry`, and has node tests. Picks, Undo and "Leave it out" are state of the wizard and never leave the browser.
 
-The server stays the authority. When the wizard starts the upload it will send the same files to `POST /api/uploads/sorting/apply` and pair with `PUT /api/uploads/{upload_id}/slide`, and a disagreement between the two sorters is shown on Check as a problem. That call is not wired yet. Until it is, the wizard uploads every file to the project without a case and without a slide link, and the server pairs results on import.
+The server stays the authority. Check asks `POST /api/uploads/sorting` and lists every file the two sorters place differently. When the wizard starts the upload it sends the same files to `POST /api/uploads/sorting/apply`, puts each slide in its case and links each result with `PUT /api/uploads/{upload_id}/slide`.
 
 The wizard shows only its own uploads in the jobs tray as one row per project built from the upload engine, next to the rows from the jobs API.
 
