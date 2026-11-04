@@ -4242,7 +4242,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, VIEW-020, GUIDE-012, GUIDE-015. Refs mock: guided/region, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, doc 38, doc 40 G1, G3 and G5, doc 44.
   Size: L.
 
-- [ ] GUIDE-003 · Disagree reasons and optional fixes
+- [x] GUIDE-003 · Disagree reasons and optional fixes
   Disagree asks what is wrong with four quick reasons per object kind, coded as [ADR 0072](adr/0072-decisions-reasons-and-opinion-forms.md) lists. Redrawing the outline or changing the type is optional.
   Done when component tests cover reasons for a region and a cell, and E2E redraws an outline from guided review.
   Depends on GUIDE-002, RSET-007. Refs mock: guided/disagree.
