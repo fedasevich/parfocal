@@ -1,6 +1,7 @@
 import { useGetMyHome, useListMySlides } from "@parfocal/api-client";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { annotateTaskPrototypeLinks } from "../screens/annotate-task/prototype-scenes.ts";
 import { disagreementPrototypeLinks } from "../screens/disagreements/prototype-scenes.ts";
 import { useJobsPrototypeLinks } from "../screens/jobs/prototype-scenes.ts";
 import { newTaskPrototypeScenes } from "../screens/new-task/prototype-scenes.ts";
@@ -173,6 +174,13 @@ function PrototypeIndex() {
               </Entry>
             ))}
             {toolPrototypeLinks(resume.project.id, resume.task_id, resume.slide_id).map(
+              ({ key, label, note, link }) => (
+                <Entry key={key} note={note}>
+                  <Link {...link}>{label}</Link>
+                </Entry>
+              ),
+            )}
+            {annotateTaskPrototypeLinks(resume.project.id, resume.task_id, resume.slide_id).map(
               ({ key, label, note, link }) => (
                 <Entry key={key} note={note}>
                   <Link {...link}>{label}</Link>
