@@ -12,7 +12,7 @@ import { CountPanel } from "../annotations/count-panel.tsx";
 import { removeShape } from "../annotations/document.ts";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
-import { PolygonLayer } from "../annotations/polygon-layer.tsx";
+import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -222,6 +222,7 @@ function OpenedSlide({
   }, []);
   useHotkeys(toolBindings, onToolKey);
   const leaveTool = useCallback(() => setTool("hand"), []);
+  const draftControl = useRef<DraftControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
@@ -229,6 +230,23 @@ function OpenedSlide({
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
   const setAnnotations = saved.setDocument;
+  const undoBindings = useBindings(["global"], ["undo", "redo"]);
+  const { undo: undoEdit, redo: redoEdit } = saved;
+  const onUndoKey = useCallback(
+    ({ phase, action }: { phase: string; action: string }) => {
+      if (phase !== "press") return;
+      if (action === "redo") {
+        redoEdit();
+        return;
+      }
+      if (action !== "undo") return;
+      const draft = draftControl.current;
+      if (draft !== null && draft.depth() > 0) draft.pop();
+      else undoEdit();
+    },
+    [undoEdit, redoEdit],
+  );
+  useHotkeys(undoBindings, onUndoKey);
   const [classes, setClasses] = useState<readonly ProjectClass[]>([]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   useEffect(() => {
@@ -357,6 +375,7 @@ function OpenedSlide({
             document={annotations}
             onClose={saved.savePolygon}
             onLeave={leaveTool}
+            draftControl={draftControl}
           />
           <FreehandLayer
             engine={session.engine}
@@ -397,6 +416,7 @@ function OpenedSlide({
             active={tool === "select"}
             document={annotations}
             onDocumentChange={setAnnotations}
+            onCommit={saved.commit}
             onLeave={leaveTool}
           />
           <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">

@@ -184,6 +184,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         { safe: true, scope: "review", inInputs: true },
       ],
       ["undo", "Undo", ["⌘Z"], "fig", { fixed: true, scope: "global" }],
+      ["redo", "Redo", ["⇧⌘Z"], "fig", { fixed: true, scope: "global" }],
       ["esc", "Close or go back", ["Esc"], "fig", { fixed: true, scope: "global", inInputs: true }],
     ],
   ],
