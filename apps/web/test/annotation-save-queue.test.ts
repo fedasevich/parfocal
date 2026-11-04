@@ -38,6 +38,7 @@ function manualTimers() {
 function fakeServer() {
   const created: string[] = [];
   const removed: string[] = [];
+  const updated: string[] = [];
   let down = false;
   let rejectNext = false;
   const transport: Transport<string> = {
@@ -50,6 +51,11 @@ function fakeServer() {
       created.push(body);
       return Promise.resolve({ kind: "done", value: { id: `server-${body}`, version: 1 } });
     },
+    update: (id, version, body): Promise<Outcome<{ version: number }>> => {
+      if (down) return Promise.reject(new TypeError("Failed to fetch"));
+      updated.push(`${id}@${version}:${body}`);
+      return Promise.resolve({ kind: "done", value: { version: version + 1 } });
+    },
     remove: (id): Promise<Outcome<null>> => {
       if (down) return Promise.reject(new TypeError("Failed to fetch"));
       removed.push(id);
@@ -60,6 +66,7 @@ function fakeServer() {
     transport,
     created,
     removed,
+    updated,
     setDown: (value: boolean) => {
       down = value;
     },

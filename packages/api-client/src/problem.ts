@@ -11,6 +11,7 @@ export type Problem = {
   code: string;
   detail?: string;
   errors?: FieldError[];
+  current?: unknown;
 };
 
 export type ErrorKind =

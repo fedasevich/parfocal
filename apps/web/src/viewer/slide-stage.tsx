@@ -6,6 +6,7 @@ import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useClassKeys } from "../annotations/class-keys.ts";
+import { ConflictNotice } from "../annotations/conflict-notice.tsx";
 import { CountLayer } from "../annotations/count-layer.tsx";
 import { markersOf } from "../annotations/count-markers.ts";
 import { CountPanel } from "../annotations/count-panel.tsx";
@@ -595,6 +596,7 @@ function OpenedSlide({
       {phase.state === "loading" ? null : (
         <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
       )}
+      <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
       {phase.state === "failed" ? (
         <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
           <InlineState

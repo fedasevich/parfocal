@@ -1,5 +1,6 @@
 import { type AnnotationDraft, listAnnotations } from "@parfocal/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, createDocument } from "./document.ts";
 import {
@@ -22,11 +23,36 @@ import {
   undo,
 } from "./history.ts";
 import type { Point } from "./polygon-draft.ts";
-import { createSaveQueue, type QueuePhase, type Remote } from "./save-queue.ts";
-import { annotationTransport } from "./save-transport.ts";
+import {
+  type Choice,
+  type Conflict,
+  createSaveQueue,
+  type QueuePhase,
+  type Remote,
+} from "./save-queue.ts";
+import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
 import { at, type Shape, type ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
+
+export type SaveConflict = Conflict<AnnotationDraft>;
+
+const sameBody = (before: Shape, after: Shape) => {
+  if (before.classKey !== after.classKey) return false;
+  if (before.points.length !== after.points.length) return false;
+  return before.points.every((value, index) => value === after.points[index]);
+};
+
+const bodyOf = (shape: Shape): AnnotationDraft | null =>
+  shape.kind === "polygon"
+    ? { kind: savedPolygonKind, geometry: polygonToGeoJson(shape.points) }
+    : shape.kind === "point"
+      ? {
+          kind: savedMarkerKind,
+          geometry: pointToGeoJson({ x: at(shape.points, 0), y: at(shape.points, 1) }),
+          class_id: shape.classKey,
+        }
+      : null;
 
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
@@ -44,17 +70,32 @@ export type SavedAnnotations = {
   readonly loaded: boolean;
   readonly saveState: SaveState;
   readonly unsaved: number;
+  readonly conflicts: readonly SaveConflict[];
+  readonly resolveConflict: (conflict: SaveConflict, choice: Choice) => void;
 };
 
-export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnnotations {
+export function useSavedAnnotations(
+  slideId: string,
+  enabled: boolean,
+  sharedTaskId: string | null = null,
+): SavedAnnotations {
   const [document, setDocumentState] = useState(createDocument);
   const [loaded, setLoaded] = useState(false);
   const [history, setHistoryState] = useState(createHistory);
   const current = useRef(document);
   const log = useRef(history);
   const remotes = useRef(new Map<ShapeId, Remote>());
-  const queue = useMemo(() => createSaveQueue(annotationTransport(slideId)), [slideId]);
+  const queue = useMemo(
+    () =>
+      createSaveQueue(
+        sharedTaskId === null
+          ? annotationTransport(slideId)
+          : sharedLayerTransport(sharedTaskId, slideId),
+      ),
+    [slideId, sharedTaskId],
+  );
   const status = useSyncExternalStore(queue.subscribe, queue.status);
+  const conflicts = useSyncExternalStore(queue.subscribe, queue.conflicts);
   const hasUnsaved = status.waiting > 0;
 
   useEffect(() => {
@@ -87,16 +128,7 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
 
   const createFor = useCallback(
     (shape: Shape) => {
-      const body: AnnotationDraft | null =
-        shape.kind === "polygon"
-          ? { kind: savedPolygonKind, geometry: polygonToGeoJson(shape.points) }
-          : shape.kind === "point"
-            ? {
-                kind: savedMarkerKind,
-                geometry: pointToGeoJson({ x: at(shape.points, 0), y: at(shape.points, 1) }),
-                class_id: shape.classKey,
-              }
-            : null;
+      const body = bodyOf(shape);
       if (body === null) return;
       const remote: Remote = { id: null, version: 1 };
       remotes.current.set(shape.id, remote);
@@ -114,16 +146,27 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     [queue],
   );
 
+  const updateFor = useCallback(
+    (shape: Shape) => {
+      const remote = remotes.current.get(shape.id);
+      const body = bodyOf(shape);
+      if (remote !== undefined && body !== null) queue.enqueueUpdate(remote, body);
+    },
+    [queue],
+  );
+
   const sync = useCallback(
     (previous: AnnotationDocument, next: AnnotationDocument) => {
       for (const id of previous.shapes.keys()) {
         if (!next.shapes.has(id)) deleteFor(id);
       }
       for (const [id, shape] of next.shapes) {
-        if (!previous.shapes.has(id)) createFor(shape);
+        const before = previous.shapes.get(id);
+        if (before === undefined) createFor(shape);
+        else if (before !== shape && !sameBody(before, shape)) updateFor(shape);
       }
     },
-    [createFor, deleteFor],
+    [createFor, deleteFor, updateFor],
   );
 
   useEffect(() => {
@@ -165,11 +208,19 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     };
   }, [slideId, enabled, setDocument]);
 
-  const commit = useCallback(
+  const recordEdit = useCallback(
     (before: AnnotationDocument, after: AnnotationDocument, label: string) => {
       setHistory(record(log.current, before, after, label).history);
     },
     [setHistory],
+  );
+
+  const commit = useCallback(
+    (before: AnnotationDocument, after: AnnotationDocument, label: string) => {
+      recordEdit(before, after, label);
+      sync(before, after);
+    },
+    [recordEdit, sync],
   );
 
   const savePolygon = useCallback(
@@ -177,10 +228,10 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
       const before = current.current;
       const added = addShape(before, { kind: "polygon", points });
       setDocument(added.document);
-      commit(before, added.document, "Add outline");
+      recordEdit(before, added.document, "Add outline");
       createFor(added.shape);
     },
-    [setDocument, commit, createFor],
+    [setDocument, recordEdit, createFor],
   );
 
   const saveMarker = useCallback(
@@ -188,10 +239,10 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
       const before = current.current;
       const added = dropMarker(before, point, classKey);
       setDocument(added.document);
-      commit(before, added.document, "Add marker");
+      recordEdit(before, added.document, "Add marker");
       createFor(added.shape);
     },
-    [setDocument, commit, createFor],
+    [setDocument, recordEdit, createFor],
   );
 
   const removeMarker = useCallback(
@@ -200,10 +251,10 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
       const next = deleteMarker(before, id);
       if (next === before) return;
       setDocument(next);
-      commit(before, next, "Remove marker");
+      recordEdit(before, next, "Remove marker");
       deleteFor(id);
     },
-    [setDocument, commit, deleteFor],
+    [setDocument, recordEdit, deleteFor],
   );
 
   const apply = useCallback(
@@ -212,9 +263,8 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
       if (next === before) return;
       setDocument(next);
       commit(before, next, label);
-      sync(before, next);
     },
-    [setDocument, commit, sync],
+    [setDocument, commit],
   );
 
   const travel = useCallback(
@@ -245,6 +295,21 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     [setHistory, setDocument, sync],
   );
 
+  const resolveConflict = useCallback(
+    (conflict: SaveConflict, choice: Choice) => {
+      if (choice === "theirs") {
+        const held = [...remotes.current].find(([, remote]) => remote === conflict.remote);
+        const shapeId = held === undefined ? null : held[0];
+        const adopted = adoptTheirs(current.current, shapeId, conflict.theirs);
+        if (shapeId !== null) remotes.current.delete(shapeId);
+        if (adopted.shapeId !== null) remotes.current.set(adopted.shapeId, conflict.remote);
+        setDocument(adopted.document);
+      }
+      queue.resolve(conflict, choice);
+    },
+    [queue, setDocument],
+  );
+
   return {
     document,
     setDocument,
@@ -261,5 +326,7 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     loaded,
     saveState: status.phase,
     unsaved: status.waiting,
+    conflicts,
+    resolveConflict,
   };
 }
