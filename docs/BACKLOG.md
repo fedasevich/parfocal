@@ -4560,7 +4560,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-001, DS-019. Refs mock: upload/tray, doc 41.
   Size: M.
 
-- [ ] JOBS-004 · Job window with steps per slide
+- [x] JOBS-004 · Job window with steps per slide
   One bar for the run, then each slide with its steps (queued, tiles read, tissue found, model running, objects placed, IDs given, result set added). A slide opens once its objects are placed. A paused run says why and offers Resume or Move it to the Parfocal GPU. Cancel keeps what is finished and offers an Undo. Close keeps the run going.
   Done when component tests cover running, paused and finished runs, and E2E cancels and undoes a run.
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
