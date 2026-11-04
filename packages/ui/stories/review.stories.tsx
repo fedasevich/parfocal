@@ -17,6 +17,7 @@ import {
   ZoneRow,
 } from "../src/components/inspector.tsx";
 import { ToolRail, ToolRailButton, ToolRailGroup } from "../src/components/tool-rail-button.tsx";
+import { answerCells, type NumberLineClass } from "../src/lib/number-line.ts";
 import { tumorShareResultFor } from "../src/lib/tumor-share.ts";
 import { mockAssets, projectClasses } from "./fixtures.ts";
 
@@ -25,6 +26,59 @@ const meta = {
 } satisfies Meta;
 
 export default meta;
+
+const numberLineSeed: NumberLineClass[] = [
+  { name: "Tumor", color: "#f87171", sure: 11190, unsure: 14, checked: 30 },
+  { name: "Stroma", color: "#6ee7b7", sure: 4300, unsure: 10, checked: 0 },
+  { name: "Immune", color: "#c084fc", sure: 2290, unsure: 0, checked: 5 },
+];
+
+const openResult = () =>
+  tumorShareResultFor(
+    Array.from({ length: 400 }, (_, index) =>
+      index < 128
+        ? { probability: 0.75, calledTumor: true }
+        : { probability: 36 / 272, calledTumor: false },
+    ),
+    0.2,
+  );
+
+function Answerable() {
+  const [rows, setRows] = useState(numberLineSeed);
+  return (
+    <div className="grid w-[300px] gap-3">
+      <NumberLine classes={rows} />
+      <button type="button" onClick={() => setRows((current) => answerCells(current, "Tumor"))}>
+        Answer one
+      </button>
+    </div>
+  );
+}
+
+export const NumberLineSeeded: Story = {
+  render: () => (
+    <div className="w-[300px]">
+      <NumberLine classes={numberLineSeed} />
+    </div>
+  ),
+};
+export const NumberLineWithChip: Story = {
+  render: () => (
+    <div className="w-[300px]">
+      <NumberLine classes={numberLineSeed} result={openResult()} />
+    </div>
+  ),
+};
+export const NumberLineAllChecked: Story = {
+  render: () => (
+    <div className="w-[300px]">
+      <NumberLine
+        classes={[{ name: "Tumor", color: "#f87171", sure: 40, unsure: 0, checked: 40 }]}
+      />
+    </div>
+  ),
+};
+export const NumberLineAnswering: Story = { render: () => <Answerable /> };
 
 type Story = StoryObj<typeof meta>;
 
@@ -180,20 +234,7 @@ export const InspectorPrimitives: Story = {
         <span className="text-body-sm text-fg-dim">Measure across the widest part.</span>
       </StepBlock>
       <ZoneRow objectId="Z1" text="14 unsure cells" pinned />
-      <NumberLine sure={18224} unsure={14} total={18238} />
-      <NumberLine
-        sure={18224}
-        unsure={14}
-        total={18238}
-        result={tumorShareResultFor(
-          Array.from({ length: 400 }, (_, index) =>
-            index < 128
-              ? { probability: 0.75, calledTumor: true }
-              : { probability: 36 / 272, calledTumor: false },
-          ),
-          0.2,
-        )}
-      />
+      <NumberLine classes={numberLineSeed} />
       <div className="flex gap-2">
         <CellCrop image={mockAssets.hpf} objectId="T1·C145" />
         <CellCrop image={mockAssets.hpf} objectId="T1·C146" />
