@@ -65,7 +65,7 @@ test("at most 200 slides are kept per user and the oldest go first", () => {
   for (let at = 0; at < 205; at += 1)
     rememberSlideCamera("u1", `s${at}`, { x: 0.5, y: 0.5, z: 2 }, t0 + at);
   const stored = JSON.parse(data.get("parfocal.slide-cameras") ?? "{}") as Record<string, object>;
-  assert.equal(Object.keys(stored["u1"] ?? {}).length, 200);
+  assert.equal(Object.keys(Object.values(stored)[0] ?? {}).length, 200);
   assert.deepEqual(recallSlideCamera("u1", "s4", t0 + 300), {});
   assert.deepEqual(recallSlideCamera("u1", "s5", t0 + 300), { x: 0.5, y: 0.5, z: 2 });
   assert.deepEqual(recallSlideCamera("u1", "s204", t0 + 300), { x: 0.5, y: 0.5, z: 2 });
