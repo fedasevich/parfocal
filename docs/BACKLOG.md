@@ -558,7 +558,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Size: S.
 
 - [ ] FOUND-031 · Heavy dependency and lazy loading audit
-  Using the FOUND-030 report, find the heaviest dependencies and the code the first page loads but does not show, such as dialogs, admin pages and charts. Move it behind `React.lazy` or dynamic imports, replace or trim the heaviest dependencies where a lighter one does the job, and lower the first-page budget in `perf-budgets.json` to the new size plus 10 KB of headroom. Write the before and after sizes in a result file and note in `knowledge/` how to repeat the audit, so it runs again at each milestone.
+  Every route page, admin and the form pages included, is already its own lazy chunk through TanStack Router `autoCodeSplitting` since SHELL-001 (routes and code splitting), so look below the page level. Using the FOUND-030 report, find the heaviest dependencies and the shell code the first page loads but does not show, such as dialogs, the jobs tray, the bell, the settings shortcut and section tables and rarely used Base UI parts. Move it behind `React.lazy` or dynamic imports, replace or trim the heaviest dependencies where a lighter one does the job, and lower the first-page budget in `perf-budgets.json` to the new size plus 10 KB of headroom. Write the before and after sizes in a result file and note in `knowledge/` how to repeat the audit, so it runs again at each milestone.
   Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
   Depends on FOUND-030.
   Size: M.
