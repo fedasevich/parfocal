@@ -208,6 +208,9 @@ importers:
 
   apps/e2e:
     devDependencies:
+      '@parfocal/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@parfocal/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
