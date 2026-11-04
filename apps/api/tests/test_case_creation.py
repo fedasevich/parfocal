@@ -6,7 +6,14 @@ from typing import Any
 import pytest
 from db_support import ApiAs
 from fastapi.testclient import TestClient
-from workspace_support import Workspace, join_project, make_project, make_workspace, owner
+from workspace_support import (
+    Workspace,
+    give_security_contact,
+    join_project,
+    make_project,
+    make_workspace,
+    owner,
+)
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
@@ -41,6 +48,7 @@ class Lab:
 
 def make_lab(database: str) -> Lab:
     workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    give_security_contact(database, workspace.tenant_id)
     lab = Lab(
         workspace,
         make_project(database, workspace.tenant_id, "clinical"),

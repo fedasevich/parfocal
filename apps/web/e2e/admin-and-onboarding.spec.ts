@@ -296,3 +296,27 @@ test("the workspace settings console saves lock times, defaults, tiers and annou
   await page.getByRole("button", { name: "End: Rounds move to 09:00" }).click();
   await expect(page.getByRole("button", { name: "End: Rounds move to 09:00" })).toHaveCount(0);
 });
+
+test("the security contact is changed, removed and restored from workspace settings", async ({
+  page,
+}) => {
+  await page.goto("/admin?section=settings");
+  const contact = page.getByRole("textbox", { name: "Security contact" });
+  const save = page.getByRole("button", { name: "Save" });
+  await expect(contact).toHaveValue("security@lab.example");
+  await expect(save).toBeDisabled();
+  await contact.fill("not an address");
+  await expect(save).toBeDisabled();
+  await contact.fill(" Breach@Hospital.Example ");
+  await save.click();
+  await expect(
+    page.getByText("Security incidents are reported to breach@hospital.example."),
+  ).toBeVisible();
+  await expect(contact).toHaveValue("breach@hospital.example");
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByText("Security contact removed.")).toBeVisible();
+  await expect(contact).toHaveValue("");
+  await expect(page.getByText("Needed before any project holds clinical data.")).toBeVisible();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(contact).toHaveValue("breach@hospital.example");
+});

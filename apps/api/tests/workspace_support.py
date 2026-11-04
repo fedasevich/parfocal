@@ -158,3 +158,12 @@ def make_slide(
             )[0][0]
         )
     )
+
+
+def give_security_contact(database: str, tenant_id: uuid.UUID) -> None:
+    owner(
+        database,
+        "INSERT INTO workspace_settings (tenant_id, security_contact) "
+        f"VALUES ('{tenant_id}', 'security@example.org') "
+        "ON CONFLICT (tenant_id) DO UPDATE SET security_contact = EXCLUDED.security_contact",
+    )

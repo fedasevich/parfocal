@@ -59,6 +59,7 @@ from parfocal_api.tables import (
     uploads,
     users,
     verdicts,
+    workspace_settings,
 )
 from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import async_database_url, metadata
@@ -377,6 +378,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
     "setWorkspaceSettings": lambda _: Call(
         "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
+    ),
+    "getSecurityContact": lambda _: Call("GET", "/api/tenant/security-contact"),
+    "setSecurityContact": lambda _: Call(
+        "PUT", "/api/tenant/security-contact", {"email": "security@example.test"}
     ),
     "setModelTier": lambda _: Call(
         "PUT", "/api/tenant/model-tiers/outline/fast", {"name": "hovernet"}
@@ -1051,6 +1056,11 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 PatientIdentity("Doomed Patient"),
             )
             spare_project = await seed_project(connection, tenant_id)
+            await connection.execute(
+                insert(workspace_settings).values(
+                    tenant_id=tenant_id, security_contact="security@example.test"
+                )
+            )
             sample_project = await seed_project(connection, tenant_id)
             await connection.execute(
                 update(projects).where(projects.c.id == sample_project).values(sample=True)

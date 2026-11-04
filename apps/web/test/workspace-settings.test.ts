@@ -8,10 +8,12 @@ import {
   durationText,
   endsAtFor,
   isAnnouncementText,
+  isSecurityContact,
   modelsForTask,
   NOT_CHOSEN,
   patientBannerChange,
   patientBannerOf,
+  securityContactOf,
   tierCell,
   tumorShareChange,
   tumorShareOf,
@@ -143,4 +145,13 @@ test("locking patient names saves the lab's value and keeps the other locks", ()
     values: { patient_names: "initials" },
     locked: ["lock_after_minutes"],
   });
+});
+
+test("a security contact is one trimmed lowercase email address", () => {
+  assert.equal(securityContactOf("  Breach@Hospital.Example "), "breach@hospital.example");
+  assert.equal(isSecurityContact("breach@hospital.example"), true);
+  const tooLong = "x".repeat(320).concat("@a.eu");
+  for (const text of ["", "breach", "a@b", "two words@hospital.example", tooLong]) {
+    assert.equal(isSecurityContact(text), false, text);
+  }
 });

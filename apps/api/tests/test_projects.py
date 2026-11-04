@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
-from workspace_support import Workspace, make_workspace, owner
+from workspace_support import Workspace, give_security_contact, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
@@ -20,7 +20,9 @@ PEOPLE = {
 
 
 def team(database: str) -> Workspace:
-    return make_workspace(database, PEOPLE, admins={"admin"})
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    give_security_contact(database, workspace.tenant_id)
+    return workspace
 
 
 def create(api: ApiAs, who: MemberPrincipal, **body: Any) -> Any:

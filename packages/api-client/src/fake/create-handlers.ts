@@ -1,6 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { CaseDraft, ProjectDraft } from "../generated/api.ts";
 import { toCaseDetail } from "./case-handlers.ts";
+import { liveSecurityContact } from "./console-handlers.ts";
 import {
   cases,
   type ProjectCode,
@@ -37,6 +38,13 @@ const nextProjectNumber = () =>
 export const createdRecordHandlers = (): RequestHandler[] => [
   http.post("*/api/projects", async ({ request }) => {
     const draft = (await request.json()) as ProjectDraft;
+    if (draft.privacy_mode === "clinical" && liveSecurityContact() === null) {
+      return problem(
+        409,
+        "Set the workspace security contact before it holds clinical data",
+        "security-contact-missing",
+      );
+    }
     const number = nextProjectNumber();
     const project: ScenarioProject = {
       code: `P${String(number).padStart(2, "0")}` as ProjectCode,

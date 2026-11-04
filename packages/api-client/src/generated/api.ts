@@ -3203,6 +3203,14 @@ export const SearchScope = {
   patients: "patients",
 } as const;
 
+export interface SecurityContact {
+  email: string | null;
+}
+
+export interface SecurityContactChange {
+  email: Email | null;
+}
+
 /**
  * @minimum 1
  * @maximum 365
@@ -41113,4 +41121,357 @@ export const useSetWorkspaceSettings = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetWorkspaceSettingsMutationOptions(options), queryClient);
+};
+
+export type getSecurityContactResponse200 = {
+  data: SecurityContact;
+  status: 200;
+};
+
+export type getSecurityContactResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSecurityContactResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSecurityContactResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSecurityContactResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSecurityContactResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSecurityContactResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSecurityContactResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSecurityContactResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSecurityContactResponseSuccess = getSecurityContactResponse200 & {
+  headers: Headers;
+};
+export type getSecurityContactResponseError = (
+  | getSecurityContactResponse400
+  | getSecurityContactResponse401
+  | getSecurityContactResponse403
+  | getSecurityContactResponse404
+  | getSecurityContactResponse409
+  | getSecurityContactResponse422
+  | getSecurityContactResponse429
+  | getSecurityContactResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSecurityContactResponse =
+  | getSecurityContactResponseSuccess
+  | getSecurityContactResponseError;
+
+export const getGetSecurityContactUrl = () => {
+  return `/api/tenant/security-contact`;
+};
+
+/**
+ * @summary Get Security Contact
+ */
+export const getSecurityContact = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSecurityContactResponse> => {
+  return apiFetch<getSecurityContactResponse>(getGetSecurityContactUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSecurityContactQueryKey = () => {
+  return [`/api/tenant/security-contact`] as const;
+};
+
+export const getGetSecurityContactQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSecurityContact>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityContact>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSecurityContactQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecurityContact>>> = ({ signal }) =>
+    getSecurityContact({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSecurityContact>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSecurityContactQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSecurityContact>>
+>;
+export type GetSecurityContactQueryError = Problem;
+
+export function useGetSecurityContact<
+  TData = Awaited<ReturnType<typeof getSecurityContact>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityContact>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecurityContact>>,
+          TError,
+          Awaited<ReturnType<typeof getSecurityContact>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecurityContact<
+  TData = Awaited<ReturnType<typeof getSecurityContact>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecurityContact>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecurityContact>>,
+          TError,
+          Awaited<ReturnType<typeof getSecurityContact>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecurityContact<
+  TData = Awaited<ReturnType<typeof getSecurityContact>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityContact>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Security Contact
+ */
+
+export function useGetSecurityContact<
+  TData = Awaited<ReturnType<typeof getSecurityContact>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityContact>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSecurityContactQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setSecurityContactResponse200 = {
+  data: SecurityContact;
+  status: 200;
+};
+
+export type setSecurityContactResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setSecurityContactResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setSecurityContactResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setSecurityContactResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setSecurityContactResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setSecurityContactResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setSecurityContactResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setSecurityContactResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setSecurityContactResponseSuccess = setSecurityContactResponse200 & {
+  headers: Headers;
+};
+export type setSecurityContactResponseError = (
+  | setSecurityContactResponse400
+  | setSecurityContactResponse401
+  | setSecurityContactResponse403
+  | setSecurityContactResponse404
+  | setSecurityContactResponse409
+  | setSecurityContactResponse422
+  | setSecurityContactResponse429
+  | setSecurityContactResponse500
+) & {
+  headers: Headers;
+};
+
+export type setSecurityContactResponse =
+  | setSecurityContactResponseSuccess
+  | setSecurityContactResponseError;
+
+export const getSetSecurityContactUrl = () => {
+  return `/api/tenant/security-contact`;
+};
+
+/**
+ * @summary Set Security Contact
+ */
+export const setSecurityContact = async (
+  securityContactChange: SecurityContactChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setSecurityContactResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setSecurityContactResponse>(getSetSecurityContactUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(securityContactChange),
+  });
+};
+
+export const getSetSecurityContactMutationKey = () => ["setSecurityContact"] as const;
+
+export const getSetSecurityContactMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setSecurityContact>>,
+    TError,
+    SetSecurityContactMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setSecurityContact>>,
+  TError,
+  SetSecurityContactMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetSecurityContactMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setSecurityContact>>,
+    SetSecurityContactMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setSecurityContact(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetSecurityContactMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setSecurityContact>>
+>;
+export type SetSecurityContactMutationBody = SecurityContactChange;
+export type SetSecurityContactMutationError = Problem;
+export type SetSecurityContactMutationVariables = { data: SecurityContactChange };
+
+/**
+ * @summary Set Security Contact
+ */
+export const useSetSecurityContact = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setSecurityContact>>,
+      TError,
+      SetSecurityContactMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setSecurityContact>>,
+  TError,
+  SetSecurityContactMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetSecurityContactMutationOptions(options), queryClient);
 };

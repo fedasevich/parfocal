@@ -1069,6 +1069,7 @@ workspace_settings = Table(
     Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("values", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
     Column("locked", ARRAY(String(40)), nullable=False, server_default="{}", info=OPERATIONAL),
+    Column("security_contact", String(320), nullable=True, info=PERSONAL),
     Column(
         "updated_at",
         DateTime(timezone=True),

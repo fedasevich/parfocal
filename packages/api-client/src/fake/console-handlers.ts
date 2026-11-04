@@ -3,6 +3,8 @@ import type {
   Announcement,
   LabSettings,
   MySettingLayers,
+  SecurityContact,
+  SecurityContactChange,
   SessionPolicyChange,
   TierChoice,
   TierMapping,
@@ -22,16 +24,23 @@ let lab: LabSettings = { values: {}, locked: [] };
 const seededPersonal = { home_layout: "both" };
 let personal: Record<string, unknown> = { ...seededPersonal };
 let tiers: TierMapping[] = copyOfTiers();
+const seededSecurityContact = "security@lab.example";
+let securityContact: string | null = seededSecurityContact;
 
 export const resetConsoleActions = () => {
   lab = { values: {}, locked: [] };
   personal = { ...seededPersonal };
   tiers = copyOfTiers();
+  securityContact = seededSecurityContact;
   resetAnnouncementBoard();
   Object.assign(sessionPolicy, seededPolicy);
 };
 
 export const liveModelTiers = (): TierMapping[] => tiers.map((mapping) => ({ ...mapping }));
+
+export const liveSecurityContact = (): string | null => securityContact;
+
+const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export const liveAnnouncements = (): Announcement[] => currentAnnouncements().map(toAnnouncement);
 
@@ -124,6 +133,18 @@ export function consoleHandlers(): RequestHandler[] {
       }
       lab = { values, locked };
       return HttpResponse.json(liveWorkspaceSettings());
+    }),
+    http.get("*/api/tenant/security-contact", () =>
+      HttpResponse.json<SecurityContact>({ email: securityContact }),
+    ),
+    http.put("*/api/tenant/security-contact", async ({ request }) => {
+      const change = (await request.json()) as SecurityContactChange;
+      const email = change.email?.trim().toLowerCase() ?? null;
+      if (email !== null && (email.length > 320 || !emailPattern.test(email))) {
+        return problem(422, "invalid-request", "Enter an email address");
+      }
+      securityContact = email;
+      return HttpResponse.json<SecurityContact>({ email });
     }),
     http.put("*/api/tenant/session-policy", async ({ request }) => {
       const change = (await request.json()) as SessionPolicyChange;

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from test_annotations import make_class
 from test_blinding import make_result_set
 from workspace_support import (
+    give_security_contact,
     join_project,
     make_case,
     make_project,
@@ -153,9 +154,11 @@ def rights_of(api: ApiAs, lead: MemberPrincipal, project: str) -> dict[str, str 
 
 
 def test_owners_and_reviewers_sign_out_own_cases_by_default(api: ApiAs, database: str) -> None:
-    people = make_workspace(
+    workspace = make_workspace(
         database, {"lead": Role.RESEARCHER, "reader": Role.REVIEWER, "viewer": Role.REVIEWER}
-    ).people
+    )
+    give_security_contact(database, workspace.tenant_id)
+    people = workspace.people
     lead = people["lead"]
     created = api(lead).post(PROJECTS, json={"name": "Clinical", "privacy_mode": "clinical"})
     assert created.status_code == 201, created.text

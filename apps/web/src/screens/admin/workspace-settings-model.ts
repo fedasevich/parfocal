@@ -146,6 +146,13 @@ export function endsAtFor(choice: AnnouncementEnd, from: Date): string | null {
   return hours === null ? null : new Date(from.getTime() + hours * 3_600_000).toISOString();
 }
 
+export const securityContactOf = (text: string) => text.trim().toLowerCase();
+
+export const isSecurityContact = (text: string) => {
+  const email = securityContactOf(text);
+  return email.length <= 320 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+};
+
 export const isAnnouncementText = (text: string) => text.trim().length > 0 && text.length <= 280;
 
 export type PatientBannerSettings = {
