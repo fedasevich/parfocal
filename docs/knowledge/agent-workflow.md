@@ -88,7 +88,7 @@ The lead worktree and its scripts, in `scripts/lead/`:
 - `claim.sh ID...` claims in the lead and commits without pushing.
 - Each agent runs with `isolation: "worktree"` and commits only on its own branch.
 - `merge.sh ID BRANCH "log text" [review note]`:
-  - It merges the branch, numbers any `0237-*.md` ADR, runs `pnpm install` and `pnpm -s verify`, writes the note and ticks the task. With a fourth argument it moves the task to review with that note instead.
+  - It merges the branch, numbers any `XXXX-*.md` ADR, runs `pnpm install` and `pnpm -s verify`, writes the note and ticks the task. With a fourth argument it moves the task to review with that note instead.
   - It commits, removes the agent's worktree and branch, and prints `MERGED-OK`.
   - It stops with `MERGE CONFLICT` or `VERIFY FAILED` and leaves the fix to the lead.
 - `push.sh` pushes. `merge.sh` calls it after every third merge, so CI runs in batches and failure emails stay few. Run `push.sh` before ending a run.
