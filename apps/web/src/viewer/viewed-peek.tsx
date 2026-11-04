@@ -1,7 +1,7 @@
 import { WholeSlidePeek } from "@parfocal/ui/components/smart-minimap";
 import { useEffect, useMemo } from "react";
 import { runCells, seenRuns } from "./seen-runs.ts";
-import type { CoverageRaster, ViewerEngine } from "./viewer-engine.ts";
+import type { CoverageRaster, TissueRaster, ViewerEngine } from "./viewer-engine.ts";
 
 const jumpCells = 12;
 const blankSlide = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
@@ -9,16 +9,18 @@ const blankSlide = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 export function ViewedPeek({
   engine,
   raster,
+  tissue,
   percent,
   onClose,
 }: {
   engine: ViewerEngine;
   raster: CoverageRaster;
+  tissue: TissueRaster | null;
   percent: number;
   onClose: () => void;
 }) {
   const { cell, columns, rows } = raster.grid;
-  const runs = useMemo(() => seenRuns(raster), [raster]);
+  const runs = useMemo(() => seenRuns(raster, tissue), [raster, tissue]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();

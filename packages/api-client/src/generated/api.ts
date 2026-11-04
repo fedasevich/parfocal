@@ -3675,6 +3675,13 @@ export interface SlideState {
   reviewers: ReviewerState[];
 }
 
+export interface SlideTissue {
+  slide_id: string;
+  grid: CoverageGrid;
+  tissue: string;
+  tissue_cells: number;
+}
+
 export interface SortedCase {
   label: string;
   case_id: string | null;
@@ -44288,3 +44295,190 @@ export const useRecordSlideCoverage = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getRecordSlideCoverageMutationOptions(options), queryClient);
 };
+
+export type getSlideTissueResponse200 = {
+  data: SlideTissue;
+  status: 200;
+};
+
+export type getSlideTissueResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideTissueResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideTissueResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideTissueResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideTissueResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideTissueResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideTissueResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideTissueResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideTissueResponseSuccess = getSlideTissueResponse200 & {
+  headers: Headers;
+};
+export type getSlideTissueResponseError = (
+  | getSlideTissueResponse400
+  | getSlideTissueResponse401
+  | getSlideTissueResponse403
+  | getSlideTissueResponse404
+  | getSlideTissueResponse409
+  | getSlideTissueResponse422
+  | getSlideTissueResponse429
+  | getSlideTissueResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideTissueResponse = getSlideTissueResponseSuccess | getSlideTissueResponseError;
+
+export const getGetSlideTissueUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/tissue`;
+};
+
+/**
+ * @summary Get Slide Tissue
+ */
+export const getSlideTissue = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideTissueResponse> => {
+  return apiFetch<getSlideTissueResponse>(getGetSlideTissueUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideTissueQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/tissue`] as const;
+};
+
+export const getGetSlideTissueQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideTissue>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideTissueQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideTissue>>> = ({ signal }) =>
+    getSlideTissue(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideTissueQueryResult = NonNullable<Awaited<ReturnType<typeof getSlideTissue>>>;
+export type GetSlideTissueQueryError = Problem;
+
+export function useGetSlideTissue<
+  TData = Awaited<ReturnType<typeof getSlideTissue>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideTissue>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideTissue>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideTissue<
+  TData = Awaited<ReturnType<typeof getSlideTissue>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideTissue>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideTissue>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideTissue<
+  TData = Awaited<ReturnType<typeof getSlideTissue>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Tissue
+ */
+
+export function useGetSlideTissue<
+  TData = Awaited<ReturnType<typeof getSlideTissue>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideTissue>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideTissueQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

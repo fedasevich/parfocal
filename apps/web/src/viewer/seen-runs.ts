@@ -1,15 +1,17 @@
-import type { CoverageRaster } from "./viewer-engine.ts";
+import type { CoverageRaster, TissueRaster } from "./viewer-engine.ts";
 
 export type SeenRun = { row: number; start: number; length: number };
 
-export function seenRuns(raster: CoverageRaster): SeenRun[] {
+export function seenRuns(raster: CoverageRaster, tissue: TissueRaster | null = null): SeenRun[] {
   const { columns, rows } = raster.grid;
   const runs: SeenRun[] = [];
   for (let row = 0; row < rows; row += 1) {
     let start = -1;
     for (let column = 0; column <= columns; column += 1) {
       const index = row * columns + column;
-      const seen = column < columns && ((raster.seen[index >> 3] ?? 0) & (1 << (index & 7))) !== 0;
+      const bit = 1 << (index & 7);
+      const onTissue = tissue === null || ((tissue.tissue[index >> 3] ?? 0) & bit) !== 0;
+      const seen = column < columns && onTissue && ((raster.seen[index >> 3] ?? 0) & bit) !== 0;
       if (seen && start < 0) start = column;
       if (!seen && start >= 0) {
         runs.push({ row, start, length: column - start });

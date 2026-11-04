@@ -15,7 +15,9 @@ import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
+import type { ScanTissue } from "./tissue-scan.ts";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
+import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -83,14 +85,38 @@ export type ViewedLink = {
   onPercent: (percent: number | null) => void;
 };
 
+function ScanKeys({
+  session,
+  host,
+  tissue,
+}: {
+  session: Session;
+  host: HTMLDivElement;
+  tissue: ScanTissue | null;
+}) {
+  const { scan, arrived } = useTissueScan(session.engine, session.module, host, tissue, true);
+  return (
+    <div
+      hidden
+      data-testid="tissue-scan"
+      data-step={scan?.step ?? 0}
+      data-fields={scan?.path.length ?? ""}
+      data-arrived={arrived}
+      data-basis={tissue === null ? "slide" : "tissue"}
+    />
+  );
+}
+
 export function SlideStage({
   slideId,
   areas = [],
   viewed,
+  systematicScan = false,
 }: {
   slideId: string;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
+  systematicScan?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -99,6 +125,7 @@ export function SlideStage({
       slideId={slideId}
       areas={areas}
       viewed={viewed}
+      systematicScan={systematicScan}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -108,11 +135,13 @@ function OpenedSlide({
   slideId,
   areas,
   viewed,
+  systematicScan,
   onRetry,
 }: {
   slideId: string;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
+  systematicScan: boolean;
   onRetry: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
@@ -208,6 +237,7 @@ function OpenedSlide({
       data-coverage-percent={coverage?.percent}
       data-coverage-seen={coverage?.share.seen}
       data-coverage-pending={coverage?.pending}
+      data-coverage-basis={coverage?.share.basis}
       className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
@@ -266,12 +296,16 @@ function OpenedSlide({
         <ViewedPeek
           engine={session.engine}
           raster={coverage.raster}
+          tissue={coverage.tissue}
           percent={coverage.percent}
           onClose={viewed.onPeekClose}
         />
       ) : null}
       {session ? <ViewerKeys session={session} /> : null}
       {session ? <AreaKeys session={session} areas={areas} /> : null}
+      {session && hostNode && systematicScan ? (
+        <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
+      ) : null}
       {session ? (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           <MagnificationControl
