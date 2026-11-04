@@ -269,3 +269,37 @@ test("the theme choice defaults to system and system follows the device", () => 
   assert.equal(effectiveTheme("dark", true), "dark");
   assert.equal(effectiveTheme("light", false), "light");
 });
+
+function channels(hex: string): number[] {
+  const value = hex.replace("#", "");
+  return [0, 2, 4].map((i) => Number.parseInt(value.slice(i, i + 2), 16));
+}
+
+function luminance(rgb: number[]): number {
+  const [r = 0, g = 0, b = 0] = rgb.map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function ratio(a: number[], b: number[]): number {
+  const high = Math.max(luminance(a), luminance(b));
+  const low = Math.min(luminance(a), luminance(b));
+  return (high + 0.05) / (low + 0.05);
+}
+
+for (const [name, tokens] of [
+  ["dark", dark],
+  ["light", light],
+] as const) {
+  test(`the warn tag keeps 4.5:1 on every surface in the ${name} theme`, () => {
+    const warn = channels(tokens.get("warn") ?? "");
+    for (const surface of ["page", "chrome", "chrome-2", "chrome-3"]) {
+      const base = channels(tokens.get(surface) ?? "");
+      const tint = base.map((v, i) => (warn[i] ?? 0) * 0.16 + v * 0.84);
+      const measured = ratio(warn, tint);
+      assert.ok(measured >= 4.5, `${surface} ${measured.toFixed(2)}`);
+    }
+  });
+}
