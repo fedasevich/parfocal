@@ -12,11 +12,14 @@ from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api.display_settings import DisplaySettings
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
 from parfocal_api.tables import (
     Role,
+    adjudication_objects,
+    adjudications,
     annotation_versions,
     annotations,
     announcements,
@@ -26,6 +29,8 @@ from parfocal_api.tables import (
     case_requests,
     class_mappings,
     disagreement_decisions,
+    display_choices,
+    display_presets,
     emergency_grants,
     hidden_models,
     invitations,
@@ -856,6 +861,67 @@ async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(str(seeded.ids["slide"]))
 
 
+async def seed_display_presets(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Preset {uuid.uuid4().hex[:8]}"
+    preset_id = await connection.scalar(
+        insert(display_presets)
+        .values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            task_id=seeded.ids["task"],
+            name=name,
+            settings=DisplaySettings().model_dump(mode="json"),
+        )
+        .returning(display_presets.c.id)
+    )
+    assert isinstance(preset_id, uuid.UUID)
+    seeded.ids["display_preset"] = preset_id
+    seeded.markers.update({name, str(preset_id)})
+
+
+async def seed_display_choices(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(display_choices).values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            user_id=seeded.ids["user"],
+            preset_id=seeded.ids["display_preset"],
+            settings=DisplaySettings(width=3).model_dump(mode="json"),
+        )
+    )
+
+
+async def seed_adjudications(connection: AsyncConnection, seeded: Seeded) -> None:
+    note = f"Adjudication note {uuid.uuid4().hex[:8]}"
+    adjudication_id = await connection.scalar(
+        insert(adjudications)
+        .values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            adjudicator_user_id=seeded.ids["user"],
+            sent_by_user_id=seeded.ids["user"],
+            note=note,
+        )
+        .returning(adjudications.c.id)
+    )
+    assert isinstance(adjudication_id, uuid.UUID)
+    seeded.ids["adjudication"] = adjudication_id
+    seeded.markers.update({note, str(adjudication_id)})
+
+
+async def seed_adjudication_objects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(adjudication_objects).values(
+            adjudication_id=seeded.ids["adjudication"],
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            slide_id=seeded.ids["slide"],
+            kind="region",
+            number=1,
+        )
+    )
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -877,6 +943,10 @@ SEEDERS: dict[str, Seeder] = {
     "model_tiers": seed_model_tiers,
     "hidden_models": seed_hidden_models,
     "slide_coverage": seed_slide_coverage,
+    "display_presets": seed_display_presets,
+    "display_choices": seed_display_choices,
+    "adjudications": seed_adjudications,
+    "adjudication_objects": seed_adjudication_objects,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1116,6 +1186,16 @@ GET_ROUTES = {
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
     "getMyEmailSchedule": Route(Exposure.PUBLIC, lambda _: "/api/me/email-schedule"),
+    "getMyDisplay": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/my-display"
+    ),
+    "listDisplayPresets": Route(Exposure.TENANT, lambda _: "/api/display-presets"),
+    "listAdjudicatorCandidates": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements/adjudicators",
+    ),
+    "listAdjudicationObjects": Route(Exposure.TENANT, lambda _: "/api/adjudications/objects"),
+    "listMyAdjudications": Route(Exposure.TENANT, lambda _: "/api/adjudications"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),
