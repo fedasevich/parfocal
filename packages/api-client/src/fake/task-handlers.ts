@@ -31,6 +31,7 @@ import {
   keepsAgreeAndDisagree,
   toDecisionSettings,
 } from "./decision-settings.ts";
+import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
@@ -199,6 +200,7 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
     question: draft.decision?.question ?? null,
   },
   counts_as_changes: [],
+  display: draft.display ?? taskDisplayFor(newTask.code),
   created_by_user_id: people.DH.id,
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
   slide_count: draft.result_sets?.length ?? draft.slide_ids?.length ?? 0,

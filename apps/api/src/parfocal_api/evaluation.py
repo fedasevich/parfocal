@@ -11,6 +11,7 @@ from sqlalchemy.types import Integer, Uuid
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import choice_value
+from parfocal_api.display_settings import TaskDisplaySettings, display_of
 from parfocal_api.opinions import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
@@ -75,6 +76,12 @@ class DecisionCounts(BaseModel):
     answers: dict[str, int]
 
 
+class PresetUse(BaseModel):
+    user_id: uuid.UUID
+    preset: str | None
+    objects: int
+
+
 class Evaluation(BaseModel):
     task_id: uuid.UUID
     sample: bool
@@ -89,6 +96,8 @@ class Evaluation(BaseModel):
     cell_agreement_between_reviewers: RateOut
     reasons: list[tuple[str, int]]
     opinions: list[OpinionOut]
+    display: TaskDisplaySettings
+    presets: list[PresetUse]
 
 
 class EvaluationHiddenError(ForbiddenError):
@@ -368,6 +377,16 @@ async def decision_counts(
     )
 
 
+async def preset_uses(connection: AsyncConnection, task_id: uuid.UUID) -> list[PresetUse]:
+    rows = await connection.execute(
+        select(verdicts.c.user_id, verdicts.c.preset, func.count())
+        .where(verdicts.c.task_id == task_id)
+        .group_by(verdicts.c.user_id, verdicts.c.preset)
+    )
+    found = [PresetUse(user_id=user, preset=preset, objects=count) for user, preset, count in rows]
+    return sorted(found, key=lambda use: (str(use.user_id), use.preset or ""))
+
+
 def fleiss_of(objects: list[engine.AiObject]) -> float | None:
     reviewers = {person for item in objects for person in item.verdicts}
     if len(reviewers) < 3:
@@ -428,4 +447,6 @@ async def evaluate(connection: AsyncConnection, task: Any) -> Evaluation:
         cell_agreement_between_reviewers=rate(between),
         reasons=engine.reasons(objects),
         opinions=await opinion_summaries(connection, task_id),
+        display=display_of(task.display),
+        presets=await preset_uses(connection, task_id),
     )

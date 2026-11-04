@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.display_settings import ConfidenceShown, DisplaySettings, DrawAs
 from parfocal_api.opinion_questions import (
     OUTLINE_QUALITY_QUESTIONS,
     READER_STUDY_QUESTIONS,
@@ -61,6 +62,7 @@ class Presets(BaseModel):
     start_mode: StartMode = StartMode.GUIDED
     split: TaskSplit = TaskSplit.EVERYONE
     decision: DecisionSettings = DecisionSettings()
+    display: DisplaySettings = DisplaySettings()
 
 
 class StudyTemplateDraft(BaseModel):
@@ -174,6 +176,7 @@ BUILT_INS: dict[BuiltInTemplate, StudyTemplateDraft] = {
             start_mode=StartMode.VIEWER,
             split=TaskSplit.EVEN,
             opinion_form=FormChange(questions=OUTLINE_QUALITY_QUESTIONS),
+            display=DisplaySettings(width=1),
         ),
     ),
     BuiltInTemplate.CELL_TYPING: StudyTemplateDraft(
@@ -190,7 +193,10 @@ BUILT_INS: dict[BuiltInTemplate, StudyTemplateDraft] = {
             DisagreementReasons(kind="disagreement-reasons", title="Why reviewers disagreed"),
             WorstObjects(kind="worst-objects", title="Objects, worst first", rows=6),
         ],
-        presets=Presets(objects_to_check=Scope(kind=TaskScope.RANDOM_CELLS, count=200)),
+        presets=Presets(
+            objects_to_check=Scope(kind=TaskScope.RANDOM_CELLS, count=200),
+            display=DisplaySettings(draw_as=DrawAs.DOTS, id_labels=False),
+        ),
     ),
     BuiltInTemplate.READER_STUDY: StudyTemplateDraft(
         name="Reader study, first read without AI",
@@ -218,6 +224,7 @@ BUILT_INS: dict[BuiltInTemplate, StudyTemplateDraft] = {
             first_read=True,
             start_mode=StartMode.VIEWER,
             opinion_form=FormChange(questions=READER_STUDY_QUESTIONS),
+            display=DisplaySettings(confidence=ConfidenceShown.HIDDEN),
         ),
     ),
 }

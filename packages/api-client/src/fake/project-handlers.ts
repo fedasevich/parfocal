@@ -20,6 +20,7 @@ import type {
   Template,
 } from "../generated/api.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
+import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   cases,
@@ -163,6 +164,7 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
     study_template_version: null,
     decision: decisionSettingsFor(task.code),
     counts_as_changes: countsAsChangesFor(task.code),
+    display: taskDisplayFor(task.code),
     created_by_user_id: people[project.owner].id,
     created_at: `${task.sentOn}T09:00:00+02:00`,
     slide_count: task.slides,

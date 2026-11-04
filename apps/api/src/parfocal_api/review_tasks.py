@@ -13,6 +13,12 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import FirstReadStartedError, task_started
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.display_settings import (
+    DisplaySettings,
+    TaskDisplaySettings,
+    display_of,
+    stored_display,
+)
 from parfocal_api.notifications import deliver_after_commit
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -117,6 +123,7 @@ class TaskDraft(BaseModel):
     study_template_id: uuid.UUID | None = None
     study_template_version: Annotated[int, Field(ge=1)] | None = None
     decision: DecisionSettings | None = None
+    display: TaskDisplaySettings | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> TaskDraft:
@@ -144,6 +151,7 @@ class TaskChange(BaseModel):
     due_on: date | None = None
     reminder_days: Reminders | None = None
     decision: DecisionSettings | None = None
+    display: TaskDisplaySettings | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> TaskChange:
@@ -185,6 +193,7 @@ class ReviewTask(BaseModel):
     study_template_id: uuid.UUID | None
     study_template_version: int | None
     decision: DecisionSettings
+    display: TaskDisplaySettings
     counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
@@ -229,6 +238,11 @@ class UnknownFormVersionError(BadRequestError):
 class UnknownStudyTemplateError(BadRequestError):
     code = "unknown-study-template"
     title = "This workspace has no such study template version"
+
+
+class UnknownResultSetError(BadRequestError):
+    code = "unknown-result-set"
+    title = "This project has no such result set"
 
 
 class StyleLockedError(ConflictError):
@@ -385,6 +399,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         study_template_id=row.study_template_id,
         study_template_version=row.study_template_version,
         decision=decision_of(row),
+        display=display_of(row.display),
         counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
@@ -573,6 +588,49 @@ async def preset_decision(
     return DecisionSettings.model_validate(stored.get("decision", {}))
 
 
+async def preset_display(
+    connection: AsyncConnection, template_id: uuid.UUID | None, version: int | None
+) -> TaskDisplaySettings:
+    if template_id is None or version is None:
+        return TaskDisplaySettings()
+    presets = await connection.scalar(
+        select(study_template_versions.c.presets).where(
+            study_template_versions.c.template_id == template_id,
+            study_template_versions.c.version == version,
+        )
+    )
+    stored = cast(dict[str, Any], presets or {})
+    return TaskDisplaySettings(defaults=DisplaySettings.model_validate(stored.get("display", {})))
+
+
+async def check_sets(
+    connection: AsyncConnection, project_id: uuid.UUID, settings: DisplaySettings
+) -> None:
+    wanted = set(settings.other_sets.result_set_ids)
+    if not wanted:
+        return
+    found = await connection.scalar(
+        select(func.count()).where(
+            result_sets.c.project_id == project_id, result_sets.c.id.in_(wanted)
+        )
+    )
+    if found != len(wanted):
+        raise UnknownResultSetError("Show only result sets of this project")
+
+
+def lock_details(old: TaskDisplaySettings, after: TaskDisplaySettings) -> dict[str, Any]:
+    changed = [
+        key
+        for key in DisplaySettings.model_fields
+        if getattr(old.defaults, key) != getattr(after.defaults, key)
+    ]
+    return {
+        "defaults_changed": sorted(changed),
+        "locked": sorted(after.locks),
+        "unlocked": sorted(set(old.locks) - set(after.locks)),
+    }
+
+
 def decision_values(decision: DecisionSettings) -> dict[str, Any]:
     return {
         "decision_style": decision.style,
@@ -699,6 +757,10 @@ async def create_review_task(
     decision = draft.decision or await preset_decision(
         connection, draft.study_template_id, template_version
     )
+    display = draft.display or await preset_display(
+        connection, draft.study_template_id, template_version
+    )
+    await check_sets(connection, project_id, display.defaults)
     number = select(func.coalesce(func.max(review_tasks.c.number), 0) + 1).where(
         review_tasks.c.project_id == project_id
     )
@@ -726,6 +788,7 @@ async def create_review_task(
             study_template_id=draft.study_template_id,
             study_template_version=template_version,
             **decision_values(decision),
+            display=stored_display(display),
             created_by_user_id=(
                 principal.user_id if isinstance(principal, MemberPrincipal) else None
             ),
@@ -776,6 +839,7 @@ async def create_review_task(
             "reviewers": len(draft.reviewer_ids),
             "split": draft.split.value,
             "decision_style": decision.style.value,
+            "display_locks": sorted(display.locks),
         }
         | (
             {}
@@ -862,6 +926,13 @@ async def change_review_task(
         raise FirstReadStartedError
     if change.decision is not None:
         values |= await decision_change(connection, principal, row, change.decision)
+    display_change = None
+    if change.display is not None:
+        before = display_of(row.display)
+        if change.display != before:
+            await check_sets(connection, row.project_id, change.display.defaults)
+            values["display"] = stored_display(change.display)
+            display_change = lock_details(before, change.display)
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
     first = change.scope or scope_of(row)
@@ -913,6 +984,15 @@ async def change_review_task(
         task_id,
         {"fields": sorted(change.model_fields_set)},
     )
+    if display_change is not None:
+        await audit(
+            connection,
+            principal,
+            AuditAction.TASK_DISPLAY_CHANGED,
+            row.tenant_id,
+            task_id,
+            display_change,
+        )
     if "due_on" in values and values["due_on"] != row.due_on:
         await tell_due_changed(connection, row, values["due_on"])
         background.add_task(deliver_after_commit, http.app, row.tenant_id)

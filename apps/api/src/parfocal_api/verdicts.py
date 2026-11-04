@@ -35,6 +35,8 @@ from parfocal_api.tables import (
     VerdictReason,
     VerdictValue,
     disagreement_decisions,
+    display_choices,
+    display_presets,
     result_objects,
     result_set_classes,
     review_edits,
@@ -113,6 +115,7 @@ class Verdict(BaseModel):
     updated_at: datetime
     reopened_at: datetime | None = None
     reopened_note: str | None = None
+    preset: str | None = None
 
 
 class ReasonNotForAnswerError(BadRequestError):
@@ -147,6 +150,7 @@ def verdict_of(row: Any) -> Verdict:
         updated_at=row.updated_at,
         reopened_at=row.reopened_at,
         reopened_note=row.reopened_note,
+        preset=row.preset,
     )
 
 
@@ -331,6 +335,17 @@ async def recount_queue_decisions(
         )
 
 
+async def preset_in_force(
+    connection: AsyncConnection, task_id: uuid.UUID, user_id: uuid.UUID | None
+) -> str | None:
+    name = await connection.scalar(
+        select(display_presets.c.name)
+        .join(display_choices, display_choices.c.preset_id == display_presets.c.id)
+        .where(display_choices.c.task_id == task_id, display_choices.c.user_id == user_id)
+    )
+    return name if isinstance(name, str) else None
+
+
 @router.put("/{object_id}", operation_id="saveVerdict", **require(Permission.REVIEW, write=True))
 async def save_verdict(
     task_id: uuid.UUID,
@@ -376,6 +391,7 @@ async def save_verdict(
         "note": draft.note or None,
         "reopened_at": None,
         "reopened_note": None,
+        "preset": await preset_in_force(connection, task_id, me),
     }
     await connection.execute(
         upsert(verdicts)

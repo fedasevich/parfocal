@@ -1554,6 +1554,7 @@ review_tasks = Table(
         info=PERSONAL,
     ),
     Column("question", String(200), nullable=True, info=OPERATIONAL),
+    Column("display", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -1810,6 +1811,7 @@ verdicts = Table(
     Column("note", String(500), nullable=True, info=PHI),
     Column("reopened_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("reopened_note", String(500), nullable=True, info=PHI),
+    Column("preset", String(40), nullable=True, info=PERSONAL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],
@@ -1852,6 +1854,49 @@ verdicts = Table(
         "('wrong_class' = ANY(reasons)) = (reason_class_id IS NOT NULL)",
         name="wrong_class_names_class",
     ),
+)
+
+display_presets = Table(
+    "display_presets",
+    metadata,
+    *owned_ids(),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
+    Column(
+        "task_id", Uuid[uuid.UUID](), ForeignKey("review_tasks.id"), nullable=True, info=OPERATIONAL
+    ),
+    Column("name", String(40), nullable=False, info=PERSONAL),
+    Column("settings", JSONB, nullable=False, info=PERSONAL),
+    *timestamps(),
+    Index(
+        "ix_display_presets_tenant_id_user_id_name",
+        "tenant_id",
+        "user_id",
+        func.lower(text("name")),
+        unique=True,
+    ),
+)
+
+display_choices = Table(
+    "display_choices",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), primary_key=True, info=PERSONAL),
+    Column(
+        "preset_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("display_presets.id", ondelete="SET NULL"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("settings", JSONB, nullable=False, info=PERSONAL),
+    *timestamps(),
 )
 
 
