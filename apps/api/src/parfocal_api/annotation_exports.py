@@ -16,12 +16,13 @@ from parfocal_api.blinding import require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import class_names
 from parfocal_api.permissions import Permission, require
-from parfocal_api.problems import NotFoundError
+from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.result_sets import set_row, slide_row
 from parfocal_api.review_order import Results
 from parfocal_api.reviewed_export import path_parts
 from parfocal_api.tables import (
     AnnotationKind,
+    ResultStatus,
     annotations,
     result_chunks,
     result_objects,
@@ -55,6 +56,11 @@ class ExportFormat(StrEnum):
     GEOJSON = "geojson"
     FLATGEOBUF = "flatgeobuf"
     PARFOCAL = "parfocal"
+
+
+class RunNotReadyError(ConflictError):
+    code = "run-not-ready"
+    title = "Export a run once its import has finished"
 
 
 @dataclass(frozen=True)
@@ -282,6 +288,8 @@ async def plan_of(
     found = await set_row(connection, principal, result_set_id)
     if found.slide_id != slide_id:
         raise NotFoundError("Result set not found")
+    if found.status != ResultStatus.READY:
+        raise RunNotReadyError
     await require_ai_shown(connection, principal, found.project_id, slide_id)
     classes = await set_classes(connection, result_set_id)
     ai = await ai_rows(connection, result_set_id, classes)
