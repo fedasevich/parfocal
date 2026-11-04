@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type RefObject, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -18,7 +18,10 @@ type PolygonLayerProps = {
   document: AnnotationDocument;
   onClose: (points: Float32Array) => void;
   onLeave: () => void;
+  draftControl?: RefObject<DraftControl | null>;
 };
+
+export type DraftControl = { readonly depth: () => number; readonly pop: () => void };
 
 const clickSlopScreenPixels = 3;
 
@@ -41,12 +44,28 @@ export function PolygonLayer({
   document: doc,
   onClose,
   onLeave,
+  draftControl,
 }: PolygonLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [draft, setDraft] = useState<PolygonDraft>([]);
   const [hover, setHover] = useState<Point | null>(null);
   const latest = useRef({ draft, onClose, onLeave, engine });
   latest.current = { draft, onClose, onLeave, engine };
+
+  useEffect(() => {
+    if (!draftControl) return;
+    draftControl.current = {
+      depth: () => latest.current.draft.length,
+      pop: () => {
+        const next = latest.current.draft.slice(0, -1);
+        latest.current.draft = next;
+        setDraft(next);
+      },
+    };
+    return () => {
+      draftControl.current = null;
+    };
+  }, [draftControl]);
 
   useEffect(() => {
     if (!active) {

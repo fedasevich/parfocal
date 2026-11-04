@@ -63,14 +63,14 @@ test("a rebound J shows as the label and fires on the new key only", () => {
   assert.deepEqual(fired(bindings, event("j", "KeyJ"), true), []);
 });
 
-test("every action but undo and Esc takes a new key and fires on it", () => {
+test("every action but undo, redo and Esc takes a new key and fires on it", () => {
   const press = event("F9", "F9", { metaKey: true, altKey: true, shiftKey: true });
   const settable = keyActions.filter(
     (action) => !(action.fixed || action.range || action.direction || action.sequence),
   );
   assert.deepEqual(
     keyActions.filter((action) => action.fixed).map((action) => action.id),
-    ["undo", "esc"],
+    ["undo", "redo", "esc"],
   );
   for (const action of settable) {
     const next = capture(startRecording(freshShortcuts(), action.id, 0), press);
