@@ -5,6 +5,7 @@ export function saveStatusText(state: SaveState, unsaved: number): string | null
   if (state === "saving") return "Saving";
   if (state === "saved") return "All edits saved";
   if (state === "failed") return "Some edits were not saved";
+  if (state === "conflict") return "A colleague changed a shape you edited";
   return unsaved === 1
     ? "Not connected, 1 edit waiting to save"
     : `Not connected, ${unsaved} edits waiting to save`;
@@ -13,7 +14,12 @@ export function saveStatusText(state: SaveState, unsaved: number): string | null
 export function SaveStatus({ state, unsaved }: { state: SaveState; unsaved: number }) {
   const text = saveStatusText(state, unsaved);
   if (text === null) return null;
-  const tone = state === "failed" ? "text-bad" : state === "retrying" ? "text-warn" : "text-fg-dim";
+  const tone =
+    state === "failed"
+      ? "text-bad"
+      : state === "retrying" || state === "conflict"
+        ? "text-warn"
+        : "text-fg-dim";
   return (
     <p
       role={state === "failed" ? "alert" : "status"}
