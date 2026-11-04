@@ -7,6 +7,12 @@ import {
   type TyperEvidence,
   type WordingSetting,
 } from "@parfocal/ui/lib/confidence-words";
+import {
+  classCount,
+  type NumberLineClass,
+  numberLineLabel,
+  numberLineTotals,
+} from "@parfocal/ui/lib/number-line";
 import { resultChipText, type TumorShareResult } from "@parfocal/ui/lib/tumor-share";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -324,9 +330,7 @@ function ZoneRow({ objectId, text, pinned = false, className, ...props }: ZoneRo
 }
 
 type NumberLineProps = React.ComponentProps<"div"> & {
-  sure: number;
-  unsure: number;
-  total: number;
+  classes: readonly NumberLineClass[];
   result?: TumorShareResult | null;
 };
 
@@ -349,23 +353,82 @@ function ResultChip({ result }: { result: TumorShareResult }) {
   );
 }
 
-function NumberLine({ sure, unsure, total, result, className, ...props }: NumberLineProps) {
+const unsureFill = "bg-[repeating-linear-gradient(-45deg,var(--unsure)_0_2px,transparent_2px_5px)]";
+
+function Segment({
+  part,
+  count,
+  max,
+  className,
+  style,
+}: {
+  part: string;
+  count: number;
+  max: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  if (count <= 0) return null;
   return (
-    <div data-slot="number-line" className={cn("grid gap-1.5", className)} {...props}>
-      <div
-        role="img"
-        aria-label={`${sure} sure and ${unsure} unsure of ${total}`}
-        className="flex h-2 overflow-hidden rounded-full bg-track"
-      >
-        <span className="bg-accent-fill" style={{ width: `${(sure / total) * 100}%` }} />
+    <span
+      data-part={part}
+      data-count={count}
+      className={cn("block h-full", className)}
+      style={{ width: `${(count / max) * 100}%`, ...style }}
+    />
+  );
+}
+
+function NumberLine({ classes, result, className, ...props }: NumberLineProps) {
+  const totals = numberLineTotals(classes);
+  const max = Math.max(1, ...classes.map(classCount));
+  const grand = Math.max(1, totals.total);
+  const number = (value: number) => value.toLocaleString("en-US");
+  return (
+    <div data-slot="number-line" className={cn("grid gap-2", className)} {...props}>
+      {classes.map((row) => (
+        <div
+          key={row.name}
+          data-slot="number-line-class"
+          data-class={row.name}
+          className="grid grid-cols-[72px_1fr_56px] items-center gap-2.5 text-body-sm"
+        >
+          <span className="inline-flex items-center gap-1.5 text-fg">
+            <i
+              aria-hidden="true"
+              className="size-2.5 rounded-[3px]"
+              style={{ background: row.color }}
+            />
+            {row.name}
+          </span>
+          <span
+            role="img"
+            aria-label={`${row.name}: ${row.sure} sure, ${row.unsure} unsure`}
+            className="flex h-1.5 overflow-hidden rounded-[3px] bg-track"
+          >
+            <Segment part="sure" count={row.sure} max={max} style={{ background: row.color }} />
+            <Segment part="unsure" count={row.unsure} max={max} className={unsureFill} />
+          </span>
+          <span className="text-right font-mono text-fg-dim tabular-nums">
+            {number(classCount(row))}
+          </span>
+        </div>
+      ))}
+      <div data-slot="number-line-total" className="grid gap-1.5 border-t border-line pt-2">
         <span
-          className="bg-[repeating-linear-gradient(-45deg,var(--unsure)_0_2px,transparent_2px_5px)]"
-          style={{ width: `${(unsure / total) * 100}%` }}
-        />
+          role="img"
+          aria-label={numberLineLabel(totals)}
+          className="flex h-2 overflow-hidden rounded-full bg-track"
+        >
+          <Segment part="checked" count={totals.checked} max={grand} className="bg-agree" />
+          <Segment part="sure" count={totals.sure} max={grand} className="bg-accent-fill" />
+          <Segment part="unsure" count={totals.unsure} max={grand} className={unsureFill} />
+        </span>
+        <span data-slot="number-line-legend" className="text-caption text-fg-dim">
+          {number(totals.checked)} checked by you · {number(totals.sure)} sure ·{" "}
+          {number(totals.unsure)} unsure of {number(totals.total)}
+        </span>
       </div>
-      <span className="text-caption text-fg-dim">
-        {sure.toLocaleString("en-US")} sure · {unsure.toLocaleString("en-US")} unsure
-      </span>
       {result ? <ResultChip result={result} /> : null}
     </div>
   );

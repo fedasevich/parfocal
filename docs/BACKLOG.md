@@ -1904,7 +1904,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: L.
 
-- [ ] HOME-008 · Search page
+- [x] HOME-008 · Search page
   A full search page reached from the sidebar and from the palette's "all results", with scopes (all, projects, cases, slides, object IDs, people, actions), grouped results, and an ID result that opens the slide at the object.
   Done when E2E searches `T2·C145` and part of a full path and opens the slide at the object.
   Depends on CASES-009, CMD-002. Refs mock 1 scene D, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -2282,7 +2282,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] REVIEW-005 · Number line
+- [x] REVIEW-005 · Number line
   One line with the tumor share and its likely range for the slide, the open zone or a drawn outline. Opening it shows counts per class, each bar split into cells the AI is sure about (solid) and unsure cells (hatched in the unsure token), a total row split into checked by you, sure and unsure, and the cutoff result chip from REVIEW-017 when the lab sets a cutoff. Every answer moves cells from unsure to checked at once.
   Done when component tests render seeded counts in each state and a unit test checks that the parts add up to the total.
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).

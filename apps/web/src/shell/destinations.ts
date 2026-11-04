@@ -12,6 +12,7 @@ const query = (params: Record<string, string | undefined>) => {
 export const destinations = {
   home: () => "/",
   myWork: () => "/my-work",
+  search: (q?: string, scope?: string) => `/search${query({ q, scope })}`,
   project: (projectId: string) => `/projects/${projectId}`,
   newProject: () => "/projects/new",
   upload: (projectId: string) => `/projects/${projectId}/upload`,
