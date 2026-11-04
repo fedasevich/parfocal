@@ -1,10 +1,9 @@
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
-import { Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
-import { type ReactNode, useState } from "react";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { type ReactNode, useEffect, useState } from "react";
 import { setDeveloperMode, useDeveloperMode } from "../../shell/developer-mode.ts";
 import { useOverlay } from "../../shell/overlays.ts";
-import { paletteEntries } from "../../shell/palette-commands.ts";
 import { matchCommand } from "../../shell/palette-match.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import {
@@ -16,6 +15,18 @@ import {
 } from "../../shell/search-hits.ts";
 import { plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
+
+type PaletteEntries = typeof import("../../shell/palette-commands.ts")["paletteEntries"];
+
+function useActionSource(): PaletteEntries | undefined {
+  const [source, setSource] = useState<PaletteEntries>();
+  useEffect(() => {
+    void import("../../shell/palette-commands.ts").then((module) =>
+      setSource(() => module.paletteEntries),
+    );
+  }, []);
+  return source;
+}
 
 type SearchState = { q: string; scope: SearchPageScope };
 
@@ -49,6 +60,7 @@ export function SearchScreen({
   const overlay = useOverlay();
   const [draft, setDraft] = useState(state.q);
   const developerMode = useDeveloperMode();
+  const paletteEntries = useActionSource();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = state.q.trim();
   const ready = trimmed.length >= 2;
@@ -59,7 +71,7 @@ export function SearchScreen({
   );
   const hits = ready && !onlyActions ? (okData(found.data)?.hits ?? []) : [];
   const actions =
-    ready && (onlyActions || state.scope === "all")
+    ready && paletteEntries && (onlyActions || state.scope === "all")
       ? paletteEntries({
           projectId: projects[0]?.id ?? "",
           onSlide: false,
@@ -103,18 +115,13 @@ export function SearchScreen({
           }}
         />
       </search>
-      <Tabs
+      <SegmentedControl
+        aria-label="Search scope"
+        wrap
         value={state.scope}
         onValueChange={(value) => change({ scope: value as SearchPageScope })}
-      >
-        <TabsList variant="page">
-          {searchScopes.map((scope) => (
-            <TabsTrigger key={scope.value} value={scope.value}>
-              {scope.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+        options={searchScopes.map((scope) => ({ value: scope.value, label: scope.label }))}
+      />
       <div aria-live="polite" className="grid max-w-[760px] gap-2">
         {!ready ? (
           <p className="m-0 text-body-sm text-fg-dim">Type at least two letters to search.</p>

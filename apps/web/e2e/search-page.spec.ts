@@ -17,10 +17,10 @@ test("the sidebar opens Search and an object ID opens the slide at the object", 
 test("part of a full path finds the object and the scopes narrow the groups", async ({ page }) => {
   await page.goto("/search?q=s26-04812%20c145");
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
-  await page.getByRole("tab", { name: "Projects" }).click();
+  await page.getByRole("radio", { name: "Projects" }).click();
   await expect(page).toHaveURL(/scope=projects/);
   await expect(page.getByRole("region", { name: "Object IDs" })).toHaveCount(0);
-  await page.getByRole("tab", { name: "Object IDs" }).click();
+  await page.getByRole("radio", { name: "Object IDs" }).click();
   await page
     .getByRole("button", { name: /^T1·C145 on A1/ })
     .first()
