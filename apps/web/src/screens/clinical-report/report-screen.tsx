@@ -12,6 +12,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { usePeople } from "../people.ts";
@@ -71,9 +72,11 @@ type ReportScreenProps = {
   step: StepKey | undefined;
   modal: ReportModal | undefined;
   onNavigate: (to: ReportNavigation) => void;
+  keep?: boolean;
 };
 
 export function ReportScreen(props: ReportScreenProps) {
+  const owner = useFlowOwner();
   const { data, pending, failed } = useReportData(props.projectId, props.slideId, props.scene);
   if (!data) {
     return (
@@ -85,18 +88,33 @@ export function ReportScreen(props: ReportScreenProps) {
     );
   }
   return (
-    <ReportFlow key={`${props.scene}-${data.id}-${data.author_user_id}`} data={data} {...props} />
+    <ReportFlow
+      key={`${props.scene}-${data.id}-${data.author_user_id}-${owner}`}
+      owner={owner}
+      data={data}
+      {...props}
+    />
   );
 }
 
 function ReportFlow({
+  owner,
   data,
   scene,
   step,
   modal,
   onNavigate,
-}: ReportScreenProps & { data: ReportData }) {
-  const [report, setReport] = useState(() => sceneReport(data, scene));
+  keep = false,
+}: ReportScreenProps & { data: ReportData; owner: string | undefined }) {
+  const flow = useKeptFlow({
+    owner,
+    id: `clinical-report:${data.id}`,
+    count: data.template.steps.length,
+    draft: sceneReport(data, scene),
+    at: step === undefined ? undefined : data.template.steps.findIndex((s) => s.key === step),
+    keep,
+  });
+  const { draft: report, setDraft: setReport, forget } = flow;
   const [sceneModalOpen, setSceneModalOpen] = useState(() => sceneModal[scene] !== undefined);
   const [focus, setFocus] = useState<string | null>(null);
   const [lastText, setLastText] = useState<"diag" | "micro" | "comment">("micro");
@@ -110,7 +128,8 @@ function ReportFlow({
   const amend = useAmendClinicalReport();
   const target = { projectId: data.project.id, slideId: data.slides[0]?.id ?? "" };
   const steps = data.template.steps;
-  const wanted = step ?? sceneStep[scene];
+  const keptStep = keep ? steps[flow.kept?.current ?? -1]?.key : undefined;
+  const wanted = step ?? keptStep ?? sceneStep[scene];
   const page: StepKey = steps.some((candidate) => candidate.key === wanted) ? wanted : "findings";
   const done = report.signed !== null;
   const sent = !done && report.sent !== null;
@@ -126,11 +145,15 @@ function ReportFlow({
   const projectHref = destinations.project(data.project.id);
 
   useEffect(() => {
+    if (done || sent) forget();
+  }, [done, sent, forget]);
+
+  useEffect(() => {
     if (done || sent) return;
     setReport((current) =>
       current.seen.includes(page) ? current : { ...current, seen: [...current.seen, page] },
     );
-  }, [page, done, sent]);
+  }, [page, done, sent, setReport]);
 
   useEffect(() => {
     if (!focus) return;
@@ -506,6 +529,7 @@ function ReportFlow({
           0,
           steps.findIndex((candidate) => candidate.key === page),
         )}
+        reached={flow.reached}
         onStepSelect={(chosen) => {
           const key = steps[chosen]?.key;
           if (key && report.seen.includes(key)) goTo(key);
