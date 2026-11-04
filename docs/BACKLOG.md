@@ -2402,7 +2402,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-023.
   Size: S.
 
-- [ ] REVIEW-025 · Fake keeps posted threads
+- [x] REVIEW-025 · Fake keeps posted threads
   REVIEW-021 (comment pin) posts a pinned thread through `useCreateThread`, but the api-client fake has no POST threads override, so a posted thread comes back as random mock data and never appears in the fake list.
   Done when an api-client fake test posts a thread with a point anchor and lists it back, and the comment pin E2E sees the new thread in the Comments tab.
   Depends on REVIEW-021.
@@ -2503,10 +2503,16 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [`poc/src/annotations/history.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/history.ts), docs 10, 16, 17.
   Size: M.
 
-- [ ] ANN-014 · Esc ladder
+- [x] ANN-014 · Esc ladder
   Close overlays, then comment card, cancel drag, discard draft, stop model run or discard proposals, deselect vertex, clear selection, leave focus review, back to select tool, close panel. Inputs keep their own Esc.
   Done when a table-driven test asserts the layer peeled in every state.
   Refs doc 30, kit Interaction spec.
+  Size: S.
+
+- [ ] ANN-029 · One Esc owner in the viewer
+  ANN-014 (Esc ladder) added the ordered ladder in apps/web/src/keys/esc-ladder.ts but wired only the comment, selection and focus review rungs into the full viewer. The polygon, select, ruler and annotate view layers still handle Esc on the window themselves, so wiring them as well would fire twice. Give the viewer one Esc owner that asks each layer for its rung, and wire the overlay, drag, draft, run, vertex, tool and panel rungs.
+  Done when a browser test presses Esc repeatedly while drawing a polygon with a comment open and sees each layer peel in the ladder's order, one per press.
+  Depends on ANN-014.
   Size: S.
 
 - [ ] ANN-015 · Layers tab
@@ -2600,7 +2606,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 8.
   Size: M.
 
-- [ ] MEAS-002 · Area and perimeter for closed shapes
+- [x] MEAS-002 · Area and perimeter for closed shapes
   Done when unit tests check areas against analytic shapes.
   Size: S.
 
@@ -3454,7 +3460,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs mock 18.
   Size: M.
 
-- [ ] CMD-003 · `?` opens Shortcuts in Settings
+- [x] CMD-003 · `?` opens Shortcuts in Settings
   `?` and "Keyboard shortcuts" in the more menu open Settings at the Shortcuts section (SET-007). There is no separate read-only sheet, so reference and editing never disagree. The source badge per key (clinical, Figma, QuPath, ours) and every registered action appear there.
   Done when a test confirms `?` opens the section and every registered action appears in it.
   Refs mock 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -4203,7 +4209,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests show a first read asks and stores only its questions, the aided read asks the rest, a task without a first read asks everything, and an old form behaves as before.
   Depends on GUIDE-006, TASK-004. Refs [ADR 0118](adr/0118-blinding-and-a-kept-first-read.md) (blinding and a kept first read).
 
-- [ ] GUIDE-007 · Slide done card with the opinion form
+- [x] GUIDE-007 · Slide done card with the opinion form
   One card in one column ends a slide. It replaces the question card in guided review and is the Opinion tab of the full viewer at panel width. It shows the counts in one line, as in "55 objects checked: 48 agree, 5 disagree, 2 not sure. 1 added.", then the opinion form's questions with "Required" next to the required ones, the submit blockers of TASK-008 and the submit button. Answers save at once as a draft and can change until sign-off. There is no separate opinion screen ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
   Done when component tests cover each question kind, the Required mark, the counts from the mapped decisions of GUIDE-015 and the card at panel width, and E2E answers on the card in guided review and finds the same answers in the full viewer's Opinion tab.
   Depends on GUIDE-006, GUIDE-002, GUIDE-009. Refs mock: guided/done, mock: guided/required, mock: case, doc 44.
