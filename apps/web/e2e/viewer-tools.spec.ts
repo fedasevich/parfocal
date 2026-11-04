@@ -164,9 +164,10 @@ test("a click on the peek goes there and the view back key returns", async ({ pa
   await slide.click({ position: { x: box.width / 2, y: box.height / 4 } });
   await expect(page.getByRole("dialog", { name: "Whole slide" })).toHaveCount(0);
   await expect(page).not.toHaveURL(/peek=true/);
-  await expect(page).toHaveURL(/y=0\.25/);
+  const centreY = (url: URL) => Math.abs(Number(url.searchParams.get("y")) - 0.25) < 0.01;
+  await expect(page).toHaveURL(centreY);
   await page.keyboard.press("Alt+ArrowLeft");
-  await expect(page).not.toHaveURL(/y=0\.25/);
+  await expect(page).not.toHaveURL(centreY);
 });
 
 test("the ruler adds M1, and Remove takes it away with Undo", async ({ page }) => {
