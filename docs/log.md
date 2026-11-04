@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- LAB-000 (lab research check) ticked: the decisions agent read POC doc 34 with the owner's leave, it matched, and ADR 0189 (developer drawer) is accepted.
+- SEC-018 (incident response runbook) ticked on the owner's answer 42 of 2026-11-04: standard defaults (24 hours to workspaces, 72 hours to the authority, the owner as lead), a paper tabletop recorded, ADR 0186 accepted. TODO: a private place for full breach records.
 - Applied the owner's answers of 2026-11-04 (SEC-021, GDPR documents on generic defaults): six ADRs accepted, two new ADRs (threads on any slide, camera kept per device), seven new tasks, GDPR and incident defaults with a paper tabletop, and the zone and type wording reviewed in ADR 0194 in place of a pathologist.
 - Fixed the test job: packages/api-client/src/generated/api.ts grew past 1 MB with the night's routes, so Biome's default files.maxSize skipped it and pnpm api:generate left it unformatted. biome.json now sets maxSize to 4 MB, and the regenerated client is committed. The golden, axe and web dev-server failures noted above are still open.
 - Correction to the CI note above: the test job failed too, not passed. Its pnpm api:generate step left packages/api-client/src/generated/api.ts modified. Regenerating in the lead worktree gives the same openapi.json, and the formatted api.ts differs from the committed one only in import placement, so the CI diff is probably formatting. In ../parfocal-wt/lead, biome reports src/generated as ignored, so its formatting step there does nothing and could not be compared. TODO: run pnpm api:generate in the main checkout, commit the result and check that the test job goes green.

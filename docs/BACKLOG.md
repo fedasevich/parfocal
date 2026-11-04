@@ -868,7 +868,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests cover break-glass flow and its audit entries.
   Size: M.
 
-- [ ] SEC-018 · Incident response and breach notification runbook
+- [x] SEC-018 · Incident response and breach notification runbook
   Done when the runbook exists, a tabletop exercise is recorded, and contacts are configured for alerting.
   Size: M.
 
@@ -1487,7 +1487,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ## 31 LAB · Developer drawer and HUD
 
-- [ ] LAB-000 · Research check
+- [x] LAB-000 · Research check
   Done when the drawer's control list is confirmed against doc 34 lab-tagged leaves and kit W25.
   Size: S.
 
