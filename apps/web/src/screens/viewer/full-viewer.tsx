@@ -39,6 +39,7 @@ import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
+import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useAnswerKeys } from "../review/answer-keys.ts";
@@ -519,6 +520,20 @@ function ViewerBody({
     [],
   );
   const meId = session.meId;
+  useRememberResume(
+    scene === undefined
+      ? {
+          task_id: session.taskId,
+          slide_id: slideId,
+          mode: "viewer",
+          object_id: search.object ?? null,
+          camera:
+            search.x !== undefined && search.y !== undefined && search.z !== undefined
+              ? { x: search.x, y: search.y, z: search.z }
+              : null,
+        }
+      : null,
+  );
   const opened = useRef<string | null>(null);
   useEffect(() => {
     if (opened.current === slideId) return;

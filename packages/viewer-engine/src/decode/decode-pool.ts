@@ -30,9 +30,21 @@ export interface DecodePoolStats {
   readonly lateEvicted: number;
 }
 
+export interface PrefetchStats {
+  readonly queued: number;
+  readonly requested: number;
+  readonly dropped: number;
+  readonly started: number;
+  readonly used: number;
+  readonly joined: number;
+}
+
 export interface DecodePool<Job, Result> {
   readonly size: number;
   request(key: string, job: Job, centre: PoolPoint | null, signal?: AbortSignal): Promise<Result>;
+  prefetch(key: string, job: Job, centre: PoolPoint | null): boolean;
+  dropPrefetch(keep?: ReadonlySet<string>): number;
+  prefetchStats(): PrefetchStats;
   setFocus(point: PoolPoint | null): void;
   stats(): DecodePoolStats;
   idle(): boolean;
@@ -59,6 +71,7 @@ interface Entry<Job, Result> {
   readonly order: number;
   readonly waiters: Set<Waiter<Result>>;
   state: "queued" | "active";
+  low: boolean;
 }
 
 function abortReason(signal: AbortSignal): Error {
@@ -83,6 +96,10 @@ export function createDecodePool<Job, Result>(
   const queue: Entry<Job, Result>[] = [];
   const retained = new Map<string, Result>();
   const freeSlots = Array.from({ length: size }, (_, slot) => size - 1 - slot);
+  const prefetched = new Set<string>();
+  const prefetchCounts = { requested: 0, dropped: 0, started: 0, used: 0, joined: 0 };
+  const lowSlots = Math.max(1, Math.floor(size / 2));
+  let activeLow = 0;
   let focus: PoolPoint | null = null;
   let order = 0;
   let disposed = false;
@@ -106,6 +123,7 @@ export function createDecodePool<Job, Result>(
       const oldest = retained.keys().next();
       if (oldest.done) break;
       retained.delete(oldest.value);
+      prefetched.delete(oldest.value);
       counts.lateEvicted++;
     }
   };
@@ -116,6 +134,10 @@ export function createDecodePool<Job, Result>(
       const candidate = queue[index];
       const current = queue[best];
       if (candidate === undefined || current === undefined) continue;
+      if (candidate.low !== current.low) {
+        if (!candidate.low) best = index;
+        continue;
+      }
       if (focus === null || candidate.centre === null || current.centre === null) continue;
       const nearer =
         distanceSquared(candidate.centre, focus) - distanceSquared(current.centre, focus);
@@ -149,10 +171,18 @@ export function createDecodePool<Job, Result>(
 
   const pump = () => {
     while (!disposed && queue.length > 0 && freeSlots.length > 0) {
-      const [entry] = queue.splice(nextIndex(), 1);
+      const index = nextIndex();
+      const next = queue[index];
+      if (next?.low === true && activeLow >= lowSlots) return;
+      const [entry] = queue.splice(index, 1);
       const slot = freeSlots.pop();
       if (entry === undefined || slot === undefined) return;
       entry.state = "active";
+      const wasLow = entry.low;
+      if (wasLow) {
+        prefetchCounts.started++;
+        activeLow++;
+      }
       counts.dispatched++;
       let running: Promise<Result>;
       try {
@@ -166,6 +196,7 @@ export function createDecodePool<Job, Result>(
           (reason: unknown) => settle(entry, { status: "rejected", reason }),
         )
         .finally(() => {
+          if (wasLow) activeLow--;
           freeSlots.push(slot);
           pump();
         });
@@ -193,15 +224,29 @@ export function createDecodePool<Job, Result>(
         const result = retained.get(key) as Result;
         retained.delete(key);
         counts.lateUsed++;
+        if (prefetched.delete(key)) prefetchCounts.used++;
         return Promise.resolve(result);
       }
       let entry = entries.get(key);
       if (entry === undefined) {
-        entry = { key, job, centre, order: order++, waiters: new Set(), state: "queued" };
+        entry = {
+          key,
+          job,
+          centre,
+          order: order++,
+          waiters: new Set(),
+          state: "queued",
+          low: false,
+        };
         entries.set(key, entry);
         queue.push(entry);
       } else {
         counts.joined++;
+        if (entry.low) {
+          entry.low = false;
+          prefetchCounts.joined++;
+          prefetched.delete(key);
+        }
       }
       const joined = entry;
       return new Promise<Result>((resolve, reject) => {
@@ -218,6 +263,41 @@ export function createDecodePool<Job, Result>(
         signal?.addEventListener("abort", onAbort, { once: true });
         pump();
       });
+    },
+    prefetch(key, job, centre) {
+      if (disposed || retained.has(key) || entries.has(key)) return false;
+      const entry: Entry<Job, Result> = {
+        key,
+        job,
+        centre,
+        order: order++,
+        waiters: new Set(),
+        state: "queued",
+        low: true,
+      };
+      entries.set(key, entry);
+      queue.push(entry);
+      prefetched.add(key);
+      prefetchCounts.requested++;
+      pump();
+      return true;
+    },
+    dropPrefetch(keep) {
+      let dropped = 0;
+      for (let index = queue.length - 1; index >= 0; index--) {
+        const entry = queue[index];
+        if (entry === undefined || !entry.low || entry.waiters.size > 0) continue;
+        if (keep?.has(entry.key)) continue;
+        queue.splice(index, 1);
+        entries.delete(entry.key);
+        prefetched.delete(entry.key);
+        dropped++;
+      }
+      prefetchCounts.dropped += dropped;
+      return dropped;
+    },
+    prefetchStats() {
+      return { queued: queue.filter((entry) => entry.low).length, ...prefetchCounts };
     },
     setFocus(point) {
       focus = point;
@@ -247,6 +327,7 @@ export function createDecodePool<Job, Result>(
       entries.clear();
       queue.length = 0;
       retained.clear();
+      prefetched.clear();
     },
   };
 }

@@ -6,6 +6,7 @@ import {
   EvidenceRow,
   ProgressDots,
   QueueRow,
+  QueueTable,
   QuotedNote,
   ReadinessList,
   ReadinessRow,
@@ -42,7 +43,7 @@ export const Queue: Story = {
     const [selected, setSelected] = useState("T2");
     const [checked, setChecked] = useState<string[]>(["T4"]);
     return (
-      <div className="grid gap-1">
+      <QueueTable aria-label="Queue">
         {rows.map((row) => (
           <QueueRow
             key={row.object}
@@ -62,18 +63,18 @@ export const Queue: Story = {
             }
           />
         ))}
-      </div>
+      </QueueTable>
     );
   },
 };
 
 export const LockedQueue: Story = {
   render: () => (
-    <div className="grid gap-1">
+    <QueueTable aria-label="Locked queue">
       {rows.slice(0, 3).map((row) => (
         <QueueRow key={row.object} object={row.object} slide={row.slide} tag={row.tag} locked />
       ))}
-    </div>
+    </QueueTable>
   ),
 };
 

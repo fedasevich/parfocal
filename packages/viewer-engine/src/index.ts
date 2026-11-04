@@ -90,6 +90,13 @@ export {
   objectivePresets,
   zoomForMagnification,
 } from "./camera/magnification.ts";
+export type {
+  MotionPrediction,
+  MotionPredictor,
+  MotionPredictorTuning,
+  MotionVector,
+} from "./camera/motion-predictor.ts";
+export { createMotionPredictor, motionPredictorTuning } from "./camera/motion-predictor.ts";
 export type { CoastStep, PointerSample, ScreenVelocity, ThrowFeel } from "./camera/physics.ts";
 export {
   coastDecayMs,
@@ -173,6 +180,7 @@ export {
   defaultDecodeWorkers,
   defaultRetainedResults,
   type PoolPoint,
+  type PrefetchStats,
 } from "./decode/decode-pool.ts";
 export {
   createRangeCache,

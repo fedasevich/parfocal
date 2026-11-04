@@ -167,3 +167,70 @@ def test_every_member_gets_a_home_with_the_announcements(api: ApiAs, database: s
         assert [entry["text"] for entry in home(api, s, who)["announcements"]] == [
             "CellViT is now one of the models"
         ]
+
+
+def put_resume(api: ApiAs, s: Study, who: str, **body: Any) -> Any:
+    return api(s.people[who]).put("/api/me/resume", json=body)
+
+
+def test_a_stored_resume_state_wins_while_it_is_newer_than_my_review_activity(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    round_one = task(api, s, name="Round 1", case_ids=[], reviewer_ids=[s.user("first")])
+    judge(database, s, round_one["id"], "first", s.slides[0], 2, "agree", "1 hour")
+    stored = put_resume(
+        api,
+        s,
+        "first",
+        task_id=round_one["id"],
+        slide_id=str(s.slides[1]),
+        mode="viewer",
+        object_id="T3",
+        camera={"x": 1200.5, "y": 800, "z": 3.25},
+    )
+    assert stored.status_code == 200, stored.text
+    assert (stored.json()["mode"], stored.json()["object_id"]) == ("viewer", "T3")
+    resumed = home(api, s, "first")["resume"]
+    assert where(resumed) == ("loose-1", 2, "T3")
+    assert resumed["mode"] == "viewer"
+    assert resumed["camera"] == {"x": 1200.5, "y": 800, "z": 3.25}
+    put_resume(api, s, "first", task_id=round_one["id"], slide_id=str(s.slides[1]), mode="guided")
+    moved = home(api, s, "first")["resume"]
+    assert (where(moved), moved["mode"], moved["camera"]) == (("loose-1", 2, None), "guided", None)
+    judge(database, s, round_one["id"], "first", s.slides[0], 4, "agree")
+    later = home(api, s, "first")["resume"]
+    assert (where(later), later["mode"], later["camera"]) == (("loose-0", 1, "T4"), "guided", None)
+    put_resume(
+        api,
+        s,
+        "first",
+        task_id=round_one["id"],
+        slide_id=str(s.slides[1]),
+        object_id="T1",
+        mode="guided",
+    )
+    assert where(home(api, s, "first")["resume"]) == ("loose-1", 2, "T1")
+    submit(api, s, "first", round_one["id"], s.slides[1])
+    assert where(home(api, s, "first")["resume"]) == ("loose-0", 1, "T4")
+
+
+def test_resume_state_is_kept_only_for_my_own_task_slides(api: ApiAs, database: str) -> None:
+    s = study(database)
+    round_one = task(
+        api,
+        s,
+        name="Round 1",
+        slide_ids=[str(s.slides[0])],
+        case_ids=[],
+        reviewer_ids=[s.user("first")],
+    )
+    body = {"task_id": round_one["id"], "slide_id": str(s.slides[0]), "mode": "guided"}
+    assert put_resume(api, s, "second", **body).status_code == 404
+    assert put_resume(api, s, "outsider", **body).status_code == 404
+    assert put_resume(api, s, "first", **{**body, "slide_id": str(s.slides[1])}).status_code == 404
+    assert put_resume(api, s, "first", **{**body, "mode": "elsewhere"}).status_code == 422
+    assert put_resume(api, s, "first", **body, camera={"x": 1, "y": 2}).status_code == 422
+    assert put_resume(api, s, "first", **body, extra=True).status_code == 422
+    assert put_resume(api, s, "first", **body).status_code == 200
+    assert home(api, s, "second")["resume"] is None

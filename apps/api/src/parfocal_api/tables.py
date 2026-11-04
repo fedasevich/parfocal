@@ -2442,3 +2442,40 @@ slide_coverage = Table(
     Column("seen_cells", Integer, nullable=False, info=PERSONAL),
     *timestamps(),
 )
+
+
+class ResumeMode(StrEnum):
+    GUIDED = "guided"
+    VIEWER = "viewer"
+
+
+resume_states = Table(
+    "resume_states",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id", ondelete="CASCADE"),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "slide_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("slides.id", ondelete="CASCADE"),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column("mode", String(10), nullable=False, info=PERSONAL),
+    Column("object_id", String(40), nullable=True, info=PERSONAL),
+    Column("camera", JSONB(none_as_null=True), nullable=True, info=PERSONAL),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["tenant_id", "user_id"],
+        ["memberships.tenant_id", "memberships.user_id"],
+        ondelete="CASCADE",
+    ),
+    one_of("mode", ResumeMode),
+)

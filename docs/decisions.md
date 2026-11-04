@@ -44,6 +44,15 @@ The contact is required only before a workspace holds clinical data. A de-identi
 
 Your choice:
 
+## 66. Typed search text in the search page URL, from SEC-010 (PHI-safe telemetry)
+
+The search page keeps the typed text in its address, `/search?q=...`, so a typed patient name lands in browser history and anything that records full URLs. Telemetry already drops query strings, and SEC-010 says URLs use ids, never names.
+
+- a. Move the text out of the URL into page state, so a search link opens empty. (recommended)
+- b. Keep it in the URL so searches can be shared and reloaded.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

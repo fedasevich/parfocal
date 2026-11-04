@@ -13,6 +13,11 @@ import {
   numberLineLabel,
   numberLineTotals,
 } from "@parfocal/ui/lib/number-line";
+import {
+  countBarGeometry,
+  type SizeScaleDot,
+  sizeScaleGeometry,
+} from "@parfocal/ui/lib/size-scale";
 import { resultChipText, type TumorShareResult } from "@parfocal/ui/lib/tumor-share";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -150,9 +155,6 @@ function ClassBars({ rows, className, ...props }: ClassBarsProps) {
   );
 }
 
-const logPosition = (mm: number, min: number, max: number) =>
-  ((Math.log10(mm) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 100;
-
 type RangeBarProps = React.ComponentProps<"div"> & {
   min: number;
   max: number;
@@ -160,51 +162,87 @@ type RangeBarProps = React.ComponentProps<"div"> & {
   high: number;
   point: number;
   cuts: number[];
+  dots?: readonly SizeScaleDot[];
+  number?: number;
 };
 
-function rangeGeometry({
+function RangeBar({
   min,
   max,
   low,
   high,
   point,
   cuts,
-}: Omit<RangeBarProps, keyof React.ComponentProps<"div">>) {
-  return {
-    bandLeft: logPosition(low, min, max),
-    bandWidth: logPosition(high, min, max) - logPosition(low, min, max),
-    point: logPosition(point, min, max),
-    cuts: cuts.map((cut) => ({ mm: cut, left: logPosition(cut, min, max) })),
-  };
-}
-
-function RangeBar({ min, max, low, high, point, cuts, className, ...props }: RangeBarProps) {
-  const geometry = rangeGeometry({ min, max, low, high, point, cuts });
+  dots,
+  number,
+  className,
+  ...props
+}: RangeBarProps) {
+  const geometry = sizeScaleGeometry({
+    min,
+    max,
+    low,
+    high,
+    point,
+    cuts,
+    ...(dots ? { dots } : {}),
+  });
   return (
     <div
       data-slot="range-bar"
       role="img"
       aria-label={`${point} mm, between ${low} and ${high} mm`}
-      className={cn("relative mt-3 h-8.5", className)}
+      className={cn("relative mt-3 h-14", className)}
       {...props}
     >
-      <span className="absolute top-2.75 right-0 left-0 h-1 rounded-[2px] bg-chrome-3" />
+      {geometry.zones.map((zone) => (
+        <span
+          key={zone.name}
+          data-zone={zone.name}
+          className="absolute top-0 text-center font-mono text-label text-fg-faint"
+          style={{ left: `${zone.left}%`, width: `${zone.width}%` }}
+        >
+          {zone.name}
+        </span>
+      ))}
+      <span className="absolute top-8.75 right-0 left-0 h-1 rounded-[2px] bg-chrome-3" />
       <span
-        className="absolute top-2 h-2.5 rounded-[5px] bg-c-tumor opacity-55"
+        data-part="band"
+        className="absolute top-8 h-2.5 rounded-[5px] bg-c-tumor opacity-55"
         style={{ left: `${geometry.bandLeft}%`, width: `${geometry.bandWidth}%` }}
       />
+      {geometry.dots.map((dot) => (
+        <span
+          key={dot.number}
+          data-part="dot"
+          data-area={dot.number}
+          className="absolute top-8.5 size-1.5 -translate-x-1/2 rounded-full bg-fg-dim"
+          style={{ left: `${dot.left}%` }}
+        />
+      ))}
       <span
-        className="absolute top-1.5 h-3.5 w-0.75 rounded-[2px] bg-c-tumor"
+        data-part="point"
+        className="absolute top-7 h-3.5 w-0.75 rounded-[2px] bg-c-tumor"
         style={{ left: `${geometry.point}%` }}
       />
+      {number != null ? (
+        <span
+          data-part="point-number"
+          className="absolute top-4 grid size-4 -translate-x-1/2 place-items-center rounded-full bg-c-tumor font-mono text-label font-semibold text-bg"
+          style={{ left: `${geometry.point}%` }}
+        >
+          {number}
+        </span>
+      ) : null}
       {geometry.cuts.map((cut) => (
         <span key={cut.mm}>
           <span
-            className="absolute top-0.75 h-5 w-0 border-l-2 border-dashed border-fg-dim"
+            data-part="cut"
+            className="absolute top-6 h-5 w-0 border-l-2 border-dashed border-fg-dim"
             style={{ left: `${cut.left}%` }}
           />
           <span
-            className="absolute top-5.5 -translate-x-1/2 font-mono text-label text-fg-faint"
+            className="absolute top-11 -translate-x-1/2 font-mono text-label text-fg-faint"
             style={{ left: `${cut.left}%` }}
           >
             {cut.mm} mm
@@ -220,9 +258,18 @@ type StagingHeroProps = Omit<React.ComponentProps<"div">, "title"> & {
   category: string;
   sub: React.ReactNode;
   range: Omit<RangeBarProps, keyof React.ComponentProps<"div">>;
+  count?: { cells: number | null; line?: number; max?: number };
 };
 
-function StagingHero({ title, category, sub, range, className, ...props }: StagingHeroProps) {
+function StagingHero({
+  title,
+  category,
+  sub,
+  range,
+  count,
+  className,
+  ...props
+}: StagingHeroProps) {
   return (
     <div data-slot="staging-hero" className={cn("grid gap-2", className)} {...props}>
       <h3 className="m-0 mt-0.5 flex items-start justify-between gap-2.5 text-title leading-tight font-semibold">
@@ -231,6 +278,20 @@ function StagingHero({ title, category, sub, range, className, ...props }: Stagi
       </h3>
       <p className="m-0 text-body-sm leading-normal text-fg-dim">{sub}</p>
       <RangeBar {...range} />
+      {count ? (
+        <div data-slot="count-block" data-counted={count.cells != null} className="grid gap-0.5">
+          <CountBar
+            count={count.cells ?? 0}
+            {...(count.line != null ? { line: count.line } : {})}
+            {...(count.max != null ? { max: count.max } : {})}
+          />
+          <span className="text-caption text-fg-dim">
+            {count.cells == null
+              ? "Tumor cells not counted yet"
+              : `About ${count.cells} tumor cells, the line is at ${count.line ?? 200}`}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -238,6 +299,7 @@ function StagingHero({ title, category, sub, range, className, ...props }: Stagi
 type CountBarProps = React.ComponentProps<"div"> & { count: number; line?: number; max?: number };
 
 function CountBar({ count, line = 200, max = 400, className, ...props }: CountBarProps) {
+  const geometry = countBarGeometry(count, line, max);
   return (
     <div
       data-slot="count-bar"
@@ -250,13 +312,13 @@ function CountBar({ count, line = 200, max = 400, className, ...props }: CountBa
       <span
         className={cn(
           "absolute top-2 left-0 h-2 rounded-full",
-          count >= line ? "bg-warn" : "bg-accent-fill",
+          geometry.over ? "bg-warn" : "bg-accent-fill",
         )}
-        style={{ width: `${Math.min(100, (count / max) * 100)}%` }}
+        style={{ width: `${geometry.fill}%` }}
       />
       <span
         className="absolute top-0.5 h-5 w-0 border-l-2 border-dashed border-fg-dim"
-        style={{ left: `${(line / max) * 100}%` }}
+        style={{ left: `${geometry.line}%` }}
       />
     </div>
   );
@@ -545,7 +607,6 @@ export {
   RangeBar,
   type RangeBarProps,
   RegionRow,
-  rangeGeometry,
   StagingHero,
   StepBlock,
   WarnBar,

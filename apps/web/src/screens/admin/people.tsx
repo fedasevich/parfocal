@@ -288,7 +288,7 @@ export function PeopleSection({
                     person={{
                       name: invitation.email,
                       initials: invitation.email.slice(0, 2).toUpperCase(),
-                      color: "var(--chrome-3)",
+                      color: "#64748b",
                     }}
                     size={28}
                     sub={`Invited ${lastActive(invitation.created_at).toLowerCase()}`}

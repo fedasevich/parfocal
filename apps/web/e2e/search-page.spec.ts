@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./telemetry-capture.ts";
 
 test("the sidebar opens Search and an object ID opens the slide at the object", async ({
   page,

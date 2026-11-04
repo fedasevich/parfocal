@@ -832,7 +832,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when permission tests cover each role.
   INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images` ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)). Guests no longer exist and research access means a de-identified project. `getRestrictedImage` serves them only in clinical projects to project owners and viewers and to emergency access, audits every read, and they are deleted with the slide by the retention purge and on patient erasure ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), proposed).
 
-- [ ] SEC-010 · PHI-safe telemetry
+- [x] SEC-010 · PHI-safe telemetry
   Analytics, logs, traces and error reports carry no PHI. URLs use ids, never names.
   Done when an automated scan of a full E2E run's telemetry finds no seeded patient names. The scan reads the console and file exporter output, because non-production environments do not export ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Size: M.
@@ -1730,7 +1730,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-017.
   Size: S.
 
-- [ ] DS-034 · App tables on the shared table
+- [x] DS-034 · App tables on the shared table
   DS-026 (table) added sortable headers, a checkbox column, `selected` rows, number and ID cells and an empty row in packages/ui. Move the admin sections, project slides, object table, disagreement queue and clinical report deposits onto them. The object table picks a row by mouse click only, so its rows cannot be reached by keyboard.
   Also put the project and My work table headers on `--density-head-y`, and the project slide set rows (9 px) and the Team reviewer rows on the density variables, which DS-033 left out.
   Done when each of those tables uses the shared table, a test tabs to an object table row and opens it with Enter, and axe passes on each screen.
@@ -1875,7 +1875,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Refs mock: home, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: L.
 
-- [ ] HOME-003 · Resume state
+- [x] HOME-003 · Resume state
   Persist the last task, slide, camera, mode, selected object and review position per user. The home aggregate prefers the stored state when it is newer than the review activity it derives the resume target from ([ADR 0085](adr/0085-home-aggregate-api.md)).
   Done when E2E closes the browser mid-review and resumes at the same object.
   Size: M.
@@ -2243,7 +2243,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on NAV-004.
   Size: S.
 
-- [ ] NAV-015 · Real area bounds and the area list on the live route
+- [x] NAV-015 · Real area bounds and the area list on the live route
   NAV-014 (area navigation in the engine viewer) flies to areas from three dev-only bounds in apps/web/src/viewer/slide-areas.ts, shown only under the fake API, and the live route has no area list panel. Serve each slide's area bounds from its result objects through the API, feed SlideStage from them and show the NAV-004 area list on the live route.
   Done when API tests return area bounds for a slide with isolation, and a browser test on a real slide picks an area from the list and steps with ] from it.
   Depends on NAV-014.
@@ -2276,7 +2276,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and an area that could still outrank the lead.
   Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0086](adr/0086-node-staging-rules.md). The validation fixture property moved to REVIEW-020.
 
-- [ ] REVIEW-004 · Staging hero and size scale
+- [x] REVIEW-004 · Staging hero and size scale
   Plain-words heading, chip, sub-line and a log size scale from 0.05 to 20 mm with ITC, micro and macro zones, a dot per area, and the current area's range band and numbered point. For a cluster, a count bar with the 200-cell line.
   Done when component tests cover every state and a unit test checks the scale geometry at the 0.2 and 2 mm lines.
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).

@@ -8,6 +8,7 @@ import {
   getListClassMappingsMockHandler,
   getListProjectClassesMockHandler,
   getListReviewTasksMockHandler,
+  getListSlideAreasMockHandler,
   getListSlideResultSetsMockHandler,
   getListTaxonomyTemplatesMockHandler,
 } from "../generated/api.msw.ts";
@@ -17,6 +18,7 @@ import type {
   ProjectClass,
   ResultSet,
   ReviewTask,
+  SlideArea,
   Template,
 } from "../generated/api.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
@@ -207,6 +209,22 @@ export const toSlideResultSets = (slideId: string): ResultSet[] => {
   });
 };
 
+const fakeAreaBounds = [
+  { number: 1, x: 0, y: 0, width: 1024, height: 768, size_mm: 6.2 },
+  { number: 2, x: 600, y: 200, width: 80, height: 60, size_mm: 1.6 },
+  { number: 3, x: 200, y: 500, width: 48, height: 36, size_mm: 0.15 },
+] as const;
+
+export const toSlideAreas = (slideId: string): SlideArea[] => {
+  const set = toSlideResultSets(slideId).find((candidate) => candidate.region_count > 0);
+  if (set === undefined) return [];
+  return fakeAreaBounds.map((area) => ({
+    ...area,
+    object: `T${area.number}`,
+    result_set_id: set.id,
+  }));
+};
+
 export const toUploadBatch = (idOrCode: string): UploadBatch => {
   const project = projectOf(idOrCode);
   return uploadBatchSchema.parse({
@@ -390,6 +408,7 @@ export function projectHandlers(): RequestHandler[] {
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
     getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),
     getListSlideResultSetsMockHandler(({ params }) => toSlideResultSets(String(params.slideId))),
+    getListSlideAreasMockHandler(({ params }) => toSlideAreas(String(params.slideId))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params.projectId))),
     getListClassMappingsMockHandler(({ params }) => toClassMappings(String(params.projectId))),
     getListTaxonomyTemplatesMockHandler(() => toTaxonomyTemplates()),

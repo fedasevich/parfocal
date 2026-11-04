@@ -79,3 +79,21 @@ def test_configuring_twice_keeps_one_handler(output: io.StringIO) -> None:
     assert output.getvalue() == ""
     assert [json.loads(line)["message"] for line in second.getvalue().splitlines()] == ["once"]
     logging.getLogger().removeHandler(handler)
+
+
+def test_server_access_lines_are_dropped_and_server_errors_are_scrubbed(
+    output: io.StringIO,
+) -> None:
+    access = logging.getLogger("uvicorn.access")
+    access.addHandler(logging.StreamHandler(io.StringIO()))
+    handler = configure_logging("api", "test", stream=output)
+    access.info('"GET /api/search?q=Fake%20Patient HTTP/1.1" 200')
+    logging.getLogger("httpx").info("HTTP Request: GET /api/search?q=Fake+Patient")
+    with log_context():
+        register_sensitive("Fake Patient")
+        logging.getLogger("uvicorn.error").error("Exception in ASGI application: Fake Patient")
+    (line,) = lines(output)
+    assert line["logger"] == "uvicorn.error"
+    assert "Fake Patient" not in json.dumps(line)
+    assert access.handlers == []
+    logging.getLogger().removeHandler(handler)

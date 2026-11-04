@@ -55,6 +55,7 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    resume_states,
     retention_policies,
     review_assignments,
     review_edits,
@@ -498,6 +499,9 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             object_key=f"cells/{set_id}/chunk-00000.pfc",
         )
     )
+    await connection.execute(
+        update(result_sets).where(result_sets.c.id == set_id).values(status="ready", region_count=1)
+    )
     seeded.ids["result_set"] = set_id
     summary_set = await connection.scalar(
         insert(result_sets)
@@ -930,6 +934,20 @@ async def seed_adjudication_objects(connection: AsyncConnection, seeded: Seeded)
     )
 
 
+async def seed_resume_states(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(resume_states).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            task_id=seeded.ids["task"],
+            slide_id=seeded.ids["slide"],
+            mode="guided",
+            object_id="T1",
+        )
+    )
+    seeded.markers.add(str(seeded.ids["task"]))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -955,6 +973,7 @@ SEEDERS: dict[str, Seeder] = {
     "display_choices": seed_display_choices,
     "adjudications": seed_adjudications,
     "adjudication_objects": seed_adjudication_objects,
+    "resume_states": seed_resume_states,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1164,6 +1183,7 @@ GET_ROUTES = {
         ),
     ),
     "getReviewTask": Route(Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}"),
+    "listSlideAreas": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/areas"),
     "listSlideResultSets": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/result-sets"
     ),

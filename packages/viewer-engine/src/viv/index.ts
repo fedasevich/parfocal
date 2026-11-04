@@ -55,6 +55,14 @@ export {
   pixelSlide,
 } from "./pixel-slide.ts";
 export {
+  createPrefetcher,
+  maxPrefetchTiles,
+  type Prefetcher,
+  type PrefetchPlan,
+  predictedTiles,
+  tileLevelForZoom,
+} from "./prefetch.ts";
+export {
   mountSlideViewport,
   type SlideViewport,
   type SlideViewportOptions,
@@ -84,6 +92,7 @@ export {
 export {
   boxDownsampleToInterleaved,
   createVivLevels,
+  type PlannedRegion,
   readVivRegion,
   regionKey,
   rgbBackground,

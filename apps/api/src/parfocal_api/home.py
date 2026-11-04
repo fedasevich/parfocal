@@ -1,10 +1,12 @@
+import math
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter
-from pydantic import BaseModel
-from sqlalchemy import exists, func, literal, select, union_all
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from sqlalchemy import exists, func, literal, literal_column, select, union_all
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.announcements import Announcement, current_announcements
@@ -14,6 +16,7 @@ from parfocal_api.my_work import MyStatus, MyTask, ProjectRef, my_review_tasks
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Grant, Permission, grant_of, in_project
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.problems import NotFoundError
 from parfocal_api.project_access import assigned_slides, reads_whole
 from parfocal_api.projects import LIVE, NOT_SAMPLE
 from parfocal_api.projects import code_of as project_code
@@ -21,12 +24,14 @@ from parfocal_api.reviewed_export import LETTERS
 from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
+    ResumeMode,
     VerdictValue,
     annotations,
     cases,
     project_members,
     projects,
     result_sets,
+    resume_states,
     review_assignments,
     review_edits,
     review_task_slides,
@@ -34,11 +39,43 @@ from parfocal_api.tables import (
     slides,
     verdicts,
 )
+from parfocal_common.db import CURRENT_TENANT
 from parfocal_common.object_ids import ObjectId
 
 STRIP = 4
 WEEK = timedelta(days=7)
 OPEN = (MyStatus.IN_REVIEW, MyStatus.NOT_STARTED)
+
+
+def finite(value: float) -> float:
+    if not math.isfinite(value):
+        raise ValueError("must be a finite number")
+    return value
+
+
+Coordinate = Annotated[float, AfterValidator(finite)]
+
+
+class ResumeCamera(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    x: Coordinate
+    y: Coordinate
+    z: Coordinate
+
+
+class ResumeChange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    task_id: uuid.UUID
+    slide_id: uuid.UUID
+    mode: ResumeMode
+    object_id: Annotated[str, Field(min_length=1, max_length=40)] | None = None
+    camera: ResumeCamera | None = None
+
+
+class ResumeState(ResumeChange):
+    updated_at: datetime
 
 
 class ResumeTarget(BaseModel):
@@ -55,7 +92,8 @@ class ResumeTarget(BaseModel):
     verdicts_on_slide: int
     due_on: date | None
     blinded: bool
-    camera: dict[str, float] | None
+    mode: ResumeMode
+    camera: ResumeCamera | None
 
 
 class StripSlide(BaseModel):
@@ -139,22 +177,43 @@ async def last_activity(connection: AsyncConnection, me: uuid.UUID) -> Any:
     ).subquery()
     return (
         await connection.execute(
-            select(touched)
-            .join(
-                review_assignments,
-                (review_assignments.c.task_id == touched.c.task_id)
-                & (review_assignments.c.slide_id == touched.c.slide_id)
-                & (review_assignments.c.user_id == me),
-            )
-            .join(review_tasks, review_tasks.c.id == touched.c.task_id)
-            .where(
-                review_assignments.c.submitted_at.is_(None),
-                review_assignments.c.released_at.is_(None),
-                review_tasks.c.archived_at.is_(None),
-                review_tasks.c.signed_off_at.is_(None),
-            )
+            still_open(select(touched), touched.c.task_id, touched.c.slide_id, me)
             .order_by(touched.c.at.desc())
             .limit(1)
+        )
+    ).one_or_none()
+
+
+def still_open(query: Any, task_column: Any, slide_column: Any, me: uuid.UUID) -> Any:
+    return (
+        query.join(
+            review_assignments,
+            (review_assignments.c.task_id == task_column)
+            & (review_assignments.c.slide_id == slide_column)
+            & (review_assignments.c.user_id == me),
+        )
+        .join(review_tasks, review_tasks.c.id == task_column)
+        .where(
+            review_assignments.c.submitted_at.is_(None),
+            review_assignments.c.released_at.is_(None),
+            review_tasks.c.archived_at.is_(None),
+            review_tasks.c.signed_off_at.is_(None),
+        )
+    )
+
+
+async def stored_resume(connection: AsyncConnection, me: uuid.UUID) -> Any:
+    return (
+        await connection.execute(
+            still_open(
+                select(resume_states),
+                resume_states.c.task_id,
+                resume_states.c.slide_id,
+                me,
+            ).where(
+                resume_states.c.tenant_id == literal_column(CURRENT_TENANT),
+                resume_states.c.user_id == me,
+            )
         )
     ).one_or_none()
 
@@ -164,11 +223,20 @@ async def resume_of(
 ) -> ResumeTarget | None:
     by_id = {task.id: task for task in tasks}
     last = await last_activity(connection, me)
-    if last is not None and last.task_id in by_id:
+    stored = await stored_resume(connection, me)
+    mode, camera = ResumeMode.GUIDED, None
+    object_id: str | None
+    if (
+        stored is not None
+        and stored.task_id in by_id
+        and (last is None or last.task_id not in by_id or stored.updated_at > last.at)
+    ):
+        task, slide_id, object_id = by_id[stored.task_id], stored.slide_id, stored.object_id
+        mode = ResumeMode(stored.mode)
+        camera = None if stored.camera is None else ResumeCamera.model_validate(stored.camera)
+    elif last is not None and last.task_id in by_id:
         task, slide_id = by_id[last.task_id], last.slide_id
-        object_id: str | None = ObjectId(LETTERS[last.kind], last.number, person=last.person).text(
-            ascii=True
-        )
+        object_id = ObjectId(LETTERS[last.kind], last.number, person=last.person).text(ascii=True)
     else:
         task = next((task for task in tasks if task.status in OPEN and task.next_slide_id), None)
         if task is None or task.next_slide_id is None:
@@ -217,7 +285,8 @@ async def resume_of(
         verdicts_on_slide=int(counted or 0),
         due_on=task.due_on,
         blinded=task.blinded,
-        camera=None,
+        mode=mode,
+        camera=camera,
     )
 
 
@@ -351,3 +420,48 @@ async def get_my_home(principal: CurrentPrincipal, connection: TenantConnection)
         week=await week_of(connection, person.user_id, adjudicated),
         announcements=await current_announcements(connection),
     )
+
+
+async def assigned_to_me(
+    connection: AsyncConnection, me: uuid.UUID, task_id: uuid.UUID, slide_id: uuid.UUID
+) -> bool:
+    found = await connection.scalar(
+        select(review_assignments.c.task_id)
+        .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
+        .where(
+            review_assignments.c.task_id == task_id,
+            review_assignments.c.slide_id == slide_id,
+            review_assignments.c.user_id == me,
+            review_assignments.c.released_at.is_(None),
+            review_tasks.c.archived_at.is_(None),
+        )
+    )
+    return found is not None
+
+
+@router.put("/resume", operation_id="setMyResume")
+async def set_my_resume(
+    change: ResumeChange, principal: CurrentPrincipal, connection: TenantConnection
+) -> ResumeState:
+    person = member_of(principal)
+    if not await assigned_to_me(connection, person.user_id, change.task_id, change.slide_id):
+        raise NotFoundError("Task slide not found")
+    values = {
+        "task_id": change.task_id,
+        "slide_id": change.slide_id,
+        "mode": change.mode.value,
+        "object_id": change.object_id,
+        "camera": None if change.camera is None else change.camera.model_dump(),
+    }
+    updated_at = (
+        await connection.execute(
+            upsert(resume_states)
+            .values(tenant_id=person.tenant_id, user_id=person.user_id, **values)
+            .on_conflict_do_update(
+                index_elements=[resume_states.c.tenant_id, resume_states.c.user_id],
+                set_=values,
+            )
+            .returning(resume_states.c.updated_at)
+        )
+    ).scalar_one()
+    return ResumeState(**change.model_dump(), updated_at=updated_at)

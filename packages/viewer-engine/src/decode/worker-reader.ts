@@ -7,6 +7,7 @@ import {
   type DecodePoolStats,
   defaultRetainedResults,
   type PoolPoint,
+  type PrefetchStats,
 } from "./decode-pool.ts";
 import type { DecodeReply, DecodeRequest, MessageTarget, WorkerOpenRequest } from "./protocol.ts";
 import { createRangeCache, type RangeCache, type RangeCacheStats } from "./range-cache.ts";
@@ -35,6 +36,9 @@ export interface DecodeStats extends DecodePoolStats {
 
 export interface WorkerRegionReader {
   readonly read: VivRegionReader;
+  prefetch(region: VivRegion, centre: PoolPoint): boolean;
+  dropPrefetch(keep?: ReadonlySet<string>): number;
+  prefetchStats(): PrefetchStats;
   readonly ready: Promise<void>;
   jpegReports(): readonly (DecodeReport | null)[];
   setFocus(point: PoolPoint | null): void;
@@ -133,6 +137,9 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
 
   return {
     read: (region, centre, signal) => pool.request(regionKey(region), region, centre, signal),
+    prefetch: (region, centre) => pool.prefetch(regionKey(region), region, centre),
+    dropPrefetch: (keep) => pool.dropPrefetch(keep),
+    prefetchStats: () => pool.prefetchStats(),
     ready,
     jpegReports: () => [...reports],
     setFocus: (point) => pool.setFocus(point),

@@ -17,6 +17,9 @@ from parfocal_common.scrubbing import (
 )
 
 CONTEXT_FIELDS = ("request_id", "tenant_id", "user_id")
+SERVER_LOGGERS = ("uvicorn", "uvicorn.error", "gunicorn", "gunicorn.error")
+ACCESS_LOGGERS = ("uvicorn.access", "gunicorn.access")
+URL_LOGGERS = ("httpx", "httpx2", "httpcore", "httpcore2")
 
 
 @dataclass
@@ -130,4 +133,15 @@ def configure_logging(
             root.removeHandler(existing)
     root.addHandler(handler)
     root.setLevel(level)
+    for name in SERVER_LOGGERS:
+        server = logging.getLogger(name)
+        server.handlers.clear()
+        server.propagate = True
+    for name in ACCESS_LOGGERS:
+        access = logging.getLogger(name)
+        access.handlers.clear()
+        access.propagate = False
+        access.disabled = True
+    for name in URL_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
     return handler

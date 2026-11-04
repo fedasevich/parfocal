@@ -95,6 +95,7 @@ import type {
   ResultSet,
   ResultSetDeletion,
   ResultSetDetail,
+  ResumeState,
   RetentionPolicy,
   ReviewEdit,
   ReviewedLayer,
@@ -116,6 +117,7 @@ import type {
   SigningKey,
   SignOutSet,
   SiteValidation,
+  SlideArea,
   SlideCoverage,
   SlideDetail,
   SlideFigure,
@@ -199,6 +201,7 @@ import {
   ResultFormat,
   ResultSource,
   ResultStatus,
+  ResumeMode,
   Retired,
   Role,
   Rule,
@@ -3837,9 +3840,12 @@ export const getGetMyHomeResponseMock = (
       verdicts_on_slide: faker.number.int(),
       due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
       blinded: faker.datatype.boolean(),
+      mode: faker.helpers.arrayElement(Object.values(ResumeMode)),
       camera: faker.helpers.arrayElement([
         {
-          [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          z: faker.number.float({ fractionDigits: 2 }),
         },
         null,
       ]),
@@ -3908,6 +3914,28 @@ export const getGetMyHomeResponseMock = (
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getSetMyResumeResponseMock = (
+  overrideResponse: Partial<Extract<ResumeState, object>> = {},
+): ResumeState => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  mode: faker.helpers.arrayElement(Object.values(ResumeMode)),
+  object_id: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 1, max: 40 } }),
+    null,
+  ]),
+  camera: faker.helpers.arrayElement([
+    {
+      x: faker.number.float({ fractionDigits: 2 }),
+      y: faker.number.float({ fractionDigits: 2 }),
+      z: faker.number.float({ fractionDigits: 2 }),
+    },
+    null,
+  ]),
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
 
@@ -9544,6 +9572,18 @@ export const getGetSlideTissueResponseMock = (
   ...overrideResponse,
 });
 
+export const getListSlideAreasResponseMock = (): SlideArea[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    number: faker.number.int(),
+    result_set_id: faker.string.uuid(),
+    x: faker.number.float({ fractionDigits: 2 }),
+    y: faker.number.float({ fractionDigits: 2 }),
+    width: faker.number.float({ fractionDigits: 2 }),
+    height: faker.number.float({ fractionDigits: 2 }),
+    size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  }));
+
 export const getGetHealthMockHandler = (
   overrideResponse?:
     | Health
@@ -11962,6 +12002,28 @@ export const getGetMyHomeMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getGetMyHomeResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetMyResumeMockHandler = (
+  overrideResponse?:
+    | ResumeState
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<ResumeState> | ResumeState),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/me/resume",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetMyResumeResponseMock(),
         { status: 200 },
       );
     },
@@ -14724,6 +14786,28 @@ export const getGetSlideTissueMockHandler = (
     options,
   );
 };
+
+export const getListSlideAreasMockHandler = (
+  overrideResponse?:
+    | SlideArea[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SlideArea[]> | SlideArea[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/areas",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSlideAreasResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
@@ -14832,6 +14916,7 @@ export const getParfocalAPIMock = () => [
   getListSiteValidationsMockHandler(),
   getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),
+  getSetMyResumeMockHandler(),
   getGetRetentionPolicyMockHandler(),
   getSetRetentionPolicyMockHandler(),
   getListLegalHoldsMockHandler(),
@@ -14953,4 +15038,5 @@ export const getParfocalAPIMock = () => [
   getGetSlideCoverageMockHandler(),
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
+  getListSlideAreasMockHandler(),
 ];

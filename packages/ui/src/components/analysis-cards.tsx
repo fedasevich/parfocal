@@ -139,6 +139,18 @@ function ClusterSteps({ state }: { state: ClusterState }) {
   );
 }
 
+function scaleMarks(state: { areas: RankedArea[]; lead: RankedArea }) {
+  return {
+    dots: state.areas
+      .filter((area) => area.call !== "disagree")
+      .map((area) => ({ number: area.number, mm: clampToScale(area.shownSize) })),
+    number: state.lead.number,
+  };
+}
+
+const cellsMidpoint = (area: RankedArea) =>
+  area.cells ? Math.round((area.cells.low + area.cells.high) / 2) : null;
+
 function ClusterHero({ state }: { state: ClusterState }) {
   const point = clampToScale(state.size);
   const measured = state.lead.measured != null;
@@ -157,7 +169,9 @@ function ClusterHero({ state }: { state: ClusterState }) {
           high: point,
           point,
           cuts: [microMm, macroMm],
+          ...scaleMarks(state),
         }}
+        count={{ cells: cellsMidpoint(state.lead) }}
       />
     );
   }
@@ -177,7 +191,9 @@ function ClusterHero({ state }: { state: ClusterState }) {
         high: measured ? point : clampToScale(state.size * (1 + aiSizeError)),
         point,
         cuts: [microMm, macroMm],
+        ...scaleMarks(state),
       }}
+      count={{ cells: cellsMidpoint(state.lead) }}
     />
   );
 }
@@ -194,6 +210,68 @@ function AreaPlaceholder() {
       <SkeletonLine width="5ch" className="font-mono" />
     </div>
   );
+}
+
+type AreaRowsProps = AreaListProps & {
+  areas: readonly RankedArea[];
+  settled: boolean;
+  running?: boolean;
+  className?: string | undefined;
+};
+
+function AreaRows({
+  areas,
+  settled,
+  running = false,
+  current,
+  visited,
+  roleOf,
+  onGoTo,
+  className,
+}: AreaRowsProps) {
+  return (
+    <InspectorCard
+      className={cn(
+        "grid content-start gap-1 overflow-auto",
+        running ? "h-40" : "max-h-40",
+        className,
+      )}
+      aria-label="Areas, largest first"
+    >
+      {areas.map((area) => (
+        <RegionRow
+          key={area.object}
+          data-area={area.object}
+          objectId={area.object}
+          kind={rowKind(area, settled)}
+          size={formatMm(area.shownSize)}
+          category={area.category}
+          selected={onGoTo ? current === area.object : area.lead}
+          note={roleOf?.(area.object)}
+          visited={visited?.has(area.object) ?? false}
+          {...(onGoTo
+            ? {
+                onSelect: () => onGoTo(area.object),
+                label: areaLabel(area, roleOf?.(area.object), visited),
+              }
+            : {})}
+        />
+      ))}
+      {running ? <AreaPlaceholder key={`next-${areas.length}`} /> : null}
+    </InspectorCard>
+  );
+}
+
+type AreaListOwnProps = AreaListProps & {
+  areas: readonly AiArea[];
+  className?: string | undefined;
+};
+
+function AreaList({ areas, ...props }: AreaListOwnProps) {
+  const state = aiState({ areas });
+  const settled =
+    (state.kind === "pre-read" || state.kind === "small-cluster") && state.phase === "settled";
+  return <AreaRows areas={state.areas} settled={settled} {...props} />;
 }
 
 function StagingCards({
@@ -253,6 +331,7 @@ function StagingCards({
               high: clampToScale(state.size),
               point: clampToScale(state.size),
               cuts: [microMm, macroMm],
+              ...scaleMarks(state),
             }}
           />
         ) : (
@@ -267,6 +346,7 @@ function StagingCards({
               high: clampToScale(state.size * (1 + aiSizeError)),
               point: clampToScale(state.size),
               cuts: [microMm, macroMm],
+              ...scaleMarks(state),
             }}
           />
         )
@@ -275,34 +355,15 @@ function StagingCards({
       )}
       <ModelWarningsBlock warnings={warnings} />
       {showList && (state.areas.length || state.kind === "running") ? (
-        <InspectorCard
-          className={cn(
-            "grid content-start gap-1 overflow-auto",
-            state.kind === "running" ? "h-40" : "max-h-40",
-          )}
-          aria-label="Areas, largest first"
-        >
-          {state.areas.map((area) => (
-            <RegionRow
-              key={area.object}
-              data-area={area.object}
-              objectId={area.object}
-              kind={rowKind(area, settled)}
-              size={formatMm(area.shownSize)}
-              category={area.category}
-              selected={onGoTo ? current === area.object : area.lead}
-              note={roleOf?.(area.object)}
-              visited={visited?.has(area.object) ?? false}
-              {...(onGoTo
-                ? {
-                    onSelect: () => onGoTo(area.object),
-                    label: areaLabel(area, roleOf?.(area.object), visited),
-                  }
-                : {})}
-            />
-          ))}
-          {state.kind === "running" ? <AreaPlaceholder key={`next-${state.areas.length}`} /> : null}
-        </InspectorCard>
+        <AreaRows
+          areas={state.areas}
+          settled={settled}
+          running={state.kind === "running"}
+          current={current}
+          visited={visited}
+          roleOf={roleOf}
+          onGoTo={onGoTo}
+        />
       ) : null}
       {staged ? (
         <div data-slot="staging-footer" className="flex items-center justify-between gap-2">
@@ -337,4 +398,11 @@ function AnalysisCards({ parts, ...props }: AnalysisCardsProps) {
   return <StagingCards showList={parts.includes("area-list")} {...props} />;
 }
 
-export { AnalysisCards, type AnalysisCardsProps, StagingCards, type StagingCardsProps };
+export {
+  AnalysisCards,
+  type AnalysisCardsProps,
+  AreaList,
+  type AreaListOwnProps as AreaListProps,
+  StagingCards,
+  type StagingCardsProps,
+};

@@ -47,10 +47,23 @@ const Section = ({ children }: { children: ReactNode }) => (
 const shortName = (task: { task_name?: string; name?: string }) =>
   (task.task_name ?? task.name ?? "").split(" · ")[0] ?? "";
 
+export function continueTo(resume: ResumeTarget) {
+  const object = resume.object_id ?? undefined;
+  if (resume.mode === "viewer")
+    return destinations.slide(
+      resume.project.id,
+      resume.slide_id,
+      resume.task_id,
+      object,
+      resume.camera ?? {},
+    );
+  return destinations.guided(resume.task_id, resume.slide_id, object, resume.camera ?? null);
+}
+
 function ResumeHero({ resume }: { resume: ResumeTarget }) {
   const goTo = useGoTo();
   const progress = useSlideProgress(resume.task_id, resume.slide_id);
-  const continueHref = destinations.guided(resume.task_id, resume.slide_id);
+  const continueHref = continueTo(resume);
   return (
     <div className="grid grid-cols-[220px_minmax(0,1fr)] overflow-hidden rounded-[14px] border border-line bg-chrome">
       <div

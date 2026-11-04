@@ -7,6 +7,9 @@ import { loadViewerEngine } from "../viewer/load-engine.ts";
 const guidedSearch = z.object({
   slide: z.string().optional(),
   object: z.string().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  z: z.number().positive().max(100).optional(),
   scene: z.enum(mockScenes.guided).optional(),
   submitted: z.boolean().optional(),
   tab: z.enum(["review", "comments", "display"]).optional(),
@@ -27,6 +30,11 @@ function GuidedRoute() {
       taskId={taskId}
       slideId={search.slide ?? ""}
       objectId={search.object}
+      camera={
+        search.x !== undefined && search.y !== undefined && search.z !== undefined
+          ? { x: search.x, y: search.y, scale: search.z }
+          : undefined
+      }
       scene={search.scene}
       submitted={search.submitted ?? false}
       tab={search.tab}
