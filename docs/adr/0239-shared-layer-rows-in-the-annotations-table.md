@@ -1,4 +1,4 @@
-# XXXX. Shared layer objects as rows of the annotations table
+# 0239. Shared layer objects as rows of the annotations table
 
 - Date: 2026-11-04
 - Status: Accepted
