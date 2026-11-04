@@ -136,3 +136,20 @@ test("signing out other devices leaves only this one", async ({ page }) => {
   await expect(dialog(page).getByText("Only this device")).toBeVisible();
   await expect(dialog(page).getByText(/Signed out of 2 other devices at/)).toBeVisible();
 });
+
+test("rebinding J in Settings changes the key shown on Skip for now", async ({ page }) => {
+  await page.goto(
+    "/tasks/00000000-0000-4000-8007-000000000014/guided?slide=00000000-0000-4000-8005-000000000001&scene=region",
+  );
+  const skip = page.getByRole("button", { name: /Skip for now/ });
+  await expect(skip.locator("kbd")).toHaveText("J");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: /Keyboard shortcuts/ }).click();
+  await dialog(page).getByRole("button", { name: "Skip for now, next object: J" }).click();
+  await page.keyboard.press("w");
+  await expect(
+    dialog(page).getByRole("button", { name: "Skip for now, next object: W" }),
+  ).toBeVisible();
+  await dialog(page).getByRole("button", { name: "Close settings" }).click();
+  await expect(skip.locator("kbd")).toHaveText("W");
+});
