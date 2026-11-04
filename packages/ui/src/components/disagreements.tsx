@@ -1,12 +1,18 @@
-import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TablePickCell,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type QueueTagTone = NonNullable<React.ComponentProps<typeof StatusTag>["tone"]>;
 
-type QueueRowProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
+type QueueRowProps = Omit<React.ComponentProps<"tr">, "onSelect"> & {
   object: string;
   slide: string;
   tag: React.ReactNode;
@@ -20,6 +26,14 @@ type QueueRowProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   onSelect?: (() => void) | undefined;
   onCheckedChange?: ((checked: boolean) => void) | undefined;
 };
+
+function QueueTable({ className, children, ...props }: React.ComponentProps<"table">) {
+  return (
+    <Table className={cn("border-separate border-spacing-y-1", className)} {...props}>
+      <TableBody className="[&_tr]:border-0">{children}</TableBody>
+    </Table>
+  );
+}
 
 function QueueRow({
   object,
@@ -41,53 +55,58 @@ function QueueRow({
     <>
       <ObjectIdTag>{object}</ObjectIdTag>
       <span className="min-w-0 truncate text-left">{slide}</span>
-      <StatusTag {...(tone ? { tone } : {})}>{tag}</StatusTag>
     </>
   );
-  const grid = "grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5";
+  const grid = "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5";
   return (
-    <div
+    <TableRow
       data-slot="queue-row"
       data-selected={selected || undefined}
       data-done={done || undefined}
       aria-disabled={locked || undefined}
       className={cn(
-        "grid min-h-11 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 rounded-ctl px-3 text-body-sm text-fg",
+        "h-11 text-body-sm text-fg [&>td]:p-0 [&>td]:text-fg [&>td:first-child]:rounded-l-ctl [&>td:first-child]:pl-3 [&>td:last-child]:rounded-r-ctl [&>td:last-child]:pr-3",
         selected
-          ? "bg-surf-panel shadow-[inset_0_0_0_1px_var(--line-strong)] dark:bg-chrome-2 dark:shadow-none"
-          : "hover:bg-surf-panel dark:hover:bg-chrome-2/60",
-        locked && "grid-cols-1 opacity-55",
+          ? "[&>td]:bg-surf-panel dark:[&>td]:bg-chrome-2"
+          : "hover:[&>td]:bg-surf-panel dark:hover:[&>td]:bg-chrome-2/60",
+        locked && "opacity-55",
         className,
       )}
       {...props}
     >
       {locked ? null : (
-        <Checkbox
-          aria-label={`Select ${object} on ${slide}`}
-          checked={checked}
+        <TablePickCell
+          label={`Select ${object} on ${slide}`}
+          picked={checked}
           disabled={!checkable}
-          title={checkable ? undefined : checkReason}
-          className="m-1"
-          onCheckedChange={(next) => onCheckedChange?.(next === true)}
+          reason={checkReason}
+          className="w-9"
+          boxClassName="m-1"
+          onToggle={() => onCheckedChange?.(!checked)}
         />
       )}
-      {locked || onSelect === undefined ? (
-        <div className={cn(grid, done && "text-fg-dim")}>{content}</div>
-      ) : (
-        <button
-          type="button"
-          aria-current={selected || undefined}
-          onClick={onSelect}
-          className={cn(
-            grid,
-            "min-h-11 cursor-pointer border-0 bg-transparent p-0 text-body-sm text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
-            done && "text-fg-dim",
-          )}
-        >
-          {content}
-        </button>
-      )}
-    </div>
+      <TableCell className={cn("w-full max-w-0 px-0", done && "text-fg-dim")}>
+        {locked || onSelect === undefined ? (
+          <div className={cn(grid, "px-1", locked && "pl-3")}>{content}</div>
+        ) : (
+          <button
+            type="button"
+            aria-current={selected || undefined}
+            onClick={onSelect}
+            className={cn(
+              grid,
+              "min-h-11 w-full cursor-pointer border-0 bg-transparent p-0 text-body-sm text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+              done && "text-fg-dim",
+            )}
+          >
+            {content}
+          </button>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <StatusTag {...(tone ? { tone } : {})}>{tag}</StatusTag>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -231,6 +250,7 @@ export {
   type ProgressDotsProps,
   QueueRow,
   type QueueRowProps,
+  QueueTable,
   QuotedNote,
   ReadinessList,
   ReadinessRow,

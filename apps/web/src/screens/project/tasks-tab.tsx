@@ -9,6 +9,14 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
@@ -26,6 +34,8 @@ const dueText = (iso: string | null) =>
       })
     : "No due date";
 
+const headCell = "px-4 py-(--density-head-y)";
+
 export function TasksTab({
   project,
   tasks,
@@ -40,19 +50,19 @@ export function TasksTab({
   return (
     <>
       <div className="flex-none overflow-auto rounded-zone border border-line bg-surf-panel">
-        <table className="w-full border-collapse text-body-sm">
-          <thead>
-            <tr className="[&>th]:border-b [&>th]:border-line [&>th]:bg-surf-panel [&>th]:px-4 [&>th]:py-2.75 [&>th]:text-left [&>th]:text-caption [&>th]:font-semibold [&>th]:text-fg-dim">
-              <th>Task</th>
-              <th>Reviewers</th>
-              <th>Due</th>
-              <th>Status</th>
-              <th>
+        <Table containerClassName="overflow-visible">
+          <TableHeader>
+            <TableRow>
+              <TableHead className={headCell}>Task</TableHead>
+              <TableHead className={headCell}>Reviewers</TableHead>
+              <TableHead className={headCell}>Due</TableHead>
+              <TableHead className={headCell}>Status</TableHead>
+              <TableHead className={headCell}>
                 <span className="sr-only">Action</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {tasks.map((task) => (
               <TaskRow
                 key={task.id}
@@ -61,8 +71,8 @@ export function TasksTab({
                 onSettings={() => setSettingsOf(task.id)}
               />
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {opened ? (
         <TaskSettingsDrawer task={opened} onClose={() => setSettingsOf(null)} toast={toast} />
@@ -94,11 +104,11 @@ function TaskRow({
   ].filter(Boolean);
   const behind = [...progress].sort((a, b) => b.total - b.done - (a.total - a.done))[0];
   return (
-    <tr
+    <TableRow
       data-testid="task-row"
-      className="[&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:text-fg-dim last:[&>td]:border-b-0"
+      className="[&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:whitespace-normal"
     >
-      <td>
+      <TableCell>
         <span className="grid min-w-0 gap-0.5">
           <b className="font-semibold text-fg">
             <span className="font-mono">{task.code}</span> · {task.name}
@@ -107,8 +117,8 @@ function TaskRow({
             {facts.join(" · ")}
           </small>
         </span>
-      </td>
-      <td>
+      </TableCell>
+      <TableCell>
         <div className="grid gap-2">
           {progress.length > 0 ? (
             progress.map((row) => (
@@ -117,7 +127,10 @@ function TaskRow({
                 className="grid grid-cols-[150px_120px_auto] items-center gap-3 text-caption"
               >
                 <Person person={people.byId(row.userId)} size={22} />
-                <ProgressBar value={(100 * row.done) / Math.max(row.total, 1)} />
+                <ProgressBar
+                  value={(100 * row.done) / Math.max(row.total, 1)}
+                  aria-label={`${people.byId(row.userId).name}, ${row.done} of ${row.total} slides`}
+                />
                 <span className="font-mono">
                   {row.done} of {row.total}
                 </span>
@@ -129,12 +142,12 @@ function TaskRow({
             </span>
           )}
         </div>
-      </td>
-      <td>{dueText(task.due_on)}</td>
-      <td>
+      </TableCell>
+      <TableCell>{dueText(task.due_on)}</TableCell>
+      <TableCell>
         <StatusTag tone={status.tone}>{status.label}</StatusTag>
-      </td>
-      <td className="w-px text-right whitespace-nowrap">
+      </TableCell>
+      <TableCell className="w-px text-right whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           <Button
             size="icon-sm"
@@ -166,7 +179,7 @@ function TaskRow({
             </Button>
           )}
         </span>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

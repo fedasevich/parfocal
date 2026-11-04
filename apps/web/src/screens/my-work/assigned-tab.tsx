@@ -3,6 +3,14 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { StatusTag, type StatusTone } from "@parfocal/ui/components/tag";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
@@ -58,26 +66,26 @@ function AssignedRow({
   const teamRow = (scene: "nudge" | "reassign") =>
     destinations.team({ scene, task: task.id, focus: behindmost });
   return (
-    <tr
+    <TableRow
       aria-selected={selected}
       onClick={(event) => {
         if (event.target instanceof Element && event.target.closest("button, a")) return;
         onSelect();
       }}
-      className={`cursor-pointer border-line border-b ${selected ? "bg-accent-soft" : ""}`}
+      className="cursor-pointer"
     >
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      <TableCell className="whitespace-normal">
         <b className="font-mono font-medium text-fg">{task.code}</b>{" "}
         <b className="font-medium text-fg">{task.name}</b>
         <small className="block text-caption text-fg-dim">
           {task.project.name}
           {detail ? ` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
         </small>
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         {set?.label ? <SetChip label={set.label} source={set.source} /> : null}
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         <div className="grid gap-1">
           {task.reviewers.map((reviewer) => (
             <div key={reviewer.user_id} className="flex items-center gap-2 text-caption">
@@ -93,14 +101,14 @@ function AssignedRow({
             </div>
           ))}
         </div>
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle text-fg-dim">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         {task.due_on ? formatDue(task.due_on) : "No due date"}
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         <StatusTag tone={tone}>{label}</StatusTag>
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         <div className="flex justify-end gap-1.5">
           {task.status === "disagreements" ? (
             <Button
@@ -134,8 +142,8 @@ function AssignedRow({
             </>
           ) : null}
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -163,20 +171,15 @@ export function AssignedTab({
           New review task
         </Button>
       </div>
-      <table className="w-full border-collapse text-body-sm">
-        <thead>
-          <tr className="text-left text-caption text-fg-dim">
+      <Table>
+        <TableHeader>
+          <TableRow>
             {["Task", "Result set", "Reviewers", "Due", "Status", ""].map((heading) => (
-              <th
-                key={heading || "actions"}
-                className="whitespace-nowrap border-line-strong border-b px-2 py-1.75 font-semibold"
-              >
-                {heading}
-              </th>
+              <TableHead key={heading || "actions"}>{heading}</TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tasks.map((task) => (
             <AssignedRow
               key={task.id}
@@ -185,8 +188,8 @@ export function AssignedTab({
               onSelect={() => onSelect(task.id)}
             />
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       {tasks.length === 0 ? (
         <p className="text-body-sm text-fg-dim">
           You have not handed out any review tasks yet. New review task starts one.

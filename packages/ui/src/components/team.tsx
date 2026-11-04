@@ -68,7 +68,7 @@ function ReviewerRow({
       data-status={status}
       data-highlight={highlight || undefined}
       className={cn(
-        "grid min-h-10 grid-cols-[minmax(0,210px)_140px_64px_minmax(0,1fr)_auto] items-center gap-4 text-body-sm",
+        "grid min-h-[calc(24px+2*var(--density-cell-y))] grid-cols-[minmax(0,210px)_140px_64px_minmax(0,1fr)_auto] items-center gap-4 text-body-sm",
         highlight &&
           "-mx-2.5 rounded-lg px-2.5 py-1 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
         className,

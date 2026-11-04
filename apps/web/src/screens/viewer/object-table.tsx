@@ -149,8 +149,16 @@ export function ObjectTablePanel({
                 <TableRow
                   key={row.object}
                   data-state={row.object === selected ? "selected" : undefined}
-                  className="cursor-pointer"
+                  tabIndex={0}
+                  className="cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
                   onClick={() => onPick(row.object)}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onPick(row.object);
+                    }
+                  }}
                 >
                   <TableCell>
                     <ObjectIdTag

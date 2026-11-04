@@ -20,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { FilterChip } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -56,6 +64,9 @@ const setName = (set: Pick<ResultSet, "name" | "model_version">) =>
   withVersion(set.name.split(" ")[0] ?? set.name, set.model_version);
 
 const slideTitle = (slide: ProjectSlide) => `${slide.label} · ${slide.stain}`;
+
+const headRow = "[&>th]:sticky [&>th]:top-0 [&>th]:z-1 [&>th]:bg-surf-panel";
+const headCell = "px-4 py-(--density-head-y)";
 
 export function useProjectSlides(projectId: string): ProjectSlide[] {
   const rows = okData(useListMySlides({ project_id: projectId }).data)?.slides ?? [];
@@ -179,31 +190,39 @@ export function SlidesTab({
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto rounded-zone border border-line bg-surf-panel">
-        <table className="w-full border-collapse text-body-sm">
-          <thead>
-            <tr className="[&>th]:sticky [&>th]:top-0 [&>th]:z-1 [&>th]:border-b [&>th]:border-line [&>th]:bg-surf-panel [&>th]:px-4 [&>th]:py-2.75 [&>th]:text-left [&>th]:text-caption [&>th]:font-semibold [&>th]:text-fg-dim">
-              <th className="w-[27%]">Slide</th>
-              <th className="w-[33%]">Result sets</th>
-              <th>Reviews</th>
-              <th>
+        <Table containerClassName="overflow-visible">
+          <TableHeader>
+            <TableRow className={headRow}>
+              <TableHead className={cn(headCell, "w-[27%]")}>Slide</TableHead>
+              <TableHead className={cn(headCell, "w-[33%]")}>Result sets</TableHead>
+              <TableHead className={headCell}>Reviews</TableHead>
+              <TableHead className={headCell}>
                 <span className="sr-only">Open</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {groups.map((group, index) => {
               const expanded = isOpen(group, index);
               return (
                 <Fragment key={group.key}>
-                  <tr
-                    aria-expanded={expanded}
+                  <TableRow
                     className="cursor-pointer"
                     onClick={() => setShut({ ...shut, [group.key]: expanded })}
                   >
-                    <td colSpan={4} className="border-b border-line bg-surf-section px-4 py-2.5">
+                    <TableCell
+                      colSpan={4}
+                      className="bg-surf-section px-4 py-2.5 whitespace-normal"
+                    >
                       <span className="flex items-center gap-2.5 text-fg-dim">
-                        <Icon name={expanded ? "down" : "next"} />
-                        <b className="font-semibold text-fg">{group.label}</b>
+                        <button
+                          type="button"
+                          aria-expanded={expanded}
+                          className="inline-flex cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-left text-fg-dim"
+                        >
+                          <Icon name={expanded ? "down" : "next"} />
+                          <b className="font-semibold text-fg">{group.label}</b>
+                        </button>
                         <span>{group.sub}</span>
                         {owner && group.key !== "loose" && caseIdOf(group.key) ? (
                           <Button
@@ -220,8 +239,8 @@ export function SlidesTab({
                           </Button>
                         ) : null}
                       </span>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                   {expanded
                     ? group.slides.map((slide) => (
                         <SlideRow
@@ -235,8 +254,8 @@ export function SlidesTab({
                       ))
                     : null}
                   {expanded && group.count > group.slides.length ? (
-                    <tr>
-                      <td colSpan={4} className="border-b border-line py-2.5 pr-4 pl-18">
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-2.5 pr-4 pl-18">
                         <button
                           type="button"
                           className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
@@ -248,14 +267,14 @@ export function SlidesTab({
                         >
                           Show all {group.count} slides
                         </button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : null}
                 </Fragment>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {editing ? (
         <CaseSlidesEditor
@@ -297,17 +316,15 @@ function SlideRow({
     });
   return (
     <>
-      <tr
+      <TableRow
         data-testid="slide-row"
         className={cn(
-          "group cursor-pointer [&>td]:border-b [&>td]:border-line [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:text-fg-dim",
-          expanded
-            ? "[&>td]:border-b-transparent [&>td]:bg-surf-hl"
-            : "hover:[&>td]:bg-[color-mix(in_srgb,var(--fg)_3%,transparent)]",
+          "group cursor-pointer [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:whitespace-normal",
+          expanded && "border-b-transparent [&>td]:bg-surf-hl",
         )}
         onClick={open}
       >
-        <td>
+        <TableCell>
           <span className="inline-flex items-center gap-3">
             <i
               aria-hidden="true"
@@ -323,15 +340,15 @@ function SlideRow({
             {slide.remote ? (
               <span
                 title={`Read in place from ${slide.remote}. Nothing copied.`}
-                className="ml-2 inline-flex h-4.5 items-center gap-1 rounded-sm bg-[rgb(56_189_248/0.14)] px-1.5 text-label font-semibold text-[#38bdf8]"
+                className="ml-2 inline-flex h-4.5 items-center gap-1 rounded-sm bg-[rgb(56_189_248/0.14)] px-1.5 text-label font-semibold text-[#0369a1] dark:text-[#38bdf8]"
               >
                 <Icon name="link" size="xs" />
                 remote
               </span>
             ) : null}
           </span>
-        </td>
-        <td>
+        </TableCell>
+        <TableCell>
           {own.length > 0 ? (
             <button
               type="button"
@@ -368,8 +385,8 @@ function SlideRow({
               </Link>
             </span>
           )}
-        </td>
-        <td>
+        </TableCell>
+        <TableCell>
           {slide.reviews.length > 0 ? (
             <span className="flex flex-wrap gap-x-5.5 gap-y-1.5">
               {slide.reviews.map((review) => (
@@ -389,13 +406,13 @@ function SlideRow({
           ) : (
             <span>Nobody yet</span>
           )}
-        </td>
-        <td className="w-px text-right whitespace-nowrap">
+        </TableCell>
+        <TableCell className="w-px text-right whitespace-nowrap">
           <Button size="sm" onClick={open}>
             Open
           </Button>
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
       {expanded ? <ResultSetDetail project={project} slide={slide} toast={toast} /> : null}
     </>
   );
@@ -420,13 +437,13 @@ function ResultSetDetail({
       params: { projectId: project.id, slideId: slide.id },
     });
   return (
-    <tr>
-      <td colSpan={4} className="border-b border-line bg-surf-hl pr-4 pb-3.5 pl-18">
+    <TableRow>
+      <TableCell colSpan={4} className="bg-surf-hl pr-4 pb-3.5 pl-18 whitespace-normal">
         <div className="grid gap-1.5" data-testid="result-sets">
           {sets.map((set) => (
             <div
               key={set.id}
-              className="grid grid-cols-[16px_minmax(0,1fr)_170px_170px_auto] items-center gap-3.5 rounded-ctl border border-line bg-surf-panel px-3 py-2.25"
+              className="grid grid-cols-[16px_minmax(0,1fr)_170px_170px_auto] items-center gap-3.5 rounded-ctl border border-line bg-surf-panel px-3 py-[calc(var(--density-cell-y)+1px)]"
             >
               <Icon name="layers" className="text-fg-dim" />
               <span className="min-w-0">
@@ -470,7 +487,7 @@ function ResultSetDetail({
               </span>
             </div>
           ))}
-          <div className="flex items-center gap-2 rounded-ctl border border-dashed border-line px-3 py-2.25">
+          <div className="flex items-center gap-2 rounded-ctl border border-dashed border-line px-3 py-[calc(var(--density-cell-y)+1px)]">
             <span className="text-body-sm text-fg-dim">
               Add another result set to {slide.label}
             </span>
@@ -501,7 +518,7 @@ function ResultSetDetail({
             </Button>
           </div>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

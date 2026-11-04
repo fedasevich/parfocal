@@ -3,6 +3,14 @@ import { Button } from "@parfocal/ui/components/button";
 import { FilterChip } from "@parfocal/ui/components/filter-chip";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@parfocal/ui/components/table";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -160,7 +168,7 @@ function SlideLine({
 }) {
   const people = usePeople();
   return (
-    <tr
+    <TableRow
       ref={measure}
       data-index={index}
       aria-rowindex={index + 2}
@@ -168,20 +176,20 @@ function SlideLine({
       data-vt-source=""
       onClick={() => onSelect(row.id)}
       onDoubleClick={() => onOpen(row)}
-      className={`cursor-pointer border-line border-b ${on ? "bg-accent-soft" : ""}`}
+      className="cursor-pointer"
     >
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      <TableCell className="whitespace-normal">
         <span className="inline-flex items-center gap-2.25">
           <SlideThumb className="h-5.5 w-8.5" />
           <b className="font-medium text-fg">{row.label}</b>
         </span>
-      </td>
+      </TableCell>
       {showProject ? (
-        <td className="px-2 py-(--density-cell-y) align-middle text-fg-dim">
+        <TableCell className="whitespace-normal">
           {row.project.code} · {row.case_label ? `case ${row.case_label}` : "loose"}
-        </td>
+        </TableCell>
       ) : null}
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      <TableCell className="whitespace-normal">
         <span className="flex flex-wrap gap-1">
           {row.result_sets.length > 0 ? (
             row.result_sets.map((set) => {
@@ -192,8 +200,8 @@ function SlideLine({
             <span className="text-fg-dim">none</span>
           )}
         </span>
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">
+      </TableCell>
+      <TableCell className="whitespace-normal">
         {row.reviews.length > 0 ? (
           row.reviews.map((review) => (
             <span key={`${review.task_id}-${review.user_id}`} className="my-0.75 flex">
@@ -207,9 +215,9 @@ function SlideLine({
         ) : (
           <span className="text-fg-dim">not assigned</span>
         )}
-      </td>
-      <td className="px-2 py-(--density-cell-y) align-middle">{statusOf(row)}</td>
-    </tr>
+      </TableCell>
+      <TableCell className="whitespace-normal">{statusOf(row)}</TableCell>
+    </TableRow>
   );
 }
 
@@ -263,24 +271,19 @@ function SlideTable({
     "Status",
   ];
   return (
-    <table
+    <Table
       aria-label="All slides"
       aria-rowcount={rows.length + 1}
-      className="w-full border-collapse text-body-sm"
+      containerClassName="overflow-visible"
     >
-      <thead>
-        <tr aria-rowindex={1} className="text-left text-caption text-fg-dim">
+      <TableHeader>
+        <TableRow aria-rowindex={1}>
           {headings.map((heading) => (
-            <th
-              key={heading}
-              className="whitespace-nowrap border-line-strong border-b px-2 py-1.75 font-semibold"
-            >
-              {heading}
-            </th>
+            <TableHead key={heading}>{heading}</TableHead>
           ))}
-        </tr>
-      </thead>
-      <tbody ref={bodyRef}>
+        </TableRow>
+      </TableHeader>
+      <TableBody ref={bodyRef}>
         {before > 0 ? (
           <tr data-slot="spacer" style={{ height: before }}>
             <td colSpan={headings.length} className="p-0" />
@@ -308,8 +311,8 @@ function SlideTable({
             <td colSpan={headings.length} className="p-0" />
           </tr>
         ) : null}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }
 
