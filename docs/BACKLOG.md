@@ -2567,7 +2567,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when API tests cover CRUD, history and bulk accept of 10,000 shapes under the latency budget.
   Depends on STACK-021. Tables in [ADR 0076](adr/0076-annotation-and-ai-result-storage.md).
 
-- [ ] ANN-021 · Autosave with optimistic updates and retry
+- [x] ANN-021 · Autosave with optimistic updates and retry
   Every edit saves in the background with batching, an offline-tolerant retry queue and a visible save state. A leave-page guard triggers only when unsaved edits exist.
   Done when E2E edits, cuts the network for 30 s, restores it, and no edit is lost.
   Size: M.

@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ANN-021 (autosave) adds a save queue in apps/web/src/annotations/save-queue.ts with batching, in-order sends, backoff retry at 1, 2, 4 and 8 s and an immediate retry on online, a save state shown top-left on the slide and a leave-page guard only while edits wait. The E2E cuts the network for 30 s and loses no edit. Edits queued offline are still lost if the tab is closed.
 - ANN-017 (proposals lifecycle) treats unaccepted model-run pieces as pending proposals with a dismissed set in the document, accept and discard through an undoable apply in use-saved-annotations, accepted shapes never take the active group, and a dashed proposal layer with an Accept and Discard bar in every tool. Tests cover ten tools. Nothing produces proposals until AISEG-005 (smart select).
 - AISEG-011 (sub-pixel contour tracing) adds apps/web/src/aiseg/contour-trace.ts, marching squares at level 0.45 on a lightly blurred mask. Traced area is 99% to 102% of mask area at 20x on five test shapes against about 80% for pixel-centre rings, and the share of mask pixels inside the outline is at least 94%, 7 unit tests.
 - AISEG-012 (scale presets) adds apps/web/src/aiseg/scale-presets.ts with the POC presets nuclei 0.25, cells 0.5, tissue 2 and region 8 um per pixel, the nearest pyramid level on a log scale with ties to the finer level, a downsample fallback for slides without a pixel size and 128 um patch plans, with 15 tests.
