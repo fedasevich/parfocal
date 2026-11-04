@@ -48,6 +48,7 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    resume_states,
     retention_policies,
     review_assignments,
     review_edits,
@@ -856,6 +857,20 @@ async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(str(seeded.ids["slide"]))
 
 
+async def seed_resume_states(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(resume_states).values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            task_id=seeded.ids["task"],
+            slide_id=seeded.ids["slide"],
+            mode="guided",
+            object_id="T1",
+        )
+    )
+    seeded.markers.add(str(seeded.ids["task"]))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -877,6 +892,7 @@ SEEDERS: dict[str, Seeder] = {
     "model_tiers": seed_model_tiers,
     "hidden_models": seed_hidden_models,
     "slide_coverage": seed_slide_coverage,
+    "resume_states": seed_resume_states,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(

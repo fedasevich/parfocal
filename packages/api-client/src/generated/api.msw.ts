@@ -95,6 +95,7 @@ import type {
   ResultSet,
   ResultSetDeletion,
   ResultSetDetail,
+  ResumeState,
   RetentionPolicy,
   ReviewEdit,
   ReviewedLayer,
@@ -199,6 +200,7 @@ import {
   ResultFormat,
   ResultSource,
   ResultStatus,
+  ResumeMode,
   Retired,
   Role,
   Rule,
@@ -3837,9 +3839,12 @@ export const getGetMyHomeResponseMock = (
       verdicts_on_slide: faker.number.int(),
       due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
       blinded: faker.datatype.boolean(),
+      mode: faker.helpers.arrayElement(Object.values(ResumeMode)),
       camera: faker.helpers.arrayElement([
         {
-          [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          z: faker.number.float({ fractionDigits: 2 }),
         },
         null,
       ]),
@@ -3908,6 +3913,28 @@ export const getGetMyHomeResponseMock = (
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getSetMyResumeResponseMock = (
+  overrideResponse: Partial<Extract<ResumeState, object>> = {},
+): ResumeState => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  mode: faker.helpers.arrayElement(Object.values(ResumeMode)),
+  object_id: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 1, max: 40 } }),
+    null,
+  ]),
+  camera: faker.helpers.arrayElement([
+    {
+      x: faker.number.float({ fractionDigits: 2 }),
+      y: faker.number.float({ fractionDigits: 2 }),
+      z: faker.number.float({ fractionDigits: 2 }),
+    },
+    null,
+  ]),
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
 
@@ -11969,6 +11996,28 @@ export const getGetMyHomeMockHandler = (
   );
 };
 
+export const getSetMyResumeMockHandler = (
+  overrideResponse?:
+    | ResumeState
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<ResumeState> | ResumeState),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/me/resume",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetMyResumeResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetRetentionPolicyMockHandler = (
   overrideResponse?:
     | RetentionPolicy
@@ -14832,6 +14881,7 @@ export const getParfocalAPIMock = () => [
   getListSiteValidationsMockHandler(),
   getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),
+  getSetMyResumeMockHandler(),
   getGetRetentionPolicyMockHandler(),
   getSetRetentionPolicyMockHandler(),
   getListLegalHoldsMockHandler(),

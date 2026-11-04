@@ -24,6 +24,7 @@ import type {
 } from "../generated/api.ts";
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
+import { storedResume } from "./resume-handlers.ts";
 import {
   type PersonKey,
   people,
@@ -239,7 +240,33 @@ const resumeTarget = (task: ScenarioReviewTask): Home["resume"] => {
     verdicts_on_slide: 38,
     due_on: task.dueOn,
     blinded: task.blinded,
+    mode: "guided",
     camera: null,
+  };
+};
+
+const storedTarget = (viewer: PersonKey): Home["resume"] => {
+  const stored = storedResume();
+  if (stored === null) return null;
+  const task = reviewTasks.find((candidate) => candidate.id === stored.task_id);
+  const slide = slides.find((candidate) => candidate.id === stored.slide_id);
+  if (task === undefined || slide === undefined) return null;
+  if (!task.reviewers.includes(viewer) || task.status === "signed") return null;
+  const derived = resumeTarget(task);
+  if (derived === null) return null;
+  const same = slide.id === derived.slide_id;
+  return {
+    ...derived,
+    slide_id: slide.id,
+    slide_label: slide.label,
+    case_label: slide.caseLabel,
+    position: same
+      ? derived.position
+      : slides.filter((candidate) => candidate.project === task.project).indexOf(slide),
+    verdicts_on_slide: same ? derived.verdicts_on_slide : 0,
+    object_id: stored.object_id ?? null,
+    mode: stored.mode,
+    camera: stored.camera ?? null,
   };
 };
 
@@ -250,7 +277,7 @@ export const toHome = (): Home => {
   const resumes = !firstWeek && task.reviewers.includes(viewer) && task.status !== "signed";
   const mine = projects.filter((candidate) => candidate.members.includes(viewer));
   return {
-    resume: resumes ? resumeTarget(task) : null,
+    resume: firstWeek ? null : (storedTarget(viewer) ?? (resumes ? resumeTarget(task) : null)),
     tasks: myTasks(),
     projects: firstWeek
       ? [sampleHomeProject(), ...mine.slice(0, 1).map(toHomeProject)]

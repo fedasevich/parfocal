@@ -13895,6 +13895,125 @@
         }
       }
     },
+    "/api/me/resume": {
+      "put": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Set My Resume",
+        "operationId": "setMyResume",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/retention": {
       "get": {
         "tags": [
@@ -38264,6 +38383,140 @@
         ],
         "title": "ResultsFile"
       },
+      "ResumeCamera": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "z": {
+            "type": "number",
+            "title": "Z"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "title": "ResumeCamera"
+      },
+      "ResumeChange": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ResumeMode"
+          },
+          "object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Id"
+          },
+          "camera": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeCamera"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_id",
+          "slide_id",
+          "mode"
+        ],
+        "title": "ResumeChange"
+      },
+      "ResumeMode": {
+        "type": "string",
+        "enum": [
+          "guided",
+          "viewer"
+        ],
+        "title": "ResumeMode"
+      },
+      "ResumeState": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ResumeMode"
+          },
+          "object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Id"
+          },
+          "camera": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeCamera"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_id",
+          "slide_id",
+          "mode",
+          "updated_at"
+        ],
+        "title": "ResumeState"
+      },
       "ResumeTarget": {
         "properties": {
           "task_id": {
@@ -38341,19 +38594,18 @@
             "type": "boolean",
             "title": "Blinded"
           },
+          "mode": {
+            "$ref": "#/components/schemas/ResumeMode"
+          },
           "camera": {
             "anyOf": [
               {
-                "additionalProperties": {
-                  "type": "number"
-                },
-                "type": "object"
+                "$ref": "#/components/schemas/ResumeCamera"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Camera"
+            ]
           }
         },
         "type": "object",
@@ -38371,6 +38623,7 @@
           "verdicts_on_slide",
           "due_on",
           "blinded",
+          "mode",
           "camera"
         ],
         "title": "ResumeTarget"

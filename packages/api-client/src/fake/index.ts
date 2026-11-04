@@ -11,6 +11,7 @@ import { createdRecordHandlers } from "./create-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
+import { resumeHandlers } from "./resume-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
@@ -48,6 +49,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...coverageHandlers(),
     ...tissueHandlers(),
     ...annotationHandlers(),
+    ...resumeHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
   ];
@@ -103,6 +105,7 @@ export {
   resetQueueState,
   setFakeQueueScene,
 } from "./queue-scene.ts";
+export { resetFakeResume, resumeHandlers } from "./resume-handlers.ts";
 export * as scenario from "./scenario.ts";
 export * as scenarioAdjudication from "./scenario-adjudication.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";

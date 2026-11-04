@@ -115,6 +115,7 @@ OPEN_OPERATIONS = {
     "listModelTiers": "member",
     "listModelVisibility": "member",
     "getMyHome": "member",
+    "setMyResume": "own-assignment",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
     "getRoomAccess": "room-grant",
