@@ -2243,7 +2243,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on NAV-004.
   Size: S.
 
-- [ ] NAV-015 · Real area bounds and the area list on the live route
+- [x] NAV-015 · Real area bounds and the area list on the live route
   NAV-014 (area navigation in the engine viewer) flies to areas from three dev-only bounds in apps/web/src/viewer/slide-areas.ts, shown only under the fake API, and the live route has no area list panel. Serve each slide's area bounds from its result objects through the API, feed SlideStage from them and show the NAV-004 area list on the live route.
   Done when API tests return area bounds for a slide with isolation, and a browser test on a real slide picks an area from the list and steps with ] from it.
   Depends on NAV-014.
