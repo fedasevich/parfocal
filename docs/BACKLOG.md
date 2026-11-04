@@ -1904,7 +1904,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: L.
 
-- [ ] HOME-008 · Search page
+- [x] HOME-008 · Search page
   A full search page reached from the sidebar and from the palette's "all results", with scopes (all, projects, cases, slides, object IDs, people, actions), grouped results, and an ID result that opens the slide at the object.
   Done when E2E searches `T2·C145` and part of a full path and opens the slide at the object.
   Depends on CASES-009, CMD-002. Refs mock 1 scene D, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
