@@ -32,5 +32,5 @@ test("Shift P draws a freehand stroke that is simplified and saved, and Escape l
   expect(points).toBeLessThan(steps);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
 });

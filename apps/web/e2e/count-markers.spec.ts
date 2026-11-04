@@ -45,6 +45,6 @@ test("M drops markers of the active class, counts them and Shift-click deletes o
   await expect(stage).toHaveAttribute("data-save-state", "saved");
 
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
   await expect(page.getByTestId("count-panel")).toHaveAttribute("data-total", "2");
 });

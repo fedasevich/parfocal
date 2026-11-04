@@ -9,7 +9,7 @@ async function openTaskSlide(page: Page) {
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   const url = new URL(page.url());
-  await page.goto(`${url.pathname}?task=${rt14}`);
+  await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate`);
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   return stage;
@@ -72,7 +72,7 @@ test("Escape closes the composer first and then leaves the tool", async ({ page 
   await expect(page.getByTestId("pin-composer")).toHaveCount(0);
   await expect(stage).toHaveAttribute("data-tool", "comment");
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
   await expect(pins(page)).toHaveCount(0);
 });
 

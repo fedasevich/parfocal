@@ -1,3 +1,4 @@
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
@@ -10,8 +11,17 @@ import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
 import { SlideStage } from "../viewer/slide-stage.tsx";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
 import { useSlideAreas } from "../viewer/use-slide-areas.ts";
+import {
+  resolveWorkspace,
+  type SlideWorkspace,
+  workspaceSetups,
+  workspaces,
+} from "../viewer/workspace.ts";
 
-const liveSearch = z.object({ task: z.string().optional() });
+const liveSearch = z.object({
+  task: z.string().optional(),
+  workspace: z.enum(workspaces).optional(),
+});
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live")({
   validateSearch: liveSearch,
@@ -44,7 +54,8 @@ function CaseHeader({ load }: { load: CaseLoad }) {
 
 function LiveSlide() {
   const { projectId, slideId } = Route.useParams();
-  const { task } = Route.useSearch();
+  const { task, workspace: chosen } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const loaded = useCaseLoad(projectId, slideId, task);
   const [percent, setPercent] = useState<number | null>(null);
   const [peek, setPeek] = useState(false);
@@ -53,6 +64,12 @@ function LiveSlide() {
   const flagged = loaded.state === "ready" && loaded.load.resultSets.length > 0;
   const slideAreas = useSlideAreas(slideId, flagged);
   const areas = slideAreas.areas;
+  const workspace = resolveWorkspace(
+    chosen,
+    loaded.state === "ready" ? loaded.load.task?.kind : undefined,
+  );
+  const switchTo = (next: SlideWorkspace) =>
+    void navigate({ search: (previous) => ({ ...previous, workspace: next }), replace: true });
   return (
     <main className="flex h-screen flex-col bg-chrome text-fg">
       <header className="flex items-center gap-3 border-line border-b px-4 py-2">
@@ -69,6 +86,13 @@ function LiveSlide() {
           <h1 className="font-semibold text-body">Slide</h1>
         )}
         <span className="flex-1" />
+        <SegmentedControl
+          aria-label="Workspace"
+          data-testid="workspace-switch"
+          value={workspace}
+          onValueChange={(next) => switchTo(next as SlideWorkspace)}
+          options={workspaces.map((name) => ({ value: name, label: workspaceSetups[name].label }))}
+        />
         <ViewingNow slideId={slideId} />
         {percent === null ? null : (
           <ViewedRing data-testid="viewed-ring" percent={percent} onClick={() => setPeek(true)} />
@@ -84,6 +108,7 @@ function LiveSlide() {
           areas={areas}
           viewed={viewed}
           outlines={fakeOutlines && task !== undefined}
+          workspace={workspace}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>
