@@ -1,7 +1,8 @@
 import { Deck, type Layer, OrthographicView } from "@deck.gl/core";
 import { BitmapLayer, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { type Camera, originCamera } from "../camera/camera.ts";
-import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
+import type { MotionVector } from "../camera/motion-predictor.ts";
+import { defaultDecodeWorkers, type PrefetchStats } from "../decode/decode-pool.ts";
 import { createRangeCache } from "../decode/range-cache.ts";
 import {
   createWorkerRegionReader,
@@ -38,6 +39,7 @@ import {
   interpolationRuleProp,
 } from "./interpolation.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
+import { createPrefetcher, type Prefetcher } from "./prefetch.ts";
 import { createVivLevels, type VivLevels } from "./viv-levels.ts";
 
 export const vivViewId = "slide";
@@ -66,6 +68,7 @@ export interface VivRouteOptions {
   readonly sleepWhenIdle?: boolean;
   readonly interpolation?: InterpolationRule;
   readonly restoreTimeoutMs?: number;
+  readonly prefetch?: boolean;
 }
 
 export interface VivGpuState {
@@ -83,6 +86,10 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly jpegReports: () => readonly (DecodeReport | null)[];
   readonly sleep: DeckSleep | null;
   readonly gpu: VivGpuState;
+  readonly setPrefetch: (enabled: boolean) => void;
+  readonly prefetchEnabled: () => boolean;
+  readonly prefetchVector: () => MotionVector | null;
+  readonly prefetchStats: () => PrefetchStats | null;
 }
 
 interface Shown {
@@ -90,6 +97,7 @@ interface Shown {
   readonly levels: VivLevels;
   readonly layer: Layer;
   readonly reader: WorkerRegionReader | null;
+  readonly prefetcher: Prefetcher | null;
 }
 
 export function vivViewState(camera: Camera) {
@@ -128,6 +136,7 @@ export function createVivRoute(
   let overlays: readonly OverlayLayer[] = [];
   let overlayLayers: Layer[] = [];
   let brightness = 1;
+  let prefetchOn = options.prefetch ?? true;
   const overlayBuilder = createOverlayLayerBuilder();
   let changes = 0;
   let renderedChanges = -1;
@@ -233,13 +242,26 @@ export function createVivRoute(
       onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.read } : {}),
     });
-    shown = { slide, levels, layer: slideLayer(slide, levels), reader };
+    const prefetcher = reader
+      ? createPrefetcher({
+          levels,
+          target: reader,
+          viewport: () =>
+            canvas.clientWidth > 0 && canvas.clientHeight > 0
+              ? { width: canvas.clientWidth, height: canvas.clientHeight }
+              : null,
+          now: systemClock,
+          enabled: prefetchOn,
+        })
+      : null;
+    shown = { slide, levels, layer: slideLayer(slide, levels), reader, prefetcher };
     applyLayers();
   };
 
   const setCamera = (next: Camera) => {
     camera = next;
     shown?.reader?.setFocus({ x: camera.x, y: camera.y });
+    shown?.prefetcher?.update(camera);
     if (gpuUsable()) deck.setProps({ viewState: vivViewState(camera) });
     changed();
   };
@@ -366,6 +388,13 @@ export function createVivRoute(
     decodeStats: () => shown?.reader?.stats() ?? null,
     jpegReports: () => shown?.reader?.jpegReports() ?? [],
     sleep,
+    setPrefetch: (enabled) => {
+      prefetchOn = enabled;
+      shown?.prefetcher?.setEnabled(enabled);
+    },
+    prefetchEnabled: () => prefetchOn,
+    prefetchVector: () => shown?.prefetcher?.vector() ?? null,
+    prefetchStats: () => shown?.reader?.prefetchStats() ?? null,
     showSlide,
     setCamera,
     setOverlays: (next) => {

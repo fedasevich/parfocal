@@ -68,3 +68,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-03 | [Monorepo, CI and Python tooling still match ADR 0006, ADR 0007 and ADR 0011, with Ruff, uv and Ubuntu runner upgrades due](2026-11-03-tooling-recheck.md) | FOUND-000 | check |
 | 2026-11-04 | [Range coalescing brings a 64-chunk viewport of a sharded OME-Zarr 0.5 store from 72 requests to 12, as doc 32 went from 194 to 39](2026-11-04-zarr-range-coalescing.md) | TILES-005 | benchmark |
 | 2026-11-04 | [HoVer-NeXt reaches an ECE of 0.022 with one view and 0.019 with 8 views after temperature scaling, and the registry stores those rows](2026-11-04-typer-calibration-registry.md) | AINUC-006 | ML evaluation |
+| 2026-11-04 | [A prefetch that follows a straight pan requests 48 to 96 tiles ahead and uses 14 to 64 of them, but the time to a sharp view stays inside the noise on a loaded machine](2026-11-04-prefetch-time-to-sharp.md) | VIEW-044 | benchmark |

@@ -57,6 +57,12 @@ export interface VivLevels {
   readonly ladder: readonly VirtualLevel[];
   readonly tileSize: number;
   readonly pending: () => number;
+  readonly regionFor: (level: number, x: number, y: number) => PlannedRegion | null;
+}
+
+export interface PlannedRegion {
+  readonly region: VivRegion;
+  readonly centre: RegionCentre;
 }
 
 export interface VivRegion {
@@ -212,31 +218,63 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
   const read: VivRegionReader =
     options.read ?? ((region, _centre, signal) => readVivRegion(source, region, signal));
 
+  const plan = (
+    virtual: VirtualLevel,
+    region: readonly [number, number, number, number],
+  ): PlannedRegion => {
+    const backing = source.levels[virtual.backing];
+    if (backing === undefined) throw new RangeError(`Level ${virtual.backing} is missing`);
+    const [x0, y0, x1, y1] = region;
+    const { residual } = virtual;
+    return {
+      region: {
+        backing: virtual.backing,
+        residual,
+        window: [
+          x0 * residual,
+          y0 * residual,
+          Math.min(x1 * residual, backing.width),
+          Math.min(y1 * residual, backing.height),
+        ],
+        width: x1 - x0,
+        height: y1 - y0,
+      },
+      centre: {
+        x: ((x0 + x1) / 2) * virtual.downsample,
+        y: ((y0 + y1) / 2) * virtual.downsample,
+      },
+    };
+  };
+
+  const tileRegion = (
+    virtual: VirtualLevel,
+    x: number,
+    y: number,
+  ): readonly [number, number, number, number] => {
+    const x0 = x * tileSize;
+    const y0 = y * tileSize;
+    return [
+      x0,
+      y0,
+      Math.min(x0 + tileSize, virtual.width),
+      Math.min(y0 + tileSize, virtual.height),
+    ];
+  };
+
+  const regionFor = (level: number, x: number, y: number): PlannedRegion | null => {
+    const virtual = ladder[level];
+    if (virtual === undefined) return null;
+    if (x < 0 || y < 0 || x >= Math.ceil(virtual.width / tileSize)) return null;
+    if (y >= Math.ceil(virtual.height / tileSize)) return null;
+    return plan(virtual, tileRegion(virtual, x, y));
+  };
+
   const readRegion = async (
     virtual: VirtualLevel,
     region: readonly [number, number, number, number],
     signal: AbortSignal | undefined,
   ): Promise<VivTile> => {
-    const backing = source.levels[virtual.backing];
-    if (backing === undefined) throw new RangeError(`Level ${virtual.backing} is missing`);
-    const [x0, y0, x1, y1] = region;
-    const { residual } = virtual;
-    const request: VivRegion = {
-      backing: virtual.backing,
-      residual,
-      window: [
-        x0 * residual,
-        y0 * residual,
-        Math.min(x1 * residual, backing.width),
-        Math.min(y1 * residual, backing.height),
-      ],
-      width: x1 - x0,
-      height: y1 - y0,
-    };
-    const centre = {
-      x: ((x0 + x1) / 2) * virtual.downsample,
-      y: ((y0 + y1) / 2) * virtual.downsample,
-    };
+    const { region: request, centre } = plan(virtual, region);
     inFlight++;
     try {
       if (signal?.aborted) throw vivSignalAborted;
@@ -274,18 +312,12 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
         if (x >= columns || y >= rows) {
           return Promise.reject(new RangeError(`Tile ${x},${y} is outside the level`));
         }
-        const x0 = x * tileSize;
-        const y0 = y * tileSize;
-        return readRegion(
-          virtual,
-          [x0, y0, Math.min(x0 + tileSize, virtual.width), Math.min(y0 + tileSize, virtual.height)],
-          signal,
-        );
+        return readRegion(virtual, tileRegion(virtual, x, y), signal);
       },
       getRaster: ({ signal }) => readRegion(virtual, [0, 0, virtual.width, virtual.height], signal),
       onTileError,
     };
   });
 
-  return { levels, ladder, tileSize, pending: () => inFlight };
+  return { levels, ladder, tileSize, pending: () => inFlight, regionFor };
 }

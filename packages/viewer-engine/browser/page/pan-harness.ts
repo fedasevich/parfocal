@@ -4,6 +4,8 @@ import {
   type Camera,
   createDefaultPixelSourceRegistry,
   createViewerEngine,
+  type MotionVector,
+  type PrefetchStats,
   type SlideFormatId,
   type ViewerEngine,
   viewRestMs,
@@ -24,6 +26,7 @@ export interface PanSlide {
   readonly workers: number;
   readonly reader: "shared-bytes" | "geotiff-direct";
   readonly magnification: number | null;
+  readonly prefetch?: boolean;
   readonly x: number;
   readonly y: number;
 }
@@ -60,7 +63,20 @@ export interface PanReport {
   readonly errors: readonly string[];
 }
 
+export interface Drive {
+  readonly pxPerSecond: number;
+  readonly ms: number;
+  readonly zigzagPx: number;
+  readonly vertical: boolean;
+}
+
+export interface DriveReport extends PanReport {
+  readonly prefetch: PrefetchStats | null;
+  readonly vector: MotionVector | null;
+}
+
 export interface PanHarness {
+  drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport>;
   open(slide: PanSlide): Promise<Opened>;
   jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport>;
   pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<PanReport>;
@@ -107,6 +123,7 @@ async function open(slide: PanSlide): Promise<Opened> {
   const factory = vivRendererFactory({
     decodeWorkers: slide.workers,
     useDevicePixels: 1,
+    ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
     onError: (error) => {
       errors.push(error.message);
     },
@@ -192,6 +209,46 @@ async function pan(legs: readonly PanLeg[], settleTimeoutMs: number): Promise<Pa
   };
 }
 
+async function drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport> {
+  const { engine: current, route: shown } = mounted();
+  const started = performance.now();
+  let last = await nextFrame();
+  let frames = 0;
+  let sign = 1;
+  let maxVector: MotionVector | null = null;
+  while (last - started < plan.ms) {
+    const now = await nextFrame();
+    const dt = now - last;
+    last = now;
+    const camera = current.getCamera();
+    const scale = 2 ** camera.zoom;
+    const along = (plan.pxPerSecond * dt) / 1000;
+    const across = plan.zigzagPx > 0 ? sign * plan.zigzagPx : 0;
+    sign = -sign;
+    const dx = plan.vertical ? across : along;
+    const dy = plan.vertical ? along : across;
+    current.setCamera({ x: camera.x + dx / scale, y: camera.y + dy / scale, zoom: camera.zoom });
+    frames++;
+    const vector = shown.prefetchVector();
+    if (vector !== null && (maxVector === null || vector.speed > maxVector.speed)) {
+      maxVector = vector;
+    }
+  }
+  const moved = performance.now();
+  await shown.whenIdle(AbortSignal.timeout(settleTimeoutMs));
+  const settled = performance.now();
+  return {
+    frames,
+    elapsedMs: moved - started,
+    settleMs: settled - moved,
+    camera: current.getCamera(),
+    decode: shown.decodeStats(),
+    errors: [...errors],
+    prefetch: shown.prefetchStats(),
+    vector: maxVector,
+  };
+}
+
 async function rest(): Promise<Camera> {
   const { engine: current } = mounted();
   while (current.getMotion() !== "idle") await nextFrame();
@@ -220,6 +277,7 @@ function close(): void {
 
 window.panHarness = {
   open,
+  drive,
   jump,
   pan,
   close,
