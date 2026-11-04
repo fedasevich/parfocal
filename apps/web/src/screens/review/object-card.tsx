@@ -12,11 +12,11 @@ import {
   type CardText,
   type Count,
   countWord,
-  disagreeReasons,
   type ReviewStyle,
   rawLabel,
   unsureReasons,
 } from "./decision-style.ts";
+import { disagreeOptions } from "./disagree-reasons.ts";
 import { dotGlyphOf, dotStateWord } from "./guided-progress.ts";
 import type { Answer } from "./review-state.ts";
 
@@ -213,6 +213,9 @@ type ObjectCardProps = {
   onReason: (reason: string) => void;
   onBackToAnswers: () => void;
   onFix: (what: string) => void;
+  redrawPoints: number | null;
+  onFinishRedraw: () => void;
+  onCancelRedraw: () => void;
   onAddMissed: () => void;
 };
 
@@ -235,6 +238,9 @@ export function ObjectCard({
   onReason,
   onBackToAnswers,
   onFix,
+  redrawPoints,
+  onFinishRedraw,
+  onCancelRedraw,
   onAddMissed,
 }: ObjectCardProps) {
   const head = (
@@ -245,6 +251,33 @@ export function ObjectCard({
       <ObjectIdTag size="lg">{object.object}</ObjectIdTag>
     </div>
   );
+  if (redrawPoints !== null) {
+    return (
+      <div className="grid gap-5" data-testid="redraw-panel">
+        {head}
+        {dots}
+        <div className="grid gap-1.5">
+          <h2 className="m-0 text-title font-semibold leading-snug text-fg">
+            Draw the new outline of {object.object}
+          </h2>
+          <p className="m-0 text-body text-fg-dim">
+            Click around it. Click the first point or press Finish to close it. The AI result stays
+            as it was.
+          </p>
+          <small className="text-body-sm text-fg-dim" aria-live="polite">
+            {redrawPoints} {redrawPoints === 1 ? "point" : "points"}
+          </small>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="primary" disabled={redrawPoints < 3} onClick={onFinishRedraw}>
+            <Icon name="check" />
+            Finish outline
+          </Button>
+          <Button onClick={onCancelRedraw}>Cancel</Button>
+        </div>
+      </div>
+    );
+  }
   if (disagreeOpen) {
     return (
       <div className="grid gap-5">
@@ -256,7 +289,7 @@ export function ObjectCard({
         <div className="grid gap-2.5">
           <span className="text-body-sm font-semibold">What is wrong</span>
           <div className="flex flex-wrap gap-2">
-            {disagreeReasons[object.kind].map((reason) => (
+            {disagreeOptions(object.kind, object.class_name, classes).map(({ label: reason }) => (
               <FilterChip
                 key={reason}
                 pressed={answer?.reasons.includes(reason) ?? false}
@@ -342,8 +375,14 @@ export function ObjectCard({
   );
 }
 
-export function noteReasonsFor(kind: ReviewObject["kind"], value: Count | undefined) {
-  if (value === "disagree") return disagreeReasons[kind];
+export function noteReasonsFor(
+  object: ReviewObject,
+  value: Count | undefined,
+  classes: ProjectClass[],
+) {
+  if (value === "disagree") {
+    return disagreeOptions(object.kind, object.class_name, classes).map((option) => option.label);
+  }
   if (value === "unsure") return unsureReasons;
   return [];
 }

@@ -4,18 +4,22 @@ import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.t
 import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
+  getClearReviewEditMockHandler,
   getClearVerdictMockHandler,
   getCreateThreadMockHandler,
   getGetOpinionMockHandler,
+  getGetReviewedLayerMockHandler,
   getGetSlideNeighboursMockHandler,
   getListMentionableMembersMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
   getSaveOpinionMockHandler,
+  getSaveReviewEditMockHandler,
   getSaveVerdictMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  EditDraft,
   Mentionable,
   Neighbours,
   Opinion,
@@ -28,7 +32,14 @@ import type {
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { objectsOn, rememberDecision, reviewedSlide, reviewsA1 } from "./review-verdicts.ts";
+import {
+  objectsOn,
+  rememberDecision,
+  rememberEdit,
+  reviewedLayerFor,
+  reviewedSlide,
+  reviewsA1,
+} from "./review-verdicts.ts";
 import { people, projectByCode, reviewTasks, slideByIndex, slides, threads } from "./scenario.ts";
 import {
   addedByLenka,
@@ -394,6 +405,28 @@ export function reviewHandlers(): RequestHandler[] {
         null,
       );
     }),
+    getSaveReviewEditMockHandler(async ({ request, params }) => {
+      const draft = (await request.json()) as EditDraft;
+      const saved = rememberEdit(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        String(params["objectId"]),
+        draft,
+      );
+      if (saved === undefined) throw new Error("edit was not kept");
+      return saved;
+    }),
+    getClearReviewEditMockHandler(({ params }) => {
+      rememberEdit(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        String(params["objectId"]),
+        null,
+      );
+    }),
+    getGetReviewedLayerMockHandler(({ params }) =>
+      reviewedLayerFor(String(params["taskId"]), String(params["slideId"])),
+    ),
     getSubmitSlideReviewMockHandler(({ params }) =>
       submittedStates(String(params["taskId"]), String(params["slideId"])),
     ),

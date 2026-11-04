@@ -1,4 +1,4 @@
-import { useSubmitSlideReview } from "@parfocal/api-client";
+import { useGetReviewedLayer, useSubmitSlideReview } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -9,10 +9,13 @@ import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { polygonToGeoJson } from "../../annotations/geojson.ts";
+import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
 import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
@@ -26,6 +29,7 @@ import {
   rawLabel,
   showsClaim,
 } from "./decision-style.ts";
+import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
@@ -46,6 +50,8 @@ import {
 } from "./object-card.tsx";
 import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
 import { nextObjectAction, previousObjectAction, useObjectKeys } from "./object-keys.ts";
+import { imageOfKind, ringOfGeometry, slideToStill, stillToSlide } from "./outline-coords.ts";
+import { RedrawLayer } from "./redraw-layer.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
@@ -144,6 +150,20 @@ function GuidedBody({
   const [disagreeOpen, setDisagreeOpen] = useState(setup.disagreeOpen);
   const [noteFor, setNoteFor] = useState<string | null>(setup.noteDraft ? "current" : null);
   const [noteDraft, setNoteDraft] = useState(setup.noteDraft ?? { reasons: [], text: "" });
+  const [redraw, setRedraw] = useState<PolygonDraft | null>(null);
+  const [redrawnNow, setRedrawn] = useState<Record<string, PolygonDraft>>({});
+  const layer = okData(useGetReviewedLayer(session.taskId, session.slideId, undefined).data);
+  const redrawn = useMemo(() => {
+    const loaded: Record<string, PolygonDraft> = {};
+    for (const edit of layer?.edits ?? []) {
+      const ring = ringOfGeometry(edit.geometry);
+      if (ring !== null) {
+        const image = imageOfKind(edit.kind === "cell" ? "cell" : "region");
+        loaded[edit.object] = ring.map((point) => slideToStill(point, image));
+      }
+    }
+    return { ...loaded, ...redrawnNow };
+  }, [layer, redrawnNow]);
   const [cellsShut, setCellsShut] = useState(false);
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(setup.cellsPreview);
@@ -272,6 +292,44 @@ function GuidedBody({
       ? kept.reasons.filter((item) => item !== reason)
       : [...kept.reasons, reason];
     put(currentId, { ...kept, reasons });
+    if (current !== undefined && kept.value === "disagree") {
+      decisions.save(
+        currentId,
+        kept.raw,
+        kept.value,
+        reasonDraft(reasons, disagreeOptions(current.kind, current.class_name, session.classes)),
+      );
+    }
+  };
+  const startRedraw = () => {
+    setRedraw([]);
+    setCamera(null);
+  };
+  const pickPoint = (point: Point) => {
+    if (redraw === null) return;
+    const last = redraw.at(-1);
+    if (last?.x === point.x && last.y === point.y) return;
+    setRedraw([...redraw, point]);
+  };
+  const finishRedraw = () => {
+    if (redraw === null) return;
+    const image = imageOfKind(current?.kind ?? "region");
+    const closed = closeDraft(redraw.map((point) => stillToSlide(point, image)));
+    if (closed.kind !== "closed") return;
+    decisions.saveOutline(currentId, polygonToGeoJson(closed.points));
+    const saved = redraw;
+    setRedrawn((now) => ({ ...now, [currentId]: saved }));
+    setRedraw(null);
+    showUndoToast({
+      message: `New outline saved for ${currentId}. The AI result is not changed.`,
+      undo: () => {
+        decisions.clearOutline(currentId);
+        setRedrawn((now) => {
+          const { [currentId]: _gone, ...rest } = now;
+          return rest;
+        });
+      },
+    });
   };
   const saveNote = () => {
     const kept = answer(currentId);
@@ -409,7 +467,9 @@ function GuidedBody({
     noteFor !== null && current ? (
       <NoteEditor
         object={currentId}
-        reasons={disagreeOpen ? [] : noteReasonsFor(current.kind, setup.pending ?? kept?.value)}
+        reasons={
+          disagreeOpen ? [] : noteReasonsFor(current, setup.pending ?? kept?.value, session.classes)
+        }
         chosen={noteDraft.reasons}
         text={noteDraft.text}
         offReason={setup.connLost ? netOff : undefined}
@@ -551,13 +611,13 @@ function GuidedBody({
         onAnswer={answerWith}
         onReason={toggleReason}
         onBackToAnswers={() => setDisagreeOpen(false)}
+        redrawPoints={redraw === null ? null : redraw.length}
+        onFinishRedraw={finishRedraw}
+        onCancelRedraw={() => setRedraw(null)}
         onFix={(what) =>
-          showUndoToast({
-            message:
-              what === "outline"
-                ? "Redraw the outline in the full viewer (prototype)"
-                : "Pick the right class with 1 to 4 (prototype)",
-          })
+          what === "outline"
+            ? startRedraw()
+            : showUndoToast({ message: "Pick the right class with 1 to 4 (prototype)" })
         }
         onAddMissed={() =>
           showUndoToast({
@@ -704,8 +764,16 @@ function GuidedBody({
           minimap={!noResults}
           hint={!showDone && !noResults}
           slideName={session.slideName}
-          overlay={({ camera: shown, moved }) => (
+          onPointPick={redraw === null ? undefined : pickPoint}
+          overlay={({ camera: shown, size, moved }) => (
             <>
+              <RedrawLayer
+                camera={shown}
+                size={size}
+                draft={redraw}
+                saved={redrawn[currentId] ?? null}
+                onClose={finishRedraw}
+              />
               {canvasIssue}
               {setup.coach ? (
                 <>
