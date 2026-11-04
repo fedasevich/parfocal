@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import * as React from "react";
 import { AppShell, Sidebar, TopBar } from "../src/components/app-shell.tsx";
 import { CoSignColumns, DepositTable, ReportDocument } from "../src/components/clinical-report.tsx";
 import { DecisionButtons } from "../src/components/decision-buttons.tsx";
@@ -354,6 +355,51 @@ export const SlideDoneOneBlocker: Story = {
       />
     </div>
   ),
+};
+
+const everyKind: OpinionQuestion[] = [
+  {
+    id: "scale",
+    question: "How useful was the AI on this slide?",
+    kind: "scale",
+    required: true,
+    help: "1 not at all · 5 very",
+  },
+  {
+    id: "choice",
+    question: "What made it hard?",
+    kind: "choice",
+    options: ["Folds", "Faint staining", "Nothing"],
+  },
+  { id: "yesno", question: "Would you sign this without changes?", kind: "yesno", required: true },
+  { id: "text", question: "Anything else?", kind: "text" },
+];
+
+function AnswerableCard({ width }: { width: number }) {
+  const [answers, setAnswers] = React.useState<Record<string, string>>({});
+  return (
+    <div className="bg-chrome p-5" style={{ width }}>
+      <SlideDoneCard
+        panel
+        slideNumber={8}
+        counts={counts}
+        questions={everyKind.map((question) => {
+          const answer = answers[question.id];
+          return answer ? { ...question, answer } : question;
+        })}
+        submitLabel="Submit and open slide 9"
+        onAnswerChange={(id, value) => setAnswers({ ...answers, [id]: value })}
+      />
+    </div>
+  );
+}
+
+export const SlideDoneEveryKind: Story = {
+  render: () => <AnswerableCard width={470} />,
+};
+
+export const SlideDonePanelWidth: Story = {
+  render: () => <AnswerableCard width={340} />,
 };
 
 export const SlideDoneFailed: Story = {

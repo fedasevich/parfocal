@@ -10,6 +10,7 @@ import {
   getListMentionableMembersMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
+  getSaveOpinionMockHandler,
   getSaveVerdictMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
@@ -17,6 +18,7 @@ import type {
   Mentionable,
   Neighbours,
   Opinion,
+  OpinionChange,
   ProjectClass,
   TaskStates,
   Thread,
@@ -154,11 +156,18 @@ export const toSlideAgreement = (taskId: string, slideId: string): SlideAgreemen
     total: reviewsA1(taskId, slideId) ? agreementWithSimona.total : 0,
   });
 
-export const toOpinion = (): Opinion => ({
+const savedOpinions = new Map<string, Record<string, unknown>>();
+
+export const toOpinion = (taskId = "", slideId = ""): Opinion => ({
   reviewer_id: people[fakeView().viewer].id,
   form_version: 1,
   questions: opinionQuestions,
-  answers: fakeView().viewer === "LM" ? lenkaOpinion : {},
+  answers: Object.fromEntries(
+    Object.entries({
+      ...(fakeView().viewer === "LM" ? lenkaOpinion : {}),
+      ...savedOpinions.get(`${taskId}/${slideId}`),
+    }).filter(([, value]) => value !== null),
+  ),
   draft: true,
   read: "single",
   updated_at: "2026-10-15T10:52:00+02:00",
@@ -270,7 +279,19 @@ export function reviewHandlers(): RequestHandler[] {
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId/states", ({ params }) =>
       params.taskId === rt13.id ? HttpResponse.json(toTaskStates(rt13)) : undefined,
     ),
-    getGetOpinionMockHandler(() => toOpinion()),
+    getGetOpinionMockHandler(({ params }) =>
+      toOpinion(String(params["taskId"]), String(params["slideId"])),
+    ),
+    getSaveOpinionMockHandler(async ({ request, params }) => {
+      const taskId = String(params["taskId"]);
+      const slideId = String(params["slideId"]);
+      const change = (await request.json()) as OpinionChange;
+      const key = `${taskId}/${slideId}`;
+      const kept = { ...savedOpinions.get(key) };
+      for (const [question, value] of Object.entries(change.answers)) kept[question] = value;
+      savedOpinions.set(key, kept);
+      return toOpinion(taskId, slideId);
+    }),
     getListThreadsMockHandler(({ params, request }) => {
       const asked = new URL(request.url).searchParams.get("resolved");
       return toThreads(
