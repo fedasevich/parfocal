@@ -4,12 +4,14 @@ import { setupServer } from "msw/node";
 import {
   defaultFakeView,
   fakeApiHandlers,
+  resetFakeThreads,
   scenario,
   scenarioReview,
   scenarioTask,
   setFakeView,
 } from "../src/fake/index.ts";
 import {
+  createThread,
   getOpinion,
   getReviewOrder,
   getReviewTask,
@@ -36,6 +38,7 @@ before(() => {
 });
 
 afterEach(() => {
+  resetFakeThreads();
   setFakeView(defaultFakeView);
 });
 
@@ -213,4 +216,31 @@ test("a blinded reviewer can mention only the researcher, the researcher anyone 
   const asResearcher = body(await listMentionableMembers(rt14.id, a1.id));
   assert.equal(asResearcher.length, Object.keys(scenario.people).length - 1);
   assert.ok(asResearcher.every((member) => member.user_id !== scenario.people.DH.id));
+});
+
+test("a thread posted with a point anchor is listed back with its first message", async () => {
+  assert.ok(rt14);
+  const before = body(await listThreads(rt14.id, a1.id)).length;
+  const response = await createThread(rt14.id, a1.id, {
+    title: "Check this corner",
+    body: "Is this fold real?",
+    anchor: {
+      kind: "point",
+      object_id: null,
+      geometry: { type: "Point", coordinates: [120, 340] },
+      offset: null,
+    },
+  });
+  assert.equal(response.status, 201);
+  const created = response.data as { id: string };
+  const all = body(await listThreads(rt14.id, a1.id));
+  assert.equal(all.length, before + 1);
+  const posted = all.find((thread) => thread.id === created.id);
+  assert.equal(posted?.title, "Check this corner");
+  assert.equal(posted?.anchor.kind, "point");
+  assert.equal(posted?.message_count, 1);
+  const open = body(await listThreads(rt14.id, a1.id, { resolved: false }));
+  assert.ok(open.some((thread) => thread.id === created.id));
+  const comments = (await listThreadComments(created.id)).data;
+  assert.equal(comments[0]?.text, "Is this fold real?");
 });

@@ -118,6 +118,7 @@ export {
   sharedReportOf,
 } from "./report-link-handlers.ts";
 export { resetFakeResume, resumeHandlers } from "./resume-handlers.ts";
+export { resetFakeThreads } from "./review-handlers.ts";
 export * as scenario from "./scenario.ts";
 export * as scenarioAdjudication from "./scenario-adjudication.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";
