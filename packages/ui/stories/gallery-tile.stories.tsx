@@ -6,6 +6,7 @@ import {
   type GalleryTileSize,
   type GalleryTileState,
 } from "../src/components/gallery-tile.tsx";
+import { mayNotBeNucleus } from "../src/lib/not-a-nucleus.ts";
 import { mockAssets } from "./fixtures.ts";
 
 const meta = {
@@ -128,4 +129,38 @@ function Pickable() {
 
 export const PickAndDecide: Story = {
   render: () => <Pickable />,
+};
+
+function Flagged() {
+  const [marked, setMarked] = useState<string[]>([]);
+  const cells = [
+    { objectId: "T1·C170", detectorScore: 0.74, foreground: 0.92 },
+    { objectId: "T1·C171", detectorScore: 0.93, foreground: 0.31 },
+    { objectId: "T1·C172", detectorScore: 0.95, foreground: 0.9 },
+  ];
+  return (
+    <div className="flex items-start gap-6 bg-chrome p-4">
+      {cells.map((cell, index) => {
+        const decision = marked.includes(cell.objectId) ? "disagree" : "open";
+        return (
+          <GalleryTile
+            key={cell.objectId}
+            size={40}
+            image={mockAssets.hpf}
+            objectId={cell.objectId}
+            label="tumor cell"
+            state={decision === "open" ? "to-check" : "done"}
+            decision={decision}
+            flagged={mayNotBeNucleus(cell)}
+            onFlagAction={() => setMarked((all) => [...all, cell.objectId])}
+            {...cropAt(index + 5)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export const MayNotBeANucleus: Story = {
+  render: () => <Flagged />,
 };

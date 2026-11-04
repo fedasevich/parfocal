@@ -11,6 +11,8 @@ export const reviewObjectSchema = z.object({
   score: z.number().min(0).max(1),
   size_mm: z.number().nonnegative().nullable(),
   other_class: z.string().nullable(),
+  detector_score: z.number().min(0).max(1).nullable().optional(),
+  foreground: z.number().min(0).max(1).nullable().optional(),
 });
 
 export const reviewObjectsSchema = z.object({

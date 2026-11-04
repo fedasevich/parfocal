@@ -56,6 +56,7 @@ import {
   rawFor,
   showsClaim,
 } from "../review/decision-style.ts";
+import { disagreeOptions, reasonDraft } from "../review/disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "../review/display-tab.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
@@ -395,6 +396,28 @@ function ViewerBody({
       );
       if (after) pick(after.object);
     }
+  };
+  const notNucleus = (object: string) => {
+    const target = cells.find((item) => item.object === object);
+    if (target === undefined || answer(object)) return;
+    const raw = rawFor(style, "disagree", target);
+    const reasons = ["Not a cell"];
+    const before = overrides;
+    put(object, { value: "disagree", raw, reasons, note: null });
+    decisions.save(
+      object,
+      raw,
+      "disagree",
+      reasonDraft(reasons, disagreeOptions(target.kind, target.class_name, session.classes)),
+    );
+    setToast({
+      id: Date.now(),
+      text: `${object}: not a nucleus, counts as disagree`,
+      undo: () => {
+        setOverrides(before);
+        decisions.restore(object, undefined);
+      },
+    });
   };
   const saveNote = () => {
     if (current === undefined) return;
@@ -1245,6 +1268,7 @@ function ViewerBody({
                       folded={cellsFolded}
                       confirming={confirmRest}
                       onPick={(object) => pick(object)}
+                      onNotNucleus={buttonsOff ? undefined : notNucleus}
                       onAgreeRest={() => setConfirmRest(true)}
                       onCancelRest={() => setConfirmRest(false)}
                       onApplyRest={() => {

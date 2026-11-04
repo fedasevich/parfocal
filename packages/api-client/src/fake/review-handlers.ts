@@ -84,6 +84,8 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
       score: item.score,
       size_mm: item.sizeMm,
       other_class: item.otherClass,
+      detector_score: item.detectorScore,
+      foreground: item.foreground,
     })),
     added: reviewsA1(taskId, slideId) ? addedByLenka : [],
   });
