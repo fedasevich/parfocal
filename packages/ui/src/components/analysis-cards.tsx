@@ -139,6 +139,18 @@ function ClusterSteps({ state }: { state: ClusterState }) {
   );
 }
 
+function scaleMarks(state: { areas: RankedArea[]; lead: RankedArea }) {
+  return {
+    dots: state.areas
+      .filter((area) => area.call !== "disagree")
+      .map((area) => ({ number: area.number, mm: clampToScale(area.shownSize) })),
+    number: state.lead.number,
+  };
+}
+
+const cellsMidpoint = (area: RankedArea) =>
+  area.cells ? Math.round((area.cells.low + area.cells.high) / 2) : null;
+
 function ClusterHero({ state }: { state: ClusterState }) {
   const point = clampToScale(state.size);
   const measured = state.lead.measured != null;
@@ -157,7 +169,9 @@ function ClusterHero({ state }: { state: ClusterState }) {
           high: point,
           point,
           cuts: [microMm, macroMm],
+          ...scaleMarks(state),
         }}
+        count={{ cells: cellsMidpoint(state.lead) }}
       />
     );
   }
@@ -177,7 +191,9 @@ function ClusterHero({ state }: { state: ClusterState }) {
         high: measured ? point : clampToScale(state.size * (1 + aiSizeError)),
         point,
         cuts: [microMm, macroMm],
+        ...scaleMarks(state),
       }}
+      count={{ cells: cellsMidpoint(state.lead) }}
     />
   );
 }
@@ -253,6 +269,7 @@ function StagingCards({
               high: clampToScale(state.size),
               point: clampToScale(state.size),
               cuts: [microMm, macroMm],
+              ...scaleMarks(state),
             }}
           />
         ) : (
@@ -267,6 +284,7 @@ function StagingCards({
               high: clampToScale(state.size * (1 + aiSizeError)),
               point: clampToScale(state.size),
               cuts: [microMm, macroMm],
+              ...scaleMarks(state),
             }}
           />
         )
