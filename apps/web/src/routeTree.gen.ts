@@ -26,6 +26,7 @@ import { Route as InvitationsTokenRouteImport } from "./routes/invitations.$toke
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
+import { Route as SharedReportsTokenRouteImport } from "./routes/shared-reports.$token.tsx";
 import { Route as SpikesHotkeysRouteImport } from "./routes/spikes.hotkeys.tsx";
 import { Route as SpikesInputTracesRouteImport } from "./routes/spikes.input-traces.tsx";
 import { Route as SpikesWorklistRouteImport } from "./routes/spikes.worklist.tsx";
@@ -134,6 +135,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
 const SettingsSectionRoute = SettingsSectionRouteImport.update({
   id: "/settings/$section",
   path: "/settings/$section",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SharedReportsTokenRoute = SharedReportsTokenRouteImport.update({
+  id: "/shared-reports/$token",
+  path: "/shared-reports/$token",
   getParentRoute: () => rootRouteImport,
 } as any);
 const SpikesHotkeysRoute = SpikesHotkeysRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/shared-reports/$token": typeof SharedReportsTokenRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/shared-reports/$token": typeof SharedReportsTokenRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
+  "/shared-reports/$token": typeof SharedReportsTokenRoute;
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
+    | "/shared-reports/$token"
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
+    | "/shared-reports/$token"
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
@@ -503,6 +514,7 @@ export interface FileRouteTypes {
     | "/invitations/$token"
     | "/projects/new"
     | "/settings/$section"
+    | "/shared-reports/$token"
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   InvitationsTokenRoute: typeof InvitationsTokenRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
+  SharedReportsTokenRoute: typeof SharedReportsTokenRoute;
   SpikesHotkeysRoute: typeof SpikesHotkeysRoute;
   SpikesInputTracesRoute: typeof SpikesInputTracesRoute;
   SpikesWorklistRoute: typeof SpikesWorklistRoute;
@@ -694,6 +707,13 @@ declare module "@tanstack/react-router" {
       path: "/settings/$section";
       fullPath: "/settings/$section";
       preLoaderRoute: typeof SettingsSectionRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/shared-reports/$token": {
+      id: "/shared-reports/$token";
+      path: "/shared-reports/$token";
+      fullPath: "/shared-reports/$token";
+      preLoaderRoute: typeof SharedReportsTokenRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/spikes/hotkeys": {
@@ -883,6 +903,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitationsTokenRoute: InvitationsTokenRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
+  SharedReportsTokenRoute: SharedReportsTokenRoute,
   SpikesHotkeysRoute: SpikesHotkeysRoute,
   SpikesInputTracesRoute: SpikesInputTracesRoute,
   SpikesWorklistRoute: SpikesWorklistRoute,

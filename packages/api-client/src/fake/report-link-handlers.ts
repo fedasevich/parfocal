@@ -6,10 +6,27 @@ import { people, projectByCode, reviewTasks } from "./scenario.ts";
 type StoredLink = ReportLink & { token: string };
 
 const lifetimeDays = 30;
-const links = new Map<string, StoredLink>();
+const storageKey = "parfocal.fake.report-links";
+let memory: StoredLink[] = [];
+
+function local(): Storage | null {
+  return typeof localStorage === "undefined" ? null : localStorage;
+}
+
+function readLinks(): Map<string, StoredLink> {
+  const stored = local()?.getItem(storageKey);
+  const list = stored == null ? memory : (JSON.parse(stored) as StoredLink[]);
+  return new Map(list.map((link) => [link.id, link]));
+}
+
+function writeLinks(links: Map<string, StoredLink>): void {
+  memory = [...links.values()];
+  local()?.setItem(storageKey, JSON.stringify(memory));
+}
 
 export function resetFakeReportLinks(): void {
-  links.clear();
+  memory = [];
+  local()?.removeItem(storageKey);
 }
 
 const problem = (status: number, code: string, title: string) =>
@@ -73,26 +90,31 @@ export function reportLinkHandlers(): RequestHandler[] {
         last_opened_at: null,
         token,
       };
+      const links = readLinks();
       links.set(link.id, link);
+      writeLinks(links);
       const created: CreatedReportLink = {
         ...listed(link),
         token,
-        url: `${new URL(request.url).origin}/shared-reports/${token}`,
+        url: `${typeof location === "undefined" ? new URL(request.url).origin : location.origin}/shared-reports/${token}`,
       };
       return HttpResponse.json(created, { status: 201 });
     }),
     http.get("*/api/review-tasks/:taskId/evaluation/links", ({ params }) =>
       HttpResponse.json(
-        [...links.values()].filter((link) => link.task_id === params.taskId).map(listed),
+        [...readLinks().values()].filter((link) => link.task_id === params.taskId).map(listed),
       ),
     ),
     http.delete("*/api/review-tasks/:taskId/evaluation/links/:linkId", ({ params }) => {
+      const links = readLinks();
       const link = links.get(String(params.linkId));
       if (link === undefined || link.task_id !== params.taskId) return notFound();
       link.revoked_at ??= new Date().toISOString();
+      writeLinks(links);
       return new HttpResponse(null, { status: 204 });
     }),
     http.get("*/api/shared-reports/:token", ({ params }) => {
+      const links = readLinks();
       const link = [...links.values()].find((candidate) => candidate.token === params.token);
       if (link === undefined) return notFound();
       if (link.revoked_at !== null || isExpired(link))
@@ -101,6 +123,7 @@ export function reportLinkHandlers(): RequestHandler[] {
       if (report === null) return notFound();
       link.opened_count += 1;
       link.last_opened_at = new Date().toISOString();
+      writeLinks(links);
       return HttpResponse.json({ ...report, expires_at: link.expires_at });
     }),
   ];

@@ -29,5 +29,5 @@ The audit log records `report-link.created` and `report-link.revoked` with the o
 
 - A link can be revoked at once and every opening shows in the audit log, also openings after revocation.
 - The reduced report is a second response model that must follow `Evaluation` when it grows. A new field is hidden from the link until it is added to `SharedEvaluation` on purpose.
-- The public route has no rate limit, because the rate limiter counts per principal. A 256 bit token cannot be guessed, but an opened link can be fetched often. TODO: limit per link if openings get costly.
-- The web page at `/shared-reports/{token}` and the owner's share button are not built yet.
+- The public route counts openings per link in the same `rate_counters` table the per principal limiter uses, under the key `report-link:{link id}`, and answers 429 `rate-limited` with `Retry-After` past `rate_limit_report_link_per_minute` (60 by default). It needs no migration. A refused opening is not written to the audit log, so a flood of fetches cannot flood the log. An unknown token is not counted, because a 256 bit token cannot be guessed. EVAL-012 (share a report link from the report page) added this.
+- EVAL-012 also built the owner's Share dialog on the report page and the public page at `/shared-reports/{token}`, which loads without sign-in and asks no other API.

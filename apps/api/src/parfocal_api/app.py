@@ -142,7 +142,9 @@ class ParfocalApi(FastAPI):
             cipher=auth.SessionCipher(settings.session_key.get_secret_value()),
             public_origin=public_origin(settings),
             limits=RateLimits(
-                settings.rate_limit_person_per_minute, settings.rate_limit_tenant_per_minute
+                settings.rate_limit_person_per_minute,
+                settings.rate_limit_tenant_per_minute,
+                settings.rate_limit_report_link_per_minute,
             ),
         )
 

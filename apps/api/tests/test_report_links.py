@@ -1,10 +1,12 @@
 import json
 import uuid
+from dataclasses import replace
 from typing import Any
 
 import pytest
 from db_support import OWNER_URL, ApiAs, query, with_database
 from test_evaluation_api import scenario
+from test_rate_limits import away_from_the_minute_edge
 from test_reviewed_layer import Review, review
 
 pytestmark = pytest.mark.db
@@ -117,3 +119,20 @@ def test_only_the_project_owner_manages_links(api: ApiAs, database: str) -> None
     elsewhere = f"/api/review-tasks/{other.task}/evaluation/links/{link['id']}"
     assert api(other.people["owner"]).delete(elsewhere).status_code == 404
     assert opened(api, link["token"]).status_code == 200
+
+
+def test_each_link_is_rate_limited_on_its_own(api: ApiAs, database: str) -> None:
+    r = scenario(api, database)
+    first, second = created(api, r), created(api, r)
+    state = api.app.state.auth
+    api.app.state.auth = replace(state, limits=replace(state.limits, report_link_per_minute=2))
+    away_from_the_minute_edge()
+    codes = [opened(api, first["token"]).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+    refused = opened(api, first["token"])
+    assert refused.json()["code"] == "rate-limited"
+    assert 1 <= int(refused.headers["retry-after"]) <= 60
+    assert opened(api, second["token"]).status_code == 200
+    assert opened(api, "unknown-token").status_code == 404
+    opened_events = [row for row in events(database, first["id"]) if row[0] == "report-link.opened"]
+    assert len(opened_events) == 2
