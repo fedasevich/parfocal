@@ -1,5 +1,5 @@
 import { earcut } from "@math.gl/polygon";
-import type { PathBatch, PointBatch, PolygonBatch, Rgba } from "./types.ts";
+import type { PathBatch, PointBatch, PolygonBatch, Rgba } from "./batch-types.ts";
 
 export interface PolygonInput {
   readonly ring: ArrayLike<number>;

@@ -415,6 +415,10 @@ export {
   pinColors,
   pinIconSize,
 } from "./overlay/pin-icons.ts";
+export {
+  createPolygonBatchInWorker,
+  type TriangulationWorker,
+} from "./overlay/triangulation-worker.ts";
 export type {
   HeatmapColormap,
   HeatmapData,

@@ -2,29 +2,9 @@ import type { SlideArea } from "../camera/camera.ts";
 import type { OverlayLayer } from "../engine/types.ts";
 import type { OverlayKind } from "./z-order.ts";
 
-export type Rgba = readonly [red: number, green: number, blue: number, alpha: number];
+export type { PathBatch, PointBatch, PolygonBatch, Rgba } from "./batch-types.ts";
 
-export interface PolygonBatch {
-  readonly count: number;
-  readonly positions: Float32Array;
-  readonly starts: Uint32Array;
-  readonly colors: Uint8Array;
-  readonly holeStarts: Uint32Array;
-  readonly indices: Uint32Array;
-}
-
-export interface PathBatch {
-  readonly count: number;
-  readonly positions: Float32Array;
-  readonly starts: Uint32Array;
-  readonly colors: Uint8Array;
-}
-
-export interface PointBatch {
-  readonly count: number;
-  readonly positions: Float32Array;
-  readonly colors: Uint8Array;
-}
+import type { PathBatch, PointBatch, PolygonBatch, Rgba } from "./batch-types.ts";
 
 export interface ShapeData {
   readonly polygons?: PolygonBatch;
