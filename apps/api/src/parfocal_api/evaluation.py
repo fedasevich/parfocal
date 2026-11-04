@@ -390,6 +390,11 @@ async def get_task_evaluation(
     task, whole = await readable_task(connection, principal, task_id)
     if not whole:
         raise EvaluationHiddenError
+    return await evaluate(connection, task)
+
+
+async def evaluate(connection: AsyncConnection, task: Any) -> Evaluation:
+    task_id = task.id
     names = await class_names(connection, task.project_id)
     objects = await ai_objects(connection, task_id, names)
     added, added_regions = await added_objects(connection, task_id, names)

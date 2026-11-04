@@ -12144,6 +12144,25 @@ export const getGetTaskEvaluationMockHandler = (
   );
 };
 
+export const getExportTaskEvaluationMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation/exports/:kind",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
 export const getListStudyTemplatesMockHandler = (
   overrideResponse?:
     | StudyTemplateSummary[]
@@ -13519,6 +13538,7 @@ export const getParfocalAPIMock = () => [
   getAskReviewersToLookAgainMockHandler(),
   getKeepReviewerDecisionsMockHandler(),
   getGetTaskEvaluationMockHandler(),
+  getExportTaskEvaluationMockHandler(),
   getListStudyTemplatesMockHandler(),
   getCreateStudyTemplateMockHandler(),
   getGetStudyTemplateMockHandler(),

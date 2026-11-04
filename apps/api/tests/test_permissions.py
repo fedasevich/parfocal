@@ -507,6 +507,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/projects/{w.project}/patients/{w.doomed_patient}"
     ),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
+    "exportTaskEvaluation": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
+    ),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
     "submitFirstRead": lambda w: Call(
         "POST", f"/api/review-tasks/{w.hidden_task}/slides/{w.slide}/first-read"
