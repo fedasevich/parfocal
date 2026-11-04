@@ -4366,6 +4366,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002.
   Size: M.
 
+- [ ] EVAL-012 · Share a report link from the report page
+  EVAL-005 (read-only link for co-authors) built the API: owners create, list and revoke links under /api/review-tasks/{id}/evaluation/links and anyone with the link opens GET /api/shared-reports/{token}. Add the owner's Share button with the link list and revoke on the report page, the public /shared-reports/{token} page that shows only the numbers, and a rate limit on the public route (ADR 0236 TODO).
+  Done when E2E creates a link, opens it signed out, sees Reviewer A and B with no names, revokes it and sees it refused, and an API test shows the rate limit.
+  Depends on EVAL-005.
+  Size: M.
+
 - [x] EVAL-006 · Task evaluation API
   An endpoint that gathers a task's reviewer decisions, decisions on queued objects, reviewed layers, added objects, region areas (with PostGIS) and opinion answers into the EVAL-001 engine and returns every metric with its counts.
   Done when API tests return the expected metrics for a seeded task, refuse reviewers and pass isolation.
