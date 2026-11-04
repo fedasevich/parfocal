@@ -197,3 +197,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0231](0231-evaluation-exports-and-their-checksum.md) | Evaluation exports are rendered on request and carry a checksum of the evaluation JSON | Proposed | 2026-11-04 |
 | [0232](0232-upload-wizard-sorts-dropped-files-in-the-browser-first.md) | The upload wizard sorts dropped files in the browser first and the server confirms | Proposed | 2026-11-04 |
 | [0233](0233-the-server-keeps-each-reviewer-display-and-stamps-the-preset-on-a-decision.md) | The server keeps each reviewer's display per task and stamps the preset in force on every decision | Proposed | 2026-11-04 |
+| [0234](0234-coverage-is-a-per-person-bitset-on-a-capped-cell-grid.md) | Coverage is a per person bitset on a capped cell grid | Proposed | 2026-11-04 |

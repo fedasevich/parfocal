@@ -418,6 +418,12 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
+    "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
+    "recordSlideCoverage": lambda w: Call(
+        "POST",
+        f"/api/slides/{w.slide}/coverage",
+        {"grid": {"cell": 64, "columns": 64, "rows": 32}, "cells": [0, 1]},
+    ),
     "requestEmergencyAccess": lambda w: Call(
         "POST",
         f"/api/projects/{w.outside_project}/emergency-access",
@@ -1406,7 +1412,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             await connection.execute(
                 update(slides)
                 .where(slides.c.id == case.loose_slide_id)
-                .values(restricted_images=[RestrictedImage.LABEL.value])
+                .values(restricted_images=[RestrictedImage.LABEL.value], width=4096, height=2048)
             )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)

@@ -14,6 +14,7 @@ import { MagnificationControl, type ViewerModule } from "./magnification-control
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
+import { useSlideCoverage } from "./slide-coverage.ts";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -123,6 +124,12 @@ function OpenedSlide({
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
   const setAnnotations = saved.setDocument;
+  const coverage = useSlideCoverage(
+    session?.engine ?? null,
+    session?.module ?? null,
+    slideId,
+    hostNode,
+  );
 
   useEffect(() => {
     const container = host.current;
@@ -178,6 +185,10 @@ function OpenedSlide({
       data-tool={tool}
       data-annotations={saved.loaded ? "loaded" : "loading"}
       data-save-state={saved.saveState}
+      data-coverage={coverage?.loaded ? "loaded" : "loading"}
+      data-coverage-percent={coverage?.percent}
+      data-coverage-seen={coverage?.share.seen}
+      data-coverage-pending={coverage?.pending}
       className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />

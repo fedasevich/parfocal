@@ -454,3 +454,42 @@ export {
   overlayStack,
 } from "./overlay/z-order.ts";
 export * from "./pixel-source/index.ts";
+export type {
+  CoverageGrid,
+  CoverageRaster,
+  CoverageShare,
+  TissueRaster,
+} from "./seen/coverage.ts";
+export {
+  bitsetBytes,
+  cellCount,
+  cellsInArea,
+  coverageBaseCell,
+  coverageGrid,
+  coverageMagnification,
+  coverageMaxSide,
+  coveragePercent,
+  coverageShare,
+  decodeBits,
+  emptyCoverage,
+  encodeBits,
+  hasBit,
+  isSeen,
+  markCells,
+  mergeCoverage,
+  sameGrid,
+  seesCoverage,
+  tissueOnGrid,
+  viewArea,
+} from "./seen/coverage.ts";
+export type {
+  CoverageSend,
+  CoverageTimers,
+  CoverageTracker,
+  CoverageTrackerOptions,
+} from "./seen/tracker.ts";
+export {
+  coverageBatchLimit,
+  coverageFlushMs,
+  createCoverageTracker,
+} from "./seen/tracker.ts";
