@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
 import { readBuildConfig } from "../config.ts";
+import { ViewingNow } from "../presence/viewing-now.tsx";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
@@ -68,6 +69,7 @@ function LiveSlide() {
           <h1 className="font-semibold text-body">Slide</h1>
         )}
         <span className="flex-1" />
+        <ViewingNow slideId={slideId} />
         {percent === null ? null : (
           <ViewedRing data-testid="viewed-ring" percent={percent} onClick={() => setPeek(true)} />
         )}
