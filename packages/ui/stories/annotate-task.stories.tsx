@@ -80,6 +80,7 @@ export const OriginWithHistory: Story = {
         classColour="var(--c-tumor)"
         origin="ai-edited"
         author={people.AK}
+        model={{ name: "CAMELYON", version: "v1.0" }}
         history={[
           { id: "1", who: null, what: "Made by CAMELYON v1.0", when: "10:02" },
           { id: "2", who: people.AK, what: "Moved two points", when: "10:41" },
@@ -91,7 +92,19 @@ export const OriginWithHistory: Story = {
         classLabel="Immune"
         classColour="var(--c-immune)"
         origin="ai"
+        model={{ name: "CAMELYON", version: "v1.0" }}
         history={[{ id: "1", who: null, what: "Made by CAMELYON v1.0", when: "10:02" }]}
+      />
+      <OriginCard
+        objectId="H2"
+        classLabel="Tumor"
+        classColour="var(--c-tumor)"
+        origin="human"
+        author={people.SM}
+        history={[
+          { id: "1", who: people.SM, what: "Drew the shape", when: "10:44" },
+          { id: "2", who: people.LM, what: "Changed the class", when: "11:20" },
+        ]}
       />
     </div>
   ),
