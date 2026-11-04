@@ -882,7 +882,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the pack exists and every subprocessor in the infrastructure has a BAA status recorded.
   Size: M.
 
-- [ ] SEC-021 · GDPR documentation
+- [x] SEC-021 · GDPR documentation
   Records of processing, DPIA for AI-assisted diagnosis, DPA template, subprocessor list, cookie and consent policy.
   Done when the documents exist and the consent banner (if any analytics need consent) is implemented and tested.
   Size: M.
