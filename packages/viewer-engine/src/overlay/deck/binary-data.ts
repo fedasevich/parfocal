@@ -49,36 +49,60 @@ export function polygonFillData(batch: PolygonBatch): BinaryData {
 
 const loopClosingVertices = 2;
 
-export function polygonOutlineData(batch: PolygonBatch): BinaryData {
-  const starts = new Uint32Array(batch.count + 1);
-  const rings: { from: number; to: number; closes: boolean }[] = [];
-  let total = 0;
+function ringBounds(batch: PolygonBatch): number[] {
+  const bounds: number[] = [];
+  let hole = 0;
   for (let polygon = 0; polygon < batch.count; polygon++) {
     const from = batch.starts[polygon] ?? 0;
     const to = batch.starts[polygon + 1] ?? 0;
-    const closes = to - from >= 3;
-    rings.push({ from, to, closes });
-    total += to - from + (closes ? loopClosingVertices : 0);
-    starts[polygon + 1] = total;
+    bounds.push(from);
+    while (hole < batch.holeStarts.length && (batch.holeStarts[hole] ?? 0) < to) {
+      const start = batch.holeStarts[hole++] ?? 0;
+      if (start > from) bounds.push(start);
+    }
+  }
+  bounds.push(batch.starts[batch.count] ?? 0);
+  return bounds;
+}
+
+export function polygonOutlineData(batch: PolygonBatch): BinaryData {
+  const bounds = ringBounds(batch);
+  const ringCount = bounds.length - 1;
+  const colorOwner = new Uint32Array(ringCount);
+  const starts = new Uint32Array(ringCount + 1);
+  let owner = 0;
+  let total = 0;
+  for (let ring = 0; ring < ringCount; ring++) {
+    const from = bounds[ring] ?? 0;
+    const to = bounds[ring + 1] ?? 0;
+    while ((batch.starts[owner + 1] ?? 0) <= from && owner < batch.count - 1) owner++;
+    colorOwner[ring] = owner;
+    total += to - from + (to - from >= 3 ? loopClosingVertices : 0);
+    starts[ring + 1] = total;
   }
   const positions = new Float32Array(total * 2);
   const colors = new Uint8Array(total * 4);
-  rings.forEach(({ from, to, closes }, polygon) => {
-    const at = starts[polygon] ?? 0;
-    const color = batch.colors.subarray(polygon * 4, polygon * 4 + 4);
-    const vertices = to - from;
+  for (let ring = 0; ring < ringCount; ring++) {
+    const from = bounds[ring] ?? 0;
+    const to = bounds[ring + 1] ?? 0;
+    const closes = to - from >= 3;
+    const at = starts[ring] ?? 0;
+    const color = batch.colors.subarray(
+      (colorOwner[ring] ?? 0) * 4,
+      (colorOwner[ring] ?? 0) * 4 + 4,
+    );
     positions.set(batch.positions.subarray(from * 2, to * 2), at * 2);
     if (closes) {
       positions.set(
         batch.positions.subarray(from * 2, from * 2 + loopClosingVertices * 2),
-        (at + vertices) * 2,
+        (at + to - from) * 2,
       );
     }
-    const written = vertices + (closes ? loopClosingVertices : 0);
+    const written = to - from + (closes ? loopClosingVertices : 0);
     for (let vertex = 0; vertex < written; vertex++) colors.set(color, (at + vertex) * 4);
-  });
+  }
   return {
-    length: batch.count,
+    length: ringCount,
     startIndices: starts,
     attributes: {
       getPath: { value: positions, size: 2 },

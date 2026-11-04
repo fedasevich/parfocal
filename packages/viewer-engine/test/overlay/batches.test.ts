@@ -119,3 +119,77 @@ test("paths and points are packed in order", () => {
   assert.deepEqual([...points.positions], [1, 2, 3, 4]);
   assert.deepEqual([...points.colors], [255, 0, 0, 255, 0, 255, 0, 255]);
 });
+
+const outer = [0, 0, 40, 0, 40, 40, 0, 40];
+const hole = [10, 10, 10, 30, 30, 30, 30, 10];
+const island = [18, 18, 22, 18, 22, 22, 18, 22];
+
+function covers(batch: PolygonBatch, x: number, y: number): boolean {
+  for (let triangle = 0; triangle < batch.indices.length / 3; triangle++) {
+    const [a = 0, b = 0, c = 0] = batch.indices.subarray(triangle * 3, triangle * 3 + 3);
+    const point = (index: number) => [
+      batch.positions[index * 2] ?? 0,
+      batch.positions[index * 2 + 1] ?? 0,
+    ];
+    const [ax = 0, ay = 0] = point(a);
+    const [bx = 0, by = 0] = point(b);
+    const [cx = 0, cy = 0] = point(c);
+    const d1 = (x - bx) * (ay - by) - (ax - bx) * (y - by);
+    const d2 = (x - cx) * (by - cy) - (bx - cx) * (y - cy);
+    const d3 = (x - ax) * (cy - ay) - (cx - ax) * (y - ay);
+    const negative = d1 < 0 || d2 < 0 || d3 < 0;
+    const positive = d1 > 0 || d2 > 0 || d3 > 0;
+    if (!(negative && positive)) return true;
+  }
+  return false;
+}
+
+test("a square with a square hole gets eight triangles and none covers the hole", () => {
+  const batch = polygonBatchFromRings([{ ring: outer, holes: [hole], color: red }]);
+  assert.equal(batch.count, 1);
+  assert.deepEqual([...batch.starts], [0, 8]);
+  assert.deepEqual([...batch.holeStarts], [4]);
+  assert.equal(batch.indices.length / 3, 8);
+  assert.equal(trianglesArea(batch), 40 * 40 - 20 * 20);
+  assert.equal(covers(batch, 20, 20), false);
+  assert.equal(covers(batch, 5, 5), true);
+  assert.equal(covers(batch, 35, 20), true);
+});
+
+test("an island polygon inside a hole is filled and the hole around it stays empty", () => {
+  const batch = polygonBatchFromRings([
+    { ring: outer, holes: [hole], color: red },
+    { ring: island, color: red },
+  ]);
+  assert.deepEqual([...batch.starts], [0, 8, 12]);
+  assert.equal(batch.indices.length / 3, 10);
+  assert.equal(trianglesArea(batch), 40 * 40 - 20 * 20 + 16);
+  assert.equal(covers(batch, 20, 20), true);
+  assert.equal(covers(batch, 14, 20), false);
+  assert.equal(covers(batch, 26, 20), false);
+});
+
+test("hole indices stay local to their polygon in a later polygon", () => {
+  const shift = (ring: number[]) => ring.map((value, index) => value + (index % 2 === 0 ? 100 : 0));
+  const batch = polygonBatchFromRings([
+    { ring: [0, 0, 4, 0, 4, 4, 0, 4], color: red },
+    { ring: shift(outer), holes: [shift(hole)], color: red },
+  ]);
+  assert.deepEqual([...batch.holeStarts], [8]);
+  assert.equal(batch.indices.length / 3, 2 + 8);
+  assert.equal(covers(batch, 120, 20), false);
+  assert.equal(covers(batch, 105, 5), true);
+});
+
+test("a hole with fewer than three vertices is dropped", () => {
+  const batch = polygonBatchFromRings([{ ring: outer, holes: [[5, 5, 6, 6]], color: red }]);
+  assert.equal(batch.holeStarts.length, 0);
+  assert.equal(batch.indices.length / 3, 2);
+});
+
+test("flat batches reject hole starts outside their polygon", () => {
+  const positions = new Float32Array([...outer, ...hole]);
+  const base = { positions, starts: new Uint32Array([0, 4, 8]), colors: new Uint8Array(8) };
+  assert.throws(() => createPolygonBatch({ ...base, holeStarts: Uint32Array.of(4) }), RangeError);
+  assert.throws(() => createPolygonBatch({ ...base, holeStarts: Uint32Array.of(0) }), RangeError);
+});
