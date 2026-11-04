@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ANN-006 (freehand tool) on Shift+P builds a stroke from coalesced pointer events, simplifies it on release with its own Ramer Douglas Peucker at 1.5 screen px, drops strokes under 6 px or 3 vertices and saves it as a region polygon, so freehand shapes are stored as plain polygons.
 - ANN-005 (polygon tool) adds Shift to snap the next vertex to 45 degrees and finishes a draft of 3 or more vertices when the tool changes, with interaction tests for every closing path.
 - RSET-010 (What files work? drawer) moved the formats drawer into a lazy chunk opened from the upload step and from Check's read error, linking the real Parfocal JSON template and schema and listing the 10 validator codes. The CSV template button is still a stand-in toast.
 - MEAS-003 (measurement list) added MeasurementList in apps/web/src/measure/ as a panel in the live slide stage, listing rulers and closed shapes with value, perimeter, drawn time and a category chip, with node and Playwright tests. Chips show the class key until class names are passed in.

@@ -2460,7 +2460,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when interaction tests cover each path.
   Size: S.
 
-- [ ] ANN-006 · Freehand tool
+- [x] ANN-006 · Freehand tool
   Coalesced pointer events, simplification on release.
   Done when tests confirm the stroke uses coalesced events and simplifies within tolerance.
   Refs doc 24.
