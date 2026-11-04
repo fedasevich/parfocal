@@ -66,7 +66,7 @@ test("the side panel offers the template, the PDF preview, arrange and the downl
 test("comparing with a second task puts its numbers next to this one", async ({ page }) => {
   await page.goto(url("report"));
   await page.getByRole("button", { name: /Compare and share/ }).click();
-  await page.getByRole("button", { name: "Compare with RT-15, PathoSAM v1.2" }).click();
+  await page.getByRole("button", { name: /Compare with RT-15/ }).click();
   const block = page.locator('[data-kind="comparison"]');
   await expect(block).toBeVisible();
   const table = block.locator('[data-slot="comparison"] table');
@@ -86,6 +86,21 @@ test("comparing with a second task puts its numbers next to this one", async ({ 
   const cells = table.getByRole("row", { name: /Cells agreed/ });
   await expect(cells.getByRole("cell")).toHaveText(["Cells agreed", "91%", "87%", "-4 points"]);
   await expect(block).toContainText("Change is RT-15 minus RT-14.");
+});
+
+test("a comparison block picks its task from the other tasks of the project", async ({ page }) => {
+  await page.goto(url("arrange"));
+  await page.getByRole("button", { name: /Compare two result sets/ }).click();
+  await expect(page.locator('[data-kind="comparison"]')).toContainText(
+    "Pick a review task to compare with.",
+  );
+  const picker = page.getByRole("combobox", { name: "Compare with" });
+  await picker.click();
+  await expect(page.getByRole("option", { name: /RT-14/ })).toHaveCount(0);
+  await page.getByRole("option", { name: /RT-15/ }).click();
+  await expect(
+    page.locator('[data-kind="comparison"] [data-slot="comparison"] table'),
+  ).toContainText("RT-15, PathoSAM v1.2");
 });
 
 const titlesOn = (page: Page, name: string) =>
