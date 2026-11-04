@@ -2710,7 +2710,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on NOTIF-001.
   Size: S.
 
-- [ ] COLLAB-007 · Presence
+- [x] COLLAB-007 · Presence
   Who is viewing a slide now, shown on the slide and on the project page.
   Done when E2E with two users shows presence within 2 s and it clears on leave.
   Size: L.
