@@ -38,8 +38,8 @@ export function createLazyUploadEngine(options: UploadEngineOptions): UploadEngi
       return () => listeners.delete(listener);
     },
     getSnapshot: () => entries,
-    async addFiles(files, target) {
-      await (await load()).addFiles(files, target);
+    async addFiles(files, target, created) {
+      await (await load()).addFiles(files, target, created);
     },
     pause(id) {
       void load().then((engine) => engine.pause(id));

@@ -16,6 +16,7 @@ import { settingsHandlers } from "./settings-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
+import { uploadHandlers } from "./upload-handlers.ts";
 import { viewerToolsHandlers } from "./viewer-tools-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 
@@ -38,6 +39,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adjudicationHandlers(),
     ...caseHandlers(),
     ...createdRecordHandlers(),
+    ...uploadHandlers(),
     ...settingsHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),

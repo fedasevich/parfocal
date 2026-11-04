@@ -15,7 +15,7 @@ import {
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
-import { type DragEvent, type ReactNode, useRef, useState } from "react";
+import { type DragEvent, lazy, type ReactNode, Suspense, useRef, useState } from "react";
 import {
   type DroppedItem,
   type DropRecord,
@@ -25,7 +25,7 @@ import {
   stemOf,
 } from "../../upload/drop.ts";
 import { dropStore, useDropStore } from "../../upload/drop-store.ts";
-import { type FileIdentity, formatBytes, sameFile } from "../../upload/entries.ts";
+import { formatBytes, sameFile } from "../../upload/entries.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
 import { FolderShape, GroupHead, RemoveButton, ResultRow, SlideBlock } from "./files-step.tsx";
@@ -64,15 +64,9 @@ const ruleOptions = [
 const stepOfScene = (scene: LiveScene) =>
   scene === "check" ? 1 : scene === "progress" || scene === "done" ? 2 : 0;
 
-const identityOf = (item: DroppedItem, projectId: string): FileIdentity => ({
-  projectId,
-  caseId: null,
-  name: item.file.name,
-  size: item.file.size,
-  lastModified: item.file.lastModified,
-});
-
 type Change = (change: Partial<LiveState>) => void;
+
+const ServerCheck = lazy(() => import("./server-check.tsx"));
 
 export function LiveWizard({ project, scene }: { project: Project; scene: LiveScene }) {
   const navigate = useNavigate();
@@ -82,6 +76,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
   const started = drop.projectId === project.id ? drop.started : [];
   const [state, setState] = useState<LiveState>(freshLiveState);
   const [dragging, setDragging] = useState(false);
+  const [phase, setPhase] = useState<"busy" | "error" | null>(null);
   const model = createLiveModel(items, state);
   const base = items.length === 0 && scene !== "progress" && scene !== "done" ? "empty" : scene;
   const shown: LiveScene = started.length === 0 && stepOfScene(base) === 2 ? "empty" : base;
@@ -112,17 +107,16 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
     void readDropped(event.dataTransfer).then(take);
   };
   const startUpload = () => {
-    const files = [...model.uploadSlides, ...model.uploadResults.map((result) => result.item)];
-    const chosen = files.flatMap((record) => {
-      const found = items.find((item) => item.path === record.path);
-      return found ? [found] : [];
-    });
-    dropStore.markStarted(chosen.map((item) => identityOf(item, project.id)));
-    void engine.addFiles(
-      chosen.map((item) => item.file),
-      { projectId: project.id, caseId: null },
-    );
-    go("progress");
+    if (phase === "busy") return;
+    setPhase("busy");
+    void import("./server-check.tsx")
+      .then(({ placeAndUpload, placeInputOf }) =>
+        placeAndUpload(engine, placeInputOf(project.id, model, state), items, (identities) => {
+          dropStore.markStarted(identities);
+          go("progress");
+        }),
+      )
+      .catch(() => setPhase("error"));
   };
   const mine = entries.filter((entry) => started.some((identity) => sameFile(identity, entry)));
   const finished = mine.length > 0 && mine.every((entry) => entry.status === "done");
@@ -200,7 +194,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
           <Button
             variant="primary"
             data-testid="start-upload"
-            disabled={!model.canStart}
+            disabled={!model.canStart || phase === "busy"}
             onClick={startUpload}
           >
             <Icon name="upload" />
@@ -272,7 +266,13 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             take={take}
           />
         ) : step === 1 ? (
-          <CheckStep model={model} state={state} set={set} />
+          <CheckStep
+            model={model}
+            state={state}
+            set={set}
+            projectId={project.id}
+            startError={phase === "error"}
+          />
         ) : (
           <UploadStep model={model} entries={mine} />
         )}
@@ -706,10 +706,14 @@ function CheckStep({
   model,
   state,
   set,
+  projectId,
+  startError,
 }: {
   model: LiveModel<DroppedItem>;
   state: LiveState;
   set: Change;
+  projectId: string;
+  startError: boolean;
 }) {
   const left = model.leftOut.length;
   const lead =
@@ -754,6 +758,9 @@ function CheckStep({
           ]}
         />
       </Zone>
+      <Suspense fallback={null}>
+        <ServerCheck projectId={projectId} model={model} state={state} startError={startError} />
+      </Suspense>
       {model.unplaced.map((result) => (
         <ProblemZone
           key={result.item.path}
