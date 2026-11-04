@@ -33,6 +33,7 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
+import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx";
 import { okData } from "../placeholder.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
@@ -134,6 +135,7 @@ export function SlidesTab({
   toast: (message: ReactNode) => void;
 }) {
   const slides = useProjectSlides(project.id);
+  const viewersOf = useProjectViewers(project.id);
   const overview = useGetProjectOverview(project.id).data?.data;
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
   const [shut, setShut] = useState<Record<string, boolean>>({});
@@ -248,6 +250,7 @@ export function SlidesTab({
                           project={project}
                           slide={slide}
                           sets={sets}
+                          viewers={viewersOf(slide.id)}
                           expanded={open === slide.id}
                           toast={toast}
                         />
@@ -291,12 +294,14 @@ function SlideRow({
   project,
   slide,
   sets,
+  viewers,
   expanded,
   toast,
 }: {
   project: Project;
   slide: ProjectSlide;
   sets: ResultSet[];
+  viewers: string[];
   expanded: boolean;
   toast: (message: ReactNode) => void;
 }) {
@@ -337,6 +342,7 @@ function SlideRow({
                 {slide.file}
               </small>
             </span>
+            <SlideViewers viewers={viewers} />
             {slide.remote ? (
               <span
                 title={`Read in place from ${slide.remote}. Nothing copied.`}

@@ -3,11 +3,11 @@ import { RoomClient, type RoomTicket, type SocketLike } from "@parfocal/edge/roo
 import { useEffect, useState } from "react";
 import { readBuildConfig } from "../config.ts";
 import { openFakeRoomSocket } from "./fake-room-socket.ts";
-import { nextPresence, roomSocketUrl } from "./presence-state.ts";
+import { nextPresence, roomSocketUrl, type Sighting } from "./presence-state.ts";
 
 const fake = readBuildConfig().fakeApi !== "off";
 const fakeLifetimeSeconds = 300;
-const nobody: ReadonlySet<string> = new Set();
+const nobody: ReadonlyMap<string, Sighting> = new Map();
 
 async function roomTicket(room: string): Promise<RoomTicket | null> {
   const response = await getRoomAccess(room);
@@ -18,8 +18,11 @@ async function roomTicket(room: string): Promise<RoomTicket | null> {
   throw new Error(`Room access answered ${response.status}`);
 }
 
-export function useRoomPresence(room: string | null, me: string | undefined): ReadonlySet<string> {
-  const [present, setPresent] = useState<ReadonlySet<string>>(nobody);
+export function useRoomPresence(
+  room: string | null,
+  me: string | undefined,
+): ReadonlyMap<string, Sighting> {
+  const [present, setPresent] = useState<ReadonlyMap<string, Sighting>>(nobody);
   useEffect(() => {
     setPresent(nobody);
     if (room === null || me === undefined) return;

@@ -173,10 +173,20 @@ def test_task_and_own_user_rooms_follow_the_reader_grant(lab: Lab) -> None:
 
 
 @pytest.mark.db
+def test_the_project_room_is_for_people_who_read_the_whole_project(lab: Lab) -> None:
+    claims = claims_of(lab, lab.access("owner", f"project:{lab.project}"))
+    assert (claims["r"], claims["p"]) == (f"project:{lab.project}", str(lab.project))
+    assert lab.access("unassigned", f"project:{lab.project}").status_code == 404
+    assert refused_as_outsider(lab.access("colleague", f"project:{lab.project}"))
+    assert lab.access("owner", f"project:{uuid.uuid4()}").status_code == 404
+
+
+@pytest.mark.db
 def test_another_workspace_never_gets_a_token_for_this_workspace_rooms(lab: Lab) -> None:
     for room in (
         f"slide:{lab.slide}",
         f"task:{lab.task}",
+        f"project:{lab.project}",
         f"user:{lab.people['owner'].user_id}",
     ):
         response = lab.access("outsider", room)

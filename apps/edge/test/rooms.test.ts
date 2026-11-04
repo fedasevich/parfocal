@@ -148,7 +148,7 @@ class Edge {
     const room = this.room(name);
     if (new URL(request.url).pathname === "/connect") {
       const socket = new FakeSocket();
-      room.join(
+      await room.join(
         socket as unknown as WebSocket,
         JSON.parse(request.headers.get("X-Room-Seat") ?? "") as Seat,
       );
@@ -418,10 +418,10 @@ describe("presence", () => {
     assert.deepEqual(benSecond.events(), [joined(ANNA)]);
     const room = edge.room(`${TENANT}/${SLIDE}`);
     benFirst.close(1000, "left");
-    room.webSocketClose(benFirst as unknown as WebSocket, 1000);
+    await room.webSocketClose(benFirst as unknown as WebSocket, 1000);
     assert.deepEqual(anna.events(), [joined(BEN)]);
     benSecond.close(1000, "left");
-    room.webSocketClose(benSecond as unknown as WebSocket, 1000);
+    await room.webSocketClose(benSecond as unknown as WebSocket, 1000);
     assert.deepEqual(anna.events(), [joined(BEN), left(BEN)]);
   });
 
@@ -440,6 +440,30 @@ describe("presence", () => {
     assert.equal(again.closed?.code, CLOSE_REMOVED);
     assert.deepEqual(anna.events(), [joined(BEN), left(BEN), joined(BEN), left(BEN)]);
     assert.deepEqual(again.events(), [joined(ANNA)]);
+  });
+
+  test("the project room learns which slide each person is viewing", async () => {
+    const edge = new Edge();
+    const projectRoom = `project:${PROJECT}`;
+    const slideId = SLIDE.slice(6);
+    await edge.join({});
+    const watcher = await edge.join({ room: projectRoom, user: BEN });
+    assert.deepEqual(watcher.events(), [
+      { kind: "presence.joined", ids: { slide: slideId, user: ANNA } },
+    ]);
+    const late = await edge.join({ room: projectRoom, user: BEN });
+    assert.deepEqual(late.events(), [
+      { kind: "presence.joined", ids: { slide: slideId, user: ANNA } },
+    ]);
+    const anna = edge.state(`${TENANT}/${SLIDE}`).sockets[0];
+    assert.ok(anna);
+    anna.close(1000, "left");
+    await edge.room(`${TENANT}/${SLIDE}`).webSocketClose(anna as unknown as WebSocket, 1000);
+    assert.deepEqual(watcher.events().at(-1), {
+      kind: "presence.left",
+      ids: { slide: slideId, user: ANNA },
+    });
+    assert.deepEqual([...edge.state(`${TENANT}/${projectRoom}`).stored.keys()], []);
   });
 
   test("presence stays inside its tenant", async () => {

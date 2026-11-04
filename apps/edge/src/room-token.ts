@@ -14,7 +14,7 @@ export type RoomVerdict =
 
 const ROOM_TOKEN_VERSION = 1;
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const ROOM_NAME = new RegExp(`^(slide|task|user):${UUID}$`);
+const ROOM_NAME = new RegExp(`^(slide|task|user|project):${UUID}$`);
 const ID = new RegExp(`^${UUID}$`);
 const encoder = new TextEncoder();
 
