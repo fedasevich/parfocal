@@ -58,7 +58,7 @@ test("Escape drops an unfinished polygon and a second Escape leaves the tool", a
   await expect(page.getByTestId("polygon-vertex")).toHaveCount(0);
   await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
 });
 
 test("a double-click closes the polygon on its last vertex", async ({ page }) => {

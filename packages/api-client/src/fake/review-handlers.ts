@@ -51,6 +51,7 @@ import { people, projectByCode, reviewTasks, slideByIndex, slides, threads } fro
 import {
   addedByLenka,
   agreementWithSimona,
+  annotateStubTaskId,
   lenkaOpinion,
   opinionQuestions,
   reviewObjects,
@@ -345,6 +346,13 @@ export const reviewDraftOperations: DraftOperation[] = [
 export function reviewHandlers(): RequestHandler[] {
   return [
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
+      if (params.taskId === annotateStubTaskId)
+        return HttpResponse.json({
+          ...toReviewTaskDetail(rt13),
+          id: annotateStubTaskId,
+          kind: "annotate",
+          classes: [],
+        });
       const extra = [rt13, rt16].find((task) => task.id === params.taskId);
       return extra ? HttpResponse.json(toReviewTaskDetail(extra)) : undefined;
     }),

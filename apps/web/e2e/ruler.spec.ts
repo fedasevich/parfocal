@@ -51,5 +51,5 @@ test("Escape switches the ruler off", async ({ page }) => {
   await page.keyboard.press("l");
   await expect(stage).toHaveAttribute("data-tool", "ruler");
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
 });

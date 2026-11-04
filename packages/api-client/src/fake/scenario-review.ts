@@ -42,6 +42,8 @@ export const rt13: ScenarioReviewTask = {
   status: "review",
 };
 
+export const annotateStubTaskId = uuid(7, 21);
+
 export type DecisionStyleKind = "certainty" | "agree" | "yesno" | "blind";
 
 export type ScenarioDecisionStyle = {

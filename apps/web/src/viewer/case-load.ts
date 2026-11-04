@@ -5,6 +5,7 @@ import type {
   ResultSet,
   ReviewTaskDetail,
   SlideRow,
+  TaskKind,
   Verdict,
 } from "@parfocal/api-client";
 
@@ -29,7 +30,12 @@ export type CaseLoad = {
   } | null;
   readonly patient: PatientDetail | null;
   readonly resultSets: readonly ResultSet[];
-  readonly task: { readonly id: string; readonly code: string; readonly name: string } | null;
+  readonly task: {
+    readonly id: string;
+    readonly code: string;
+    readonly name: string;
+    readonly kind: TaskKind;
+  } | null;
   readonly decisions: readonly Verdict[];
 };
 
@@ -54,7 +60,9 @@ export function shapeCaseLoad(input: CaseLoadInput): CaseLoad {
       : null,
     patient: clinical ? (detail?.patient ?? null) : null,
     resultSets: input.resultSets,
-    task: input.task ? { id: input.task.id, code: input.task.code, name: input.task.name } : null,
+    task: input.task
+      ? { id: input.task.id, code: input.task.code, name: input.task.name, kind: input.task.kind }
+      : null,
     decisions: input.task ? input.decisions : [],
   };
 }

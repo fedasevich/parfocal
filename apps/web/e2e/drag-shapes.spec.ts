@@ -41,7 +41,7 @@ test("R drags a rectangle and Shift makes it a square", async ({ page }) => {
   await page.keyboard.up("Shift");
   await expect(shapes).toHaveCount(2);
   await page.keyboard.press("Escape");
-  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect(stage).toHaveAttribute("data-tool", "select");
 });
 
 test("O drags an ellipse and Shift makes it a circle", async ({ page }) => {

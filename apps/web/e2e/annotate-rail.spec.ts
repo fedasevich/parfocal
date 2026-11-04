@@ -43,12 +43,12 @@ test("the rail shows the five families and every tool answers its key and its bu
     await expect(stage).toHaveAttribute("data-tool", item.stage);
     await expect(button).toHaveAttribute("aria-pressed", "true");
     await page.keyboard.press("Escape");
-    await expect(stage).toHaveAttribute("data-tool", "hand");
+    await expect(stage).toHaveAttribute("data-tool", "select");
 
     await button.click();
     await expect(stage).toHaveAttribute("data-tool", item.stage);
     await button.click();
-    await expect(stage).toHaveAttribute("data-tool", "hand");
+    await expect(stage).toHaveAttribute("data-tool", "select");
   }
 
   await page.keyboard.press("v");

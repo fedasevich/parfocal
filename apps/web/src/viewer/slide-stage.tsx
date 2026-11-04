@@ -44,6 +44,7 @@ import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
+import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
 
 type Phase =
   | { readonly state: "loading" }
@@ -183,6 +184,7 @@ export function SlideStage({
   viewed,
   systematicScan = false,
   outlines = false,
+  workspace = "annotate",
 }: {
   slideId: string;
   projectId?: string;
@@ -191,6 +193,7 @@ export function SlideStage({
   viewed?: ViewedLink;
   systematicScan?: boolean;
   outlines?: boolean;
+  workspace?: SlideWorkspace;
 }) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -203,6 +206,7 @@ export function SlideStage({
       viewed={viewed}
       systematicScan={systematicScan}
       outlines={outlines}
+      workspace={workspace}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -216,6 +220,7 @@ function OpenedSlide({
   viewed,
   systematicScan,
   outlines,
+  workspace,
   onRetry,
 }: {
   slideId: string;
@@ -225,6 +230,7 @@ function OpenedSlide({
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
   outlines: boolean;
+  workspace: SlideWorkspace;
   onRetry: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
@@ -233,29 +239,35 @@ function OpenedSlide({
     host.current = node;
     setHostNode(node);
   }, []);
-  const [tool, setTool] = useState<ViewerTool>("hand");
+  const setup = workspaceSetups[workspace];
+  const restingTool: ViewerTool = setup.restingTool;
+  const [tool, setTool] = useState<ViewerTool>(restingTool);
+  useEffect(() => setTool(restingTool), [restingTool]);
   const toolBindings = useBindings(["annotate"], railActions);
-  const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
-    const railTool = toolOfAction[action];
-    if (phase !== "press" || railTool === undefined) return;
-    const pressed = stageToolOf(railTool);
-    if (pressed === "hand") {
-      setTool("hand");
-      return;
-    }
-    setTool((current) => (current === pressed ? "hand" : pressed));
-  }, []);
+  const onToolKey = useCallback(
+    ({ phase, action }: { phase: string; action: string }) => {
+      const railTool = toolOfAction[action];
+      if (phase !== "press" || railTool === undefined || !railHasTool(setup, railTool)) return;
+      const pressed = stageToolOf(railTool);
+      if (pressed === "hand") {
+        setTool("hand");
+        return;
+      }
+      setTool((current) => (current === pressed ? restingTool : pressed));
+    },
+    [setup, restingTool],
+  );
   useHotkeys(toolBindings, onToolKey);
-  const leaveTool = useCallback(() => setTool("hand"), []);
+  const leaveTool = useCallback(() => setTool(restingTool), [restingTool]);
   const waiting = !liveTools.has(tool) && tool !== "hand";
   useEffect(() => {
     if (!waiting) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setTool("hand");
+      if (event.key === "Escape") setTool(restingTool);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [waiting]);
+  }, [waiting, restingTool]);
   const draftControl = useRef<DraftControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
@@ -374,6 +386,17 @@ function OpenedSlide({
   }, [slideId]);
 
   useEffect(() => {
+    if (session === null || hostNode === null) return;
+    const mark = () => {
+      const camera = session.engine.getCamera();
+      hostNode.dataset["camera"] =
+        `${camera.x.toFixed(3)},${camera.y.toFixed(3)},${camera.zoom.toFixed(4)}`;
+    };
+    mark();
+    return session.engine.subscribeCamera(mark);
+  }, [session, hostNode]);
+
+  useEffect(() => {
     session?.engine.setSlideBrightness(brightness);
   }, [session, brightness]);
 
@@ -383,6 +406,8 @@ function OpenedSlide({
       data-state={phase.state}
       data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
       data-tool={tool}
+      data-workspace={workspace}
+      data-drag={setup.dragBehaviour}
       data-annotations={saved.loaded ? "loaded" : "loading"}
       data-save-state={saved.saveState}
       data-coverage={coverage?.loaded ? "loaded" : "loading"}
@@ -392,7 +417,7 @@ function OpenedSlide({
       data-coverage-basis={coverage?.share.basis}
       className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
     >
-      <div ref={hostRef} className="absolute inset-0" />
+      <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
       {session && hostNode ? (
         <>
           <RulerLayer
@@ -474,7 +499,7 @@ function OpenedSlide({
             onDiscard={proposals.discard}
           />
           <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
-            {annotateRail.map((group) => (
+            {setup.rail.map((group) => (
               <div
                 key={group.map((item) => item.tool).join("-")}
                 className="flex flex-col border-b border-line last:border-b-0"
@@ -490,7 +515,7 @@ function OpenedSlide({
                       {...(item.action === undefined ? {} : { action: item.action })}
                       data-tool={item.tool}
                       pressed={tool === stageTool}
-                      onPressedChange={(on) => setTool(on ? stageTool : "hand")}
+                      onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
                     />
                   );
                 })}
@@ -498,7 +523,10 @@ function OpenedSlide({
             ))}
           </div>
           <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
-            {tool === "marker" || markersOf(annotations).length > 0 ? (
+            {showsCountPanel(setup, {
+              counting: tool === "marker",
+              markers: markersOf(annotations).length,
+            }) ? (
               <CountPanel
                 document={annotations}
                 classes={classes}
