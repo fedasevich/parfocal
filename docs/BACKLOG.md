@@ -2605,7 +2605,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover promotion and pruning with undo.
   Size: S.
 
-- [ ] ANN-028 · Annotation audit and provenance display
+- [x] ANN-028 · Annotation audit and provenance display
   Who created, edited and reviewed each shape, with model name and version for AI output. On an annotate task the popover shows the origin (AI, AI edited by a named expert, drawn by a named expert) and the object history from ANN-030.
   Done when component tests show provenance in the shape popover.
   Depends on ANN-030. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
