@@ -198,3 +198,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0232](0232-upload-wizard-sorts-dropped-files-in-the-browser-first.md) | The upload wizard sorts dropped files in the browser first and the server confirms | Proposed | 2026-11-04 |
 | [0233](0233-the-server-keeps-each-reviewer-display-and-stamps-the-preset-on-a-decision.md) | The server keeps each reviewer's display per task and stamps the preset in force on every decision | Proposed | 2026-11-04 |
 | [0234](0234-coverage-is-a-per-person-bitset-on-a-capped-cell-grid.md) | Coverage is a per person bitset on a capped cell grid | Proposed | 2026-11-04 |
+| [0235](0235-report-pages-from-a-shared-unit-plan.md) | The report page and the PDF split blocks into pages by one shared unit plan, and a signed report keeps its layout through its pinned template version | Proposed | 2026-11-04 |

@@ -122,6 +122,7 @@ import type {
   SlidePage,
   SlideScope,
   SlideTable,
+  SlideTissue,
   Sorting,
   StudyTemplate,
   StudyTemplateSummary,
@@ -9529,6 +9530,20 @@ export const getRecordSlideCoverageResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideTissueResponseMock = (
+  overrideResponse: Partial<Extract<SlideTissue, object>> = {},
+): SlideTissue => ({
+  slide_id: faker.string.uuid(),
+  grid: {
+    cell: faker.number.int({ min: 1 }),
+    columns: faker.number.int({ min: 1, max: 1024 }),
+    rows: faker.number.int({ min: 1, max: 1024 }),
+  },
+  tissue: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tissue_cells: faker.number.int(),
+  ...overrideResponse,
+});
+
 export const getGetHealthMockHandler = (
   overrideResponse?:
     | Health
@@ -14687,6 +14702,28 @@ export const getRecordSlideCoverageMockHandler = (
     options,
   );
 };
+
+export const getGetSlideTissueMockHandler = (
+  overrideResponse?:
+    | SlideTissue
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SlideTissue> | SlideTissue),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/tissue",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideTissueResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
@@ -14915,4 +14952,5 @@ export const getParfocalAPIMock = () => [
   getSetSecurityContactMockHandler(),
   getGetSlideCoverageMockHandler(),
   getRecordSlideCoverageMockHandler(),
+  getGetSlideTissueMockHandler(),
 ];

@@ -3,7 +3,7 @@ import hashlib
 import io
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -26,7 +26,15 @@ from parfocal_api.evaluation import (
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ProblemError
-from parfocal_api.report_template import RenderedReport, render_report, report_data
+from parfocal_api.report_template import (
+    RenderedReport,
+    ReportCompared,
+    ReportDecision,
+    ReportObject,
+    headline_of,
+    render_report,
+    report_data,
+)
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_export import (
     LETTERS,
@@ -46,7 +54,7 @@ from parfocal_api.tables import (
 )
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import ObjectId, ObjectPath
-from parfocal_common.report_blocks import ReportBlock
+from parfocal_common.report_blocks import Comparison, ReportBlock, ReportFormat
 
 CHECKSUM_HEADER = "X-Parfocal-Evaluation-Checksum"
 VERSION_HEADER = "X-Parfocal-Evaluation-Version"
@@ -136,11 +144,14 @@ def version_of(task: Any, evaluation: Evaluation) -> Version:
     return Version(number=1, checksum=checksum_of(evaluation), signed_at=task.signed_off_at)
 
 
-async def task_blocks(connection: AsyncConnection, task: Any) -> tuple[ReportBlock, ...]:
+async def task_layout(
+    connection: AsyncConnection, task: Any
+) -> tuple[tuple[ReportBlock, ...], ReportFormat]:
     if task.study_template_id is None:
-        return tuple(BUILT_INS[BuiltInTemplate.DETECTION].blocks)
+        built_in = BUILT_INS[BuiltInTemplate.DETECTION]
+        return tuple(built_in.blocks), built_in.format
     template = await template_at(connection, task.study_template_id, task.study_template_version)
-    return tuple(template.blocks)
+    return tuple(template.blocks), template.format
 
 
 def csv_text(columns: tuple[str, ...], rows: list[dict[str, Any]]) -> str:
@@ -328,8 +339,57 @@ async def annotations_geojson(connection: AsyncConnection, task: Any, version: V
     )
 
 
+def report_objects(rows: list[dict[str, Any]]) -> tuple[ReportObject, ...]:
+    return tuple(
+        ReportObject(
+            object_id=row["object_id"],
+            slide=row["object_id"].split("/")[-2],
+            kind=row["kind"],
+            class_name=row["class"],
+            agree=row["agree"] or 0,
+            disagree=row["disagree"] or 0,
+            unsure=row["unsure"] or 0,
+            consensus=row["consensus"],
+        )
+        for row in rows
+    )
+
+
+def report_decisions(rows: list[dict[str, Any]]) -> tuple[ReportDecision, ...]:
+    letters = {
+        reviewer: f"Reviewer {chr(65 + index)}"
+        for index, reviewer in enumerate(sorted({str(row["reviewer_id"]) for row in rows}))
+    }
+    return tuple(
+        ReportDecision(
+            object_id=row["object_id"],
+            reviewer=letters[str(row["reviewer_id"])],
+            decision=row["decision"],
+        )
+        for row in rows
+    )
+
+
+async def compared_tasks(
+    connection: AsyncConnection, principal: Any, blocks: tuple[ReportBlock, ...]
+) -> dict[str, ReportCompared]:
+    compared: dict[str, ReportCompared] = {}
+    for block in blocks:
+        if not isinstance(block, Comparison) or block.task_id is None:
+            continue
+        try:
+            other, whole = await readable_task(connection, principal, block.task_id)
+        except ProblemError:
+            continue
+        if whole:
+            found = await evaluate(connection, other)
+            compared[str(block.task_id)] = ReportCompared(other.name, headline_of(found))
+    return compared
+
+
 async def rendered_report(
     connection: AsyncConnection,
+    principal: Any,
     task: Any,
     evaluation: Evaluation,
     version: Version,
@@ -338,6 +398,7 @@ async def rendered_report(
     project_name = await connection.scalar(
         select(projects.c.name).where(projects.c.id == task.project_id)
     )
+    blocks, report_format = await task_layout(connection, task)
     data = report_data(
         evaluation,
         str(project_name),
@@ -345,7 +406,16 @@ async def rendered_report(
         version.number,
         version.signed_at.date() if version.signed_at else None,
         version.checksum,
-        await task_blocks(connection, task),
+        blocks,
+        report_format,
+    )
+    data = replace(
+        data,
+        objects=report_objects(await object_rows(connection, task, version)),
+        decision_rows=report_decisions(await decision_rows(connection, task, version))
+        if "decisions" in report_format.appendices
+        else (),
+        compared=await compared_tasks(connection, principal, blocks),
     )
     return render_report(data, locale)
 
@@ -388,7 +458,7 @@ async def export_task_evaluation(
     content: str | bytes
     match kind:
         case ExportKind.PDF:
-            report = await rendered_report(connection, task, evaluation, version, locale)
+            report = await rendered_report(connection, principal, task, evaluation, version, locale)
             content = pdf_of(report, version)
         case ExportKind.DECISIONS:
             content = csv_text(DECISION_COLUMNS, await decision_rows(connection, task, version))

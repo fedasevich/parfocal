@@ -1,4 +1,10 @@
-import { getSlideCoverage, recordSlideCoverage, type SlideCoverage } from "@parfocal/api-client";
+import {
+  getSlideCoverage,
+  getSlideTissue,
+  recordSlideCoverage,
+  type SlideCoverage,
+  type SlideTissue,
+} from "@parfocal/api-client";
 import { useEffect, useState } from "react";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type {
@@ -6,6 +12,7 @@ import type {
   CoverageRaster,
   CoverageShare,
   CoverageTracker,
+  TissueRaster,
   ViewerEngine,
 } from "./viewer-engine.ts";
 
@@ -16,6 +23,7 @@ export type SlideCoverageState = {
   readonly percent: number;
   readonly pending: number;
   readonly loaded: boolean;
+  readonly tissue: TissueRaster | null;
 };
 
 type Host = { getBoundingClientRect(): { width: number; height: number } };
@@ -27,6 +35,15 @@ function rasterOf(
 ): CoverageRaster | null {
   if (!module.sameGrid(grid, coverage.grid)) return null;
   return { grid, seen: module.decodeBits(coverage.seen, module.bitsetBytes(grid)) };
+}
+
+function tissueOf(
+  module: ViewerModule,
+  grid: CoverageGrid,
+  stored: SlideTissue,
+): TissueRaster | null {
+  if (!module.sameGrid(grid, stored.grid)) return null;
+  return { grid, tissue: module.decodeBits(stored.tissue, module.bitsetBytes(grid)) };
 }
 
 export function useSlideCoverage(
@@ -42,6 +59,7 @@ export function useSlideCoverage(
     if (engine === null || module === null || host === null || slide === null) return;
     const grid = module.coverageGrid(slide);
     let loaded = false;
+    let tissue: TissueRaster | null = null;
     const tracker = module.createCoverageTracker({
       grid,
       micronsPerPixel: slide.micronsPerPixel,
@@ -59,6 +77,7 @@ export function useSlideCoverage(
         percent: module.coveragePercent(share),
         pending: tracker.pending(),
         loaded,
+        tissue,
       });
     };
     const observe = () => {
@@ -72,6 +91,14 @@ export function useSlideCoverage(
     };
     document.addEventListener("visibilitychange", flushWhenHidden);
     let cancelled = false;
+    getSlideTissue(slideId)
+      .then((response) => {
+        const stored = response.status === 200 ? tissueOf(module, grid, response.data) : null;
+        if (cancelled || stored === null) return;
+        tissue = stored;
+        tracker.setTissue(stored);
+      })
+      .catch(() => undefined);
     getSlideCoverage(slideId)
       .then((response) => {
         const stored = response.status === 200 ? rasterOf(module, grid, response.data) : null;

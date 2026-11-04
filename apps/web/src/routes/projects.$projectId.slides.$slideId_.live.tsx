@@ -1,4 +1,6 @@
+import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 import { z } from "zod";
 import { readBuildConfig } from "../config.ts";
 import type { CaseLoad } from "../viewer/case-load.ts";
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live
   component: LiveSlide,
 });
 
-const liveAreas = slideAreasFor(readBuildConfig().fakeApi !== "off");
+const fakeApi = readBuildConfig().fakeApi !== "off";
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -43,6 +45,12 @@ function LiveSlide() {
   const { projectId, slideId } = Route.useParams();
   const { task } = Route.useSearch();
   const loaded = useCaseLoad(projectId, slideId, task);
+  const [percent, setPercent] = useState<number | null>(null);
+  const [peek, setPeek] = useState(false);
+  const closePeek = useCallback(() => setPeek(false), []);
+  const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
+  const flagged = loaded.state === "ready" && loaded.load.resultSets.length > 0;
+  const areas = slideAreasFor(fakeApi && flagged);
   return (
     <main className="flex h-screen flex-col bg-chrome text-fg">
       <header className="flex items-center gap-3 border-line border-b px-4 py-2">
@@ -58,10 +66,20 @@ function LiveSlide() {
         ) : (
           <h1 className="font-semibold text-body">Slide</h1>
         )}
+        <span className="flex-1" />
+        {percent === null ? null : (
+          <ViewedRing data-testid="viewed-ring" percent={percent} onClick={() => setPeek(true)} />
+        )}
       </header>
       {loaded.state === "ready" ? <CasePatientBanner load={loaded.load} /> : null}
       <div className="min-h-0 flex-1">
-        <SlideStage key={slideId} slideId={slideId} areas={liveAreas} />
+        <SlideStage
+          key={slideId}
+          slideId={slideId}
+          areas={areas}
+          viewed={viewed}
+          systematicScan={loaded.state === "ready" && areas.length === 0}
+        />
       </div>
     </main>
   );
