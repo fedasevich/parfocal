@@ -30,7 +30,8 @@ import {
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import type { ConnectModelScene } from "../onboarding/scenes.ts";
 import { projectColour } from "../palette.ts";
@@ -191,20 +192,41 @@ type Props = {
   notify: Notify;
 };
 
-export function ConnectModelScreen({
+export function ConnectModelScreen(props: Props) {
+  const owner = useFlowOwner();
+  return <ConnectModelBody key={owner ?? "anonymous"} owner={owner} {...props} />;
+}
+
+function ConnectModelBody({
+  owner,
   scene,
   onScene,
   contract,
   onContract,
   onDone,
   notify,
-}: Props) {
+}: Props & { owner: string | undefined }) {
   const query = useGetLabModelConnection();
   const data = query.data?.data;
-  const [form, setForm] = useState<Form | null>(null);
+  const page = scene === "addmap" ? 1 : 0;
+  const flow = useKeptFlow<Form | null>({
+    owner,
+    id: "connect-model",
+    count: 2,
+    draft: null,
+    at: page,
+    persist: (saved) => (saved ? { ...saved, secret: "" } : saved),
+  });
+  const form = flow.draft;
+  const setForm = flow.setDraft;
   const [tile, setTile] = useState(0);
   const renderLink = useRouterLink();
-  const page = scene === "addmap" ? 1 : 0;
+  const resumeAt = useRef(flow.kept?.current === 1 && scene === "addmodel" && !contract);
+  useEffect(() => {
+    if (!resumeAt.current) return;
+    resumeAt.current = false;
+    onScene("addmap");
+  }, [onScene]);
   const host = form ? hostOf(form.address) : (data?.host ?? "");
   const passed = data?.test.outcome === "follows-contract";
   const crumbs = [
@@ -226,13 +248,23 @@ export function ConnectModelScreen({
       />
     );
   }
+  const done = () => {
+    flow.forget();
+    onDone();
+  };
   const current = form ?? startForm(data);
   const update = (change: Partial<Form>) => setForm({ ...current, ...change });
   const steps = [
     { label: "Connect and test" },
     {
       label: "Classes and access",
-      why: passed ? "Not reached yet. Use Next: classes and access." : "Test the connection first.",
+      ...(flow.reached < 1
+        ? {
+            why: passed
+              ? "Not reached yet. Use Next: classes and access."
+              : "Test the connection first.",
+          }
+        : {}),
     },
   ];
   return (
@@ -251,8 +283,10 @@ export function ConnectModelScreen({
         }
         steps={steps}
         current={page}
+        reached={flow.reached}
         onStepSelect={(index) => {
           if (index === 0) onScene("addtested");
+          if (index === 1 && flow.reached >= 1) onScene("addmap");
         }}
         bar={
           page === 1 ? (
@@ -260,12 +294,12 @@ export function ConnectModelScreen({
               data={data}
               form={current}
               onBack={() => onScene("addtested")}
-              onDone={onDone}
+              onDone={done}
               notify={notify}
             />
           ) : (
             <FlowBar
-              back={<Button onClick={onDone}>Cancel</Button>}
+              back={<Button onClick={done}>Cancel</Button>}
               hint={
                 passed
                   ? "Connected. Next, match its classes and choose who can run it."

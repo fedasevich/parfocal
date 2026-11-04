@@ -211,9 +211,19 @@ function useFlowSteps(count: number, initial: Partial<FlowProgress> = {}) {
       }),
     [count],
   );
+  const sync = React.useCallback(
+    (index: number) =>
+      setProgress((now) => {
+        if (index < 0 || index >= count) return now;
+        const reached = Math.max(now.reached, index);
+        return now.current === index && now.reached === reached ? now : { current: index, reached };
+      }),
+    [count],
+  );
   return {
     ...progress,
     progress,
+    sync,
     first: progress.current === 0,
     last: progress.current === count - 1,
     go,

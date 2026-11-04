@@ -6,31 +6,42 @@ import { FactList } from "@parfocal/ui/components/inspector";
 import { Switch } from "@parfocal/ui/components/switch";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { CheckRow, FileIcon, FileList, FileRow, SlideOverlay, useCrumbLink } from "./parts.tsx";
 
-export function ViewerFlow({
-  project,
-  batch,
-  slideHref,
-  onCancel,
-  onAdded,
-}: {
+type ViewerFlowProps = {
   project: Project;
   batch: UploadBatch;
   slideHref: string;
   onCancel: () => void;
   onAdded: (message: ReactNode) => void;
-}) {
-  const [step, setStep] = useState(0);
-  const [reached, setReached] = useState(0);
-  const [show, setShow] = useState(true);
+};
+
+export function ViewerFlow(props: ViewerFlowProps) {
+  const owner = useFlowOwner();
+  return <ViewerFlowBody key={owner ?? "anonymous"} owner={owner} {...props} />;
+}
+
+function ViewerFlowBody({
+  owner,
+  project,
+  batch,
+  slideHref,
+  onCancel,
+  onAdded,
+}: ViewerFlowProps & { owner: string | undefined }) {
+  const flow = useKeptFlow({
+    owner,
+    id: `add-result-set:${project.id}`,
+    count: 2,
+    draft: { show: true },
+  });
+  const { current: step, reached, go } = flow;
+  const show = flow.draft.show;
+  const setShow = (next: boolean) => flow.setDraft({ show: next });
   const renderLink = useCrumbLink();
   const preview = batch.result_preview;
-  const go = (next: number) => {
-    setStep(next);
-    setReached(Math.max(reached, next));
-  };
   return (
     <FlowPage
       data-testid="add-result-set"
@@ -57,11 +68,21 @@ export function ViewerFlow({
         },
       ]}
       current={step}
+      reached={reached}
       onStepSelect={go}
       bar={
         step === 0 ? (
           <FlowBar
-            back={<Button onClick={onCancel}>Cancel</Button>}
+            back={
+              <Button
+                onClick={() => {
+                  flow.forget();
+                  onCancel();
+                }}
+              >
+                Cancel
+              </Button>
+            }
             hint="Parfocal reads the file and lines it up with A1 before anything is added."
             next={
               <Button variant="primary" onClick={() => go(1)}>
@@ -76,9 +97,10 @@ export function ViewerFlow({
             next={
               <Button
                 variant="primary"
-                onClick={() =>
-                  onAdded(`${preview.model} ${preview.version} is a result set on A1 (mock)`)
-                }
+                onClick={() => {
+                  flow.forget();
+                  onAdded(`${preview.model} ${preview.version} is a result set on A1 (mock)`);
+                }}
               >
                 <Icon name="layers" />
                 Add result set

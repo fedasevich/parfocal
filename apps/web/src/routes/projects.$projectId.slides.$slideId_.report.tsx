@@ -25,6 +25,7 @@ function ClinicalReport() {
       scene={search.scene ?? "findings"}
       step={search.step}
       modal={search.modal}
+      keep={search.scene === undefined}
       onNavigate={(to) =>
         void navigate({
           search: (previous) => ({ ...previous, step: to.step, modal: to.modal }),
