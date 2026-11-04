@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
+const a2 = "00000000-0000-4000-8005-000000000002";
 const tumor052 = "00000000-0000-4000-8005-000000000014";
 
 const review = (page: Page) => page.getByRole("tabpanel");
@@ -68,6 +69,22 @@ test("answering moves on, and the Slide done card gates the submit", async ({ pa
   await expect(submit).toBeEnabled();
   await submit.click();
   await expect(page).toHaveURL(/\/submitted\?/);
+});
+
+test("submitting with open threads warns and still goes through", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=done`);
+  const warning = page.locator('[data-slot="submit-warning"]');
+  await expect(warning).toContainText("3 open threads on this slide. You can still submit.");
+  const submit = page.getByRole("button", { name: /Submit and open slide 9/ });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+  await expect(page).toHaveURL(/\/submitted\?/);
+});
+
+test("a slide with no open threads shows no submit warning", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a2}&scene=done`);
+  await expect(page.getByText("is done").first()).toBeVisible();
+  await expect(page.locator('[data-slot="submit-warning"]')).toHaveCount(0);
 });
 
 const undoHost = (page: Page) => page.locator('[data-slot="undo-toast-host"]');

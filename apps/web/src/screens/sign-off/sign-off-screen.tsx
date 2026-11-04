@@ -346,6 +346,13 @@ function SignOffModal({
                 ) : null}
               </>
             )}
+            {summary.open_threads.total ? (
+              <ReadinessRow
+                tone="warn"
+                title={`${plural(summary.open_threads.total, "thread")} still open`}
+                sub={`${summary.open_threads.slides.map((row) => `${row.count} on ${row.slide_label}`).join(", ")} · they do not block signing, the report lists them`}
+              />
+            ) : null}
             <ReadinessRow
               tone="ok"
               title="Result set and IDs fixed"

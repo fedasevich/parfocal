@@ -56,7 +56,7 @@ import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
 import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
-import { ThreadsTab } from "./threads-tab.tsx";
+import { ThreadsTab, useOpenThreadsWarning } from "./threads-tab.tsx";
 import { useDecisionSaves } from "./use-decision-saves.ts";
 import { useOpinionDraft } from "./use-opinion-draft.ts";
 
@@ -100,6 +100,7 @@ function GuidedBody({
   const navigate = useNavigate();
   const person = usePeople();
   const submitReview = useSubmitSlideReview();
+  const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const style = setup.style ? { ...session.style, kind: setup.style } : session.style;
   const decisions = useDecisionSaves(session, style);
   const objects = setup.issue === "noresults" ? [] : session.objects;
@@ -577,6 +578,7 @@ function GuidedBody({
       blockers={doneBlockers}
       submitLabel={nextLabel}
       failed={failed}
+      warning={threadsWarning}
       onSubmit={submit}
       onAnswerChange={changeOpinion}
     />

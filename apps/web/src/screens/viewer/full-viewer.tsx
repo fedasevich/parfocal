@@ -85,7 +85,7 @@ import {
   type StillView,
 } from "../review/slide-still.tsx";
 import { recallSlideCamera, rememberSlideCamera } from "../review/slide-switch.ts";
-import { ThreadsTab } from "../review/threads-tab.tsx";
+import { ThreadsTab, useOpenThreadsWarning } from "../review/threads-tab.tsx";
 import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
@@ -213,6 +213,7 @@ function ViewerBody({
   const router = useRouter();
   const person = usePeople();
   const submitReview = useSubmitSlideReview();
+  const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const progress = okData(
     useGetSlideAiProgress(slideId, {
       query: {
@@ -892,6 +893,7 @@ function ViewerBody({
       blockers={doneBlockers}
       submitLabel={failed ? "Try again" : "Submit"}
       failed={failed}
+      warning={threadsWarning}
       {...(readOnly ? { lockedReason: "Signed off 15 Oct. Changes need an amendment." } : {})}
       onSubmit={submit}
       onAnswerChange={changeOpinion}
