@@ -72,3 +72,13 @@ test("compact fits more rows and a shorter inspector than comfortable", async ({
   expect(compact.foot).toBeLessThan(comfortable.foot);
   expect(compact.firstCard).toBeLessThan(comfortable.firstCard);
 });
+
+for (const density of ["comfortable", "compact"] as const) {
+  test(`the ${density} flow page main column uses the ${density} gap`, async ({ page }) => {
+    await page.goto(story(`components-modals-and-flow-pages--flow-${density}`));
+    await expect(page.locator("[data-slot=flow-main]")).toHaveCSS(
+      "row-gap",
+      px(densitySpacingPx["flow-page-gap"][density]),
+    );
+  });
+}
