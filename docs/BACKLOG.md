@@ -2737,7 +2737,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover cursor broadcast throttling and display.
   Size: L.
 
-- [ ] COLLAB-012 · Open threads at submit and sign-off
+- [x] COLLAB-012 · Open threads at submit and sign-off
   Submitting a review and signing off a task warn on open threads but do not block.
   Done when E2E submits with an open thread and sees the warning.
   Size: S.
