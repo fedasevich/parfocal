@@ -2425,7 +2425,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-021.
   Size: S.
 
-- [ ] REVIEW-026 · Confidence wording in Settings and guided review
+- [x] REVIEW-026 · Confidence wording in Settings and guided review
   REVIEW-022 (AI wording on screen) added frequency to the personal setting `confidence_wording` and the `aiWording` helper, but the Settings screen has no row for the setting, and guided review reads the task's display preset instead of it.
   Done when Settings shows the row with all four values, guided review follows the setting when the task does not lock a preset, and component tests cover both.
   Depends on REVIEW-022.
