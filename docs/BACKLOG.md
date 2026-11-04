@@ -3179,7 +3179,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 26.
   Size: S.
 
-- [ ] AISEG-012 · Scale presets
+- [x] AISEG-012 · Scale presets
   Nuclei 0.25 µm, cells, tissue, region, mapped to model input microns per pixel.
   Done when tests confirm patches are read at the right level for each preset.
   Size: S.
