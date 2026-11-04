@@ -552,6 +552,17 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the budget check passes with at least 10,000 bytes spare and the E2E suite stays green.
   Size: S.
 
+- [ ] FOUND-030 · Bundle analyzer report
+  Nobody can see what each chunk of `apps/web` holds, so a heavy import into the first page shows up only when the budget in `perf-budgets.json` fails. Add a build mode that writes a treemap and a JSON summary of every chunk with its modules and gzip size, and upload both as a CI artifact on each pull request.
+  Done when one command builds the report locally, CI attaches it to pull requests, and the summary names the largest modules of the first-page chunk.
+  Size: S.
+
+- [ ] FOUND-031 · Heavy dependency and lazy loading audit
+  Using the FOUND-030 report, find the heaviest dependencies and the code the first page loads but does not show, such as dialogs, admin pages and charts. Move it behind `React.lazy` or dynamic imports, replace or trim the heaviest dependencies where a lighter one does the job, and lower the first-page budget in `perf-budgets.json` to the new size plus 10 KB of headroom. Write the before and after sizes in a result file and note in `knowledge/` how to repeat the audit, so it runs again at each milestone.
+  Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
+  Depends on FOUND-030.
+  Size: M.
+
 ---
 
 ## 02 SKEL · Walking skeleton (milestone M1)
