@@ -80,6 +80,6 @@ def associated_images(path: Path, pyramid: Pyramid) -> tuple[Associated, ...]:
             images = from_openslide(path)
         case Reader.WSIDICOM:
             images = from_dicom(path)
-        case Reader.TIFFSLIDE:
+        case Reader.TIFFFILE:
             images = from_ome(path)
     return tuple(encoded(kind, images[kind]) for kind in Kind if kind in images)

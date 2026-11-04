@@ -278,3 +278,30 @@ def test_old_queue_choices_read_as_agree_and_disagree(empty_database: str) -> No
     command.downgrade(config, "0079")
     decisions = "SELECT decision FROM disagreement_decisions ORDER BY number"
     assert query(empty_database, decisions) == [("keep-ai",), ("go-with-reviewers",)]
+
+
+def test_old_tiffslide_slides_read_back_as_tifffile(empty_database: str) -> None:
+    config = alembic_config(empty_database)
+    command.upgrade(config, "0082")
+    for statement in CONTEXT_SEED:
+        query(empty_database, statement)
+    query(
+        empty_database,
+        "INSERT INTO slides (tenant_id, project_id, case_id, label, reader) "
+        "SELECT c.tenant_id, c.project_id, c.id, r.label, r.reader FROM cases c, "
+        "(VALUES ('A2', 'tiffslide'), ('A3', 'openslide')) AS r(label, reader)",
+    )
+
+    command.upgrade(config, "0083")
+    readers = "SELECT label, reader FROM slides ORDER BY label"
+    assert query(empty_database, readers) == [
+        ("A1", None),
+        ("A2", "tifffile"),
+        ("A3", "openslide"),
+    ]
+    command.downgrade(config, "0082")
+    assert query(empty_database, readers) == [
+        ("A1", None),
+        ("A2", "tiffslide"),
+        ("A3", "openslide"),
+    ]
