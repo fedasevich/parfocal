@@ -960,6 +960,31 @@ export interface CountsAsChange {
   reasons_dropped: number;
 }
 
+export interface CoverageGrid {
+  /** @minimum 1 */
+  cell: number;
+  /**
+   * @minimum 1
+   * @maximum 1024
+   */
+  columns: number;
+  /**
+   * @minimum 1
+   * @maximum 1024
+   */
+  rows: number;
+}
+
+export interface CoverageBatch {
+  grid: CoverageGrid;
+  /**
+   * @minItems 1
+   * @maxItems 8192
+   * @items.minimum 0
+   */
+  cells: number[];
+}
+
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
 
 export const ServiceScope = {
@@ -3493,6 +3518,14 @@ export interface SiteValidation {
 export interface SlideChoice {
   slide_id?: string | null;
   slide_upload_id?: string | null;
+}
+
+export interface SlideCoverage {
+  slide_id: string;
+  grid: CoverageGrid;
+  seen: string;
+  seen_cells: number;
+  updated_at: string | null;
 }
 
 export interface SlideDecision {
@@ -42677,4 +42710,365 @@ export const useSetSecurityContact = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetSecurityContactMutationOptions(options), queryClient);
+};
+
+export type getSlideCoverageResponse200 = {
+  data: SlideCoverage;
+  status: 200;
+};
+
+export type getSlideCoverageResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideCoverageResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideCoverageResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideCoverageResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideCoverageResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideCoverageResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideCoverageResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideCoverageResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideCoverageResponseSuccess = getSlideCoverageResponse200 & {
+  headers: Headers;
+};
+export type getSlideCoverageResponseError = (
+  | getSlideCoverageResponse400
+  | getSlideCoverageResponse401
+  | getSlideCoverageResponse403
+  | getSlideCoverageResponse404
+  | getSlideCoverageResponse409
+  | getSlideCoverageResponse422
+  | getSlideCoverageResponse429
+  | getSlideCoverageResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideCoverageResponse =
+  | getSlideCoverageResponseSuccess
+  | getSlideCoverageResponseError;
+
+export const getGetSlideCoverageUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/coverage`;
+};
+
+/**
+ * @summary Get Slide Coverage
+ */
+export const getSlideCoverage = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideCoverageResponse> => {
+  return apiFetch<getSlideCoverageResponse>(getGetSlideCoverageUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideCoverageQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/coverage`] as const;
+};
+
+export const getGetSlideCoverageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideCoverage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideCoverageQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideCoverage>>> = ({ signal }) =>
+    getSlideCoverage(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideCoverageQueryResult = NonNullable<Awaited<ReturnType<typeof getSlideCoverage>>>;
+export type GetSlideCoverageQueryError = Problem;
+
+export function useGetSlideCoverage<
+  TData = Awaited<ReturnType<typeof getSlideCoverage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideCoverage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideCoverage<
+  TData = Awaited<ReturnType<typeof getSlideCoverage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideCoverage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideCoverage<
+  TData = Awaited<ReturnType<typeof getSlideCoverage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Coverage
+ */
+
+export function useGetSlideCoverage<
+  TData = Awaited<ReturnType<typeof getSlideCoverage>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideCoverage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideCoverageQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type recordSlideCoverageResponse200 = {
+  data: SlideCoverage;
+  status: 200;
+};
+
+export type recordSlideCoverageResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type recordSlideCoverageResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type recordSlideCoverageResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type recordSlideCoverageResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type recordSlideCoverageResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type recordSlideCoverageResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type recordSlideCoverageResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type recordSlideCoverageResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type recordSlideCoverageResponseSuccess = recordSlideCoverageResponse200 & {
+  headers: Headers;
+};
+export type recordSlideCoverageResponseError = (
+  | recordSlideCoverageResponse400
+  | recordSlideCoverageResponse401
+  | recordSlideCoverageResponse403
+  | recordSlideCoverageResponse404
+  | recordSlideCoverageResponse409
+  | recordSlideCoverageResponse422
+  | recordSlideCoverageResponse429
+  | recordSlideCoverageResponse500
+) & {
+  headers: Headers;
+};
+
+export type recordSlideCoverageResponse =
+  | recordSlideCoverageResponseSuccess
+  | recordSlideCoverageResponseError;
+
+export const getRecordSlideCoverageUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/coverage`;
+};
+
+/**
+ * @summary Record Slide Coverage
+ */
+export const recordSlideCoverage = async (
+  slideId: string,
+  coverageBatch: CoverageBatch,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<recordSlideCoverageResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<recordSlideCoverageResponse>(getRecordSlideCoverageUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(coverageBatch),
+  });
+};
+
+export const getRecordSlideCoverageMutationKey = () => ["recordSlideCoverage"] as const;
+
+export const getRecordSlideCoverageMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordSlideCoverage>>,
+    TError,
+    RecordSlideCoverageMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordSlideCoverage>>,
+  TError,
+  RecordSlideCoverageMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordSlideCoverageMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordSlideCoverage>>,
+    RecordSlideCoverageMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return recordSlideCoverage(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordSlideCoverageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordSlideCoverage>>
+>;
+export type RecordSlideCoverageMutationBody = CoverageBatch;
+export type RecordSlideCoverageMutationError = Problem;
+export type RecordSlideCoverageMutationVariables = { slideId: string; data: CoverageBatch };
+
+/**
+ * @summary Record Slide Coverage
+ */
+export const useRecordSlideCoverage = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordSlideCoverage>>,
+      TError,
+      RecordSlideCoverageMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordSlideCoverage>>,
+  TError,
+  RecordSlideCoverageMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordSlideCoverageMutationOptions(options), queryClient);
 };

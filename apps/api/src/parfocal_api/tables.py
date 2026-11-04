@@ -2349,3 +2349,29 @@ thread_messages = Table(
         info=OPERATIONAL,
     ),
 )
+
+slide_coverage = Table(
+    "slide_coverage",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "slide_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("slides.id", ondelete="CASCADE"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        info=PERSONAL,
+    ),
+    Column("cell", Integer, nullable=False, info=OPERATIONAL),
+    Column("columns", Integer, nullable=False, info=OPERATIONAL),
+    Column("rows", Integer, nullable=False, info=OPERATIONAL),
+    Column("seen", LargeBinary, nullable=False, info=PERSONAL),
+    Column("seen_cells", Integer, nullable=False, info=PERSONAL),
+    *timestamps(),
+)

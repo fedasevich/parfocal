@@ -58,6 +58,7 @@ from parfocal_api.tables import (
     session_policies,
     site_validations,
     slide_counters,
+    slide_coverage,
     slides,
     stage_throughput,
     study_template_versions,
@@ -429,7 +430,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         update(slides)
         .where(slides.c.id == case.loose_slide_id)
-        .values(restricted_images=[RestrictedImage.LABEL.value])
+        .values(restricted_images=[RestrictedImage.LABEL.value], width=4096, height=2048)
     )
     async with httpx2.AsyncClient(timeout=30) as http:
         await put_restricted_images(
@@ -839,6 +840,22 @@ async def seed_hidden_models(connection: AsyncConnection, seeded: Seeded) -> Non
     seeded.markers.add(str(user))
 
 
+async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(slide_coverage).values(
+            tenant_id=seeded.tenant_id,
+            slide_id=seeded.ids["slide"],
+            user_id=seeded.ids["user"],
+            cell=64,
+            columns=64,
+            rows=32,
+            seen=bytes(256),
+            seen_cells=0,
+        )
+    )
+    seeded.markers.add(str(seeded.ids["slide"]))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -859,6 +876,7 @@ SEEDERS: dict[str, Seeder] = {
     "site_validations": seed_site_validations,
     "model_tiers": seed_model_tiers,
     "hidden_models": seed_hidden_models,
+    "slide_coverage": seed_slide_coverage,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1000,6 +1018,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
+    "getSlideCoverage": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/coverage"),
     "getRoomAccess": Route(Exposure.TENANT, lambda a: f"/api/rooms/slide:{a.ids['slide']}/access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
     "listReviewTasks": Route(

@@ -113,6 +113,7 @@ import type {
   SigningKey,
   SignOutSet,
   SiteValidation,
+  SlideCoverage,
   SlideDetail,
   SlideFigure,
   SlidePage,
@@ -9195,6 +9196,42 @@ export const getSetSecurityContactResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideCoverageResponseMock = (
+  overrideResponse: Partial<Extract<SlideCoverage, object>> = {},
+): SlideCoverage => ({
+  slide_id: faker.string.uuid(),
+  grid: {
+    cell: faker.number.int({ min: 1 }),
+    columns: faker.number.int({ min: 1, max: 1024 }),
+    rows: faker.number.int({ min: 1, max: 1024 }),
+  },
+  seen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  seen_cells: faker.number.int(),
+  updated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getRecordSlideCoverageResponseMock = (
+  overrideResponse: Partial<Extract<SlideCoverage, object>> = {},
+): SlideCoverage => ({
+  slide_id: faker.string.uuid(),
+  grid: {
+    cell: faker.number.int({ min: 1 }),
+    columns: faker.number.int({ min: 1, max: 1024 }),
+    rows: faker.number.int({ min: 1, max: 1024 }),
+  },
+  seen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  seen_cells: faker.number.int(),
+  updated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
 export const getGetHealthMockHandler = (
   overrideResponse?:
     | Health
@@ -14168,6 +14205,54 @@ export const getSetSecurityContactMockHandler = (
     options,
   );
 };
+
+export const getGetSlideCoverageMockHandler = (
+  overrideResponse?:
+    | SlideCoverage
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideCoverage> | SlideCoverage),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/coverage",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideCoverageResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRecordSlideCoverageMockHandler = (
+  overrideResponse?:
+    | SlideCoverage
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SlideCoverage> | SlideCoverage),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/coverage",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRecordSlideCoverageResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
@@ -14388,4 +14473,6 @@ export const getParfocalAPIMock = () => [
   getSetWorkspaceSettingsMockHandler(),
   getGetSecurityContactMockHandler(),
   getSetSecurityContactMockHandler(),
+  getGetSlideCoverageMockHandler(),
+  getRecordSlideCoverageMockHandler(),
 ];

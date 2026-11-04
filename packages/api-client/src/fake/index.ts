@@ -6,6 +6,7 @@ import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
+import { coverageHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
@@ -44,6 +45,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
+    ...coverageHandlers(),
     ...annotationHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
@@ -73,6 +75,12 @@ export {
   liveWorkspaceSettings,
   resetConsoleActions,
 } from "./console-handlers.ts";
+export {
+  coverageHandlers,
+  recordFakeCoverage,
+  resetFakeCoverage,
+  toSlideCoverage,
+} from "./coverage-handlers.ts";
 export { resetCreatedRecords } from "./create-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
 export {

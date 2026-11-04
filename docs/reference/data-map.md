@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 31 |
-| `personal` | 65 |
+| `personal` | 68 |
 | `secret` | 9 |
-| `operational` | 580 |
+| `operational` | 587 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -765,6 +765,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `slide_id` | operational |
 | `letter` | operational |
 | `last` | operational |
+
+## slide_coverage
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `cell` | operational |
+| `columns` | operational |
+| `rows` | operational |
+| `seen` | personal |
+| `seen_cells` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## slides
 
