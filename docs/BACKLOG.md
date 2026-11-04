@@ -4216,7 +4216,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when API tests create a task with two scope parts, show both kinds in the review order and the counts, and an old single-kind task reads as a list of one.
   Depends on EVAL-007, GUIDE-012. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows).
 
-- [ ] TASK-013 · Annotate task kind
+- [x] TASK-013 · Annotate task kind
   A task is `review` (the default) or `annotate` ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), annotate tasks on one shared layer). An annotate task pins one ready result set per slide or none, takes no scope or the check options of TASK-015, snapshots the project classes, stores no review order and refuses decisions, opinion-form answers per object, review edits and the queue with `not-a-review-task`. Ready follows the slide's ingest status. Removing a class that task annotations use is refused.
   Done when API tests create an annotate task on slides with no result set and with one, refuse a decision in it, derive Ready from the slide alone, list old tasks as `review`, refuse deleting a used class, and the isolation test covers the new columns.
   Depends on TASK-001, PROJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
