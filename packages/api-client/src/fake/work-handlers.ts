@@ -420,15 +420,26 @@ const pathOf = (hit: SearchHit): string =>
     ? hit.id
     : [hit.project?.code, hit.case_label, hit.label].filter(Boolean).join("/");
 
-export const searchScenario = (query: string): SearchHit[] => {
+const scopeKinds: Record<string, SearchHit["kind"][]> = {
+  projects: ["project"],
+  cases: ["case", "patient-case"],
+  slides: ["slide"],
+  objects: ["object"],
+  people: ["person"],
+  patients: ["patient-case"],
+};
+
+export const searchScenario = (query: string, scope = "all"): SearchHit[] => {
+  const kinds = scopeKinds[scope];
   const tokens = fold(query.trim()).split(/\s+/).filter(Boolean);
   if (tokens.join("").length < 2) return [];
   return searchIndex()
     .filter((hit) => {
+      if (kinds && !kinds.includes(hit.kind)) return false;
       const haystack = fold(`${hit.label} ${pathOf(hit)}`);
       return tokens.every((token) => haystack.includes(token));
     })
-    .slice(0, 8);
+    .slice(0, kinds ? 20 : 8);
 };
 
 export const reviewOrderOf = reviewOrderFor;
@@ -507,8 +518,9 @@ export function workHandlers(): RequestHandler[] {
       inbox.mark((await request.json()) as MarkRead),
     ),
     getSearchMockHandler(({ request }) => {
-      const query = new URL(request.url).searchParams.get("q") ?? "";
-      return { query, hits: searchScenario(query) };
+      const params = new URL(request.url).searchParams;
+      const query = params.get("q") ?? "";
+      return { query, hits: searchScenario(query, params.get("scope") ?? "all") };
     }),
     getListAnnouncementsMockHandler(() => currentAnnouncements().map(toAnnouncement)),
     getCreateAnnouncementMockHandler(async ({ request }) => {

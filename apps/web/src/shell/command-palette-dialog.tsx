@@ -1,7 +1,6 @@
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components/command-palette";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
-import type { IconName } from "@parfocal/ui/components/icon";
 import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
 import { type KeyboardEvent, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
@@ -11,25 +10,7 @@ import { useOverlay } from "./overlays.ts";
 import { type PaletteGroup, paletteEntries, paletteGroups } from "./palette-commands.ts";
 import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
-
-const hitIcons: Record<SearchHit["kind"], IconName> = {
-  project: "folder",
-  case: "file",
-  slide: "slides",
-  object: "target",
-  person: "user",
-  "patient-case": "file",
-};
-
-function hitHref(hit: SearchHit): string | null {
-  const projectId = hit.project?.id;
-  if (hit.kind === "project") return destinations.project(hit.id);
-  if ((hit.kind === "slide" || hit.kind === "object") && projectId && hit.slide_id) {
-    return destinations.slide(projectId, hit.slide_id, undefined, hit.object_id ?? undefined);
-  }
-  if (hit.kind === "case" && projectId) return destinations.project(projectId);
-  return null;
-}
+import { hitHref, hitIcons } from "./search-hits.ts";
 
 type Row = PaletteCommand & { group: PaletteGroup; score: number };
 
@@ -135,10 +116,28 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       .slice(0, perGroupLimit)
       .map(({ row }) => row),
   }));
-  const commands = byGroup
+  const ranked = byGroup
     .filter((entry) => entry.rows.length > 0)
     .sort((a, b) => (b.rows[0]?.score ?? 0) - (a.rows[0]?.score ?? 0) || a.order - b.order)
     .flatMap((entry) => entry.rows);
+  const allResults: Row[] =
+    trimmed.length >= 2
+      ? [
+          {
+            id: "all-results",
+            group: "Go to",
+            icon: "search",
+            label: `All results for "${trimmed}"`,
+            matched: [],
+            score: 0,
+            run: () => {
+              close();
+              void goTo(destinations.search(trimmed));
+            },
+          },
+        ]
+      : [];
+  const commands = [...ranked, ...allResults];
   const groupOrder = [...new Set(commands.map((command) => command.group))];
   const current = Math.min(active, Math.max(0, commands.length - 1));
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

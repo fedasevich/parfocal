@@ -1,6 +1,7 @@
 export const shellRouteIds: ReadonlySet<string> = new Set([
   "/",
   "/my-work",
+  "/search",
   "/projects/new",
   "/projects/$projectId/",
   "/projects/$projectId/cases/new",
