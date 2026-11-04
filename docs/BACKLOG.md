@@ -2276,7 +2276,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests cover each category boundary, a lead area ruled out (the next largest takes over), the count rule and an area that could still outrank the lead.
   Refs doc 33, doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0086](adr/0086-node-staging-rules.md). The validation fixture property moved to REVIEW-020.
 
-- [ ] REVIEW-004 · Staging hero and size scale
+- [x] REVIEW-004 · Staging hero and size scale
   Plain-words heading, chip, sub-line and a log size scale from 0.05 to 20 mm with ITC, micro and macro zones, a dot per area, and the current area's range band and numbered point. For a cluster, a count bar with the 200-cell line.
   Done when component tests cover every state and a unit test checks the scale geometry at the 0.2 and 2 mm lines.
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
