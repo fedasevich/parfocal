@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import func, select, update
+from sqlalchemy import ColumnElement, func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
@@ -24,6 +24,7 @@ from parfocal_api.tables import (
     ProjectRole,
     ResultSource,
     ResultStatus,
+    TaskKind,
     annotations,
     opinions,
     projects,
@@ -32,6 +33,7 @@ from parfocal_api.tables import (
     review_edits,
     review_task_slides,
     review_tasks,
+    slides,
     verdicts,
 )
 
@@ -103,12 +105,13 @@ class ReviewerFacts:
 
 @dataclass(frozen=True)
 class SlideFacts:
-    set_status: ResultStatus
-    set_source: ResultSource
+    set_status: ResultStatus | None
+    set_source: ResultSource | None
     reviewers: Mapping[uuid.UUID, ReviewerFacts]
     open_disagreements: int = 0
     signed_off: bool = False
     exported: bool = False
+    ingested: bool = True
 
 
 @dataclass(frozen=True)
@@ -122,11 +125,20 @@ class MoveFacts:
 
 
 def before_review(facts: SlideFacts) -> State | None:
+    if facts.set_status is None:
+        return None if facts.ingested else State.UPLOADED
     if facts.set_status is ResultStatus.READY:
         return None
     if facts.set_source is ResultSource.RUN and facts.set_status is ResultStatus.IMPORTING:
         return State.AI_RUNNING
     return State.UPLOADED
+
+
+def ingested() -> ColumnElement[bool]:
+    return (
+        slides.c.deleted_at.is_(None)
+        & (slides.c.upload_id.is_(None) | slides.c.published_at.is_not(None))
+    ).label("ingested")
 
 
 def reviewer_state(facts: ReviewerFacts) -> State:
@@ -271,33 +283,41 @@ async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> li
 
 
 async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
+    annotating = task.kind == TaskKind.ANNOTATE
     slide_rows = (
         await connection.execute(
-            select(review_task_slides.c.slide_id, result_sets.c.status, result_sets.c.source)
-            .join(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
+            select(
+                review_task_slides.c.slide_id,
+                result_sets.c.status,
+                result_sets.c.source,
+                ingested(),
+            )
+            .join(slides, slides.c.id == review_task_slides.c.slide_id)
+            .outerjoin(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
             .where(review_task_slides.c.task_id == task.id)
             .order_by(review_task_slides.c.position)
         )
     ).all()
-    queue = await queue_of(connection, task.id)
+    queue = [] if annotating else await queue_of(connection, task.id)
     open_disagreements = open_by_slide(queue)
     by_slide: dict[uuid.UUID, list[Any]] = {}
     for row in await assignment_rows(connection, task.id):
         by_slide.setdefault(row.slide_id, []).append(row)
-    slides: list[SlideState] = []
+    states: list[SlideState] = []
     for slide in slide_rows:
         assigned = by_slide.get(slide.slide_id, [])
         facts = SlideFacts(
-            set_status=ResultStatus(slide.status),
-            set_source=ResultSource(slide.source),
+            set_status=None if annotating else ResultStatus(slide.status),
+            set_source=None if annotating else ResultSource(slide.source),
             reviewers={
                 row.user_id: ReviewerFacts(row.submitted_at is not None, bool(row.has_work))
                 for row in assigned
             },
             open_disagreements=open_disagreements.get(slide.slide_id, 0),
             signed_off=task.signed_off_at is not None,
+            ingested=slide.ingested,
         )
-        slides.append(
+        states.append(
             SlideState(
                 slide_id=slide.slide_id,
                 state=slide_state(facts),
@@ -314,7 +334,7 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
     return TaskStates(
         task_id=task.id,
         signed_off_at=task.signed_off_at,
-        slides=slides,
+        slides=states,
         left_open=left_open_count(queue),
     )
 

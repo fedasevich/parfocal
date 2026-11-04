@@ -711,6 +711,40 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.ids["task"] = task_id
     seeded.markers.update({str(task_id), task_name})
+    snapshot_class = f"Snapshot class {uuid.uuid4().hex[:8]}"
+    annotate_id = await connection.scalar(
+        insert(review_tasks)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            number=2,
+            name=f"Annotate {uuid.uuid4().hex[:8]}",
+            kind="annotate",
+            class_snapshot=[
+                {"id": str(uuid.uuid4()), "key": 1, "name": snapshot_class, "colour": "#d62728"}
+            ],
+            split="everyone",
+            scope="whole-slide",
+            opinion_form_version=1,
+            start_mode="guided",
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(review_tasks.c.id)
+    )
+    assert isinstance(annotate_id, uuid.UUID)
+    await connection.execute(
+        insert(review_task_slides).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=annotate_id,
+            slide_id=case.loose_slide_id,
+            position=0,
+            kind="annotate",
+            result_set_id=None,
+        )
+    )
+    seeded.ids["annotate_task"] = annotate_id
+    seeded.markers.add(snapshot_class)
     seeded.markers.update({str(set_id), set_name})
     seeded.ids["annotation"] = annotation_id
     seeded.markers.add(str(annotation_id))
@@ -1412,3 +1446,20 @@ def test_a_shared_report_shows_only_its_own_workspace(
     assert response.status_code == 200, response.text
     assert [marker for marker in b.markers if marker in response.text] == []
     assert str(a.ids["task"]) not in response.text
+
+
+def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
+    api: ApiAs, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    path = f"/api/review-tasks/{a.ids['annotate_task']}"
+    mine = api(a.member()).get(path)
+    assert mine.status_code == 200, mine.text
+    assert (mine.json()["kind"], mine.json()["slides"][0]["result_set_id"]) == ("annotate", None)
+    snapshot = mine.json()["classes"][0]["name"]
+    assert snapshot in a.markers
+    theirs = api(b.member()).get(path)
+    assert theirs.status_code == 404
+    assert snapshot not in theirs.text
+    listed = api(b.member()).get(f"/api/projects/{a.ids['project']}/review-tasks")
+    assert snapshot not in listed.text

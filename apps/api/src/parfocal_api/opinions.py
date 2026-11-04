@@ -165,7 +165,7 @@ async def save_opinion(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> Opinion:
-    row = await assigned_slide(connection, principal, task_id, slide_id)
+    row = await assigned_slide(connection, principal, task_id, slide_id, review=False)
     me = user_of(principal)
     assert me is not None
     current = await opinion_of(connection, task_id, slide_id, me)

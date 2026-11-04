@@ -1465,6 +1465,12 @@ class TaskScope(StrEnum):
     CELLS_BELOW_SCORE = "cells-below-score"
     INSIDE_ROIS = "inside-rois"
     UNSURE_ZONES = "unsure-zones"
+    WHOLE_SLIDE = "whole-slide"
+
+
+class TaskKind(StrEnum):
+    REVIEW = "review"
+    ANNOTATE = "annotate"
 
 
 class StartMode(StrEnum):
@@ -1489,6 +1495,10 @@ review_tasks = Table(
     Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("number", Integer, nullable=False, info=OPERATIONAL),
     Column("name", String(120), nullable=False, info=OPERATIONAL),
+    Column(
+        "kind", String(10), nullable=False, server_default=TaskKind.REVIEW.value, info=OPERATIONAL
+    ),
+    Column("class_snapshot", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     Column("split", String(10), nullable=False, info=OPERATIONAL),
     Column("scope", String(20), nullable=False, info=OPERATIONAL),
     Column("scope_count", Integer, nullable=True, info=OPERATIONAL),
@@ -1559,6 +1569,7 @@ review_tasks = Table(
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
+    UniqueConstraint("id", "kind"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
         ["project_id", "opinion_form_version"],
@@ -1576,8 +1587,11 @@ review_tasks = Table(
     CheckConstraint(
         "(study_template_id IS NULL) = (study_template_version IS NULL)", name="study_template"
     ),
+    one_of("kind", TaskKind),
     one_of("split", TaskSplit),
     one_of("scope", TaskScope),
+    CheckConstraint("(kind = 'annotate') = (class_snapshot IS NOT NULL)", name="class_snapshot"),
+    CheckConstraint("(kind = 'annotate') = (scope = 'whole-slide')", name="whole_slide"),
     one_of("start_mode", StartMode),
     one_of("decision_style", DecisionStyle),
     CheckConstraint(
@@ -1607,9 +1621,14 @@ review_task_slides = Table(
     Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("slide_id", Uuid[uuid.UUID](), primary_key=True, index=True, info=OPERATIONAL),
     Column("position", Integer, nullable=False, info=OPERATIONAL),
-    Column("result_set_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "kind", String(10), nullable=False, server_default=TaskKind.REVIEW.value, info=OPERATIONAL
+    ),
+    Column("result_set_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     UniqueConstraint("task_id", "position"),
     ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
+    ForeignKeyConstraint(["task_id", "kind"], ["review_tasks.id", "review_tasks.kind"]),
+    CheckConstraint("kind = 'annotate' OR result_set_id IS NOT NULL", name="result_set"),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
         ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]

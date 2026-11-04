@@ -153,6 +153,8 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
     number: Number(task.code.slice(3)),
     code: task.code,
     name: task.name,
+    kind: "review",
+    classes: null,
     split: task.split === "even" ? "even" : "everyone",
     scope: scopeOf(task),
     scopes: [scopeOf(task)],

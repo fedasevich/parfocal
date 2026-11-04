@@ -9,6 +9,7 @@ export const scopeWords: Record<TaskScope, string> = {
   "cells-below-score": "Cells the model was least sure about",
   "inside-rois": "Only inside ROIs",
   "unsure-zones": "Unsure zones only",
+  "whole-slide": "The whole slide",
 };
 
 export type ReviewTag = { label: string; tone: "neutral" | "accent" | "warn" };

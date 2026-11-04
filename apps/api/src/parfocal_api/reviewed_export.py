@@ -19,7 +19,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import code_of
-from parfocal_api.reviewed_layer import task_slide
+from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.tables import (
     annotations,
     cases,
@@ -355,7 +355,7 @@ async def export_reviewed_layer(
     reviewer_id: uuid.UUID | None = None,
     consensus: bool = False,
 ) -> dict[str, Any]:
-    row = await task_slide(connection, principal, task_id, slide_id)
+    row = await review_slide(connection, principal, task_id, slide_id)
     whole = reads_whole(
         await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
     )
