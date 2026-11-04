@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./telemetry-capture.ts";
 
 const p03 = "00000000-0000-4000-8003-000000000003";
 const a1 = "00000000-0000-4000-8005-000000000001";
