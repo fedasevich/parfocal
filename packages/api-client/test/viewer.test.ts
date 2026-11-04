@@ -8,6 +8,7 @@ import {
   setFakeViewerScene,
 } from "../src/fake/index.ts";
 import {
+  getResultSetTyper,
   getSlideAiProgress,
   getSlideResultStats,
   listAnnotationLayers,
@@ -143,4 +144,25 @@ test("the outline task has Best and Good mapped and Fast left to the lab", async
       ["fast", null],
     ],
   );
+});
+
+test("the fake typers carry the calibration evidence the Word wording needs", async () => {
+  for (const key of ["cam", "sam"]) {
+    const set = scenario.resultSets.find((item) => item.key === key);
+    assert.ok(set);
+    const { data } = await getResultSetTyper(set.id);
+    assert.equal(data.calibrated, true);
+    assert.equal(data.checked_on_held_out, true);
+    assert.ok(data.band_accuracy.confident !== undefined);
+  }
+});
+
+test("PathoSAM's typer scores under the accuracy floor and CAMELYON's does not", async () => {
+  const accuracy = async (key: string) => {
+    const set = scenario.resultSets.find((item) => item.key === key);
+    assert.ok(set);
+    return (await getResultSetTyper(set.id)).data.test_set_accuracy ?? 1;
+  };
+  assert.ok((await accuracy("sam")) < 0.7);
+  assert.ok((await accuracy("cam")) >= 0.7);
 });

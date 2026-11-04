@@ -108,6 +108,7 @@ export {
 } from "./task-handlers.ts";
 export { getListTeamWorkloadMockHandler } from "./team-handlers.ts";
 export {
+  getGetResultSetTyperMockHandler,
   getGetSlideAiProgressMockHandler,
   getGetSlideResultStatsMockHandler,
 } from "./viewer-handlers.ts";
