@@ -13,7 +13,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 31 |
-| `personal` | 57 |
+| `personal` | 58 |
 | `secret` | 9 |
 | `operational` | 570 |
 | `public` | 0 |
@@ -1008,4 +1008,5 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `tenant_id` | operational |
 | `values` | operational |
 | `locked` | operational |
+| `security_contact` | personal |
 | `updated_at` | operational |

@@ -69,6 +69,7 @@ EXPORTED_ELSEWHERE = {
     "sessions": "the session list",
     "audit_people": "the audit list, which resolves the pseudonym",
     "audit_events": "the audit list",
+    "workspace_settings": "the workspace security contact, which admins see in the settings",
 }
 NOT_EXPORTED = {
     "platform_operators": "operators are Parfocal staff accounts outside any workspace",

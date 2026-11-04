@@ -101,6 +101,7 @@ import type {
   RunAreas,
   ScaleQuestion,
   SearchResults,
+  SecurityContact,
   SelectionScope,
   ServiceAccount,
   Session,
@@ -8590,6 +8591,20 @@ export const getSetWorkspaceSettingsResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSecurityContactResponseMock = (
+  overrideResponse: Partial<Extract<SecurityContact, object>> = {},
+): SecurityContact => ({
+  email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  ...overrideResponse,
+});
+
+export const getSetSecurityContactResponseMock = (
+  overrideResponse: Partial<Extract<SecurityContact, object>> = {},
+): SecurityContact => ({
+  email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  ...overrideResponse,
+});
+
 export const getGetHealthMockHandler = (
   overrideResponse?:
     | Health
@@ -13380,6 +13395,54 @@ export const getSetWorkspaceSettingsMockHandler = (
     options,
   );
 };
+
+export const getGetSecurityContactMockHandler = (
+  overrideResponse?:
+    | SecurityContact
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SecurityContact> | SecurityContact),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/security-contact",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSecurityContactResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetSecurityContactMockHandler = (
+  overrideResponse?:
+    | SecurityContact
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<SecurityContact> | SecurityContact),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/security-contact",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetSecurityContactResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
@@ -13592,4 +13655,6 @@ export const getParfocalAPIMock = () => [
   getGetMySettingLayersMockHandler(),
   getSetMySettingLayersMockHandler(),
   getSetWorkspaceSettingsMockHandler(),
+  getGetSecurityContactMockHandler(),
+  getSetSecurityContactMockHandler(),
 ];

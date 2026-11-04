@@ -18,6 +18,7 @@ from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import emergency_open, require_reading, role_in
 from parfocal_api.realtime import RealtimeClient
+from parfocal_api.security_contact import require_security_contact
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -236,6 +237,8 @@ async def create_project(
 ) -> Project:
     if not isinstance(principal, MemberPrincipal):
         raise OnlyMembersCreateProjectsError
+    if draft.privacy_mode is PrivacyMode.CLINICAL:
+        await require_security_contact(connection)
     await connection.execute(
         select(
             func.pg_advisory_xact_lock(
@@ -361,6 +364,8 @@ async def change_project_privacy(
         return await project_of(connection, principal, project_id)
     if row.archived_at is not None:
         raise ProjectArchivedError
+    if change.privacy_mode is PrivacyMode.CLINICAL:
+        await require_security_contact(connection)
     if change.privacy_mode is PrivacyMode.DE_IDENTIFIED:
         holds = select(cases.c.id).where(
             cases.c.project_id == project_id, cases.c.patient_id.is_not(None)

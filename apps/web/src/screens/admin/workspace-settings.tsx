@@ -2,6 +2,7 @@ import {
   type Announcement,
   type AnnouncementKind,
   getGetMySettingLayersQueryKey,
+  getGetSecurityContactQueryKey,
   getGetSessionPolicyQueryKey,
   getListAnnouncementsQueryKey,
   getListModelTiersQueryKey,
@@ -12,12 +13,14 @@ import {
   useCreateAnnouncement,
   useEndAnnouncement,
   useGetMySettingLayers,
+  useGetSecurityContact,
   useGetSessionPolicy,
   useListAnnouncements,
   useListModelTiers,
   useListStudyTemplates,
   useResetModelTier,
   useSetModelTier,
+  useSetSecurityContact,
   useSetWorkspaceSettings,
   useUpdateSessionPolicy,
 } from "@parfocal/api-client";
@@ -60,6 +63,7 @@ import {
   endsAtFor,
   idleLockChoices,
   isAnnouncementText,
+  isSecurityContact,
   modelsForTask,
   NO_TEMPLATE,
   NOT_CHOSEN,
@@ -67,6 +71,7 @@ import {
   patientBannerChange,
   patientBannerOf,
   privacyOptions,
+  securityContactOf,
   sessionHourChoices,
   type TumorShareKey,
   taskText,
@@ -134,6 +139,89 @@ function NumberChoice({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+type SendContact = (email: string | null, message: string, undo?: () => void) => void;
+
+function SecurityContactField({ saved, send }: { saved: string | null; send: SendContact }) {
+  const [draft, setDraft] = useState(saved ?? "");
+  const email = securityContactOf(draft);
+  const changed = email !== (saved ?? "");
+  return (
+    <Labelled
+      label="Security contact"
+      help={
+        saved === null
+          ? "Needed before any project holds clinical data."
+          : "Parfocal writes here within 24 hours of a security incident."
+      }
+    >
+      <form
+        className="flex flex-wrap items-center gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (isSecurityContact(draft) && changed) {
+            send(email, `Security incidents are reported to ${email}.`, () =>
+              send(saved, "Security contact restored."),
+            );
+          }
+        }}
+      >
+        <Input
+          type="email"
+          aria-label="Security contact"
+          placeholder="security@hospital.example"
+          maxLength={320}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          className="w-72"
+        />
+        <Button type="submit" variant="primary" disabled={!isSecurityContact(draft) || !changed}>
+          Save
+        </Button>
+        {saved === null ? null : (
+          <Button
+            type="button"
+            onClick={() =>
+              send(null, "Security contact removed.", () =>
+                send(saved, "Security contact restored."),
+              )
+            }
+          >
+            Remove
+          </Button>
+        )}
+      </form>
+    </Labelled>
+  );
+}
+
+function SecurityContactZone({ notify }: { notify: Notify }) {
+  const contact = okData(useGetSecurityContact().data);
+  const queryClient = useQueryClient();
+  const update = useSetSecurityContact();
+  if (contact === undefined) return null;
+  const send: SendContact = (email, message, undo) =>
+    update.mutate(
+      { data: { email } },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetSecurityContactQueryKey() });
+          notify(message, undo);
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+  return (
+    <Zone
+      title="Security contact"
+      sub="Where Parfocal reports a security incident or a breach that touches this workspace."
+    >
+      <div className={rows}>
+        <SecurityContactField key={contact.email ?? ""} saved={contact.email} send={send} />
+      </div>
+    </Zone>
   );
 }
 
@@ -694,6 +782,7 @@ export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
   return (
     <>
       <LockTimes notify={notify} />
+      <SecurityContactZone notify={notify} />
       <Defaults lab={lab} notify={notify} />
       <TumorShare lab={lab} notify={notify} />
       <PatientBannerZone lab={lab} notify={notify} />

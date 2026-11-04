@@ -115,7 +115,7 @@ The notice to the supervisory authority holds what Art. 33(3) lists:
 3. The likely consequences.
 4. The measures taken or proposed, including those to reduce harm.
 
-The notice to a workspace (processor duty) holds the same four items as far as they are known, the incident ID, and what the workspace must decide. Send it to the workspace's registered security contact, which SEC-029 (security contact for each workspace) adds before the first tenant. Until then, send it to the workspace owners.
+The notice to a workspace (processor duty) holds the same four items as far as they are known, the incident ID, and what the workspace must decide. Send it to the workspace's security contact, which a workspace admin sets under Admin, Workspace settings, Security contact (SEC-029). The incident lead reads it from the `security_contact` column of `workspace_settings` for the affected tenant, a production read. A workspace cannot create or switch a project to clinical without one. A de-identified workspace may have none, and then the notice goes to the workspace owners.
 
 The notice to people (Art. 34(2)) uses clear plain language and holds items 2 to 4 above, with what the person can do to protect themselves.
 
@@ -124,7 +124,7 @@ Email to users goes through Resend in production ([ADR 0039](../adr/0039-email-t
 | Notify | Where | Who |
 |---|---|---|
 | Supervisory authority | The authority of the member state of Parfocal's main establishment, through its online breach form. TODO: name it once the legal entity is registered (SEC-030) | Privacy contact |
-| Affected workspaces | The workspace security contact (SEC-029), or the workspace owners until it exists | Incident lead |
+| Affected workspaces | The workspace security contact from its settings (SEC-029), or the workspace owners when a de-identified workspace set none | Incident lead |
 | People affected | Email through Resend, or a public notice under Art. 34(3)(c) | Privacy contact, after counsel |
 | Subprocessor whose service failed | Its security contact, see the contact table | Incident lead |
 | Police or CSIRT | Report a SEV1 caused by an attack to the national CSIRT of the main establishment, and to the police when there is a crime such as extortion. TODO: name the CSIRT with the authority (SEC-030) | Incident lead |

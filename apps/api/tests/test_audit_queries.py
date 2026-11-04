@@ -8,7 +8,7 @@ import pytest
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from db_support import ApiAs
-from workspace_support import make_workspace
+from workspace_support import give_security_contact, make_workspace
 
 from parfocal_api.audit import AuditEvent, chain_breaks, event_hash
 from parfocal_api.audit_trail import signed_bytes
@@ -32,7 +32,7 @@ class History:
 
 
 def history(api: ApiAs, database: str) -> History:
-    people = make_workspace(
+    workspace = make_workspace(
         database,
         {
             "admin": Role.RESEARCHER,
@@ -41,7 +41,9 @@ def history(api: ApiAs, database: str) -> History:
             "reviewer": Role.REVIEWER,
         },
         admins={"admin"},
-    ).people
+    )
+    give_security_contact(database, workspace.tenant_id)
+    people = workspace.people
     started = datetime.now(UTC) - timedelta(seconds=1)
     owner = api(people["owner"])
     project = owner.post("/api/projects", json={"name": "Audit", "privacy_mode": "clinical"})

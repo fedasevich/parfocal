@@ -285,7 +285,10 @@ async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> Non
     )
     await connection.execute(
         insert(workspace_settings).values(
-            tenant_id=seeded.tenant_id, values={"lock_after_minutes": 5}, locked=[]
+            tenant_id=seeded.tenant_id,
+            values={"lock_after_minutes": 5},
+            locked=[],
+            security_contact=f"security-{target}@example.test",
         )
     )
     seeded.markers.add(str(target))
@@ -915,6 +918,9 @@ GET_ROUTES = {
         Exposure.TENANT, lambda _: "/api/tenant/invitations", admin_rights=True
     ),
     "getSessionPolicy": Route(Exposure.TENANT, lambda _: "/api/tenant/session-policy"),
+    "getSecurityContact": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/security-contact", admin_rights=True
+    ),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
     "listNotifications": Route(Exposure.TENANT, lambda _: "/api/me/notifications"),

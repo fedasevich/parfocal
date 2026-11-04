@@ -50,6 +50,7 @@ from parfocal_api import (
     room_access,
     sample_project,
     search,
+    security_contact,
     service_accounts,
     sessions_api,
     settings_api,
@@ -233,5 +234,6 @@ def create_app(
     app.include_router(invitations.task_router)
     app.include_router(settings_api.me_router)
     app.include_router(settings_api.tenant_router)
+    app.include_router(security_contact.router)
 
     return app
