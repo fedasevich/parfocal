@@ -36,6 +36,8 @@ export type LayerInput = {
   setB: string;
   reviewers: PersonInfo[];
   selected: string | null;
+  otherSets?: { id: string; color: string }[];
+  reviewedOn?: boolean;
 };
 
 export type LayerDrawing = {
@@ -83,6 +85,8 @@ const scaled = (key: string, factor: number, props: Record<string, string | numb
 
 export function layerDrawing(input: LayerInput): LayerDrawing {
   const { view, objects, added, stats, confidence, selected } = input;
+  const reviewedOn = input.reviewedOn ?? true;
+  const otherSets = input.otherSets ?? [];
   const regions = objects.filter((item) => item.kind === "region");
   const score = (object: string) => regions.find((item) => item.object === object)?.score;
   const ids = [...regions.map((item) => item.object), ...added];
@@ -98,9 +102,31 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
   const plain = (object: string) => (added.includes(object) ? setColours.reviewed : setColours.a);
   const nothing: LayerDrawing = {
     regionStyle: (object) =>
-      added.includes(object) ? { stroke: setColours.reviewed, dash: "6 4" } : undefined,
-    tags: tagsIn(plain, true),
-    underlay: undefined,
+      added.includes(object)
+        ? reviewedOn
+          ? { stroke: setColours.reviewed, dash: "6 4" }
+          : { stroke: "none" }
+        : undefined,
+    tags: tagsIn(plain, true).filter((tag) => reviewedOn || !added.includes(tag.object)),
+    underlay: otherSets.length
+      ? () => (
+          <g data-slot="other-set-outlines">
+            {otherSets.map(({ id, color }, set) => (
+              <g key={id}>
+                {regions.map((item, index) =>
+                  scaled(shapeKey(item.object), 1.04 + 0.03 * ((index + set) % 3), {
+                    fill: "none",
+                    stroke: color,
+                    strokeDasharray: "8 5",
+                    strokeWidth: 1.6,
+                    opacity: 0.85,
+                  }),
+                )}
+              </g>
+            ))}
+          </g>
+        )
+      : undefined,
     legend: null,
     extra: null,
   };
