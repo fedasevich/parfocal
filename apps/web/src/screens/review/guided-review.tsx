@@ -26,6 +26,7 @@ import {
   showsClaim,
 } from "./decision-style.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
+import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
   type GuidedScene,
@@ -198,11 +199,12 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
     goTo(objects.findIndex((item) => item.object === target));
   };
   const advance = (from: number, decided: Answers) => {
-    const at = (object: string) => answerOf(base, decided, object);
-    const next = objects.findIndex((item, position) => position > from && !at(item.object));
-    const wrap = objects.findIndex((item) => !at(item.object));
-    const target = next >= 0 ? next : wrap;
-    if (target < 0) {
+    const target = nextOpenIndex(
+      objects.map((item) => item.object),
+      from,
+      (object) => Boolean(answerOf(base, decided, object)),
+    );
+    if (target === null) {
       setShowDone(true);
       setWhole(true);
       return;
