@@ -22,3 +22,14 @@ test("hiding names swaps display names for initials at any depth and leaves the 
   assert.equal(input.data[0]?.display_name, "Lenka Malá");
   assert.equal(maskNames(null), null);
 });
+
+test("hiding names keeps the email domain and drops the local part", () => {
+  assert.deepEqual(maskNames({ initials: "LM", email: "lenka@fnvltava.example" }), {
+    initials: "LM",
+    email: "lm@fnvltava.example",
+  });
+  assert.deepEqual(maskNames({ email: "karel@cuailab.example" }), {
+    email: "member@cuailab.example",
+  });
+  assert.deepEqual(maskNames({ email: null }), { email: null });
+});

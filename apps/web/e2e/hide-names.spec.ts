@@ -3,7 +3,11 @@ import { expect, type Page, test } from "@playwright/test";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
-const fullName = /\b[A-ZÀ-Ž][a-zà-ž]+ (?:[A-ZÀ-Ž][a-zà-ž]+ )?[A-ZÀ-Ž][a-zà-ž]+á\b|Lenka Malá/gu;
+const emailLocal =
+  /\b(?:lenka|anna|simona|jan|tomas|petra|hana|martin|daniel|eva|karel|ondrej)[a-z.]*@/giu;
+
+const fullName =
+  /Lenka Malá|Anna Kopecká|Simona Marková|Jan Růžička|Tomáš Beneš|Petra Králová|Hana Lukešová|Martin Vlček|Daniel Hruška/gu;
 
 async function names(page: Page): Promise<string[]> {
   const text = await page.evaluate(() => {
@@ -12,7 +16,7 @@ async function names(page: Page): Promise<string[]> {
     );
     return [document.body.innerText, ...attributes].join("\n");
   });
-  return text.match(fullName) ?? [];
+  return [...(text.match(fullName) ?? []), ...(text.match(emailLocal) ?? [])];
 }
 
 async function toggle(page: Page) {
@@ -41,3 +45,15 @@ test("no member name appears on the comments tab with initials only on", async (
   await toggle(page);
   await expect.poll(() => names(page), { timeout: 30_000 }).toEqual([]);
 });
+
+for (const path of ["/", "/my-work", "/admin?scene=people", "/admin"]) {
+  test(`no member name or email appears on ${path} with initials only on`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await toggle(page);
+    await page.waitForTimeout(1500);
+    await expect.poll(() => names(page), { timeout: 30_000 }).toEqual([]);
+  });
+}

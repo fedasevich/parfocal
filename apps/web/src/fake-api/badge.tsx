@@ -2,11 +2,15 @@ import { defaultFakeView, fakeView, scenario } from "@parfocal/api-client/fake";
 import type { QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
+import { shellStore } from "../shell/shell-store.ts";
 import { type FakeScope, fakeBadgeLabel, subscribeToQueries } from "./badge-state.ts";
 
 function personaNote(): string | null {
   const { viewer, firstWeek } = fakeView();
-  if (viewer !== defaultFakeView.viewer) return `viewing as ${scenario.people[viewer].name}`;
+  if (viewer !== defaultFakeView.viewer) {
+    const person = scenario.people[viewer];
+    return `viewing as ${shellStore.getState().initialsOnly ? person.key : person.name}`;
+  }
   return firstWeek ? "in the first week" : null;
 }
 
