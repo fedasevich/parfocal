@@ -114,6 +114,13 @@ test("the minimap opens the whole-slide peek and Esc returns", async ({ page }) 
   await expect(page.getByRole("dialog", { name: "Whole slide" })).toHaveCount(0);
   await page.keyboard.press("z");
   await expect(page.getByRole("dialog", { name: "Whole slide" })).toBeVisible();
+  const handle = await page.getByRole("separator", { name: "Resize the side panel" }).boundingBox();
+  expect(handle).not.toBeNull();
+  const onTop = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.getAttribute("aria-label") ?? "",
+    [(handle?.x ?? 0) + (handle?.width ?? 0) / 2, (handle?.y ?? 0) + 120] as const,
+  );
+  expect(onTop).not.toBe("Resize the side panel");
   await page.getByRole("button", { name: "Back to the view" }).click();
   await expect(page).not.toHaveURL(/peek=true/);
 });
