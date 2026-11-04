@@ -17,6 +17,7 @@ import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
+import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 type Phase =
@@ -76,12 +77,20 @@ function AreaKeys({ session, areas }: { session: Session; areas: readonly SlideA
   );
 }
 
+export type ViewedLink = {
+  peek: boolean;
+  onPeekClose: () => void;
+  onPercent: (percent: number | null) => void;
+};
+
 export function SlideStage({
   slideId,
   areas = [],
+  viewed,
 }: {
   slideId: string;
   areas?: readonly SlideAreaEntry[];
+  viewed?: ViewedLink;
 }) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -89,6 +98,7 @@ export function SlideStage({
       key={attempt}
       slideId={slideId}
       areas={areas}
+      viewed={viewed}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -97,10 +107,12 @@ export function SlideStage({
 function OpenedSlide({
   slideId,
   areas,
+  viewed,
   onRetry,
 }: {
   slideId: string;
   areas: readonly SlideAreaEntry[];
+  viewed: ViewedLink | undefined;
   onRetry: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
@@ -130,6 +142,13 @@ function OpenedSlide({
     slideId,
     hostNode,
   );
+
+  const percent = coverage?.loaded ? coverage.percent : null;
+  const reportPercent = viewed?.onPercent;
+  useEffect(() => {
+    reportPercent?.(percent);
+    return () => reportPercent?.(null);
+  }, [percent, reportPercent]);
 
   useEffect(() => {
     const container = host.current;
@@ -242,6 +261,14 @@ function OpenedSlide({
             />
           </div>
         </>
+      ) : null}
+      {session && coverage && viewed?.peek ? (
+        <ViewedPeek
+          engine={session.engine}
+          raster={coverage.raster}
+          percent={coverage.percent}
+          onClose={viewed.onPeekClose}
+        />
       ) : null}
       {session ? <ViewerKeys session={session} /> : null}
       {session ? <AreaKeys session={session} areas={areas} /> : null}
