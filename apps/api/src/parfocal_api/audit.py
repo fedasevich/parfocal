@@ -138,6 +138,9 @@ class AuditAction(StrEnum):
     DISPLAY_PRESET_SAVED = "display-preset.saved"
     DISPLAY_PRESET_CHANGED = "display-preset.changed"
     DISPLAY_PRESET_DELETED = "display-preset.deleted"
+    REPORT_LINK_CREATED = "report-link.created"
+    REPORT_LINK_REVOKED = "report-link.revoked"
+    REPORT_LINK_OPENED = "report-link.opened"
 
 
 class AuditTarget(StrEnum):
@@ -161,6 +164,7 @@ class AuditTarget(StrEnum):
     PATIENT = "patient"
     THREAD = "thread"
     DISPLAY_PRESET = "display-preset"
+    REPORT_LINK = "report-link"
 
 
 @dataclass(frozen=True)

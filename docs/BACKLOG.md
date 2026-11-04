@@ -4354,16 +4354,22 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002, RSET-008.
   Size: L.
 
-- [ ] EVAL-004 · Compare two evaluations
+- [x] EVAL-004 · Compare two evaluations
   Two result sets of the same slides side by side, for example CAMELYON against PathoSAM.
   Done when component tests render a comparison of two seeded tasks.
   Depends on EVAL-002.
   Size: M.
 
-- [ ] EVAL-005 · Read-only link for co-authors
+- [x] EVAL-005 · Read-only link for co-authors
   A link to the report without slides, revocable and logged.
   Done when API tests cover the link, revocation and the log.
   Depends on EVAL-002.
+  Size: M.
+
+- [ ] EVAL-012 · Share a report link from the report page
+  EVAL-005 (read-only link for co-authors) built the API: owners create, list and revoke links under /api/review-tasks/{id}/evaluation/links and anyone with the link opens GET /api/shared-reports/{token}. Add the owner's Share button with the link list and revoke on the report page, the public /shared-reports/{token} page that shows only the numbers, and a rate limit on the public route (ADR 0236 TODO).
+  Done when E2E creates a link, opens it signed out, sees Reviewer A and B with no names, revokes it and sees it refused, and an API test shows the rate limit.
+  Depends on EVAL-005.
   Size: M.
 
 - [x] EVAL-006 · Task evaluation API
@@ -4594,7 +4600,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026), and how the Display panel's state with its task locks ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks) reaches it.
   Size: S.
 
-- [ ] VIZ-001 · Result sets in the Display panel
+- [x] VIZ-001 · Result sets in the Display panel
   The other result sets are rows in the Display panel's What the AI shows group, each with show or hide, its colour swatch, its version and "imported 12 Oct" or "run here 13 Oct". A set that is on draws its objects dashed in its colour behind the task's set. The person's review is its own row, "Your review". In the full viewer each row keeps a menu to compare, run again or add another. When the task locks the other result sets the rows are read-only and show the reason ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when component tests cover each control and a locked group, and E2E hides a set.
   Depends on RSET-001, VIEW-026, TASK-011. Refs mock: layers/display, doc 38 answer 2, doc 44.

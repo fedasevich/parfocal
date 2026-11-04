@@ -2479,3 +2479,51 @@ resume_states = Table(
     ),
     one_of("mode", ResumeMode),
 )
+
+
+report_links = Table(
+    "report_links",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "task_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("review_tasks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
+    Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("opened_count", Integer, nullable=False, server_default="0", info=OPERATIONAL),
+    Column("last_opened_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)

@@ -178,14 +178,26 @@ type ResultSetRowItem = {
   menu?: { icon: IconName; label: string; onSelect?: () => void }[];
 };
 
-type ResultSetRowsProps = React.ComponentProps<"div"> & {
+type ResultSetRowsProps = Omit<React.ComponentProps<"div">, "onToggle"> & {
   sets: ResultSetRowItem[];
+  locked?: { reason: string } | undefined;
   onToggle?: (key: string, on: boolean) => void;
 };
 
-function ResultSetRows({ sets, onToggle, className, ...props }: ResultSetRowsProps) {
+function ResultSetRows({ sets, locked, onToggle, className, ...props }: ResultSetRowsProps) {
   return (
-    <div data-slot="result-set-rows" className={cn("grid gap-1.5", className)} {...props}>
+    <div
+      data-slot="result-set-rows"
+      data-locked={locked ? true : undefined}
+      className={cn("grid gap-1.5", className)}
+      {...props}
+    >
+      {locked ? (
+        <p className="m-0 flex items-start gap-1.5 text-caption text-fg-dim">
+          <Icon name="lock" size="xs" className="mt-0.5 shrink-0" />
+          <span>{locked.reason}</span>
+        </p>
+      ) : null}
       {sets.map((set) => {
         const body = (
           <>
@@ -204,12 +216,19 @@ function ResultSetRows({ sets, onToggle, className, ...props }: ResultSetRowsPro
           <div key={set.key} className="flex items-center gap-1.5">
             {set.fixed ? (
               <div className="flex min-w-0 flex-1 items-center gap-2.5 px-1 py-1">{body}</div>
+            ) : locked && set.key !== "reviewed" ? (
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 px-1 py-1">
+                {body}
+                <span className="text-caption text-fg-dim">{set.on ? "Shown" : "Hidden"}</span>
+              </div>
             ) : (
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 px-1 py-1">
                 {body}
                 <Switch
                   aria-label={set.name}
-                  defaultChecked={set.on ?? false}
+                  {...(onToggle
+                    ? { checked: set.on ?? false }
+                    : { defaultChecked: set.on ?? false })}
                   onCheckedChange={(on) => onToggle?.(set.key, on)}
                 />
               </label>

@@ -66,7 +66,7 @@ const sets = [
     on: false,
   },
   {
-    key: "rev",
+    key: "reviewed",
     name: "Your review",
     sub: "The reviewed layer, as you edit it",
     color: "#38bdf8",
@@ -215,6 +215,43 @@ export const DisplayInTheViewer: Story = {
           >
             <ViewPicker views={views} value="panel" />
           </Zone>
+        }
+      />
+    </div>
+  ),
+};
+
+function ToggledSets() {
+  const [on, setOn] = useState<Record<string, boolean>>({ sam: false, reviewed: true });
+  return (
+    <div className="w-85">
+      <ResultSetRows
+        sets={sets.map((set) => (set.fixed ? set : { ...set, on: on[set.key] ?? false }))}
+        onToggle={(key, value) => setOn((current) => ({ ...current, [key]: value }))}
+      />
+      <output data-testid="shown">
+        {Object.entries(on)
+          .filter(([, value]) => value)
+          .map(([key]) => key)
+          .join(",")}
+      </output>
+    </div>
+  );
+}
+
+export const ResultSetsToggle: Story = { render: () => <ToggledSets /> };
+
+export const ResultSetsLocked: Story = {
+  render: () => (
+    <div className="w-85">
+      <DisplayPanel
+        viewer
+        folded={["draw", "move"]}
+        resultSets={
+          <ResultSetRows
+            sets={sets}
+            locked={{ reason: "Locked by RT-14: the other sets stay hidden this round" }}
+          />
         }
       />
     </div>

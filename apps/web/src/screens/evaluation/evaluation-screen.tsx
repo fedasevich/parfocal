@@ -5,6 +5,7 @@ import {
   useGetEvaluationReport,
   useGetReviewTask,
   useGetTaskEvaluation,
+  useListReviewTasks,
   useListStudyTemplates,
 } from "@parfocal/api-client";
 import { Banner, InlineError } from "@parfocal/ui/components/banner";
@@ -75,6 +76,9 @@ function EvaluationBody({
   const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
   const templates = okData(useListStudyTemplates().data) ?? [];
+  const others = (okData(useListReviewTasks(report.project.id).data) ?? []).filter(
+    (other) => other.id !== taskId,
+  );
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name ?? "";
   const renderLink = useRouterLink();
@@ -133,6 +137,32 @@ function EvaluationBody({
     next.splice(at, 1);
     next.splice(to, 0, current);
     change(next);
+  };
+  const pickedBlock = blocks.find((block) => block.kind === "comparison" && block.task_id);
+  const offered = others.find((other) => other.id === pickedBlock?.task_id) ?? others[0] ?? null;
+  const setCompared = (block: PageBlock, id: string | null) =>
+    change(blocks.map((item) => (item === block ? { ...item, task_id: id } : item)));
+  const compare = () => {
+    const shown = blocks.find((block) => block.kind === "comparison" && block.task_id);
+    if (shown) {
+      setSelected(shown.id);
+      return;
+    }
+    if (!offered) return;
+    const block: PageBlock = {
+      id: `comparison-${Date.now()}`,
+      kind: "comparison",
+      title: blockCopy.comparison.name,
+      width: "full",
+      show_title: true,
+      page_break: false,
+      task_id: offered.id,
+    };
+    change([...blocks, block]);
+    setSelected(block.id);
+    toast.show(`${offered.code}, ${offered.name}, is now next to this one`, () =>
+      setBlocks(blocks),
+    );
   };
   const remove = () => {
     if (!current) return;
@@ -279,6 +309,33 @@ function EvaluationBody({
                         shows: blockCopy[current.kind].shows,
                       }}
                     />
+                    {current.kind === "comparison" ? (
+                      <div className="grid gap-1.5">
+                        <span className="text-body-sm font-semibold">Compare with</span>
+                        <Select
+                          value={current.task_id ?? null}
+                          onValueChange={(value) =>
+                            setCompared(current, value ? String(value) : null)
+                          }
+                        >
+                          <SelectTrigger aria-label="Compare with" className="w-full">
+                            <SelectValue placeholder="Pick a review task">
+                              {(() => {
+                                const picked = others.find((other) => other.id === current.task_id);
+                                return picked ? `${picked.code} · ${picked.name}` : null;
+                              })()}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {others.map((other) => (
+                              <SelectItem key={other.id} value={other.id}>
+                                {other.code} · {other.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
                 <section className="grid content-start gap-2 rounded-zone bg-surf-panel p-3.5">
@@ -474,10 +531,15 @@ function EvaluationBody({
                 </InlineError>
               ) : null}
             </FoldingZone>
-            <FoldingZone title="Compare and share" summary="RT-15 or a read-only link">
-              <Button onClick={() => toast.show("Puts RT-15, PathoSAM v1.2, next to this one")}>
+            <FoldingZone
+              title="Compare and share"
+              summary={offered ? `${offered.code} or a read-only link` : "A read-only link"}
+            >
+              <Button onClick={compare} disabled={!offered}>
                 <Icon name="slides" />
-                Compare with RT-15, PathoSAM v1.2
+                {offered
+                  ? `Compare with ${offered.code}, ${offered.name}`
+                  : "No other task to compare"}
               </Button>
               <Button
                 onClick={() => toast.show("A read-only link for co-authors, no slides included")}

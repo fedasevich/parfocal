@@ -7,6 +7,8 @@ import {
   type LayoutPage,
   type QueueRow,
   reportPages,
+  useGetEvaluationReport,
+  useGetTaskEvaluation,
 } from "@parfocal/api-client";
 import {
   ConfusionMatrix,
@@ -21,8 +23,10 @@ import {
 } from "@parfocal/ui/components/evaluation-report";
 import type { ReactNode } from "react";
 import { answerWord } from "../disagreements/text.ts";
+import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import {
+  comparisonRows,
   fixed,
   headlineMetrics,
   headlineTiles,
@@ -254,8 +258,50 @@ function BlockBody({
       return <p className="m-0 whitespace-pre-line">{block.body}</p>;
     case "comparison":
       if (!block.task_id) return <Empty>Pick a review task to compare with.</Empty>;
-      return <Empty>The review task to compare with is not available.</Empty>;
+      return (
+        <ComparisonBlock
+          taskId={block.task_id}
+          report={report}
+          evaluation={evaluation}
+          decimals={decimals}
+        />
+      );
   }
+}
+
+function ComparisonBlock({
+  taskId,
+  report,
+  evaluation,
+  decimals,
+}: {
+  taskId: string;
+  report: EvaluationReport;
+  evaluation: Evaluation | undefined;
+  decimals: number;
+}) {
+  const otherReport = okData(useGetEvaluationReport(taskId).data);
+  const otherEvaluation = okData(useGetTaskEvaluation(taskId).data);
+  if (!evaluation || !otherReport || !otherEvaluation)
+    return <Empty>The review task to compare with is not available.</Empty>;
+  const head = (side: EvaluationReport) => `${side.task_code}, ${side.model}`;
+  return (
+    <div className="grid gap-1.5" data-slot="comparison">
+      <PaperTable
+        head={["Measure", head(report), head(otherReport), "Change"]}
+        rows={comparisonRows(evaluation, otherEvaluation, decimals).map((row) => [
+          row.label,
+          row.left,
+          row.right,
+          row.change,
+        ])}
+      />
+      <span className="text-[7.5px] text-[#666]">
+        Change is {otherReport.task_code} minus {report.task_code}. Both tasks cover the same
+        slides.
+      </span>
+    </div>
+  );
 }
 
 function Closing({ report, queue, format, nameOf }: PagesProps) {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Evaluation } from "@parfocal/api-client";
-import { opinionRows, reasonRows } from "../src/screens/evaluation/numbers.ts";
+import { comparisonRows, opinionRows, reasonRows } from "../src/screens/evaluation/numbers.ts";
 
 const evaluation = {
   reasons: [
@@ -30,4 +30,27 @@ test("opinion answers run in score order", () => {
     opinionRows(evaluation).map((row) => row.count),
     [4, 2, 1],
   );
+});
+
+const withNumbers = (sensitivity: number, cells: number, disagree: number) =>
+  ({
+    overall: [{ kind: "region", sensitivity: { value: sensitivity }, precision: { value: 0.9 } }],
+    dice: { Tumor: { value: 0.8 } },
+    mean_kappa: 0.7,
+    cell_agreement_with_ai: { value: cells },
+    decisions: { counted: { disagree } },
+  }) as unknown as Evaluation;
+
+test("a comparison lists each measure for both tasks with the change", () => {
+  const rows = comparisonRows(withNumbers(0.92, 0.91, 10), withNumbers(0.84, 0.87, 12));
+  assert.deepEqual(rows[0], {
+    label: "Sensitivity, regions",
+    left: "0.92",
+    right: "0.84",
+    change: "-0.08",
+  });
+  assert.equal(rows[1]?.change, "same");
+  const cells = rows.find((row) => row.label === "Cells agreed");
+  assert.deepEqual([cells?.left, cells?.right, cells?.change], ["91%", "87%", "-4 points"]);
+  assert.equal(rows.at(-1)?.change, "+2");
 });

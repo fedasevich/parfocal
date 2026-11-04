@@ -11,6 +11,7 @@ import { createdRecordHandlers } from "./create-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
+import { reportLinkHandlers } from "./report-link-handlers.ts";
 import { resumeHandlers } from "./resume-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
@@ -50,6 +51,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...tissueHandlers(),
     ...annotationHandlers(),
     ...resumeHandlers(),
+    ...reportLinkHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
   ];
@@ -110,6 +112,11 @@ export {
   resetQueueState,
   setFakeQueueScene,
 } from "./queue-scene.ts";
+export {
+  reportLinkHandlers,
+  resetFakeReportLinks,
+  sharedReportOf,
+} from "./report-link-handlers.ts";
 export { resetFakeResume, resumeHandlers } from "./resume-handlers.ts";
 export * as scenario from "./scenario.ts";
 export * as scenarioAdjudication from "./scenario-adjudication.ts";
