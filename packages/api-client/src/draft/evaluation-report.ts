@@ -158,6 +158,40 @@ export const ReportBlockKind = {
   comparison: "comparison",
 } as const;
 
+export const reportBlockSchema = z.object({
+  kind: z.enum(ReportBlockKind),
+  title: z.string(),
+  width: z.enum(["full", "half"]),
+  show_title: z.boolean().default(true),
+  page_break: z.boolean().default(false),
+  metrics: z.array(z.string()).optional(),
+  columns: z.array(z.string()).optional(),
+  rows: z.number().int().nullable().optional(),
+  top: z.number().int().nullable().optional(),
+  body: z.string().optional(),
+  caption: z.string().optional(),
+  slide_id: z.string().nullable().optional(),
+  object_id: z.string().nullable().optional(),
+  task_id: z.string().nullable().optional(),
+});
+
+export type EvaluationReportBlock = z.infer<typeof reportBlockSchema>;
+
+export const reportFormatSchema = z.object({
+  paper: z.enum(["a4", "letter"]).default("a4"),
+  orientation: z.enum(["portrait", "landscape"]).default("portrait"),
+  text_size: z.enum(["small", "normal", "large"]).default("normal"),
+  running_header: z.boolean().default(true),
+  page_numbers: z.enum(["none", "page", "page-of"]).default("page-of"),
+  draft_watermark: z.boolean().default(true),
+  signature: z.boolean().default(true),
+  label_language: z.enum(["en", "cs", "de"]).default("en"),
+  decimals: z.number().int().min(0).max(4).default(2),
+  appendices: z.array(z.enum(["objects", "decisions", "methods"])).default(["objects"]),
+});
+
+export type EvaluationReportFormat = z.infer<typeof reportFormatSchema>;
+
 export const evaluationReportSchema = z.object({
   task_id: z.string(),
   task_code: z.string(),
@@ -178,13 +212,8 @@ export const evaluationReportSchema = z.object({
     version: z.number().int(),
     latest_version: z.number().int(),
     retired_on: z.iso.date().nullable(),
-    blocks: z.array(
-      z.object({
-        kind: z.enum(ReportBlockKind),
-        title: z.string(),
-        width: z.enum(["full", "half"]),
-      }),
-    ),
+    blocks: z.array(reportBlockSchema),
+    format: reportFormatSchema.default(reportFormatSchema.parse({})),
   }),
   formats: z.array(z.object({ key: z.string(), label: z.string() })),
   confusion: z.object({

@@ -1,0 +1,268 @@
+{
+  "cases": [
+    {
+      "name": "every kind in a4 portrait",
+      "format": {
+        "paper": "a4",
+        "orientation": "portrait",
+        "text_size": "normal",
+        "appendices": ["objects"]
+      },
+      "blocks": [
+        {
+          "kind": "headline-numbers",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "region-metrics",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "confusion-matrix",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "reviewer-agreement",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "disagreement-reasons",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "opinion-answers",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "worst-objects",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "slide-table",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "slide-figure",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "text",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "comparison",
+          "width": "full",
+          "page_break": false
+        }
+      ],
+      "pages": [
+        {
+          "rows": [[0], [1], [2], [3]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [[4], [5], [6], [7]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [[8], [9], [10]],
+          "closing": true,
+          "appendix": null
+        },
+        {
+          "rows": [],
+          "closing": false,
+          "appendix": "objects"
+        }
+      ]
+    },
+    {
+      "name": "half widths pair and a page break",
+      "format": {
+        "paper": "a4",
+        "orientation": "portrait",
+        "text_size": "normal",
+        "appendices": []
+      },
+      "blocks": [
+        {
+          "kind": "headline-numbers",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "disagreement-reasons",
+          "width": "half",
+          "page_break": false
+        },
+        {
+          "kind": "opinion-answers",
+          "width": "half",
+          "page_break": false
+        },
+        {
+          "kind": "text",
+          "width": "half",
+          "page_break": false
+        },
+        {
+          "kind": "comparison",
+          "width": "half",
+          "page_break": true
+        },
+        {
+          "kind": "worst-objects",
+          "width": "full",
+          "page_break": false
+        }
+      ],
+      "pages": [
+        {
+          "rows": [[0], [1, 2], [3]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [[4], [5]],
+          "closing": true,
+          "appendix": null
+        }
+      ]
+    },
+    {
+      "name": "landscape letter in large text",
+      "format": {
+        "paper": "letter",
+        "orientation": "landscape",
+        "text_size": "large",
+        "appendices": ["decisions", "methods"]
+      },
+      "blocks": [
+        {
+          "kind": "headline-numbers",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "region-metrics",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "confusion-matrix",
+          "width": "half",
+          "page_break": false
+        },
+        {
+          "kind": "reviewer-agreement",
+          "width": "half",
+          "page_break": false
+        },
+        {
+          "kind": "slide-table",
+          "width": "full",
+          "page_break": false
+        }
+      ],
+      "pages": [
+        {
+          "rows": [[0]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [[1], [2, 3]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [[4]],
+          "closing": true,
+          "appendix": null
+        },
+        {
+          "rows": [],
+          "closing": false,
+          "appendix": "decisions"
+        },
+        {
+          "rows": [],
+          "closing": false,
+          "appendix": "methods"
+        }
+      ]
+    },
+    {
+      "name": "small text fits more on a page",
+      "format": {
+        "paper": "a4",
+        "orientation": "portrait",
+        "text_size": "small",
+        "appendices": []
+      },
+      "blocks": [
+        {
+          "kind": "worst-objects",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "slide-figure",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "region-metrics",
+          "width": "full",
+          "page_break": false
+        },
+        {
+          "kind": "text",
+          "width": "full",
+          "page_break": false
+        }
+      ],
+      "pages": [
+        {
+          "rows": [[0], [1], [2], [3]],
+          "closing": false,
+          "appendix": null
+        },
+        {
+          "rows": [],
+          "closing": true,
+          "appendix": null
+        }
+      ]
+    },
+    {
+      "name": "no blocks",
+      "format": {
+        "paper": "a4",
+        "orientation": "portrait",
+        "text_size": "normal",
+        "appendices": []
+      },
+      "blocks": [],
+      "pages": [
+        {
+          "rows": [],
+          "closing": true,
+          "appendix": null
+        }
+      ]
+    }
+  ]
+}

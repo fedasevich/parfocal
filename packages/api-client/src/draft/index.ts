@@ -247,5 +247,6 @@ export {
 } from "./list-thread-comments.ts";
 export * from "./model-runs.ts";
 export * from "./project.ts";
+export * from "./report-layout.ts";
 export * from "./set-my-shortcuts.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";

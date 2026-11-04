@@ -2,19 +2,39 @@ import type { CountsAsChange, Evaluation } from "@parfocal/api-client";
 import { countsAsRule } from "@parfocal/ui/lib/counts-as-rule";
 import { toReviewStyle } from "../review/decision-mapping.ts";
 
-const two = (value: number | null | undefined) => (value == null ? "n/a" : value.toFixed(2));
+export const fixed = (value: number | null | undefined, decimals = 2) =>
+  value == null ? "n/a" : value.toFixed(decimals);
 
-export function headlineTiles(evaluation: Evaluation) {
+export const headlineMetrics = [
+  "sensitivity",
+  "precision",
+  "dice",
+  "kappa",
+  "cell-agreement",
+] as const;
+
+export function headlineTiles(
+  evaluation: Evaluation,
+  metrics: readonly string[] = headlineMetrics,
+  decimals = 2,
+) {
   const region = evaluation.overall.find((row) => row.kind === "region") ?? evaluation.overall[0];
   const dice = Object.values(evaluation.dice)[0];
   const cells = evaluation.cell_agreement_with_ai.value;
-  return [
-    { value: two(region?.sensitivity.value), label: "Sensitivity, regions" },
-    { value: two(region?.precision.value), label: "Precision, regions" },
-    { value: two(dice?.value), label: "Dice, regions" },
-    { value: two(evaluation.mean_kappa), label: "Cohen's κ, reviewers" },
-    { value: cells == null ? "n/a" : `${Math.round(cells * 100)}%`, label: "Cells agreed" },
-  ];
+  const tiles: Record<string, { value: string; label: string }> = {
+    sensitivity: {
+      value: fixed(region?.sensitivity.value, decimals),
+      label: "Sensitivity, regions",
+    },
+    precision: { value: fixed(region?.precision.value, decimals), label: "Precision, regions" },
+    dice: { value: fixed(dice?.value, decimals), label: "Dice, regions" },
+    kappa: { value: fixed(evaluation.mean_kappa, decimals), label: "Cohen's κ, reviewers" },
+    "cell-agreement": {
+      value: cells == null ? "n/a" : `${Math.round(cells * 100)}%`,
+      label: "Cells agreed",
+    },
+  };
+  return metrics.flatMap((metric) => (tiles[metric] ? [tiles[metric]] : []));
 }
 
 const reasonLabel: Record<string, string> = {
