@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 import httpx2
+import numpy as np
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
@@ -15,6 +16,7 @@ from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images
 from parfocal_api.display_settings import DisplaySettings
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
 from parfocal_api.tables import (
     Role,
@@ -80,10 +82,11 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
-from parfocal_common.ingest import RestrictedImage
+from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_ingest.tissue import TissueMask
 
 pytestmark = pytest.mark.db
 
@@ -443,6 +446,11 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             seeded.tenant_id,
             case.loose_slide_id,
             {RestrictedImage.LABEL: stand_in_images(str(seeded.tenant_id))[RestrictedImage.LABEL]},
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
+            TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
+            "image/png",
         )
     set_name = f"Model {uuid.uuid4().hex[:8]}"
     set_id = await connection.scalar(
@@ -1088,6 +1096,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
+    "getSlideTissue": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tissue"),
     "getSlideCoverage": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/coverage"),
     "getRoomAccess": Route(Exposure.TENANT, lambda a: f"/api/rooms/slide:{a.ids['slide']}/access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
