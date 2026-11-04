@@ -2,7 +2,7 @@
 
 This is the data protection impact assessment that GDPR Article 35 asks for, written for SEC-021 (GDPR documentation). It covers Parfocal as the product is described in [ADR 0053](../adr/0053-ai-results-review-direction.md) (the AI results review direction) on 2026-11-03. Each workspace is the controller of its own processing and should adopt or extend this assessment for its own use, as the [DPA template](dpa-template.md) says.
 
-Status: draft by Parfocal agents. TODO: the owner reviews it, and counsel and the DPO, if one is named, sign it before the first tenant with real patient data.
+Status: draft by Parfocal agents with the generic defaults the owner accepted on 2026-11-04. Parfocal claims no clinical use, so the product is research software and no medical device assessment under the EU MDR is made. TODO: counsel, and the DPO if one is named, sign it before the first tenant with real patient data (SEC-030), and a medical device assessment comes first if any clinical use is ever claimed.
 
 ## Why a DPIA is needed
 

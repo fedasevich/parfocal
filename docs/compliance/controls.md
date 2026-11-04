@@ -41,7 +41,7 @@ This matrix maps the GDPR articles, the HIPAA Security Rule safeguards and the I
 | Art. 34 | Communication of a personal data breach to the data subject | SEC-018 (incident response runbook) | [incident-response.md](incident-response.md). |
 | Art. 35 | Data protection impact assessment | SEC-021 (DPIA for AI-assisted diagnosis) | [dpia-ai-results-review.md](dpia-ai-results-review.md), a draft until counsel signs it. |
 | Art. 36 | Prior consultation | SEC-021 (DPIA) | Needed only if the DPIA shows high residual risk. |
-| Art. 37 | Designation of the data protection officer | Policy | Decision for the company. TODO in [records-of-processing.md](records-of-processing.md). |
+| Art. 37 | Designation of the data protection officer | Policy | None named while the pilot holds no real patient data. Revisited before the first tenant that processes health data at scale ([records-of-processing.md](records-of-processing.md), SEC-030). |
 | Art. 44 | General principle for transfers | SEC-005 (data residency), SEC-021 (subprocessor list) | |
 | Art. 45 | Transfers on the basis of an adequacy decision | SEC-005 (data residency), SEC-021 (subprocessor list) | |
 | Art. 46 | Transfers subject to appropriate safeguards | SEC-021 (DPA template, subprocessor list), SEC-005 (data residency) | Standard contractual clauses go in the subprocessor contracts. |

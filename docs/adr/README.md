@@ -177,18 +177,18 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0169](0169-walking-skeleton-retrospective.md) | Walking skeleton retrospective | Accepted | 2026-11-03 |
 | [0171](0171-analytics-without-device-storage.md) | Product analytics store nothing on the device, so Parfocal shows no consent banner | Accepted | 2026-11-03 |
 | [0172](0172-backend-message-catalogues-and-pseudo-locale.md) | Backend messages live in keyed catalogues with a pseudo locale | Accepted | 2026-11-03 |
-| [0173](0173-lingui-for-web-app-strings.md) | Lingui for the web app's strings | Proposed | 2026-11-03 |
+| [0173](0173-lingui-for-web-app-strings.md) | Lingui for the web app's strings | Accepted | 2026-11-03 |
 | [0176](0176-case-view-state-model.md) | The case view state model: the slide and workspace in the path, the view in the URL, camera memory per slide while the case is open | Accepted | 2026-11-03 |
 | [0179](0179-upload-and-server-readers-rechecked.md) | The upload protocol stands, and the server readers stand except that tifffile reads OME-TIFF and the worker reads unsharded OME-Zarr itself | Accepted | 2026-11-03 |
 | [0182](0182-shell-routing-and-state-confirmed.md) | The shell keeps TanStack Router with Zod search params and the one-home state rule, with no upgrade due | Accepted | 2026-11-03 |
-| [0185](0185-smart-minimap-state-machine-and-placement.md) | The smart minimap is one XState machine with a size mode, a fade flag and a peek overlay, placed by scoring the four corners | Proposed | 2026-11-03 |
-| [0186](0186-incident-response-and-breach-notification.md) | Incident response follows GDPR with Parfocal as processor first, a 24 hour notice to workspaces and a register kept in the repository without PHI | Proposed | 2026-11-03 |
+| [0185](0185-smart-minimap-state-machine-and-placement.md) | The smart minimap is one XState machine with a size mode, a fade flag and a peek overlay, placed by scoring the four corners | Accepted | 2026-11-03 |
+| [0186](0186-incident-response-and-breach-notification.md) | Incident response follows GDPR with Parfocal as processor first, a 24 hour notice to workspaces and a register kept in the repository without PHI | Accepted | 2026-11-03 |
 | [0187](0187-motion-tokens-scale-and-global-reduced-motion.md) | Motion tokens scale with one variable, and reduced motion is a global cut in CSS | Accepted | 2026-11-03 |
-| [0189](0189-developer-drawer-control-list.md) | The developer drawer keeps the ten sections of the mock, and the debug handle is `window.__parfocal` | Proposed | 2026-11-03 |
+| [0189](0189-developer-drawer-control-list.md) | The developer drawer keeps the ten sections of the mock, and the debug handle is `window.__parfocal` | Accepted | 2026-11-03 |
 | [0191](0191-home-layout-as-a-personal-setting.md) | The home layout is a personal setting that setup writes from the chosen role and settings change | Proposed | 2026-11-03 |
 | [0194](0194-confidence-display-rules-and-evidence.md) | Confidence display rules are written over calibrated probabilities and are re-checked per typer | Proposed | 2026-11-03 |
-| [0197](0197-annotate-key-map-check-and-client-geometry-libraries.md) | The Annotate key map stays as the kit has it, and the client does geometry with Clipper2, earcut through math.gl, flatbush and a small planar module of its own | Proposed | 2026-11-03 |
+| [0197](0197-annotate-key-map-check-and-client-geometry-libraries.md) | The Annotate key map stays as the kit has it, and the client does geometry with Clipper2, earcut through math.gl, flatbush and a small planar module of its own | Accepted | 2026-11-03 |
 | [0195](0195-slide-brightness-as-a-slide-layer-tint.md) | Slide brightness is a tint on the slide layer inside the engine, so overlays keep their colour | Proposed | 2026-11-03 |
-| [0202](0202-v1-model-line-up-per-tier.md) | The v1 model line-up is PathoSAM AIS and HoVer-NeXt for nuclei, the MONAI CAMELYON model for tumor, and PathoSAM for interactive outlines, all non-commercial or unconfirmed | Proposed | 2026-11-03 |
+| [0202](0202-v1-model-line-up-per-tier.md) | The v1 model line-up is PathoSAM AIS and HoVer-NeXt for nuclei, the MONAI CAMELYON model for tumor, and PathoSAM for interactive outlines, all non-commercial or unconfirmed | Accepted | 2026-11-03 |
 | [0227](0227-self-hosted-plex-with-optional-font-display.md) | IBM Plex is vendored into the tokens package, loads with font-display optional, and a source scan keeps every size on the type scale | Accepted | 2026-11-03 |
 | [0228](0228-queue-decisions-stored-beside-the-old-choice-and-look-again-reopens-decisions.md) | A queue decision keeps the old choice column beside the new answer, and Ask both to look again marks the reviewers' decisions reopened instead of deleting them | Accepted | 2026-11-03 |

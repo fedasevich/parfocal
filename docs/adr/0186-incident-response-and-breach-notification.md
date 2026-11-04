@@ -1,8 +1,8 @@
 # 0186. Incident response follows GDPR with Parfocal as processor first, a 24 hour notice to workspaces and a register kept in the repository without PHI
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Parfocal agents, owner to review
+- Status: Accepted
+- Deciders: Parfocal agents, owner (accepted 2026-11-04 with industry standard defaults)
 - Backlog: SEC-018 (incident response and breach notification runbook). Touches SEC-021 (GDPR documentation, DPA clause 4.6), SEC-020 (HIPAA readiness pack) and OPS-007 (alerting and on-call)
 
 ## Context
@@ -24,8 +24,8 @@ Option 1, GDPR only. The runbook [incident-response.md](../compliance/incident-r
 
 ## Consequences
 
-- The DPA's 24 hours must be confirmed by counsel. If counsel changes it, the runbook's clock table changes with it.
+- The owner accepted 24 hours for telling workspaces and 72 hours for the supervisory authority (Art. 33) on 2026-11-04. If counsel changes the 24 hours in SEC-030 (legal review before the first real tenant), the runbook's clock table changes with it.
 - Alert contacts cannot be set from the repository. The runbook lists the channels that exist, all of them about cost, and an owner checklist for security contacts.
-- The private place for full breach records, the supervisory authority and every contact are TODOs for the owner.
-- Workspaces have no security contact field. A notice to a workspace needs one before the first tenant with real patient data. TODO: a backlog task.
-- SEC-018 can move to review only. It is done when the owner runs and records the exercise and sets the contacts.
+- The owner is incident lead and privacy contact until staff exist, and `security@parfocal.eu` is the security contact once OPS-013 (email routing for support and security) routes it. The private place for full breach records stays a TODO for the owner, and the supervisory authority, national CSIRT and counsel wait for the legal entity in SEC-030.
+- Workspaces have no security contact field. SEC-029 (security contact for each workspace) adds it, and until then a notice goes to the workspace owners.
+- The first tabletop exercise was run on paper by an agent on 2026-11-04 and is recorded in [tabletop-exercise.md](../compliance/tabletop-exercise.md). With the contacts set above, SEC-018 is done.

@@ -2,7 +2,7 @@
 
 The record of every security incident and personal data breach, kept under GDPR Art. 33(5) and step 1 of the [incident response runbook](incident-response.md). Every breach goes here, including the ones nobody was told about, with the reason.
 
-Never write PHI, patient names, file names that may name a patient, email addresses or secrets here. Describe data by kind and count. This file sits in a public repository, so an entry for a real breach holds only the ID, the dates, the severity and a pointer to the full record. TODO: the owner chooses a private place for full records before the first tenant with real patient data.
+Never write PHI, patient names, file names that may name a patient, email addresses or secrets here. Describe data by kind and count. This file sits in a public repository, so an entry for a real breach holds only the ID, the dates, the severity and a pointer to the full record. Full records live outside this repository, in a private place only the incident lead can open, such as an encrypted folder or a private repository. TODO: the owner picks that place before the first tenant with real patient data, and writes only its name here, never a link that grants access.
 
 ## Entries
 

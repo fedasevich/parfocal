@@ -4,6 +4,7 @@
 - Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: COLLAB-002, COLLAB-003, COLLAB-005, COLLAB-006, NOTIF-007
+- Partly superseded: where a thread lives is replaced by [threads on any slide with an optional task](XXXX-threads-on-any-slide-with-an-optional-task.md) (2026-11-04). The sign-off and visibility rules stay.
 
 ## Context
 

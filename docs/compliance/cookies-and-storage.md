@@ -32,4 +32,4 @@ No third party sets a cookie or storage entry. Production error reports (Sentry)
 
 ## Consent
 
-Everything above is strictly necessary for a service the user asked for, so Article 5(3) of the ePrivacy Directive needs no consent and Parfocal shows no consent banner. Product analytics rely on legitimate interest with an opt-out (ADR 0171). Adding any other cookie or storage key means updating this page, and anything not strictly necessary needs a new ADR and a consent banner first.
+Everything above is strictly necessary for a service the user asked for, so Article 5(3) of the ePrivacy Directive needs no consent and Parfocal shows no consent banner. Product analytics rely on legitimate interest with an opt-out (ADR 0171). The owner accepted on 2026-11-04 that analytics without device storage need no consent, and counsel checks that reading for the first tenants' countries in SEC-030 (legal review before the first real tenant). Adding any other cookie or storage key means updating this page, and anything not strictly necessary needs a new ADR and a consent banner first.
