@@ -5,6 +5,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { ConflictNotice } from "../annotations/conflict-notice.tsx";
 import { CountLayer } from "../annotations/count-layer.tsx";
@@ -18,6 +19,7 @@ import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.ts
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SaveStatus } from "../annotations/save-status.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
+import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -62,6 +64,8 @@ const liveTools = new Set([
   "rectangle",
   "ellipse",
   "marker",
+  "arrow",
+  "text",
   "comment",
 ]);
 
@@ -270,6 +274,7 @@ function OpenedSlide({
     return () => window.removeEventListener("keydown", onKey);
   }, [waiting, restingTool]);
   const draftControl = useRef<DraftControl | null>(null);
+  const textControl = useRef<TextControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
@@ -290,7 +295,7 @@ function OpenedSlide({
       if (action !== "undo") return;
       const draft = draftControl.current;
       if (draft !== null && draft.depth() > 0) draft.pop();
-      else undoEdit();
+      else if (textControl.current?.restore() !== true) undoEdit();
     },
     [undoEdit, redoEdit],
   );
@@ -416,7 +421,7 @@ function OpenedSlide({
       data-coverage-seen={coverage?.share.seen}
       data-coverage-pending={coverage?.pending}
       data-coverage-basis={coverage?.share.basis}
-      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
+      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
     >
       <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
       {session && hostNode ? (
@@ -470,6 +475,23 @@ function OpenedSlide({
             onDrop={dropAt}
             onRemove={saved.removeMarker}
             onLeave={leaveTool}
+          />
+          <ArrowLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "arrow"}
+            document={annotations}
+            onApply={saved.apply}
+            onLeave={leaveTool}
+          />
+          <TextLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "text"}
+            document={annotations}
+            onApply={saved.apply}
+            onLeave={leaveTool}
+            control={textControl}
           />
           <SelectLayer
             engine={session.engine}
