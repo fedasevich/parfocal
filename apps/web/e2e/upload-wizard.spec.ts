@@ -42,12 +42,28 @@ async function writeTree(root: string, tree: Tree) {
   for (const child of tree.children) await writeTree(here, child);
 }
 
-type Gate = { release: () => void };
+type Created = { filename: string; caseId: string | null; uploadId: string };
+
+type Gate = {
+  release: () => void;
+  created: Created[];
+  pairs: { uploadId: string; slideUploadId: string }[];
+};
+
+const caseS2604812 = "00000000-0000-4000-8004-000000000001";
 
 async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
   let release: () => void = () => undefined;
   const gate = hold ? new Promise<void>((done) => (release = done)) : Promise.resolve();
   let counter = 0;
+  const created: Created[] = [];
+  const pairs: { uploadId: string; slideUploadId: string }[] = [];
+  page.on("request", (request) => {
+    const match = /\/api\/uploads\/([^/]+)\/slide$/.exec(new URL(request.url()).pathname);
+    if (request.method() !== "PUT" || match === null) return;
+    const body = request.postDataJSON() as { slide_upload_id: string };
+    pairs.push({ uploadId: match[1] ?? "", slideUploadId: body.slide_upload_id });
+  });
   const cors = (route: { request: () => { headers: () => Record<string, string> } }) => ({
     "access-control-allow-origin": route.request().headers()["origin"] ?? "*",
     "access-control-allow-credentials": "true",
@@ -70,6 +86,15 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
     }
     if (request.method() === "POST" && path === "/uploads/s3/multipart") {
       counter += 1;
+      const draft = request.postDataJSON() as {
+        filename: string;
+        metadata: { case_id?: string };
+      };
+      created.push({
+        filename: draft.filename,
+        caseId: draft.metadata.case_id ?? null,
+        uploadId: `up-${counter}`,
+      });
       await route.fulfill({
         status: 201,
         headers,
@@ -109,7 +134,7 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
     }
     await route.fulfill({ status: 200, headers, json: {} });
   });
-  return { release };
+  return { release, created, pairs };
 }
 
 async function dropTree(page: Page, selector: string, tree: Tree) {
@@ -284,4 +309,18 @@ test("a folder dropped on a project is sorted, an unmatched result is placed, an
 
   gate.release();
   await expect(job).toContainText("Uploaded 7 files", { timeout: 20_000 });
+
+  const idOf = (filename: string) => gate.created.find((item) => item.filename === filename);
+  expect(idOf("A1_HE.svs")?.caseId).toBe(caseS2604812);
+  expect(idOf("A1_HE.geojson")?.caseId).toBe(caseS2604812);
+  expect(idOf("cells.csv")?.caseId).toBe(caseS2604812);
+  expect(idOf("tumor_031.tif")?.caseId).toBeNull();
+  expect(idOf("mystery_heatmap.png")?.caseId).toBeNull();
+  const linkedTo = (filename: string) =>
+    gate.pairs.find((pair) => pair.uploadId === idOf(filename)?.uploadId)?.slideUploadId;
+  await expect.poll(() => gate.pairs.length).toBe(4);
+  expect(linkedTo("A1_HE.geojson")).toBe(idOf("A1_HE.svs")?.uploadId);
+  expect(linkedTo("cells.csv")).toBe(idOf("A2_HE.svs")?.uploadId);
+  expect(linkedTo("tumor_031_prob.png")).toBe(idOf("tumor_031.tif")?.uploadId);
+  expect(linkedTo("mystery_heatmap.png")).toBe(idOf("tumor_031.tif")?.uploadId);
 });

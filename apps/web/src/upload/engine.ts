@@ -27,12 +27,14 @@ export type UploadMeta = {
   last_modified: number;
 };
 
+export type CreatedListener = (uploadId: string) => void;
+
 export type UploadTarget = { projectId: string; caseId: string | null };
 
 export type UploadEngine = {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => readonly UploadEntry[];
-  addFiles(files: readonly File[], target: UploadTarget): Promise<void>;
+  addFiles(files: readonly File[], target: UploadTarget, created?: CreatedListener): Promise<void>;
   pause(id: string): void;
   resume(id: string): void;
   retry(id: string): void;
@@ -62,6 +64,8 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
   const storage = options.storage ?? window.sessionStorage;
   const now = options.now ?? Date.now;
   const listeners = new Set<() => void>();
+  const createdFor = new WeakMap<Blob, CreatedListener>();
+  const announced = new Set<string>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   let entries: readonly UploadEntry[] = readHints(storage);
 
@@ -106,6 +110,14 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
     );
   }
 
+  uppy.on("state-update", (_before, after) => {
+    for (const file of Object.values(after.files)) {
+      const uploadId = file.s3Multipart?.uploadId;
+      if (uploadId === undefined || announced.has(file.id)) continue;
+      announced.add(file.id);
+      if (file.data instanceof Blob) createdFor.get(file.data)?.(uploadId);
+    }
+  });
   uppy.on("upload-progress", (file, progress) => {
     if (file === undefined) return;
     change(file.id, (entry) => withProgress(entry, progress.bytesUploaded ?? 0));
@@ -181,8 +193,9 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
       return () => listeners.delete(listener);
     },
     getSnapshot: () => entries,
-    async addFiles(files, target) {
+    async addFiles(files, target, created) {
       for (const file of files) {
+        if (created) createdFor.set(file, created);
         try {
           await addOne(file, target);
         } catch {
