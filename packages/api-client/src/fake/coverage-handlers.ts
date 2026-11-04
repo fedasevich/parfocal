@@ -1,5 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import type { CoverageBatch, CoverageGrid, SlideCoverage } from "../generated/api.ts";
+import type { CoverageBatch, CoverageGrid, SlideCoverage, SlideTissue } from "../generated/api.ts";
 
 const storageKey = "parfocal.fake.coverage";
 
@@ -92,5 +92,45 @@ export const coverageHandlers = (): RequestHandler[] => [
     "*/api/slides/:slideId/coverage",
     async ({ params, request }) =>
       HttpResponse.json(recordFakeCoverage(params.slideId, await request.json())),
+  ),
+];
+
+export const fakeTissueRows: readonly string[] = [
+  "####............",
+  "####............",
+  "####............",
+  "###.............",
+  "................",
+  "###.............",
+  "######..........",
+  "################",
+  "################",
+  "################",
+  "################",
+  "################",
+];
+
+export const fakeTissueGrid: CoverageGrid = { cell: 64, columns: 16, rows: 12 };
+
+export function toSlideTissue(slideId: string): SlideTissue {
+  const { columns, rows } = fakeTissueGrid;
+  const bits = Array.from({ length: Math.ceil((columns * rows) / 8) }, () => 0);
+  fakeTissueRows.forEach((line, row) => {
+    line.split("").forEach((mark, column) => {
+      const index = row * columns + column;
+      if (mark === "#") bits[index >> 3] = (bits[index >> 3] ?? 0) | (1 << (index & 7));
+    });
+  });
+  return {
+    slide_id: slideId,
+    grid: fakeTissueGrid,
+    tissue: base64Of(bits),
+    tissue_cells: countBits(bits),
+  };
+}
+
+export const tissueHandlers = (): RequestHandler[] => [
+  http.get<{ slideId: string }>("*/api/slides/:slideId/tissue", ({ params }) =>
+    HttpResponse.json(toSlideTissue(params.slideId)),
   ),
 ];

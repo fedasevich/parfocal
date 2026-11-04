@@ -16,7 +16,7 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live
   component: LiveSlide,
 });
 
-const liveAreas = slideAreasFor(readBuildConfig().fakeApi !== "off");
+const fakeApi = readBuildConfig().fakeApi !== "off";
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -43,6 +43,8 @@ function LiveSlide() {
   const { projectId, slideId } = Route.useParams();
   const { task } = Route.useSearch();
   const loaded = useCaseLoad(projectId, slideId, task);
+  const flagged = loaded.state === "ready" && loaded.load.resultSets.length > 0;
+  const areas = slideAreasFor(fakeApi && flagged);
   return (
     <main className="flex h-screen flex-col bg-chrome text-fg">
       <header className="flex items-center gap-3 border-line border-b px-4 py-2">
@@ -61,7 +63,12 @@ function LiveSlide() {
       </header>
       {loaded.state === "ready" ? <CasePatientBanner load={loaded.load} /> : null}
       <div className="min-h-0 flex-1">
-        <SlideStage key={slideId} slideId={slideId} areas={liveAreas} />
+        <SlideStage
+          key={slideId}
+          slideId={slideId}
+          areas={areas}
+          systematicScan={loaded.state === "ready" && areas.length === 0}
+        />
       </div>
     </main>
   );

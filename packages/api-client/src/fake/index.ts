@@ -6,7 +6,7 @@ import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
-import { coverageHandlers } from "./coverage-handlers.ts";
+import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
 import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
@@ -46,6 +46,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
     ...coverageHandlers(),
+    ...tissueHandlers(),
     ...annotationHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
@@ -77,9 +78,13 @@ export {
 } from "./console-handlers.ts";
 export {
   coverageHandlers,
+  fakeTissueGrid,
+  fakeTissueRows,
   recordFakeCoverage,
   resetFakeCoverage,
+  tissueHandlers,
   toSlideCoverage,
+  toSlideTissue,
 } from "./coverage-handlers.ts";
 export { resetCreatedRecords } from "./create-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";

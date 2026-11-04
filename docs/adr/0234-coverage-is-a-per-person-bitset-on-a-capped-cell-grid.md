@@ -26,4 +26,4 @@ The percentage is of tissue cells when a tissue mask is on the client, and of th
 - `GET` and `POST /api/slides/{slide_id}/coverage` read and add to the caller's own raster. Coverage only ever grows.
 - `@parfocal/viewer-engine` exports the grid, raster, share and a batching tracker, so later screens read one API.
 - A slide whose size changes gets a new grid and starts empty.
-- TODO: the tissue mask is stored by ingest as `tissue.png` but not yet served to the client, so the live viewer counts against the whole slide.
+- CASE-016 (systematic scan on the real tissue mask) serves the stored `tissue.png` as `GET /api/slides/{slide_id}/tissue`, a bitset on this same grid, so the live viewer counts tissue cells and the systematic scan steps over them. A slide without a stored mask still counts against the whole slide.
