@@ -12,6 +12,7 @@ class ScopeKind(StrEnum):
     CELLS_BELOW_SCORE = "cells-below-score"
     INSIDE_ROIS = "inside-rois"
     UNSURE_ZONES = "unsure-zones"
+    ALL_CELLS = "all-cells"
 
 
 type ObjectKey = tuple[Letter, int]
@@ -58,6 +59,8 @@ def in_scope(scope: Scope, candidates: Sequence[Candidate], slide_key: str) -> l
     match scope.kind:
         case ScopeKind.ALL_REGIONS:
             chosen = [item.key for item in candidates if item.letter is Letter.REGION]
+        case ScopeKind.ALL_CELLS:
+            chosen = [item.key for item in cells_of(candidates)]
         case ScopeKind.RANDOM_CELLS:
             if scope.count is None or scope.seed is None:
                 raise ValueError("A random sample needs a count and a seed")

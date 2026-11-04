@@ -135,6 +135,7 @@ import type {
   StudyTemplateSummary,
   StudyTemplateVersion,
   Target,
+  TaskSlide,
   TaskStates,
   Template,
   Tenant,
@@ -171,6 +172,9 @@ import {
   CaseSource,
   Certainty,
   ChartStyle,
+  CheckKind,
+  CheckOrder,
+  CheckPreset,
   Code,
   ColourBy,
   ConfidenceShown,
@@ -213,6 +217,7 @@ import {
   Rule,
   ServiceScope,
   Sex,
+  SignOffRule,
   SignOutRight,
   SignOutWarning,
   SlideColumn,
@@ -230,6 +235,7 @@ import {
   TenantKind,
   TenantStatus,
   TierTask,
+  UncheckedExport,
   UploadKind,
   UploadStatus,
   VerdictReason,
@@ -3106,6 +3112,28 @@ export const getCreateReviewTaskResponseMock = (
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
   },
+  check: faker.helpers.arrayElement([
+    {
+      preset: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(CheckPreset)),
+        null,
+      ]),
+      scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+          count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+          score: faker.helpers.arrayElement([
+            faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+      sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+      unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+    },
+    null,
+  ]),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -3129,6 +3157,10 @@ export const getCreateReviewTaskResponseMock = (
     () => ({
       slide_id: faker.string.uuid(),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      run_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3219,6 +3251,28 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
         [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
       },
     },
+    check: faker.helpers.arrayElement([
+      {
+        preset: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(CheckPreset)),
+          null,
+        ]),
+        scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => ({
+            kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+            count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+            score: faker.helpers.arrayElement([
+              faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+              null,
+            ]),
+          }),
+        ),
+        order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+        sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+        unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+      },
+      null,
+    ]),
     counts_as_changes: Array.from(
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
@@ -3321,6 +3375,28 @@ export const getGetReviewTaskResponseMock = (
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
   },
+  check: faker.helpers.arrayElement([
+    {
+      preset: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(CheckPreset)),
+        null,
+      ]),
+      scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+          count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+          score: faker.helpers.arrayElement([
+            faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+      sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+      unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+    },
+    null,
+  ]),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -3344,6 +3420,10 @@ export const getGetReviewTaskResponseMock = (
     () => ({
       slide_id: faker.string.uuid(),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      run_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3434,6 +3514,28 @@ export const getChangeReviewTaskResponseMock = (
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
   },
+  check: faker.helpers.arrayElement([
+    {
+      preset: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(CheckPreset)),
+        null,
+      ]),
+      scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+          count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+          score: faker.helpers.arrayElement([
+            faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+      sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+      unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+    },
+    null,
+  ]),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -3457,6 +3559,10 @@ export const getChangeReviewTaskResponseMock = (
     () => ({
       slide_id: faker.string.uuid(),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      run_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3577,6 +3683,28 @@ export const getAddTaskReviewerResponseMock = (
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
   },
+  check: faker.helpers.arrayElement([
+    {
+      preset: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(CheckPreset)),
+        null,
+      ]),
+      scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+          count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+          score: faker.helpers.arrayElement([
+            faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+      sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+      unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+    },
+    null,
+  ]),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -3600,6 +3728,10 @@ export const getAddTaskReviewerResponseMock = (
     () => ({
       slide_id: faker.string.uuid(),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      run_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3867,6 +3999,20 @@ export const getListSharedObjectHistoryResponseMock = (): AnnotationVersion[] =>
     changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
+
+export const getAddRunToTaskSlideResponseMock = (
+  overrideResponse: Partial<Extract<TaskSlide, object>> = {},
+): TaskSlide => ({
+  slide_id: faker.string.uuid(),
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  run_set_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  reviewer_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  ...overrideResponse,
+});
 
 export const getGetReviewOrderResponseMock = (
   overrideResponse: Partial<Extract<ReviewOrder, object>> = {},
@@ -12276,6 +12422,28 @@ export const getListSharedObjectHistoryMockHandler = (
   );
 };
 
+export const getAddRunToTaskSlideMockHandler = (
+  overrideResponse?:
+    | TaskSlide
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TaskSlide> | TaskSlide),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/runs",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAddRunToTaskSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetReviewOrderMockHandler = (
   overrideResponse?:
     | ReviewOrder
@@ -15460,6 +15628,7 @@ export const getParfocalAPIMock = () => [
   getChangeSharedObjectMockHandler(),
   getDeleteSharedObjectMockHandler(),
   getListSharedObjectHistoryMockHandler(),
+  getAddRunToTaskSlideMockHandler(),
   getGetReviewOrderMockHandler(),
   getExportReviewedLayerMockHandler(),
   getListAnnouncementsMockHandler(),

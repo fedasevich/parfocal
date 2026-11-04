@@ -11,6 +11,19 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import FirstReadStartedError, task_started
+from parfocal_api.check_options import (
+    CheckChange,
+    CheckOptions,
+    CheckPreset,
+    check_of,
+    check_scopes,
+    least_sure,
+    overlaid,
+    resolved,
+    shown_score,
+    stored_check,
+    stored_score,
+)
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.display_settings import (
@@ -25,7 +38,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
-from parfocal_api.review_order import Results, store_order, stored_seeds
+from parfocal_api.review_order import Results, clear_order, store_order, stored_seeds
 from parfocal_api.tables import (
     DecisionStyle,
     ProjectRole,
@@ -54,7 +67,6 @@ from parfocal_common.scope import ScopeKind
 
 MAX_SLIDES = 500
 MAX_REVIEWERS = 50
-SCORE_STEPS = 255
 REVIEWING_ROLES = frozenset({ProjectRole.OWNER, ProjectRole.REVIEWER})
 
 type TaskName = Annotated[
@@ -139,6 +151,8 @@ class TaskDraft(BaseModel):
     study_template_version: Annotated[int, Field(ge=1)] | None = None
     decision: DecisionSettings | None = None
     display: TaskDisplaySettings | None = None
+    preset: CheckPreset | None = None
+    check: CheckChange | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> TaskDraft:
@@ -150,6 +164,8 @@ class TaskDraft(BaseModel):
         elif (self.model_name is None) == (not self.result_sets):
             raise ValueError("Pick a result set per slide or a model name, not both")
         scope_fits(self.kind, self.scope, self.extra_scopes)
+        if self.kind is TaskKind.REVIEW and (self.preset is not None or self.check is not None):
+            raise ValueError("Only an annotate task has check options")
         if len(set(self.reviewer_ids)) != len(self.reviewer_ids):
             raise ValueError("A reviewer appears twice")
         if (self.split is TaskSplit.CHOSEN) != bool(self.pairs):
@@ -173,6 +189,7 @@ class TaskChange(BaseModel):
     reminder_days: Reminders | None = None
     decision: DecisionSettings | None = None
     display: TaskDisplaySettings | None = None
+    check: CheckChange | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> TaskChange:
@@ -184,6 +201,7 @@ class TaskChange(BaseModel):
 class TaskSlide(BaseModel):
     slide_id: uuid.UUID
     result_set_id: uuid.UUID | None
+    run_set_ids: list[uuid.UUID] = []
     reviewer_ids: list[uuid.UUID]
 
 
@@ -217,6 +235,7 @@ class ReviewTask(BaseModel):
     study_template_version: int | None
     decision: DecisionSettings
     display: TaskDisplaySettings
+    check: CheckOptions | None = None
     counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
@@ -283,6 +302,11 @@ class CountsAsSignedOffError(ConflictError):
     title = "Counts as cannot change after sign-off"
 
 
+class CheckNotForKindError(BadRequestError):
+    code = "check-not-for-task-kind"
+    title = "Only an annotate task has check options"
+
+
 class StudyTemplateRetiredError(ConflictError):
     code = "study-template-retired"
     title = "This study template is retired"
@@ -301,8 +325,18 @@ def code_of(number: int) -> str:
     return f"RT-{number}"
 
 
-def stored_score(score: float) -> int:
-    return round(score * SCORE_STEPS)
+def ordering_scopes(row: Any) -> list[SamplingScope]:
+    if row.kind == TaskKind.ANNOTATE:
+        return check_scopes(row.check_options)
+    return sampling_scopes(row)
+
+
+def stored_options(row: Any) -> dict[str, Any]:
+    return cast(dict[str, Any], row.check_options or {})
+
+
+def by_least_sure(row: Any) -> bool:
+    return least_sure(row.check_options) if row.kind == TaskKind.ANNOTATE else True
 
 
 def sampling_scopes(row: Any) -> list[SamplingScope]:
@@ -337,18 +371,20 @@ def stored_parts(extra: Sequence[Scope], kept: Sequence[Mapping[str, Any]]) -> l
     return [stored_part(part, seeds.get(part.kind.value)) for part in extra]
 
 
-async def task_sets(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uuid.UUID, uuid.UUID]:
+async def task_sets(
+    connection: AsyncConnection, task_id: uuid.UUID
+) -> dict[uuid.UUID, list[uuid.UUID]]:
     rows = await connection.execute(
-        select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id).where(
+        select(
+            review_task_slides.c.slide_id,
+            review_task_slides.c.result_set_id,
+            review_task_slides.c.run_set_ids,
+        ).where(
             review_task_slides.c.task_id == task_id,
             review_task_slides.c.result_set_id.is_not(None),
         )
     )
-    return {row[0]: row[1] for row in rows if row[1] is not None}
-
-
-def shown_score(stored: int | None) -> float | None:
-    return None if stored is None else round(stored / SCORE_STEPS, 3)
+    return {row[0]: [row[1], *row[2]] for row in rows if row[1] is not None}
 
 
 def scope_of(row: Any) -> Scope:
@@ -395,6 +431,7 @@ async def task_slides_of(
         TaskSlide(
             slide_id=slide.slide_id,
             result_set_id=slide.result_set_id,
+            run_set_ids=list(slide.run_set_ids),
             reviewer_ids=reviewers.get(slide.slide_id, []),
         )
         for slide in slide_rows
@@ -435,6 +472,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         study_template_version=row.study_template_version,
         decision=decision_of(row),
         display=display_of(row.display),
+        check=check_of(row.check_options) if row.kind == TaskKind.ANNOTATE else None,
         counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
@@ -810,6 +848,7 @@ async def create_review_task(
     number = select(func.coalesce(func.max(review_tasks.c.number), 0) + 1).where(
         review_tasks.c.project_id == project_id
     )
+    check = stored_check(resolved(draft.preset, draft.check), None) if annotating else None
     scope = draft.task_scope()
     seed = secrets.randbits(62)
     task_id = await connection.scalar(
@@ -837,6 +876,7 @@ async def create_review_task(
             study_template_version=template_version,
             **decision_values(decision),
             display=stored_display(display),
+            check_options=check,
             created_by_user_id=(
                 principal.user_id if isinstance(principal, MemberPrincipal) else None
             ),
@@ -866,16 +906,20 @@ async def create_review_task(
             for slide, user in pairs
         ],
     )
-    if not annotating:
+    made = await task_row(connection, task_id)
+    scopes = ordering_scopes(made)
+    if scopes:
+        ordered = [slide_id for slide_id in slide_ids if slide_id in picked]
         await store_order(
             connection,
             results,
             project.tenant_id,
             project_id,
             task_id,
-            sampling_scopes(await task_row(connection, task_id)),
-            {slide_id: picked[slide_id] for slide_id in slide_ids},
-            dict.fromkeys(slide_ids, seed),
+            scopes,
+            {slide_id: [picked[slide_id]] for slide_id in ordered},
+            dict.fromkeys(ordered, seed),
+            by_least_sure(made),
         )
     await audit(
         connection,
@@ -894,6 +938,17 @@ async def create_review_task(
             "display_locks": sorted(display.locks),
         }
         | ({} if snapshot is None else {"classes": len(snapshot)})
+        | (
+            {}
+            if check is None
+            else {
+                "preset": check["preset"],
+                "check_kinds": [part["kind"] for part in check["scope"]],
+                "check_order": check["order"],
+                "sign_off": check["sign_off"],
+                "unchecked_export": check["unchecked_export"],
+            }
+        )
         | (
             {}
             if draft.study_template_id is None
@@ -1001,6 +1056,15 @@ async def change_review_task(
     rescoped = (change.scope is not None or change.extra_scopes is not None) and [
         (part.kind, part.count, part.score) for part in [first, *extra]
     ] != [(part.kind, part.count, part.score) for part in scopes_of(row)]
+    if change.check is not None:
+        if TaskKind(row.kind) is not TaskKind.ANNOTATE:
+            raise CheckNotForKindError
+        before = check_of(row.check_options)
+        values["check_options"] = stored_check(overlaid(before, change.check), row.check_options)
+        rescoped = rescoped or (
+            [values["check_options"][key] for key in ("scope", "order")]
+            != [stored_options(row).get(key) for key in ("scope", "order")]
+        )
     if change.extra_scopes is not None:
         values["extra_scopes"] = stored_parts(change.extra_scopes, row.extra_scopes)
     if change.scope is not None:
@@ -1023,16 +1087,21 @@ async def change_review_task(
         sets = await task_sets(connection, task_id)
         known = await stored_seeds(connection, task_id, list(sets))
         fallback = changed.scope_seed or secrets.randbits(62)
-        await store_order(
-            connection,
-            results,
-            row.tenant_id,
-            row.project_id,
-            task_id,
-            sampling_scopes(changed),
-            sets,
-            {slide_id: known.get(slide_id, fallback) for slide_id in sets},
-        )
+        scopes = ordering_scopes(changed)
+        if scopes:
+            await store_order(
+                connection,
+                results,
+                row.tenant_id,
+                row.project_id,
+                task_id,
+                scopes,
+                sets,
+                {slide_id: known.get(slide_id, fallback) for slide_id in sets},
+                by_least_sure(changed),
+            )
+        else:
+            await clear_order(connection, task_id)
     await audit(
         connection,
         principal,

@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import first_read_open
+from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import left_open_count, open_by_slide, open_count, queue_of
 from parfocal_api.permissions import Permission, require
@@ -19,6 +20,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
+from parfocal_api.review_order import unchecked_objects
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     ProjectRole,
@@ -78,6 +80,7 @@ class Refused(StrEnum):
     DISAGREEMENTS_OPEN = "disagreements-open"
     ALREADY_SIGNED_OFF = "already-signed-off"
     NOT_SIGNED_OFF = "not-signed-off"
+    OBJECTS_UNCHECKED = "objects-unchecked"
 
 
 REFUSALS: Mapping[Refused, tuple[type[ProblemError], str]] = {
@@ -94,6 +97,10 @@ REFUSALS: Mapping[Refused, tuple[type[ProblemError], str]] = {
     Refused.DISAGREEMENTS_OPEN: (ConflictError, "Some disagreements are not decided yet"),
     Refused.ALREADY_SIGNED_OFF: (ConflictError, "The task is already signed off"),
     Refused.NOT_SIGNED_OFF: (ConflictError, "The task is not signed off"),
+    Refused.OBJECTS_UNCHECKED: (
+        ConflictError,
+        "Some AI objects in the check scope are not checked yet",
+    ),
 }
 
 
@@ -122,6 +129,7 @@ class MoveFacts:
     first_read_open: bool = False
     all_submitted: bool = False
     open_disagreements: int = 0
+    unchecked_objects: int = 0
 
 
 def before_review(facts: SlideFacts) -> State | None:
@@ -194,6 +202,8 @@ def check_move(move: Move, facts: MoveFacts) -> Refused | None:
                 return Refused.SLIDES_UNSUBMITTED
             if facts.open_disagreements:
                 return Refused.DISAGREEMENTS_OPEN
+            if facts.unchecked_objects:
+                return Refused.OBJECTS_UNCHECKED
             return None
         case Move.REOPEN_TASK:
             if facts.actor is not Actor.OWNER:
@@ -476,6 +486,11 @@ async def task_move(
         signed_off=task.signed_off_at is not None,
         all_submitted=not unsubmitted,
         open_disagreements=open_count(await queue_of(connection, task_id)),
+        unchecked_objects=(
+            await unchecked_objects(connection, task_id)
+            if move is Move.SIGN_OFF and requires_all_checked(task.check_options)
+            else 0
+        ),
     )
     action = AuditAction.TASK_SIGNED_OFF if move is Move.SIGN_OFF else AuditAction.TASK_REOPENED
     await apply(connection, principal, task, move, facts, action, {})

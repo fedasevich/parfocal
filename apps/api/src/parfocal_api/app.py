@@ -66,6 +66,7 @@ from parfocal_api import (
     slide_tissue,
     study_templates,
     task_changes,
+    task_runs,
     taxonomy,
     tenants,
     threads,
@@ -199,6 +200,7 @@ def create_app(
     app.include_router(task_changes.router)
     app.include_router(reviewed_layer.router)
     app.include_router(annotate_layer.router)
+    app.include_router(task_runs.router)
     app.include_router(review_order.router)
     app.include_router(reviewed_export.router)
     app.include_router(announcements.router)

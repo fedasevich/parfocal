@@ -16,7 +16,7 @@ from parfocal_api.review_order import (
     order_of_slide,
     write_order,
 )
-from parfocal_api.review_tasks import sampling_scopes
+from parfocal_api.review_tasks import by_least_sure, ordering_scopes
 from parfocal_api.tables import review_task_slides, review_tasks
 from parfocal_common.jobs import (
     JobStatus,
@@ -55,16 +55,24 @@ async def order_one_slide(
             )
         )
     ).one_or_none()
-    set_id = await connection.scalar(
-        select(review_task_slides.c.result_set_id).where(
-            review_task_slides.c.task_id == task_id, review_task_slides.c.slide_id == slide_id
+    sets = (
+        await connection.execute(
+            select(review_task_slides.c.result_set_id, review_task_slides.c.run_set_ids).where(
+                review_task_slides.c.task_id == task_id, review_task_slides.c.slide_id == slide_id
+            )
         )
-    )
-    if task is None or set_id is None:
+    ).one_or_none()
+    if task is None or sets is None or sets.result_set_id is None:
         return
     try:
         keys = await order_of_slide(
-            connection, store, sampling_scopes(task), slide_id, set_id, seed
+            connection,
+            store,
+            ordering_scopes(task),
+            slide_id,
+            [sets.result_set_id, *sets.run_set_ids],
+            seed,
+            by_least_sure(task),
         )
     except (ResultFilesMissingError, ResultFilesUnreadableError) as error:
         raise StepFailedError(error.code) from error

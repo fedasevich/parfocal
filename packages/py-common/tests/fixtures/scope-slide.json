@@ -173,6 +173,11 @@
       "total": 5,
       "first": 1,
       "second": 1
+    },
+    "all-cells": {
+      "total": 20,
+      "first": 10,
+      "second": 2
     }
   }
 }
