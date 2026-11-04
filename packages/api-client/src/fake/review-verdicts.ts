@@ -1,4 +1,10 @@
-import type { ReviewOrder, Verdict } from "../generated/api.ts";
+import type {
+  EditDraft,
+  ReviewEdit,
+  ReviewedLayer,
+  ReviewOrder,
+  Verdict,
+} from "../generated/api.ts";
 import { reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
@@ -103,4 +109,75 @@ export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
   return [...merged.values()].sort(
     (a, b) => (order.get(a.object) ?? 0) - (order.get(b.object) ?? 0),
   );
+};
+
+const editsKey = "parfocal.fake.review-edits";
+
+type EditStore = Record<string, Record<string, ReviewEdit>>;
+
+let editsMemory: EditStore = {};
+
+const editSession = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+const readEdits = (): EditStore => {
+  const stored = editSession()?.getItem(editsKey);
+  return stored === null || stored === undefined ? editsMemory : (JSON.parse(stored) as EditStore);
+};
+
+const writeEdits = (store: EditStore) => {
+  editsMemory = store;
+  editSession()?.setItem(editsKey, JSON.stringify(store));
+};
+
+const noReviewer = "00000000-0000-4000-8000-000000000000";
+
+export const rememberEdit = (
+  taskId: string,
+  slideId: string,
+  object: string,
+  draft: EditDraft | null,
+) => {
+  const key = savedKey(taskId, slideId);
+  const store = readEdits();
+  const kept = { ...store[key] };
+  if (draft === null) delete kept[object];
+  else {
+    kept[object] = {
+      object,
+      kind: object.includes("C") ? "cell" : "region",
+      number: Number(object.replace(/\D/g, "").slice(-3)) || 0,
+      split: "train",
+      class_id: draft.class_id ?? null,
+      geometry: (draft.geometry as ReviewEdit["geometry"]) ?? null,
+      deleted: draft.deleted ?? false,
+      retired: null,
+      merged_into: null,
+      updated_at: "2026-10-15T10:53:00+02:00",
+    };
+  }
+  writeEdits({ ...store, [key]: kept });
+  return kept[object];
+};
+
+export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer => {
+  const edits = Object.values(readEdits()[savedKey(taskId, slideId)] ?? {});
+  return {
+    task_id: taskId,
+    slide_id: slideId,
+    result_set_id: noReviewer,
+    reviewer_id: noReviewer,
+    edits,
+    added: [],
+    summary: {
+      regions: null,
+      cells: null,
+      retyped: 0,
+      reshaped: edits.filter((item) => item.geometry !== null).length,
+      deleted: 0,
+      split: 0,
+      merged: 0,
+      added: 0,
+    },
+  };
 };

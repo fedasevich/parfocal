@@ -1,4 +1,5 @@
 import {
+  getGetReviewedLayerQueryKey,
   getListVerdictsQueryKey,
   type PolygonGeometry,
   useClearReviewEdit,
@@ -31,8 +32,10 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
       objectId,
       data: { ...decisionBody(style, raw, classes, value), ...reasons },
     });
-  const edits = useSaveReviewEdit();
-  const unedit = useClearReviewEdit();
+  const refreshLayer = () =>
+    void queryClient.invalidateQueries({ queryKey: getGetReviewedLayerQueryKey(taskId, slideId) });
+  const edits = useSaveReviewEdit({ mutation: { onSuccess: refreshLayer } });
+  const unedit = useClearReviewEdit({ mutation: { onSuccess: refreshLayer } });
   const saveOutline = (objectId: string, geometry: PolygonGeometry) =>
     edits.mutate({ taskId, slideId, objectId, data: { geometry } });
   const clearOutline = (objectId: string) => unedit.mutate({ taskId, slideId, objectId });

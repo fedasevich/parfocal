@@ -55,8 +55,19 @@ test("redrawing the outline from guided review saves a new outline and leaves th
   await expect(page.getByTestId("redraw-vertex")).toHaveCount(4);
   await page.getByRole("button", { name: "Finish outline" }).click();
   const request = await saved;
-  const body = request.postDataJSON() as { geometry: { type: string } };
+  const body = request.postDataJSON() as {
+    geometry: { type: string; coordinates: number[][][] };
+  };
   expect(body.geometry.type).toBe("Polygon");
+  const ring = body.geometry.coordinates[0] ?? [];
+  expect(ring).toHaveLength(5);
+  expect(Math.max(...ring.map((position) => position[0] ?? 0))).toBeGreaterThan(30_000);
   await expect(page.getByTestId("redrawn-outline")).toHaveAttribute("data-points", "4");
   await expect(page.getByTestId("redraw-panel")).toHaveCount(0);
+  const drawn = await page.getByTestId("redrawn-outline").getAttribute("points");
+
+  await page.reload();
+  await expect(page.getByTestId("redrawn-outline")).toHaveAttribute("data-points", "4");
+  const again = await page.getByTestId("redrawn-outline").getAttribute("points");
+  expect(again).toBe(drawn);
 });

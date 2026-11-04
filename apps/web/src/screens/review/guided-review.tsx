@@ -1,4 +1,4 @@
-import { useSubmitSlideReview } from "@parfocal/api-client";
+import { useGetReviewedLayer, useSubmitSlideReview } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -9,12 +9,13 @@ import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
 import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
@@ -49,6 +50,7 @@ import {
 } from "./object-card.tsx";
 import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
 import { nextObjectAction, previousObjectAction, useObjectKeys } from "./object-keys.ts";
+import { imageOfKind, ringOfGeometry, slideToStill, stillToSlide } from "./outline-coords.ts";
 import { RedrawLayer } from "./redraw-layer.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
@@ -149,7 +151,19 @@ function GuidedBody({
   const [noteFor, setNoteFor] = useState<string | null>(setup.noteDraft ? "current" : null);
   const [noteDraft, setNoteDraft] = useState(setup.noteDraft ?? { reasons: [], text: "" });
   const [redraw, setRedraw] = useState<PolygonDraft | null>(null);
-  const [redrawn, setRedrawn] = useState<Record<string, PolygonDraft>>({});
+  const [redrawnNow, setRedrawn] = useState<Record<string, PolygonDraft>>({});
+  const layer = okData(useGetReviewedLayer(session.taskId, session.slideId, undefined).data);
+  const redrawn = useMemo(() => {
+    const loaded: Record<string, PolygonDraft> = {};
+    for (const edit of layer?.edits ?? []) {
+      const ring = ringOfGeometry(edit.geometry);
+      if (ring !== null) {
+        const image = imageOfKind(edit.kind === "cell" ? "cell" : "region");
+        loaded[edit.object] = ring.map((point) => slideToStill(point, image));
+      }
+    }
+    return { ...loaded, ...redrawnNow };
+  }, [layer, redrawnNow]);
   const [cellsShut, setCellsShut] = useState(false);
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(setup.cellsPreview);
@@ -299,7 +313,8 @@ function GuidedBody({
   };
   const finishRedraw = () => {
     if (redraw === null) return;
-    const closed = closeDraft(redraw);
+    const image = imageOfKind(current?.kind ?? "region");
+    const closed = closeDraft(redraw.map((point) => stillToSlide(point, image)));
     if (closed.kind !== "closed") return;
     decisions.saveOutline(currentId, polygonToGeoJson(closed.points));
     const saved = redraw;
