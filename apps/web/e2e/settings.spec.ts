@@ -153,3 +153,19 @@ test("rebinding J in Settings changes the key shown on Skip for now", async ({ p
   await dialog(page).getByRole("button", { name: "Close settings" }).click();
   await expect(skip.locator("kbd")).toHaveText("W");
 });
+
+test("the question mark key opens Shortcuts with the source badges", async ({ page }) => {
+  await page.goto("/");
+  await expect(async () => {
+    if (!/\/settings\/shortcuts$/.test(page.url())) await page.keyboard.press("Shift+?");
+    await expect(page).toHaveURL(/\/settings\/shortcuts$/, { timeout: 1000 });
+  }).toPass();
+  const shortcuts = dialog(page);
+  await expect(shortcuts.getByRole("heading", { name: "Shortcuts" })).toBeVisible();
+  for (const name of ["Whole slide", "Shortcut sheet", "Find any action", "Undo"]) {
+    await expect(shortcuts.getByText(name).first()).toBeAttached();
+  }
+  for (const source of ["Figma", "QuPath", "ours"]) {
+    await expect(shortcuts.getByText(source, { exact: true }).first()).toBeAttached();
+  }
+});
