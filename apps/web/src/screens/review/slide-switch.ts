@@ -6,32 +6,68 @@ export function stepSlideId(ids: readonly string[], currentId: string, delta: 1 
   return ids[at + delta];
 }
 
-type RememberedCamera = Required<CameraSearch>;
+const storageKey = "parfocal.slide-cameras";
+const maxAgeMs = 30 * 24 * 60 * 60 * 1000;
+const maxSlidesPerUser = 200;
 
-const cameras = new Map<string, RememberedCamera>();
-let openCase: string | null = null;
+type Entry = { x: number; y: number; z: number; at: number };
+type Store = Record<string, Record<string, Entry>>;
 
-export function caseMemoryKey(projectId: string | undefined, caseLabel: string | null) {
-  if (!projectId || caseLabel === null) return null;
-  return `${projectId}/${caseLabel}`;
+function isEntry(value: unknown): value is Entry {
+  if (value === null || typeof value !== "object") return false;
+  const entry = value as Record<string, unknown>;
+  return ["x", "y", "z", "at"].every((key) => Number.isFinite(entry[key]));
 }
 
-export function openCaseMemory(caseKey: string | null) {
-  if (caseKey === null || caseKey === openCase) return;
-  openCase = caseKey;
-  cameras.clear();
+function readStore(): Store {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
+    if (parsed === null || typeof parsed !== "object") return {};
+    const store: Store = {};
+    for (const [user, slides] of Object.entries(parsed)) {
+      if (slides === null || typeof slides !== "object") continue;
+      const slideEntries: [string, Entry][] = [];
+      for (const [id, entry] of Object.entries(slides as Record<string, unknown>))
+        if (isEntry(entry)) slideEntries.push([id, entry]);
+      store[user] = Object.fromEntries(slideEntries);
+    }
+    return store;
+  } catch {
+    return {};
+  }
 }
 
-export function rememberSlideCamera(slideId: string, search: CameraSearch) {
+function fresh(slides: Record<string, Entry>, now: number) {
+  return Object.entries(slides).filter(([, entry]) => now - entry.at <= maxAgeMs);
+}
+
+export function rememberSlideCamera(
+  userId: string | undefined,
+  slideId: string,
+  search: CameraSearch,
+  now = Date.now(),
+) {
+  if (userId === undefined) return;
   if (search.x === undefined || search.y === undefined || search.z === undefined) return;
-  cameras.set(slideId, { x: search.x, y: search.y, z: search.z });
+  const store = readStore();
+  const kept = fresh(store[userId] ?? {}, now).filter(([id]) => id !== slideId);
+  kept.push([slideId, { x: search.x, y: search.y, z: search.z, at: now }]);
+  kept.sort((a, b) => a[1].at - b[1].at);
+  store[userId] = Object.fromEntries(kept.slice(-maxSlidesPerUser));
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(store));
+  } catch {
+    return;
+  }
 }
 
-export function recallSlideCamera(slideId: string): CameraSearch {
-  return cameras.get(slideId) ?? {};
-}
-
-export function forgetSlideCameras() {
-  openCase = null;
-  cameras.clear();
+export function recallSlideCamera(
+  userId: string | undefined,
+  slideId: string,
+  now = Date.now(),
+): CameraSearch {
+  if (userId === undefined) return {};
+  const entry = readStore()[userId]?.[slideId];
+  if (entry === undefined || now - entry.at > maxAgeMs) return {};
+  return { x: entry.x, y: entry.y, z: entry.z };
 }

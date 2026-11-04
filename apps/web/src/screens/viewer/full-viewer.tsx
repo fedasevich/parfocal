@@ -81,7 +81,7 @@ import {
   SlideStill,
   type StillView,
 } from "../review/slide-still.tsx";
-import { caseMemoryKey, openCaseMemory, rememberSlideCamera } from "../review/slide-switch.ts";
+import { recallSlideCamera, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
@@ -515,13 +515,35 @@ function ViewerBody({
       }),
     [],
   );
-  const caseKey = caseMemoryKey(session.task?.project_id, session.caseLabel);
+  const meId = session.meId;
+  const opened = useRef<string | null>(null);
   useEffect(() => {
-    openCaseMemory(caseKey);
-  }, [caseKey]);
+    if (opened.current === slideId) return;
+    opened.current = slideId;
+    const hasCamera = search.x !== undefined && search.y !== undefined && search.z !== undefined;
+    if (hasCamera || search.object !== undefined) return;
+    const remembered = recallSlideCamera(meId, slideId);
+    if (remembered.z !== undefined) writeSearch.current(remembered);
+  }, [meId, slideId, search.x, search.y, search.z, search.object]);
+  const pendingCamera = useRef<CameraSearch | null>(null);
   useEffect(() => {
-    if (camera !== null) rememberSlideCamera(slideId, cameraToSearch(cameraImage, camera));
-  }, [camera, cameraImage, slideId]);
+    if (camera === null) return;
+    const rest = cameraToSearch(cameraImage, camera);
+    pendingCamera.current = rest;
+    const timer = setTimeout(() => {
+      pendingCamera.current = null;
+      rememberSlideCamera(meId, slideId, rest);
+    }, cameraWriteDelayMs);
+    return () => clearTimeout(timer);
+  }, [camera, cameraImage, slideId, meId]);
+  useEffect(
+    () => () => {
+      if (pendingCamera.current === null) return;
+      rememberSlideCamera(meId, slideId, pendingCamera.current);
+      pendingCamera.current = null;
+    },
+    [meId, slideId],
+  );
   useEffect(() => {
     if (camera === null) return;
     const timer = setTimeout(

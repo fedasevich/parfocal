@@ -117,6 +117,29 @@ test("switching slides keeps the camera each slide had", async ({ page }) => {
   expect({ x: after.get("x"), y: after.get("y"), z: after.get("z") }).toEqual(zoomed);
 });
 
+test("a slide reopened after a reload starts at its remembered view", async ({ page }) => {
+  test.setTimeout(90_000);
+  const url = await fullViewerUrl(page);
+  await page.goto(url);
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await page.getByRole("img", { name: "The whole slide" }).hover();
+  await page.mouse.wheel(0, -300);
+  await expect.poll(() => new URL(page.url()).searchParams.get("z")).not.toBeNull();
+  await page.waitForTimeout(600);
+  const before = new URL(page.url()).searchParams;
+  const zoomed = { x: before.get("x"), y: before.get("y"), z: before.get("z") };
+  const bare = new URL(page.url());
+  for (const key of ["x", "y", "z"]) bare.searchParams.delete(key);
+  await page.goto(bare.toString());
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect
+    .poll(() => {
+      const after = new URL(page.url()).searchParams;
+      return { x: after.get("x"), y: after.get("y"), z: after.get("z") };
+    })
+    .toEqual(zoomed);
+});
+
 test("the pinned slide strip is off until the setting turns it on", async ({ page }) => {
   test.setTimeout(90_000);
   const url = await fullViewerUrl(page);
