@@ -24,7 +24,9 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import {
+  cancellableRuns,
   canOpenSlide,
+  pausedRuns,
   runSummary,
   slidePercent,
   slideTone,
@@ -88,7 +90,7 @@ function JobWindowBody({
     tray.notify(resumedMessage(await resume(job)));
   };
   const moveToGpu = async () => {
-    const paused = runs.filter((run) => run.status === "paused");
+    const paused = pausedRuns(runs);
     for (const run of paused) {
       await move.mutateAsync({ projectId, runId: run.id, data: { server: parfocalGpu } });
     }
@@ -102,13 +104,13 @@ function JobWindowBody({
     );
   };
   const cancel = async () => {
-    const first = runs[0];
-    if (!first) return;
-    await cancelModelRun(projectId, first.id);
+    const stopped = cancellableRuns(runs);
+    if (stopped.length === 0) return;
+    for (const run of stopped) await cancelModelRun(projectId, run.id);
     await refresh();
     onClose();
     tray.notify("Run cancelled. Slides that finished keep their results.", () => {
-      void resumeModelRun(projectId, first.id).then(refresh);
+      void Promise.all(stopped.map((run) => resumeModelRun(projectId, run.id))).then(refresh);
     });
   };
   const footer =

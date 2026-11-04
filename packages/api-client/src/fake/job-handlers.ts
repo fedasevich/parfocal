@@ -252,11 +252,13 @@ export function jobHandlers(): RequestHandler[] {
       startRuns((await request.json()) as ModelRunDraft),
     ),
     http.post<RunParams>("*/api/projects/:projectId/model-runs/:runId/cancel", ({ params }) => {
-      const found = runById(params.runId);
+      const found = allRunsById(params.runId);
       if (found === undefined) return notFound();
       updateJobsState((state) => ({
         ...state,
-        cancelled: [...state.cancelled, found.batch.id],
+        cancelled: state.cancelled.includes(found.batch.id)
+          ? state.cancelled
+          : [...state.cancelled, found.batch.id],
       }));
       return HttpResponse.json(cancelled(toModelRun(found.batch, found.slide)));
     }),
@@ -267,7 +269,9 @@ export function jobHandlers(): RequestHandler[] {
       updateJobsState((state) =>
         wasCancelled
           ? { ...state, cancelled: state.cancelled.filter((id) => id !== found.batch.id) }
-          : { ...state, resumed: "resumed" },
+          : found.slide.state === "paused"
+            ? { ...state, resumed: "resumed" }
+            : state,
       );
       const resumed = runById(params.runId) ?? found;
       return HttpResponse.json(toModelRun(resumed.batch, resumed.slide));

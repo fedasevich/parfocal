@@ -184,6 +184,11 @@ export function stepsOf(
 
 export const canOpenSlide = (run: ModelRun) => stepsDone(run) >= 4;
 
+export const pausedRuns = (runs: ModelRun[]) => runs.filter((run) => run.status === "paused");
+
+export const cancellableRuns = (runs: ModelRun[]) =>
+  runs.filter((run) => run.actions.includes("cancel"));
+
 export type RunSummary = {
   state: "running" | "paused" | "done";
   percent: number;

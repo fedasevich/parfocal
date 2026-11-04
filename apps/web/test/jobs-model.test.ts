@@ -5,8 +5,11 @@ import { scenarioJobs } from "@parfocal/api-client/fake";
 import { fakeJobsSceneFor } from "../src/fake-api/jobs-scene-rules.ts";
 import { fakeViewFor } from "../src/fake-api/view-rules.ts";
 import {
+  cancellableRuns,
+  canOpenSlide,
   jobIcon,
   jobTarget,
+  pausedRuns,
   runEstimate,
   runSummary,
   slidePercent,
@@ -263,4 +266,35 @@ test("the job scenes follow the route and Daniel views them", () => {
   assert.equal(startedRunJobId, scenarioJobs.startedRunId);
   assert.equal(fakeViewFor("/projects/p07/run-model", {}).viewer, "DH");
   assert.equal(fakeViewFor(`/projects/p07/jobs/${startedRunJobId}`, {}).viewer, "DH");
+});
+
+test("a slide opens once its objects are placed and not before", () => {
+  const placing = run("running", [
+    stage("Queued", "done"),
+    stage("Tiles read", "done", 9, 9),
+    stage("Tissue found", "done", 61),
+    stage("Model running", "done", 1, 1),
+    stage("Objects placed", "running", 400, 21408),
+    stage("IDs given", "pending"),
+    stage("Result set added", "pending"),
+  ]);
+  assert.equal(canOpenSlide(pausedRun), false);
+  assert.equal(canOpenSlide(placing), true);
+  assert.equal(slideValueText(placing), "Objects placed");
+});
+
+test("cancel stops every slide that is not finished and leaves the finished ones", () => {
+  const finished = { ...run("done", []), id: "finished", actions: [] };
+  const running = { ...run("running", []), id: "running", actions: ["cancel" as const] };
+  const waiting = { ...run("queued", []), id: "waiting", actions: ["cancel" as const] };
+  const paused = { ...pausedRun, id: "paused", actions: ["resume" as const, "cancel" as const] };
+  const runs = [finished, running, waiting, paused];
+  assert.deepEqual(
+    cancellableRuns(runs).map((item) => item.id),
+    ["running", "waiting", "paused"],
+  );
+  assert.deepEqual(
+    pausedRuns(runs).map((item) => item.id),
+    ["paused"],
+  );
 });
