@@ -7,11 +7,16 @@ import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
+import {
+  clearAll,
+  clearPrompt,
+  deleteShapes,
+  needsClearConfirmation,
+} from "../annotations/clear.ts";
 import { ConflictNotice } from "../annotations/conflict-notice.tsx";
 import { CountLayer } from "../annotations/count-layer.tsx";
 import { markersOf } from "../annotations/count-markers.ts";
 import { CountPanel } from "../annotations/count-panel.tsx";
-import { removeShape } from "../annotations/document.ts";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { PinLayer } from "../annotations/pin-layer.tsx";
@@ -560,8 +565,23 @@ function OpenedSlide({
             <MeasurementList
               document={annotations}
               micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-              onRemove={(id) => setAnnotations(removeShape(annotations, id))}
+              onRemove={(id) =>
+                saved.apply(deleteShapes(annotations, [id]).document, "Delete shape")
+              }
             />
+            {annotations.shapes.size > 0 ? (
+              <Button
+                size="sm"
+                data-testid="clear-annotations"
+                onClick={() => {
+                  const count = annotations.shapes.size;
+                  if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count))) return;
+                  saved.apply(clearAll(annotations).document, "Clear all");
+                }}
+              >
+                Clear all
+              </Button>
+            ) : null}
           </div>
         </>
       ) : null}
