@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- INGEST-021 (upload wizard) finished: Check lists where the browser and server sorts differ, Start upload calls /uploads/sorting/apply, puts slides in their case and links results with PUT /uploads/{id}/slide, with fake handlers. The first-page bundle is at 349,999 of 350,000 bytes, so FOUND-029 frees headroom.
 - NAV-014 (area navigation in the engine viewer) makes ], [ and G then n fly to area bounds through engine.flyToArea, whose view history Alt+Left uses, and marks an area visited at rest at 10x or more, tested on the real tumor_044 slide. The areas are three dev-only bounds under the fake API, so NAV-015 now serves real bounds and the live area list.
 - DS-028 (decision buttons in the four styles) moved answersFor into packages/ui/src/lib/decision-answers.ts, added stories for all four styles in both sizes, and a test that each style's keys come from the key registry. Axe passes on 24 runs. The large size stays 58 px tall (task says 40 px) and 5-point certainty keeps Can't tell as its middle answer instead of a separate Not sure, both left for the owner's mock review.
 - SEC-029 (security contact for each workspace) added /api/tenant/security-contact (migration 0084), a Security contact area in Admin, Workspace settings, audit without the address, and a 409 security-contact-missing before a project goes clinical. The incident runbook now notifies that contact. Decisions 64 and 65 ask who reads it and whether de-identified workspaces need one.
