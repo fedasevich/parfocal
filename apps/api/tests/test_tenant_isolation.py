@@ -93,6 +93,8 @@ from parfocal_ingest.tissue import TissueMask
 
 pytestmark = pytest.mark.db
 
+SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
+
 
 @dataclass(frozen=True)
 class Seeded:
@@ -744,6 +746,35 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["annotate_task"] = annotate_id
+    shared_id = await connection.scalar(
+        insert(annotations)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            task_id=annotate_id,
+            kind="region",
+            number=1,
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            origin="ai-edited",
+            source_number=1,
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(annotations.c.id)
+    )
+    assert isinstance(shared_id, uuid.UUID)
+    await connection.execute(
+        insert(annotation_versions).values(
+            tenant_id=seeded.tenant_id,
+            annotation_id=shared_id,
+            version=1,
+            change="edited",
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            changed_by_user_id=seeded.ids["user"],
+        )
+    )
+    seeded.ids["shared_object"] = shared_id
+    seeded.markers.add(str(shared_id))
     seeded.markers.add(snapshot_class)
     seeded.markers.update({str(set_id), set_name})
     seeded.ids["annotation"] = annotation_id
@@ -1266,6 +1297,19 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/slides/{a.ids['slide']}/annotations/{a.ids['annotation']}",
     ),
+    "getSharedLayer": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}/shared-layer"
+        ),
+    ),
+    "listSharedObjectHistory": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}"
+            f"/shared-layer/objects/{a.ids['shared_object']}/history"
+        ),
+    ),
     "listAnnotationHistory": Route(
         Exposure.TENANT,
         lambda a: f"/api/slides/{a.ids['slide']}/annotations/{a.ids['annotation']}/history",
@@ -1463,3 +1507,15 @@ def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
     assert snapshot not in theirs.text
     listed = api(b.member()).get(f"/api/projects/{a.ids['project']}/review-tasks")
     assert snapshot not in listed.text
+    layer = f"{path}/slides/{a.ids['slide']}/shared-layer"
+    shared = str(a.ids["shared_object"])
+    assert shared in api(a.member()).get(layer).text
+    for attempt in (
+        api(b.member()).get(layer),
+        api(b.member()).post(f"{layer}/objects", json={"kind": "region", "geometry": SQUARE}),
+        api(b.member()).put(f"{layer}/ai/T1", json={"deleted": True}),
+        api(b.member()).patch(f"{layer}/objects/{shared}", json={"version": 1, "class_id": None}),
+        api(b.member()).delete(f"{layer}/objects/{shared}", params={"version": 1}),
+    ):
+        assert attempt.status_code == 404, attempt.text
+        assert shared not in attempt.text

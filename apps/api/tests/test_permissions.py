@@ -221,6 +221,13 @@ class Workspace:
     declinable: uuid.UUID = field(default_factory=uuid.uuid4)
     adjudicator: uuid.UUID = field(default_factory=uuid.uuid4)
     report_link: uuid.UUID = field(default_factory=uuid.uuid4)
+    annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
+    layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
+    doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @property
+    def shared_layer(self) -> str:
+        return f"/api/review-tasks/{self.annotate_task}/slides/{self.slide}/shared-layer"
 
     @property
     def annotations(self) -> str:
@@ -260,6 +267,10 @@ NEEDS_A_TASK = frozenset(
         "resolveThread",
         "reopenThread",
         "deleteThread",
+        "createSharedObject",
+        "changeAiObject",
+        "changeSharedObject",
+        "deleteSharedObject",
     }
 )
 
@@ -479,6 +490,20 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getReviewedLayer": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/layer"),
+    "getSharedLayer": lambda w: Call("GET", w.shared_layer),
+    "listSharedObjectHistory": lambda w: Call(
+        "GET", f"{w.shared_layer}/objects/{w.layer_object}/history"
+    ),
+    "createSharedObject": lambda w: Call(
+        "POST", f"{w.shared_layer}/objects", {"kind": "region", "geometry": SQUARE}
+    ),
+    "changeAiObject": lambda w: Call("PUT", f"{w.shared_layer}/ai/T1", {"deleted": True}),
+    "changeSharedObject": lambda w: Call(
+        "PATCH", f"{w.shared_layer}/objects/{w.layer_object}", {"version": 1, "geometry": SQUARE}
+    ),
+    "deleteSharedObject": lambda w: Call(
+        "DELETE", f"{w.shared_layer}/objects/{w.doomed_layer_object}?version=1"
+    ),
     "search": lambda _: Call("GET", "/api/search?q=A1"),
     "getSlideNeighbours": lambda w: Call(
         "GET", f"/api/slides/{w.slide}/neighbours?from=task&task_id={w.task}&skip_submitted=false"
@@ -957,6 +982,69 @@ async def seed_annotation(
     return annotation_id
 
 
+async def seed_annotate_task(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    result_set_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
+    task_id = await connection.scalar(
+        insert(review_tasks)
+        .values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            number=90,
+            name="Seeded annotate task",
+            kind="annotate",
+            class_snapshot=[],
+            split="everyone",
+            scope="whole-slide",
+            opinion_form_version=1,
+            start_mode="guided",
+        )
+        .returning(review_tasks.c.id)
+    )
+    assert isinstance(task_id, uuid.UUID)
+    await connection.execute(
+        insert(review_task_slides).values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            position=0,
+            kind="annotate",
+            result_set_id=result_set_id,
+        )
+    )
+    await connection.execute(
+        insert(review_assignments).values(
+            tenant_id=tenant_id, task_id=task_id, slide_id=slide_id, user_id=user_id
+        )
+    )
+    kept, doomed = [
+        await connection.scalar(
+            insert(annotations)
+            .values(
+                tenant_id=tenant_id,
+                project_id=project_id,
+                slide_id=slide_id,
+                task_id=task_id,
+                kind="region",
+                number=number,
+                geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+                created_by_user_id=user_id,
+            )
+            .returning(annotations.c.id)
+        )
+        for number in (90, 91)
+    ]
+    assert isinstance(kept, uuid.UUID)
+    assert isinstance(doomed, uuid.UUID)
+    return task_id, kept, doomed
+
+
 async def seed_thread(
     connection: AsyncConnection,
     tenant_id: uuid.UUID,
@@ -1231,6 +1319,14 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )
             )
             assert isinstance(result_set, uuid.UUID)
+            annotate_task, layer_object, doomed_layer_object = await seed_annotate_task(
+                connection,
+                tenant_id,
+                case.project_id,
+                case.loose_slide_id,
+                result_set,
+                people[lead],
+            )
             submitted_task, ready_task, signed_task = [
                 await seed_task(
                     connection,
@@ -1559,6 +1655,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             declinable=declinable,
             adjudicator=adjudicator,
             report_link=report_link,
+            annotate_task=annotate_task,
+            layer_object=layer_object,
+            doomed_layer_object=doomed_layer_object,
         )
     finally:
         await engine.dispose()

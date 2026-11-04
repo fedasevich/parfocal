@@ -10,3 +10,13 @@ class NotAReviewTaskError(ConflictError):
 def review_only(kind: str) -> None:
     if kind != TaskKind.REVIEW:
         raise NotAReviewTaskError
+
+
+class NotAnAnnotateTaskError(ConflictError):
+    code = "not-an-annotate-task"
+    title = "Only an annotate task has a shared layer"
+
+
+def annotate_only(kind: str) -> None:
+    if kind != TaskKind.ANNOTATE:
+        raise NotAnAnnotateTaskError

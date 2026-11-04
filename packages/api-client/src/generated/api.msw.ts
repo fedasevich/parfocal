@@ -53,6 +53,7 @@ import type {
   IssuedToken,
   Job,
   LabSettings,
+  LayerObject,
   LegalHold,
   LineStringGeometry,
   Marked,
@@ -115,6 +116,7 @@ import type {
   Session,
   SessionPolicy,
   SessionSummary,
+  SharedLayer,
   SharedReport,
   SignedPart,
   SigningKey,
@@ -158,6 +160,7 @@ import {
   AnchorKind,
   AnnotationChange,
   AnnotationKind,
+  AnnotationOrigin,
   AnnouncementKind,
   Appendix,
   Asked,
@@ -3748,6 +3751,122 @@ export const getGetReviewedLayerResponseMock = (
   },
   ...overrideResponse,
 });
+
+export const getGetSharedLayerResponseMock = (
+  overrideResponse: Partial<Extract<SharedLayer, object>> = {},
+): SharedLayer => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+      number: faker.number.int(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+      source: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      geometry: {},
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      version: faker.number.int(),
+      created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      deleted_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getCreateSharedObjectResponseMock = (
+  overrideResponse: Partial<Extract<LayerObject, object>> = {},
+): LayerObject => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+  source: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  geometry: {},
+  class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  version: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  deleted_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getChangeAiObjectResponseMock = (
+  overrideResponse: Partial<Extract<LayerObject, object>> = {},
+): LayerObject => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+  source: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  geometry: {},
+  class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  version: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  deleted_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getChangeSharedObjectResponseMock = (
+  overrideResponse: Partial<Extract<LayerObject, object>> = {},
+): LayerObject => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+  source: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  geometry: {},
+  class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  version: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  deleted_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getListSharedObjectHistoryResponseMock = (): AnnotationVersion[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    version: faker.number.int(),
+    change: faker.helpers.arrayElement(Object.values(AnnotationChange)),
+    geometry: {},
+    class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
 
 export const getGetReviewOrderResponseMock = (
   overrideResponse: Partial<Extract<ReviewOrder, object>> = {},
@@ -12022,6 +12141,141 @@ export const getGetReviewedLayerMockHandler = (
   );
 };
 
+export const getGetSharedLayerMockHandler = (
+  overrideResponse?:
+    | SharedLayer
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SharedLayer> | SharedLayer),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSharedLayerResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateSharedObjectMockHandler = (
+  overrideResponse?:
+    | LayerObject
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LayerObject> | LayerObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/objects",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateSharedObjectResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getChangeAiObjectMockHandler = (
+  overrideResponse?:
+    | LayerObject
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LayerObject> | LayerObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/ai/:objectId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeAiObjectResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getChangeSharedObjectMockHandler = (
+  overrideResponse?:
+    | LayerObject
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0],
+      ) => Promise<LayerObject> | LayerObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/objects/:annotationId",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeSharedObjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteSharedObjectMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/objects/:annotationId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getListSharedObjectHistoryMockHandler = (
+  overrideResponse?:
+    | AnnotationVersion[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AnnotationVersion[]> | AnnotationVersion[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/objects/:annotationId/history",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSharedObjectHistoryResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetReviewOrderMockHandler = (
   overrideResponse?:
     | ReviewOrder
@@ -15200,6 +15454,12 @@ export const getParfocalAPIMock = () => [
   getResolveReviewObjectMockHandler(),
   getAddReviewObjectMockHandler(),
   getGetReviewedLayerMockHandler(),
+  getGetSharedLayerMockHandler(),
+  getCreateSharedObjectMockHandler(),
+  getChangeAiObjectMockHandler(),
+  getChangeSharedObjectMockHandler(),
+  getDeleteSharedObjectMockHandler(),
+  getListSharedObjectHistoryMockHandler(),
   getGetReviewOrderMockHandler(),
   getExportReviewedLayerMockHandler(),
   getListAnnouncementsMockHandler(),
