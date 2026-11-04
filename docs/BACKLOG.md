@@ -2190,7 +2190,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock §2.8, NaviPath evidence.
   Size: M.
 
-- [ ] NAV-006 · Smart minimap state machine
+- [x] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n from any visible mode, as the owner chose on 2026-11-04, faded within 40 px of the pointer).
   Read the minimap setting through `shownMinimap` in packages/ui/src/lib/minimap-box.ts (NAV-009).
   Done when model-based tests drive every transition.
