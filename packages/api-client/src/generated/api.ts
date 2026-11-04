@@ -568,6 +568,7 @@ export const AuditTarget = {
   patient: "patient",
   thread: "thread",
   "display-preset": "display-preset",
+  "report-link": "report-link",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -1080,6 +1081,20 @@ export interface CoverageBatch {
    * @items.minimum 0
    */
   cells: number[];
+}
+
+export interface CreatedReportLink {
+  id: string;
+  task_id: string;
+  created_by: string | null;
+  created_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+  expired: boolean;
+  opened_count: number;
+  last_opened_at: string | null;
+  token: string;
+  url: string;
 }
 
 export type ServiceScope = (typeof ServiceScope)[keyof typeof ServiceScope];
@@ -3189,6 +3204,18 @@ export interface ReportFormat {
   downloads?: Download[];
 }
 
+export interface ReportLink {
+  id: string;
+  task_id: string;
+  created_by: string | null;
+  created_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+  expired: boolean;
+  opened_count: number;
+  last_opened_at: string | null;
+}
+
 export interface Resolved {
   source_name: string;
   class_id: string | null;
@@ -3581,6 +3608,51 @@ export interface SetRef {
   id: string;
   name: string;
   status: ResultStatus;
+}
+
+export type SharedEvaluationDice = { [key: string]: RateOut };
+
+export interface SharedKappa {
+  first: string;
+  second: string;
+  value: number | null;
+  objects: number;
+}
+
+export type SharedOpinionCounts = { [key: string]: number };
+
+export interface SharedOpinion {
+  key: string;
+  count: number;
+  mean: number | null;
+  spread: number | null;
+  counts: SharedOpinionCounts;
+}
+
+export interface SharedEvaluation {
+  sample: boolean;
+  decisions: DecisionCounts;
+  classes: ClassMetrics[];
+  overall: ClassMetrics[];
+  dice: SharedEvaluationDice;
+  kappa: SharedKappa[];
+  mean_kappa: number | null;
+  fleiss_kappa: number | null;
+  cell_agreement_with_ai: RateOut;
+  cell_agreement_between_reviewers: RateOut;
+  /**
+   * @items.minItems 2
+   * @items.maxItems 2
+   */
+  reasons: [string, number][];
+  opinions: SharedOpinion[];
+}
+
+export interface SharedReport {
+  project_name: string;
+  task_name: string;
+  expires_at: string;
+  evaluation: SharedEvaluation;
 }
 
 export interface SignOutChange {
@@ -34631,6 +34703,675 @@ export function useExportTaskEvaluation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTaskEvaluationQueryOptions(taskId, kind, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createReportLinkResponse201 = {
+  data: CreatedReportLink;
+  status: 201;
+};
+
+export type createReportLinkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createReportLinkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createReportLinkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createReportLinkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createReportLinkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createReportLinkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createReportLinkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createReportLinkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createReportLinkResponseSuccess = createReportLinkResponse201 & {
+  headers: Headers;
+};
+export type createReportLinkResponseError = (
+  | createReportLinkResponse400
+  | createReportLinkResponse401
+  | createReportLinkResponse403
+  | createReportLinkResponse404
+  | createReportLinkResponse409
+  | createReportLinkResponse422
+  | createReportLinkResponse429
+  | createReportLinkResponse500
+) & {
+  headers: Headers;
+};
+
+export type createReportLinkResponse =
+  | createReportLinkResponseSuccess
+  | createReportLinkResponseError;
+
+export const getCreateReportLinkUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation/links`;
+};
+
+/**
+ * @summary Create Report Link
+ */
+export const createReportLink = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createReportLinkResponse> => {
+  return apiFetch<createReportLinkResponse>(getCreateReportLinkUrl(taskId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateReportLinkMutationKey = () => ["createReportLink"] as const;
+
+export const getCreateReportLinkMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createReportLink>>,
+    TError,
+    CreateReportLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createReportLink>>,
+  TError,
+  CreateReportLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateReportLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createReportLink>>,
+    CreateReportLinkMutationVariables
+  > = (props) => {
+    const { taskId } = props ?? {};
+
+    return createReportLink(taskId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateReportLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createReportLink>>
+>;
+
+export type CreateReportLinkMutationError = Problem;
+export type CreateReportLinkMutationVariables = { taskId: string };
+
+/**
+ * @summary Create Report Link
+ */
+export const useCreateReportLink = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createReportLink>>,
+      TError,
+      CreateReportLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createReportLink>>,
+  TError,
+  CreateReportLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateReportLinkMutationOptions(options), queryClient);
+};
+
+export type listReportLinksResponse200 = {
+  data: ReportLink[];
+  status: 200;
+};
+
+export type listReportLinksResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listReportLinksResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listReportLinksResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listReportLinksResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listReportLinksResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listReportLinksResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listReportLinksResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listReportLinksResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listReportLinksResponseSuccess = listReportLinksResponse200 & {
+  headers: Headers;
+};
+export type listReportLinksResponseError = (
+  | listReportLinksResponse400
+  | listReportLinksResponse401
+  | listReportLinksResponse403
+  | listReportLinksResponse404
+  | listReportLinksResponse409
+  | listReportLinksResponse422
+  | listReportLinksResponse429
+  | listReportLinksResponse500
+) & {
+  headers: Headers;
+};
+
+export type listReportLinksResponse = listReportLinksResponseSuccess | listReportLinksResponseError;
+
+export const getListReportLinksUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation/links`;
+};
+
+/**
+ * @summary List Report Links
+ */
+export const listReportLinks = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listReportLinksResponse> => {
+  return apiFetch<listReportLinksResponse>(getListReportLinksUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListReportLinksQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation/links`] as const;
+};
+
+export const getListReportLinksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listReportLinks>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListReportLinksQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listReportLinks>>> = ({ signal }) =>
+    listReportLinks(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListReportLinksQueryResult = NonNullable<Awaited<ReturnType<typeof listReportLinks>>>;
+export type ListReportLinksQueryError = Problem;
+
+export function useListReportLinks<
+  TData = Awaited<ReturnType<typeof listReportLinks>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReportLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listReportLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReportLinks<
+  TData = Awaited<ReturnType<typeof listReportLinks>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReportLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listReportLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReportLinks<
+  TData = Awaited<ReturnType<typeof listReportLinks>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Report Links
+ */
+
+export function useListReportLinks<
+  TData = Awaited<ReturnType<typeof listReportLinks>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReportLinks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListReportLinksQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type revokeReportLinkResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeReportLinkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type revokeReportLinkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type revokeReportLinkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type revokeReportLinkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type revokeReportLinkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type revokeReportLinkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type revokeReportLinkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type revokeReportLinkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type revokeReportLinkResponseSuccess = revokeReportLinkResponse204 & {
+  headers: Headers;
+};
+export type revokeReportLinkResponseError = (
+  | revokeReportLinkResponse400
+  | revokeReportLinkResponse401
+  | revokeReportLinkResponse403
+  | revokeReportLinkResponse404
+  | revokeReportLinkResponse409
+  | revokeReportLinkResponse422
+  | revokeReportLinkResponse429
+  | revokeReportLinkResponse500
+) & {
+  headers: Headers;
+};
+
+export type revokeReportLinkResponse =
+  | revokeReportLinkResponseSuccess
+  | revokeReportLinkResponseError;
+
+export const getRevokeReportLinkUrl = (taskId: string, linkId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation/links/${linkId}`;
+};
+
+/**
+ * @summary Revoke Report Link
+ */
+export const revokeReportLink = async (
+  taskId: string,
+  linkId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<revokeReportLinkResponse> => {
+  return apiFetch<revokeReportLinkResponse>(getRevokeReportLinkUrl(taskId, linkId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokeReportLinkMutationKey = () => ["revokeReportLink"] as const;
+
+export const getRevokeReportLinkMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeReportLink>>,
+    TError,
+    RevokeReportLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokeReportLink>>,
+  TError,
+  RevokeReportLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokeReportLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeReportLink>>,
+    RevokeReportLinkMutationVariables
+  > = (props) => {
+    const { taskId, linkId } = props ?? {};
+
+    return revokeReportLink(taskId, linkId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeReportLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokeReportLink>>
+>;
+
+export type RevokeReportLinkMutationError = Problem;
+export type RevokeReportLinkMutationVariables = { taskId: string; linkId: string };
+
+/**
+ * @summary Revoke Report Link
+ */
+export const useRevokeReportLink = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokeReportLink>>,
+      TError,
+      RevokeReportLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokeReportLink>>,
+  TError,
+  RevokeReportLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokeReportLinkMutationOptions(options), queryClient);
+};
+
+export type getSharedReportResponse200 = {
+  data: SharedReport;
+  status: 200;
+};
+
+export type getSharedReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSharedReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSharedReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSharedReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSharedReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSharedReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSharedReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSharedReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSharedReportResponseSuccess = getSharedReportResponse200 & {
+  headers: Headers;
+};
+export type getSharedReportResponseError = (
+  | getSharedReportResponse400
+  | getSharedReportResponse401
+  | getSharedReportResponse403
+  | getSharedReportResponse404
+  | getSharedReportResponse409
+  | getSharedReportResponse422
+  | getSharedReportResponse429
+  | getSharedReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSharedReportResponse = getSharedReportResponseSuccess | getSharedReportResponseError;
+
+export const getGetSharedReportUrl = (token: string) => {
+  return `/api/shared-reports/${token}`;
+};
+
+/**
+ * @summary Get Shared Report
+ */
+export const getSharedReport = async (
+  token: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSharedReportResponse> => {
+  return apiFetch<getSharedReportResponse>(getGetSharedReportUrl(token), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSharedReportQueryKey = (token: string) => {
+  return [`/api/shared-reports/${token}`] as const;
+};
+
+export const getGetSharedReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSharedReport>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSharedReportQueryKey(token);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSharedReport>>> = ({ signal }) =>
+    getSharedReport(token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: token !== null && token !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSharedReportQueryResult = NonNullable<Awaited<ReturnType<typeof getSharedReport>>>;
+export type GetSharedReportQueryError = Problem;
+
+export function useGetSharedReport<
+  TData = Awaited<ReturnType<typeof getSharedReport>>,
+  TError = Problem,
+>(
+  token: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedReport>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedReport<
+  TData = Awaited<ReturnType<typeof getSharedReport>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedReport>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedReport<
+  TData = Awaited<ReturnType<typeof getSharedReport>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Shared Report
+ */
+
+export function useGetSharedReport<
+  TData = Awaited<ReturnType<typeof getSharedReport>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSharedReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSharedReportQueryOptions(token, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

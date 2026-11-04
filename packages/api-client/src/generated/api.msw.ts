@@ -26,6 +26,7 @@ import type {
   Comparison,
   CompletedUpload,
   ConfusionMatrix,
+  CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
   DisagreementReasons,
@@ -91,6 +92,7 @@ import type {
   QueuedObject,
   Reassignment,
   RegionMetrics,
+  ReportLink,
   Resolved,
   ResultSet,
   ResultSetDeletion,
@@ -113,6 +115,7 @@ import type {
   Session,
   SessionPolicy,
   SessionSummary,
+  SharedReport,
   SignedPart,
   SigningKey,
   SignOutSet,
@@ -6231,6 +6234,153 @@ export const getGetTaskEvaluationResponseMock = (
       objects: faker.number.int(),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getCreateReportLinkResponseMock = (
+  overrideResponse: Partial<Extract<CreatedReportLink, object>> = {},
+): CreatedReportLink => ({
+  id: faker.string.uuid(),
+  task_id: faker.string.uuid(),
+  created_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  revoked_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  expired: faker.datatype.boolean(),
+  opened_count: faker.number.int(),
+  last_opened_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  token: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListReportLinksResponseMock = (): ReportLink[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    task_id: faker.string.uuid(),
+    created_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    revoked_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    expired: faker.datatype.boolean(),
+    opened_count: faker.number.int(),
+    last_opened_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
+
+export const getGetSharedReportResponseMock = (
+  overrideResponse: Partial<Extract<SharedReport, object>> = {},
+): SharedReport => ({
+  project_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  task_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  evaluation: {
+    sample: faker.datatype.boolean(),
+    decisions: {
+      style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+      counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
+      counted: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+      answers: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+    },
+    classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        true_positives: faker.number.int(),
+        false_positives: faker.number.int(),
+        false_negatives: faker.number.int(),
+        unsure: faker.number.int(),
+        undecided: faker.number.int(),
+        precision: {
+          value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          numerator: faker.number.int(),
+          denominator: faker.number.int(),
+        },
+        sensitivity: {
+          value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          numerator: faker.number.int(),
+          denominator: faker.number.int(),
+        },
+      }),
+    ),
+    overall: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        true_positives: faker.number.int(),
+        false_positives: faker.number.int(),
+        false_negatives: faker.number.int(),
+        unsure: faker.number.int(),
+        undecided: faker.number.int(),
+        precision: {
+          value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          numerator: faker.number.int(),
+          denominator: faker.number.int(),
+        },
+        sensitivity: {
+          value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          numerator: faker.number.int(),
+          denominator: faker.number.int(),
+        },
+      }),
+    ),
+    dice: {
+      [faker.string.alphanumeric(5)]: {
+        value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        numerator: faker.number.int(),
+        denominator: faker.number.int(),
+      },
+    },
+    kappa: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        first: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        second: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        objects: faker.number.int(),
+      }),
+    ),
+    mean_kappa: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    fleiss_kappa: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    cell_agreement_with_ai: {
+      value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      numerator: faker.number.int(),
+      denominator: faker.number.int(),
+    },
+    cell_agreement_between_reviewers: {
+      value: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      numerator: faker.number.int(),
+      denominator: faker.number.int(),
+    },
+    reasons: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => [faker.string.alpha({ length: { min: 10, max: 20 } }), faker.number.int()],
+    ),
+    opinions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        count: faker.number.int(),
+        mean: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        spread: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        counts: {
+          [faker.string.alphanumeric(5)]: faker.number.int(),
+        },
+      }),
+    ),
+  },
   ...overrideResponse,
 });
 
@@ -13451,6 +13601,97 @@ export const getExportTaskEvaluationMockHandler = (
   );
 };
 
+export const getCreateReportLinkMockHandler = (
+  overrideResponse?:
+    | CreatedReportLink
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<CreatedReportLink> | CreatedReportLink),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/evaluation/links",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateReportLinkResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListReportLinksMockHandler = (
+  overrideResponse?:
+    | ReportLink[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReportLink[]> | ReportLink[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation/links",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListReportLinksResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRevokeReportLinkMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/evaluation/links/:linkId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getGetSharedReportMockHandler = (
+  overrideResponse?:
+    | SharedReport
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SharedReport> | SharedReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/shared-reports/:token",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSharedReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListStudyTemplatesMockHandler = (
   overrideResponse?:
     | StudyTemplateSummary[]
@@ -14980,6 +15221,10 @@ export const getParfocalAPIMock = () => [
   getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
+  getCreateReportLinkMockHandler(),
+  getListReportLinksMockHandler(),
+  getRevokeReportLinkMockHandler(),
+  getGetSharedReportMockHandler(),
   getListStudyTemplatesMockHandler(),
   getCreateStudyTemplateMockHandler(),
   getGetStudyTemplateMockHandler(),
