@@ -16,6 +16,18 @@ export function closeDraft(draft: PolygonDraft): DraftStep {
   return { kind: "closed", points: Float32Array.from(draft.flatMap((p) => [p.x, p.y])) };
 }
 
+export function snapTo45(draft: PolygonDraft, slide: Point): Point {
+  const last = draft.at(-1);
+  if (last === undefined) return slide;
+  const dx = slide.x - last.x;
+  const dy = slide.y - last.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return slide;
+  const step = Math.PI / 4;
+  const angle = Math.round(Math.atan2(dy, dx) / step) * step;
+  return { x: last.x + Math.cos(angle) * length, y: last.y + Math.sin(angle) * length };
+}
+
 export function clickDraft(
   draft: PolygonDraft,
   slide: Point,

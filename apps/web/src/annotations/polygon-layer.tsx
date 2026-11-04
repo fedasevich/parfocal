@@ -2,7 +2,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
-import { clickDraft, closeDraft, type Point, type PolygonDraft } from "./polygon-draft.ts";
+import {
+  clickDraft,
+  closeDraft,
+  type Point,
+  type PolygonDraft,
+  snapTo45,
+} from "./polygon-draft.ts";
 import { at } from "./shapes.ts";
 
 type PolygonLayerProps = {
@@ -44,14 +50,27 @@ export function PolygonLayer({
 
   useEffect(() => {
     if (!active) {
+      const pending = latest.current.draft;
+      if (pending.length > 0) {
+        latest.current.draft = [];
+        const step = closeDraft(pending);
+        if (step.kind === "closed") latest.current.onClose(step.points);
+      }
       setDraft([]);
       setHover(null);
       return;
     }
     let pressed: { id: number; x: number; y: number } | null = null;
     const bounds = () => stage.getBoundingClientRect();
-    const toSlide = (event: MouseEvent): Point =>
-      screenToSlide(latest.current.engine.getCamera(), bounds(), event.clientX, event.clientY);
+    const toSlide = (event: MouseEvent): Point => {
+      const point = screenToSlide(
+        latest.current.engine.getCamera(),
+        bounds(),
+        event.clientX,
+        event.clientY,
+      );
+      return event.shiftKey ? snapTo45(latest.current.draft, point) : point;
+    };
     const toScreen = (point: Point): Point =>
       slideToScreen(latest.current.engine.getCamera(), bounds(), point);
     const apply = (next: ReturnType<typeof clickDraft>) => {
