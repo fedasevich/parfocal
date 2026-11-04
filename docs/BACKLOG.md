@@ -1432,7 +1432,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a golden test renders a polygon with a hole and an island inside the hole, and unit tests check the triangle count and that no triangle covers the hole.
   Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).
   Size: M.
-- [ ] VIEW-051 · Triangulate large result sets off the main thread
+- [x] VIEW-051 · Triangulate large result sets off the main thread
   A polygon batch of a large result set is triangulated in a worker or comes with its indices from the server, so a 1M polygon layer does not block the page for 273 ms.
   Done when a test shows the longest main-thread task while a 1M polygon batch is prepared stays under 50 ms and the pixels match the main-thread batch.
   Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md), [result](results/2026-10-25-overlay-polygon-indices.md).

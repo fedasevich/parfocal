@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- VIEW-051 (triangulate off the main thread) added createPolygonBatchInWorker with transferred buffers. A 1M polygon batch drops from one 1.3 s long task to a longest main-thread gap of 8.7 to 24.5 ms with identical pixels, though one loaded run hit 74 ms. Nothing calls it yet, so the nucleus result loading should switch to it.
 - WL-013 (hide names) rewrites API responses while Initials only is on: display names and known full names in free text become initials and emails keep only initials and domain, through setResponseTransform in the api-client fetcher. hide-names.spec.ts checks Team, comments, Home, My work and admin People. The toggle still resets on reload and patient names keep their own setting.
 - FOUND-029 (first-page bundle headroom) moved the command palette body and the session lock screen behind lazy imports, so the first page fell from 349,999 to 337,624 gzip bytes with 12,376 spare under the unchanged budget.
 - INGEST-021 (upload wizard) finished: Check lists where the browser and server sorts differ, Start upload calls /uploads/sorting/apply, puts slides in their case and links results with PUT /uploads/{id}/slide, with fake handlers. The first-page bundle is at 349,999 of 350,000 bytes, so FOUND-029 frees headroom.
