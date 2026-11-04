@@ -6,6 +6,7 @@ import { useAppliedDensity } from "../shell/density.ts";
 import { GlobalShell } from "../shell/global-shell.tsx";
 import { overlaySearch } from "../shell/overlays.ts";
 import { inGlobalShell } from "../shell/shell-routes.ts";
+import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
@@ -29,6 +30,7 @@ function Root() {
           <Outlet />
         )}
         <CommandPalette />
+        <ShortcutsKey />
       </KeyBindingsProvider>
     </SessionLock>
   );
