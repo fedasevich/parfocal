@@ -37,7 +37,7 @@ Threads are built on a task slide only, and at sign-off new threads stop while r
 - a. Keep both as built. (recommended, because every review conversation belongs to a task)
 - b. Allow threads on any slide with the task optional, or freeze all thread activity at sign-off. Say which.
 
-Your choice:
+Your choice: B let's be able to comment any slide even  if there is no task
 
 ## 32. The support address on refused uploads, from INGEST-018 (ingest failure UX)
 
@@ -47,7 +47,7 @@ A file refused for good shows a "Contact support" link. It points at `support@pa
 - b. Use your own address directly. Write it here.
 - c. Hide the link until the pilot.
 
-Your choice:
+Your choice: A
 
 ## 33. How the browser places BIF camera frames, from VIEW-057 (BIF frame placement)
 
@@ -56,7 +56,7 @@ Ventana BIF slides are stitched from camera frames. The browser now places them 
 - a. Keep OpenSlide's even pitch. (recommended, because server tiles, AI results and annotations share one set of coordinates)
 - b. Use the per-boundary positions the file stores. Seams drop to about 1.5, but the reference is no longer OpenSlide and stored BIF annotations would need remapping.
 
-Your choice:
+Your choice: A
 
 ## 34. Legal facts for the GDPR documents, from SEC-021 (GDPR documentation)
 
@@ -68,7 +68,7 @@ SEC-021 drafted records of processing, a DPIA for AI results review, a DPA templ
 - d. Whether counsel must confirm that analytics with no device storage need no consent (ADR 0171) in the first tenants' countries.
 - e. Whether any clinical use needs a medical device assessment.
 
-Your choice:
+Your choice: let's postpone it for now, if possible let's have generic good enough for now things there
 
 ## 35. Lingui for web app strings, from I18N-000 (research check for i18n libraries)
 
@@ -77,7 +77,7 @@ ADR 0173 picks Lingui 6 with ICU messages, PO catalogues and the en-XA pseudo lo
 - a. Accept Lingui (ADR 0173 becomes Accepted). (recommended)
 - b. Use FormatJS (react-intl) instead.
 
-Your choice:
+Your choice: A
 
 ## 36. Remember a slide's camera across visits, from CASE-000 (case view state model)
 
@@ -86,7 +86,7 @@ ADR 0176 keeps each slide's last camera only while its case is open (CASE-003 bu
 - a. No, forget it when the case closes. (recommended, matches the mock)
 - b. Yes, remember it per device across visits.
 
-Your choice:
+Your choice: B
 
 ## 37. Primary button hover, from DS-006 (buttons and icon buttons)
 
@@ -95,7 +95,7 @@ The mock lightens the filled primary button on hover with white, which drops its
 - a. Keep the darker hover. (recommended, meets contrast)
 - b. Keep the mock's lighter hover and accept the contrast exclusion.
 
-Your choice:
+Your choice: A
 
 ## 38. Smart minimap, from NAV-000 (minimap state machine and placement)
 
@@ -106,7 +106,7 @@ ADR 0185 (proposed) makes the minimap one state machine with size modes hidden, 
 - c. Weights for an open thread, the floating cells panel, proposals and pins in corner scoring are not in the kit. (recommended: NAV-007 picks them and records them in ADR 0185)
 - d. Accept ADR 0185.
 
-Your choice:
+Your choice: all yes
 
 ## 39. Keys for view history back and forward, from VIEW-047 (view history)
 
@@ -115,7 +115,7 @@ The viewer now flies back and forward through the views you left. The default ke
 - a. Keep Alt+Left and Alt+Right. (recommended, they match browser habit and people can rebind them)
 - b. Use [ and ] instead and leave the browser keys alone.
 
-Your choice:
+Your choice: A
 
 ## 40. The clinical note in case details, from CASE-011 (case header details)
 
@@ -124,7 +124,7 @@ The slide picker's case details now show project, case, specimen, blocks, the ta
 - a. Add a backlog task to store an encrypted clinical note per case, with a migration. (recommended if clinical projects need the note on screen)
 - b. Drop the clinical note row from the picker.
 
-Your choice:
+Your choice: A
 
 ## 41. Checking the developer drawer against POC doc 34, from LAB-000 (lab research check)
 
@@ -133,7 +133,7 @@ ADR 0189 (proposed) confirms the developer drawer's ten sections in four groups,
 - a. Give one session read access to the POC repository to check doc 34, then accept ADR 0189.
 - b. Accept ADR 0189 without that check.
 
-Your choice:
+Your choice: A you can check it for that it was good there
 
 ## 42. Incident response facts, from SEC-018 (incident response and breach notification runbook)
 
@@ -144,7 +144,7 @@ SEC-018 wrote the runbook (`docs/compliance/incident-response.md`), an empty bre
 - c. Choose a private place for full breach records, because this repository is public.
 - d. Run the tabletop exercise and record it.
 
-Your choice:
+Your choice: let's do some industry standard good thing
 
 ## 43. Record number in initials mode, from CASE-010 (patient banner)
 
@@ -154,7 +154,7 @@ Clinical case screens now show the patient banner (name, sex, age, record number
 - b. Hide it in initials mode. (recommended, initials mode is meant to hide identity)
 - c. Show only its last 3 digits.
 
-Your choice:
+Your choice: A
 
 ## 44. Pathologist check of zone names and type hints, from REVIEW-000 (review research check)
 
@@ -164,7 +164,7 @@ ADR 0013 asked REVIEW-000 for a pathologist to confirm the zone names ("tumor or
 - b. Add a separate task for a pathologist wording review.
 - c. Drop it.
 
-Your choice:
+Your choice: c there won't be ever pathlogist, do what you know is good for that please act like my pathlogist
 
 ## 45. Annotate key map and geometry libraries, from ANN-000 (annotate research check)
 
@@ -173,7 +173,7 @@ ADR 0197 (proposed) keeps the kit key map, adds hold Space to pan and Alt as a s
 - a. Keep M only for markers, and accept ADR 0197. (recommended)
 - b. Also accept QuPath's "." for markers.
 
-Your choice:
+Your choice: A, it probably can be configurable
 
 ## 46. The Add a note key, from DS-030 (every key hint from the key registry)
 
@@ -183,7 +183,7 @@ N is No in the yes or no decision style, so "Add a note" moved from N to ⇧N. P
 - b. Use C, the same key as Comment.
 - c. N in every style except yes or no.
 
-Your choice:
+Your choice: A, all of it has to be configurable probably
 
 ## 47. The v1 model line-up, from AIP-000 (AI pipeline research check)
 
@@ -198,7 +198,7 @@ AIP-002 also requires a licence block, which conflicts with STACK-031 (licence p
 - d. Drop that condition from AIP-002.
 - e. Keep the block.
 
-Your choice:
+Your choice: a,c
 
 ## 48. The zoom to selection key, from NAV-012 (zoom to selection)
 
@@ -208,7 +208,7 @@ NAV-012 asks for Shift+2, but the approved mock and kit give Shift+1 to Shift+4 
 - b. Use Shift+2 and move the display presets, which changes the mock.
 - c. Another key, such as "." or ⇧0.
 
-Your choice:
+Your choice: A, make it configurable
 
 ## 49. A manual Lock the screen in the account menu, from SHELL-012 (account menu)
 
@@ -217,7 +217,7 @@ The account menu shows "Lock the screen" disabled. Building it needs LockCard wo
 - a. Yes, build a manual lock in the menu. (recommended, quick to leave a workstation safely)
 - b. Drop it from the menu.
 
-Your choice:
+Your choice: A
 
 ## 50. How many class keys, from ANN-011 (classes and keys 1 to 4)
 
@@ -226,7 +226,7 @@ The task title says keys 1 to 4, but its note says keys follow the project taxon
 - a. Keep 1 to 9. (recommended, matches the taxonomy limit)
 - b. Narrow to 1 to 4 as the title says.
 
-Your choice:
+Your choice: A
 
 ## 60. Model warnings when there are none, from REVIEW-023 (model warnings in the inspector)
 
@@ -235,7 +235,7 @@ The inspector's Model warnings block lists what the rules of ADR 0194 find.
 - a. Hide the block when there are no warnings (built). (recommended, keeps the inspector quiet)
 - b. Show a quiet "No model warnings for this slide" line.
 
-Your choice:
+Your choice: A
 
 ## 61. Flow pages and density, from DS-023 (flow page with the shared stepper)
 
@@ -244,7 +244,7 @@ Flow pages keep the mock's fixed 20 px gap in the main column (`.fp-main`), whil
 - a. Keep the mock's fixed 20 px.
 - b. Add a flow page density token, 20 px comfortable and 14 px compact. (recommended, matches the rest of compact mode)
 
-Your choice:
+Your choice: b
 
 ## The review column, what each task waits for
 
