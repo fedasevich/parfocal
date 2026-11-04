@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- DS-028 (decision buttons in the four styles) moved answersFor into packages/ui/src/lib/decision-answers.ts, added stories for all four styles in both sizes, and a test that each style's keys come from the key registry. Axe passes on 24 runs. The large size stays 58 px tall (task says 40 px) and 5-point certainty keeps Can't tell as its middle answer instead of a separate Not sure, both left for the owner's mock review.
 - SEC-029 (security contact for each workspace) added /api/tenant/security-contact (migration 0084), a Security contact area in Admin, Workspace settings, audit without the address, and a 409 security-contact-missing before a project goes clinical. The incident runbook now notifies that contact. Decisions 64 and 65 ask who reads it and whether de-identified workspaces need one.
 - VIEW-050 (polygons with holes) gave overlay polygon batches holes (holes on PolygonInput, holeStarts on PolygonBatch) that earcut, the indices and the outline loops follow. Unit tests check triangle counts and an empty hole, and the overlay-polygon-hole-island golden renders a hole with an island.
 - DS-035 (warn tag contrast) found the light warn tag already at 4.73:1 since DS-005 moved --warn to #804d00. A tokens test now pins 4.5:1 for the warn tag tint on page, chrome, chrome-2 and chrome-3 in both themes, and axe passes on the 28 tag and table story runs.

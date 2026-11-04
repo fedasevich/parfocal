@@ -1689,7 +1689,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit: submit and Slide done, mock: guided/skipped, mock: signoff/blocked, mock: creport/missing.
   Size: S.
 
-- [ ] DS-028 · Decision buttons in the four decision styles
+- [x] DS-028 · Decision buttons in the four decision styles
   The answer buttons of a decision with their keycaps in each of the four styles: 5-point certainty (1 to 5), Agree with the AI (K, X, U), Yes or no (Y, N, U) and Pick the class blind (one key per project class and U). Every style has Not sure. They come in the large guided size, 40 px with 24 px keycaps, and the compact size of the Objects tab, the cells panel, the disagreement queue and the adjudicator view, with the chosen answer marked. GUIDE-015 (decision styles with the raw answer and Counts as) owns what each answer means.
   Done when stories cover each style in both sizes and themes, a test checks that the keys come from the key registry and match the style, and axe passes.
   Depends on PROTO-011. Refs kit: decision styles, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, mock: gallery/blind, mock: disagree/adjudicate.
