@@ -38,6 +38,7 @@ export type SavedAnnotations = {
   readonly saveMarker: (point: Point, classKey: string | null) => void;
   readonly removeMarker: (id: ShapeId) => void;
   readonly commit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
+  readonly apply: (next: AnnotationDocument, label: string) => void;
   readonly undo: () => string | null;
   readonly redo: () => string | null;
   readonly fold: (id: EntryId, change: (doc: AnnotationDocument) => AnnotationDocument) => void;
@@ -213,6 +214,17 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     [setDocument, commit, deleteFor],
   );
 
+  const apply = useCallback(
+    (next: AnnotationDocument, label: string) => {
+      const before = current.current;
+      if (next === before) return;
+      setDocument(next);
+      commit(before, next, label);
+      sync(before, next);
+    },
+    [setDocument, commit, sync],
+  );
+
   const travel = useCallback(
     (step: typeof undo | typeof redo): string | null => {
       const applied = step(log.current);
@@ -248,6 +260,7 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     saveMarker,
     removeMarker,
     commit,
+    apply,
     undo: undoLast,
     redo: redoLast,
     fold: foldInto,

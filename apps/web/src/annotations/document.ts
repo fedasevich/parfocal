@@ -29,6 +29,7 @@ export interface AnnotationDocument {
   readonly groups: ReadonlyMap<GroupId, Group>;
   readonly runs: ReadonlyMap<RunId, ModelRun>;
   readonly promoted: ReadonlyMap<string, ShapeId>;
+  readonly dismissed: ReadonlySet<string>;
   readonly nextShapeId: ShapeId;
   readonly nextGroupId: GroupId;
 }
@@ -85,6 +86,7 @@ export function createDocument(): AnnotationDocument {
     groups: new Map(),
     runs: new Map(),
     promoted: new Map(),
+    dismissed: new Set(),
     nextShapeId: 1,
     nextGroupId: 1,
   };
@@ -329,7 +331,8 @@ export function removeRun(doc: AnnotationDocument, id: RunId): AnnotationDocumen
   for (const key of doc.promoted.keys()) {
     if (key.startsWith(`${id}:`)) promoted.delete(key);
   }
-  return { ...doc, runs, promoted };
+  const dismissed = new Set([...doc.dismissed].filter((key) => !key.startsWith(`${id}:`)));
+  return { ...doc, runs, promoted, dismissed };
 }
 
 export function promotedShape(
@@ -346,7 +349,8 @@ export function openPieces(doc: AnnotationDocument, runId: RunId): number[] {
   if (!run) throw new UnknownEntryError("run", runId);
   const open: number[] = [];
   for (let piece = 0; piece < run.count; piece++) {
-    if (!doc.promoted.has(pieceKey(runId, piece))) open.push(piece);
+    const key = pieceKey(runId, piece);
+    if (!doc.promoted.has(key) && !doc.dismissed.has(key)) open.push(piece);
   }
   return open;
 }
