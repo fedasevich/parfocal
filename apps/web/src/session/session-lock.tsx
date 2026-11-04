@@ -1,10 +1,8 @@
-import { getSession, recordActivity, useGetMe, useGetSessionPolicy } from "@parfocal/api-client";
-import { LockCard } from "@parfocal/ui/components/auth";
+import { getSession, recordActivity, useGetSessionPolicy } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
-import { personOf } from "../shell/global-shell.tsx";
 import {
   activityIntervalMs,
   createActivityThrottle,
@@ -12,7 +10,6 @@ import {
   idleCheckDue,
   isSessionLocked,
   locksAt,
-  reauthUrl,
 } from "./lock-rules.ts";
 
 const inputEvents = ["keydown", "pointerdown", "wheel", "touchstart"] as const;
@@ -65,9 +62,7 @@ function useActivity(active: boolean, idleMinutes: number, onLocked: () => void)
   }, [active, idleMinutes]);
 }
 
-function currentPath(): string {
-  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
-}
+const LockScreen = lazy(() => import("./lock-screen.tsx"));
 
 export function SessionLock({ children }: { children: ReactNode }) {
   const pathname = useLocation({ select: (location) => location.pathname });
@@ -85,23 +80,11 @@ export function SessionLock({ children }: { children: ReactNode }) {
       <div inert={locked} aria-hidden={locked || undefined} className="contents">
         {children}
       </div>
-      {locked ? <LockScreen minutes={minutes} /> : null}
+      {locked ? (
+        <Suspense fallback={null}>
+          <LockScreen minutes={minutes} />
+        </Suspense>
+      ) : null}
     </>
-  );
-}
-
-function LockScreen({ minutes }: { minutes: number }) {
-  const me = okData(useGetMe().data);
-  const unlock = () => window.location.assign(reauthUrl(currentPath()));
-  return (
-    <div className="fixed inset-0 z-[1000]">
-      <LockCard
-        person={personOf(me)}
-        minutes={minutes}
-        onUnlock={unlock}
-        onPasskey={unlock}
-        onLogOut={() => window.location.assign("/api/auth/logout")}
-      />
-    </div>
   );
 }
