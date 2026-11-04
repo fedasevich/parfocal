@@ -6,7 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { msw } from "msw/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig, type Plugin } from "vite";
+import { bundleSummaryJson } from "./vite/bundle-summary.ts";
 import { noAppPageForMissingData } from "./vite/data-paths.ts";
 import { fixtureTilesInDevOnly } from "./vite/dev-tiles.ts";
 import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
@@ -43,7 +45,22 @@ function mockAssetsInDevOnly(): Plugin {
   };
 }
 
-export default defineConfig({
+const root = fileURLToPath(new URL(".", import.meta.url));
+const reportDir = join(root, "bundle-report");
+
+function bundleReport(): Plugin[] {
+  return [
+    visualizer({
+      filename: join(reportDir, "treemap.html"),
+      template: "treemap",
+      gzipSize: true,
+      title: "Parfocal web bundle",
+    }) as unknown as Plugin,
+    bundleSummaryJson(root, join(reportDir, "summary.json")),
+  ];
+}
+
+export default defineConfig(({ mode }) => ({
   envPrefix: publicEnvPrefix,
   plugins: [
     publicEnvOnly(),
@@ -63,6 +80,7 @@ export default defineConfig({
     fontPreloadInBuildOnly(),
     fixtureTilesInDevOnly(),
     noAppPageForMissingData(),
+    ...(mode === "analyze" ? bundleReport() : []),
   ],
   resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },
   server: {
@@ -72,5 +90,8 @@ export default defineConfig({
   preview: { headers: crossOriginIsolation },
   html: { cspNonce: "PARFOCAL_CSP_NONCE" },
   worker: { format: "es" },
-  build: { target: "es2024" },
-});
+  build: {
+    target: "es2024",
+    ...(mode === "analyze" ? { outDir: join(reportDir, "dist"), emptyOutDir: true } : {}),
+  },
+}));
