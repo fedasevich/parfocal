@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import {
   minimumDragScreenPixels,
   type Point,
@@ -16,7 +17,6 @@ type ArrowLayerProps = {
   active: boolean;
   document: AnnotationDocument;
   onApply: (next: AnnotationDocument, label: string) => void;
-  onLeave: () => void;
 };
 
 type ArrowDrawing = {
@@ -45,18 +45,12 @@ function ArrowMark({ drawing }: { drawing: ArrowDrawing }) {
   );
 }
 
-export function ArrowLayer({
-  engine,
-  stage,
-  active,
-  document: doc,
-  onApply,
-  onLeave,
-}: ArrowLayerProps) {
+export function ArrowLayer({ engine, stage, active, document: doc, onApply }: ArrowLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [draft, setDraft] = useState<Segment | null>(null);
-  const latest = useRef({ doc, onApply, onLeave, engine });
-  latest.current = { doc, onApply, onLeave, engine };
+  const escRegistry = useEscRegistry();
+  const latest = useRef({ doc, onApply, engine });
+  latest.current = { doc, onApply, engine };
 
   useEffect(() => {
     if (!active) {
@@ -114,24 +108,19 @@ export function ArrowLayer({
       stage.releasePointerCapture(event.pointerId);
       cancel();
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (anchor !== null) cancel();
-      else latest.current.onLeave();
-    };
 
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
+      leaveRung?.();
       cancel();
     };
-  }, [active, stage]);
+  }, [active, stage, escRegistry]);
 
   const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const drawings: ArrowDrawing[] = arrowsOf(doc).map((shape) => {

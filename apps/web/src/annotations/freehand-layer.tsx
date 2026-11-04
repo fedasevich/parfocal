@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { finishStroke, strokeSamples } from "./freehand.ts";
@@ -9,14 +10,14 @@ type FreehandLayerProps = {
   stage: HTMLElement;
   active: boolean;
   onClose: (points: Float32Array) => void;
-  onLeave: () => void;
 };
 
-export function FreehandLayer({ engine, stage, active, onClose, onLeave }: FreehandLayerProps) {
+export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [stroke, setStroke] = useState<readonly Point[]>([]);
-  const latest = useRef({ onClose, onLeave, engine });
-  latest.current = { onClose, onLeave, engine };
+  const escRegistry = useEscRegistry();
+  const latest = useRef({ onClose, engine });
+  latest.current = { onClose, engine };
 
   useEffect(() => {
     if (!active) {
@@ -56,26 +57,21 @@ export function FreehandLayer({ engine, stage, active, onClose, onLeave }: Freeh
       const closed = finishStroke(points, scale);
       if (closed !== null) latest.current.onClose(closed);
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (drawing !== null) {
-        drawing = null;
-        setStroke([]);
-      } else {
-        latest.current.onLeave();
-      }
+    const cancel = () => {
+      drawing = null;
+      setStroke([]);
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: cancel });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
+      leaveRung?.();
     };
-  }, [active, stage]);
+  }, [active, stage, escRegistry]);
 
   const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const path = stroke

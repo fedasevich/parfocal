@@ -1,5 +1,6 @@
 import type { PointerInput } from "@parfocal/viewer-engine";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -14,7 +15,6 @@ type SelectLayerProps = {
   document: AnnotationDocument;
   onDocumentChange: (next: AnnotationDocument) => void;
   onCommit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
-  onLeave: () => void;
 };
 
 type Screen = { x: number; y: number };
@@ -93,13 +93,11 @@ export function SelectLayer({
   document: doc,
   onDocumentChange,
   onCommit,
-  onLeave,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const tool = useSelectTool(engine, stage, doc, onDocumentChange, onCommit);
   const state = useSyncExternalStore(tool.subscribe, tool.state);
-  const leave = useRef(onLeave);
-  leave.current = onLeave;
+  const escRegistry = useEscRegistry();
 
   useEffect(() => {
     tool.prune(doc);
@@ -133,21 +131,22 @@ export function SelectLayer({
       event.stopImmediatePropagation();
       event.preventDefault();
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (!tool.cancel()) leave.current();
-    };
     const types = Object.keys(pointerKinds);
     for (const type of types) stage.addEventListener(type, pointer as EventListener, true);
     stage.addEventListener("dblclick", doubleClick, true);
-    window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("vertex", {
+      open: () => tool.state().gesture !== "idle",
+      peel: () => {
+        tool.cancel();
+      },
+    });
     return () => {
       for (const type of types) stage.removeEventListener(type, pointer as EventListener, true);
       stage.removeEventListener("dblclick", doubleClick, true);
-      window.removeEventListener("keydown", key);
+      leaveRung?.();
       tool.cancel();
     };
-  }, [active, stage, tool]);
+  }, [active, stage, tool, escRegistry]);
 
   if (!active) return null;
 

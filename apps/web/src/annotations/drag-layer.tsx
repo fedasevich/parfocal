@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { type DragKind, dragCorner, dragOutline, finishDrag } from "./drag-shape.ts";
@@ -10,16 +11,16 @@ type DragLayerProps = {
   kind: DragKind;
   active: boolean;
   onClose: (points: Float32Array) => void;
-  onLeave: () => void;
 };
 
 type Drag = { id: number; start: Point; end: Point; equal: boolean };
 
-export function DragLayer({ engine, stage, kind, active, onClose, onLeave }: DragLayerProps) {
+export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useRef({ onClose, onLeave, engine, kind });
-  latest.current = { onClose, onLeave, engine, kind };
+  const escRegistry = useEscRegistry();
+  const latest = useRef({ onClose, engine, kind });
+  latest.current = { onClose, engine, kind };
 
   useEffect(() => {
     if (!active) {
@@ -66,26 +67,21 @@ export function DragLayer({ engine, stage, kind, active, onClose, onLeave }: Dra
       );
       if (outline !== null) latest.current.onClose(outline);
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (current !== null) {
-        current = null;
-        setDrag(null);
-      } else {
-        latest.current.onLeave();
-      }
+    const cancel = () => {
+      current = null;
+      setDrag(null);
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("drag", { open: () => current !== null, peel: cancel });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
+      leaveRung?.();
     };
-  }, [active, stage]);
+  }, [active, stage, escRegistry]);
 
   const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   let path = "";

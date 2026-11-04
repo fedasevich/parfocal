@@ -1,6 +1,7 @@
 import { RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AnnotationDocument, addShape } from "../annotations/document.ts";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import {
@@ -20,7 +21,6 @@ type RulerLayerProps = {
   active: boolean;
   document: AnnotationDocument;
   onDocumentChange: (next: AnnotationDocument) => void;
-  onLeave: () => void;
 };
 
 type Size = { width: number; height: number };
@@ -43,13 +43,13 @@ export function RulerLayer({
   active,
   document: doc,
   onDocumentChange,
-  onLeave,
 }: RulerLayerProps) {
+  const escRegistry = useEscRegistry();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const size = useStageSize(stage);
   const [draft, setDraft] = useState<Segment | null>(null);
-  const latest = useRef({ doc, onDocumentChange, onLeave, engine });
-  latest.current = { doc, onDocumentChange, onLeave, engine };
+  const latest = useRef({ doc, onDocumentChange, engine });
+  latest.current = { doc, onDocumentChange, engine };
   const spacing = engine.getSlide()?.micronsPerPixel ?? null;
 
   useEffect(() => {
@@ -112,26 +112,21 @@ export function RulerLayer({
       const axis = snapToAreaAxis(latest.current.doc, slidePoint(event));
       if (axis !== null) commit(axis);
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (anchor !== null) cancel();
-      else latest.current.onLeave();
-    };
 
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("dblclick", doubleClick, true);
-    window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("dblclick", doubleClick, true);
-      window.removeEventListener("keydown", key);
+      leaveRung?.();
       cancel();
     };
-  }, [active, stage]);
+  }, [active, stage, escRegistry]);
 
   const rect = { left: 0, top: 0, width: size.width, height: size.height };
   const drawn: { key: string; segment: Segment; dashed: boolean }[] = [];

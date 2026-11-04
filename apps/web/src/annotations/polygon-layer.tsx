@@ -1,4 +1,5 @@
 import { type RefObject, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -17,7 +18,6 @@ type PolygonLayerProps = {
   active: boolean;
   document: AnnotationDocument;
   onClose: (points: Float32Array) => void;
-  onLeave: () => void;
   draftControl?: RefObject<DraftControl | null>;
 };
 
@@ -43,14 +43,14 @@ export function PolygonLayer({
   active,
   document: doc,
   onClose,
-  onLeave,
   draftControl,
 }: PolygonLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [draft, setDraft] = useState<PolygonDraft>([]);
   const [hover, setHover] = useState<Point | null>(null);
-  const latest = useRef({ draft, onClose, onLeave, engine });
-  latest.current = { draft, onClose, onLeave, engine };
+  const escRegistry = useEscRegistry();
+  const latest = useRef({ draft, onClose, engine });
+  latest.current = { draft, onClose, engine };
 
   useEffect(() => {
     if (!draftControl) return;
@@ -133,13 +133,6 @@ export function PolygonLayer({
         apply(closeDraft(latest.current.draft));
         return;
       }
-      if (event.key !== "Escape") return;
-      if (latest.current.draft.length > 0) {
-        latest.current.draft = [];
-        setDraft([]);
-      } else {
-        latest.current.onLeave();
-      }
     };
 
     stage.addEventListener("pointerdown", down, true);
@@ -147,14 +140,22 @@ export function PolygonLayer({
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("dblclick", doubleClick, true);
     window.addEventListener("keydown", key);
+    const leaveRung = escRegistry?.add("draft", {
+      open: () => latest.current.draft.length > 0,
+      peel: () => {
+        latest.current.draft = [];
+        setDraft([]);
+      },
+    });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       window.removeEventListener("keydown", key);
+      leaveRung?.();
     };
-  }, [active, stage]);
+  }, [active, stage, escRegistry]);
 
   const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const project = (point: Point) => slideToScreen(camera, rect, point);

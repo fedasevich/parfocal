@@ -27,6 +27,7 @@ import { SelectLayer } from "../annotations/select-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
+import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { MeasurementList } from "../measure/measurement-list.tsx";
@@ -60,19 +61,6 @@ type Phase =
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
 type ViewerTool = string;
-
-const liveTools = new Set([
-  "ruler",
-  "select",
-  "polygon",
-  "freehand",
-  "rectangle",
-  "ellipse",
-  "marker",
-  "arrow",
-  "text",
-  "comment",
-]);
 
 const toolOfAction: Readonly<Record<string, ViewerTool>> = Object.fromEntries(
   annotateRail
@@ -268,16 +256,16 @@ function OpenedSlide({
     [setup, restingTool],
   );
   useHotkeys(toolBindings, onToolKey);
-  const leaveTool = useCallback(() => setTool(restingTool), [restingTool]);
-  const waiting = !liveTools.has(tool) && tool !== "hand";
-  useEffect(() => {
-    if (!waiting) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setTool(restingTool);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [waiting, restingTool]);
+  const escRegistry = useNewEscRegistry();
+  useEscOwner(escRegistry);
+  useEffect(
+    () =>
+      escRegistry.add("tool", {
+        open: () => tool !== restingTool,
+        peel: () => setTool(restingTool),
+      }),
+    [escRegistry, tool, restingTool],
+  );
   const draftControl = useRef<DraftControl | null>(null);
   const textControl = useRef<TextControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
@@ -412,250 +400,243 @@ function OpenedSlide({
   }, [session, brightness]);
 
   return (
-    <div
-      data-testid="slide-stage"
-      data-state={phase.state}
-      data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
-      data-tool={tool}
-      data-workspace={workspace}
-      data-drag={setup.dragBehaviour}
-      data-annotations={saved.loaded ? "loaded" : "loading"}
-      data-save-state={saved.saveState}
-      data-coverage={coverage?.loaded ? "loaded" : "loading"}
-      data-coverage-percent={coverage?.percent}
-      data-coverage-seen={coverage?.share.seen}
-      data-coverage-pending={coverage?.pending}
-      data-coverage-basis={coverage?.share.basis}
-      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
-    >
-      <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
-      {session && hostNode ? (
-        <>
-          <RulerLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "ruler"}
-            document={annotations}
-            onDocumentChange={setAnnotations}
-            onLeave={leaveTool}
-          />
-          <PolygonLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "polygon"}
-            document={annotations}
-            onClose={saved.savePolygon}
-            onLeave={leaveTool}
-            draftControl={draftControl}
-          />
-          <FreehandLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "freehand"}
-            onClose={saved.savePolygon}
-            onLeave={leaveTool}
-          />
-          <DragLayer
-            engine={session.engine}
-            stage={hostNode}
-            kind="rectangle"
-            active={tool === "rectangle"}
-            onClose={saved.savePolygon}
-            onLeave={leaveTool}
-          />
-          <DragLayer
-            engine={session.engine}
-            stage={hostNode}
-            kind="ellipse"
-            active={tool === "ellipse"}
-            onClose={saved.savePolygon}
-            onLeave={leaveTool}
-          />
-          <CountLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "marker"}
-            document={annotations}
-            colourOf={colourOf}
-            onDrop={dropAt}
-            onRemove={saved.removeMarker}
-            onLeave={leaveTool}
-          />
-          <ArrowLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "arrow"}
-            document={annotations}
-            onApply={saved.apply}
-            onLeave={leaveTool}
-          />
-          <TextLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "text"}
-            document={annotations}
-            onApply={saved.apply}
-            onLeave={leaveTool}
-            control={textControl}
-          />
-          <SelectLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "select"}
-            document={annotations}
-            onDocumentChange={setAnnotations}
-            onCommit={saved.commit}
-            onLeave={leaveTool}
-          />
-          <PinLayer
-            engine={session.engine}
-            stage={hostNode}
-            active={tool === "comment"}
-            document={annotations}
-            taskId={taskId}
-            slideId={slideId}
-            micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-            onDocumentChange={setAnnotations}
-            onCommit={saved.commit}
-            onLeave={leaveTool}
-          />
-          <ProposalLayer
-            engine={session.engine}
-            stage={hostNode}
-            proposals={proposals.pending}
-            onAccept={proposals.accept}
-            onDiscard={proposals.discard}
-          />
-          <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
-            {setup.rail.map((group) => (
-              <div
-                key={group.map((item) => item.tool).join("-")}
-                className="flex flex-col border-b border-line last:border-b-0"
-              >
-                {group.map((item) => {
-                  const stageTool = stageToolOf(item.tool);
-                  return (
-                    <ToolRailButton
-                      key={item.tool}
-                      icon={item.icon}
-                      label={item.label}
-                      ai={item.ai ?? false}
-                      {...(item.action === undefined ? {} : { action: item.action })}
-                      data-tool={item.tool}
-                      pressed={tool === stageTool}
-                      onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-          <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
-            {showsCountPanel(setup, {
-              counting: tool === "marker",
-              markers: markersOf(annotations).length,
-            }) ? (
-              <CountPanel
-                document={annotations}
-                classes={classes}
-                activeClass={activeClass}
-                onPick={setActiveClass}
-              />
-            ) : null}
-            <MeasurementList
+    <EscProvider value={escRegistry}>
+      <div
+        data-testid="slide-stage"
+        data-state={phase.state}
+        data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
+        data-tool={tool}
+        data-workspace={workspace}
+        data-drag={setup.dragBehaviour}
+        data-annotations={saved.loaded ? "loaded" : "loading"}
+        data-save-state={saved.saveState}
+        data-coverage={coverage?.loaded ? "loaded" : "loading"}
+        data-coverage-percent={coverage?.percent}
+        data-coverage-seen={coverage?.share.seen}
+        data-coverage-pending={coverage?.pending}
+        data-coverage-basis={coverage?.share.basis}
+        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
+      >
+        <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+        {session && hostNode ? (
+          <>
+            <RulerLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "ruler"}
               document={annotations}
+              onDocumentChange={setAnnotations}
+            />
+            <PolygonLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "polygon"}
+              document={annotations}
+              onClose={saved.savePolygon}
+              draftControl={draftControl}
+            />
+            <FreehandLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "freehand"}
+              onClose={saved.savePolygon}
+            />
+            <DragLayer
+              engine={session.engine}
+              stage={hostNode}
+              kind="rectangle"
+              active={tool === "rectangle"}
+              onClose={saved.savePolygon}
+            />
+            <DragLayer
+              engine={session.engine}
+              stage={hostNode}
+              kind="ellipse"
+              active={tool === "ellipse"}
+              onClose={saved.savePolygon}
+            />
+            <CountLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "marker"}
+              document={annotations}
+              colourOf={colourOf}
+              onDrop={dropAt}
+              onRemove={saved.removeMarker}
+            />
+            <ArrowLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "arrow"}
+              document={annotations}
+              onApply={saved.apply}
+            />
+            <TextLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "text"}
+              document={annotations}
+              onApply={saved.apply}
+              control={textControl}
+            />
+            <SelectLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "select"}
+              document={annotations}
+              onDocumentChange={setAnnotations}
+              onCommit={saved.commit}
+            />
+            <PinLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "comment"}
+              document={annotations}
+              taskId={taskId}
+              slideId={slideId}
               micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-              onRemove={(id) =>
-                saved.apply(deleteShapes(annotations, [id]).document, "Delete shape")
+              onDocumentChange={setAnnotations}
+              onCommit={saved.commit}
+            />
+            <ProposalLayer
+              engine={session.engine}
+              stage={hostNode}
+              proposals={proposals.pending}
+              onAccept={proposals.accept}
+              onDiscard={proposals.discard}
+            />
+            <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
+              {setup.rail.map((group) => (
+                <div
+                  key={group.map((item) => item.tool).join("-")}
+                  className="flex flex-col border-b border-line last:border-b-0"
+                >
+                  {group.map((item) => {
+                    const stageTool = stageToolOf(item.tool);
+                    return (
+                      <ToolRailButton
+                        key={item.tool}
+                        icon={item.icon}
+                        label={item.label}
+                        ai={item.ai ?? false}
+                        {...(item.action === undefined ? {} : { action: item.action })}
+                        data-tool={item.tool}
+                        pressed={tool === stageTool}
+                        onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
+              {showsCountPanel(setup, {
+                counting: tool === "marker",
+                markers: markersOf(annotations).length,
+              }) ? (
+                <CountPanel
+                  document={annotations}
+                  classes={classes}
+                  activeClass={activeClass}
+                  onPick={setActiveClass}
+                />
+              ) : null}
+              <MeasurementList
+                document={annotations}
+                micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
+                onRemove={(id) =>
+                  saved.apply(deleteShapes(annotations, [id]).document, "Delete shape")
+                }
+              />
+              {annotations.shapes.size > 0 ? (
+                <Button
+                  size="sm"
+                  data-testid="clear-annotations"
+                  onClick={() => {
+                    const count = annotations.shapes.size;
+                    if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
+                      return;
+                    saved.apply(clearAll(annotations).document, "Clear all");
+                  }}
+                >
+                  Clear all
+                </Button>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+        {session && coverage && viewed?.peek ? (
+          <ViewedPeek
+            engine={session.engine}
+            raster={coverage.raster}
+            tissue={coverage.tissue}
+            percent={coverage.percent}
+            onClose={viewed.onPeekClose}
+          />
+        ) : null}
+        {session && outlines ? (
+          <>
+            <OutlineLayer
+              engine={session.engine}
+              module={session.module}
+              mode={outlineMode}
+              tissue={coverage?.tissue ?? null}
+            />
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
+              <SegmentedControl
+                aria-label="Outline display"
+                value={outlineMode}
+                onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
+                options={outlineModeChoices.map((choice) => ({
+                  value: choice,
+                  label: outlineModeLabels[choice],
+                }))}
+              />
+            </div>
+          </>
+        ) : null}
+        {session ? <ViewerKeys session={session} /> : null}
+        {session ? <AreaKeys session={session} areas={areas} /> : null}
+        {session && hostNode && systematicScan ? (
+          <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
+        ) : null}
+        {session ? (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <MagnificationControl
+              engine={session.engine}
+              units={session.module}
+              brightness={brightness}
+              onBrightnessChange={setBrightness}
+            />
+          </div>
+        ) : null}
+        {phase.state === "loading" ? (
+          <p role="status" className="absolute top-4 left-4 text-body-sm text-fg-dim">
+            Loading the slide
+          </p>
+        ) : null}
+        {phase.state === "loading" ? null : (
+          <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
+        )}
+        <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
+        {phase.state === "failed" ? (
+          <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
+            <InlineState
+              icon="warn"
+              title={phase.failure.title}
+              role="alert"
+              className="border-solid shadow-pop"
+              action={
+                <Button size="lg" onClick={onRetry}>
+                  Try again
+                </Button>
               }
-            />
-            {annotations.shapes.size > 0 ? (
-              <Button
-                size="sm"
-                data-testid="clear-annotations"
-                onClick={() => {
-                  const count = annotations.shapes.size;
-                  if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count))) return;
-                  saved.apply(clearAll(annotations).document, "Clear all");
-                }}
-              >
-                Clear all
-              </Button>
-            ) : null}
+            >
+              {phase.failure.detail}
+            </InlineState>
           </div>
-        </>
-      ) : null}
-      {session && coverage && viewed?.peek ? (
-        <ViewedPeek
-          engine={session.engine}
-          raster={coverage.raster}
-          tissue={coverage.tissue}
-          percent={coverage.percent}
-          onClose={viewed.onPeekClose}
-        />
-      ) : null}
-      {session && outlines ? (
-        <>
-          <OutlineLayer
-            engine={session.engine}
-            module={session.module}
-            mode={outlineMode}
-            tissue={coverage?.tissue ?? null}
-          />
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
-            <SegmentedControl
-              aria-label="Outline display"
-              value={outlineMode}
-              onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
-              options={outlineModeChoices.map((choice) => ({
-                value: choice,
-                label: outlineModeLabels[choice],
-              }))}
-            />
-          </div>
-        </>
-      ) : null}
-      {session ? <ViewerKeys session={session} /> : null}
-      {session ? <AreaKeys session={session} areas={areas} /> : null}
-      {session && hostNode && systematicScan ? (
-        <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
-      ) : null}
-      {session ? (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <MagnificationControl
-            engine={session.engine}
-            units={session.module}
-            brightness={brightness}
-            onBrightnessChange={setBrightness}
-          />
-        </div>
-      ) : null}
-      {phase.state === "loading" ? (
-        <p role="status" className="absolute top-4 left-4 text-body-sm text-fg-dim">
-          Loading the slide
-        </p>
-      ) : null}
-      {phase.state === "loading" ? null : (
-        <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
-      )}
-      <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
-      {phase.state === "failed" ? (
-        <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
-          <InlineState
-            icon="warn"
-            title={phase.failure.title}
-            role="alert"
-            className="border-solid shadow-pop"
-            action={
-              <Button size="lg" onClick={onRetry}>
-                Try again
-              </Button>
-            }
-          >
-            {phase.failure.detail}
-          </InlineState>
-        </div>
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+    </EscProvider>
   );
 }

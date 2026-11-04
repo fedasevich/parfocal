@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -27,7 +28,6 @@ type TextLayerProps = {
   active: boolean;
   document: AnnotationDocument;
   onApply: (next: AnnotationDocument, label: string) => void;
-  onLeave: () => void;
   control: RefObject<TextControl | null>;
 };
 
@@ -39,15 +39,14 @@ export function TextLayer({
   active,
   document: doc,
   onApply,
-  onLeave,
   control,
 }: TextLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const [draft, setDraftState] = useState<TextDraft | null>(null);
   const draftRef = useRef<TextDraft | null>(null);
   const dropped = useRef<TextDraft | null>(null);
-  const latest = useRef({ doc, onApply, onLeave, engine });
-  latest.current = { doc, onApply, onLeave, engine };
+  const latest = useRef({ doc, onApply, engine });
+  latest.current = { doc, onApply, engine };
 
   const setDraft = useCallback((next: TextDraft | null) => {
     draftRef.current = next;
@@ -69,6 +68,12 @@ export function TextLayer({
     if (open !== null && cleanText(open.text) !== "") dropped.current = open;
     setDraft(null);
   }, [setDraft]);
+
+  const escRegistry = useEscRegistry();
+  useEffect(
+    () => escRegistry?.add("draft", { open: () => draftRef.current !== null, peel: drop }),
+    [escRegistry, drop],
+  );
 
   useEffect(() => {
     control.current = {
@@ -115,16 +120,11 @@ export function TextLayer({
         text: "",
       });
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && draftRef.current === null) latest.current.onLeave();
-    };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
     };
   }, [active, stage, commit, setDraft]);
 
