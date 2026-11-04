@@ -2,6 +2,7 @@ import {
   type AnalysisTemplate,
   type SlideAiProgress,
   useGetMyHome,
+  useGetMySettings,
   useGetProject,
   useGetSlideAiProgress,
   useGetSlideResultStats,
@@ -97,6 +98,7 @@ import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canva
 import { peekSpot } from "../viewer-tools/peek-model.ts";
 import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
+import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
@@ -201,6 +203,7 @@ function ViewerBody({
   const setup = viewerSetup(scene);
   const navigator = isNavigatorScene(scene) ? scene : null;
   const measuring = search.tool === "ruler";
+  const minimapSetting = useGetMySettings().data?.data.personal.minimap ?? "useful";
   const peekOpen = search.peek === true;
   const [peekHeld, setPeekHeld] = useState(false);
   const navigate = useNavigate();
@@ -1140,6 +1143,27 @@ function ViewerBody({
                   <div className="absolute top-4 left-4">{drawing.legend}</div>
                 ) : null}
                 {drawing.extra}
+                {nothing || running || setup.issue === "slidefail" ? null : (
+                  <ViewerMinimap
+                    setting={minimapSetting}
+                    view={stillView}
+                    camera={still.camera}
+                    size={still.size}
+                    areas={areas}
+                    checked={regions
+                      .filter((region) => answer(region.object))
+                      .map((region) => region.object)}
+                    blockLeft={!whole}
+                    blockToast={toast !== null}
+                    onOpen={() => onSearch({ peek: true })}
+                    onPopOut={() =>
+                      setToast({
+                        id: Date.now(),
+                        text: "Opens the whole slide on the second monitor",
+                      })
+                    }
+                  />
+                )}
                 {whole && cells.length && !running && view === "panel" ? (
                   <CellCluster
                     className="absolute top-[50%] left-[54%]"
