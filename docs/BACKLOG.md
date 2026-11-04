@@ -1875,7 +1875,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Refs mock: home, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: L.
 
-- [ ] HOME-003 · Resume state
+- [x] HOME-003 · Resume state
   Persist the last task, slide, camera, mode, selected object and review position per user. The home aggregate prefers the stored state when it is newer than the review activity it derives the resume target from ([ADR 0085](adr/0085-home-aggregate-api.md)).
   Done when E2E closes the browser mid-review and resumes at the same object.
   Size: M.
