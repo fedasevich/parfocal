@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ADJ-008 (send to an adjudicator) built: researchers send queued objects to a project member who is not a reviewer of the task, who sees reviewers only as A and B and decides or declines with a note, with migration 0086 (adjudications). The web now uses the generated adjudication client in place of the drafts.
 - GUIDE-002 (guided review) finished: auto-advance and the dot glyphs are unit-tested helpers, and E2E reviews a slide by mouse alone and by keyboard alone. The keyboard spec does not yet press J and Shift+J from CMD-006.
 - CMD-006 (rebinding UI) saves shortcut edits through a draft setMyShortcuts and drives the keycaps and hotkeys, with set-aware clash checks, the single-letter switch, position matching, Z modes, a keys file export and import, and J and Shift+J on guided review. The E2E rebinding J to W passes. The QuPath-like and Figma-like presets change no keys yet, and Overlays, Tumor map and Sign out have no listener.
 - OBJ-005 (ID labels) CI: the ci workflow gained an update_goldens dispatch input that regenerates goldens on the Linux runner as an artifact. viv-overlay-id-labels and viv-overlay-stack now come from Linux (they fail on a Mac). decisions-both-modes runs at 1280x1100 because the side panel foot grows to 433 px after X and hides rows at 720 px (TODO look at that layout), and the peek click test allows 0.01.

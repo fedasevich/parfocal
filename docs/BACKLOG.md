@@ -4319,7 +4319,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-006, GUIDE-015, GUIDE-011. Refs mock: disagree/queue, mock: disagree/edited, doc 44.
   Size: M.
 
-- [ ] ADJ-008 · Send to an adjudicator
+- [x] ADJ-008 · Send to an adjudicator
   The researcher sends one or more queued objects to one adjudicator, a member who is not a reviewer of the task, with an optional note of up to 300 characters, in the small Send to an adjudicator modal. A reviewer of the task is shown dim and cannot be picked, and someone away shows as a warning. The adjudicator gets one notification for all the objects, reads them with the reviewers as Reviewer A and Reviewer B fixed per task, without names, avatars or note authors, decides them as ADJ-007 does, and may decline with a note, after which the rows say so and can be sent to someone else. Objects with the adjudicator and not yet decided still block sign-off ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, proposed).
   Done when API tests cover sending several objects, a refused reviewer of the task, declining with a note, sending again, a decision by the adjudicator next to both reviewers', the A and B labels staying the same across objects, and no reviewer name, avatar or note author in any adjudicator response, with isolation and audit.
   Depends on ADJ-007, NOTIF-001. Refs mock: disagree/sendadj, mock: disagree/sent, mock: disagree/declined, mock: disagree/adjudicate, doc 44.
