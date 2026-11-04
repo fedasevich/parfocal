@@ -59,3 +59,5 @@ Option 1 in all four.
 - Deploying needs a wrangler config with the `ROOMS` namespace bound to the `Room` class, the `ROOM_TOKEN_KEY` secret in Cloudflare, and `room_token_key` with `realtime_internal_url` in the API settings, which are production writes for the owner.
 - The tests cover the room logic against a fake state, not workerd. The upgrade response with status 101 is not exercised until a Workers test pool or a staging deploy runs it.
 - TODO: the number 0140 was free on `origin/main` on 2026-11-02. If another branch takes it first, renumber this record.
+
+- Amended on 2026-11-05 by COLLAB-007 (presence): rooms now send presence events on join and leave, and a `project:` room kind, joinable only by whole-project readers, keeps a short-lived index of who views which slide.
