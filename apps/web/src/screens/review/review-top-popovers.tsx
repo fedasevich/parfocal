@@ -75,7 +75,13 @@ export function useReviewTopPopovers({
   const pick = (slideId: string) => {
     if (!projectId) return;
     void goTo(
-      destinations.slide(projectId, slideId, task?.id, undefined, recallSlideCamera(slideId)),
+      destinations.slide(
+        projectId,
+        slideId,
+        task?.id,
+        undefined,
+        recallSlideCamera(session.meId, slideId),
+      ),
     );
   };
   const blockOf = (blockId: string | null) => {

@@ -13,13 +13,14 @@ Both are set by the API, are HttpOnly and Secure, and cannot be read by scripts.
 
 ## Local and session storage
 
-All are set by the web app for features the user uses, hold no identifier of the user and are never sent to a server.
+All are set by the web app for features the user uses, hold no name or contact detail of the user and are never sent to a server.
 
 | Key | Storage | What it holds | Why it is needed |
 |---|---|---|---|
 | `parfocal.device-settings` | localStorage | The device layer of the settings, such as the theme (system, light or dark) | Keeps the settings that belong to this device |
 | `parfocal-theme` | localStorage | The theme from before the device layer | Read once, moved into `parfocal.device-settings` and removed |
 | `parfocal-developer-mode` | localStorage | On or absent | Keeps developer mode on for people who turned it on |
+| `parfocal.slide-cameras` | localStorage | The opaque id of the signed-in user, the slide id and the last camera (x, y, zoom) with the time it was written, for 30 days and at most 200 slides per user | Reopens a slide where the person left it, and keeps people on a shared workstation apart. No name, file name or patient data. [ADR 0229](../adr/0229-slide-camera-remembered-per-device.md) |
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |
 | `parfocal.uploads.interrupted` | sessionStorage | Project and case ids, file name, size and modification time of unfinished uploads | Offers to resume an upload after a reload. File names may identify a patient, so this stays in `sessionStorage`, which the browser clears when the tab closes |

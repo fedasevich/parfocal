@@ -40,7 +40,9 @@ test("storage keys are found in getItem calls and in constants they use", () => 
 test("every browser storage key of the web app is in the cookie and storage policy", () => {
   const keys = webSources.flatMap(storageKeys);
   assert.ok(
-    keys.includes("parfocal.device-settings") && keys.includes("parfocal.uploads.interrupted"),
+    keys.includes("parfocal.device-settings") &&
+      keys.includes("parfocal.uploads.interrupted") &&
+      keys.includes("parfocal.slide-cameras"),
   );
   for (const key of keys)
     assert.ok(policy.includes(`\`${key}\``), `${key} is missing from cookies-and-storage.md`);
