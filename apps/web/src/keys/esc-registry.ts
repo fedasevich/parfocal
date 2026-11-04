@@ -1,4 +1,4 @@
-import { type EscLayer, type EscState, escLayer } from "./esc-ladder.ts";
+import type { EscLayer, EscState } from "./esc-ladder.ts";
 
 export type EscRung = { readonly open: () => boolean; readonly peel: () => void };
 
