@@ -9,6 +9,7 @@ export interface PolygonBatch {
   readonly positions: Float32Array;
   readonly starts: Uint32Array;
   readonly colors: Uint8Array;
+  readonly holeStarts: Uint32Array;
   readonly indices: Uint32Array;
 }
 

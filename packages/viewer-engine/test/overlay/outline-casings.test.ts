@@ -8,6 +8,7 @@ import {
   proposalDash,
   white,
 } from "../../src/index.ts";
+import { polygonOutlineData } from "../../src/overlay/deck/binary-data.ts";
 import { createOverlayLayerBuilder } from "../../src/overlay/deck/overlay-layers.ts";
 
 const red = [255, 0, 0, 255] as const;
@@ -122,4 +123,28 @@ test("a casing that follows alpha takes each outline's alpha in its own colour",
     .getColor.value;
   assert.deepEqual(Array.from(colors.subarray(0, 4)), [11, 11, 11, 51]);
   assert.equal(find(builder.build([overlay])).data, casing.data);
+});
+
+test("an outline follows the outer ring and every hole as separate closed loops", () => {
+  const batch = polygonBatchFromRings([
+    {
+      ring: [0, 0, 40, 0, 40, 40, 0, 40],
+      holes: [[10, 10, 10, 30, 30, 30, 30, 10]],
+      color: [1, 2, 3, 255],
+    },
+    { ring: [50, 0, 54, 0, 54, 4, 50, 4], color: [9, 8, 7, 255] },
+  ]);
+  const data = polygonOutlineData(batch);
+  assert.equal(data.length, 3);
+  assert.deepEqual([...(data.startIndices ?? [])], [0, 6, 12, 18]);
+  const path = data.attributes.getPath;
+  assert.ok(path && !(path instanceof Uint32Array));
+  assert.deepEqual(
+    [...path.value.subarray(12, 24)],
+    [10, 10, 10, 30, 30, 30, 30, 10, 10, 10, 10, 30],
+  );
+  const colors = data.attributes.getColor;
+  assert.ok(colors && !(colors instanceof Uint32Array));
+  assert.deepEqual([...colors.value.subarray(6 * 4, 6 * 4 + 4)], [1, 2, 3, 255]);
+  assert.deepEqual([...colors.value.subarray(12 * 4, 12 * 4 + 4)], [9, 8, 7, 255]);
 });

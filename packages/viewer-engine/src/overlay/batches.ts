@@ -3,6 +3,7 @@ import type { PathBatch, PointBatch, PolygonBatch, Rgba } from "./types.ts";
 
 export interface PolygonInput {
   readonly ring: ArrayLike<number>;
+  readonly holes?: readonly ArrayLike<number>[];
   readonly color: Rgba;
 }
 
@@ -21,6 +22,7 @@ export interface FlatBatch {
   readonly positions: Float32Array;
   readonly starts: Uint32Array;
   readonly colors: Uint8Array;
+  readonly holeStarts?: Uint32Array;
 }
 
 const minimumPolygonVertices = 3;
@@ -45,15 +47,30 @@ function checkFlatBatch(batch: FlatBatch): number {
   return count;
 }
 
-export function triangulatePolygons(positions: Float32Array, starts: Uint32Array): Uint32Array {
+export function triangulatePolygons(
+  positions: Float32Array,
+  starts: Uint32Array,
+  holeStarts: Uint32Array = new Uint32Array(0),
+): Uint32Array {
   const count = starts.length - 1;
   const triangles: number[][] = [];
   let total = 0;
+  let hole = 0;
   for (let polygon = 0; polygon < count; polygon++) {
     const from = starts[polygon] ?? 0;
     const to = starts[polygon + 1] ?? 0;
+    while (hole < holeStarts.length && (holeStarts[hole] ?? 0) <= from) hole++;
+    const localHoles: number[] = [];
+    while (hole < holeStarts.length && (holeStarts[hole] ?? 0) < to) {
+      localHoles.push((holeStarts[hole] ?? 0) - from);
+      hole++;
+    }
     if (to - from < minimumPolygonVertices) continue;
-    const local = earcut(positions.subarray(from * 2, to * 2), undefined, 2);
+    const local = earcut(
+      positions.subarray(from * 2, to * 2),
+      localHoles.length > 0 ? localHoles : undefined,
+      2,
+    );
     for (let index = 0; index < local.length; index++) local[index] = (local[index] ?? 0) + from;
     triangles.push(local);
     total += local.length;
@@ -67,14 +84,35 @@ export function triangulatePolygons(positions: Float32Array, starts: Uint32Array
   return indices;
 }
 
+function checkHoleStarts(batch: FlatBatch): Uint32Array {
+  const holeStarts = batch.holeStarts ?? new Uint32Array(0);
+  let polygon = 0;
+  let previous = -1;
+  for (const start of holeStarts) {
+    if (start <= previous) throw new RangeError("Hole starts must increase");
+    previous = start;
+    while (polygon < batch.starts.length - 1 && (batch.starts[polygon + 1] ?? 0) <= start) {
+      polygon++;
+    }
+    const from = batch.starts[polygon] ?? 0;
+    const to = batch.starts[polygon + 1] ?? 0;
+    if (start <= from || start >= to) {
+      throw new RangeError("Each hole must start inside a polygon after its outer ring");
+    }
+  }
+  return holeStarts;
+}
+
 export function createPolygonBatch(batch: FlatBatch): PolygonBatch {
   const count = checkFlatBatch(batch);
+  const holeStarts = checkHoleStarts(batch);
   return {
     count,
     positions: batch.positions,
     starts: batch.starts,
     colors: batch.colors,
-    indices: triangulatePolygons(batch.positions, batch.starts),
+    holeStarts,
+    indices: triangulatePolygons(batch.positions, batch.starts, holeStarts),
   };
 }
 
@@ -125,12 +163,38 @@ function flatten(
 }
 
 export function polygonBatchFromRings(polygons: readonly PolygonInput[]): PolygonBatch {
-  return createPolygonBatch(
-    flatten(
-      polygons.map(({ ring, color }) => ({ points: ring, color })),
-      openRingLength,
-    ),
-  );
+  const groups = polygons.map(({ ring, holes }) => [
+    ring,
+    ...(holes ?? []).filter((hole) => openRingLength(hole) >= minimumPolygonVertices),
+  ]);
+  const lengths = groups.map((group) => group.map(openRingLength));
+  const starts = new Uint32Array(polygons.length + 1);
+  const holeStarts: number[] = [];
+  let vertex = 0;
+  lengths.forEach((group, polygon) => {
+    group.forEach((length, member) => {
+      if (member > 0) holeStarts.push(vertex);
+      vertex += length;
+    });
+    starts[polygon + 1] = vertex;
+  });
+  const positions = new Float32Array(vertex * 2);
+  const colors = new Uint8Array(polygons.length * 4);
+  let cursor = 0;
+  groups.forEach((group, polygon) => {
+    group.forEach((ring, member) => {
+      const length = (lengths[polygon]?.[member] ?? 0) * 2;
+      for (let value = 0; value < length; value++) positions[cursor + value] = ring[value] ?? 0;
+      cursor += length;
+    });
+    colors.set(polygons[polygon]?.color ?? [0, 0, 0, 0], polygon * 4);
+  });
+  return createPolygonBatch({
+    positions,
+    starts,
+    colors,
+    holeStarts: Uint32Array.from(holeStarts),
+  });
 }
 
 export function pathBatchFromLines(lines: readonly LineInput[]): PathBatch {
