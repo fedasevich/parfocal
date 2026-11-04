@@ -832,7 +832,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when permission tests cover each role.
   INGEST-017 (publish step and slide status) stores them under `t/{tenant}/restricted/{slide}/` and records which exist in `slides.restricted_images` ([ADR 0122](adr/0122-ingest-publishes-the-slide-row-only-when-it-is-ready.md)). Guests no longer exist and research access means a de-identified project. `getRestrictedImage` serves them only in clinical projects to project owners and viewers and to emergency access, audits every read, and they are deleted with the slide by the retention purge and on patient erasure ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), proposed).
 
-- [ ] SEC-010 · PHI-safe telemetry
+- [x] SEC-010 · PHI-safe telemetry
   Analytics, logs, traces and error reports carry no PHI. URLs use ids, never names.
   Done when an automated scan of a full E2E run's telemetry finds no seeded patient names. The scan reads the console and file exporter output, because non-production environments do not export ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Size: M.
