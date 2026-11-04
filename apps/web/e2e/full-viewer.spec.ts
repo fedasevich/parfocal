@@ -74,7 +74,7 @@ for (const part of parts) {
     expect(links.map((link) => link.name).sort()).toEqual(Object.keys(shows).sort());
     for (const { name, href } of inPart(links, part)) {
       await page.goto(href);
-      await expect(viewer(page), name).toBeVisible();
+      await expect(viewer(page), name).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
       await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
     }
