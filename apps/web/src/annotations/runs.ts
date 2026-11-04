@@ -5,6 +5,7 @@ export interface ModelRun {
   readonly model: string;
   readonly version: string | null;
   readonly label: string;
+  readonly source: string | null;
   readonly classKey: string | null;
   readonly count: number;
   readonly positions: Float32Array;
@@ -23,6 +24,7 @@ export interface RunInput {
   readonly model: string;
   readonly version?: string | null;
   readonly label?: string;
+  readonly source?: string | null;
   readonly classKey?: string | null;
 }
 
@@ -47,6 +49,7 @@ export function runFromProposals(input: RunInput, proposals: readonly RunProposa
     model: input.model,
     version: input.version ?? null,
     label: input.label ?? input.model,
+    source: input.source ?? null,
     classKey: input.classKey ?? null,
     count: proposals.length,
     positions,

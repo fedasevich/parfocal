@@ -13,7 +13,9 @@ import { removeShape } from "../annotations/document.ts";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
+import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
+import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -253,6 +255,7 @@ function OpenedSlide({
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
+  const proposals = useProposals(saved);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
   const { undo: undoEdit, redo: redoEdit } = saved;
@@ -442,6 +445,13 @@ function OpenedSlide({
             onDocumentChange={setAnnotations}
             onCommit={saved.commit}
             onLeave={leaveTool}
+          />
+          <ProposalLayer
+            engine={session.engine}
+            stage={hostNode}
+            proposals={proposals.pending}
+            onAccept={proposals.accept}
+            onDiscard={proposals.discard}
           />
           <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
             {annotateRail.map((group) => (
