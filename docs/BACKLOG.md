@@ -1508,7 +1508,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/hud.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/hud.ts).
   Size: M.
 
-- [ ] LAB-003 · Sample slides and synthetic data
+- [x] LAB-003 · Sample slides and synthetic data
   Format samples (15 sample slides and 5 large files) and CAMELYON slides loadable for developers, synthetic nuclei at 10k, 100k, 500k and 1M, with a visible "synthetic" chip.
   Done when tests confirm synthetic layers are always labelled.
   Refs doc 25.

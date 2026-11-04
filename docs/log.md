@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- LAB-003 (sample slides and synthetic data) added apps/web/src/lab/synthetic-data.ts with the 15 format samples, 5 big files and CAMELYON16 list, and a seeded generator for synthetic nuclei and heatmap fields, each labelled with a Synthetic chip in the developer drawer, tested for labels. The catalogue slides still open through the mock drawer and no renderer draws the generated layers yet.
 - DS-037 (flow screens keep their step and draft) added useKeptFlow over useFlowSteps and the kept draft store, so Add a result set, Connect a model, New review task and Clinical report keep step, reached and draft per user, with the model secret never stored and drafts dropped on finish. kept-flow.spec.ts covers all four. Co-sign has no stepper and the live upload wizard does not keep its step yet.
 - REVIEW-005 (number line) changed NumberLine to per-class counts with a solid sure and hatched unsure bar per class and a total row split into checked, sure and unsure, with the sums in packages/ui/src/lib/number-line.ts. Unit tests and four stories cover the states. Wiring it to live inspector counts is still open.
 - HOME-008 (search page) added /search with scopes and grouped results, a sidebar Search item and an All results row at the end of the palette, now in the lazy palette dialog. An ID result opens the slide at the object. The agent's raised bundle budget was reverted, and the first page is 340,521 of 350,000 bytes.
