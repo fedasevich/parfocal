@@ -177,15 +177,19 @@ export const toAvailability = (): MemberAvailability[] =>
     note: null,
   }));
 
+const wholeSlide = { kind: "whole-slide", count: null, score: null } as const;
+
 export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDetail => ({
   id: newTask.id,
   project_id: projectId,
   number: Number(newTask.code.slice(3)),
   code: newTask.code,
   name: draft.name,
+  kind: draft.kind ?? "review",
+  classes: draft.kind === "annotate" ? [] : null,
   split: draft.split,
-  scope: draft.scope,
-  scopes: [draft.scope, ...(draft.extra_scopes ?? [])],
+  scope: draft.scope ?? wholeSlide,
+  scopes: [draft.scope ?? wholeSlide, ...(draft.extra_scopes ?? [])],
   opinion_form_version: draft.opinion_form_version ?? 1,
   blinded: draft.blinded ?? true,
   ai_hidden_first_read: draft.ai_hidden_first_read ?? false,

@@ -1479,6 +1479,7 @@ export const TaskScope = {
   "cells-below-score": "cells-below-score",
   "inside-rois": "inside-rois",
   "unsure-zones": "unsure-zones",
+  "whole-slide": "whole-slide",
 } as const;
 
 export interface Scope {
@@ -3372,12 +3373,21 @@ export interface ReviewOrder {
   objects: OrderedObject[];
 }
 
+export type TaskKind = (typeof TaskKind)[keyof typeof TaskKind];
+
+export const TaskKind = {
+  review: "review",
+  annotate: "annotate",
+} as const;
+
 export interface ReviewTask {
   id: string;
   project_id: string;
   number: number;
   code: string;
   name: string;
+  kind: TaskKind;
+  classes: ProjectClass[] | null;
   split: TaskSplit;
   scope: Scope;
   scopes: Scope[];
@@ -3400,7 +3410,7 @@ export interface ReviewTask {
 
 export interface TaskSlide {
   slide_id: string;
-  result_set_id: string;
+  result_set_id: string | null;
   reviewer_ids: string[];
 }
 
@@ -3410,6 +3420,8 @@ export interface ReviewTaskDetail {
   number: number;
   code: string;
   name: string;
+  kind: TaskKind;
+  classes: ProjectClass[] | null;
   split: TaskSplit;
   scope: Scope;
   scopes: Scope[];
@@ -3941,6 +3953,7 @@ export interface TaskChange {
 
 export interface TaskDraft {
   name: TaskName;
+  kind?: TaskKind;
   /** @maxItems 500 */
   slide_ids?: string[];
   /** @maxItems 500 */
@@ -3956,7 +3969,7 @@ export interface TaskDraft {
   split: TaskSplit;
   /** @maxItems 25000 */
   pairs?: Pair[];
-  scope: Scope;
+  scope?: Scope | null;
   extra_scopes?: ExtraScopes;
   opinion_form_version?: number | null;
   blinded?: boolean;

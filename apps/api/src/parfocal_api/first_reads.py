@@ -16,7 +16,7 @@ from parfocal_api.opinion_questions import asked_in
 from parfocal_api.opinions import opinion_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
-from parfocal_api.reviewed_layer import assigned_slide, task_slide
+from parfocal_api.reviewed_layer import assigned_slide, review_slide
 from parfocal_api.tables import (
     AnnotationKind,
     annotations,
@@ -180,7 +180,7 @@ async def get_first_read(
     connection: TenantConnection,
     reviewer_id: uuid.UUID | None = None,
 ) -> FirstRead:
-    row = await task_slide(connection, principal, task_id, slide_id)
+    row = await review_slide(connection, principal, task_id, slide_id)
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")

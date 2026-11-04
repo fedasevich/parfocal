@@ -31,6 +31,7 @@ from parfocal_api.tables import (
     ProjectRole,
     ResultStatus,
     StartMode,
+    TaskKind,
     TaskScope,
     TaskSplit,
     cases,
@@ -46,6 +47,7 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_api.task_notices import tell_due_changed
+from parfocal_api.taxonomy import ProjectClass, classes_of
 from parfocal_api.verdicts import recount
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
@@ -85,6 +87,18 @@ def distinct_kinds(first: Scope, extra: Sequence[Scope]) -> None:
         raise ValueError("Each part of the scope is a different kind")
 
 
+def scope_fits(kind: TaskKind, first: Scope | None, extra: Sequence[Scope]) -> None:
+    if kind is TaskKind.ANNOTATE:
+        if (first is not None and first.kind is not TaskScope.WHOLE_SLIDE) or extra:
+            raise ValueError("An annotate task takes the whole slide as its scope")
+        return
+    if first is None:
+        raise ValueError("A review task needs a scope")
+    if TaskScope.WHOLE_SLIDE in {first.kind, *(part.kind for part in extra)}:
+        raise ValueError("Only an annotate task takes the whole slide as its scope")
+    distinct_kinds(first, extra)
+
+
 class ScopeKindsRepeatedError(BadRequestError):
     code = "scope-kinds-repeated"
     title = "Each part of the scope is a different kind"
@@ -102,6 +116,7 @@ class Pair(BaseModel):
 
 class TaskDraft(BaseModel):
     name: TaskName
+    kind: TaskKind = TaskKind.REVIEW
     slide_ids: Annotated[list[uuid.UUID], Field(max_length=MAX_SLIDES)] = []
     case_ids: Annotated[list[uuid.UUID], Field(max_length=MAX_SLIDES)] = []
     result_sets: Annotated[list[SlideSet], Field(max_length=MAX_SLIDES)] = []
@@ -112,7 +127,7 @@ class TaskDraft(BaseModel):
     reviewer_ids: Annotated[list[uuid.UUID], Field(min_length=1, max_length=MAX_REVIEWERS)]
     split: TaskSplit
     pairs: Annotated[list[Pair], Field(max_length=MAX_SLIDES * MAX_REVIEWERS)] = []
-    scope: Scope
+    scope: Scope | None = None
     extra_scopes: ExtraScopes = []
     opinion_form_version: Annotated[int, Field(ge=1)] | None = None
     blinded: bool = True
@@ -129,16 +144,22 @@ class TaskDraft(BaseModel):
     def consistent(self) -> TaskDraft:
         if not self.slide_ids and not self.case_ids:
             raise ValueError("Name slides or cases")
-        if (self.model_name is None) == (not self.result_sets):
+        if self.kind is TaskKind.ANNOTATE:
+            if self.model_name is not None and self.result_sets:
+                raise ValueError("Pick a result set per slide or a model name, not both")
+        elif (self.model_name is None) == (not self.result_sets):
             raise ValueError("Pick a result set per slide or a model name, not both")
+        scope_fits(self.kind, self.scope, self.extra_scopes)
         if len(set(self.reviewer_ids)) != len(self.reviewer_ids):
             raise ValueError("A reviewer appears twice")
         if (self.split is TaskSplit.CHOSEN) != bool(self.pairs):
             raise ValueError("Only a chosen split lists slide and reviewer pairs, and it must")
         if self.study_template_version is not None and self.study_template_id is None:
             raise ValueError("A template version needs its template")
-        distinct_kinds(self.scope, self.extra_scopes)
         return self
+
+    def task_scope(self) -> Scope:
+        return self.scope or Scope(kind=TaskScope.WHOLE_SLIDE)
 
 
 class TaskChange(BaseModel):
@@ -162,7 +183,7 @@ class TaskChange(BaseModel):
 
 class TaskSlide(BaseModel):
     slide_id: uuid.UUID
-    result_set_id: uuid.UUID
+    result_set_id: uuid.UUID | None
     reviewer_ids: list[uuid.UUID]
 
 
@@ -181,6 +202,8 @@ class ReviewTask(BaseModel):
     number: int
     code: str
     name: str
+    kind: TaskKind
+    classes: list[ProjectClass] | None
     split: TaskSplit
     scope: Scope
     scopes: list[Scope]
@@ -203,6 +226,11 @@ class ReviewTask(BaseModel):
 
 class ReviewTaskDetail(ReviewTask):
     slides: list[TaskSlide]
+
+
+class ScopeNotForKindError(BadRequestError):
+    code = "scope-not-for-task-kind"
+    title = "Only an annotate task takes the whole slide, and it takes nothing else"
 
 
 class TaskNeedsSlidesError(BadRequestError):
@@ -312,10 +340,11 @@ def stored_parts(extra: Sequence[Scope], kept: Sequence[Mapping[str, Any]]) -> l
 async def task_sets(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uuid.UUID, uuid.UUID]:
     rows = await connection.execute(
         select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id).where(
-            review_task_slides.c.task_id == task_id
+            review_task_slides.c.task_id == task_id,
+            review_task_slides.c.result_set_id.is_not(None),
         )
     )
-    return {row[0]: row[1] for row in rows}
+    return {row[0]: row[1] for row in rows if row[1] is not None}
 
 
 def shown_score(stored: int | None) -> float | None:
@@ -387,6 +416,12 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         number=row.number,
         code=code_of(row.number),
         name=row.name,
+        kind=TaskKind(row.kind),
+        classes=(
+            None
+            if row.class_snapshot is None
+            else [ProjectClass.model_validate(item) for item in row.class_snapshot]
+        ),
         split=TaskSplit(row.split),
         scope=scope_of(row),
         scopes=scopes_of(row),
@@ -484,6 +519,11 @@ async def sets_for(
         for choice in draft.result_sets:
             if (choice.slide_id, choice.result_set_id) in valid:
                 picked[choice.slide_id] = choice.result_set_id
+    if draft.kind is TaskKind.ANNOTATE:
+        unknown = {choice.slide_id for choice in draft.result_sets} - set(picked)
+        if unknown:
+            raise NoResultSetError("Pin only a finished result set of the same slide")
+        return picked
     missing = [slide.label for slide in task_slides if slide.id not in picked]
     if missing:
         raise NoResultSetError(f"No finished result set for {', '.join(missing[:5])}")
@@ -761,10 +801,16 @@ async def create_review_task(
         connection, draft.study_template_id, template_version
     )
     await check_sets(connection, project_id, display.defaults)
+    annotating = draft.kind is TaskKind.ANNOTATE
+    snapshot = (
+        [item.model_dump(mode="json") for item in await classes_of(connection, project_id)]
+        if annotating
+        else None
+    )
     number = select(func.coalesce(func.max(review_tasks.c.number), 0) + 1).where(
         review_tasks.c.project_id == project_id
     )
-    scope = draft.scope
+    scope = draft.task_scope()
     seed = secrets.randbits(62)
     task_id = await connection.scalar(
         insert(review_tasks)
@@ -773,6 +819,8 @@ async def create_review_task(
             project_id=project_id,
             number=number.scalar_subquery(),
             name=draft.name,
+            kind=draft.kind,
+            class_snapshot=snapshot,
             split=draft.split,
             scope=scope.kind,
             scope_count=scope.count,
@@ -805,7 +853,8 @@ async def create_review_task(
                 "task_id": task_id,
                 "slide_id": slide_id,
                 "position": position,
-                "result_set_id": picked[slide_id],
+                "kind": draft.kind,
+                "result_set_id": picked.get(slide_id),
             }
             for position, slide_id in enumerate(slide_ids)
         ],
@@ -817,16 +866,17 @@ async def create_review_task(
             for slide, user in pairs
         ],
     )
-    await store_order(
-        connection,
-        results,
-        project.tenant_id,
-        project_id,
-        task_id,
-        sampling_scopes(await task_row(connection, task_id)),
-        {slide_id: picked[slide_id] for slide_id in slide_ids},
-        dict.fromkeys(slide_ids, seed),
-    )
+    if not annotating:
+        await store_order(
+            connection,
+            results,
+            project.tenant_id,
+            project_id,
+            task_id,
+            sampling_scopes(await task_row(connection, task_id)),
+            {slide_id: picked[slide_id] for slide_id in slide_ids},
+            dict.fromkeys(slide_ids, seed),
+        )
     await audit(
         connection,
         principal,
@@ -835,12 +885,15 @@ async def create_review_task(
         task_id,
         {
             "project_id": str(project_id),
+            "kind": draft.kind.value,
             "slides": len(slide_ids),
+            "pinned_result_sets": len(picked),
             "reviewers": len(draft.reviewer_ids),
             "split": draft.split.value,
             "decision_style": decision.style.value,
             "display_locks": sorted(display.locks),
         }
+        | ({} if snapshot is None else {"classes": len(snapshot)})
         | (
             {}
             if draft.study_template_id is None
@@ -937,6 +990,10 @@ async def change_review_task(
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
     first = change.scope or scope_of(row)
     extra = change.extra_scopes if change.extra_scopes is not None else scopes_of(row)[1:]
+    if (TaskKind(row.kind) is TaskKind.ANNOTATE) != (first.kind is TaskScope.WHOLE_SLIDE) or (
+        TaskScope.WHOLE_SLIDE in {part.kind for part in extra}
+    ):
+        raise ScopeNotForKindError
     try:
         distinct_kinds(first, extra)
     except ValueError as error:

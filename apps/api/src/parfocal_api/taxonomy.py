@@ -14,9 +14,9 @@ from parfocal_api.colours import separation
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
-from parfocal_api.problems import BadRequestError
+from parfocal_api.problems import BadRequestError, ConflictError
 from parfocal_api.projects import ProjectArchivedError, owned, visible
-from parfocal_api.tables import class_mappings, project_classes
+from parfocal_api.tables import annotations, class_mappings, project_classes
 
 MIN_BETWEEN_CLASSES = 15.0
 RESERVED = (
@@ -107,6 +107,11 @@ class UnknownClassError(BadRequestError):
     title = "This class is not in the project"
 
 
+class ClassInUseError(ConflictError):
+    code = "class-in-use"
+    title = "Annotations in a task use this class, so it stays"
+
+
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 templates_router = APIRouter(prefix="/api/taxonomy-templates", tags=["projects"])
 
@@ -136,6 +141,16 @@ async def classes_of(connection: AsyncConnection, project_id: uuid.UUID) -> list
         .order_by(project_classes.c.key)
     )
     return [ProjectClass.model_validate(row, from_attributes=True) for row in rows]
+
+
+async def refuse_used(connection: AsyncConnection, removed: set[uuid.UUID]) -> None:
+    if not removed:
+        return
+    used = select(annotations.c.id).where(
+        annotations.c.class_id.in_(removed), annotations.c.task_id.is_not(None)
+    )
+    if await connection.scalar(select(used.exists())):
+        raise ClassInUseError
 
 
 async def audit(
@@ -204,6 +219,7 @@ async def set_project_classes(
     kept = {draft.id for draft in change.classes if draft.id is not None}
     if not kept <= existing:
         raise UnknownClassError
+    await refuse_used(connection, existing - kept)
     await connection.execute(
         delete(project_classes).where(
             project_classes.c.project_id == project_id, project_classes.c.id.not_in(kept)

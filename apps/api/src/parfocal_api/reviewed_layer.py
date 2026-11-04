@@ -49,6 +49,7 @@ from parfocal_api.tables import (
     review_tasks,
     slide_counters,
 )
+from parfocal_api.task_kinds import review_only
 from parfocal_common.object_ids import (
     Letter,
     ObjectId,
@@ -188,6 +189,7 @@ async def task_slide(
                 review_task_slides.c.result_set_id,
                 review_tasks.c.project_id,
                 review_tasks.c.tenant_id,
+                review_tasks.c.kind,
                 review_tasks.c.signed_off_at,
                 review_tasks.c.decision_style,
                 review_tasks.c.counts_as,
@@ -216,10 +218,23 @@ async def task_slide(
     return row
 
 
-async def assigned_slide(
+async def review_slide(
     connection: AsyncConnection, principal: Principal, task_id: uuid.UUID, slide_id: uuid.UUID
 ) -> Any:
     row = await task_slide(connection, principal, task_id, slide_id)
+    review_only(row.kind)
+    return row
+
+
+async def assigned_slide(
+    connection: AsyncConnection,
+    principal: Principal,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    *,
+    review: bool = True,
+) -> Any:
+    row = await (review_slide if review else task_slide)(connection, principal, task_id, slide_id)
     assigned = select(review_assignments).where(
         review_assignments.c.task_id == task_id,
         review_assignments.c.slide_id == slide_id,
@@ -745,7 +760,7 @@ async def resolve_review_object(
     connection: TenantConnection,
     reviewer_id: uuid.UUID | None = None,
 ) -> ObjectResolution:
-    row = await task_slide(connection, principal, task_id, slide_id)
+    row = await review_slide(connection, principal, task_id, slide_id)
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")
@@ -799,7 +814,7 @@ async def get_reviewed_layer(
     connection: TenantConnection,
     reviewer_id: uuid.UUID | None = None,
 ) -> ReviewedLayer:
-    row = await task_slide(connection, principal, task_id, slide_id)
+    row = await review_slide(connection, principal, task_id, slide_id)
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")

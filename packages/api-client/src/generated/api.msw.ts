@@ -219,6 +219,7 @@ import {
   StepStatus,
   StudyKind,
   TargetKind,
+  TaskKind,
   TaskScope,
   TaskSplit,
   TaskStatus,
@@ -3029,6 +3030,16 @@ export const getCreateReviewTaskResponseMock = (
   number: faker.number.int(),
   code: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+  classes: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
   split: faker.helpers.arrayElement(Object.values(TaskSplit)),
   scope: {
     kind: faker.helpers.arrayElement(Object.values(TaskScope)),
@@ -3114,7 +3125,7 @@ export const getCreateReviewTaskResponseMock = (
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       slide_id: faker.string.uuid(),
-      result_set_id: faker.string.uuid(),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3131,6 +3142,16 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
     number: faker.number.int(),
     code: faker.string.alpha({ length: { min: 10, max: 20 } }),
     name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+    classes: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+        id: faker.string.uuid(),
+        key: faker.number.int(),
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      })),
+      null,
+    ]),
     split: faker.helpers.arrayElement(Object.values(TaskSplit)),
     scope: {
       kind: faker.helpers.arrayElement(Object.values(TaskScope)),
@@ -3224,6 +3245,16 @@ export const getGetReviewTaskResponseMock = (
   number: faker.number.int(),
   code: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+  classes: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
   split: faker.helpers.arrayElement(Object.values(TaskSplit)),
   scope: {
     kind: faker.helpers.arrayElement(Object.values(TaskScope)),
@@ -3309,7 +3340,7 @@ export const getGetReviewTaskResponseMock = (
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       slide_id: faker.string.uuid(),
-      result_set_id: faker.string.uuid(),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3327,6 +3358,16 @@ export const getChangeReviewTaskResponseMock = (
   number: faker.number.int(),
   code: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+  classes: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
   split: faker.helpers.arrayElement(Object.values(TaskSplit)),
   scope: {
     kind: faker.helpers.arrayElement(Object.values(TaskScope)),
@@ -3412,7 +3453,7 @@ export const getChangeReviewTaskResponseMock = (
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       slide_id: faker.string.uuid(),
-      result_set_id: faker.string.uuid(),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,
@@ -3460,6 +3501,16 @@ export const getAddTaskReviewerResponseMock = (
   number: faker.number.int(),
   code: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+  classes: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
   split: faker.helpers.arrayElement(Object.values(TaskSplit)),
   scope: {
     kind: faker.helpers.arrayElement(Object.values(TaskScope)),
@@ -3545,7 +3596,7 @@ export const getAddTaskReviewerResponseMock = (
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       slide_id: faker.string.uuid(),
-      result_set_id: faker.string.uuid(),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       reviewer_ids: Array.from(
         { length: faker.number.int({ min: 1, max: 10 }) },
         (_, i) => i + 1,

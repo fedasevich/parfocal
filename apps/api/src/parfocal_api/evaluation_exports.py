@@ -52,6 +52,7 @@ from parfocal_api.tables import (
     review_task_slides,
     verdicts,
 )
+from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import ObjectId, ObjectPath
 from parfocal_common.report_blocks import Comparison, ReportBlock, ReportFormat
@@ -379,6 +380,7 @@ async def compared_tasks(
             continue
         try:
             other, whole = await readable_task(connection, principal, block.task_id)
+            review_only(other.kind)
         except ProblemError:
             continue
         if whole:
@@ -451,6 +453,7 @@ async def export_task_evaluation(
     locale: Locale = DEFAULT_LOCALE,
 ) -> Response:
     task, whole = await readable_task(connection, principal, task_id)
+    review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
     evaluation = await evaluate(connection, task)

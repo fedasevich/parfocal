@@ -50,6 +50,7 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_api.task_changes import person_of
+from parfocal_api.task_kinds import review_only
 from parfocal_common.disagreements import Why
 
 type SendNote = Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)]
@@ -151,6 +152,7 @@ router = APIRouter(prefix="/api/adjudications", tags=["adjudications"])
 
 async def owned_task(connection: AsyncConnection, principal: Principal, task_id: uuid.UUID) -> Any:
     task, _ = await readable_task(connection, principal, task_id)
+    review_only(task.kind)
     if await role_in(connection, principal, task.project_id) is not ProjectRole.OWNER:
         raise DecidersOnlyError
     return task

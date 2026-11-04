@@ -29,6 +29,7 @@ from parfocal_api.tables import (
     review_task_slides,
     verdicts,
 )
+from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
 
 UNCLASSIFIED = "unclassified"
@@ -407,6 +408,7 @@ async def get_task_evaluation(
     task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> Evaluation:
     task, whole = await readable_task(connection, principal, task_id)
+    review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
     return await evaluate(connection, task)

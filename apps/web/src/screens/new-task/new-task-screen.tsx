@@ -100,7 +100,7 @@ export function NewTaskScreen(props: NewTaskScreenProps) {
   return <NewTaskFlow key={`${props.scene}|${owner}`} owner={owner} data={data} {...props} />;
 }
 
-const scopeOf = (draft: Draft): TaskDraft["scope"] => {
+const scopeOf = (draft: Draft): NonNullable<TaskDraft["scope"]> => {
   const kind = scopeKinds(draft)[0];
   if (kind === "cells") return { kind: "random-cells", count: Number(draft.scopeOptions.cells) };
   if (kind === "low") return { kind: "cells-below-score", score: Number(draft.scopeOptions.low) };

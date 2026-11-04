@@ -23,7 +23,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.model_catalogue import calibration_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError
-from parfocal_api.reviewed_layer import KINDS, task_slide
+from parfocal_api.reviewed_layer import KINDS, review_slide
 from parfocal_api.tables import (
     AnnotationKind,
     ResultObjectKind,
@@ -459,7 +459,7 @@ async def get_review_order(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
 ) -> ReviewOrder:
-    await task_slide(connection, principal, task_id, slide_id)
+    await review_slide(connection, principal, task_id, slide_id)
     row = (
         await connection.execute(
             select(

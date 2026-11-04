@@ -33,6 +33,7 @@ from parfocal_api.tables import (
     review_task_slides,
     verdicts,
 )
+from parfocal_api.task_kinds import review_only
 from parfocal_api.verdicts import ai_region_class
 from parfocal_common.disagreements import Why, why_queued
 from parfocal_common.object_ids import Letter, ObjectId
@@ -312,7 +313,8 @@ def left_open_count(queue: list[QueuedObject]) -> int:
 async def list_disagreements(
     task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[QueuedObject]:
-    _, whole = await readable_task(connection, principal, task_id)
+    task, whole = await readable_task(connection, principal, task_id)
+    review_only(task.kind)
     if not whole:
         raise QueueHiddenError
     return await queue_of(connection, task_id)
@@ -326,6 +328,7 @@ async def decidable(
     object_id: str,
 ) -> tuple[Any, ObjectId, QueuedObject]:
     task, _ = await readable_task(connection, principal, task_id)
+    review_only(task.kind)
     if await role_in(connection, principal, task.project_id) is not ProjectRole.OWNER:
         raise DecidersOnlyError
     if task.signed_off_at is not None:

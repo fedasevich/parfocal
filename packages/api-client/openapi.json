@@ -39608,6 +39608,23 @@
             "type": "string",
             "title": "Name"
           },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProjectClass"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
+          },
           "split": {
             "$ref": "#/components/schemas/TaskSplit"
           },
@@ -39724,6 +39741,8 @@
           "number",
           "code",
           "name",
+          "kind",
+          "classes",
           "split",
           "scope",
           "scopes",
@@ -39768,6 +39787,23 @@
           "name": {
             "type": "string",
             "title": "Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProjectClass"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
           },
           "split": {
             "$ref": "#/components/schemas/TaskSplit"
@@ -39892,6 +39928,8 @@
           "number",
           "code",
           "name",
+          "kind",
+          "classes",
           "split",
           "scope",
           "scopes",
@@ -43366,6 +43404,10 @@
           "name": {
             "$ref": "#/components/schemas/TaskName"
           },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind",
+            "default": "review"
+          },
           "slide_ids": {
             "items": {
               "type": "string",
@@ -43431,7 +43473,14 @@
             "default": []
           },
           "scope": {
-            "$ref": "#/components/schemas/Scope"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scope"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "extra_scopes": {
             "$ref": "#/components/schemas/ExtraScopes",
@@ -43528,8 +43577,7 @@
         "required": [
           "name",
           "reviewer_ids",
-          "split",
-          "scope"
+          "split"
         ],
         "title": "TaskDraft"
       },
@@ -43544,6 +43592,14 @@
           "email"
         ],
         "title": "TaskInvitationDraft"
+      },
+      "TaskKind": {
+        "type": "string",
+        "enum": [
+          "review",
+          "annotate"
+        ],
+        "title": "TaskKind"
       },
       "TaskLanding": {
         "properties": {
@@ -43614,7 +43670,8 @@
           "random-cells",
           "cells-below-score",
           "inside-rois",
-          "unsure-zones"
+          "unsure-zones",
+          "whole-slide"
         ],
         "title": "TaskScope"
       },
@@ -43626,8 +43683,15 @@
             "title": "Slide Id"
           },
           "result_set_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Result Set Id"
           },
           "reviewer_ids": {

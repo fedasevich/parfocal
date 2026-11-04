@@ -27,7 +27,7 @@ from parfocal_api.reviewed_layer import (
     ai_object,
     assigned_slide,
     check_exists,
-    task_slide,
+    review_slide,
 )
 from parfocal_api.tables import (
     AnnotationKind,
@@ -489,7 +489,7 @@ async def list_verdicts(
     connection: TenantConnection,
     reviewer_id: uuid.UUID | None = None,
 ) -> list[Verdict]:
-    row = await task_slide(connection, principal, task_id, slide_id)
+    row = await review_slide(connection, principal, task_id, slide_id)
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
         raise BadRequestError("Name the reviewer")
