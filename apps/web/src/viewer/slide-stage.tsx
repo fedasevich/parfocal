@@ -14,6 +14,7 @@ import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
+import { SaveStatus } from "../annotations/save-status.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
@@ -544,11 +545,9 @@ function OpenedSlide({
           Loading the slide
         </p>
       ) : null}
-      {saved.saveState === "failed" ? (
-        <p role="alert" className="absolute top-4 right-4 text-bad text-body-sm">
-          The polygon was not saved
-        </p>
-      ) : null}
+      {phase.state === "loading" ? null : (
+        <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
+      )}
       {phase.state === "failed" ? (
         <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
           <InlineState

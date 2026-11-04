@@ -1,10 +1,5 @@
-import {
-  type AnnotationDraft,
-  createAnnotation,
-  deleteAnnotation,
-  listAnnotations,
-} from "@parfocal/api-client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type AnnotationDraft, listAnnotations } from "@parfocal/api-client";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, createDocument } from "./document.ts";
 import {
@@ -27,9 +22,11 @@ import {
   undo,
 } from "./history.ts";
 import type { Point } from "./polygon-draft.ts";
+import { createSaveQueue, type QueuePhase, type Remote } from "./save-queue.ts";
+import { annotationTransport } from "./save-transport.ts";
 import { at, type Shape, type ShapeId } from "./shapes.ts";
 
-export type SaveState = "idle" | "saving" | "saved" | "failed";
+export type SaveState = QueuePhase;
 
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
@@ -46,18 +43,37 @@ export type SavedAnnotations = {
   readonly canRedo: boolean;
   readonly loaded: boolean;
   readonly saveState: SaveState;
+  readonly unsaved: number;
 };
-
-type Stored = { readonly id: string; readonly version: number } | null;
 
 export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnnotations {
   const [document, setDocumentState] = useState(createDocument);
   const [loaded, setLoaded] = useState(false);
-  const [saveState, setSaveState] = useState<SaveState>("idle");
   const [history, setHistoryState] = useState(createHistory);
   const current = useRef(document);
   const log = useRef(history);
-  const stored = useRef(new Map<ShapeId, Promise<Stored>>());
+  const remotes = useRef(new Map<ShapeId, Remote>());
+  const queue = useMemo(() => createSaveQueue(annotationTransport(slideId)), [slideId]);
+  const status = useSyncExternalStore(queue.subscribe, queue.status);
+  const hasUnsaved = status.waiting > 0;
+
+  useEffect(() => {
+    const resume = () => queue.flushNow();
+    window.addEventListener("online", resume);
+    return () => {
+      window.removeEventListener("online", resume);
+      queue.flushNow();
+    };
+  }, [queue]);
+
+  useEffect(() => {
+    if (!hasUnsaved) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasUnsaved]);
 
   const setDocument = useCallback((next: AnnotationDocument) => {
     current.current = next;
@@ -82,41 +98,20 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
               }
             : null;
       if (body === null) return;
-      setSaveState("saving");
-      const request: Promise<Stored> = createAnnotation(slideId, body).then(
-        (response) => {
-          if (response.status !== 201) {
-            setSaveState("failed");
-            return null;
-          }
-          setSaveState("saved");
-          return { id: response.data.id, version: response.data.version };
-        },
-        () => {
-          setSaveState("failed");
-          return null;
-        },
-      );
-      stored.current.set(shape.id, request);
+      const remote: Remote = { id: null, version: 1 };
+      remotes.current.set(shape.id, remote);
+      queue.enqueueCreate(remote, body);
     },
-    [slideId],
+    [queue],
   );
 
   const deleteFor = useCallback(
     (id: ShapeId) => {
-      const pending = stored.current.get(id);
-      stored.current.delete(id);
-      if (pending === undefined) return;
-      setSaveState("saving");
-      void pending.then((entry) => {
-        if (entry === null) return;
-        return deleteAnnotation(slideId, entry.id, { version: entry.version }).then(
-          (response) => setSaveState(response.status === 204 ? "saved" : "failed"),
-          () => setSaveState("failed"),
-        );
-      });
+      const remote = remotes.current.get(id);
+      remotes.current.delete(id);
+      if (remote !== undefined) queue.enqueueRemove(remote);
     },
-    [slideId],
+    [queue],
   );
 
   const sync = useCallback(
@@ -146,10 +141,7 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
           if (points === null) continue;
           const added = addShape(next, { kind: "polygon", points });
           next = added.document;
-          stored.current.set(
-            added.shape.id,
-            Promise.resolve({ id: annotation.id, version: annotation.version }),
-          );
+          remotes.current.set(added.shape.id, { id: annotation.id, version: annotation.version });
         }
         if (markers.status === 200) {
           for (const annotation of markers.data) {
@@ -157,10 +149,10 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
             if (point === null) continue;
             const added = dropMarker(next, point, annotation.class_id);
             next = added.document;
-            stored.current.set(
-              added.shape.id,
-              Promise.resolve({ id: annotation.id, version: annotation.version }),
-            );
+            remotes.current.set(added.shape.id, {
+              id: annotation.id,
+              version: annotation.version,
+            });
           }
         }
         setDocument(next);
@@ -267,6 +259,7 @@ export function useSavedAnnotations(slideId: string, enabled: boolean): SavedAnn
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     loaded,
-    saveState,
+    saveState: status.phase,
+    unsaved: status.waiting,
   };
 }
