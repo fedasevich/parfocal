@@ -22,7 +22,7 @@ import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
-import { inspectorCounts } from "@parfocal/ui/lib/inspector-tabs";
+import { inspectorCounts, inspectorTabLabels } from "@parfocal/ui/lib/inspector-tabs";
 import { objectIdPath } from "@parfocal/ui/lib/object-id";
 import {
   advanceScan,
@@ -1056,6 +1056,7 @@ function ViewerBody({
         railGroups={reviewRail}
         railKeys={reviewRailKeys}
         panel={inspector}
+        panelTab={{ label: inspectorTabLabels[tab], count: tabCounts[tab] }}
         onToolChange={pickTool}
         onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
         overlay={
