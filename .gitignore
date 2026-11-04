@@ -95,3 +95,4 @@ bench-out/
 /.claude/settings.local.json
 /.claude/usage-override.json
 !packages/test-fixtures/reference-tiles/**
+bundle-report/

@@ -239,6 +239,31 @@ jobs:
           name: linux-goldens
           path: packages/golden-images/goldens/*.png
 
+  bundle-report:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: bundle-report
+      - run: pnpm analyze:web
+      - run: |
+          {
+            echo "### Largest modules of the first-page chunk"
+            echo
+            echo "| Module | Bytes |"
+            echo "| --- | ---: |"
+            jq -r '.firstPage.largestModules[:10][] | "| `\(.id)` | \(.bytes) |"' apps/web/bundle-report/summary.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bundle-report
+          path: |
+            apps/web/bundle-report/treemap.html
+            apps/web/bundle-report/summary.json
+
   ci-ok:
     if: always()
     needs: [changes, lint, typecheck, test, db, formats, e2e, browser]
