@@ -1,3 +1,4 @@
+import { ScrollArea } from "@parfocal/ui/components/scroll-area";
 import { TabCount, Tabs, TabsContent, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -62,12 +63,14 @@ function SidePanel({
         </TabsList>
         {tabs.map((tab) => (
           <TabsContent key={tab.value} value={tab.value} className="flex min-h-0 flex-1 flex-col">
-            <div
-              data-slot="side-panel-body"
-              className="flex min-h-0 flex-1 flex-col gap-(--density-panel-gap) overflow-auto p-(--density-panel-pad)"
-            >
-              {tab.body}
-            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              <div
+                data-slot="side-panel-body"
+                className="flex flex-col gap-(--density-panel-gap) p-(--density-panel-pad)"
+              >
+                {tab.body}
+              </div>
+            </ScrollArea>
             {tab.foot ? (
               <div
                 data-slot="side-panel-foot"

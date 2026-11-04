@@ -18,7 +18,7 @@ export default defineConfig({
     trace: process.env.CI ? "off" : "retain-on-failure",
   },
   webServer: {
-    command: `vite --port ${port} --strictPort`,
+    command: `node --no-turbo-fast-api-calls ./node_modules/vite/bin/vite.js --port ${port} --strictPort`,
     env: {
       PARFOCAL_PUBLIC_APP_ENV: "dev",
       PARFOCAL_PUBLIC_FAKE_API: "all",
