@@ -87,6 +87,7 @@ import { recallSlideCamera, rememberSlideCamera } from "../review/slide-switch.t
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
+import { useOpinionDraft } from "../review/use-opinion-draft.ts";
 import {
   AiSays,
   type ListFilter,
@@ -287,11 +288,7 @@ function ViewerBody({
   const [failed, setFailed] = useState(setup.submitFail);
   const [tellMe, setTellMe] = useState(false);
   const [toast, setToast] = useState<{ text: string; undo?: () => void; id: number } | null>(null);
-  const [opinion, setOpinion] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      Object.entries(session.opinion?.answers ?? {}).map(([key, value]) => [key, String(value)]),
-    ),
-  );
+  const { answers: opinion, change: changeOpinion } = useOpinionDraft(session);
   const firstOpenCell = cells.find((cell) => !answer(cell.object))?.object ?? cells[0]?.object;
   const firstRegion = regions[0];
   const measurement =
@@ -889,7 +886,7 @@ function ViewerBody({
       failed={failed}
       {...(readOnly ? { lockedReason: "Signed off 15 Oct. Changes need an amendment." } : {})}
       onSubmit={submit}
-      onAnswerChange={(id, value) => setOpinion({ ...opinion, [id]: value })}
+      onAnswerChange={changeOpinion}
     />
   );
 

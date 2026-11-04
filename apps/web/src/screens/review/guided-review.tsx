@@ -52,6 +52,7 @@ import { ReviewTop } from "./review-top.tsx";
 import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab } from "./threads-tab.tsx";
 import { useDecisionSaves } from "./use-decision-saves.ts";
+import { useOpinionDraft } from "./use-opinion-draft.ts";
 
 type GuidedReviewProps = {
   taskId: string;
@@ -150,13 +151,7 @@ function GuidedBody({
   const [camera, setCamera] = useState<Camera | null>(() =>
     objectId !== undefined && startCamera !== undefined ? startCamera : null,
   );
-  const [opinionEdits, setOpinionEdits] = useState<Record<string, string>>({});
-  const savedOpinion = Object.fromEntries(
-    Object.entries(session.opinion?.answers ?? {})
-      .filter(([key]) => !setup.dropAnswers.includes(key))
-      .map(([key, value]) => [key, String(value)]),
-  );
-  const opinion: Record<string, string> = { ...savedOpinion, ...opinionEdits };
+  const { answers: opinion, change: changeOpinion } = useOpinionDraft(session, setup.dropAnswers);
   const [failed, setFailed] = useState(setup.submitFail);
   const tabNow: GuidedTab = setup.coach ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
@@ -523,7 +518,7 @@ function GuidedBody({
       submitLabel={nextLabel}
       failed={failed}
       onSubmit={submit}
-      onAnswerChange={(id, value) => setOpinionEdits({ ...opinionEdits, [id]: value })}
+      onAnswerChange={changeOpinion}
     />
   ) : current ? (
     <div className="flex min-h-full flex-col gap-5">
