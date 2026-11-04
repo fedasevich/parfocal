@@ -2572,7 +2572,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when E2E edits, cuts the network for 30 s, restores it, and no edit is lost.
   Size: M.
 
-- [ ] ANN-022 · Concurrent edit protection
+- [x] ANN-022 · Concurrent edit protection
   Version checks on save, conflict message when two users edit the same shape. On the shared layer of an annotate task (ANN-030) the conflict shows the colleague's version and lets the expert keep either.
   Done when tests cover the conflict path.
   Size: M.
