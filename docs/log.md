@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- INGEST-030 (name the OME-TIFF reader after tifffile) renamed Reader.TIFFSLIDE to Reader.TIFFFILE and migration 0083 rewrites stored tiffslide readers to tifffile. The owner's unpushed ADJ-008 branch also uses 0083, so it renumbers to 0084 on merge.
 - DS-036 (preload the main Plex fonts) preloads the Plex Sans 400 and 600 latin woff2 files in apps/web index.html, with a dev-only Vite plugin that drops the tags. A build and preview browser test with 120 ms delayed fonts sees Plex loaded with one request per file.
 - EVAL-003 (exports) added GET /api/review-tasks/{id}/evaluation/exports/{kind} for report.pdf (Typst, block order), decisions.csv, objects.csv, annotations.json and annotations.geojson, each with a sha256 evaluation checksum in a header and the file. ADR 0231 records the checksum and the optional pdf extra. No web download buttons yet.
 - CASE-017 (slide camera across visits) moved the per-slide camera into localStorage under parfocal.slide-cameras, keyed by user and slide, with a 30-day expiry and a 200-slide cap, and dropped the open-case memory. Browser specs need a longer expect timeout on a loaded 4-CPU cloud container.

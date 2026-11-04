@@ -1125,7 +1125,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
   Size: L.
 
-- [ ] INGEST-030 · Name the OME-TIFF reader after tifffile
+- [x] INGEST-030 · Name the OME-TIFF reader after tifffile
   The ingest worker reads OME-TIFF with tifffile, but `Reader.TIFFSLIDE` in `parfocal_ingest.pyramid` stores the string `tiffslide` in each slide's `reader` column. Rename the value to `tifffile` and add a migration that updates existing slide rows, so the stored reader names the library that read the file.
   Done when worker tests read `tifffile` for the OME-TIFF fixture and a migration test shows an old `tiffslide` row read back as `tifffile`.
   Depends on INGEST-000. Refs [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md).
