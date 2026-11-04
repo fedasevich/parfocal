@@ -2091,7 +2091,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on CASE-006, VIEW-049.
   Size: S.
 
-- [ ] CASE-017 · Remember a slide's camera across visits
+- [x] CASE-017 · Remember a slide's camera across visits
   A slide reopened later on the same device starts where the person left it, as the owner chose on 2026-11-04 ([a slide's camera remembered on the device across visits](adr/0229-slide-camera-remembered-per-device.md)). The per-slide memory of CASE-003 moves into `localStorage` under `parfocal.slide-cameras`, keyed by the user's opaque id and the slide id, written when the camera rests, read when a link is built and when a slide opens with no camera in its URL and no object. Entries older than 30 days are dropped, at most 200 slides are kept per user, and sign out keeps them. The cookie and storage policy gains the row.
   Done when unit tests cover the camera order, the expiry, the cap and two users on one device, the device storage test passes with the new key, and a browser test reloads the app and opens a slide at its remembered view.
   Depends on CASE-003.

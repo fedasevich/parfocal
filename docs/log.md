@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- CASE-017 (slide camera across visits) moved the per-slide camera into localStorage under parfocal.slide-cameras, keyed by user and slide, with a 30-day expiry and a 200-slide cap, and dropped the open-case memory. Browser specs need a longer expect timeout on a loaded 4-CPU cloud container.
 - OBJ-005 (ID labels) CI fixes: the inspector side panel body now scrolls in the shared ScrollArea for axe, slide progress queries wait for real IDs, and Vite runs with --no-turbo-fast-api-calls after a V8 crash on CI (unproven). TODO: the Linux goldens for viv-overlay-id-labels and viv-overlay-stack, which depend on the runner's monospace font.
 - LAB-000 (lab research check) ticked: the decisions agent read POC doc 34 with the owner's leave, it matched, and ADR 0189 (developer drawer) is accepted.
 - SEC-018 (incident response runbook) ticked on the owner's answer 42 of 2026-11-04: standard defaults (24 hours to workspaces, 72 hours to the authority, the owner as lead), a paper tabletop recorded, ADR 0186 accepted. TODO: a private place for full breach records.
