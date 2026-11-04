@@ -3223,7 +3223,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-006, AIP-009. Refs docs 17, 19, 26.
   Size: M.
 
-- [ ] AINUC-002 · Typer runner
+- [x] AINUC-002 · Typer runner
   Per-nucleus class probabilities and alternative types, with a per-slide tissue default for ambiguous mappings (epithelial is not always tumour). HoVer-NeXt at 0.25 µm/px, probabilities averaged inside each outline, neoplastic to tumor, connective to stroma, inflammatory to immune, dead and epithelial to other unless the tissue default applies.
   Done when tests confirm probabilities sum to 1 and the tissue default applies.
   Refs docs 21, 29.
