@@ -16,6 +16,7 @@ export function personalBindings(
   return keyRegistry.bindings({
     ...(resolve.preset === undefined ? {} : { preset: resolve.preset }),
     ...(resolve.personal === undefined ? {} : { personal: resolve.personal }),
+    ...(resolve.singleLetter === undefined ? {} : { singleLetter: resolve.singleLetter }),
     scopes,
     only,
   });

@@ -25,6 +25,7 @@ import {
   setModelTier,
   setMyAvailability,
   setMySettingLayers,
+  setMyShortcuts,
   setWorkspaceSettings,
   updateSessionPolicy,
 } from "../src/index.ts";
@@ -197,4 +198,35 @@ test("available with a note or a past end is refused like the API", async () => 
     status: 400,
   });
   assert.equal((await getMyAvailability()).data.status, "available");
+});
+
+test("saved shortcuts come back from getMySettings until the fake is reset", async () => {
+  const saved = await setMyShortcuts({
+    preset: "qupath",
+    custom: { dnext: ["W"] },
+    single_letter: false,
+    by_position: false,
+    whole_slide_key: "tap",
+  });
+  assert.deepEqual(saved.data.custom, { dnext: ["W"] });
+  const { data } = await getMySettings();
+  assert.equal(data.shortcuts.preset, "qupath");
+  assert.deepEqual(data.shortcuts.custom, { dnext: ["W"] });
+  assert.equal(data.shortcuts.single_letter, false);
+  assert.equal(data.shortcuts.whole_slide_key, "tap");
+  resetSettingsActions();
+  assert.deepEqual((await getMySettings()).data.shortcuts.custom, {});
+});
+
+test("shortcuts with an unknown whole slide mode are refused", async () => {
+  await assert.rejects(
+    setMyShortcuts({
+      preset: "default",
+      custom: {},
+      single_letter: true,
+      by_position: true,
+      whole_slide_key: "double" as "tap",
+    }),
+    { status: 422 },
+  );
 });

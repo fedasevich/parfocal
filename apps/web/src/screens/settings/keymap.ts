@@ -219,7 +219,7 @@ export const reservedKeys: Record<string, string> = {
   "⌘N": "opens a new window",
   "⌘R": "reloads the page",
   "⌘L": "jumps to the address bar",
-  "⌘⇧T": "reopens a closed tab",
+  "⇧⌘T": "reopens a closed tab",
   "⌘P": "prints",
   "⌘H": "hides the window",
   "⌘M": "minimises the window",
@@ -238,3 +238,5 @@ export const shortcutPresetNames = {
   qupath: "QuPath-like",
   figma: "Figma-like",
 } as const;
+
+export type PresetKey = keyof typeof shortcutPresetNames;

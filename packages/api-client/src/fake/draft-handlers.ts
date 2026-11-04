@@ -93,7 +93,10 @@ export {
   getListReviewObjectsMockHandler,
   getListThreadCommentsMockHandler,
 } from "./review-handlers.ts";
-export { getGetMySettingsMockHandler } from "./settings-handlers.ts";
+export {
+  getGetMySettingsMockHandler,
+  getSetMyShortcutsMockHandler,
+} from "./settings-handlers.ts";
 export {
   getConfirmEmailMockHandler,
   getCreateAccountMockHandler,

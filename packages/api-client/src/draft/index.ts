@@ -27,6 +27,8 @@ export {
   mySettingsSchema,
   NoticeChannel,
   ShortcutPreset,
+  type ShortcutSettings,
+  shortcutSettingsSchema,
   useGetMySettings,
   WholeSlideKey,
 } from "./get-my-settings.ts";
@@ -257,4 +259,5 @@ export {
 } from "./list-thread-comments.ts";
 export * from "./model-runs.ts";
 export * from "./project.ts";
+export * from "./set-my-shortcuts.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";

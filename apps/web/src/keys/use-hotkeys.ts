@@ -1,5 +1,14 @@
 import { useLayoutEffect, useRef } from "react";
-import { type Binding, type Fired, idleKeys, isTyping, type KeyInput, step } from "./registry.ts";
+import { usePersonalKeys } from "./personal-keys.ts";
+import {
+  type Binding,
+  type Fired,
+  idleKeys,
+  isTyping,
+  type KeyInput,
+  keyInputOf,
+  step,
+} from "./registry.ts";
 
 export function useHotkeys(
   bindings: readonly Binding[],
@@ -7,6 +16,7 @@ export function useHotkeys(
   onPending?: (keys: string[] | null) => void,
 ) {
   const state = useRef(idleKeys);
+  const byPosition = usePersonalKeys().byPosition !== false;
   useLayoutEffect(() => {
     const handle = (input: KeyInput, event?: KeyboardEvent) => {
       const result = step(bindings, state.current, input);
@@ -17,21 +27,7 @@ export function useHotkeys(
       for (const fired of result.fired) onFire(fired);
     };
     const fromEvent = (type: "down" | "up") => (event: KeyboardEvent) =>
-      handle(
-        {
-          type,
-          key: event.key,
-          code: event.code,
-          metaKey: event.metaKey,
-          ctrlKey: event.ctrlKey,
-          altKey: event.altKey,
-          shiftKey: event.shiftKey,
-          repeat: event.repeat,
-          typing: isTyping(event.target),
-          at: event.timeStamp,
-        },
-        event,
-      );
+      handle(keyInputOf(type, event, isTyping(event.target), byPosition), event);
     const down = fromEvent("down");
     const up = fromEvent("up");
     const blur = () => handle({ type: "blur", at: performance.now() });
@@ -43,5 +39,5 @@ export function useHotkeys(
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
-  }, [bindings, onFire, onPending]);
+  }, [bindings, onFire, onPending, byPosition]);
 }

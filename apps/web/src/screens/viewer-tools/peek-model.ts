@@ -1,3 +1,4 @@
+import type { WholeSlideMode } from "../../keys/actions.ts";
 import type { Fired } from "../../keys/registry.ts";
 import { cameraToSearch } from "../review/camera-search.ts";
 import type { Spot } from "../viewer/area-nav.ts";
@@ -6,8 +7,25 @@ export type PeekEffect = "hold" | "latch" | "close" | null;
 
 export type PeekKeyStep = { closing: boolean; effect: PeekEffect };
 
-export function peekKeyStep(open: boolean, closing: boolean, fired: Fired): PeekKeyStep {
+export function peekKeyStep(
+  open: boolean,
+  closing: boolean,
+  fired: Fired,
+  mode: WholeSlideMode = "both",
+): PeekKeyStep {
   if (fired.action === "esc") return { closing, effect: open ? "close" : null };
+  if (mode === "tap") {
+    if (fired.phase === "hold-start") return { closing, effect: null };
+    if (fired.phase === "tap" || fired.phase === "hold-end")
+      return { closing: false, effect: open ? "close" : "latch" };
+    return { closing, effect: null };
+  }
+  if (mode === "hold") {
+    if (fired.phase === "hold-start") return { closing: false, effect: open ? null : "hold" };
+    if (fired.phase === "tap" || fired.phase === "hold-end")
+      return { closing: false, effect: open ? "close" : null };
+    return { closing, effect: null };
+  }
   if (fired.phase === "hold-start") return { closing: open, effect: open ? "close" : "hold" };
   if (closing) return { closing: false, effect: null };
   if (fired.phase === "tap") return { closing: false, effect: "latch" };

@@ -1,5 +1,7 @@
+import type { ShortcutSettings } from "@parfocal/api-client";
+import { expandSlot, isSingleLetterKey, keysOverlap } from "../../keys/actions.ts";
 import { keyNames, unshifted } from "../../keys/registry.ts";
-import { type KeyAction, keyAction, keyActions, reservedKeys } from "./keymap.ts";
+import { type KeyAction, keyAction, keyActions, type PresetKey, reservedKeys } from "./keymap.ts";
 
 export type ShortcutFilter = "all" | "changed" | "conflicts";
 
@@ -9,9 +11,11 @@ export type Pending =
   | { kind: "conflict"; combo: string; other: string }
   | { kind: "reserved"; combo: string }
   | { kind: "safe"; combo: string }
+  | { kind: "setclash"; combo: string; other: string; slot: string }
   | { kind: "dirclash"; value: string; names: string[] };
 
 export type ShortcutState = {
+  preset: PresetKey;
   custom: Record<string, string[]>;
   filter: ShortcutFilter;
   recording: { id: string; slot: number } | null;
@@ -35,8 +39,11 @@ export type KeyPress = {
 export type Outcome = { state: ShortcutState; message?: string };
 
 export const freshShortcuts = (
-  base: Partial<Pick<ShortcutState, "custom" | "singleLetter" | "byPosition" | "wholeSlide">> = {},
+  base: Partial<
+    Pick<ShortcutState, "preset" | "custom" | "singleLetter" | "byPosition" | "wholeSlide">
+  > = {},
 ): ShortcutState => ({
+  preset: "default",
   custom: {},
   filter: "all",
   recording: null,
@@ -55,30 +62,53 @@ export const currentKeys = (state: ShortcutState, action: KeyAction): string[] =
 export const isChanged = (state: ShortcutState, action: KeyAction) =>
   state.custom[action.id] !== undefined;
 
-const sameContext = (a: KeyAction, b: KeyAction) => a.context === b.context;
+const styleOf = (action: KeyAction) => /^in the style (.*)$/.exec(action.note ?? "")?.[1];
 
-export function conflicts(state: ShortcutState): [string, string, string][] {
-  const found: [string, string, string][] = [];
+const sameContext = (a: KeyAction, b: KeyAction) => {
+  if (a.context !== b.context) return false;
+  const first = styleOf(a);
+  const second = styleOf(b);
+  return first === undefined || second === undefined || first === second;
+};
+
+const sequencesOf = (slots: string[]) =>
+  slots.flatMap((slot) => expandSlot(slot).map(([, keys]) => keys));
+
+export function clashingSlots(slot: string, others: string[]): string[] {
+  const mine = sequencesOf([slot]);
+  return others.filter((other) =>
+    sequencesOf([other]).some((theirs) => mine.some((keys) => keysOverlap(keys, theirs))),
+  );
+}
+
+export function conflicts(state: ShortcutState): [string, string, string, string][] {
+  const found: [string, string, string, string][] = [];
   keyActions.forEach((a, index) => {
     for (const b of keyActions.slice(index + 1)) {
       if (!sameContext(a, b)) continue;
       const bKeys = currentKeys(state, b);
       for (const key of currentKeys(state, a)) {
-        if (bKeys.includes(key)) found.push([a.id, b.id, key]);
+        for (const theirs of clashingSlots(key, bKeys)) found.push([a.id, b.id, key, theirs]);
       }
     }
   });
   return found;
 }
 
-export const isSingleCharacter = (key: string) => /^[A-Z0-9+\-?]$/.test(key);
+export const isSingleCharacter = (slot: string) =>
+  isSingleLetterKey(expandSlot(slot)[0]?.[1][0] ?? "");
 
-const namedKeys: Record<string, string> = {
-  ...keyNames,
-  Tab: "⇥",
-  Backspace: "⌫",
-  Delete: "⌦",
-};
+export function clashesWith(
+  state: ShortcutState,
+  action: KeyAction,
+  slot: string,
+): { other: KeyAction; slot: string }[] {
+  return keyActions.flatMap((other) =>
+    other.id === action.id || !sameContext(action, other)
+      ? []
+      : clashingSlots(slot, currentKeys(state, other)).map((theirs) => ({ other, slot: theirs })),
+  );
+}
 
 const modifierKeys = ["Meta", "Control", "Alt", "Shift"];
 
@@ -87,14 +117,14 @@ export function comboOf(
   byPosition: boolean,
 ): { mods: string; key: string | null } {
   const mods =
-    (press.metaKey ? "⌘" : "") +
-    (press.ctrlKey ? "⌃" : "") +
+    (press.ctrlKey && press.metaKey ? "⌃" : "") +
     (press.altKey ? "⌥" : "") +
-    (press.shiftKey ? "⇧" : "");
+    (press.shiftKey ? "⇧" : "") +
+    (press.metaKey || press.ctrlKey ? "⌘" : "");
   if (modifierKeys.includes(press.key)) return { mods, key: null };
   const code = press.code ?? "";
   const key =
-    namedKeys[press.key] ??
+    keyNames[press.key] ??
     (byPosition && code.startsWith("Key")
       ? code.slice(3)
       : byPosition && code.startsWith("Digit")
@@ -150,7 +180,7 @@ export function capture(state: ShortcutState, press: KeyPress): Outcome {
   if (recording === null) return { state };
   const action = keyAction(recording.id);
   if (key === "Esc" && !mods) return { state: done(state) };
-  if ((key === "⌫" || key === "⌦") && !mods) {
+  if ((press.key === "Backspace" || press.key === "Delete") && !mods) {
     const list = [...currentKeys(state, action)];
     list.splice(recording.slot, 1);
     return { state: done(state, { ...state.custom, [action.id]: list }) };
@@ -160,11 +190,12 @@ export function capture(state: ShortcutState, press: KeyPress): Outcome {
       return key
         ? {
             state,
-            message: "Press only the modifier, for example ⌥ or ⌃. The numbers 1 to 6 stay.",
+            message: `Press only the modifier, for example ⌥ or ⌘. The numbers ${rangeDigits(action)} stay.`,
           }
         : { state };
     }
-    return { state: done(state, assign(state.custom, action.id, 0, `${mods}1 … ${mods}6`)) };
+    const [first, last] = rangeDigits(action).split(" to ");
+    return checkClash(state, action, `${mods}${first} … ${mods}${last}`, 0);
   }
   if (!key) return { state };
   const combo = action.sequence ? `${mods}${key} then 1 … 9` : mods + key;
@@ -174,14 +205,28 @@ export function capture(state: ShortcutState, press: KeyPress): Outcome {
   if (action.safe && !/[⌘⌃]/.test(mods)) {
     return { state: { ...state, pending: { kind: "safe", combo } } };
   }
-  const other = keyActions.find(
-    (candidate) =>
-      candidate.id !== action.id &&
-      sameContext(action, candidate) &&
-      currentKeys(state, candidate).includes(combo),
-  );
-  if (other) return { state: { ...state, pending: { kind: "conflict", combo, other: other.id } } };
-  return { state: done(state, assign(state.custom, action.id, recording.slot, combo)) };
+  return checkClash(state, action, combo, recording.slot);
+}
+
+export function rangeDigits(action: KeyAction): string {
+  const match = /(\d) … [^\d]*(\d)$/.exec(action.keys[0] ?? "");
+  return `${match?.[1] ?? "1"} to ${match?.[2] ?? "6"}`;
+}
+
+function checkClash(state: ShortcutState, action: KeyAction, combo: string, slot: number): Outcome {
+  const clashes = clashesWith(state, action, combo);
+  const exact = clashes.find((clash) => clash.slot === combo);
+  if (exact && !action.range && !action.sequence)
+    return { state: { ...state, pending: { kind: "conflict", combo, other: exact.other.id } } };
+  const first = clashes[0];
+  if (first)
+    return {
+      state: {
+        ...state,
+        pending: { kind: "setclash", combo, other: first.other.id, slot: first.slot },
+      },
+    };
+  return { state: done(state, assign(state.custom, action.id, slot, combo)) };
 }
 
 export function swap(state: ShortcutState): Outcome {
@@ -234,18 +279,9 @@ export function applySafeCombo(state: ShortcutState): ShortcutState {
 
 export function pickDirection(state: ShortcutState, id: string, value: string): ShortcutState {
   const action = keyAction(id);
-  const letters = value === "Arrows" ? [] : value.split("");
-  const hit = keyActions.filter(
-    (other) =>
-      other.id !== action.id &&
-      sameContext(action, other) &&
-      currentKeys(state, other).some((key) => letters.includes(key)),
-  );
+  const hit = clashesWith(state, action, value);
   if (hit.length > 0) {
-    const names = hit.map(
-      (other) =>
-        `${other.name.toLowerCase()} (${currentKeys(state, other).find((key) => letters.includes(key))})`,
-    );
+    const names = hit.map((clash) => `${clash.other.name.toLowerCase()} (${clash.slot})`);
     return { ...state, pending: { kind: "dirclash", value, names } };
   }
   return done(state, assign(state.custom, id, 0, value));
@@ -287,6 +323,7 @@ export type ShortcutScene =
 
 export function sceneShortcuts(scene: ShortcutScene, base: ShortcutState): ShortcutState {
   const state = freshShortcuts({
+    preset: base.preset,
     custom: base.custom,
     singleLetter: base.singleLetter,
     byPosition: base.byPosition,
@@ -325,3 +362,20 @@ export function sceneShortcuts(scene: ShortcutScene, base: ShortcutState): Short
       return state;
   }
 }
+
+export const shortcutSettingsOf = (state: ShortcutState): ShortcutSettings => ({
+  preset: state.preset,
+  custom: state.custom,
+  single_letter: state.singleLetter,
+  by_position: state.byPosition,
+  whole_slide_key: state.wholeSlide,
+});
+
+export const stateOfSettings = (settings: ShortcutSettings): ShortcutState =>
+  freshShortcuts({
+    preset: settings.preset,
+    custom: settings.custom,
+    singleLetter: settings.single_letter,
+    byPosition: settings.by_position,
+    wholeSlide: settings.whole_slide_key,
+  });

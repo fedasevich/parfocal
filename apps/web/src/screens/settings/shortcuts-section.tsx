@@ -19,9 +19,11 @@ import {
   type KeyAction,
   keyAction,
   keyGroups,
+  type PresetKey,
   reservedKeys,
   shortcutPresetNames,
 } from "./keymap.ts";
+import { exportShortcuts, importShortcuts, shortcutFileName } from "./shortcut-file.ts";
 import {
   applySafeCombo,
   cancelRecording,
@@ -33,10 +35,12 @@ import {
   isSingleCharacter,
   type Outcome,
   pickDirection,
+  rangeDigits,
   resetKey,
   type ShortcutFilter,
   type ShortcutState,
   safeCombo,
+  shortcutSettingsOf,
   startRecording,
   swap,
   take,
@@ -44,9 +48,7 @@ import {
   type WholeSlide,
 } from "./shortcuts.ts";
 
-export type ShortcutPresetKey = keyof typeof shortcutPresetNames;
-
-const presetOrder: ShortcutPresetKey[] = ["default", "qupath", "figma"];
+const presetOrder: PresetKey[] = ["default", "qupath", "figma"];
 
 const holdNotes: Record<WholeSlide, string> = {
   both: "tap keeps it open, hold shows it while held",
@@ -126,7 +128,7 @@ function PendingCard({
         }
       >
         {action.range
-          ? "Press only the modifier, for example ⌥ or ⌃. The numbers 1 to 6 stay the same."
+          ? `Press only the modifier, for example ⌥ or ⌘. The numbers ${rangeDigits(action)} stay the same.`
           : action.sequence
             ? "Press the first key. A number from 1 to 9 always follows it."
             : "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."}
@@ -156,6 +158,26 @@ function PendingCard({
         }
       >
         One key can only do one thing in the same place. Choose what happens to {otherName}.
+      </KeyCard>
+    );
+  }
+  if (pending.kind === "setclash") {
+    const other = keyAction(pending.other);
+    return (
+      <KeyCard
+        tone="warn"
+        title={`${pending.combo} overlaps ${other.name.toLowerCase()} (${pending.slot})`}
+        actions={
+          <>
+            <Button onClick={() => apply({ state: startRecording(state, action.id, slot) })}>
+              Try another key
+            </Button>
+            {cancel}
+          </>
+        }
+      >
+        {other.name} uses {pending.slot} as a set or a chord, so one of its keys would stop working.
+        Change {other.name.toLowerCase()} first, or pick another key.
       </KeyCard>
     );
   }
@@ -207,7 +229,7 @@ function Row({
 }: {
   state: ShortcutState;
   action: KeyAction;
-  clashes: [string, string, string][];
+  clashes: [string, string, string, string][];
   apply: (outcome: Outcome) => void;
 }) {
   const keys = currentKeys(state, action);
@@ -222,7 +244,9 @@ function Row({
   const chip = (key: string, slot: number) => {
     const recording = recordingHere && state.recording?.slot === slot;
     const off = !state.singleLetter && isSingleCharacter(key) && !action.fixed;
-    const conflict = clashing.some(([, , clash]) => clash === key);
+    const conflict = clashing.some(
+      ([first, , mine, theirs]) => (first === action.id ? mine : theirs) === key,
+    );
     return (
       <KeyBinding
         key={`${key}-${slot}`}
@@ -299,20 +323,11 @@ function Row({
 type ShortcutsSectionProps = {
   state: ShortcutState;
   query: string;
-  preset: ShortcutPresetKey;
   apply: (outcome: Outcome) => void;
-  onPreset: (preset: ShortcutPresetKey) => void;
   notify: (message: string) => void;
 };
 
-export function ShortcutsSection({
-  state,
-  query,
-  preset,
-  apply,
-  onPreset,
-  notify,
-}: ShortcutsSectionProps) {
+export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSectionProps) {
   const clashes = conflicts(state);
   const changedCount = Object.keys(state.custom).length;
   const visible = visibleActions(state, query);
@@ -324,8 +339,52 @@ export function ShortcutsSection({
     }))
     .filter((group) => group.rows.length > 0);
   const set = (patch: Partial<ShortcutState>) => apply({ state: { ...state, ...patch } });
+  const fileInput = useRef<HTMLInputElement>(null);
+  const download = () => {
+    const blob = new Blob([exportShortcuts(shortcutSettingsOf(state))], {
+      type: "application/json",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = shortcutFileName;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    notify(
+      `${shortcutFileName} saved to Downloads, with ${
+        changedCount
+          ? `your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
+          : "the default keys"
+      }`,
+    );
+  };
+  const upload = async (file: File | undefined) => {
+    if (file === undefined) return;
+    const result = importShortcuts(await file.text(), shortcutSettingsOf(state));
+    if (!result.ok) {
+      notify(result.reason);
+      return;
+    }
+    const { settings, dropped } = result;
+    apply({
+      state: {
+        ...state,
+        recording: null,
+        pending: null,
+        preset: settings.preset,
+        custom: settings.custom,
+        singleLetter: settings.single_letter,
+        byPosition: settings.by_position,
+        wholeSlide: settings.whole_slide_key,
+      },
+    });
+    notify(
+      dropped.length === 0
+        ? `Loaded ${Object.keys(settings.custom).length} changed keys from ${file.name}`
+        : `Loaded ${file.name}. Left out ${dropped.length}: ${dropped.join("; ")}`,
+    );
+  };
   const nextPreset =
-    presetOrder[(presetOrder.indexOf(preset) + 1) % presetOrder.length] ?? "default";
+    presetOrder[(presetOrder.indexOf(state.preset) + 1) % presetOrder.length] ?? "default";
   return (
     <>
       <div className="flex items-center gap-2.5">
@@ -359,13 +418,13 @@ export function ShortcutsSection({
             size="xs"
             className="font-medium text-fg"
             onClick={() => {
-              onPreset(nextPreset);
+              set({ preset: nextPreset });
               notify(
                 `Preset ${shortcutPresetNames[nextPreset]}. Your own changes stay on top of it.`,
               );
             }}
           >
-            {shortcutPresetNames[preset]}
+            {shortcutPresetNames[state.preset]}
             <Icon name="down" size="xs" />
           </Button>
         </span>
@@ -455,19 +514,21 @@ export function ShortcutsSection({
           />
         </OptionRow>
         <OptionRow label="Your shortcuts" help="Personal: they follow you to any workstation.">
-          <Button
-            onClick={() =>
-              notify(
-                `shortcuts.json saved to Downloads, with ${
-                  changedCount
-                    ? `your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
-                    : "the default keys"
-                }`,
-              )
-            }
-          >
-            Export
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => fileInput.current?.click()}>Import</Button>
+            <Button onClick={download}>Export</Button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="application/json,.json"
+              aria-label="Import shortcuts file"
+              className="hidden"
+              onChange={(event) => {
+                void upload(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+          </div>
         </OptionRow>
       </div>
     </>
