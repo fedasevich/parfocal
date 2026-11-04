@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from parfocal_api import (
+    adjudications,
     annotations,
     announcements,
     audit_trail,
@@ -215,6 +216,8 @@ def create_app(
     app.include_router(opinions.router)
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)
+    app.include_router(adjudications.task_router)
+    app.include_router(adjudications.router)
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
     app.include_router(study_templates.router)

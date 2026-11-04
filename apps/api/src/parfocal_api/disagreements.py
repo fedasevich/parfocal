@@ -25,6 +25,8 @@ from parfocal_api.tables import (
     ProjectRole,
     VerdictReason,
     VerdictValue,
+    adjudication_objects,
+    adjudications,
     disagreement_decisions,
     review_assignments,
     review_edits,
@@ -44,6 +46,7 @@ class ReviewerVerdict(BaseModel):
     answer: str
     value: VerdictValue
     reasons: list[VerdictReason]
+    note: str | None = None
     reopened: bool
 
 
@@ -54,6 +57,19 @@ class QueueDecision(BaseModel):
     value: VerdictValue
     choice: Decision | None
     decided_by_user_id: uuid.UUID | None
+
+
+class Adjudication(BaseModel):
+    id: uuid.UUID
+    adjudicator_user_id: uuid.UUID
+    note: str | None
+    sent_at: datetime
+    declined_at: datetime | None
+    declined_note: str | None
+
+    @property
+    def active(self) -> bool:
+        return self.declined_at is None
 
 
 class QueuedObject(BaseModel):
@@ -68,6 +84,13 @@ class QueuedObject(BaseModel):
     note: str | None = None
     edited_after_decisions: bool = False
     looking_again: bool = False
+    adjudication: Adjudication | None = None
+
+    def reviewers(self) -> list[ReviewerVerdict]:
+        return self.verdicts
+
+    def with_adjudicator(self) -> bool:
+        return self.adjudication is not None and self.adjudication.active
 
 
 class DecisionDraft(BaseModel):
@@ -98,6 +121,11 @@ class QueueHiddenError(ForbiddenError):
 class NotEditedError(ConflictError):
     code = "not-edited-after-decisions"
     title = "This object was not redrawn after its reviewers decided"
+
+
+class WithAdjudicatorError(ConflictError):
+    code = "with-adjudicator"
+    title = "This object is with an adjudicator"
 
 
 class LookingAgainError(ConflictError):
@@ -166,6 +194,31 @@ def edited_after(redrawn: datetime | None, decided: datetime, settled: datetime 
     return settled is None or redrawn > settled
 
 
+async def sent_objects(connection: AsyncConnection, task_id: uuid.UUID) -> dict[Key, Adjudication]:
+    rows = await connection.execute(
+        select(
+            adjudication_objects.c.slide_id,
+            adjudication_objects.c.kind,
+            adjudication_objects.c.number,
+            adjudications,
+        )
+        .join(adjudications, adjudications.c.id == adjudication_objects.c.adjudication_id)
+        .where(adjudication_objects.c.task_id == task_id)
+        .order_by(adjudications.c.sent_at, adjudications.c.id)
+    )
+    return {
+        (row.slide_id, row.kind, row.number): Adjudication(
+            id=row.id,
+            adjudicator_user_id=row.adjudicator_user_id,
+            note=row.note,
+            sent_at=row.sent_at,
+            declined_at=row.declined_at,
+            declined_note=row.declined_note,
+        )
+        for row in rows
+    }
+
+
 async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[QueuedObject]:
     complete = await complete_slides(connection, task_id)
     if not complete:
@@ -185,6 +238,7 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
         )
     }
     redrawn = await last_redrawn(connection, task_id)
+    sent = await sent_objects(connection, task_id)
     queued: list[QueuedObject] = []
     for key, rows in grouped.items():
         slide_id, kind, number = key
@@ -213,6 +267,7 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
                         answer=row.answer,
                         value=VerdictValue(row.value),
                         reasons=[VerdictReason(code) for code in row.reasons],
+                        note=row.note,
                         reopened=row.reopened_at is not None,
                     )
                     for row in rows
@@ -227,6 +282,7 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
                     choice.edits_settled_at if choice else None,
                 ),
                 looking_again=looking_again,
+                adjudication=sent.get(key),
             )
         )
     return queued
@@ -423,6 +479,8 @@ async def decide_disagreement(
     task, found, item = await decidable(connection, principal, task_id, slide_id, object_id)
     if item.looking_again:
         raise LookingAgainError
+    if item.with_adjudicator():
+        raise WithAdjudicatorError
     value = await counted_value(connection, task, slide_id, found, draft)
     values = UNDECIDED | {
         "style": task.decision_style,
@@ -461,6 +519,8 @@ async def leave_disagreement_open(
     task, found, item = await decidable(connection, principal, task_id, slide_id, object_id)
     if item.looking_again:
         raise LookingAgainError
+    if item.with_adjudicator():
+        raise WithAdjudicatorError
     values = UNDECIDED | {
         "left_open": True,
         "note": draft.note or None,

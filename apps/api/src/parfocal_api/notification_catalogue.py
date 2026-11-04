@@ -133,6 +133,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         QUIET,
         breaks_mute=False,
     ),
+    NotificationKind.ADJUDICATION_REQUESTED: Entry(
+        TargetKind.TASK,
+        "Objects to adjudicate",
+        "A researcher asked you to decide some queued objects.",
+        ALL,
+        breaks_mute=True,
+    ),
     NotificationKind.INTEGRATION_DOWN: Entry(
         TargetKind.DELIVERY,
         "Integration down",

@@ -158,66 +158,6 @@ export const useUpdateQueuedObject = <TError = Problem, TContext = unknown>(
   queryClient?: QueryClient,
 ) => updateDraft.useDraftMutation<TError, TContext>(options, queryClient);
 
-export const adjudicationSentSchema = z.object({
-  id: z.string(),
-  adjudicator_user_id: z.string(),
-  objects: z.number().int(),
-});
-
-export type AdjudicationSent = z.infer<typeof adjudicationSentSchema>;
-
-export type SendToAdjudicatorMutationVariables = {
-  taskId: string;
-  data: {
-    adjudicator_user_id: string;
-    note: string | null;
-    objects: { slide_id: string; object: string }[];
-  };
-};
-
-export const getSendToAdjudicatorUrl = (taskId: string) =>
-  `/api/review-tasks/${taskId}/adjudications`;
-
-const sendDraft = defineDraftMutation(
-  "sendToAdjudicator",
-  {
-    method: "POST",
-    url: ({ taskId }: SendToAdjudicatorMutationVariables) => getSendToAdjudicatorUrl(taskId),
-    body: ({ data }) => data,
-  },
-  adjudicationSentSchema,
-);
-
-export type sendToAdjudicatorResponse = Awaited<ReturnType<typeof sendDraft.fetcher>>;
-export type SendToAdjudicatorMutationResult = sendToAdjudicatorResponse;
-export type SendToAdjudicatorMutationError = Problem;
-
-export const sendToAdjudicator = (
-  variables: SendToAdjudicatorMutationVariables,
-  options?: DraftRequest,
-) => sendDraft.fetcher(variables, options);
-
-export const getSendToAdjudicatorMutationKey = () => sendDraft.mutationKey();
-
-export const getSendToAdjudicatorMutationOptions = <TError = Problem, TContext = unknown>(
-  options?: DraftMutationOptions<
-    sendToAdjudicatorResponse,
-    SendToAdjudicatorMutationVariables,
-    TError,
-    TContext
-  >,
-) => sendDraft.mutationOptions<TError, TContext>(options);
-
-export const useSendToAdjudicator = <TError = Problem, TContext = unknown>(
-  options?: DraftMutationOptions<
-    sendToAdjudicatorResponse,
-    SendToAdjudicatorMutationVariables,
-    TError,
-    TContext
-  >,
-  queryClient?: QueryClient,
-) => sendDraft.useDraftMutation<TError, TContext>(options, queryClient);
-
 const anonymousAnswerSchema = queueAnswerSchema.omit({ user_id: true });
 
 export const adjudicationObjectSchema = z.object({

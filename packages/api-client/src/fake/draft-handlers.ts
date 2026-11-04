@@ -1,6 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
-import { type MyAdjudication, myAdjudicationSchema } from "../draft/list-my-adjudications.ts";
 import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
@@ -12,7 +11,6 @@ import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import {
-  adjudications,
   cases,
   checklist,
   cosignRequests,
@@ -38,7 +36,6 @@ export {
   getGetEvaluationReportMockHandler,
   getGetMyAdjudicationMockHandler,
   getGetSignOffSummaryMockHandler,
-  getSendToAdjudicatorMockHandler,
   getStartEvaluationVersionMockHandler,
   getUpdateQueuedObjectMockHandler,
 } from "./adjudication-handlers.ts";
@@ -129,28 +126,6 @@ const taskByCode = (code: string) => {
   return task;
 };
 
-export const toMyAdjudications = (): MyAdjudication[] =>
-  adjudications
-    .filter((item) => inScenarioWorkspace() && item.adjudicator === fakeView().viewer)
-    .map((item) => {
-      const task = taskByCode(item.task);
-      const project = projectByCode(task.project);
-      const slide = slideByIndex(item.slide);
-      return myAdjudicationSchema.parse({
-        id: item.id,
-        task_id: task.id,
-        task_code: task.code,
-        task_name: task.name,
-        project: { id: project.id, code: project.code, name: project.name },
-        asked_by_user_id: people[item.askedBy].id,
-        slide_id: slide.id,
-        slide_label: slide.label,
-        objects: item.objects,
-        decided: item.decided,
-        sent_at: item.sentAt,
-      });
-    });
-
 export const toMyCosignRequests = (): CosignRequest[] =>
   cosignRequests
     .filter((item) => item.to === fakeView().viewer)
@@ -193,11 +168,6 @@ export const toSlideThreads = (slideId: string): SlideThread[] =>
       }),
     );
 
-export const getListMyAdjudicationsMockHandler = (overrideResponse?: MyAdjudication[]) =>
-  http.get("*/api/me/adjudications", () =>
-    HttpResponse.json(overrideResponse ?? toMyAdjudications()),
-  );
-
 export const getListMyCosignRequestsMockHandler = (overrideResponse?: CosignRequest[]) =>
   http.get("*/api/me/cosign-requests", () =>
     HttpResponse.json(overrideResponse ?? toMyCosignRequests()),
@@ -212,12 +182,6 @@ export const getListSlideThreadsMockHandler = (overrideResponse?: SlideThread[])
   );
 
 export const draftOperations: DraftOperation[] = [
-  {
-    operationId: "listMyAdjudications",
-    method: "get",
-    path: "/api/me/adjudications",
-    handler: () => getListMyAdjudicationsMockHandler(),
-  },
   {
     operationId: "listMyCosignRequests",
     method: "get",
