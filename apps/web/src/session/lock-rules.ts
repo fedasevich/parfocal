@@ -31,7 +31,7 @@ export function reauthUrl(returnTo: string): string {
   return `/api/auth/login?${query.toString()}`;
 }
 
-const publicPaths = ["/sign-in", "/sign-up", "/invite"];
+const publicPaths = ["/sign-in", "/sign-up", "/invite", "/shared-reports"];
 
 export function locksAt(pathname: string): boolean {
   return !publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));

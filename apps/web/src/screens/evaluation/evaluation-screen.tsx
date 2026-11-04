@@ -36,6 +36,7 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
 import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
+import { ShareLinks } from "./share-links.tsx";
 
 export type EvaluationScene = "report" | "arrange" | "pdf" | "retiredtpl" | "exportfail";
 
@@ -541,12 +542,7 @@ function EvaluationBody({
                   ? `Compare with ${offered.code}, ${offered.name}`
                   : "No other task to compare"}
               </Button>
-              <Button
-                onClick={() => toast.show("A read-only link for co-authors, no slides included")}
-              >
-                <Icon name="link" />
-                Read-only link
-              </Button>
+              <ShareLinks taskId={taskId} taskCode={report.task_code} />
             </FoldingZone>
           </aside>
         </div>

@@ -13,8 +13,13 @@ export const headlineMetrics = [
   "cell-agreement",
 ] as const;
 
+type HeadlineNumbers = Pick<
+  Evaluation,
+  "overall" | "dice" | "cell_agreement_with_ai" | "mean_kappa"
+>;
+
 export function headlineTiles(
-  evaluation: Evaluation,
+  evaluation: HeadlineNumbers,
   metrics: readonly string[] = headlineMetrics,
   decimals = 2,
 ) {
@@ -46,14 +51,16 @@ const reasonLabel: Record<string, string> = {
   not_a_cell: "Not a cell",
 };
 
-export const reasonRows = (evaluation: Evaluation) =>
+export const reasonRows = (evaluation: Pick<Evaluation, "reasons">) =>
   evaluation.reasons
     .map(([code, count]) => ({ label: reasonLabel[code] ?? code, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
 const scoreLabel: Record<string, string> = { "1": "1 · unusable", "5": "5 · sign as is" };
 
-export const opinionRows = (evaluation: Evaluation) => {
+export const opinionRows = (evaluation: {
+  opinions: readonly { counts: Record<string, number> }[];
+}) => {
   const counts = evaluation.opinions[0]?.counts ?? {};
   return Object.keys(counts)
     .sort((a, b) => Number(a) - Number(b))
@@ -85,7 +92,7 @@ const countWord: Record<string, string> = {
 const longDay = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-export const answerSpread = (evaluation: Evaluation) =>
+export const answerSpread = (evaluation: Pick<Evaluation, "decisions">) =>
   Object.entries(evaluation.decisions.answers)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([answer, count]) => `${answerName[answer] ?? answer} ${count}`)

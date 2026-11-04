@@ -21,8 +21,9 @@ from parfocal_api.evaluation import (
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
-from parfocal_api.problems import NotFoundError, ProblemError
+from parfocal_api.problems import NotFoundError, ProblemError, TooManyRequestsError
 from parfocal_api.projects import owned
+from parfocal_api.rate_limits import report_link_wait
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     ActorKind,
@@ -271,11 +272,23 @@ async def get_shared_report(token: str, request: Request) -> SharedReport:
     engine = engine_of(request)
     hashed = digest(token)
     async with scoped_transaction(engine, AUTH_SCOPE) as connection:
-        tenant_id = await connection.scalar(
-            select(report_links.c.tenant_id).where(report_links.c.token_hash == hashed)
+        found = (
+            await connection.execute(
+                select(report_links.c.id, report_links.c.tenant_id).where(
+                    report_links.c.token_hash == hashed
+                )
+            )
+        ).one_or_none()
+        wait = (
+            None
+            if found is None
+            else await report_link_wait(connection, found.id, auth_state(request).limits)
         )
-    if tenant_id is None:
+    if found is None:
         raise NotFoundError("Report link not found")
+    if wait is not None:
+        raise TooManyRequestsError(wait)
+    tenant_id = found.tenant_id
     async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
         link = (
             await connection.execute(

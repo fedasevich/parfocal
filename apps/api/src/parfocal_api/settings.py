@@ -35,6 +35,7 @@ class ApiSettings(StorageSettings):
     realtime_internal_url: AnyHttpUrl | None = None
     rate_limit_person_per_minute: PositiveInt = 600
     rate_limit_tenant_per_minute: PositiveInt = 3000
+    rate_limit_report_link_per_minute: PositiveInt = 60
     upload_max_bytes: Annotated[int, Field(ge=1, le=MAX_PARTS * MAX_PART_BYTES)] = (
         DEFAULT_UPLOAD_MAX_BYTES
     )

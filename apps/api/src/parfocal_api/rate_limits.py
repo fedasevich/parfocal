@@ -24,6 +24,7 @@ SWEEP_CHANCE = 0.01
 class RateLimits:
     person_per_minute: int
     tenant_per_minute: int
+    report_link_per_minute: int = 60
 
 
 def limits_for(principal: Principal, limits: RateLimits) -> dict[str, int]:
@@ -47,7 +48,16 @@ def limits_for(principal: Principal, limits: RateLimits) -> dict[str, int]:
 async def seconds_to_wait(
     connection: AsyncConnection, principal: Principal, limits: RateLimits
 ) -> int | None:
-    allowed = limits_for(principal, limits)
+    return await counted_wait(connection, limits_for(principal, limits))
+
+
+async def report_link_wait(
+    connection: AsyncConnection, link_id: object, limits: RateLimits
+) -> int | None:
+    return await counted_wait(connection, {f"report-link:{link_id}": limits.report_link_per_minute})
+
+
+async def counted_wait(connection: AsyncConnection, allowed: dict[str, int]) -> int | None:
     if not allowed:
         return None
     window = func.date_trunc("minute", func.now())
