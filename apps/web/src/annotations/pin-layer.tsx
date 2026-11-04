@@ -6,15 +6,17 @@ import {
 } from "@parfocal/api-client";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { pinThread } from "../screens/review/comment-pin.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
+import { PinThread } from "./pin-thread.tsx";
 import { movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
+import { popoverSpot } from "./thread-popover.ts";
 
 type PinLayerProps = {
   engine: ViewerEngine;
@@ -23,12 +25,17 @@ type PinLayerProps = {
   document: AnnotationDocument;
   taskId: string | undefined;
   slideId: string;
+  micronsPerPixel: number | null;
   onDocumentChange: (next: AnnotationDocument) => void;
   onCommit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   onLeave: () => void;
 };
 
 const clickSlopScreenPixels = 3;
+
+const onPinOrThread = (event: Event) =>
+  event.target instanceof Element &&
+  event.target.closest('[data-slot="comment-pin"], [data-testid="pin-thread"]') !== null;
 
 const noTaskReason = "Open the slide from a task to comment on it";
 
@@ -94,6 +101,7 @@ export function PinLayer({
   document: doc,
   taskId,
   slideId,
+  micronsPerPixel,
   onDocumentChange,
   onCommit,
   onLeave,
@@ -107,8 +115,10 @@ export function PinLayer({
   const threads: Thread[] = okData(listed.data) ?? [];
   const [draft, setDraft] = useState<Point | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useRef({ doc, engine, onDocumentChange, onCommit, onLeave, draft, drag });
-  latest.current = { doc, engine, onDocumentChange, onCommit, onLeave, draft, drag };
+  const [openId, setOpenId] = useState<string | null>(null);
+  const latest = useRef({ doc, engine, onDocumentChange, onCommit, onLeave, draft, drag, openId });
+  latest.current = { doc, engine, onDocumentChange, onCommit, onLeave, draft, drag, openId };
+  const closeThread = useCallback(() => setOpenId(null), []);
   const create = useCreateThread();
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
 
@@ -117,10 +127,21 @@ export function PinLayer({
   }, [active]);
 
   useEffect(() => {
+    if (openId === null) return;
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      setOpenId(null);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [openId]);
+
+  useEffect(() => {
     if (!active) return;
     let pressed: { id: number; x: number; y: number } | null = null;
     const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || onPinOrThread(event)) return;
       pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
     };
     const up = (event: PointerEvent) => {
@@ -134,6 +155,7 @@ export function PinLayer({
     };
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (latest.current.openId !== null) return;
       if (latest.current.draft !== null) setDraft(null);
       else latest.current.onLeave();
     };
@@ -175,7 +197,13 @@ export function PinLayer({
     const { drag: current, doc: before } = latest.current;
     setDrag(null);
     dragStart.current = null;
-    if (current === null || !current.moved) return;
+    if (current === null) return;
+    if (!current.moved) {
+      setDraft(null);
+      setOpenId((already) => (already === threadId ? null : threadId));
+      return;
+    }
+    setOpenId(null);
     const after = movePin(before, threadId, current.point, toleranceNow());
     latest.current.onDocumentChange(after);
     latest.current.onCommit(before, after, "Move comment pin");
@@ -187,6 +215,9 @@ export function PinLayer({
     const point = dragged ?? pinPoint(doc, thread.id, pointOfAnchor(thread.anchor));
     return point === null ? [] : [{ thread, point }];
   });
+
+  const opened = pins.find(({ thread }) => thread.id === openId);
+  const openedAt = opened ? slideToScreen(camera, rect, opened.point) : null;
 
   return (
     <div
@@ -251,6 +282,16 @@ export function PinLayer({
           </button>
         );
       })}
+      {opened && openedAt ? (
+        <PinThread
+          key={opened.thread.id}
+          thread={opened.thread}
+          document={doc}
+          micronsPerPixel={micronsPerPixel}
+          spot={popoverSpot(openedAt, { width: rect.width, height: rect.height })}
+          onClose={closeThread}
+        />
+      ) : null}
       {draft && draftAt ? (
         <>
           <span
