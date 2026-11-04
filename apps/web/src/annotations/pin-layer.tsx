@@ -7,6 +7,7 @@ import {
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { pinThread } from "../screens/review/comment-pin.ts";
@@ -28,7 +29,6 @@ type PinLayerProps = {
   micronsPerPixel: number | null;
   onDocumentChange: (next: AnnotationDocument) => void;
   onCommit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
-  onLeave: () => void;
 };
 
 const clickSlopScreenPixels = 3;
@@ -104,7 +104,6 @@ export function PinLayer({
   micronsPerPixel,
   onDocumentChange,
   onCommit,
-  onLeave,
 }: PinLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const people = usePeople();
@@ -116,8 +115,8 @@ export function PinLayer({
   const [draft, setDraft] = useState<Point | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const latest = useRef({ doc, engine, onDocumentChange, onCommit, onLeave, draft, drag, openId });
-  latest.current = { doc, engine, onDocumentChange, onCommit, onLeave, draft, drag, openId };
+  const latest = useRef({ doc, engine, onDocumentChange, onCommit, draft, drag, openId });
+  latest.current = { doc, engine, onDocumentChange, onCommit, draft, drag, openId };
   const closeThread = useCallback(() => setOpenId(null), []);
   const create = useCreateThread();
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
@@ -126,16 +125,18 @@ export function PinLayer({
     if (!active) setDraft(null);
   }, [active]);
 
-  useEffect(() => {
-    if (openId === null) return;
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      event.preventDefault();
-      setOpenId(null);
-    };
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, [openId]);
+  const escRegistry = useEscRegistry();
+  useEffect(
+    () =>
+      escRegistry?.add("comment", {
+        open: () => latest.current.openId !== null || latest.current.draft !== null,
+        peel: () => {
+          if (latest.current.openId !== null) setOpenId(null);
+          else setDraft(null);
+        },
+      }),
+    [escRegistry],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -153,19 +154,11 @@ export function PinLayer({
       const current = latest.current.engine.getCamera();
       setDraft(screenToSlide(current, stage.getBoundingClientRect(), event.clientX, event.clientY));
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      if (latest.current.openId !== null) return;
-      if (latest.current.draft !== null) setDraft(null);
-      else latest.current.onLeave();
-    };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
     };
   }, [active, stage]);
 

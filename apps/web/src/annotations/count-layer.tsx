@@ -14,7 +14,6 @@ type CountLayerProps = {
   colourOf: (classKey: string | null) => string;
   onDrop: (point: Point) => void;
   onRemove: (id: ShapeId) => void;
-  onLeave: () => void;
 };
 
 const clickSlopScreenPixels = 3;
@@ -27,11 +26,10 @@ export function CountLayer({
   colourOf,
   onDrop,
   onRemove,
-  onLeave,
 }: CountLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
-  const latest = useRef({ doc, onDrop, onRemove, onLeave, engine });
-  latest.current = { doc, onDrop, onRemove, onLeave, engine };
+  const latest = useRef({ doc, onDrop, onRemove, engine });
+  latest.current = { doc, onDrop, onRemove, engine };
 
   useEffect(() => {
     if (!active) return;
@@ -64,16 +62,11 @@ export function CountLayer({
       }
       latest.current.onDrop(point);
     };
-    const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") latest.current.onLeave();
-    };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointerup", up, true);
-    window.addEventListener("keydown", key);
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointerup", up, true);
-      window.removeEventListener("keydown", key);
     };
   }, [active, stage]);
 
