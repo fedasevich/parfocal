@@ -2688,7 +2688,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   During blind review a reviewer sees only their own threads and the researcher's (TASK-004), through `parfocal_api.blinding.sees_reviewer` ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Depends on OBJ-001, TASK-004.
   Size: M.
 
-- [ ] COLLAB-003 · Comment tool and pins
+- [x] COLLAB-003 · Comment tool and pins
   C places a pin and opens the composer, Enter posts, Shift+Enter adds a line. Pins show initials, store an offset relative to their target, follow and hide with their shape, and are draggable with undo.
   Done when interaction tests cover placing, dragging and following a moved shape.
   Refs doc 15, mock 12.

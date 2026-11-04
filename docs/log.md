@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-05
+
+- COLLAB-003 (comment tool and pins) adds a pin model and pin layer in apps/web/src/annotations and the C tool on the live stage. Enter posts, Shift+Enter adds a line, pins show initials, follow and hide with their shape by a stored offset, and drag as one undo step. A dragged pin is session-only until a thread anchor move endpoint exists, and the composer needs a task until COLLAB-015 (threads on any slide).
+
 ## 2026-11-04
 
 - AINUC-002 (typer runner) adds parfocal_ml.typer in workers/ml, which averages HoVer-NeXt PanNuke probabilities inside each outline at 0.25 um per pixel and maps them as the POC does, epithelial to tumor only when the slide's tissue default is tumor (uterus, cervix, prostate and esophagus from POC doc 21), with alternative types within 0.10 of the top. 10 tests on synthetic maps and a stubbed model.
