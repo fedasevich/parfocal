@@ -4,8 +4,8 @@ import {
   type DecisionAnswer,
   type ProjectClass,
 } from "@parfocal/ui/components/decision-buttons";
-import { sureText } from "./ai-wording.ts";
-import type { Confidence, Count, ReviewStyle } from "./decision-mapping.ts";
+import { type ReviewConfidence, sureText } from "./ai-wording.ts";
+import type { Count, ReviewStyle } from "./decision-mapping.ts";
 
 export * from "./decision-mapping.ts";
 
@@ -47,7 +47,7 @@ export type CardText = {
 export function cardText(
   style: ReviewStyle,
   object: ReviewObject,
-  confidence: Confidence,
+  confidence: ReviewConfidence,
 ): CardText {
   const cls = object.class_name.toLowerCase();
   const cell = object.kind === "cell";

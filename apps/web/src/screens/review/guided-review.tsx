@@ -1,4 +1,9 @@
-import { useGetReviewedLayer, useSubmitSlideReview } from "@parfocal/api-client";
+import {
+  resolveSetting,
+  useGetMySettingLayers,
+  useGetReviewedLayer,
+  useSubmitSlideReview,
+} from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
@@ -16,6 +21,7 @@ import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { type ReviewConfidence, reviewConfidence } from "./ai-wording.ts";
 import { useAnswerKeys } from "./answer-keys.ts";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
@@ -189,17 +195,25 @@ function GuidedBody({
       : null,
   );
   const counts = countAnswers(objects, answer);
-  const settings = displaySettings(
-    session.display,
-    setup.preset,
-    setup.confidenceLock
-      ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
-      : [],
-  );
-  const confidence = settings.confidence as Confidence;
   const extraLocks: DisplayLock[] = setup.confidenceLock
     ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
     : [];
+  const myLayers = okData(useGetMySettingLayers().data);
+  const wording =
+    scene === undefined
+      ? resolveSetting("confidence_wording", {
+          lab: myLayers?.lab ?? { values: {}, locked: [] },
+          personal: myLayers?.personal ?? {},
+          device: {},
+        }).value
+      : null;
+  const sceneSettings = displaySettings(session.display, setup.preset, extraLocks);
+  const confidence: ReviewConfidence =
+    wording === null
+      ? (sceneSettings.confidence as Confidence)
+      : reviewConfidence(session.display, setup.preset, extraLocks, wording);
+  const shownConfidence = confidence === "frequency" ? "word" : confidence;
+  const settings = { ...sceneSettings, confidence: shownConfidence };
   const readOnly = setup.readOnly || setup.issue === "withdrawn";
   const tileFail = setup.issue === "slidefail";
   const lockLine: LockLine = setup.readOnly
@@ -959,6 +973,7 @@ function GuidedBody({
                   display={session.display}
                   preset={setup.preset}
                   extraLocks={extraLocks}
+                  confidence={shownConfidence}
                 />
               ),
             },

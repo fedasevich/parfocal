@@ -50,6 +50,7 @@ export type RowKey =
   | "defaultPreset"
   | "modelWarnings"
   | "outlineMode"
+  | "confidenceWording"
   | "device"
   | "wheel"
   | "doubleClick"
@@ -151,6 +152,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Outline display",
       "personal",
       "How the review viewer shows how sure the AI is about each outline.",
+    ),
+    row(
+      "confidenceWording",
+      "Confidence wording",
+      "personal",
+      "How the review card says how sure the AI is. A task that locks confidence keeps its own.",
     ),
     row(
       "defaultPreset",

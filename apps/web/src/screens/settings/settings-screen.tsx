@@ -31,6 +31,7 @@ import {
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Toast } from "@parfocal/ui/components/undo-toast";
+import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
@@ -68,6 +69,7 @@ import {
   shortcutSettingsOf,
 } from "./shortcuts.ts";
 import { isListening, ShortcutsSection, useKeyCapture } from "./shortcuts-section.tsx";
+import { wordingNow, wordingPairs } from "./wording-row.ts";
 
 type Personal = MySettings["personal"];
 
@@ -218,6 +220,7 @@ function LoadedSettings({
   const [device, setDevice] = useState<Device>(deviceDefaults);
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [outlineMode, setOutlineMode] = useOutlineMode();
+  const [wordingPicked, setWordingPicked] = useState<WordingSetting | null>(null);
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const [channels, setChannels] = useState<Partial<Record<RowKey, Channel>>>({});
   const [signedOutAt, setSignedOutAt] = useState<{ count: number; at: Date } | null>(null);
@@ -446,6 +449,25 @@ function LoadedSettings({
         value={outlineMode}
         pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
         onChange={(value) => setOutlineMode(value as OutlineModeChoice)}
+      />
+    ),
+    confidenceWording: () => (
+      <Segments
+        label="Confidence wording"
+        value={
+          wordingPicked ??
+          wordingNow({
+            lab: layers?.lab ?? { values: {}, locked: [] },
+            personal: layers?.personal ?? {},
+            device: {},
+          })
+        }
+        pairs={wordingPairs}
+        onChange={(value) => {
+          const choice = value as WordingSetting;
+          setWordingPicked(choice);
+          saveLayers.mutate({ data: { values: { confidence_wording: choice } } });
+        }}
       />
     ),
     modelWarnings: () =>
