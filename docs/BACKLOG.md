@@ -4167,7 +4167,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover each decision, a change, a refused change after sign-off and the audit entry.
   Depends on OBJ-001, TASK-002.
 
-- [ ] GUIDE-002 · Guided review
+- [x] GUIDE-002 · Guided review
   One object at a time with the question, the buttons and the keys of the task's decision style (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), for example "How sure are you that T2 is tumor?" with 1 to 5 in the default 5-point certainty, what the AI said in a 16 px line when the style shows the claim, and a Not sure answer in every style. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review. The slide uses the smart minimap of NAV-006 instead of its own fixed 136 px map ([ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md)).
   Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
   Objects come in the task's review order (GUIDE-012).
