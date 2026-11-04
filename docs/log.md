@@ -4,6 +4,10 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- ANN-005 (polygon tool) adds Shift to snap the next vertex to 45 degrees and finishes a draft of 3 or more vertices when the tool changes, with interaction tests for every closing path.
+- RSET-010 (What files work? drawer) moved the formats drawer into a lazy chunk opened from the upload step and from Check's read error, linking the real Parfocal JSON template and schema and listing the 10 validator codes. The CSV template button is still a stand-in toast.
+- MEAS-003 (measurement list) added MeasurementList in apps/web/src/measure/ as a panel in the live slide stage, listing rulers and closed shapes with value, perimeter, drawn time and a category chip, with node and Playwright tests. Chips show the class key until class names are passed in.
+- Main CI fix: the isolation and permission suites now cover the display preset, adjudication, slide tissue and area routes, sendToAdjudicator's researcher case uses an adjudicator who stays in the project, and the db test auth override no longer keeps every test app alive (FastAPI 0.142 caches dependency callables), which had the whole db run OOM-killed at 5 to 8 GB. The e2e job fetches the small fixtures, the side panel resize handle sits under the whole-slide peek, and the first viewer render waits 20 s like the tool specs.
 - MEAS-002 (area and perimeter) added apps/web/src/measure/shape-measure.ts with shoelace polygons, analytic ellipses and even-odd holes and islands in px and microns, null microns without mpp, tested on analytic shapes. Nothing shows the numbers yet, which MEAS-003 does.
 - CMD-003 (? opens Shortcuts) mounts a ShortcutsKey in the root route so ? opens Settings at Shortcuts, with a test that every registered action is listed and an E2E pressing Shift+?.
 - REVIEW-025 (fake keeps posted threads) makes the api-client fake keep posted threads with their first message, list them back with the resolved filter and serve their comments, and the comment pin E2E sees a new thread in the Comments tab.

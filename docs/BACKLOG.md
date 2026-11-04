@@ -2455,7 +2455,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 16.
   Size: M.
 
-- [ ] ANN-005 · Polygon tool
+- [x] ANN-005 · Polygon tool
   Click adds a vertex, Enter, double-click or click on the first vertex closes, Shift snaps 45°, switching tool finishes a polygon of 3 or more vertices.
   Done when interaction tests cover each path.
   Size: S.
@@ -2610,7 +2610,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests check areas against analytic shapes.
   Size: S.
 
-- [ ] MEAS-003 · Measurement list in the inspector
+- [x] MEAS-003 · Measurement list in the inspector
   Each measurement with area, value, time, category chip.
   Done when component tests cover the list.
   Size: S.
@@ -4021,7 +4021,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when API tests refuse the delete without confirmation when a task uses the set, allow it with confirmation, and allow an unreviewed set without it.
   Depends on RSET-001, TASK-001. Split from RSET-001 by [ADR 0077](adr/0077-result-sets.md).
 
-- [ ] RSET-010 · Help drawer "What files work?"
+- [x] RSET-010 · Help drawer "What files work?"
   The drawer opens from the upload and from an import error, lists the formats that import, links the Parfocal JSON template and schema, and explains the error codes of the validator.
   Done when a component test opens it from both places and shows each format.
   Depends on RSET-002. Split from RSET-002 so the schema and validator have no screen work. Refs mock: formats.
