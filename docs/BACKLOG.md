@@ -4354,7 +4354,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002, RSET-008.
   Size: L.
 
-- [ ] EVAL-004 · Compare two evaluations
+- [x] EVAL-004 · Compare two evaluations
   Two result sets of the same slides side by side, for example CAMELYON against PathoSAM.
   Done when component tests render a comparison of two seeded tasks.
   Depends on EVAL-002.
