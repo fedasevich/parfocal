@@ -2585,7 +2585,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Importing a file as a result set goes through RSET. This task covers importing a file as editable annotations in Annotate.
   Size: M.
 
-- [ ] ANN-024 · Export GeoJSON, FlatGeobuf and own JSON
+- [x] ANN-024 · Export GeoJSON, FlatGeobuf and own JSON
   Runs are included (the POC once exported "0 shapes"), large results stream from the server.
   Done when tests export a 100k-run result and count every feature.
   Size: M.
