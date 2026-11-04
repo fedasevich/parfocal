@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- VIEW-025 (coverage tracking) records each person's 10x coverage per slide as a bitset on a capped 64 px cell grid and batches it to GET and POST /api/slides/{slide_id}/coverage (migration 0087, renumbered after ADJ-008's 0086), with useSlideCoverage for CASE-009 and CASE-016. ADR 0234 records it. Coverage counts the whole slide until the tissue mask reaches the client.
 - LAB-003 (sample slides and synthetic data) added apps/web/src/lab/synthetic-data.ts with the 15 format samples, 5 big files and CAMELYON16 list, and a seeded generator for synthetic nuclei and heatmap fields, each labelled with a Synthetic chip in the developer drawer, tested for labels. The catalogue slides still open through the mock drawer and no renderer draws the generated layers yet.
 - ADJ-008 (send to an adjudicator) built: researchers send queued objects to a project member who is not a reviewer of the task, who sees reviewers only as A and B and decides or declines with a note, with migration 0086 (adjudications). The web now uses the generated adjudication client in place of the drafts.
 - GUIDE-002 (guided review) finished: auto-advance and the dot glyphs are unit-tested helpers, and E2E reviews a slide by mouse alone and by keyboard alone. The keyboard spec does not yet press J and Shift+J from CMD-006.

@@ -1317,7 +1317,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when unit tests cover conversions on slides with different microns per pixel.
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
 
-- [ ] VIEW-025 · Coverage tracking
+- [x] VIEW-025 · Coverage tracking
   Record which tissue has been seen at 10× or more, per user and slide, persisted to the server in batches.
   Done when tests on a scripted pan path produce the expected coverage raster and percentage, and coverage survives reload.
   Refs kit W19, mock 5 and 17.
