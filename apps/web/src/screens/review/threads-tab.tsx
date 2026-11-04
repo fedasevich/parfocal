@@ -23,6 +23,14 @@ export const useSlideThreads = (taskId: string, slideId: string) =>
 export const openThreadCount = (threads: Thread[]) =>
   threads.filter((thread) => thread.resolved_at === null).length;
 
+export const openThreadsWarning = (count: number, where: string) =>
+  count === 0
+    ? undefined
+    : `${count} open thread${count === 1 ? "" : "s"} on ${where}. You can still submit.`;
+
+export const useOpenThreadsWarning = (taskId: string, slideId: string) =>
+  openThreadsWarning(openThreadCount(useSlideThreads(taskId, slideId)), "this slide");
+
 type ThreadsTabProps = {
   taskId: string;
   slideId: string;

@@ -115,6 +115,7 @@ type SlideDoneCardProps = React.ComponentProps<"div"> & {
   blockers?: Blocker[];
   submitLabel: string;
   failed?: boolean;
+  warning?: string | undefined;
   lockedReason?: string;
   panel?: boolean;
   onSubmit?: () => void;
@@ -128,6 +129,7 @@ function SlideDoneCard({
   blockers = [],
   submitLabel,
   failed = false,
+  warning,
   lockedReason,
   panel = false,
   onSubmit,
@@ -214,6 +216,11 @@ function SlideDoneCard({
         ))}
       </div>
       <BeforeYouList id={listId} title="Before you submit" blockers={blockers} />
+      {warning ? (
+        <InlineError tone="warn" role="status" data-slot="submit-warning">
+          {warning}
+        </InlineError>
+      ) : null}
       <div className="mt-auto grid gap-2.5">
         <button
           type="button"

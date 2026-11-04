@@ -45,6 +45,10 @@ export const signOffSummarySchema = z.object({
     with_adjudicator: z.array(countByPerson),
     left_open: z.array(z.object({ object: z.string(), slide_label: z.string() })),
   }),
+  open_threads: z.object({
+    total: z.number().int(),
+    slides: z.array(z.object({ slide_label: z.string(), count: z.number().int() })),
+  }),
   result_set: z.object({
     name: z.string(),
     objects: z.number().int(),

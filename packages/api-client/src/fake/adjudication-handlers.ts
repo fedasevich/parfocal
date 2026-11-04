@@ -41,6 +41,7 @@ import {
   signQueueTask,
   startNextVersion,
 } from "./queue-scene.ts";
+import { toThreads } from "./review-handlers.ts";
 import {
   adjudications,
   type PersonKey,
@@ -49,6 +50,7 @@ import {
   reviewTasks,
   scenarioNow,
   slideByIndex,
+  slides,
 } from "./scenario.ts";
 import {
   adjudicator,
@@ -213,6 +215,12 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
         }))
         .filter((row) => row.slides_left > 0);
   const states = live.map((item) => item.live.state);
+  const openThreads = slides
+    .map((slide) => ({
+      slide_label: slide.label,
+      count: toThreads(current.id, slide.id, false).length,
+    }))
+    .filter((row) => row.count > 0);
   return signOffSummarySchema.parse({
     task_id: taskId,
     version: 1,
@@ -236,6 +244,10 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
       left_open: live
         .filter((item) => item.live.state === "left-open")
         .map((item) => ({ object: item.seed.object, slide_label: item.seed.slideLabel })),
+    },
+    open_threads: {
+      total: openThreads.reduce((sum, row) => sum + row.count, 0),
+      slides: openThreads,
     },
     result_set: resultSetFacts,
     signature: state.signed

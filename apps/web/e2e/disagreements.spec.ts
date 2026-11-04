@@ -105,6 +105,15 @@ for (const { path, persona, sees, dialog } of scenes) {
   });
 }
 
+test("sign-off warns about open threads and still lets the researcher sign", async ({ page }) => {
+  await page.goto(`${base}/sign-off?scene=ready`);
+  const modal = page.getByRole("dialog", { name: "Sign off RT-14" });
+  await expect(modal).toContainText("3 threads still open");
+  await expect(modal).toContainText("3 on A1");
+  await expect(modal).toContainText("they do not block signing");
+  await expect(modal.getByRole("button", { name: /^Sign/ }).last()).toBeEnabled();
+});
+
 test("the report's Methods block says how the decisions were counted", async ({ page }) => {
   await page.goto(`${base}/evaluation?scene=report`);
   const methods = page.locator("[data-methods]").first();
