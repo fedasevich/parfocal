@@ -97,7 +97,7 @@ test("a row click opens the object, an answer lands in the list and Whole slide 
   await expect(panel(page).getByRole("button", { name: /^T5 Tumor region/ })).toContainText(
     "agree",
   );
-  await page.getByRole("button", { name: "Whole slide" }).click();
+  await page.getByRole("button", { name: "Whole slide", exact: true }).click();
   await expect(page).not.toHaveURL(/object=/);
   await expect(page.getByRole("button", { name: /Go to|All decided/ })).toBeVisible();
 });

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { pathPoints, placeMinimap } from "../src/screens/viewer-tools/minimap-placement.ts";
+import { tissueShareOnScreen } from "../src/screens/viewer-tools/tissue-share.ts";
 import { cropCentre } from "../src/screens/viewer-tools/tool-geometry.ts";
 import {
   measuredSize,
@@ -69,4 +70,11 @@ test("path points read the mock's M and L path", () => {
     [3, 4],
     [5, 6],
   ]);
+});
+
+test("the tissue on screen is the share of the tissue bounds the viewport covers", () => {
+  assert.equal(tissueShareOnScreen([-100, -100, 2000, 2500]), 1);
+  assert.equal(tissueShareOnScreen([0, 0, 700, 1924]), 0.5);
+  assert.equal(tissueShareOnScreen([2000, 0, 100, 100]), 0);
+  assert.ok(tissueShareOnScreen([800, 800, 294, 253]) < 0.05);
 });
