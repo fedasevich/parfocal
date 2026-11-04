@@ -1,8 +1,8 @@
 # 0173. Lingui for the web app's strings
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Parfocal agents, owner to review
+- Status: Accepted
+- Deciders: Parfocal agents, owner (accepted 2026-11-04)
 - Backlog: I18N-000 (research check for i18n libraries), I18N-001 (string externalisation in the web app)
 
 ## Context

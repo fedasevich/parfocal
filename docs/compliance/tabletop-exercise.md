@@ -1,6 +1,6 @@
 # Tabletop exercise
 
-A ready-to-run exercise for the [incident response runbook](incident-response.md), and the record of each time it is run. SEC-018 (incident response and breach notification runbook) asks that one exercise be recorded. None has been run yet, because it needs the people named in the runbook's roles table.
+A ready-to-run exercise for the [incident response runbook](incident-response.md), and the record of each time it is run. SEC-018 (incident response and breach notification runbook) asks that one exercise be recorded. The first was run on paper on 2026-11-04, see Records.
 
 ## How to run it
 
@@ -105,4 +105,46 @@ Runbook changes made after the exercise:
 
 ## Records
 
-No exercise has been run yet. TODO: the owner runs the first one and records it here.
+### Tabletop 2026-11-04 · Another workspace's slides in a reviewer's task list
+
+- Facilitator: a Parfocal agent session, at the owner's request (decision 42).
+- Participants and their roles: the same agent session played the incident lead, the technical responder and the privacy contact by following the runbook as written. The owner, who holds those roles, was not in the room. There is no deputy and no counsel yet.
+- Duration: one pass through the five injects, on paper.
+- Scenario: [the scenario above](#scenario-another-workspaces-slides-in-a-reviewers-task-list), unchanged.
+
+What the team did at each inject:
+
+1. The email would reach `support@parfocal.eu`, which does not exist until OPS-013 (email routing for support and security) routes it to the owner's inbox. Severity SEV1, because another workspace's patient data is shown. The register entry takes 09:10 as first notice and also as awareness, because the reviewer already saw patient initials, which is the stricter reading of the clock.
+2. Containment within the hour is a rollback deploy of Friday's change and a fix of the job to `SET LOCAL`, both additive and covered by ADR 0151 (standing approval within $30 a month). A legal hold goes on both workspaces. Nothing needs deleting or rotating, so no single action needed the owner's separate yes. Evidence first from the sources that expire soonest, the edge and container logs, then a Neon branch of production as a snapshot, then the audit log, which is kept. Finding every crossed request means comparing each audit event's actor workspace with its target workspace since Friday 16:00 UTC, and there is no ready query for that.
+3. It is a breach of workspace B's data, for which B is controller and Parfocal processor. Parfocal tells B within 24 hours of awareness, so by Tuesday 09:10 UTC, with the four items of the notice section and the incident ID. Workspace A is told too, so it can ask its reviewer to keep nothing. One reviewer, a health professional, saw initials and a barcode for 40 seconds, so the risk to patients is likely not high, but that is B's call as controller.
+4. No names by email. Parfocal sends B the slide and case IDs through the workspace itself, and B looks the patients up in its own records. The register keeps only counts. To the second question, Parfocal does not notify an authority for B's data, B does, and Parfocal answers B's questions so it meets its own 72 hours.
+5. The runbook says counsel agrees before the hold is lifted, and there is no counsel. The review lists the timeline, the cause (session level tenant setting behind the pooler), the fix and its test, and the follow-up tasks below.
+
+Where the runbook helped:
+
+- The severity table and the clock table gave the answers to injects 1 and 3 without debate.
+- The split between processor and controller duties answered inject 4 directly.
+- The rule that only deletes, rotations, purges and resets need a separate yes kept containment fast.
+
+Where the runbook failed or was unclear:
+
+- The support and security mailboxes do not exist yet, so the first report would be lost.
+- Lifting the legal hold needs counsel, and none is retained.
+- A workspace has no security contact to send the notice to.
+- There is no ready query for audit events that cross workspaces, and no alert for them.
+- One person holds every role, so a breach while the owner is away has nobody to decide.
+
+Actions:
+
+| Action | Owner | Backlog task or date |
+|---|---|---|
+| Route `support@` and `security@parfocal.eu` to the owner's inbox | Agent, owner verifies the address once | OPS-013 (email routing for support and security) |
+| Add a security contact to each workspace | Agent | SEC-029 (security contact for each workspace) |
+| Name counsel, the supervisory authority and the national CSIRT | Owner | SEC-030 (legal review of the GDPR documents before the first real tenant) |
+| Alert on audit events whose actor and target workspaces differ, and keep the query in the runbook | Agent | OPS-007 (alerting and on-call) |
+| Name a deputy | Owner | When a second person joins |
+
+Runbook changes made after the exercise:
+
+- Recover: while no counsel is retained, the affected controller's written agreement lifts the legal hold.
+- Notices go to the workspace owners until SEC-029 adds the security contact.

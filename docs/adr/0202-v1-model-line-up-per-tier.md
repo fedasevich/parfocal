@@ -1,8 +1,8 @@
 # 0202. The v1 model line-up is PathoSAM AIS and HoVer-NeXt for nuclei, the MONAI CAMELYON model for tumor, and PathoSAM for interactive outlines, all non-commercial or unconfirmed
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Yurii Fedas (to confirm), proposed by the agent doing AIP-000 (AI platform research check)
+- Status: Accepted
+- Deciders: Yurii Fedas (accepted 2026-11-04 as the v1 starting line-up), proposed by the agent doing AIP-000 (AI platform research check)
 - Backlog: AIP-000 (AI platform research check). Confirms STACK-022 (background jobs and durable workflows), STACK-027 (GPU inference serving) and STACK-031 (model licensing policy, on hold). Feeds AINUC-000 (nuclei research check), AISEG-000 (interactive segmentation research check), AITUM-000 (tumor map research check), AIP-002 (model registry) and the tier defaults of [ADR 0159](0159-tier-mapping-per-workspace.md) (tier mapping per workspace)
 
 ## Context
@@ -84,7 +84,7 @@ Rules that follow.
 ## Consequences
 
 - The catalogue and the tier defaults of ADR 0159 still name `pathosam-hovernext` and `hovernet`, and the Good tiers point at HoVer-Net. A follow-up task brings the catalogue and defaults in line with the table above. This ADR changes no code.
-- AIP-002 (model registry) stores each row with its licence fields as recorded here. Its done-when line still asks for the STACK-031 rule to block a non-commercial model in a commercial tenant, which conflicts with STACK-031 being on hold. `TODO` for the owner.
+- AIP-002 (model registry) stores each row with its licence fields as recorded here. Its done-when line still asks for the STACK-031 rule to block a non-commercial model in a commercial tenant, which conflicted with STACK-031 being on hold. The owner chose on 2026-11-04 to record licences only and block nothing while STACK-031 is on hold, and AIP-002 now says so. The block comes back with STACK-031.
 - AINUC-000, AISEG-000 and AITUM-000 start from this table and read NucShare, SAFViT, PLUTO-4 and LiteFM in full.
 - Open source checks: re-read on Hugging Face, Zenodo and arXiv every cell marked "not re-read" once those hosts are reachable, the PathoSAM and InstanSeg weights licences, and the SAM 3 licence text.
 

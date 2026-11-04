@@ -7,7 +7,7 @@ Fields in square brackets are filled per tenant.
 ## Parties
 
 - Controller: [legal name, address, registration number, contact for data protection].
-- Processor: TODO: the owner names Parfocal's legal entity, its address and its contact for data protection.
+- Processor: Yurii Fedas, trading as Parfocal, contact for data protection `support@parfocal.eu`. TODO: the postal address and registration number, or the company once it exists (SEC-030, legal review before the first real tenant).
 
 ## 1. Subject, duration and nature
 
@@ -47,7 +47,7 @@ Fields in square brackets are filled per tenant.
 
 4.5 The processor helps the controller with security, breach notification, impact assessments and prior consultation under Articles 32 to 36.
 
-4.6 The processor notifies the controller of a personal data breach without undue delay and within [24] hours of becoming aware of it, with the facts Article 33(3) lists as far as they are known. TODO: confirm the hours with counsel. The [incident response runbook](incident-response.md) uses 24 hours ([ADR 0186](../adr/0186-incident-response-and-breach-notification.md)).
+4.6 The processor notifies the controller of a personal data breach without undue delay and within [24] hours of becoming aware of it, with the facts Article 33(3) lists as far as they are known. The owner accepted 24 hours on 2026-11-04, and counsel may change it in SEC-030. The [incident response runbook](incident-response.md) uses 24 hours ([ADR 0186](../adr/0186-incident-response-and-breach-notification.md)).
 
 4.7 The processor makes available the information needed to show compliance and allows audits by the controller or an auditor it mandates, with [30] days notice, at most once a year unless a breach or a regulator requires more.
 

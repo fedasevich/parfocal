@@ -21,10 +21,10 @@ There is one person behind Parfocal today, so most roles fall on the owner. The 
 
 | Role | Does what | Who |
 |---|---|---|
-| Incident lead | Runs the incident, decides severity, keeps the timeline, decides whether to notify | TODO: the owner names the lead and a deputy |
+| Incident lead | Runs the incident, decides severity, keeps the timeline, decides whether to notify | The owner, Yurii Fedas, until staff exist. There is no deputy yet. While the owner is unreachable, an agent session keeps the timeline and the clocks but decides nothing |
 | Technical responder | Contains and fixes. An agent may help with reads and with additive fixes. Every delete, rotation, purge or reset still needs the owner's yes in chat, one action at a time ([ADR 0115](../adr/0115-production-access-and-spend-caps.md), [ADR 0151](../adr/0151-standing-approval-for-production-within-30-dollars.md)) | The owner, with agents |
-| Privacy contact | Judges the risk to people, writes the notices, talks to the authority | TODO: the owner, or the data protection officer once one is named ([records-of-processing.md](records-of-processing.md)) |
-| Counsel | Checks the notices and the decision not to notify | TODO: name and contact |
+| Privacy contact | Judges the risk to people, writes the notices, talks to the authority | The owner, until a data protection officer is named ([records-of-processing.md](records-of-processing.md)) |
+| Counsel | Checks the notices and the decision not to notify | None retained yet. TODO: the legal review before the first real tenant (SEC-030) names counsel |
 
 ## Severity
 
@@ -43,7 +43,7 @@ The 72 hours of Art. 33 run from the moment Parfocal becomes aware of a breach, 
 | From awareness | As controller | As processor |
 |---|---|---|
 | Hour 0 | Open a register entry. Preserve evidence | Same |
-| Within 24 hours (TODO: the hours counsel sets in DPA clause 4.6) | | Tell every affected workspace with what is known, even if incomplete |
+| Within 24 hours, as DPA clause 4.6 says | | Tell every affected workspace with what is known, even if incomplete |
 | Within 72 hours | Notify the supervisory authority unless the breach is unlikely to result in a risk to people. If facts are missing, notify anyway and send the rest in phases (Art. 33(4)). If late, give the reasons for the delay | Answer the workspace's questions so it can meet its own 72 hours |
 | Without undue delay | Tell the people affected when the risk to them is high (Art. 34), unless Art. 34(3) applies | Help the workspace tell its patients if it asks |
 | Always | Record the breach, its effects and the action taken, even when nobody is notified (Art. 33(5)) | Record it the same way |
@@ -115,7 +115,7 @@ The notice to the supervisory authority holds what Art. 33(3) lists:
 3. The likely consequences.
 4. The measures taken or proposed, including those to reduce harm.
 
-The notice to a workspace (processor duty) holds the same four items as far as they are known, the incident ID, and what the workspace must decide. Send it to the workspace's registered security contact. TODO: the workspace settings have no security contact field yet, so this needs a backlog task before the first tenant.
+The notice to a workspace (processor duty) holds the same four items as far as they are known, the incident ID, and what the workspace must decide. Send it to the workspace's registered security contact, which SEC-029 (security contact for each workspace) adds before the first tenant. Until then, send it to the workspace owners.
 
 The notice to people (Art. 34(2)) uses clear plain language and holds items 2 to 4 above, with what the person can do to protect themselves.
 
@@ -123,15 +123,15 @@ Email to users goes through Resend in production ([ADR 0039](../adr/0039-email-t
 
 | Notify | Where | Who |
 |---|---|---|
-| Supervisory authority | TODO: the authority of the member state of Parfocal's main establishment, its breach form or address, once the owner names the legal entity | Privacy contact |
-| Affected workspaces | The workspace security contact (TODO above) | Incident lead |
+| Supervisory authority | The authority of the member state of Parfocal's main establishment, through its online breach form. TODO: name it once the legal entity is registered (SEC-030) | Privacy contact |
+| Affected workspaces | The workspace security contact (SEC-029), or the workspace owners until it exists | Incident lead |
 | People affected | Email through Resend, or a public notice under Art. 34(3)(c) | Privacy contact, after counsel |
 | Subprocessor whose service failed | Its security contact, see the contact table | Incident lead |
-| Police or CSIRT | TODO: whether to report, and to which national CSIRT | Incident lead |
+| Police or CSIRT | Report a SEV1 caused by an attack to the national CSIRT of the main establishment, and to the police when there is a crime such as extortion. TODO: name the CSIRT with the authority (SEC-030) | Incident lead |
 
 ### 7. Recover
 
-Deploy the fix through the normal pipeline with a test that fails before it. Restore from backup only by the restore steps of SEC-014 (backups and restore testing), which are not written yet. Lift the legal hold only after the incident is closed and counsel agrees.
+Deploy the fix through the normal pipeline with a test that fails before it. Restore from backup only by the restore steps of SEC-014 (backups and restore testing), which are not written yet. Lift the legal hold only after the incident is closed and counsel agrees. While no counsel is retained, the affected controller's written agreement replaces counsel's.
 
 ### 8. Learn
 
@@ -158,8 +158,8 @@ No channel today alerts on a security event in production, such as a burst of fa
 
 Tick each item in the owner's own record, with the date. None of these can be done from a cloud session.
 
-- [ ] Name the incident lead, a deputy, the privacy contact and counsel in the roles table above.
-- [ ] Choose one security contact address, for example a mailbox at `parfocal.eu`, and write it here. TODO: the address.
+- [x] Name the incident lead and the privacy contact in the roles table above (the owner, 2026-11-04). A deputy and counsel follow when they exist.
+- [x] Choose one security contact address: `security@parfocal.eu`, routed to the owner's inbox by OPS-013 (email routing for support and security).
 - [ ] Check that the Cloudflare, Modal, Neon (through Vercel), Zitadel, GitHub and Endora account emails reach a mailbox the incident lead reads, and write which address each uses.
 - [ ] Turn on account security notifications in each: new sign-in, API token created, member added. Write which ones each provider offers.
 - [ ] In Zitadel, decide whether failed sign-in and lockout events should notify the security contact, and set it if so.
@@ -168,20 +168,20 @@ Tick each item in the owner's own record, with the date. None of these can be do
 - [ ] When Sentry, Grafana Cloud and Resend accounts are created, route their alerts to the security contact on day one, as platform.md already asks for spend.
 - [ ] Find the breach notification form of the supervisory authority and write its link in the contact table.
 - [ ] Record each subprocessor's security contact from its DPA in the contact table.
-- [ ] Run the [tabletop exercise](tabletop-exercise.md) and record it.
+- [x] Run the [tabletop exercise](tabletop-exercise.md) and record it (on paper, 2026-11-04).
 
 ### Contact table
 
-Every entry is a TODO. Do not fill it from memory or the web without checking the source on the day.
+Do not fill an entry from memory or the web without checking the source on the day.
 
 | Who | Contact | Source and date checked |
 |---|---|---|
-| Incident lead | TODO | |
-| Deputy | TODO | |
-| Privacy contact | TODO | |
-| Counsel | TODO | |
-| Supervisory authority | TODO | |
-| National CSIRT | TODO | |
+| Incident lead | The owner, through `security@parfocal.eu` | ADR 0186, 2026-11-04 |
+| Deputy | None yet | |
+| Privacy contact | The owner, through `security@parfocal.eu` | ADR 0186, 2026-11-04 |
+| Counsel | TODO: SEC-030 | |
+| Supervisory authority | TODO: SEC-030, after the legal entity | |
+| National CSIRT | TODO: SEC-030, after the legal entity | |
 | Cloudflare security | TODO | Cloudflare DPA |
 | Modal security | TODO | Modal DPA |
 | Neon security | TODO | Neon DPA |

@@ -50,4 +50,21 @@ A typer without these numbers measured on held-out data gets the percent wording
 - AINUC-006 and AINUC-007 store, per typer and view count, the temperature, the four band shares and accuracies, the test-set accuracy and the confident and unsure shares. REVIEW-011, REVIEW-013 and REVIEW-014 read them and never hard-code HoVer-NeXt's.
 - AINUC-000 must replay this table for the typer it picks, since ADR 0042 probably rules out HoVer-NeXt. Until then the evidence is HoVer-NeXt's, on PanNuke regions of 300 to 700 nuclei with a reviewer who is always right, and no doctor has used any of it.
 - REVIEW-011 now cites these band cutoffs instead of doc 28's.
-- The pathologist check that ADR 0013 (cell findings) attached to this task, whether zone names such as "tumor or immune" and the type hints read correctly, needs a doctor and is still open. It belongs with the round 4 pilot.
+- The pathologist check that ADR 0013 (cell findings) attached to this task is done, see the wording review below. No pathologist will review the product, so the owner asked on 2026-11-04 that an agent do it with standard histopathology terms (decision 44).
+
+## Wording review of zone names and type hints, 2026-11-04
+
+Done by an agent acting as the reviewing pathologist, against the classes the typers produce (PanNuke's neoplastic, inflammatory, connective, dead and epithelial, folded into the kit's Tumor, Stroma, Immune and Other) and the terms a surgical pathologist uses at the microscope.
+
+| Item | Before | After | Why |
+|---|---|---|---|
+| Zone torn between two types | "tumor or immune" | "Tumor or immune", the more common type first | Reads as the real differential, for example large activated lymphocytes against tumor cells in a node. Kept |
+| Zone where the second typer disagrees | "second typer disagrees" | "Models disagree" | "Typer" is our word, not a pathologist's |
+| Zone of doubtful detections | "maybe not cells" | "Possibly not cells" | Plainer and less casual |
+| Tumor hint | none | neoplastic cells, mitoses included | A mitosis in the tumor is tumor, not Other |
+| Stroma hint | none | fibroblasts, endothelial and smooth muscle cells | The connective class of the typers |
+| Immune hint | lymphocytes, plasma cells, histiocytes | lymphocytes, plasma cells, histiocytes, neutrophils and eosinophils | The typers' inflammatory class holds granulocytes too, and without them a reviewer would file a neutrophil under Other |
+| Other hint | none | benign epithelium, necrotic and apoptotic cells, and any other cell | Benign epithelium is not tumor and has no class of its own here |
+| Not a cell hint | none | debris, pigment, red blood cells, folds or blur | The usual false detections. Red blood cells have no nucleus, so they are not a nucleated cell |
+
+"Immune" stays as the button name instead of "Inflammatory", because it is shorter and matches the immune cell counts researchers report, and the hint lists the cells. US spelling "tumor" stays, as everywhere in the app. REVIEW-018 (zones) and REVIEW-019 (type bar) now carry this wording. Nothing is built with the old wording yet.

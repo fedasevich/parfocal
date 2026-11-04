@@ -815,6 +815,13 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-018.
   Size: S.
 
+- [ ] SEC-030 · Legal review of the GDPR documents before the first real tenant
+  The SEC-021 (GDPR documentation) drafts in `docs/compliance/` use generic defaults the owner accepted on 2026-11-04: the owner as the legal entity, no DPO, retention of 30 days for unaccepted invitations and ended sessions, 90 days for read notifications and 1 year for operator records, analytics without device storage treated as needing no consent ([ADR 0171](adr/0171-analytics-without-device-storage.md)), and no clinical use claimed, so no medical device assessment. Before the first tenant with real patient data, counsel reads the records of processing, the DPIA, the DPA template, the subprocessor list, the cookie and storage policy and the incident response runbook, and the owner fills every TODO they leave: the registered entity and address, whether a DPO is needed, the supervisory authority and national CSIRT, counsel's contact, the DPA notice hours and the consent reading in the first tenants' countries.
+  Done when counsel's comments are applied, no TODO about the entity, DPO, authority or counsel remains in `docs/compliance/`, and the log records the review date.
+  Depends on SEC-021.
+  Needs: owner.
+  Size: M.
+
 - [x] SEC-009 · Slide label and macro image handling
   Label and macro images can contain names and barcodes. They are stored separately, shown only to permitted roles, and excluded from guest and research access.
   Done when permission tests cover each role.
@@ -861,7 +868,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests cover break-glass flow and its audit entries.
   Size: M.
 
-- [ ] SEC-018 · Incident response and breach notification runbook
+- [x] SEC-018 · Incident response and breach notification runbook
   Done when the runbook exists, a tabletop exercise is recorded, and contacts are configured for alerting.
   Size: M.
 
@@ -875,7 +882,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the pack exists and every subprocessor in the infrastructure has a BAA status recorded.
   Size: M.
 
-- [ ] SEC-021 · GDPR documentation
+- [x] SEC-021 · GDPR documentation
   Records of processing, DPIA for AI-assisted diagnosis, DPA template, subprocessor list, cookie and consent policy.
   Done when the documents exist and the consent banner (if any analytics need consent) is implemented and tested.
   Size: M.
@@ -1480,7 +1487,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 ## 31 LAB · Developer drawer and HUD
 
-- [ ] LAB-000 · Research check
+- [x] LAB-000 · Research check
   Done when the drawer's control list is confirmed against doc 34 lab-tagged leaves and kit W25.
   Size: S.
 
@@ -1742,6 +1749,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-023.
   Size: M.
 
+- [ ] DS-038 · Flow page density token
+  Flow pages keep the mock's fixed 20 px gap in the main column (`.fp-main`) while other pages tighten in compact density (DS-033). The owner chose on 2026-11-04 to add a flow page token, 20 px in comfortable and 14 px in compact.
+  Done when a test reads the computed gap of `.fp-main` as 20 px and 14 px in the two densities, and the flow page stories show both.
+  Depends on DS-023, DS-033.
+  Size: S.
+
 ---
 
 ## 09 SHELL · Application shell and layout
@@ -1828,6 +1841,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   The account menu (SHELL-012) shows "Help and what's new" disabled. Build the page it opens: short help per screen, the keyboard map link and release notes from the release versioning (FOUND-017).
   Done when the menu item opens the page, a component test covers it, and axe passes.
   Depends on SHELL-012.
+  Size: S.
+
+- [ ] SHELL-014 · Lock the screen from the account menu
+  The account menu (SHELL-012) shows "Lock the screen" disabled. Make it lock the session at once, the same lock IAM-021 (lock screen that returns to the same view) shows after idle, with LockCard wording for a manual lock, such as "You locked the screen", instead of "after N minutes". Unlock returns to the same view and camera.
+  Done when an API test locks a session on request, a component test covers the menu item and the manual wording, and E2E locks from the menu, unlocks and finds the same camera position.
+  Depends on IAM-021, SHELL-012.
   Size: S.
 
 ---
@@ -2072,6 +2091,12 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on CASE-006, VIEW-049.
   Size: S.
 
+- [ ] CASE-017 · Remember a slide's camera across visits
+  A slide reopened later on the same device starts where the person left it, as the owner chose on 2026-11-04 ([a slide's camera remembered on the device across visits](adr/0229-slide-camera-remembered-per-device.md)). The per-slide memory of CASE-003 moves into `localStorage` under `parfocal.slide-cameras`, keyed by the user's opaque id and the slide id, written when the camera rests, read when a link is built and when a slide opens with no camera in its URL and no object. Entries older than 30 days are dropped, at most 200 slides are kept per user, and sign out keeps them. The cookie and storage policy gains the row.
+  Done when unit tests cover the camera order, the expiry, the cap and two users on one device, the device storage test passes with the new key, and a browser test reloads the app and opens a slide at its remembered view.
+  Depends on CASE-003.
+  Size: S.
+
 - [ ] CASE-007 · Systematic scan mode
   Step field by field along the serpentine path with a key, marking seen tissue.
   Done when E2E completes a scan on a small slide and coverage reaches 100%.
@@ -2161,14 +2186,14 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Size: M.
 
 - [ ] NAV-006 · Smart minimap state machine
-  States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n, faded within 40 px of the pointer).
+  States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n from any visible mode, as the owner chose on 2026-11-04, faded within 40 px of the pointer).
   Read the minimap setting through `shownMinimap` in packages/ui/src/lib/minimap-box.ts (NAV-009).
   Done when model-based tests drive every transition.
   Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
 - [ ] NAV-007 · Minimap placement scoring
-  Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning.
+  Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning. The kit gives no weights for an open thread, the floating cells panel, proposals and pins, so this task picks them and records them in [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md), as the owner agreed on 2026-11-04.
   Done when unit tests reproduce the mock's placement decisions for each scene.
   Refs mock 7 placement algorithm. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
@@ -2197,7 +2222,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Size: M.
 
 - [ ] NAV-012 · Zoom to selection
-  Shift+2 zooms to the selected shape or area.
+  ⇧F zooms to the selected shape or area. Shift+1 to Shift+4 stay the display presets, as the owner kept on 2026-11-04, and people can rebind it (CMD-006).
   Done when a test confirms the selection is fitted with margin.
   Size: S.
 
@@ -2324,13 +2349,13 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: M.
 
 - [ ] REVIEW-018 · Zones where the AI is unsure
-  From the whole-slide cells: a grid of 128 px squares at level 0 (about 31 µm), the share of unsure nuclei per square as in POC `uncertaintyField`, squares with at least 3 nuclei and at least 30% unsure joined edge to edge, zones with fewer than 4 unsure cells dropped. Each zone keeps its cells, its unsure cells and a soft outline, and is named by the most common pair of top-two types among its unsure cells, or "second typer disagrees" or "maybe not cells" when those flags dominate. No other description is generated. Recomputed after corrections and after the learner re-checks the slide. Thresholds are settings until AINUC results on whole slides confirm them.
+  From the whole-slide cells: a grid of 128 px squares at level 0 (about 31 µm), the share of unsure nuclei per square as in POC `uncertaintyField`, squares with at least 3 nuclei and at least 30% unsure joined edge to edge, zones with fewer than 4 unsure cells dropped. Each zone keeps its cells, its unsure cells and a soft outline, and is named by the most common pair of top-two types among its unsure cells, such as "Tumor or immune", or "Models disagree" or "Possibly not cells" when those flags dominate (wording reviewed in [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md)). No other description is generated. Recomputed after corrections and after the learner re-checks the slide. Thresholds are settings until AINUC results on whole slides confirm them.
   Done when unit tests on a seeded grid cover joining, dropping, naming and ranking, and a test on the mock's 929 nuclei gives two zones of 26 and 24 unsure cells and 31 scattered ones.
   Depends on AINUC-003. Refs POC [`src/segment/confidence.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/confidence.ts), mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
 - [ ] REVIEW-019 · Type bar next to the cell and arrow jumps
-  A bar beside the selected cell with Keep, Tumor, Stroma, Immune, Other and Not a cell, each with its key in a keycap (K, 1 to 4, X), placed below or above the cell so it never covers it, and the only place the type buttons appear. Each type names what it covers on hover (immune: lymphocytes, plasma cells, histiocytes). Clicking any cell on the slide selects it. While a cell is selected the arrow keys jump to the nearest unsure cell in that direction (within a cone, undecided cells first, across zones), Shift+arrows pan, J and Shift+J step through the zone, Esc goes back to the zone and then to the list.
+  A bar beside the selected cell with Keep, Tumor, Stroma, Immune, Other and Not a cell, each with its key in a keycap (K, 1 to 4, X), placed below or above the cell so it never covers it, and the only place the type buttons appear. Each type names what it covers on hover, with the wording reviewed in [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md): Tumor is neoplastic cells, mitoses included, Stroma is fibroblasts, endothelial and smooth muscle cells, Immune is lymphocytes, plasma cells, histiocytes, neutrophils and eosinophils, Other is benign epithelium, necrotic and apoptotic cells and any other cell, and Not a cell is debris, pigment, red blood cells, folds or blur. Clicking any cell on the slide selects it. While a cell is selected the arrow keys jump to the nearest unsure cell in that direction (within a cone, undecided cells first, across zones), Shift+arrows pan, J and Shift+J step through the zone, Esc goes back to the zone and then to the list.
   Done when E2E answers cells with the mouse only and with the keyboard only, and unit tests cover the direction search and its edge cases (no cell that way, cells already decided).
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
@@ -2678,6 +2703,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on IAM-019, REPORT-015. Refs kit W57.
   Size: M.
 
+- [ ] COLLAB-015 · Threads on any slide
+  A thread can be started on any slide a person can read, with the task optional, as the owner chose on 2026-11-04 ([threads on any slide with an optional task](adr/0230-threads-on-any-slide-with-an-optional-task.md)). A migration makes `threads.task_id` nullable. A thread with a task keeps every rule of [ADR 0152](adr/0152-threads-on-task-slides.md) (threads on task slides), including the sign-off rule. A taskless thread is seen by everyone who can read the slide, except that a reader with an open first read on that slide sees only their own and the researcher's. Its notifications carry the project and the case so mutes catch them, and the target opens the slide with no task. The comment tool works on a slide opened outside a task, and the Comments tab marks each thread "Slide" or with its task.
+  Done when API tests cover creating, listing, replying and deleting taskless threads with tenant isolation, audit and the first read rule, a notification test resolves a taskless target and a project mute catches it, and a component test shows a taskless thread in the Comments tab.
+  Depends on COLLAB-002, COLLAB-005.
+  Size: M.
+
 ---
 
 ## 18 CMP · Compare slides
@@ -2873,6 +2904,12 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-003 and the final UI shell.
   Size: M.
 
+- [ ] CASES-026 · Encrypted clinical note per case
+  The slide picker's case details (CASE-011) have a clinical note row in clinical projects, but [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) removed `cases.clinical_note`, so it always reads "No clinical note". The owner chose on 2026-11-04 to store it again. A migration adds the note sealed with the tenant key as patient identifiers are (SEC-004), with the column classed phi in the data map. Project owners write it in clinical projects only, de-identified projects refuse it, and it is never written to logs, audit details, notifications or telemetry. A short ADR records why the note comes back, and a security review of the sealing is written into it.
+  Done when API tests cover writing, reading, clearing, tenant isolation, the refusal in de-identified projects and an audit entry without the text, a log capture test proves the text never reaches a log, and the case details show the note.
+  Depends on SEC-004, CASE-011.
+  Size: M.
+
 - [ ] CASES-023 · Idea: Due time rules
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
   Due time comes from the priority and specimen type, counted in the lab's working calendar with its holidays and working hours. Changing the rules affects only new cases.
@@ -2898,7 +2935,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [ ] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
-  Done when API tests cover registration and the licence rule from STACK-031 blocks a non-commercial model in a commercial tenant.
+  Done when API tests cover registration and the licence fields are recorded for every model. While STACK-031 (licence policy) is on hold the registry blocks nothing, as the owner chose on 2026-11-04 ([ADR 0202](adr/0202-v1-model-line-up-per-tier.md)), and the block of a non-commercial model in a commercial tenant comes back with STACK-031.
   Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
   Size: M.
 
@@ -3423,7 +3460,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: S.
 
 - [ ] CMD-006 · Rebinding UI
-  Click a key next to an action and press the new one. Defaults are marked, changed keys show the default and a reset. A key already used in the same scope offers to swap the two or to leave the other action without a key. Keys the browser keeps (⌘W, ⌘T, ⌘R, ⌘L and others) are refused with the reason. Actions that change the report (sign out) need ⌘ or Ctrl. Undo and Esc stay fixed. Sets are edited as sets: the modifier for the magnification keys, the first key of a chord such as G then a number, and arrows, WASD or IJKL for directions with a clash check. Any action can have a second key. Search by name, or press a key to find what it does. Single-letter shortcuts can be switched off (WCAG 2.1.4), keys match by physical position so non-US layouts keep the map, Z can be tap, hold or both, and the map exports and imports as a file.
+  Click a key next to an action and press the new one. Defaults are marked, changed keys show the default and a reset. A key already used in the same scope offers to swap the two or to leave the other action without a key. Keys the browser keeps (⌘W, ⌘T, ⌘R, ⌘L and others) are refused with the reason. Actions that change the report (sign out) need ⌘ or Ctrl. Undo and Esc stay fixed. Sets are edited as sets: the modifier for the magnification keys, the first key of a chord such as G then a number, and arrows, WASD or IJKL for directions with a clash check. Any action can have a second key. Search by name, or press a key to find what it does. Every action in the key registry can be rebound, including the Annotate keys, Add a note (⇧N), zoom to selection (⇧F) and view history back and forward (Alt+Left and Alt+Right). Single-letter shortcuts can be switched off (WCAG 2.1.4), keys match by physical position so non-US layouts keep the map, Z can be tap, hold or both, and the map exports and imports as a file.
   Done when E2E rebinds J and the review HUD shows the new key, and tests cover a conflict swap, a reserved key, the modifier rule, a set, the single-letter switch and position matching on a Czech layout.
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
@@ -3656,7 +3693,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: L.
 
 - [ ] OPS-007 · Alerting and on-call
-  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. Fault-injection tests on staging switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
+  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. A security alert fires on any audit event whose actor and target workspaces differ, as the first tabletop exercise asked ([tabletop-exercise.md](compliance/tabletop-exercise.md)). Fault-injection tests on staging switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when each SLO has an alert tested by fault injection.
   Size: M.
 
@@ -3686,6 +3723,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a load test report meets the SLOs.
   Depends on TEST-010.
   Size: L.
+
+- [ ] OPS-013 · Email routing for support and security
+  Turn on Cloudflare Email Routing for the `parfocal.eu` zone and forward `support@parfocal.eu` (the Contact support link of INGEST-018, ingest failure UX) and `security@parfocal.eu` (the security contact of the [incident response runbook](compliance/incident-response.md)) to the owner's inbox. Email Routing is free. Adding its MX and SPF records and the two rules is an additive production write under [ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month). Check first that the zone has no MX record of its own, and stop and ask if it does, because replacing one is not additive. The owner verifies the destination address once by opening Cloudflare's verification email, and that step alone needs the owner. Add a `SECURITY.md` that names `security@parfocal.eu`, a row in `knowledge/platform.md`, and log the production change.
+  Done when a test email to each address reaches the owner's inbox and the log records the records and rules added.
+  Needs: owner.
+  Size: S.
 
 ---
 
@@ -4114,7 +4157,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on OBJ-001, TASK-002.
 
 - [ ] GUIDE-002 · Guided review
-  One object at a time with the question, the buttons and the keys of the task's decision style (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), for example "How sure are you that T2 is tumor?" with 1 to 5 in the default 5-point certainty, what the AI said in a 16 px line when the style shows the claim, and a Not sure answer in every style. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review.
+  One object at a time with the question, the buttons and the keys of the task's decision style (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), for example "How sure are you that T2 is tumor?" with 1 to 5 in the default 5-point certainty, what the AI said in a 16 px line when the style shows the claim, and a Not sure answer in every style. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review. The slide uses the smart minimap of NAV-006 instead of its own fixed 136 px map ([ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md)).
   Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
   Objects come in the task's review order (GUIDE-012).
   Depends on GUIDE-001, VIEW-020, GUIDE-012, GUIDE-015. Refs mock: guided/region, mock: guided/certainty, mock: guided/yesno, mock: guided/blind, doc 38, doc 40 G1, G3 and G5, doc 44.
@@ -4168,7 +4211,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Required questions block the submit of a slide until they are answered, which TASK-008 (submit a slide review) checks ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
 
 - [ ] GUIDE-010 · Notes on decisions
-  After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the N key open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
+  After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the ⇧N key (N is No in the yes or no style, DS-030) open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when component tests cover writing, editing and cancelling a note with each decision, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
   Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
   Size: L.
