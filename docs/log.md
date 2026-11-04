@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- WL-013 (hide names) rewrites API responses while Initials only is on: display names and known full names in free text become initials and emails keep only initials and domain, through setResponseTransform in the api-client fetcher. hide-names.spec.ts checks Team, comments, Home, My work and admin People. The toggle still resets on reload and patient names keep their own setting.
 - FOUND-029 (first-page bundle headroom) moved the command palette body and the session lock screen behind lazy imports, so the first page fell from 349,999 to 337,624 gzip bytes with 12,376 spare under the unchanged budget.
 - INGEST-021 (upload wizard) finished: Check lists where the browser and server sorts differ, Start upload calls /uploads/sorting/apply, puts slides in their case and links results with PUT /uploads/{id}/slide, with fake handlers. The first-page bundle is at 349,999 of 350,000 bytes, so FOUND-029 frees headroom.
 - NAV-014 (area navigation in the engine viewer) makes ], [ and G then n fly to area bounds through engine.flyToArea, whose view history Alt+Left uses, and marks an area visited at rest at 10x or more, tested on the real tumor_044 slide. The areas are three dev-only bounds under the fake API, so NAV-015 now serves real bounds and the live area list.

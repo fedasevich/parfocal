@@ -2003,7 +2003,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when tests cover persistence and experiment override.
   Size: M.
 
-- [ ] WL-013 · Hide names
+- [x] WL-013 · Hide names
   Swap names for initials across the app for screen sharing and teaching.
   Read `useShell((s) => s.initialsOnly)` from the shell store, which the account menu already sets (SHELL-012).
   Done when E2E confirms no full name appears anywhere in the DOM with the toggle on.
