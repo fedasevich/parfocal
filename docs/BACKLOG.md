@@ -1792,7 +1792,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when tests assert the camera is unchanged across a switch.
   Size: M.
 
-- [ ] SHELL-005 · Inspector panel with resize and hide
+- [x] SHELL-005 · Inspector panel with resize and hide
   Default 340 px, drag between 280 and 560, drag below 220 hides it, I toggles it, a floating tab shows the active section and count when hidden. Option "hides while panning".
   The rail's Hide the side panel button already fires the `panel` action on I (CMD-007), but ViewerFrame has no hidden state, so I does nothing on the viewer yet.
   Done when interaction tests cover resize, hide, restore and persistence per user.
