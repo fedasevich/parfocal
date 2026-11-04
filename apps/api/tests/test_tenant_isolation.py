@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 import httpx2
+import numpy as np
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
@@ -13,11 +14,15 @@ from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api.display_settings import DisplaySettings
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
 from parfocal_api.tables import (
     Role,
+    adjudication_objects,
+    adjudications,
     annotation_versions,
     annotations,
     announcements,
@@ -27,6 +32,8 @@ from parfocal_api.tables import (
     case_requests,
     class_mappings,
     disagreement_decisions,
+    display_choices,
+    display_presets,
     emergency_grants,
     hidden_models,
     invitations,
@@ -78,10 +85,11 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
-from parfocal_common.ingest import RestrictedImage
+from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_ingest.tissue import TissueMask
 
 pytestmark = pytest.mark.db
 
@@ -441,6 +449,11 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             seeded.tenant_id,
             case.loose_slide_id,
             {RestrictedImage.LABEL: stand_in_images(str(seeded.tenant_id))[RestrictedImage.LABEL]},
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
+            TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
+            "image/png",
         )
     set_name = f"Model {uuid.uuid4().hex[:8]}"
     set_id = await connection.scalar(
@@ -862,6 +875,67 @@ async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(str(seeded.ids["slide"]))
 
 
+async def seed_display_presets(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Preset {uuid.uuid4().hex[:8]}"
+    preset_id = await connection.scalar(
+        insert(display_presets)
+        .values(
+            tenant_id=seeded.tenant_id,
+            user_id=seeded.ids["user"],
+            task_id=seeded.ids["task"],
+            name=name,
+            settings=DisplaySettings().model_dump(mode="json"),
+        )
+        .returning(display_presets.c.id)
+    )
+    assert isinstance(preset_id, uuid.UUID)
+    seeded.ids["display_preset"] = preset_id
+    seeded.markers.update({name, str(preset_id)})
+
+
+async def seed_display_choices(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(display_choices).values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            user_id=seeded.ids["user"],
+            preset_id=seeded.ids["display_preset"],
+            settings=DisplaySettings(width=3).model_dump(mode="json"),
+        )
+    )
+
+
+async def seed_adjudications(connection: AsyncConnection, seeded: Seeded) -> None:
+    note = f"Adjudication note {uuid.uuid4().hex[:8]}"
+    adjudication_id = await connection.scalar(
+        insert(adjudications)
+        .values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            adjudicator_user_id=seeded.ids["user"],
+            sent_by_user_id=seeded.ids["user"],
+            note=note,
+        )
+        .returning(adjudications.c.id)
+    )
+    assert isinstance(adjudication_id, uuid.UUID)
+    seeded.ids["adjudication"] = adjudication_id
+    seeded.markers.update({note, str(adjudication_id)})
+
+
+async def seed_adjudication_objects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(adjudication_objects).values(
+            adjudication_id=seeded.ids["adjudication"],
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            slide_id=seeded.ids["slide"],
+            kind="region",
+            number=1,
+        )
+    )
+
+
 async def seed_resume_states(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(resume_states).values(
@@ -915,6 +989,10 @@ SEEDERS: dict[str, Seeder] = {
     "model_tiers": seed_model_tiers,
     "hidden_models": seed_hidden_models,
     "slide_coverage": seed_slide_coverage,
+    "display_presets": seed_display_presets,
+    "display_choices": seed_display_choices,
+    "adjudications": seed_adjudications,
+    "adjudication_objects": seed_adjudication_objects,
     "resume_states": seed_resume_states,
     "report_links": seed_report_links,
 }
@@ -1058,6 +1136,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
+    "getSlideTissue": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tissue"),
     "getSlideCoverage": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/coverage"),
     "getRoomAccess": Route(Exposure.TENANT, lambda a: f"/api/rooms/slide:{a.ids['slide']}/access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
@@ -1161,6 +1240,16 @@ GET_ROUTES = {
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
     "getMyEmailSchedule": Route(Exposure.PUBLIC, lambda _: "/api/me/email-schedule"),
+    "getMyDisplay": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/my-display"
+    ),
+    "listDisplayPresets": Route(Exposure.TENANT, lambda _: "/api/display-presets"),
+    "listAdjudicatorCandidates": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements/adjudicators",
+    ),
+    "listAdjudicationObjects": Route(Exposure.TENANT, lambda _: "/api/adjudications/objects"),
+    "listMyAdjudications": Route(Exposure.TENANT, lambda _: "/api/adjudications"),
     "listMembers": Route(
         Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}/members"
     ),

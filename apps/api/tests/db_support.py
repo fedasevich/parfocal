@@ -88,20 +88,33 @@ def api_settings(database: str) -> ApiSettings:
     )
 
 
-class ApiAs:
-    def __init__(self, app: ParfocalApi, client: TestClient) -> None:
-        self.app = app
-        self.client = client
+class Acting:
+    def __init__(self) -> None:
         self.principal: Principal | None = None
-        app.dependency_overrides[authenticate] = self.current
 
     async def current(self) -> Principal:
         if self.principal is None:
             raise UnauthenticatedError
         return self.principal
 
+
+class ApiAs:
+    def __init__(self, app: ParfocalApi, client: TestClient) -> None:
+        self.app = app
+        self.client = client
+        self.acting = Acting()
+        app.dependency_overrides[authenticate] = self.acting.current
+
+    @property
+    def principal(self) -> Principal | None:
+        return self.acting.principal
+
+    @principal.setter
+    def principal(self, principal: Principal | None) -> None:
+        self.acting.principal = principal
+
     def __call__(self, principal: Principal) -> TestClient:
-        self.principal = principal
+        self.acting.principal = principal
         return self.client
 
 

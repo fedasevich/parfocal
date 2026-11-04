@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx2
+import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
@@ -27,6 +28,7 @@ from parfocal_api.permissions import (
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
+from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     BuiltInTemplate,
@@ -67,11 +69,12 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells
 from parfocal_common.db import async_database_url, metadata
-from parfocal_common.ingest import RestrictedImage
+from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_ingest.tissue import TissueMask
 from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
@@ -216,6 +219,7 @@ class Workspace:
     display_preset: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_preset: uuid.UUID = field(default_factory=uuid.uuid4)
     declinable: uuid.UUID = field(default_factory=uuid.uuid4)
+    adjudicator: uuid.UUID = field(default_factory=uuid.uuid4)
     report_link: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
@@ -423,6 +427,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
+    "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",
@@ -578,7 +583,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST",
         f"/api/review-tasks/{w.queued_task}/disagreements/adjudications",
         {
-            "adjudicator_user_id": str(w.colleague),
+            "adjudicator_user_id": str(w.adjudicator),
             "objects": [{"slide_id": str(w.slide), "object": "T4"}],
         },
     ),
@@ -1086,6 +1091,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.REVIEWER)
             deputy = await add_person(connection, tenant_id, f"{slug}-deputy", Role.RESEARCHER)
+            adjudicator = await add_person(
+                connection, tenant_id, f"{slug}-adjudicator", Role.REVIEWER
+            )
             account, spare_account = [
                 await connection.scalar(
                     insert(service_accounts)
@@ -1424,7 +1432,11 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         "user_id": user,
                         "role": role,
                     }
-                    for user, role in ((people[REVIEWER], "viewer"), (colleague, "viewer"))
+                    for user, role in (
+                        (people[REVIEWER], "viewer"),
+                        (colleague, "viewer"),
+                        (adjudicator, "viewer"),
+                    )
                 ],
             )
             queued_run, paused_run, failed_run = await seed_runs(
@@ -1452,6 +1464,11 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     tenant_id,
                     case.loose_slide_id,
                     {RestrictedImage.LABEL: stand_in_images(slug)[RestrictedImage.LABEL]},
+                )
+                await store.put_object(
+                    f"{slide_prefix(tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
+                    TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
+                    "image/png",
                 )
                 uploads_made = [
                     await seed_upload(
@@ -1540,6 +1557,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             display_preset=kept_preset,
             doomed_preset=doomed_preset,
             declinable=declinable,
+            adjudicator=adjudicator,
             report_link=report_link,
         )
     finally:
