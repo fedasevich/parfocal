@@ -4,11 +4,13 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { removeShape } from "../annotations/document.ts";
 import { PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
+import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { loadViewerEngine } from "./load-engine.ts";
@@ -310,6 +312,13 @@ function OpenedSlide({
               action="truler"
               pressed={tool === "ruler"}
               onPressedChange={(on) => setTool(on ? "ruler" : "hand")}
+            />
+          </div>
+          <div className="absolute right-4 bottom-4 w-72 max-w-[calc(100%-2rem)]">
+            <MeasurementList
+              document={annotations}
+              micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
+              onRemove={(id) => setAnnotations(removeShape(annotations, id))}
             />
           </div>
         </>
