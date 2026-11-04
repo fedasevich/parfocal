@@ -35,6 +35,7 @@ import { lookUrl } from "../thumbnails.ts";
 import {
   type Answer,
   adjudicatorWhy,
+  answerOf,
   answerText,
   answerTone,
   answerWord,
@@ -164,7 +165,10 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       />
       <div className="grid gap-1">
         <small className="text-body-sm font-semibold text-fg">
-          {adjudicatorWhy(current.reviewer_a, current.reviewer_b)}
+          {adjudicatorWhy(
+            { ...current.reviewer_a, raw: answerOf(current.reviewer_a.raw) },
+            { ...current.reviewer_b, raw: answerOf(current.reviewer_b.raw) },
+          )}
         </small>
         <h2 className="m-0 text-title font-semibold text-fg">
           The AI says {current.object} is {current.ai.class_name.toLowerCase()},{" "}
@@ -184,7 +188,9 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
           ] as const
         ).map(([letter, answer]) => (
           <EvidenceRow key={letter} icon="user" title={`Reviewer ${letter}`}>
-            <StatusTag tone={answerTone[answer.raw]}>{answerText(answer)}</StatusTag>
+            <StatusTag tone={answerTone[answerOf(answer.raw)]}>
+              {answerText({ ...answer, raw: answerOf(answer.raw) })}
+            </StatusTag>
             {answer.note ? <QuotedNote>{answer.note}</QuotedNote> : null}
           </EvidenceRow>
         ))}
