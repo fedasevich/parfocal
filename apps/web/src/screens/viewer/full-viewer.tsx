@@ -282,6 +282,7 @@ function ViewerBody({
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [idLabels, setIdLabels] = useState<boolean | null>(null);
+  const [shownSets, setShownSets] = useState<Record<string, boolean>>({ reviewed: true });
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
   const [failed, setFailed] = useState(setup.submitFail);
   const [tellMe, setTellMe] = useState(false);
@@ -349,6 +350,12 @@ function ViewerBody({
   const taskSetId = session.task?.slides[0]?.result_set_id;
   const otherSet = slideSets.find((item) => item.id !== taskSetId);
   const setA = setName;
+  const setsLock = session.display?.locks.find((lock) => lock.setting === "other-sets");
+  const setIsShown = (key: string) => shownSets[key] ?? false;
+  const otherSetsOn = setsLock
+    ? []
+    : slideSets.filter((set) => set.id !== taskSetId && setIsShown(set.id));
+  const reviewedOn = setIsShown("reviewed");
   const setB = shortName(stats?.model_vs_model.set_b_id ?? otherSet?.id) || "the other set";
   const pick = (object: string | undefined) => {
     setCamera(null);
@@ -580,6 +587,8 @@ function ViewerBody({
     setB,
     reviewers: people,
     selected,
+    otherSets: otherSetsOn.map((set) => ({ id: set.id, color: setColours.b })),
+    reviewedOn,
   });
   const showScore = confidence !== "hidden";
 
@@ -736,6 +745,14 @@ function ViewerBody({
 
   const resultSetRows = (
     <ResultSetRows
+      onToggle={(key, on) => setShownSets((current) => ({ ...current, [key]: on }))}
+      locked={
+        setsLock
+          ? {
+              reason: `Locked by ${session.display?.task_code ?? "the task"}: ${setsLock.reason.charAt(0).toLowerCase()}${setsLock.reason.slice(1)}`,
+            }
+          : undefined
+      }
       sets={[
         ...slideSets.map((set) => {
           const task = set.id === taskSetId;
@@ -745,7 +762,7 @@ function ViewerBody({
             sub: `${set.source === "run" ? "Run here" : "Imported"} ${formatDayMonth(new Date(set.produced_at ?? set.created_at))}${task ? " · the result this task checks" : ""}`,
             color: task ? setColours.a : setColours.b,
             fixed: task,
-            on: false,
+            on: task ? false : setsLock ? false : setIsShown(set.id),
             menu: [
               {
                 icon: "slides" as const,
@@ -776,7 +793,7 @@ function ViewerBody({
           name: "Your review",
           sub: "The reviewed layer, as you edit it",
           color: setColours.reviewed,
-          on: true,
+          on: reviewedOn,
           menu: [
             {
               icon: "slides" as const,
