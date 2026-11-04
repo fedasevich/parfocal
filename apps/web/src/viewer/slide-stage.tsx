@@ -461,6 +461,7 @@ function OpenedSlide({
             document={annotations}
             taskId={taskId}
             slideId={slideId}
+            micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
             onDocumentChange={setAnnotations}
             onCommit={saved.commit}
             onLeave={leaveTool}

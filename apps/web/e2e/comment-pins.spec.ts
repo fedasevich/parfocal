@@ -122,3 +122,47 @@ test("a pin placed on a shape follows the shape when it moves", async ({ page })
   expect(after.y - before.y).toBeGreaterThan(50);
   expect(after.y - before.y).toBeLessThan(70);
 });
+
+const thread = (page: Page) => page.getByTestId("pin-thread");
+
+test("clicking a pin opens its thread, a reply joins it and Escape closes it", async ({ page }) => {
+  const stage = await openTaskSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await placePin(page, { x: box.x + 600, y: box.y + 500 }, "Is this edge real?");
+  await expect(pins(page)).toHaveCount(1);
+  await pins(page).first().click();
+  await expect(thread(page)).toBeVisible();
+  await expect(thread(page).getByRole("heading", { name: "Is this edge real?" })).toBeVisible();
+  await expect(thread(page).locator('[data-slot="comment"]')).toHaveCount(1);
+  await expect(thread(page).locator('[data-slot="comment"]').first()).toContainText("just now");
+  const reply = thread(page).getByRole("textbox", { name: "Reply to this thread" });
+  await expect(reply).toBeFocused();
+  await reply.fill("Yes, it follows the fold");
+  await page.keyboard.press("Enter");
+  await expect(thread(page).locator('[data-slot="comment"]')).toHaveCount(2);
+  await expect(reply).toHaveValue("");
+  await page.keyboard.press("Escape");
+  await expect(thread(page)).toHaveCount(0);
+  await expect(stage).toHaveAttribute("data-tool", "comment");
+});
+
+test("a pin on a shape embeds the shape's measurement in its thread", async ({ page }) => {
+  const stage = await openTaskSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await placePin(page, { x: box.x + 300, y: box.y + 270 }, "Inside the outline");
+  await pins(page).first().click();
+  const embed = thread(page).locator('[data-slot="thread-measurement"]');
+  await expect(embed).toContainText("Area");
+  await expect(embed).toContainText("Perimeter");
+});
+
+test("Resolve closes the thread and takes its pin off the slide", async ({ page }) => {
+  const stage = await openTaskSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await placePin(page, { x: box.x + 600, y: box.y + 500 }, "Settled already");
+  await pins(page).first().click();
+  await thread(page).getByRole("button", { name: "Resolve" }).click();
+  await expect(thread(page)).toHaveCount(0);
+  await expect(pins(page)).toHaveCount(0);
+});

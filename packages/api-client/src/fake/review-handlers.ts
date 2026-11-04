@@ -10,9 +10,13 @@ import {
   getGetOpinionMockHandler,
   getGetReviewedLayerMockHandler,
   getGetSlideNeighboursMockHandler,
+  getGetThreadMockHandler,
   getListMentionableMembersMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
+  getReopenThreadMockHandler,
+  getReplyToThreadMockHandler,
+  getResolveThreadMockHandler,
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
   getSaveVerdictMockHandler,
@@ -21,6 +25,8 @@ import {
 import type {
   EditDraft,
   Mentionable,
+  Message,
+  MessageCreate,
   Neighbours,
   Opinion,
   OpinionChange,
@@ -28,6 +34,7 @@ import type {
   TaskStates,
   Thread,
   ThreadCreate,
+  ThreadDetail,
   VerdictDraft,
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
@@ -97,20 +104,21 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
 
 const postedThreads: Thread[] = [];
 const postedComments: ThreadComment[] = [];
+const resolution = new Map<string, { at: string; by: string } | null>();
 
 export const resetFakeThreads = () => {
   postedThreads.length = 0;
   postedComments.length = 0;
+  resolution.clear();
 };
 
 export const toThreadComments = (threadId: string): ThreadComment[] => {
   const posted = postedComments.filter((item) => item.thread_id === threadId);
-  if (posted.length > 0) return posted;
   const thread = threads.find((item) => item.id === threadId);
-  if (thread === undefined) return [];
+  if (thread === undefined) return posted;
   const task = [...reviewTasks, rt16].find((item) => item.code === thread.task);
   const researcher = projectByCode(task?.project ?? "P07").owner;
-  return visibleComments(fakeView().viewer, task?.blinded ?? false, researcher)
+  const seeded = visibleComments(fakeView().viewer, task?.blinded ?? false, researcher)
     .filter((item) => item.anchor === thread.anchor)
     .map((item) =>
       threadCommentSchema.parse({
@@ -123,6 +131,40 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
         created_at: item.at,
       }),
     );
+  return [...seeded, ...posted];
+};
+
+const withResolution = (thread: Thread): Thread => {
+  const changed = resolution.get(thread.id);
+  if (changed === undefined) return thread;
+  return { ...thread, resolved_at: changed?.at ?? null, resolved_by: changed?.by ?? null };
+};
+
+const findThread = (taskId: string, slideId: string, threadId: string) =>
+  toThreads(taskId, slideId, null).find((item) => item.id === threadId);
+
+const toMessage = (comment: ThreadComment): Message => ({
+  id: comment.id,
+  author_id: comment.author_id,
+  body: comment.text,
+  mentions: [],
+  created_at: comment.created_at,
+});
+
+const detailOf = (taskId: string, slideId: string, threadId: string): ThreadDetail => {
+  const thread = findThread(taskId, slideId, threadId);
+  if (thread === undefined) throw new Error(`The fake has no thread ${threadId}`);
+  return toThreadDetail(thread);
+};
+
+const toThreadDetail = (thread: Thread): ThreadDetail => {
+  const messages = toThreadComments(thread.id).map(toMessage);
+  return {
+    ...thread,
+    message_count: messages.length || thread.message_count,
+    last_message_at: messages.at(-1)?.created_at ?? thread.last_message_at,
+    messages,
+  };
 };
 
 export const toThreads = (taskId: string, slideId: string, resolved: boolean | null): Thread[] => {
@@ -130,14 +172,10 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
   if (task === undefined) return [];
   const project = projectByCode(task.project);
   const posted = postedThreads.filter(
-    (item) =>
-      item.task_id === task.id &&
-      item.slide_id === slideId &&
-      (resolved === null || (item.resolved_at === null) === !resolved),
+    (item) => item.task_id === task.id && item.slide_id === slideId,
   );
   const seeded: Thread[] = threads
     .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
-    .filter((item) => resolved === null || item.open === !resolved)
     .map((item) => ({
       id: item.id,
       project_id: project.id,
@@ -157,7 +195,9 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
       message_count: item.replies + 1,
       last_message_at: item.last,
     }));
-  return [...seeded, ...posted];
+  return [...seeded, ...posted]
+    .map(withResolution)
+    .filter((item) => resolved === null || (item.resolved_at === null) === !resolved);
 };
 
 export const toMentionable = (taskId: string): Mentionable[] => {
@@ -371,7 +411,39 @@ export function reviewHandlers(): RequestHandler[] {
       );
       return { ...thread, messages: [message] };
     }),
+    getReplyToThreadMockHandler(async ({ params, request }) => {
+      const body = (await request.json()) as MessageCreate;
+      const viewer = people[fakeView().viewer];
+      const threadId = String(params["threadId"]);
+      const comment = threadCommentSchema.parse({
+        id: crypto.randomUUID(),
+        thread_id: threadId,
+        author_id: viewer.id,
+        author_is_researcher: false,
+        text: body.body,
+        reply_to: null,
+        created_at: new Date().toISOString(),
+      });
+      postedComments.push(comment);
+      return toMessage(comment);
+    }),
+    getResolveThreadMockHandler(({ params }) => {
+      const threadId = String(params["threadId"]);
+      resolution.set(threadId, {
+        at: new Date().toISOString(),
+        by: people[fakeView().viewer].id,
+      });
+      return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
+    }),
+    getReopenThreadMockHandler(({ params }) => {
+      const threadId = String(params["threadId"]);
+      resolution.set(threadId, null);
+      return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
+    }),
     getListMentionableMembersMockHandler(({ params }) => toMentionable(String(params["taskId"]))),
+    getGetThreadMockHandler(({ params }) =>
+      detailOf(String(params["taskId"]), String(params["slideId"]), String(params["threadId"])),
+    ),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
     getSaveVerdictMockHandler(async ({ request, params }) => {
