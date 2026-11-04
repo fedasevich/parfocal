@@ -14,8 +14,13 @@ export function useSlideProgress(
   taskId: string | undefined,
   slideId: string | undefined,
 ): SlideProgress | undefined {
-  const verdicts = okData(useListVerdicts(taskId ?? "", slideId ?? "").data);
-  const order = okData(useGetReviewOrder(taskId ?? "", slideId ?? "").data);
+  const wanted = Boolean(taskId) && Boolean(slideId);
+  const verdicts = okData(
+    useListVerdicts(taskId ?? "", slideId ?? "", undefined, { query: { enabled: wanted } }).data,
+  );
+  const order = okData(
+    useGetReviewOrder(taskId ?? "", slideId ?? "", undefined, { query: { enabled: wanted } }).data,
+  );
   if (verdicts === undefined || order === undefined || order.total === 0) return undefined;
   const count = (value: string) => verdicts.filter((verdict) => verdict.value === value).length;
   const decided = verdicts.length;
