@@ -1,9 +1,11 @@
 import { HttpResponse, http } from "msw";
+import { type ResultSetTyper, resultSetTyperSchema } from "../draft/get-result-set-typer.ts";
 import { type SlideAiProgress, slideAiProgressSchema } from "../draft/get-slide-ai-progress.ts";
 import { type SlideResultStats, slideResultStatsSchema } from "../draft/get-slide-result-stats.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { reviewsA1 } from "./review-verdicts.ts";
 import { people, resultSets } from "./scenario.ts";
+import { typers } from "./scenario-typers.ts";
 import {
   aiAgainstReviewed,
   aiStillReading,
@@ -71,6 +73,29 @@ export const toSlideAiProgress = (slideId: string): SlideAiProgress => {
   });
 };
 
+export const toResultSetTyper = (resultSetId: string): ResultSetTyper | undefined => {
+  const key = resultSets.find((set) => set.id === resultSetId)?.key;
+  const typer = key === undefined ? undefined : typers[key];
+  if (typer === undefined) return undefined;
+  return resultSetTyperSchema.parse({
+    result_set_id: resultSetId,
+    name: typer.name,
+    calibrated: typer.calibrated,
+    checked_on_held_out: typer.checkedOnHeldOut,
+    band_accuracy: typer.bandAccuracy,
+    test_set_accuracy: typer.testSetAccuracy,
+    test_set_confident_share: typer.testSetConfidentShare,
+    test_set_unsure_share: typer.testSetUnsureShare,
+    validated_sites: typer.validatedSites,
+  });
+};
+
+export const getGetResultSetTyperMockHandler = (overrideResponse?: ResultSetTyper) =>
+  http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId/typer", ({ params }) => {
+    const typer = overrideResponse ?? toResultSetTyper(params.resultSetId);
+    return typer === undefined ? new HttpResponse(null, { status: 404 }) : HttpResponse.json(typer);
+  });
+
 export const getGetSlideResultStatsMockHandler = (overrideResponse?: SlideResultStats) =>
   http.get<{ taskId: string; slideId: string }>(
     "*/api/review-tasks/:taskId/slides/:slideId/result-stats",
@@ -84,6 +109,12 @@ export const getGetSlideAiProgressMockHandler = (overrideResponse?: SlideAiProgr
   );
 
 export const viewerDraftOperations: DraftOperation[] = [
+  {
+    operationId: "getResultSetTyper",
+    method: "get",
+    path: "/api/result-sets/{result_set_id}/typer",
+    handler: () => getGetResultSetTyperMockHandler(),
+  },
   {
     operationId: "getSlideResultStats",
     method: "get",

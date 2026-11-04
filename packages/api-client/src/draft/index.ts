@@ -45,6 +45,18 @@ export {
   useGetProjectScopeOptions,
 } from "./get-project-scope-options.ts";
 export {
+  type GetResultSetTyperQueryError,
+  type GetResultSetTyperQueryResult,
+  getGetResultSetTyperQueryKey,
+  getGetResultSetTyperQueryOptions,
+  getGetResultSetTyperUrl,
+  getResultSetTyper,
+  type getResultSetTyperResponse,
+  type ResultSetTyper,
+  resultSetTyperSchema,
+  useGetResultSetTyper,
+} from "./get-result-set-typer.ts";
+export {
   type GetReviewTaskDefaultsQueryError,
   type GetReviewTaskDefaultsQueryResult,
   getGetReviewTaskDefaultsQueryKey,

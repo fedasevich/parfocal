@@ -4,6 +4,7 @@ import {
   useGetMyHome,
   useGetMySettings,
   useGetProject,
+  useGetResultSetTyper,
   useGetSlideAiProgress,
   useGetSlideResultStats,
   useListSlideResultSets,
@@ -17,6 +18,7 @@ import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel"
 import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
+import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
@@ -115,6 +117,7 @@ import {
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
 import { useAreaNav } from "./use-area-nav.ts";
+import { viewerModelWarnings } from "./viewer-model-warnings.ts";
 import {
   isNavigatorScene,
   type LayerView,
@@ -207,7 +210,8 @@ function ViewerBody({
   const setup = viewerSetup(scene);
   const navigator = isNavigatorScene(scene) ? scene : null;
   const measuring = search.tool === "ruler";
-  const minimapSetting = useGetMySettings().data?.data.personal.minimap ?? "useful";
+  const personalSettings = useGetMySettings().data?.data.personal;
+  const minimapSetting = personalSettings?.minimap ?? "useful";
   const peekOpen = search.peek === true;
   const [peekHeld, setPeekHeld] = useState(false);
   const navigate = useNavigate();
@@ -226,6 +230,10 @@ function ViewerBody({
   const stats = okData(useGetSlideResultStats(session.taskId, slideId).data);
   const slideSets = okData(useListSlideResultSets(slideId).data) ?? [];
   const setName = useSetName(session);
+  const typerSetId = session.task?.slides[0]?.result_set_id;
+  const typer = okData(
+    useGetResultSetTyper(typerSetId ?? "", { query: { enabled: typerSetId !== undefined } }).data,
+  );
   const running = progress?.state === "running";
   const style = session.style;
   const decisions = useDecisionSaves(session, style);
@@ -704,6 +712,9 @@ function ViewerBody({
           added={added.map((item) => item.object)}
         />
         <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
+        <ModelWarningsBlock
+          warnings={viewerModelWarnings(typer, objects, personalSettings?.model_warnings ?? true)}
+        />
         <ObjectList
           objects={objects}
           counts={counts}
