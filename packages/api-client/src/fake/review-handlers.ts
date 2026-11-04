@@ -5,6 +5,7 @@ import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-ob
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
   getClearVerdictMockHandler,
+  getCreateThreadMockHandler,
   getGetOpinionMockHandler,
   getGetSlideNeighboursMockHandler,
   getListMentionableMembersMockHandler,
@@ -22,6 +23,7 @@ import type {
   ProjectClass,
   TaskStates,
   Thread,
+  ThreadCreate,
   VerdictDraft,
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
@@ -82,7 +84,17 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
   });
 };
 
+const postedThreads: Thread[] = [];
+const postedComments: ThreadComment[] = [];
+
+export const resetFakeThreads = () => {
+  postedThreads.length = 0;
+  postedComments.length = 0;
+};
+
 export const toThreadComments = (threadId: string): ThreadComment[] => {
+  const posted = postedComments.filter((item) => item.thread_id === threadId);
+  if (posted.length > 0) return posted;
   const thread = threads.find((item) => item.id === threadId);
   if (thread === undefined) return [];
   const task = [...reviewTasks, rt16].find((item) => item.code === thread.task);
@@ -106,7 +118,13 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
   const task = taskById(taskId);
   if (task === undefined) return [];
   const project = projectByCode(task.project);
-  return threads
+  const posted = postedThreads.filter(
+    (item) =>
+      item.task_id === task.id &&
+      item.slide_id === slideId &&
+      (resolved === null || (item.resolved_at === null) === !resolved),
+  );
+  const seeded: Thread[] = threads
     .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
     .filter((item) => resolved === null || item.open === !resolved)
     .map((item) => ({
@@ -128,6 +146,7 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
       message_count: item.replies + 1,
       last_message_at: item.last,
     }));
+  return [...seeded, ...posted];
 };
 
 export const toMentionable = (taskId: string): Mentionable[] => {
@@ -299,6 +318,47 @@ export function reviewHandlers(): RequestHandler[] {
         String(params["slideId"]),
         asked === null ? null : asked === "true",
       );
+    }),
+    getCreateThreadMockHandler(async ({ params, request }) => {
+      const body = (await request.json()) as ThreadCreate;
+      const task = taskById(String(params["taskId"]));
+      const viewer = people[fakeView().viewer];
+      const id = crypto.randomUUID();
+      const at = new Date().toISOString();
+      const message = {
+        id: crypto.randomUUID(),
+        author_id: viewer.id,
+        body: body.body,
+        mentions: [],
+        created_at: at,
+      };
+      const thread: Thread = {
+        id,
+        project_id: projectByCode(task?.project ?? "P07").id,
+        task_id: String(params["taskId"]),
+        slide_id: String(params["slideId"]),
+        title: body.title,
+        anchor: body.anchor,
+        created_by: viewer.id,
+        created_at: at,
+        resolved_at: null,
+        resolved_by: null,
+        message_count: 1,
+        last_message_at: at,
+      };
+      postedThreads.push(thread);
+      postedComments.push(
+        threadCommentSchema.parse({
+          id: message.id,
+          thread_id: id,
+          author_id: viewer.id,
+          author_is_researcher: false,
+          text: body.body,
+          reply_to: null,
+          created_at: at,
+        }),
+      );
+      return { ...thread, messages: [message] };
     }),
     getListMentionableMembersMockHandler(({ params }) => toMentionable(String(params["taskId"]))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),

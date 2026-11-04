@@ -79,6 +79,20 @@ test("a click on the slide in comment mode opens a thread pinned there", async (
   expect(Math.abs(at.y + at.height - (box.y + box.height * 0.5))).toBeLessThan(2);
 });
 
+test("a posted pin thread shows up in the Comments tab", async ({ page }) => {
+  const rail = await openViewer(page);
+  await rail.getByRole("button", { name: "Comment on an ID (C)" }).click();
+  const slide = page.locator("[data-slot=slide-still]");
+  const box = await slide.boundingBox();
+  if (box === null) throw new Error("the slide has no box");
+  await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.4);
+  const thread = page.getByTestId("pinned-thread");
+  await thread.getByLabel("Comment at the pin").fill("Fold near the capsule edge");
+  await thread.getByRole("button", { name: "Send" }).click();
+  await expect(thread).toHaveCount(0);
+  await expect(page.getByText("Fold near the capsule edge").first()).toBeVisible();
+});
+
 test("Esc leaves comment mode without a thread", async ({ page }) => {
   const rail = await openViewer(page);
   await rail.getByRole("button", { name: "Comment on an ID (C)" }).click();
