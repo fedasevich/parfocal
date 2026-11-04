@@ -2414,7 +2414,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-022.
   Size: S.
 
-- [ ] REVIEW-027 · Outline modes in the review viewer
+- [x] REVIEW-027 · Outline modes in the review viewer
   REVIEW-012 (outline display modes) added fade, mark unsure and bands as overlay data in `packages/viewer-engine/src/overlay/outline-modes.ts` with golden tests, but nothing in the web app calls `outlineModeOverlays`. Connect the Settings and developer confidence mode to it in the review viewer.
   Done when a browser test on a real slide switches each mode and the overlay changes, and the setting is remembered.
   Depends on REVIEW-012.
@@ -2466,7 +2466,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 24.
   Size: S.
 
-- [ ] ANN-007 · Rectangle and ellipse tools
+- [x] ANN-007 · Rectangle and ellipse tools
   Shift makes squares and circles.
   Done when interaction tests cover both.
   Size: S.
@@ -4288,7 +4288,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-001, TASK-002.
   Since 2026-11-01 a Not sure with the reason "Need a second look" also queues an object. ADJ-007 (queue decisions in the task's style and leaving open) adds that rule ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, proposed).
 
-- [ ] ADJ-002 · Disagreement queue
+- [x] ADJ-002 · Disagreement queue
   The researcher's queue for one task, headed with the round, the result set and how many objects need a decision out of the task's total. The list is filtered by All, Reviewers differ and Both vs AI, and each row has the object, the AI's claim and score, why it is queued (reviewers differ, both vs AI or second look asked) and its state (with the adjudicator, left open, declined or edited after decisions). Under the slide sit the AI's claim and each reviewer's decision by name, because the researcher is not blinded, with the preset under a decision when it was not the task default ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks). The decide panel offers the buttons of the task's decision style, then "Edit T2 myself in the viewer", "Send to an adjudicator" and "Leave open". A decision moves to the next open row. Rows can be selected with checkboxes, and with a selection the only action is Send to an adjudicator, which opens the small modal of ADJ-008. "Go to sign-off" is the primary only when every row is decided, left open or with the adjudicator. The queue says it opens only when every reviewer has submitted and offers a nudge, and declined and edited rows offer their way out ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, left open and anonymous adjudicators).
   Done when component tests cover each filter, a decision in each decision style, leaving open, a multi-selection sent to an adjudicator, the locked queue, a declined row and an edited row, and E2E resolves a queue with one decision, three objects sent to an adjudicator and two left open.
   Depends on ADJ-001, ADJ-006, ADJ-007, ADJ-008, GUIDE-015. Refs mock: disagree/queue, mock: disagree/selected, mock: disagree/sendadj, mock: disagree/sent, mock: disagree/lockedqueue, mock: disagree/declined, mock: disagree/edited, doc 40 D7, doc 44.
