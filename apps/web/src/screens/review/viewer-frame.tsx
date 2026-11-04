@@ -9,8 +9,12 @@ import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { ToolRail, ToolRailButton, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { useBindings } from "../../keys/personal-keys.ts";
+import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { type Count, countWord } from "./decision-style.ts";
+import { InspectorDock } from "./inspector-dock.tsx";
+import { useInspectorLayout } from "./inspector-layout.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useRailKeys } from "./review-rail.ts";
 import type { Answer } from "./review-state.ts";
@@ -78,6 +82,7 @@ type ViewerFrameProps = {
   onSubmit?: () => void;
   progressSub?: string | undefined;
   scene?: string | undefined;
+  panelTab?: { label: string; count?: number | undefined } | undefined;
 };
 
 export function ViewerFrame({
@@ -101,9 +106,29 @@ export function ViewerFrame({
   onToolChange,
   onCompare,
   overlay,
+  panelTab,
 }: ViewerFrameProps) {
   const panelKey = useKeyLabel("panel");
   useRailKeys(railGroups, onToolChange, railKeys);
+  const [layout, setLayout] = useInspectorLayout(session.meId);
+  const [panning, setPanning] = useState(false);
+  const panelBindings = useBindings(["viewer"], ["panel"]);
+  useHotkeys(panelBindings, (fired) => {
+    if (fired.phase === "press") setLayout({ hidden: !layout.hidden });
+  });
+  useEffect(() => {
+    if (!panning) return;
+    const stop = () => setPanning(false);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+  }, [panning]);
+  const activeTab = tabs.find((item) => item.value === tab);
+  const tabLabel = panelTab?.label ?? activeTab?.label ?? "Panel";
+  const tabCount = panelTab ? panelTab.count : activeTab?.count;
   return (
     <main
       className="flex h-dvh min-w-0 flex-col bg-page text-fg"
@@ -152,26 +177,42 @@ export function ViewerFrame({
             ) : null}
             <ToolRailButton
               icon="panel"
-              label="Hide the side panel"
+              label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
+              pressed={!layout.hidden}
+              onPressedChange={() => setLayout({ hidden: !layout.hidden })}
               {...(panelKey === null ? {} : { keyHint: panelKey })}
             />
           </ToolRailGroup>
         </ToolRail>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div data-vt-target="" className="relative flex min-h-0 min-w-0 flex-1">
+          <div
+            data-vt-target=""
+            className="relative flex min-h-0 min-w-0 flex-1"
+            onPointerDownCapture={() => {
+              if (layout.hideWhilePanning && !layout.hidden) setPanning(true);
+            }}
+          >
             {children}
           </div>
           {below}
         </div>
-        {panel ?? (
-          <SidePanel
-            width={340}
-            value={tab}
-            onValueChange={onTabChange}
-            tabs={tabs}
-            head={panelHead}
-          />
-        )}
+        <InspectorDock
+          layout={layout}
+          onLayout={setLayout}
+          panning={panning}
+          tabLabel={tabLabel}
+          tabCount={tabCount}
+        >
+          {panel ?? (
+            <SidePanel
+              width={layout.width}
+              value={tab}
+              onValueChange={onTabChange}
+              tabs={tabs}
+              head={panelHead}
+            />
+          )}
+        </InspectorDock>
         {overlay}
       </div>
     </main>
