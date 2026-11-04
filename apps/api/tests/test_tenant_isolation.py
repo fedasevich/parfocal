@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -44,6 +45,7 @@ from parfocal_api.tables import (
     platform_operators,
     project_classes,
     project_members,
+    report_links,
     result_chunks,
     result_objects,
     result_set_classes,
@@ -874,6 +876,24 @@ async def seed_resume_states(connection: AsyncConnection, seeded: Seeded) -> Non
     seeded.markers.add(str(seeded.ids["task"]))
 
 
+def shared_token(seeded: Seeded) -> str:
+    return f"shared-{seeded.tenant_id}"
+
+
+async def seed_report_links(connection: AsyncConnection, seeded: Seeded) -> None:
+    link = await connection.scalar(
+        insert(report_links)
+        .values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            token_hash=hashlib.sha256(shared_token(seeded).encode()).digest(),
+            expires_at=text("now() + interval '1 day'"),
+        )
+        .returning(report_links.c.id)
+    )
+    seeded.markers.add(str(link))
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -896,6 +916,7 @@ SEEDERS: dict[str, Seeder] = {
     "hidden_models": seed_hidden_models,
     "slide_coverage": seed_slide_coverage,
     "resume_states": seed_resume_states,
+    "report_links": seed_report_links,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1053,6 +1074,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/exports/objects.csv",
     ),
+    "listReportLinks": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/links"
+    ),
+    "getSharedReport": Route(Exposure.PUBLIC, lambda a: f"/api/shared-reports/{shared_token(a)}"),
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",
@@ -1287,3 +1312,14 @@ def test_auth_tables_are_hidden_from_tenant_scopes(
     a, _ = seeded
     counts = asyncio.run(rows_visible_to_a_member(database, a.tenant_id))
     assert counts == dict.fromkeys(sorted(AUTH_TABLES), 0)
+
+
+def test_a_shared_report_shows_only_its_own_workspace(
+    api: ApiAs, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    api.principal = None
+    response = api.client.get(GET_ROUTES["getSharedReport"].path(a))
+    assert response.status_code == 200, response.text
+    assert [marker for marker in b.markers if marker in response.text] == []
+    assert str(a.ids["task"]) not in response.text

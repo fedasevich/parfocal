@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 33 |
-| `personal` | 74 |
-| `secret` | 9 |
-| `operational` | 603 |
+| `personal` | 75 |
+| `secret` | 10 |
+| `operational` | 611 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -554,6 +554,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `key` | personal |
 | `window_start` | operational |
 | `count` | operational |
+
+## report_links
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `token_hash` | secret |
+| `created_by_user_id` | personal |
+| `expires_at` | operational |
+| `revoked_at` | operational |
+| `opened_count` | operational |
+| `last_opened_at` | operational |
+| `created_at` | operational |
 
 ## result_chunks
 

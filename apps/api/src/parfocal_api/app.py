@@ -39,6 +39,7 @@ from parfocal_api import (
     personal_data,
     project_jobs,
     projects,
+    report_links,
     restricted_images,
     result_formats,
     result_pairing,
@@ -223,6 +224,8 @@ def create_app(
     app.include_router(adjudications.router)
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
+    app.include_router(report_links.router)
+    app.include_router(report_links.public_router)
     app.include_router(study_templates.router)
     app.include_router(my_work.router)
     app.include_router(case_creation.router)

@@ -45,6 +45,7 @@ from parfocal_api.tables import (
     project_classes,
     project_members,
     projects,
+    report_links,
     result_objects,
     result_sets,
     review_assignments,
@@ -75,6 +76,7 @@ from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
     "getHealth": "public",
+    "getSharedReport": "public",
     "getSession": "signed-in",
     "getMe": "signed-in",
     "updateMe": "signed-in",
@@ -214,6 +216,7 @@ class Workspace:
     display_preset: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_preset: uuid.UUID = field(default_factory=uuid.uuid4)
     declinable: uuid.UUID = field(default_factory=uuid.uuid4)
+    report_link: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
     def annotations(self) -> str:
@@ -530,6 +533,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
+    ),
+    "createReportLink": lambda w: Call("POST", f"/api/review-tasks/{w.task}/evaluation/links"),
+    "listReportLinks": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation/links"),
+    "revokeReportLink": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.task}/evaluation/links/{w.report_link}"
     ),
     "getOpinion": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/opinion"),
     "submitFirstRead": lambda w: Call(
@@ -1300,6 +1308,17 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             kept_preset, doomed_preset = await seed_presets(
                 connection, tenant_id, people[presets_for]
             )
+            report_link = await connection.scalar(
+                insert(report_links)
+                .values(
+                    tenant_id=tenant_id,
+                    task_id=task,
+                    token_hash=uuid.uuid4().bytes,
+                    expires_at=func.now(),
+                )
+                .returning(report_links.c.id)
+            )
+            assert isinstance(report_link, uuid.UUID)
             assert isinstance(reassignment, uuid.UUID)
             assert isinstance(nudge, uuid.UUID)
             await connection.execute(
@@ -1521,6 +1540,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             display_preset=kept_preset,
             doomed_preset=doomed_preset,
             declinable=declinable,
+            report_link=report_link,
         )
     finally:
         await engine.dispose()

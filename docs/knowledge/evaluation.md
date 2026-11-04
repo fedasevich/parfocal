@@ -23,6 +23,10 @@ The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `V
 - Region areas come from one PostGIS query per slide and class: the union of the AI's regions, the union of the agreed regions (reshaped where a reviewer reshaped them) and the added regions, and the area of their intersection. The task does not store an order of reviewers, so the reshape that counts is the earliest one saved, not "the first reviewer in task order" as ADR 0084 puts it.
 - Opinions are summarised per question of the task's pinned form.
 
+## Read-only report links
+
+`parfocal_api.report_links` lets the project owner create, list and revoke links under `/api/review-tasks/{id}/evaluation/links`. `GET /api/shared-reports/{token}` needs no sign-in and returns `SharedReport`, a copy of the evaluation without ids, presets, display settings or free text answers, with reviewers named Reviewer A, B and so on. Links last 30 days, a revoked or expired one answers 410 `report-link-gone`, and every opening is audited as `report-link.opened` ([ADR 0236](../adr/0236-read-only-report-links-show-only-numbers.md)). Add a new `Evaluation` field to `SharedEvaluation` only on purpose.
+
 ## The geometric scorer counts pixels as squares on a 4x grid
 
 `parfocal_ml.scoring` rasterises each predicted ring by centre sampling on a 4x supersampled grid, where a label pixel's centre sits on its integer coordinate, so its edges are at ±0.5. A ring through the boundary pixels' centres covers only part of the nucleus (9 of 16 fine cells for a 4-pixel square), and a ring on the true edge scores 1. A ground-truth nucleus more than half inside the ignore mask is dropped, and so is a ring mostly inside it. The POC's stored `region.all.json` is stale for `classical-batch` and `pathosam-auto-hv`, so compare against the POC scorer itself, not that file ([result](../results/2026-10-18-geometric-scorer-reproduction.md)).
