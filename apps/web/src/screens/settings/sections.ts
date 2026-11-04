@@ -49,6 +49,7 @@ export type RowKey =
   | "strip"
   | "defaultPreset"
   | "modelWarnings"
+  | "outlineMode"
   | "device"
   | "wheel"
   | "doubleClick"
@@ -145,6 +146,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
     ),
   ],
   ai: [
+    row(
+      "outlineMode",
+      "Outline display",
+      "personal",
+      "How the review viewer shows how sure the AI is about each outline.",
+    ),
     row(
       "defaultPreset",
       "Default display preset",

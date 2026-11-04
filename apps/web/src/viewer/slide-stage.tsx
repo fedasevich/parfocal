@@ -2,6 +2,7 @@ import { getTileAccess } from "@parfocal/api-client";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { removeShape } from "../annotations/document.ts";
@@ -17,6 +18,13 @@ import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
+import { OutlineLayer } from "./outline-layer.tsx";
+import {
+  type OutlineModeChoice,
+  outlineModeChoices,
+  outlineModeLabels,
+  useOutlineMode,
+} from "./outline-mode.ts";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -138,11 +146,13 @@ export function SlideStage({
   areas = [],
   viewed,
   systematicScan = false,
+  outlines = false,
 }: {
   slideId: string;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
   systematicScan?: boolean;
+  outlines?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -152,6 +162,7 @@ export function SlideStage({
       areas={areas}
       viewed={viewed}
       systematicScan={systematicScan}
+      outlines={outlines}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -162,12 +173,14 @@ function OpenedSlide({
   areas,
   viewed,
   systematicScan,
+  outlines,
   onRetry,
 }: {
   slideId: string;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
+  outlines: boolean;
   onRetry: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
@@ -188,6 +201,7 @@ function OpenedSlide({
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
+  const [outlineMode, setOutlineMode] = useOutlineMode();
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
   const setAnnotations = saved.setDocument;
@@ -347,6 +361,27 @@ function OpenedSlide({
           percent={coverage.percent}
           onClose={viewed.onPeekClose}
         />
+      ) : null}
+      {session && outlines ? (
+        <>
+          <OutlineLayer
+            engine={session.engine}
+            module={session.module}
+            mode={outlineMode}
+            tissue={coverage?.tissue ?? null}
+          />
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
+            <SegmentedControl
+              aria-label="Outline display"
+              value={outlineMode}
+              onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
+              options={outlineModeChoices.map((choice) => ({
+                value: choice,
+                label: outlineModeLabels[choice],
+              }))}
+            />
+          </div>
+        </>
       ) : null}
       {session ? <ViewerKeys session={session} /> : null}
       {session ? <AreaKeys session={session} areas={areas} /> : null}

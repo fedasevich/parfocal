@@ -33,6 +33,7 @@ import {
   nucleiChipFor,
   syntheticCounts,
 } from "../../lab/synthetic-data.ts";
+import { type OutlineModeChoice, useOutlineMode } from "../../viewer/outline-mode.ts";
 import { SlideStill } from "../review/slide-still.tsx";
 import { BenchSection } from "./bench-section.tsx";
 import {
@@ -108,6 +109,31 @@ function Pick({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+const confidenceItems: Readonly<Record<string, OutlineModeChoice | null>> = {
+  Off: null,
+  Mark: "mark-unsure",
+  Fade: "fade",
+  Bands: "bands",
+  Map: null,
+};
+
+function ConfidenceDisplay() {
+  const [mode, setMode] = useOutlineMode();
+  const shown =
+    Object.entries(confidenceItems).find(([, choice]) => choice === mode)?.[0] ?? "Fade";
+  return (
+    <Pick
+      label="Confidence display"
+      value={shown}
+      items={Object.keys(confidenceItems)}
+      onChange={(item) => {
+        const choice = confidenceItems[item];
+        if (choice) setMode(choice);
+      }}
+    />
   );
 }
 
@@ -691,11 +717,7 @@ export function DeveloperScreen({
           note="Doctors pick wording and outlines in Settings. These override them while testing."
         >
           <DevRow label="Display" hint="Off, mark, fade, bands or map">
-            <Pick
-              label="Confidence display"
-              value="Fade"
-              items={["Off", "Mark", "Fade", "Bands", "Map"]}
-            />
+            <ConfidenceDisplay />
           </DevRow>
           <DevRow label="Words">
             {seg(
