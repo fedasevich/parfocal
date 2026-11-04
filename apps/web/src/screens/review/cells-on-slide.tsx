@@ -222,6 +222,18 @@ function CellsBody({
                     "focus",
                   )
                 }
+                onNotNucleus={(flagged) => {
+                  const cell = cells.find((item) => item.object === flagged);
+                  if (cell === undefined) return;
+                  setOverrides(
+                    new Map(overrides).set(flagged, {
+                      value: "disagree",
+                      raw: rawFor(style, "disagree", cell),
+                      reasons: ["Not a cell"],
+                      note: null,
+                    }),
+                  );
+                }}
                 onAgreeRest={() => setConfirming(true)}
                 onCancelRest={() => setConfirming(false)}
                 onApplyRest={() => {

@@ -75,6 +75,8 @@ export type ScenarioReviewObject = {
   score: number;
   sizeMm: number | null;
   otherClass: string | null;
+  detectorScore: number | null;
+  foreground: number | null;
 };
 
 const regionScores: [string, number, number][] = [
@@ -99,6 +101,19 @@ const cellScores = [
   0.49, 0.49, 0.49, 0.5, 0.52, 0.53, 0.54, 0.54, 0.56, 0.56, 0.57, 0.57, 0.58, 0.58, 0.59, 0.6, 0.6,
 ];
 
+const lowDetectorScores = new Map([
+  [3, 0.72],
+  [12, 0.76],
+  [46, 0.72],
+  [48, 0.64],
+]);
+
+const lowForegrounds = new Map([
+  [8, 0.41],
+  [44, 0.41],
+  [49, 0.33],
+]);
+
 export const sampledCells: string[] = sampledCellNumbers.flatMap(([region, numbers]) =>
   numbers.map((number) => `${region}·C${number}`),
 );
@@ -111,6 +126,8 @@ export const reviewObjects: ScenarioReviewObject[] = [
     score,
     sizeMm,
     otherClass: null,
+    detectorScore: null,
+    foreground: null,
   })),
   ...sampledCells.map((object, index) => ({
     object,
@@ -119,6 +136,8 @@ export const reviewObjects: ScenarioReviewObject[] = [
     score: cellScores[index] ?? 0.5,
     sizeMm: null,
     otherClass: "Immune",
+    detectorScore: lowDetectorScores.get(index) ?? 0.91,
+    foreground: lowForegrounds.get(index) ?? 0.84,
   })),
 ];
 

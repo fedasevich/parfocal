@@ -136,6 +136,26 @@ test("the next slide card, the cells gallery and the comments open on fake data"
   );
 });
 
+test("the cells gallery shows the X action on cells that may not be nuclei and the X marks one disagree", async ({
+  page,
+}) => {
+  await page.goto(`/tasks/${rt14}/cells?slide=${a1}&scene=grid`);
+  await expect(page.getByRole("button", { name: "Agree with the rest" })).toBeVisible();
+  const actions = page.locator('[data-slot="gallery-tile-flag-action"]');
+  await expect(actions).toHaveCount(5);
+  await expect(page.locator('[data-slot="gallery-tile"][data-flag]')).toHaveCount(5);
+  await expect(page.getByRole("button", { name: /^T1·C101 .*may not be a nucleus/ })).toHaveCount(
+    0,
+  );
+  const flaggedTile = page.getByRole("button", {
+    name: "T5·C531 tumor 57%, to check, may not be a nucleus",
+  });
+  await expect(flaggedTile).toBeVisible();
+  await page.getByRole("button", { name: "T5·C531 may not be a nucleus, disagree" }).click();
+  await expect(actions).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "T5·C531 tumor 57%, disagree" })).toBeVisible();
+});
+
 test("the reopen box shows the submitted banner", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region&submitted=true`);
   await expect(

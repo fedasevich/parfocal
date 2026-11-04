@@ -7,6 +7,7 @@ import {
 } from "@parfocal/ui/lib/confidence-words";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { Icon } from "./icon.tsx";
 
 type GalleryTileState = "to-check" | "current" | "done";
 
@@ -44,6 +45,8 @@ type GalleryTileProps = Omit<React.ComponentProps<"button">, "children"> & {
   imageSize?: string | undefined;
   outline?: React.ReactNode;
   ai?: GalleryTileAi | undefined;
+  flagged?: boolean;
+  onFlagAction?: (() => void) | undefined;
 };
 
 function GalleryTile({
@@ -59,6 +62,8 @@ function GalleryTile({
   imageSize,
   outline,
   ai,
+  flagged = false,
+  onFlagAction,
   className,
   ...props
 }: GalleryTileProps) {
@@ -67,7 +72,7 @@ function GalleryTile({
   const status = decision === "open" ? stateWords[state] : decision;
   const wording = ai ? aiWording(ai.calls, ai.wording, ai.typer) : undefined;
   const shown = wording?.text ?? label;
-  return (
+  const tile = (
     <button
       type="button"
       data-slot="gallery-tile"
@@ -77,7 +82,8 @@ function GalleryTile({
       aria-pressed={state === "current"}
       data-wording={wording?.mode ?? wording?.setting}
       data-band={wording?.band}
-      aria-label={`${objectId} ${shown}, ${status}`}
+      data-flag={flagged ? "may-not-be-nucleus" : undefined}
+      aria-label={`${objectId} ${shown}, ${status}${flagged ? ", may not be a nucleus" : ""}`}
       className={cn(
         "group/tile relative block shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 text-left text-fg focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 focus-visible:outline-solid",
         crop && "rounded-[5px]",
@@ -147,6 +153,30 @@ function GalleryTile({
         )}
       />
     </button>
+  );
+  if (!flagged) return tile;
+  return (
+    <span data-slot="gallery-tile-flagged" className="relative inline-block shrink-0">
+      {tile}
+      {onFlagAction ? (
+        <button
+          type="button"
+          data-slot="gallery-tile-flag-action"
+          title="May not be a nucleus. Disagree (X)"
+          aria-label={`${objectId} may not be a nucleus, disagree`}
+          className="absolute -top-1 -right-1 grid size-3.5 cursor-pointer place-items-center rounded-full border-0 bg-v-disagree p-0 text-white shadow-[0_0_0_2px_var(--chrome)] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 focus-visible:outline-solid"
+          onClick={onFlagAction}
+        >
+          <Icon name="close" className="size-2" />
+        </button>
+      ) : (
+        <span
+          aria-hidden="true"
+          data-slot="gallery-tile-flag-mark"
+          className="absolute -top-1 -right-1 size-3.5 rounded-full bg-v-disagree shadow-[0_0_0_2px_var(--chrome)]"
+        />
+      )}
+    </span>
   );
 }
 

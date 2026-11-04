@@ -285,6 +285,27 @@ function GuidedBody({
     }
     if (settings.auto) advance(index, next);
   };
+  const notNucleus = (object: string) => {
+    const target = objects.find((item) => item.object === object);
+    if (target === undefined || answer(object)) return;
+    const raw = rawFor(style, "disagree", target);
+    const reasons = ["Not a cell"];
+    const before = overrides;
+    put(object, { value: "disagree", raw, reasons, note: null });
+    decisions.save(
+      object,
+      raw,
+      "disagree",
+      reasonDraft(reasons, disagreeOptions(target.kind, target.class_name, session.classes)),
+    );
+    showUndoToast({
+      message: `${object}: not a nucleus, counts as disagree`,
+      undo: () => {
+        setOverrides(before);
+        decisions.restore(object, undefined);
+      },
+    });
+  };
   const toggleReason = (reason: string) => {
     const kept = answer(currentId);
     if (!kept) return;
@@ -816,6 +837,7 @@ function GuidedBody({
                     folded={cellsFolded}
                     confirming={confirmRest}
                     onPick={(object) => jump(object)}
+                    onNotNucleus={buttonsOff ? undefined : notNucleus}
                     onAgreeRest={() => setConfirmRest(true)}
                     onCancelRest={() => setConfirmRest(false)}
                     onApplyRest={() => {

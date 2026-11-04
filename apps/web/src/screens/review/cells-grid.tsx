@@ -1,6 +1,7 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
+import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
 import { lookUrl } from "../thumbnails.ts";
 import { reviewTyper } from "./ai-wording.ts";
 import type { Answer } from "./review-state.ts";
@@ -48,6 +49,7 @@ type CellsGridProps = {
   folded: boolean;
   confirming: boolean;
   onPick: (object: string) => void;
+  onNotNucleus?: ((object: string) => void) | undefined;
   onAgreeRest: () => void;
   onApplyRest: () => void;
   onCancelRest: () => void;
@@ -65,6 +67,7 @@ export function CellsGrid({
   folded,
   confirming,
   onPick,
+  onNotNucleus,
   onAgreeRest,
   onApplyRest,
   onCancelRest,
@@ -90,6 +93,9 @@ export function CellsGrid({
     >
       {cells.map((cell) => {
         const value = answer(cell.object)?.value;
+        const flagged =
+          !value &&
+          mayNotBeNucleus({ detectorScore: cell.detector_score, foreground: cell.foreground });
         return (
           <GalleryTile
             key={cell.object}
@@ -106,6 +112,8 @@ export function CellsGrid({
               typer: reviewTyper,
               wording: claimHidden ? "hidden" : "words",
             }}
+            flagged={flagged}
+            onFlagAction={flagged && onNotNucleus ? () => onNotNucleus(cell.object) : undefined}
             outline={<CellOutline object={cell.object} white={claimHidden} />}
             data-vt-source=""
             onClick={() => onPick(cell.object)}

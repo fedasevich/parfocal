@@ -53,6 +53,20 @@ test("a done tile fades the crop and shows the decision dot", async ({ page }) =
   await expect(page.getByRole("button", { name: "T1·C145 tumor 82%, agree" })).toBeVisible();
 });
 
+test("a tile that may not be a nucleus shows the X action and the X marks it disagree", async ({
+  page,
+}) => {
+  await page.goto(story("may-not-be-a-nucleus"));
+  await expect(tiles(page)).toHaveCount(3);
+  await expect(page.locator('[data-slot="gallery-tile-flag-action"]')).toHaveCount(2);
+  await expect(page.locator('[data-slot="gallery-tile"][data-flag]')).toHaveCount(2);
+  const first = page.getByRole("button", { name: "T1·C170 may not be a nucleus, disagree" });
+  await expect(first).toBeVisible();
+  await first.click();
+  await expect(page.locator('[data-slot="gallery-tile"][data-decision="disagree"]')).toHaveCount(1);
+  await expect(page.locator('[data-slot="gallery-tile-flag-action"]')).toHaveCount(2);
+});
+
 test("each decision has its own dot colour", async ({ page }) => {
   await page.goto(story("done-each-decision"));
   await expect(tiles(page)).toHaveCount(3);
