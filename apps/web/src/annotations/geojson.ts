@@ -1,7 +1,21 @@
-import type { Annotation, PolygonGeometry, Position } from "@parfocal/api-client";
+import type { Annotation, PointGeometry, PolygonGeometry, Position } from "@parfocal/api-client";
+import type { Point } from "./polygon-draft.ts";
 import { at } from "./shapes.ts";
 
 export const savedPolygonKind = "region";
+
+export const savedMarkerKind = "cell";
+
+export function pointToGeoJson(point: Point): PointGeometry {
+  return { type: "Point", coordinates: [point.x, point.y] };
+}
+
+export function markerPointOf(annotation: Annotation): Point | null {
+  const { geometry } = annotation;
+  if (geometry["type"] !== "Point") return null;
+  const position: unknown = geometry["coordinates"];
+  return isPosition(position) ? { x: position[0], y: position[1] } : null;
+}
 
 export function polygonToGeoJson(points: Float32Array): PolygonGeometry {
   const ring: Position[] = [];

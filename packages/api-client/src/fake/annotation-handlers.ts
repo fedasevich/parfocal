@@ -76,4 +76,13 @@ export const annotationHandlers = (): RequestHandler[] => [
       return HttpResponse.json(created, { status: 201 });
     },
   ),
+  http.delete<{ slideId: string; annotationId: string }>(
+    "*/api/slides/:slideId/annotations/:annotationId",
+    ({ params }) => {
+      const store = readStore();
+      const kept = (store[params.slideId] ?? []).filter((item) => item.id !== params.annotationId);
+      writeStore({ ...store, [params.slideId]: kept });
+      return new HttpResponse(null, { status: 204 });
+    },
+  ),
 ];

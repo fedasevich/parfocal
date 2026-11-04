@@ -77,6 +77,7 @@ function LiveSlide() {
         <SlideStage
           key={slideId}
           slideId={slideId}
+          projectId={projectId}
           areas={areas}
           viewed={viewed}
           outlines={fakeOutlines && task !== undefined}

@@ -1,10 +1,14 @@
-import { getTileAccess } from "@parfocal/api-client";
+import { getTileAccess, listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useClassKeys } from "../annotations/class-keys.ts";
+import { CountLayer } from "../annotations/count-layer.tsx";
+import { markersOf } from "../annotations/count-markers.ts";
+import { CountPanel } from "../annotations/count-panel.tsx";
 import { removeShape } from "../annotations/document.ts";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
@@ -41,7 +45,15 @@ type Phase =
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
-type ViewerTool = "hand" | "ruler" | "select" | "polygon" | "freehand" | "rectangle" | "ellipse";
+type ViewerTool =
+  | "hand"
+  | "ruler"
+  | "select"
+  | "polygon"
+  | "freehand"
+  | "rectangle"
+  | "ellipse"
+  | "marker";
 
 const toolOfAction: Readonly<Record<string, ViewerTool>> = {
   tselect: "select",
@@ -50,6 +62,7 @@ const toolOfAction: Readonly<Record<string, ViewerTool>> = {
   tfree: "freehand",
   trect: "rectangle",
   tellipse: "ellipse",
+  tmarker: "marker",
 };
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
@@ -146,12 +159,14 @@ function ScanKeys({
 
 export function SlideStage({
   slideId,
+  projectId,
   areas = [],
   viewed,
   systematicScan = false,
   outlines = false,
 }: {
   slideId: string;
+  projectId?: string;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
   systematicScan?: boolean;
@@ -162,6 +177,7 @@ export function SlideStage({
     <OpenedSlide
       key={attempt}
       slideId={slideId}
+      projectId={projectId}
       areas={areas}
       viewed={viewed}
       systematicScan={systematicScan}
@@ -173,6 +189,7 @@ export function SlideStage({
 
 function OpenedSlide({
   slideId,
+  projectId,
   areas,
   viewed,
   systematicScan,
@@ -180,6 +197,7 @@ function OpenedSlide({
   onRetry,
 }: {
   slideId: string;
+  projectId: string | undefined;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
@@ -195,7 +213,7 @@ function OpenedSlide({
   const [tool, setTool] = useState<ViewerTool>("hand");
   const toolBindings = useBindings(
     ["annotate"],
-    ["truler", "tselect", "tpoly", "tfree", "trect", "tellipse"],
+    ["truler", "tselect", "tpoly", "tfree", "trect", "tellipse", "tmarker"],
   );
   const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
     const pressed = toolOfAction[action];
@@ -211,6 +229,41 @@ function OpenedSlide({
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
   const setAnnotations = saved.setDocument;
+  const [classes, setClasses] = useState<readonly ProjectClass[]>([]);
+  const [activeClass, setActiveClass] = useState<string | null>(null);
+  useEffect(() => {
+    if (projectId === undefined) return;
+    let cancelled = false;
+    void listProjectClasses(projectId).then(
+      (response) => {
+        if (cancelled || response.status !== 200) return;
+        const sorted = [...response.data].sort((a, b) => a.key - b.key);
+        setClasses(sorted);
+        setActiveClass((current) => current ?? sorted[0]?.id ?? null);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+  const pickSlot = useCallback(
+    (slot: number) => {
+      const picked = classes[slot - 1];
+      if (picked !== undefined) setActiveClass(picked.id);
+    },
+    [classes],
+  );
+  useClassKeys(pickSlot, tool === "marker");
+  const colourOf = useCallback(
+    (classKey: string | null) =>
+      classes.find((item) => item.id === classKey)?.colour ?? "var(--color-accent)",
+    [classes],
+  );
+  const dropAt = useCallback(
+    (point: { x: number; y: number }) => saved.saveMarker(point, activeClass),
+    [saved.saveMarker, activeClass],
+  );
   const coverage = useSlideCoverage(
     session?.engine ?? null,
     session?.module ?? null,
@@ -284,7 +337,7 @@ function OpenedSlide({
       data-coverage-seen={coverage?.share.seen}
       data-coverage-pending={coverage?.pending}
       data-coverage-basis={coverage?.share.basis}
-      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
+      className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=ruler]:**:cursor-crosshair!"
     >
       <div ref={hostRef} className="absolute inset-0" />
       {session && hostNode ? (
@@ -326,6 +379,16 @@ function OpenedSlide({
             kind="ellipse"
             active={tool === "ellipse"}
             onClose={saved.savePolygon}
+            onLeave={leaveTool}
+          />
+          <CountLayer
+            engine={session.engine}
+            stage={hostNode}
+            active={tool === "marker"}
+            document={annotations}
+            colourOf={colourOf}
+            onDrop={dropAt}
+            onRemove={saved.removeMarker}
             onLeave={leaveTool}
           />
           <SelectLayer
@@ -373,6 +436,13 @@ function OpenedSlide({
               onPressedChange={(on) => setTool(on ? "ellipse" : "hand")}
             />
             <ToolRailButton
+              icon="marker"
+              label="Count marker"
+              action="tmarker"
+              pressed={tool === "marker"}
+              onPressedChange={(on) => setTool(on ? "marker" : "hand")}
+            />
+            <ToolRailButton
               icon="ruler"
               label="Ruler"
               action="truler"
@@ -380,7 +450,15 @@ function OpenedSlide({
               onPressedChange={(on) => setTool(on ? "ruler" : "hand")}
             />
           </div>
-          <div className="absolute right-4 bottom-4 w-72 max-w-[calc(100%-2rem)]">
+          <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
+            {tool === "marker" || markersOf(annotations).length > 0 ? (
+              <CountPanel
+                document={annotations}
+                classes={classes}
+                activeClass={activeClass}
+                onPick={setActiveClass}
+              />
+            ) : null}
             <MeasurementList
               document={annotations}
               micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
