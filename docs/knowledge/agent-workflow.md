@@ -59,9 +59,10 @@ The owner's Claude plan has a 5-hour and a weekly limit. The status line records
 
 Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready task that passes, in this order:
 
-1. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).
-2. An open task that a slice task depends on.
-3. Else the highest "unblocks" count from `board.py ready --agent-only`, the smaller `Size` winning a tie.
+1. The annotation path (milestone MA), in the order [ADR 0237](../adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists, since 2026-11-04.
+2. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).
+3. An open task that a path or slice task depends on.
+4. Else the highest "unblocks" count from `board.py ready --agent-only`, the smaller `Size` winning a tie.
 
 `Idea:` tasks stay in the backlog but come last. At most one task that adds a migration runs at a time.
 
@@ -87,7 +88,7 @@ The lead worktree and its scripts, in `scripts/lead/`:
 - `claim.sh ID...` claims in the lead and commits without pushing.
 - Each agent runs with `isolation: "worktree"` and commits only on its own branch.
 - `merge.sh ID BRANCH "log text" [review note]`:
-  - It merges the branch, numbers any `XXXX-*.md` ADR, runs `pnpm install` and `pnpm -s verify`, writes the note and ticks the task. With a fourth argument it moves the task to review with that note instead.
+  - It merges the branch, numbers any `0237-*.md` ADR, runs `pnpm install` and `pnpm -s verify`, writes the note and ticks the task. With a fourth argument it moves the task to review with that note instead.
   - It commits, removes the agent's worktree and branch, and prints `MERGED-OK`.
   - It stops with `MERGE CONFLICT` or `VERIFY FAILED` and leaves the fix to the lead.
 - `push.sh` pushes. `merge.sh` calls it after every third merge, so CI runs in batches and failure emails stay few. Run `push.sh` before ending a run.
@@ -97,7 +98,7 @@ The agent prompt always says:
 - Read the task with `board.py show ID` and only the docs it lists. Grep for what already exists and build on it.
 - Run `pnpm install` first, and `uv sync` when Python is touched.
 - Build the tests that the "Done when" line names, and compare screens with the mock by number.
-- Name new ADRs `docs/adr/XXXX-short-title.md`, with a `# XXXX. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
+- Name new ADRs `docs/adr/0237-short-title.md`, with a `# 0237. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
 - Do not edit `docs/BACKLOG.md`, `docs/log.md`, `docs/decisions.md`, `docs/board/` or READMEs (except the results index). Do not claim, note, tick or push.
 - Never use the word "verdict", and write no code comments.
 - Use a distinct `PARFOCAL_E2E_PORT` from 5190 to 5199 and stop the dev server before finishing.

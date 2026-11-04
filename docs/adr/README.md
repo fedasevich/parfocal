@@ -200,3 +200,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0234](0234-coverage-is-a-per-person-bitset-on-a-capped-cell-grid.md) | Coverage is a per person bitset on a capped cell grid | Proposed | 2026-11-04 |
 | [0235](0235-report-pages-from-a-shared-unit-plan.md) | The report page and the PDF split blocks into pages by one shared unit plan, and a signed report keeps its layout through its pinned template version | Proposed | 2026-11-04 |
 | [0236](0236-read-only-report-links-show-only-numbers.md) | A read-only report link is a hashed random token that shows only the numbers, lasts 30 days and logs every opening | Proposed | 2026-11-04 |
+| [0237](0237-annotate-tasks-on-one-shared-layer.md) | A task is a review task or an annotate task, and experts annotate on one shared layer per task slide | Accepted | 2026-11-04 |
