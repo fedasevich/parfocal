@@ -4360,7 +4360,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-002.
   Size: M.
 
-- [ ] EVAL-005 · Read-only link for co-authors
+- [x] EVAL-005 · Read-only link for co-authors
   A link to the report without slides, revocable and logged.
   Done when API tests cover the link, revocation and the log.
   Depends on EVAL-002.
