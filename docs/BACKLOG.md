@@ -1422,7 +1422,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a test opens a slide through the real opener and the camera is fitted to the stored box, and a slide with no box opens fitted to the whole scan.
   Depends on VIEW-048, INGEST-007. Refs [ADR 0110](adr/0110-native-jpeg-decode-and-tissue-fit.md).
   Size: S.
-- [ ] VIEW-050 · Polygons with holes in overlay batches
+- [x] VIEW-050 · Polygons with holes in overlay batches
   Overlay polygon batches accept rings with holes. The triangulation, the outline loops and the precomputed indices all follow the holes.
   Done when a golden test renders a polygon with a hole and an island inside the hole, and unit tests check the triangle count and that no triangle covers the hole.
   Depends on VIEW-026. Refs [ADR 0108](adr/0108-overlay-layers-as-typed-data-over-deck-gl.md).

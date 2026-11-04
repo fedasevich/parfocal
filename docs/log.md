@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- VIEW-050 (polygons with holes) gave overlay polygon batches holes (holes on PolygonInput, holeStarts on PolygonBatch) that earcut, the indices and the outline loops follow. Unit tests check triangle counts and an empty hole, and the overlay-polygon-hole-island golden renders a hole with an island.
 - DS-035 (warn tag contrast) found the light warn tag already at 4.73:1 since DS-005 moved --warn to #804d00. A tokens test now pins 4.5:1 for the warn tag tint on page, chrome, chrome-2 and chrome-3 in both themes, and axe passes on the 28 tag and table story runs.
 - DS-038 (flow page density token) added --density-flow-page-gap, 20 px comfortable and 14 px compact, which FlowPage's main column (data-slot flow-main) uses. FlowComfortable and FlowCompact stories and a density spec read the computed gap in both densities.
 - INGEST-021 (upload wizard) first part: Upload opens a live Files, Check and Upload wizard that sorts dropped files in the browser (ADR 0232), a drop on a project opens it, the jobs tray lists the uploads, and the upload engine loads lazily to stay under the first-page budget (25 bytes spare). Uploads do not yet reach a case or slide.
