@@ -2493,7 +2493,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover counting and deletion.
   Size: S.
 
-- [ ] ANN-009 · Arrow and text tools
+- [x] ANN-009 · Arrow and text tools
   Text commits on Enter, drops on Esc (undo restores it).
   Done when interaction tests cover both.
   Size: S.
