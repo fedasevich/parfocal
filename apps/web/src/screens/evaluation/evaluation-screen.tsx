@@ -1,5 +1,6 @@
 import {
   type EvaluationReport,
+  reportBlockSchema,
   useGetDisagreementQueue,
   useGetEvaluationReport,
   useGetReviewTask,
@@ -33,21 +34,14 @@ import { blockCopy } from "../admin/templates.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
-import { type PageBlock, pageCount, ReportPage } from "./report-pages.tsx";
+import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 
 export type EvaluationScene = "report" | "arrange" | "pdf" | "retiredtpl" | "exportfail";
 
 type BlockKind = PageBlock["kind"];
 
 const fromTemplate = (report: EvaluationReport): PageBlock[] =>
-  report.template.blocks.map((block, index) => ({
-    id: `${block.kind}-${index}`,
-    kind: block.kind,
-    title: block.title,
-    width: block.width,
-  }));
-
-const pageNumbers = Array.from({ length: pageCount }, (_, index) => index + 1);
+  report.template.blocks.map((block, index) => ({ ...block, id: `${block.kind}-${index}` }));
 
 const shortDay = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -90,7 +84,7 @@ function EvaluationBody({
   const [selected, setSelected] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState(report.template.name);
   const [version, setVersion] = useState(report.template.version);
-  const [format, setFormat] = useState(report.formats[0]?.key ?? "pdf");
+  const [fileKind, setFileKind] = useState(report.formats[0]?.key ?? "pdf");
   const [failed, setFailed] = useState(scene === "exportfail");
   const [page, setPage] = useState(1);
   const arranging = scene === "arrange";
@@ -98,11 +92,16 @@ function EvaluationBody({
   const current = blocks.find((block) => block.id === selected) ?? null;
   const file = `${report.task_code}_evaluation_v${report.version}`;
   const projectHref = destinations.project(report.project.id);
+  const format = report.template.format;
+  const plan = planOf(blocks, format);
+  const pageCount = plan.length;
   const pageProps = {
     report,
     evaluation,
     queue,
     blocks,
+    format,
+    pages: pageCount,
     templateVersion: version,
     nameOf,
     countsAsChanges,
@@ -118,6 +117,8 @@ function EvaluationBody({
       kind,
       title: blockCopy[kind].name,
       width: "full",
+      show_title: true,
+      page_break: false,
     };
     const at = current ? blocks.indexOf(current) + 1 : blocks.length;
     change([...blocks.slice(0, at), block, ...blocks.slice(at)]);
@@ -141,12 +142,12 @@ function EvaluationBody({
     toast.show(`Removed ${current.title}`, () => setBlocks(before));
   };
   const download = () => {
-    if (failed || (scene === "exportfail" && format === "pdf")) {
+    if (failed || (scene === "exportfail" && fileKind === "pdf")) {
       setFailed(true);
       return;
     }
     toast.show(
-      `${file}.${format === "docx" ? "docx" : format === "pdf" ? "pdf" : "csv"} saved to Downloads`,
+      `${file}.${fileKind === "docx" ? "docx" : fileKind === "pdf" ? "pdf" : "csv"} saved to Downloads`,
     );
   };
   const switchTemplate = (id: string | null) => {
@@ -157,10 +158,8 @@ function EvaluationBody({
     setVersion(picked.version);
     setBlocks(
       picked.blocks.map((block, index) => ({
+        ...reportBlockSchema.parse({ width: "full", ...block }),
         id: `${block.kind}-${index}`,
-        kind: block.kind,
-        title: block.title,
-        width: (block as { width?: "full" | "half" }).width ?? "full",
       })),
     );
     setArranged(false);
@@ -182,10 +181,11 @@ function EvaluationBody({
   ];
   const pages = (
     <div className="grid justify-items-center gap-6 py-6">
-      {pageNumbers.map((number) => (
+      {plan.map((layout, index) => (
         <ReportPage
-          key={number}
-          page={number}
+          key={`${layout.appendix ?? "page"}-${layout.rows.flat().join(".")}-${layout.closing}`}
+          page={index + 1}
+          plan={layout}
           {...pageProps}
           {...(arranging ? { selected, onSelect: setSelected } : {})}
         />
@@ -424,14 +424,14 @@ function EvaluationBody({
             </FoldingZone>
             <FoldingZone
               title="Download"
-              summary={report.formats.find((item) => item.key === format)?.label}
+              summary={report.formats.find((item) => item.key === fileKind)?.label}
               defaultOpen
             >
               <span className="text-body-sm font-semibold">Format</span>
-              <Select value={format} onValueChange={(value) => setFormat(String(value))}>
+              <Select value={fileKind} onValueChange={(value) => setFileKind(String(value))}>
                 <SelectTrigger aria-label="Format" className="w-full">
                   <SelectValue>
-                    {report.formats.find((item) => item.key === format)?.label}
+                    {report.formats.find((item) => item.key === fileKind)?.label}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -498,11 +498,14 @@ function EvaluationBody({
           <PdfPreview
             className="h-full rounded-none border-0"
             title={file}
-            meta={`A4 · portrait · ${pageCount} pages`}
+            meta={`${format.paper === "letter" ? "Letter" : "A4"} · ${format.orientation} · ${pageCount} pages`}
             pages={pageCount}
             current={page}
             onCurrentChange={setPage}
-            renderPage={(number) => <ReportPage page={number} {...pageProps} />}
+            renderPage={(number) => {
+              const layout = plan[number - 1];
+              return layout ? <ReportPage page={number} plan={layout} {...pageProps} /> : null;
+            }}
             onPrint={() => toast.show(`Opens the print dialog for ${file}.pdf`)}
             onDownload={() => toast.show(`${file}.pdf saved to Downloads`)}
             onClose={() => onScene("report")}

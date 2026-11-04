@@ -257,4 +257,5 @@ export {
 } from "./list-thread-comments.ts";
 export * from "./model-runs.ts";
 export * from "./project.ts";
+export * from "./report-layout.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";

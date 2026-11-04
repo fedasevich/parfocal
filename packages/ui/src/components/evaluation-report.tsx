@@ -5,25 +5,58 @@ type ReportSheetProps = React.ComponentProps<"article"> & {
   page: number;
   pages: number;
   footer?: React.ReactNode;
+  header?: React.ReactNode;
+  numbering?: "none" | "page" | "page-of";
+  landscape?: boolean;
+  watermark?: string | undefined;
 };
 
-function ReportSheet({ page, pages, footer, className, children, ...props }: ReportSheetProps) {
+function ReportSheet({
+  page,
+  pages,
+  footer,
+  header,
+  numbering = "page-of",
+  landscape = false,
+  watermark,
+  className,
+  children,
+  ...props
+}: ReportSheetProps) {
   return (
     <article
       data-slot="report-sheet"
+      data-orientation={landscape ? "landscape" : "portrait"}
       aria-label={`Page ${page} of ${pages}`}
       className={cn(
-        "flex min-h-[877px] w-155 shrink-0 flex-col gap-5 bg-white px-11 pt-9 pb-6 text-[10px] leading-[1.4] text-[#111] shadow-pop",
+        "relative flex shrink-0 flex-col gap-5 overflow-hidden bg-white px-11 pt-9 pb-6 text-[10px] leading-[1.4] text-[#111] shadow-pop",
+        landscape ? "min-h-155 w-[877px]" : "min-h-[877px] w-155",
         className,
       )}
       {...props}
     >
-      <div className="grid min-h-0 flex-1 content-start gap-5">{children}</div>
-      <div className="flex justify-between text-[8px] text-[#6b6b6b]">
-        <span>{footer}</span>
-        <span>
-          Page {page} of {pages}
+      {watermark ? (
+        <span
+          aria-hidden="true"
+          data-slot="report-watermark"
+          className="pointer-events-none absolute inset-0 grid -rotate-30 place-items-center text-[64px] font-bold text-[#e4e4e4] select-none"
+        >
+          {watermark}
         </span>
+      ) : null}
+      {header ? (
+        <div data-slot="report-header" className="relative text-[7.5px] text-[#6b6b6b]">
+          {header}
+        </div>
+      ) : null}
+      <div className="relative grid min-h-0 flex-1 content-start gap-5">{children}</div>
+      <div className="relative flex justify-between text-[8px] text-[#6b6b6b]">
+        <span>{footer}</span>
+        {numbering === "none" ? null : (
+          <span data-slot="report-page-number">
+            {numbering === "page" ? `Page ${page}` : `Page ${page} of ${pages}`}
+          </span>
+        )}
       </div>
     </article>
   );
@@ -120,7 +153,7 @@ function ReportBlock({
       )}
       {...props}
     >
-      <h3 className="m-0 text-[9px] font-bold">{title}</h3>
+      {title ? <h3 className="m-0 text-[9px] font-bold">{title}</h3> : null}
       {children}
       {onSelect ? (
         <button

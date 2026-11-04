@@ -19,12 +19,22 @@ from parfocal_api.report_template import (
     EVERY_BLOCK,
     REPORT_MESSAGES,
     ReportClass,
+    ReportCompared,
     ReportData,
+    ReportDecision,
+    ReportObject,
     ReportOpinion,
     render_report,
     report_data,
 )
 from parfocal_api.tables import DecisionStyle
+from parfocal_common.report_blocks import (
+    Comparison,
+    ReportFormat,
+    SlideFigure,
+    SlideTable,
+    TextBlock,
+)
 
 SENTINELS = {
     "recipient_name": "RECIPIENT-SENTINEL",
@@ -56,8 +66,77 @@ REPORT = ReportData(
     reasons=(("REASON-SENTINEL", 2),),
     opinions=(ReportOpinion(key="QUESTION-SENTINEL", count=2, mean=3.0),),
 )
+SLIDE_ID = uuid.UUID("00000000-0000-4000-8000-000000000001")
+OTHER_TASK = uuid.UUID("00000000-0000-4000-8000-000000000002")
+MISSING_TASK = uuid.UUID("00000000-0000-4000-8000-000000000003")
+FULL_BLOCKS = (
+    *EVERY_BLOCK[:7],
+    SlideTable(kind="slide-table", title="Slides", columns=["objects", "disagreements", "time"]),
+    SlideFigure(
+        kind="slide-figure",
+        title="Figure",
+        slide_id=SLIDE_ID,
+        object_id="T1",
+        caption="CAPTION-SENTINEL",
+    ),
+    EVERY_BLOCK[9],
+    Comparison(kind="comparison", title="Comparison", task_id=OTHER_TASK, metrics=["dice"]),
+)
+FULL_REPORT = replace(
+    REPORT,
+    headline={"dice": 0.6, "kappa": 0.5},
+    cell_agreement=0.75,
+    blocks=FULL_BLOCKS,
+    format=ReportFormat(appendices=["objects", "decisions", "methods"]),
+    objects=(
+        ReportObject(
+            object_id="P1/C1/SLIDE-SENTINEL/T1",
+            slide="SLIDE-SENTINEL",
+            kind="region",
+            class_name="CLASS-SENTINEL",
+            agree=1,
+            disagree=1,
+            unsure=0,
+            consensus="CONSENSUS-SENTINEL",
+        ),
+    ),
+    decision_rows=(
+        ReportDecision(
+            object_id="P1/C1/SLIDE-SENTINEL/T1",
+            reviewer="REVIEWER-SENTINEL",
+            decision="DECISION-SENTINEL",
+        ),
+    ),
+    compared={str(OTHER_TASK): ReportCompared("COMPARED-SENTINEL", {"dice": 0.4})},
+)
+EMPTY_REPORT = ReportData(
+    project_name="PROJECT-SENTINEL",
+    task_name="TASK-SENTINEL",
+    version=1,
+    checksum="sha256:0123abcd",
+    signed_off_on=None,
+    sample=False,
+    classes=(),
+    fleiss_kappa=None,
+    decisions={},
+    blocks=(
+        *EVERY_BLOCK[:9],
+        TextBlock(kind="text", title="Methods"),
+        Comparison(kind="comparison", title="Comparison", metrics=["dice"]),
+        Comparison(kind="comparison", title="Gone", task_id=MISSING_TASK, metrics=["dice"]),
+    ),
+)
 REPORT_VALUES = (
     "PROJECT-SENTINEL",
+    "SLIDE-SENTINEL",
+    "CONSENSUS-SENTINEL",
+    "REVIEWER-SENTINEL",
+    "DECISION-SENTINEL",
+    "COMPARED-SENTINEL",
+    "CAPTION-SENTINEL",
+    "P1/C1/",
+    "T1",
+    "Gone",
     "TASK-SENTINEL",
     "CLASS-SENTINEL",
     "OTHER-SENTINEL",
@@ -65,7 +144,11 @@ REPORT_VALUES = (
     "QUESTION-SENTINEL",
     "METHODS-SENTINEL",
     "sha256:0123abcd",
-    *(block.title for block in EVERY_BLOCK),
+    *(block.title for block in FULL_BLOCKS),
+)
+TYPST_WORDS = re.compile(
+    r"(?<![A-Za-z])(?:set|page|paper|a4|flipped|false|true|margin|cm|numbering|header|background|none|"
+    r"text|size|pt|rotate|deg|fill|luma|h|fr|table|columns|grid|column|gutter|pagebreak|inset)\b"
 )
 
 
@@ -110,17 +193,18 @@ def test_every_message_has_a_pseudo_translation() -> None:
 
 
 def test_the_report_renders_with_every_string_translated_in_the_pseudo_locale() -> None:
-    report = render_report(REPORT, Locale.PSEUDO)
-    literals = [
-        literal.replace('\\"', '"').replace("\\\\", "\\")
-        for literal in LITERAL.findall(report.source)
-    ]
-    shown = [without(literal, REPORT_VALUES) for literal in literals]
-    assert not any(LETTERS.search(text) for text in shown), shown
-    outside = LITERAL.sub("", report.source)
-    assert set(LETTERS.findall(outside.replace("table", "").replace("columns", ""))) == set()
-    draft = render_report(replace(REPORT, signed_off_on=None, reasons=()), Locale.PSEUDO)
-    literals += LITERAL.findall(draft.source)
+    report = render_report(FULL_REPORT, Locale.PSEUDO)
+    literals: list[str] = []
+    for data in (FULL_REPORT, EMPTY_REPORT, replace(REPORT, signed_off_on=None, reasons=())):
+        source = render_report(data, Locale.PSEUDO).source
+        found = [
+            literal.replace('\\"', '"').replace("\\\\", "\\") for literal in LITERAL.findall(source)
+        ]
+        shown = [without(literal, REPORT_VALUES) for literal in found]
+        assert not any(LETTERS.search(text) for text in shown), shown
+        outside = TYPST_WORDS.sub("", LITERAL.sub("", source))
+        assert set(LETTERS.findall(outside)) == set(), outside
+        literals += found
     for message in pseudo_catalogue(REPORT_MESSAGES).values():
         assert message in literals, message
     assert "0.83" in literals
