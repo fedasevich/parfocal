@@ -2545,7 +2545,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [`poc/src/annotations/grouping.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/grouping.ts).
   Size: M.
 
-- [ ] ANN-017 · Proposals lifecycle
+- [x] ANN-017 · Proposals lifecycle
   Pending proposals are visible in any tool, accept and discard from anywhere, accepted output never becomes the active group.
   Done when tests cover accept and discard from each tool.
   Refs doc 25.
