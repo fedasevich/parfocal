@@ -27,6 +27,8 @@ export {
   mySettingsSchema,
   NoticeChannel,
   ShortcutPreset,
+  type ShortcutSettings,
+  shortcutSettingsSchema,
   useGetMySettings,
   WholeSlideKey,
 } from "./get-my-settings.ts";
@@ -116,18 +118,6 @@ export {
   type listAnnotationLayersResponse,
   useListAnnotationLayers,
 } from "./list-annotation-layers.ts";
-export {
-  getListMyAdjudicationsQueryKey,
-  getListMyAdjudicationsQueryOptions,
-  getListMyAdjudicationsUrl,
-  type ListMyAdjudicationsQueryError,
-  type ListMyAdjudicationsQueryResult,
-  listMyAdjudications,
-  type listMyAdjudicationsResponse,
-  type MyAdjudication,
-  myAdjudicationSchema,
-  useListMyAdjudications,
-} from "./list-my-adjudications.ts";
 export {
   type CosignRequest,
   cosignRequestSchema,
@@ -257,4 +247,5 @@ export {
 } from "./list-thread-comments.ts";
 export * from "./model-runs.ts";
 export * from "./project.ts";
+export * from "./set-my-shortcuts.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";

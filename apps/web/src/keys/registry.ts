@@ -218,6 +218,37 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
   return { state: cleared, fired: [], consumed: false };
 }
 
+type KeyEventLike = {
+  key: string;
+  code: string;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+  repeat: boolean;
+  timeStamp: number;
+};
+
+export function keyInputOf(
+  type: "down" | "up",
+  event: KeyEventLike,
+  typing: boolean,
+  byPosition: boolean,
+): KeyInput {
+  return {
+    type,
+    key: event.key,
+    ...(byPosition ? { code: event.code } : {}),
+    metaKey: event.metaKey,
+    ctrlKey: event.ctrlKey,
+    altKey: event.altKey,
+    shiftKey: event.shiftKey,
+    repeat: event.repeat,
+    typing,
+    at: event.timeStamp,
+  };
+}
+
 export function isTyping(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null;
   return Boolean(

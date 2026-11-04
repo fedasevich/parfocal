@@ -142,3 +142,71 @@ test("the reopen box shows the submitted banner", async ({ page }) => {
     page.getByText("You submitted this slide. Changes are saved and Simona is told."),
   ).toBeVisible();
 });
+
+const dot = (page: Page, object: string) =>
+  page.getByRole("group", { name: "Objects" }).getByRole("button", { name: object, exact: true });
+
+const openGuided = async (page: Page) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
+};
+
+test("the dots carry a check, a cross and a question mark, and an open one carries none", async ({
+  page,
+}) => {
+  await openGuided(page);
+  await expect(dot(page, "T1").locator('[data-icon-name="check"]')).toHaveCount(1);
+  await expect(dot(page, "T2").locator('[data-icon-name="close"]')).toHaveCount(1);
+  await expect(dot(page, "T4")).toHaveText("?");
+  await expect(dot(page, "T5")).toHaveText("");
+  await expect(dot(page, "T5").locator("svg")).toHaveCount(0);
+  await expect(dot(page, "T5")).toHaveAttribute("aria-current", "true");
+});
+
+test("a slide is reviewed with the mouse alone, and each answer moves on by itself", async ({
+  page,
+}) => {
+  await openGuided(page);
+  await review(page)
+    .getByRole("button", { name: /Not sure/ })
+    .first()
+    .click();
+  await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
+  await expect(dot(page, "T5")).toHaveText("?");
+  await expect(page.getByRole("button", { name: /^Back to / })).toBeVisible();
+  await page.getByRole("button", { name: "Whole slide" }).click();
+  await expect(page.getByRole("button", { name: "Whole slide" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: "Whole slide" }).click();
+  await dot(page, "T5").click();
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
+  await review(page).getByRole("button", { name: /Agree/ }).first().click();
+  const position = page.getByText(/^Object \d+ of 55 on this slide$/);
+  for (let cell = 0; cell < 5; cell += 1) {
+    const at = await position.innerText();
+    await review(page).getByRole("button", { name: /Agree/ }).first().click();
+    await expect(position).not.toHaveText(at);
+  }
+  await review(page).getByRole("button", { name: /Agree/ }).first().click();
+  await expect(page.getByText("Slide 8 is done")).toBeVisible();
+  await expect(page.getByRole("link", { name: /My work/ }).first()).toBeVisible();
+});
+
+test("a slide is reviewed with the keyboard alone", async ({ page }) => {
+  await openGuided(page);
+  await page.keyboard.press("k");
+  await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
+  await expect(dot(page, "T5").locator('[data-icon-name="check"]')).toHaveCount(1);
+  const position = page.getByText(/^Object \d+ of 55 on this slide$/);
+  const before = await position.innerText();
+  await page.keyboard.press("ArrowLeft");
+  await expect(position).not.toHaveText(before);
+  await page.keyboard.press("ArrowRight");
+  await expect(position).toHaveText(before);
+  await page.keyboard.press("u");
+  for (let cell = 0; cell < 5; cell += 1) await page.keyboard.press("k");
+  await expect(page.getByText("Slide 8 is done")).toBeVisible();
+  await expect(page.getByRole("img", { name: /, 0 open$/ })).toBeVisible();
+});

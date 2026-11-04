@@ -19,7 +19,7 @@ pnpm golden:update                                   # rewrite every golden imag
 3. Open the changed files in `goldens/` and look at them before committing. A golden is only as good as the review of its first version.
 4. Run the suite again without `GOLDEN_UPDATE` and commit the PNGs with the change that caused them, and say why in the commit message.
 
-Goldens can be written on a Mac or on Linux, because the suite always renders with SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`) and fails when WebGL runs on anything else. `GOLDEN_MEASURE=1 pnpm --filter @parfocal/golden-images exec playwright test render/measure.spec.ts` prints how far the hardware GPU and a channel-swapped renderer are from the goldens.
+Goldens that hold text (`viv-overlay-id-labels` and `viv-overlay-stack`) come from the Linux runner, because the host font changes their pixels and they fail on a Mac. Regenerate them with `gh workflow run ci --ref BRANCH -f update_goldens=true` on a pushed branch, then download the `linux-goldens` artifact with `gh run download`. Goldens without text can be written on a Mac or on Linux, because the suite always renders with SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`) and fails when WebGL runs on anything else. `GOLDEN_MEASURE=1 pnpm --filter @parfocal/golden-images exec playwright test render/measure.spec.ts` prints how far the hardware GPU and a channel-swapped renderer are from the goldens.
 
 ## Plugging in a renderer
 

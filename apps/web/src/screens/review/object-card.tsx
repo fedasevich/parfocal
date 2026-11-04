@@ -17,6 +17,7 @@ import {
   rawLabel,
   unsureReasons,
 } from "./decision-style.ts";
+import { dotGlyphOf, dotStateWord } from "./guided-progress.ts";
 import type { Answer } from "./review-state.ts";
 
 const dotTone: Record<Count, string> = {
@@ -45,12 +46,13 @@ export function ObjectDots({ regions, cells, current, answer, skipped, onJump }:
       {regions.map((region) => {
         const value = answer(region.object)?.value;
         const skip = skipped.includes(region.object) && !value;
+        const glyph = dotGlyphOf(value);
         return (
           <button
             key={region.object}
             type="button"
             onClick={() => onJump(region.object)}
-            title={`${region.object}${value ? `, ${countWord[value].toLowerCase()}` : skip ? ", skipped, still open" : ", not answered yet"}`}
+            title={`${region.object}, ${dotStateWord(value, skip)}`}
             aria-label={region.object}
             aria-current={region.object === current ? "true" : undefined}
             className={cn(
@@ -61,11 +63,11 @@ export function ObjectDots({ regions, cells, current, answer, skipped, onJump }:
                 "shadow-[0_0_0_2px_var(--chrome),0_0_0_4px_color-mix(in_srgb,var(--accent)_75%,white)]",
             )}
           >
-            {value === "agree" ? (
+            {glyph === "check" ? (
               <Icon name="check" size="xs" />
-            ) : value === "disagree" ? (
+            ) : glyph === "cross" ? (
               <Icon name="close" size="xs" />
-            ) : value === "unsure" ? (
+            ) : glyph === "question" ? (
               "?"
             ) : null}
           </button>

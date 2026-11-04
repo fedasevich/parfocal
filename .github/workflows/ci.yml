@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_goldens:
+        description: Regenerate the golden images on the runner and upload them as an artifact
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,6 +39,10 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           TO: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           FROM="$BASE"
           if [ -z "$FROM" ]; then
             FROM=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci --branch main --event push --status success --limit 1 --json headSha --jq '.[0].headSha // ""')
@@ -55,6 +65,7 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
   lint:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -82,6 +93,7 @@ jobs:
           pnpm commitlint --from "$FROM" --to "$TO" --verbose
 
   typecheck:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -93,6 +105,7 @@ jobs:
       - run: pnpm test:guards
 
   test:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -188,7 +201,7 @@ jobs:
 
   browser:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' || (github.event_name == 'workflow_dispatch' && inputs.update_goldens)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -206,9 +219,20 @@ jobs:
           key: fixtures-browser-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
       - run: pnpm fixtures small viewer
       - run: google-chrome --version
-      - run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}
+      - if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'golden-images' }}
+        run: pnpm turbo run test:browser --filter=@parfocal/golden-images
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          GOLDEN_UPDATE: "1"
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'golden-images' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-goldens
+          path: packages/golden-images/goldens/*.png
 
   ci-ok:
     if: always()

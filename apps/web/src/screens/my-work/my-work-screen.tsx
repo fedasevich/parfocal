@@ -41,7 +41,7 @@ export function MyWorkScreen({
 }) {
   const goTo = useGoTo();
   const tasks = okData(useListMyReviewTasks().data) ?? [];
-  const adjudications = useListMyAdjudications().data?.data ?? [];
+  const adjudications = okData(useListMyAdjudications().data) ?? [];
   const assigned = okData(useListTasksAssignedByMe().data) ?? [];
   const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
   const me = okData(useGetMe().data);

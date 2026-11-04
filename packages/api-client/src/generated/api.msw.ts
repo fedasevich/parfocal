@@ -10,6 +10,7 @@ import { HttpResponse, http } from "msw";
 import type {
   AbortedUpload,
   AcceptedInvitation,
+  AdjudicatedObject,
   Annotation,
   AnnotationRef,
   AnnotationVersion,
@@ -17,6 +18,7 @@ import type {
   AssignedTask,
   AuditEvent,
   AuditExport,
+  Candidate,
   CaseDetail,
   CaseSummary,
   ChoiceQuestion,
@@ -64,6 +66,7 @@ import type {
   ModelShown,
   MultiPolygonGeometry,
   Mute,
+  MyAdjudication,
   MyDisplay,
   MySettingLayers,
   MyTask,
@@ -5564,6 +5567,10 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
         answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
         value: faker.helpers.arrayElement(Object.values(VerdictValue)),
         reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
         reopened: faker.datatype.boolean(),
       }),
     ),
@@ -5591,6 +5598,26 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
     edited_after_decisions: faker.datatype.boolean(),
     looking_again: faker.datatype.boolean(),
+    adjudication: faker.helpers.arrayElement([
+      {
+        id: faker.string.uuid(),
+        adjudicator_user_id: faker.string.uuid(),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        declined_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        declined_note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      null,
+    ]),
   }));
 
 export const getDecideDisagreementResponseMock = (
@@ -5607,6 +5634,10 @@ export const getDecideDisagreementResponseMock = (
       answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
       reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
       reopened: faker.datatype.boolean(),
     }),
   ),
@@ -5634,6 +5665,26 @@ export const getDecideDisagreementResponseMock = (
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   edited_after_decisions: faker.datatype.boolean(),
   looking_again: faker.datatype.boolean(),
+  adjudication: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      adjudicator_user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      declined_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      declined_note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -5651,6 +5702,10 @@ export const getLeaveDisagreementOpenResponseMock = (
       answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
       reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
       reopened: faker.datatype.boolean(),
     }),
   ),
@@ -5678,6 +5733,26 @@ export const getLeaveDisagreementOpenResponseMock = (
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   edited_after_decisions: faker.datatype.boolean(),
   looking_again: faker.datatype.boolean(),
+  adjudication: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      adjudicator_user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      declined_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      declined_note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -5695,6 +5770,10 @@ export const getAskReviewersToLookAgainResponseMock = (
       answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
       reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
       reopened: faker.datatype.boolean(),
     }),
   ),
@@ -5722,6 +5801,26 @@ export const getAskReviewersToLookAgainResponseMock = (
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   edited_after_decisions: faker.datatype.boolean(),
   looking_again: faker.datatype.boolean(),
+  adjudication: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      adjudicator_user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      declined_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      declined_note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -5739,6 +5838,10 @@ export const getKeepReviewerDecisionsResponseMock = (
       answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       value: faker.helpers.arrayElement(Object.values(VerdictValue)),
       reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
       reopened: faker.datatype.boolean(),
     }),
   ),
@@ -5766,8 +5869,202 @@ export const getKeepReviewerDecisionsResponseMock = (
   note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   edited_after_decisions: faker.datatype.boolean(),
   looking_again: faker.datatype.boolean(),
+  adjudication: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      adjudicator_user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      declined_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      declined_note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
+
+export const getListAdjudicatorCandidatesResponseMock = (): Candidate[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reviewer_of_task: faker.datatype.boolean(),
+    away: faker.datatype.boolean(),
+  }));
+
+export const getSendToAdjudicatorResponseMock = (): QueuedObject[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    slide_id: faker.string.uuid(),
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+    number: faker.number.int(),
+    why: faker.helpers.arrayElement(Object.values(Why)),
+    verdicts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+        reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        reopened: faker.datatype.boolean(),
+      }),
+    ),
+    decision: faker.helpers.arrayElement([
+      {
+        style: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(DecisionStyle)),
+          null,
+        ]),
+        answer: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+        choice: faker.helpers.arrayElement([
+          faker.helpers.arrayElement(Object.values(Decision)),
+          null,
+        ]),
+        decided_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      },
+      null,
+    ]),
+    left_open: faker.datatype.boolean(),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    edited_after_decisions: faker.datatype.boolean(),
+    looking_again: faker.datatype.boolean(),
+    adjudication: faker.helpers.arrayElement([
+      {
+        id: faker.string.uuid(),
+        adjudicator_user_id: faker.string.uuid(),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        declined_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        declined_note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      null,
+    ]),
+  }));
+
+export const getListAdjudicationObjectsResponseMock = (): AdjudicatedObject[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    adjudication_id: faker.string.uuid(),
+    task_id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    why: faker.helpers.arrayElement(Object.values(Why)),
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    reviewer_decisions: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      reviewer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    })),
+    decision: faker.helpers.arrayElement([
+      {
+        answer: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      null,
+    ]),
+  }));
+
+export const getDecideAsAdjudicatorResponseMock = (
+  overrideResponse: Partial<Extract<AdjudicatedObject, object>> = {},
+): AdjudicatedObject => ({
+  adjudication_id: faker.string.uuid(),
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  why: faker.helpers.arrayElement(Object.values(Why)),
+  style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+  note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  reviewer_decisions: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    reviewer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+    reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  })),
+  decision: faker.helpers.arrayElement([
+    {
+      answer: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getListMyAdjudicationsResponseMock = (): MyAdjudication[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    task_id: faker.string.uuid(),
+    task_code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    task_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    asked_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    slide_id: faker.string.uuid(),
+    slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    decided: faker.number.int(),
+    sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
 
 export const getGetTaskEvaluationResponseMock = (
   overrideResponse: Partial<Extract<Evaluation, object>> = {},
@@ -12862,6 +13159,143 @@ export const getKeepReviewerDecisionsMockHandler = (
   );
 };
 
+export const getListAdjudicatorCandidatesMockHandler = (
+  overrideResponse?:
+    | Candidate[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Candidate[]> | Candidate[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/disagreements/adjudicators",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListAdjudicatorCandidatesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSendToAdjudicatorMockHandler = (
+  overrideResponse?:
+    | QueuedObject[]
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<QueuedObject[]> | QueuedObject[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/disagreements/adjudications",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSendToAdjudicatorResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListAdjudicationObjectsMockHandler = (
+  overrideResponse?:
+    | AdjudicatedObject[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AdjudicatedObject[]> | AdjudicatedObject[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/adjudications/objects",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListAdjudicationObjectsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDecideAsAdjudicatorMockHandler = (
+  overrideResponse?:
+    | AdjudicatedObject
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<AdjudicatedObject> | AdjudicatedObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/adjudications/:taskId/:slideId/:objectId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDecideAsAdjudicatorResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeclineAdjudicationMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/adjudications/:adjudicationId/decline",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getListMyAdjudicationsMockHandler = (
+  overrideResponse?:
+    | MyAdjudication[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MyAdjudication[]> | MyAdjudication[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/adjudications",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListMyAdjudicationsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetTaskEvaluationMockHandler = (
   overrideResponse?:
     | Evaluation
@@ -14331,6 +14765,12 @@ export const getParfocalAPIMock = () => [
   getLeaveDisagreementOpenMockHandler(),
   getAskReviewersToLookAgainMockHandler(),
   getKeepReviewerDecisionsMockHandler(),
+  getListAdjudicatorCandidatesMockHandler(),
+  getSendToAdjudicatorMockHandler(),
+  getListAdjudicationObjectsMockHandler(),
+  getDecideAsAdjudicatorMockHandler(),
+  getDeclineAdjudicationMockHandler(),
+  getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
   getListStudyTemplatesMockHandler(),

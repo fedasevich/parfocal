@@ -13,6 +13,16 @@ export const ShortcutPreset = {
 
 export const WholeSlideKey = { both: "both", hold: "hold", tap: "tap" } as const;
 
+export const shortcutSettingsSchema = z.object({
+  preset: z.enum(ShortcutPreset),
+  custom: z.record(z.string(), z.array(z.string())),
+  single_letter: z.boolean(),
+  by_position: z.boolean(),
+  whole_slide_key: z.enum(WholeSlideKey),
+});
+
+export type ShortcutSettings = z.infer<typeof shortcutSettingsSchema>;
+
 export const mySettingsSchema = z.object({
   personal: z.object({
     density: z.enum(["comfortable", "compact"]),
@@ -32,13 +42,7 @@ export const mySettingsSchema = z.object({
     initials_while_sharing: z.boolean(),
     slide_submitted_notice: z.enum(NoticeChannel),
   }),
-  shortcuts: z.object({
-    preset: z.enum(ShortcutPreset),
-    custom: z.record(z.string(), z.array(z.string())),
-    single_letter: z.boolean(),
-    by_position: z.boolean(),
-    whole_slide_key: z.enum(WholeSlideKey),
-  }),
+  shortcuts: shortcutSettingsSchema,
 });
 
 export type MySettings = z.infer<typeof mySettingsSchema>;

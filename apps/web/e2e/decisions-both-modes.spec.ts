@@ -2,6 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 
 const rt14 = "00000000-0000-4000-8007-000000000014";
 
+test.use({ viewport: { width: 1280, height: 1100 } });
+
 const panel = (page: Page) => page.getByRole("complementary", { name: "Side panel" });
 const row = (page: Page, object: string) =>
   panel(page).getByRole("button", { name: new RegExp(`^${object} Tumor region`) });

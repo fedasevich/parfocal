@@ -70,13 +70,10 @@ test("objects sent to Anna reach her anonymously and her decisions resolve them"
   setFakeQueueScene(open);
   const queue = (await getDisagreementQueue(rt14)).data;
   const picked = queue.rows.filter((row) => ["T4", "T5", "T1·C145"].includes(row.object));
-  await sendToAdjudicator({
-    taskId: rt14,
-    data: {
-      adjudicator_user_id: people.AK.id,
-      note: null,
-      objects: picked.map((row) => ({ slide_id: row.slide_id, object: row.object })),
-    },
+  await sendToAdjudicator(rt14, {
+    adjudicator_user_id: people.AK.id,
+    note: null,
+    objects: picked.map((row) => ({ slide_id: row.slide_id, object: row.object })),
   });
   const mine = (await getMyAdjudication(rt14)).data;
   assert.equal(mine.objects.length, 3);

@@ -26,6 +26,7 @@ import {
   showsClaim,
 } from "./decision-style.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
+import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
   type GuidedScene,
@@ -43,6 +44,7 @@ import {
   SavedNote,
 } from "./object-card.tsx";
 import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
+import { nextObjectAction, previousObjectAction, useObjectKeys } from "./object-keys.ts";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
@@ -197,11 +199,12 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
     goTo(objects.findIndex((item) => item.object === target));
   };
   const advance = (from: number, decided: Answers) => {
-    const at = (object: string) => answerOf(base, decided, object);
-    const next = objects.findIndex((item, position) => position > from && !at(item.object));
-    const wrap = objects.findIndex((item) => !at(item.object));
-    const target = next >= 0 ? next : wrap;
-    if (target < 0) {
+    const target = nextOpenIndex(
+      objects.map((item) => item.object),
+      from,
+      (object) => Boolean(answerOf(base, decided, object)),
+    );
+    if (target === null) {
       setShowDone(true);
       setWhole(true);
       return;
@@ -288,6 +291,12 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
   });
 
   useAnswerKeys(answersOf(style, session.classes, current), answerWith, !showDone && !noResults);
+
+  useObjectKeys(
+    () => goTo(index + 1),
+    () => goTo(index - 1),
+    !showDone && !noResults,
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -547,9 +556,11 @@ function GuidedBody({ session, objectId, scene, submitted, tab, onTabChange }: B
         >
           <Icon name="back" />
           Previous
+          <Keycap action={previousObjectAction} size="sm" />
         </Button>
         <Button variant="ghost" onClick={() => goTo(index + 1)}>
           {kept ? "Next" : "Skip for now"}
+          <Keycap action={nextObjectAction} size="sm" />
           <Icon name="next" />
         </Button>
       </div>

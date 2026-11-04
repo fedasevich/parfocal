@@ -1,6 +1,6 @@
 import { MapTrail, PeekHere, WholeSlidePeek } from "@parfocal/ui/components/smart-minimap";
 import { useRef } from "react";
-import { useBindings } from "../../keys/personal-keys.ts";
+import { useBindings, usePersonalKeys } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { peekKeyStep } from "./peek-model.ts";
@@ -46,9 +46,10 @@ export function SlidePeek({
 
 export function usePeekKey(open: boolean, onOpen: (held: boolean) => void, onClose: () => void) {
   const closing = useRef(false);
+  const mode = usePersonalKeys().wholeSlide ?? "both";
   const bindings = useBindings(["viewer"], open ? ["peek", "esc"] : ["peek"]);
   useHotkeys(bindings, (fired) => {
-    const next = peekKeyStep(open, closing.current, fired);
+    const next = peekKeyStep(open, closing.current, fired, mode);
     closing.current = next.closing;
     if (next.effect === "close") onClose();
     else if (next.effect === "hold") onOpen(true);

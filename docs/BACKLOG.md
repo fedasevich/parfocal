@@ -572,7 +572,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when API tests create a project for the user's tenant and another tenant's user gets 404 for it.
   Depends on IAM-003, PROJ-001. Met by PROJ-001 and ADAPT-004: `test_projects.py` creates a project in the user's workspace and `test_another_workspace_gets_nothing` gets 404 from another workspace, and `slides` belongs to a project ([ADR 0063](adr/0063-cases-and-slides-in-projects.md)).
 
-- [ ] SKEL-004 · Upload one SVS and its result file into a project
+- [x] SKEL-004 · Upload one SVS and its result file into a project
   Presigned multipart upload, objects land under the tenant's prefix, a slide row and a result set row are created.
   Done when an E2E test uploads CMU-1-Small-Region.svs with a small GeoJSON and both show in the project.
   Depends on INGEST-001, INGEST-002, RSET-001.
@@ -2190,7 +2190,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock §2.8, NaviPath evidence.
   Size: M.
 
-- [ ] NAV-006 · Smart minimap state machine
+- [x] NAV-006 · Smart minimap state machine
   States hidden, reading, area, locator, travel, faded and peek, with the transitions from the kit spec (hidden while more than half the tissue is on screen, area mapping from 20×, locator in focus review, travel on `]` or G+n from any visible mode, as the owner chose on 2026-11-04, faded within 40 px of the pointer).
   Read the minimap setting through `shownMinimap` in packages/ui/src/lib/minimap-box.ts (NAV-009).
   Done when model-based tests drive every transition.
@@ -3470,7 +3470,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests switch presets and assert bindings.
   Size: S.
 
-- [ ] CMD-006 · Rebinding UI
+- [x] CMD-006 · Rebinding UI
   Click a key next to an action and press the new one. Defaults are marked, changed keys show the default and a reset. A key already used in the same scope offers to swap the two or to leave the other action without a key. Keys the browser keeps (⌘W, ⌘T, ⌘R, ⌘L and others) are refused with the reason. Actions that change the report (sign out) need ⌘ or Ctrl. Undo and Esc stay fixed. Sets are edited as sets: the modifier for the magnification keys, the first key of a chord such as G then a number, and arrows, WASD or IJKL for directions with a clash check. Any action can have a second key. Search by name, or press a key to find what it does. Every action in the key registry can be rebound, including the Annotate keys, Add a note (⇧N), zoom to selection (⇧F) and view history back and forward (Alt+Left and Alt+Right). Single-letter shortcuts can be switched off (WCAG 2.1.4), keys match by physical position so non-US layouts keep the map, Z can be tap, hold or both, and the map exports and imports as a file.
   Done when E2E rebinds J and the review HUD shows the new key, and tests cover a conflict swap, a reserved key, the modifier rule, a set, the single-letter switch and position matching on a Czech layout.
   Depends on CMD-001. Refs mock 19 and 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -4167,7 +4167,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests cover each decision, a change, a refused change after sign-off and the audit entry.
   Depends on OBJ-001, TASK-002.
 
-- [ ] GUIDE-002 · Guided review
+- [x] GUIDE-002 · Guided review
   One object at a time with the question, the buttons and the keys of the task's decision style (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating), for example "How sure are you that T2 is tumor?" with 1 to 5 in the default 5-point certainty, what the AI said in a 16 px line when the style shows the claim, and a Not sure answer in every style. It moves on by itself, zooms the slide to the object, allows drag and zoom with Back to the object and Whole slide, and shows progress dots with a check, a cross or a question mark. My work is one click away, and the Guided and Full viewer switch keeps one review. The slide uses the smart minimap of NAV-006 instead of its own fixed 136 px map ([ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md)).
   Done when E2E reviews a slide by mouse and by keyboard only, unit tests cover the auto-advance, and a test proves the dots carry a glyph per state.
   Objects come in the task's review order (GUIDE-012).
@@ -4319,7 +4319,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-006, GUIDE-015, GUIDE-011. Refs mock: disagree/queue, mock: disagree/edited, doc 44.
   Size: M.
 
-- [ ] ADJ-008 · Send to an adjudicator
+- [x] ADJ-008 · Send to an adjudicator
   The researcher sends one or more queued objects to one adjudicator, a member who is not a reviewer of the task, with an optional note of up to 300 characters, in the small Send to an adjudicator modal. A reviewer of the task is shown dim and cannot be picked, and someone away shows as a warning. The adjudicator gets one notification for all the objects, reads them with the reviewers as Reviewer A and Reviewer B fixed per task, without names, avatars or note authors, decides them as ADJ-007 does, and may decline with a note, after which the rows say so and can be sent to someone else. Objects with the adjudicator and not yet decided still block sign-off ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, proposed).
   Done when API tests cover sending several objects, a refused reviewer of the task, declining with a note, sending again, a decision by the adjudicator next to both reviewers', the A and B labels staying the same across objects, and no reviewer name, avatar or note author in any adjudicator response, with isolation and audit.
   Depends on ADJ-007, NOTIF-001. Refs mock: disagree/sendadj, mock: disagree/sent, mock: disagree/declined, mock: disagree/adjudicate, doc 44.

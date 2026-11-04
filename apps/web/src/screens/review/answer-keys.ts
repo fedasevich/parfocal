@@ -16,7 +16,7 @@ export function answerOfFired(answers: readonly DecisionAnswer[], fired: Fired):
   return answers.find((answer) => answer.action === fired.action)?.raw ?? null;
 }
 
-const inLayer = () =>
+export const inLayer = () =>
   typeof document !== "undefined" &&
   Boolean(document.activeElement?.closest("[role=dialog], [role=menu]"));
 

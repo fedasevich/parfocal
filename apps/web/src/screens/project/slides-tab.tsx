@@ -49,8 +49,11 @@ const reviewLook: Record<string, { text: string; tone: string }> = {
   assigned: { text: "assigned", tone: "text-fg-faint" },
 };
 
+const withVersion = (name: string, version: string | null) =>
+  version ? `${name} ${version}` : name;
+
 const setName = (set: Pick<ResultSet, "name" | "model_version">) =>
-  `${set.name.split(" ")[0] ?? set.name} ${set.model_version}`;
+  withVersion(set.name.split(" ")[0] ?? set.name, set.model_version);
 
 const slideTitle = (slide: ProjectSlide) => `${slide.label} · ${slide.stain}`;
 
@@ -81,6 +84,22 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
     count: item.slide_count,
     slides: slides.filter((slide) => slide.case_label === item.label),
   }));
+  const known = new Set(cases.map((item) => item.label));
+  for (const label of new Set(slides.map((slide) => slide.case_label))) {
+    if (label === null || known.has(label)) continue;
+    const own = slides.filter((slide) => slide.case_label === label);
+    groups.push({
+      key: label,
+      label: (
+        <>
+          Case <span className="font-mono">{label}</span>
+        </>
+      ),
+      sub: `${own.length} slide${own.length === 1 ? "" : "s"}`,
+      count: own.length,
+      slides: own,
+    });
+  }
   const loose = slides.filter((slide) => slide.case_label === null);
   if (loose.length > 0) {
     groups.push({
@@ -327,7 +346,7 @@ function SlideRow({
               {own.map((set) => (
                 <span
                   key={set.id}
-                  title={`${set.name} ${set.model_version} · ${set.source === "import" ? `imported from ${set.source_file ?? "a file"}` : "run here"}`}
+                  title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? `imported from ${set.source_file ?? "a file"}` : "run here"}`}
                   className="inline-flex h-5.5 items-center gap-1.25 rounded-md border border-line bg-surf-section px-2 text-caption font-medium whitespace-nowrap text-fg"
                 >
                   <Icon name="layers" size="xs" />

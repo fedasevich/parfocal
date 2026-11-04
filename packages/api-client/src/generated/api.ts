@@ -176,6 +176,104 @@ export interface AddedDraft {
   class_id?: string | null;
 }
 
+export type Why = (typeof Why)[keyof typeof Why];
+
+export const Why = {
+  "reviewers-differ": "reviewers-differ",
+  "against-the-ai": "against-the-ai",
+  "second-look": "second-look",
+} as const;
+
+export type DecisionStyle = (typeof DecisionStyle)[keyof typeof DecisionStyle];
+
+export const DecisionStyle = {
+  certainty: "certainty",
+  agree: "agree",
+  "yes-no": "yes-no",
+  blind: "blind",
+} as const;
+
+export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
+
+export const VerdictValue = {
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "unsure",
+} as const;
+
+export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
+
+export const VerdictReason = {
+  not_class: "not_class",
+  boundary_off: "boundary_off",
+  two_regions: "two_regions",
+  artefact: "artefact",
+  not_a_cell: "not_a_cell",
+  wrong_class: "wrong_class",
+  need_deeper_level: "need_deeper_level",
+  need_ihc: "need_ihc",
+  border_unclear: "border_unclear",
+  out_of_focus: "out_of_focus",
+  need_second_look: "need_second_look",
+} as const;
+
+export interface ReviewerDecision {
+  reviewer: string;
+  answer: string;
+  value: VerdictValue;
+  reasons: VerdictReason[];
+  note: string | null;
+}
+
+export interface AdjudicatorDecision {
+  answer: string | null;
+  answer_class_id: string | null;
+  value: VerdictValue;
+  note: string | null;
+}
+
+export interface AdjudicatedObject {
+  adjudication_id: string;
+  task_id: string;
+  slide_id: string;
+  object: string;
+  why: Why;
+  style: DecisionStyle;
+  note: string | null;
+  sent_at: string;
+  reviewer_decisions: ReviewerDecision[];
+  decision?: AdjudicatorDecision | null;
+}
+
+export interface Adjudication {
+  id: string;
+  adjudicator_user_id: string;
+  note: string | null;
+  sent_at: string;
+  declined_at: string | null;
+  declined_note: string | null;
+}
+
+export interface ObjectRef {
+  slide_id: string;
+  object: string;
+}
+
+/**
+ * @maxLength 300
+ */
+export type SendNote = string;
+
+export interface AdjudicationDraft {
+  adjudicator_user_id: string;
+  /**
+   * @minItems 1
+   * @maxItems 500
+   */
+  objects: ObjectRef[];
+  note?: SendNote | null;
+}
+
 export interface AdminRightsChange {
   admin_rights: boolean;
 }
@@ -562,6 +660,13 @@ export const ButtonPlace = {
   "under-slide": "under-slide",
 } as const;
 
+export interface Candidate {
+  user_id: string;
+  display_name: string;
+  reviewer_of_task: boolean;
+  away: boolean;
+}
+
 export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
 
 export const CaseSource = {
@@ -937,14 +1042,6 @@ export interface ConfusionMatrix {
   values?: ConfusionMatrixValues;
 }
 
-export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
-
-export const VerdictValue = {
-  agree: "agree",
-  disagree: "disagree",
-  unsure: "unsure",
-} as const;
-
 /**
  * @minItems 5
  * @maxItems 5
@@ -1005,15 +1102,6 @@ export const Decision = {
 
 export type DecisionCountsAnswers = { [key: string]: number };
 
-export type DecisionStyle = (typeof DecisionStyle)[keyof typeof DecisionStyle];
-
-export const DecisionStyle = {
-  certainty: "certainty",
-  agree: "agree",
-  "yes-no": "yes-no",
-  blind: "blind",
-} as const;
-
 export interface DecisionCounts {
   style: DecisionStyle;
   counts_as: VerdictValue[];
@@ -1042,6 +1130,10 @@ export interface DecisionSettings {
   style?: DecisionStyle;
   counts_as?: CountsAs;
   question?: DecisionQuestion | null;
+}
+
+export interface DeclineDraft {
+  note?: SendNote | null;
 }
 
 export type DisagreementReasonsWidth =
@@ -1676,6 +1768,7 @@ export const NotificationKind = {
   "task-due-changed": "task-due-changed",
   "result-set-added": "result-set-added",
   "integration-down": "integration-down",
+  "adjudication-requested": "adjudication-requested",
 } as const;
 
 export interface KindCount {
@@ -2207,6 +2300,20 @@ export interface Mute {
   created_at: string;
 }
 
+export interface MyAdjudication {
+  id: string;
+  task_id: string;
+  task_code: string;
+  task_name: string;
+  project: ProjectRef;
+  asked_by_user_id: string | null;
+  slide_id: string;
+  slide_label: string;
+  objects: string[];
+  decided: number;
+  sent_at: string;
+}
+
 export interface MyDisplay {
   task: TaskDisplaySettings;
   preset_id: string | null;
@@ -2706,35 +2813,12 @@ export interface QueueDecision {
   decided_by_user_id: string | null;
 }
 
-export type Why = (typeof Why)[keyof typeof Why];
-
-export const Why = {
-  "reviewers-differ": "reviewers-differ",
-  "against-the-ai": "against-the-ai",
-  "second-look": "second-look",
-} as const;
-
-export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
-
-export const VerdictReason = {
-  not_class: "not_class",
-  boundary_off: "boundary_off",
-  two_regions: "two_regions",
-  artefact: "artefact",
-  not_a_cell: "not_a_cell",
-  wrong_class: "wrong_class",
-  need_deeper_level: "need_deeper_level",
-  need_ihc: "need_ihc",
-  border_unclear: "border_unclear",
-  out_of_focus: "out_of_focus",
-  need_second_look: "need_second_look",
-} as const;
-
 export interface ReviewerVerdict {
   user_id: string;
   answer: string;
   value: VerdictValue;
   reasons: VerdictReason[];
+  note?: string | null;
   reopened: boolean;
 }
 
@@ -2750,6 +2834,7 @@ export interface QueuedObject {
   note?: string | null;
   edited_after_decisions?: boolean;
   looking_again?: boolean;
+  adjudication?: Adjudication | null;
 }
 
 export type ReassignWhat = (typeof ReassignWhat)[keyof typeof ReassignWhat];
@@ -4182,6 +4267,10 @@ export type GetOpinionParams = {
 
 export type GetFirstReadParams = {
   reviewer_id?: string | null;
+};
+
+export type ListAdjudicationObjectsParams = {
+  task_id?: string | null;
 };
 
 export type ExportTaskEvaluationParams = {
@@ -32751,6 +32840,1133 @@ export const useKeepReviewerDecisions = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getKeepReviewerDecisionsMutationOptions(options), queryClient);
 };
+
+export type listAdjudicatorCandidatesResponse200 = {
+  data: Candidate[];
+  status: 200;
+};
+
+export type listAdjudicatorCandidatesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAdjudicatorCandidatesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAdjudicatorCandidatesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAdjudicatorCandidatesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAdjudicatorCandidatesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAdjudicatorCandidatesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAdjudicatorCandidatesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listAdjudicatorCandidatesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAdjudicatorCandidatesResponseSuccess = listAdjudicatorCandidatesResponse200 & {
+  headers: Headers;
+};
+export type listAdjudicatorCandidatesResponseError = (
+  | listAdjudicatorCandidatesResponse400
+  | listAdjudicatorCandidatesResponse401
+  | listAdjudicatorCandidatesResponse403
+  | listAdjudicatorCandidatesResponse404
+  | listAdjudicatorCandidatesResponse409
+  | listAdjudicatorCandidatesResponse422
+  | listAdjudicatorCandidatesResponse429
+  | listAdjudicatorCandidatesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAdjudicatorCandidatesResponse =
+  | listAdjudicatorCandidatesResponseSuccess
+  | listAdjudicatorCandidatesResponseError;
+
+export const getListAdjudicatorCandidatesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/disagreements/adjudicators`;
+};
+
+/**
+ * @summary List Adjudicator Candidates
+ */
+export const listAdjudicatorCandidates = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAdjudicatorCandidatesResponse> => {
+  return apiFetch<listAdjudicatorCandidatesResponse>(getListAdjudicatorCandidatesUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAdjudicatorCandidatesQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/disagreements/adjudicators`] as const;
+};
+
+export const getListAdjudicatorCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdjudicatorCandidatesQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdjudicatorCandidates>>> = ({
+    signal,
+  }) => listAdjudicatorCandidates(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListAdjudicatorCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdjudicatorCandidates>>
+>;
+export type ListAdjudicatorCandidatesQueryError = Problem;
+
+export function useListAdjudicatorCandidates<
+  TData = Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof listAdjudicatorCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdjudicatorCandidates<
+  TData = Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof listAdjudicatorCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdjudicatorCandidates<
+  TData = Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Adjudicator Candidates
+ */
+
+export function useListAdjudicatorCandidates<
+  TData = Awaited<ReturnType<typeof listAdjudicatorCandidates>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicatorCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdjudicatorCandidatesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type sendToAdjudicatorResponse201 = {
+  data: QueuedObject[];
+  status: 201;
+};
+
+export type sendToAdjudicatorResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type sendToAdjudicatorResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type sendToAdjudicatorResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type sendToAdjudicatorResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type sendToAdjudicatorResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type sendToAdjudicatorResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type sendToAdjudicatorResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type sendToAdjudicatorResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type sendToAdjudicatorResponseSuccess = sendToAdjudicatorResponse201 & {
+  headers: Headers;
+};
+export type sendToAdjudicatorResponseError = (
+  | sendToAdjudicatorResponse400
+  | sendToAdjudicatorResponse401
+  | sendToAdjudicatorResponse403
+  | sendToAdjudicatorResponse404
+  | sendToAdjudicatorResponse409
+  | sendToAdjudicatorResponse422
+  | sendToAdjudicatorResponse429
+  | sendToAdjudicatorResponse500
+) & {
+  headers: Headers;
+};
+
+export type sendToAdjudicatorResponse =
+  | sendToAdjudicatorResponseSuccess
+  | sendToAdjudicatorResponseError;
+
+export const getSendToAdjudicatorUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/disagreements/adjudications`;
+};
+
+/**
+ * @summary Send To Adjudicator
+ */
+export const sendToAdjudicator = async (
+  taskId: string,
+  adjudicationDraft: AdjudicationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<sendToAdjudicatorResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<sendToAdjudicatorResponse>(getSendToAdjudicatorUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(adjudicationDraft),
+  });
+};
+
+export const getSendToAdjudicatorMutationKey = () => ["sendToAdjudicator"] as const;
+
+export const getSendToAdjudicatorMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendToAdjudicator>>,
+    TError,
+    SendToAdjudicatorMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendToAdjudicator>>,
+  TError,
+  SendToAdjudicatorMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSendToAdjudicatorMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendToAdjudicator>>,
+    SendToAdjudicatorMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return sendToAdjudicator(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendToAdjudicatorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendToAdjudicator>>
+>;
+export type SendToAdjudicatorMutationBody = AdjudicationDraft;
+export type SendToAdjudicatorMutationError = Problem;
+export type SendToAdjudicatorMutationVariables = { taskId: string; data: AdjudicationDraft };
+
+/**
+ * @summary Send To Adjudicator
+ */
+export const useSendToAdjudicator = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendToAdjudicator>>,
+      TError,
+      SendToAdjudicatorMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof sendToAdjudicator>>,
+  TError,
+  SendToAdjudicatorMutationVariables,
+  TContext
+> => {
+  return useMutation(getSendToAdjudicatorMutationOptions(options), queryClient);
+};
+
+export type listAdjudicationObjectsResponse200 = {
+  data: AdjudicatedObject[];
+  status: 200;
+};
+
+export type listAdjudicationObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAdjudicationObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAdjudicationObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAdjudicationObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAdjudicationObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAdjudicationObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAdjudicationObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listAdjudicationObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAdjudicationObjectsResponseSuccess = listAdjudicationObjectsResponse200 & {
+  headers: Headers;
+};
+export type listAdjudicationObjectsResponseError = (
+  | listAdjudicationObjectsResponse400
+  | listAdjudicationObjectsResponse401
+  | listAdjudicationObjectsResponse403
+  | listAdjudicationObjectsResponse404
+  | listAdjudicationObjectsResponse409
+  | listAdjudicationObjectsResponse422
+  | listAdjudicationObjectsResponse429
+  | listAdjudicationObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAdjudicationObjectsResponse =
+  | listAdjudicationObjectsResponseSuccess
+  | listAdjudicationObjectsResponseError;
+
+export const getListAdjudicationObjectsUrl = (params?: ListAdjudicationObjectsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/adjudications/objects?${stringifiedParams}`
+    : `/api/adjudications/objects`;
+};
+
+/**
+ * @summary List Adjudication Objects
+ */
+export const listAdjudicationObjects = async (
+  params?: ListAdjudicationObjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAdjudicationObjectsResponse> => {
+  return apiFetch<listAdjudicationObjectsResponse>(getListAdjudicationObjectsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAdjudicationObjectsQueryKey = (params?: ListAdjudicationObjectsParams) => {
+  return [`/api/adjudications/objects`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAdjudicationObjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdjudicationObjects>>,
+  TError = Problem,
+>(
+  params?: ListAdjudicationObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicationObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdjudicationObjectsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdjudicationObjects>>> = ({
+    signal,
+  }) => listAdjudicationObjects(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdjudicationObjects>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAdjudicationObjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdjudicationObjects>>
+>;
+export type ListAdjudicationObjectsQueryError = Problem;
+
+export function useListAdjudicationObjects<
+  TData = Awaited<ReturnType<typeof listAdjudicationObjects>>,
+  TError = Problem,
+>(
+  params: undefined | ListAdjudicationObjectsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicationObjects>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdjudicationObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listAdjudicationObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdjudicationObjects<
+  TData = Awaited<ReturnType<typeof listAdjudicationObjects>>,
+  TError = Problem,
+>(
+  params?: ListAdjudicationObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicationObjects>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdjudicationObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listAdjudicationObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdjudicationObjects<
+  TData = Awaited<ReturnType<typeof listAdjudicationObjects>>,
+  TError = Problem,
+>(
+  params?: ListAdjudicationObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicationObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Adjudication Objects
+ */
+
+export function useListAdjudicationObjects<
+  TData = Awaited<ReturnType<typeof listAdjudicationObjects>>,
+  TError = Problem,
+>(
+  params?: ListAdjudicationObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdjudicationObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdjudicationObjectsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type decideAsAdjudicatorResponse200 = {
+  data: AdjudicatedObject;
+  status: 200;
+};
+
+export type decideAsAdjudicatorResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type decideAsAdjudicatorResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type decideAsAdjudicatorResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type decideAsAdjudicatorResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type decideAsAdjudicatorResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type decideAsAdjudicatorResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type decideAsAdjudicatorResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type decideAsAdjudicatorResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type decideAsAdjudicatorResponseSuccess = decideAsAdjudicatorResponse200 & {
+  headers: Headers;
+};
+export type decideAsAdjudicatorResponseError = (
+  | decideAsAdjudicatorResponse400
+  | decideAsAdjudicatorResponse401
+  | decideAsAdjudicatorResponse403
+  | decideAsAdjudicatorResponse404
+  | decideAsAdjudicatorResponse409
+  | decideAsAdjudicatorResponse422
+  | decideAsAdjudicatorResponse429
+  | decideAsAdjudicatorResponse500
+) & {
+  headers: Headers;
+};
+
+export type decideAsAdjudicatorResponse =
+  | decideAsAdjudicatorResponseSuccess
+  | decideAsAdjudicatorResponseError;
+
+export const getDecideAsAdjudicatorUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/adjudications/${taskId}/${slideId}/${objectId}`;
+};
+
+/**
+ * @summary Decide As Adjudicator
+ */
+export const decideAsAdjudicator = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  decisionDraft: DecisionDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<decideAsAdjudicatorResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<decideAsAdjudicatorResponse>(
+    getDecideAsAdjudicatorUrl(taskId, slideId, objectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(decisionDraft),
+    },
+  );
+};
+
+export const getDecideAsAdjudicatorMutationKey = () => ["decideAsAdjudicator"] as const;
+
+export const getDecideAsAdjudicatorMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof decideAsAdjudicator>>,
+    TError,
+    DecideAsAdjudicatorMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof decideAsAdjudicator>>,
+  TError,
+  DecideAsAdjudicatorMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDecideAsAdjudicatorMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof decideAsAdjudicator>>,
+    DecideAsAdjudicatorMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return decideAsAdjudicator(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DecideAsAdjudicatorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof decideAsAdjudicator>>
+>;
+export type DecideAsAdjudicatorMutationBody = DecisionDraft;
+export type DecideAsAdjudicatorMutationError = Problem;
+export type DecideAsAdjudicatorMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: DecisionDraft;
+};
+
+/**
+ * @summary Decide As Adjudicator
+ */
+export const useDecideAsAdjudicator = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof decideAsAdjudicator>>,
+      TError,
+      DecideAsAdjudicatorMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof decideAsAdjudicator>>,
+  TError,
+  DecideAsAdjudicatorMutationVariables,
+  TContext
+> => {
+  return useMutation(getDecideAsAdjudicatorMutationOptions(options), queryClient);
+};
+
+export type declineAdjudicationResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type declineAdjudicationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type declineAdjudicationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type declineAdjudicationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type declineAdjudicationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type declineAdjudicationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type declineAdjudicationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type declineAdjudicationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type declineAdjudicationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type declineAdjudicationResponseSuccess = declineAdjudicationResponse204 & {
+  headers: Headers;
+};
+export type declineAdjudicationResponseError = (
+  | declineAdjudicationResponse400
+  | declineAdjudicationResponse401
+  | declineAdjudicationResponse403
+  | declineAdjudicationResponse404
+  | declineAdjudicationResponse409
+  | declineAdjudicationResponse422
+  | declineAdjudicationResponse429
+  | declineAdjudicationResponse500
+) & {
+  headers: Headers;
+};
+
+export type declineAdjudicationResponse =
+  | declineAdjudicationResponseSuccess
+  | declineAdjudicationResponseError;
+
+export const getDeclineAdjudicationUrl = (adjudicationId: string) => {
+  return `/api/adjudications/${adjudicationId}/decline`;
+};
+
+/**
+ * @summary Decline Adjudication
+ */
+export const declineAdjudication = async (
+  adjudicationId: string,
+  declineDraft: DeclineDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<declineAdjudicationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<declineAdjudicationResponse>(getDeclineAdjudicationUrl(adjudicationId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(declineDraft),
+  });
+};
+
+export const getDeclineAdjudicationMutationKey = () => ["declineAdjudication"] as const;
+
+export const getDeclineAdjudicationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineAdjudication>>,
+    TError,
+    DeclineAdjudicationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineAdjudication>>,
+  TError,
+  DeclineAdjudicationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclineAdjudicationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineAdjudication>>,
+    DeclineAdjudicationMutationVariables
+  > = (props) => {
+    const { adjudicationId, data } = props ?? {};
+
+    return declineAdjudication(adjudicationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineAdjudicationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineAdjudication>>
+>;
+export type DeclineAdjudicationMutationBody = DeclineDraft;
+export type DeclineAdjudicationMutationError = Problem;
+export type DeclineAdjudicationMutationVariables = { adjudicationId: string; data: DeclineDraft };
+
+/**
+ * @summary Decline Adjudication
+ */
+export const useDeclineAdjudication = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declineAdjudication>>,
+      TError,
+      DeclineAdjudicationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declineAdjudication>>,
+  TError,
+  DeclineAdjudicationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclineAdjudicationMutationOptions(options), queryClient);
+};
+
+export type listMyAdjudicationsResponse200 = {
+  data: MyAdjudication[];
+  status: 200;
+};
+
+export type listMyAdjudicationsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMyAdjudicationsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMyAdjudicationsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMyAdjudicationsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMyAdjudicationsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMyAdjudicationsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMyAdjudicationsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMyAdjudicationsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMyAdjudicationsResponseSuccess = listMyAdjudicationsResponse200 & {
+  headers: Headers;
+};
+export type listMyAdjudicationsResponseError = (
+  | listMyAdjudicationsResponse400
+  | listMyAdjudicationsResponse401
+  | listMyAdjudicationsResponse403
+  | listMyAdjudicationsResponse404
+  | listMyAdjudicationsResponse409
+  | listMyAdjudicationsResponse422
+  | listMyAdjudicationsResponse429
+  | listMyAdjudicationsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMyAdjudicationsResponse =
+  | listMyAdjudicationsResponseSuccess
+  | listMyAdjudicationsResponseError;
+
+export const getListMyAdjudicationsUrl = () => {
+  return `/api/adjudications`;
+};
+
+/**
+ * @summary List My Adjudications
+ */
+export const listMyAdjudications = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMyAdjudicationsResponse> => {
+  return apiFetch<listMyAdjudicationsResponse>(getListMyAdjudicationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyAdjudicationsQueryKey = () => {
+  return [`/api/adjudications`] as const;
+};
+
+export const getListMyAdjudicationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyAdjudications>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyAdjudications>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyAdjudicationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyAdjudications>>> = ({ signal }) =>
+    listMyAdjudications({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyAdjudications>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMyAdjudicationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyAdjudications>>
+>;
+export type ListMyAdjudicationsQueryError = Problem;
+
+export function useListMyAdjudications<
+  TData = Awaited<ReturnType<typeof listMyAdjudications>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyAdjudications>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyAdjudications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyAdjudications>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyAdjudications<
+  TData = Awaited<ReturnType<typeof listMyAdjudications>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyAdjudications>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyAdjudications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyAdjudications>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyAdjudications<
+  TData = Awaited<ReturnType<typeof listMyAdjudications>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyAdjudications>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List My Adjudications
+ */
+
+export function useListMyAdjudications<
+  TData = Awaited<ReturnType<typeof listMyAdjudications>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyAdjudications>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMyAdjudicationsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getTaskEvaluationResponse200 = {
   data: Evaluation;

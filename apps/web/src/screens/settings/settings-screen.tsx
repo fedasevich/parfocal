@@ -1,5 +1,6 @@
 import {
   getGetMySettingLayersQueryKey,
+  getGetMySettingsQueryKey,
   getListSessionsQueryKey,
   type MySettings,
   type Preference,
@@ -11,6 +12,7 @@ import {
   useListNotificationPreferences,
   useListSessions,
   useSetMySettingLayers,
+  useSetMyShortcuts,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -57,13 +59,9 @@ import {
   type Outcome,
   type ShortcutState,
   sceneShortcuts,
+  shortcutSettingsOf,
 } from "./shortcuts.ts";
-import {
-  isListening,
-  type ShortcutPresetKey,
-  ShortcutsSection,
-  useKeyCapture,
-} from "./shortcuts-section.tsx";
+import { isListening, ShortcutsSection, useKeyCapture } from "./shortcuts-section.tsx";
 
 type Personal = MySettings["personal"];
 
@@ -216,8 +214,13 @@ function LoadedSettings({
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const [channels, setChannels] = useState<Partial<Record<RowKey, Channel>>>({});
   const [signedOutAt, setSignedOutAt] = useState<{ count: number; at: Date } | null>(null);
-  const [preset, setPreset] = useState<ShortcutPresetKey>(settings.shortcuts.preset);
+  const { mutate: saveShortcuts } = useSetMyShortcuts({
+    mutation: {
+      onSuccess: () => void queryClient.invalidateQueries({ queryKey: getGetMySettingsQueryKey() }),
+    },
+  });
   const base = freshShortcuts({
+    preset: settings.shortcuts.preset,
     custom: settings.shortcuts.custom,
     singleLetter: settings.shortcuts.single_letter,
     byPosition: settings.shortcuts.by_position,
@@ -236,10 +239,13 @@ function LoadedSettings({
   const notify = useCallback((text: string) => setMessage({ id: Date.now(), text }), []);
   const apply = useCallback(
     (outcome: Outcome) => {
+      const saved = shortcutSettingsOf(outcome.state);
+      if (JSON.stringify(saved) !== JSON.stringify(shortcutSettingsOf(shortcuts)))
+        saveShortcuts({ data: saved });
       setShortcuts(outcome.state);
       if (outcome.message) notify(outcome.message);
     },
-    [notify],
+    [notify, shortcuts, saveShortcuts],
   );
   useKeyCapture(shortcuts, apply);
   useEffect(() => {
@@ -555,16 +561,7 @@ function LoadedSettings({
       return <SettingsEmpty query={typed.trim()} onClear={() => onQuery("")} />;
     }
     if (shown.key === "shortcuts") {
-      return (
-        <ShortcutsSection
-          state={shortcuts}
-          query={query}
-          preset={preset}
-          apply={apply}
-          onPreset={setPreset}
-          notify={notify}
-        />
-      );
+      return <ShortcutsSection state={shortcuts} query={query} apply={apply} notify={notify} />;
     }
     const rows = matchingRows(shown.key, query);
     if (shown.key === "account") {
