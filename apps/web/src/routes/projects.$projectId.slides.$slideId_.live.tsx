@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
+import { readBuildConfig } from "../config.ts";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
+import { slideAreasFor } from "../viewer/slide-areas.ts";
 import { SlideStage } from "../viewer/slide-stage.tsx";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
 
@@ -13,6 +15,8 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live
   loader: loadViewerEngine,
   component: LiveSlide,
 });
+
+const liveAreas = slideAreasFor(readBuildConfig().fakeApi !== "off");
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -57,7 +61,7 @@ function LiveSlide() {
       </header>
       {loaded.state === "ready" ? <CasePatientBanner load={loaded.load} /> : null}
       <div className="min-h-0 flex-1">
-        <SlideStage key={slideId} slideId={slideId} />
+        <SlideStage key={slideId} slideId={slideId} areas={liveAreas} />
       </div>
     </main>
   );

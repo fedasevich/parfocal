@@ -1,0 +1,55 @@
+import { expect, type Page, test } from "@playwright/test";
+
+const p07 = "00000000-0000-4000-8003-000000000007";
+
+async function openSlide(page: Page) {
+  await page.setViewportSize({ width: 480, height: 640 });
+  await page.goto(`/projects/${p07}?tab=slides`);
+  await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 15_000,
+  });
+  return page.getByTestId("area-nav");
+}
+
+const magnification = async (page: Page) => {
+  const label = (await page.getByTestId("magnification-bar").getAttribute("aria-label")) ?? "";
+  return Number(/(\d+(?:\.\d+)?)/.exec(label)?.[1] ?? Number.NaN);
+};
+
+test("] and [ step the areas, a close area counts as visited past 10x and Alt+Left goes back", async ({
+  page,
+}) => {
+  const nav = await openSlide(page);
+  await expect(nav).toHaveAttribute("data-current", "");
+  await page.keyboard.press("]");
+  await expect(nav).toHaveAttribute("data-current", "T1");
+  await expect.poll(() => magnification(page)).toBeLessThan(10);
+  await expect(nav).toHaveAttribute("data-visited", "");
+  await page.keyboard.press("]");
+  await expect(nav).toHaveAttribute("data-current", "T2");
+  await expect(nav).toHaveAttribute("data-visited", "T2");
+  expect(await magnification(page)).toBeGreaterThan(10);
+  await page.keyboard.press("]");
+  await expect(nav).toHaveAttribute("data-current", "T3");
+  await expect(nav).toHaveAttribute("data-visited", "T2 T3");
+  await page.keyboard.press("[");
+  await expect(nav).toHaveAttribute("data-current", "T2");
+  await page.keyboard.press("[");
+  await expect(nav).toHaveAttribute("data-current", "T1");
+  await expect(nav).toHaveAttribute("data-visited", "T2 T3");
+  await page.waitForTimeout(1500);
+  await page.keyboard.press("]");
+  await expect(nav).toHaveAttribute("data-current", "T2");
+  await expect.poll(() => magnification(page)).toBeGreaterThan(10);
+  await page.waitForTimeout(1500);
+  await page.keyboard.press("Alt+ArrowLeft");
+  await expect.poll(() => magnification(page), { timeout: 15_000 }).toBeLessThan(10);
+});
+
+test("G then 2 flies to the second largest area", async ({ page }) => {
+  const nav = await openSlide(page);
+  await page.keyboard.press("g");
+  await page.keyboard.press("2");
+  await expect(nav).toHaveAttribute("data-current", "T2");
+});

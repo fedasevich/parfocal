@@ -12,7 +12,9 @@ import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
+import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
+import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -60,14 +62,46 @@ function ViewerKeys({ session }: { session: Session }) {
   return null;
 }
 
-export function SlideStage({ slideId }: { slideId: string }) {
-  const [attempt, setAttempt] = useState(0);
+function AreaKeys({ session, areas }: { session: Session; areas: readonly SlideAreaEntry[] }) {
+  const nav = useEngineAreaNav(session.engine, session.module, areas);
+  if (areas.length === 0) return null;
   return (
-    <OpenedSlide key={attempt} slideId={slideId} onRetry={() => setAttempt((count) => count + 1)} />
+    <div
+      hidden
+      data-testid="area-nav"
+      data-current={nav.current ?? ""}
+      data-visited={[...nav.visited].sort().join(" ")}
+    />
   );
 }
 
-function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => void }) {
+export function SlideStage({
+  slideId,
+  areas = [],
+}: {
+  slideId: string;
+  areas?: readonly SlideAreaEntry[];
+}) {
+  const [attempt, setAttempt] = useState(0);
+  return (
+    <OpenedSlide
+      key={attempt}
+      slideId={slideId}
+      areas={areas}
+      onRetry={() => setAttempt((count) => count + 1)}
+    />
+  );
+}
+
+function OpenedSlide({
+  slideId,
+  areas,
+  onRetry,
+}: {
+  slideId: string;
+  areas: readonly SlideAreaEntry[];
+  onRetry: () => void;
+}) {
   const host = useRef<HTMLDivElement | null>(null);
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const hostRef = useCallback((node: HTMLDivElement | null) => {
@@ -199,6 +233,7 @@ function OpenedSlide({ slideId, onRetry }: { slideId: string; onRetry: () => voi
         </>
       ) : null}
       {session ? <ViewerKeys session={session} /> : null}
+      {session ? <AreaKeys session={session} areas={areas} /> : null}
       {session ? (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           <MagnificationControl
