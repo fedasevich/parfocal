@@ -1737,7 +1737,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
   Size: S.
 
-- [ ] DS-036 · Preload the main Plex fonts
+- [x] DS-036 · Preload the main Plex fonts
   DS-003 (typography) committed the IBM Plex woff2 files with font-display optional (ADR 0227), so a first visit on a slow link may draw in the fallback font. Preload the two main files in apps/web index.html.
   Done when a browser test on a throttled first load sees Plex rendered, and the preload names files that exist in the build.
   Depends on DS-003.
