@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- REVIEW-005 (number line) changed NumberLine to per-class counts with a solid sure and hatched unsure bar per class and a total row split into checked, sure and unsure, with the sums in packages/ui/src/lib/number-line.ts. Unit tests and four stories cover the states. Wiring it to live inspector counts is still open.
 - HOME-008 (search page) added /search with scopes and grouped results, a sidebar Search item and an All results row at the end of the palette, now in the lazy palette dialog. An ID result opens the slide at the object. The agent's raised bundle budget was reverted, and the first page is 340,521 of 350,000 bytes.
 - TASK-011 (display defaults, locks and presets) stores a task's display defaults and up to five reasoned locks from its study template, reviewer presets and per-task choice (migration 0085), refuses locked changes with display-setting-locked, stamps the preset on each decision and counts presets in the evaluation. ADR 0233 records the preset stamped on the server. The web still uses the getTaskDisplay draft until VIZ-007 moves to /my-display.
 - VIEW-051 (triangulate off the main thread) added createPolygonBatchInWorker with transferred buffers. A 1M polygon batch drops from one 1.3 s long task to a longest main-thread gap of 8.7 to 24.5 ms with identical pixels, though one loaded run hit 74 ms. Nothing calls it yet, so the nucleus result loading should switch to it.

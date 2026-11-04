@@ -2282,7 +2282,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] REVIEW-005 · Number line
+- [x] REVIEW-005 · Number line
   One line with the tumor share and its likely range for the slide, the open zone or a drawn outline. Opening it shows counts per class, each bar split into cells the AI is sure about (solid) and unsure cells (hatched in the unsure token), a total row split into checked by you, sure and unsure, and the cutoff result chip from REVIEW-017 when the lab sets a cutoff. Every answer moves cells from unsure to checked at once.
   Done when component tests render seeded counts in each state and a unit test checks that the parts add up to the total.
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
