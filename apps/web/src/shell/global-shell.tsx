@@ -43,6 +43,7 @@ function useActiveItem(): string | undefined {
   if (ids.includes("/")) return "home";
   if (ids.includes("/my-work")) return "my-work";
   if (ids.includes("/team")) return "team";
+  if (ids.includes("/search")) return "search";
   return params.projectId;
 }
 
@@ -73,6 +74,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
           icon: "slides",
           ...(toReview > 0 ? { count: toReview } : {}),
         },
+        { id: "search", href: destinations.search(), label: "Search", icon: "search" },
       ],
     },
     {

@@ -16,6 +16,7 @@ import { Route as InviteRouteImport } from "./routes/invite.tsx";
 import { Route as IssueStatesRouteImport } from "./routes/issue-states.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
+import { Route as SearchRouteImport } from "./routes/search.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
 import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
 import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
@@ -83,6 +84,11 @@ const MyWorkRoute = MyWorkRouteImport.update({
 const PrototypeRoute = PrototypeRouteImport.update({
   id: "/prototype",
   path: "/prototype",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SearchRoute = SearchRouteImport.update({
+  id: "/search",
+  path: "/search",
   getParentRoute: () => rootRouteImport,
 } as any);
 const SetupRoute = SetupRouteImport.update({
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
+  "/search": typeof SearchRoute;
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
+  "/search": typeof SearchRoute;
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   "/issue-states": typeof IssueStatesRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
+  "/search": typeof SearchRoute;
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/my-work"
     | "/prototype"
+    | "/search"
     | "/setup"
     | "/sign-in"
     | "/sign-up"
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/my-work"
     | "/prototype"
+    | "/search"
     | "/setup"
     | "/sign-in"
     | "/sign-up"
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/my-work"
     | "/prototype"
+    | "/search"
     | "/setup"
     | "/sign-in"
     | "/sign-up"
@@ -527,6 +539,7 @@ export interface RootRouteChildren {
   IssueStatesRoute: typeof IssueStatesRoute;
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
+  SearchRoute: typeof SearchRoute;
   SetupRoute: typeof SetupRoute;
   SignInRoute: typeof SignInRoute;
   SignUpRoute: typeof SignUpRoute;
@@ -611,6 +624,13 @@ declare module "@tanstack/react-router" {
       path: "/prototype";
       fullPath: "/prototype";
       preLoaderRoute: typeof PrototypeRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/search": {
+      id: "/search";
+      path: "/search";
+      fullPath: "/search";
+      preLoaderRoute: typeof SearchRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/setup": {
@@ -855,6 +875,7 @@ const rootRouteChildren: RootRouteChildren = {
   IssueStatesRoute: IssueStatesRoute,
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
+  SearchRoute: SearchRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
