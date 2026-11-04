@@ -76,6 +76,7 @@ function LiveSlide() {
           slideId={slideId}
           areas={areas}
           viewed={viewed}
+          outlines={task !== undefined}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>

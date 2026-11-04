@@ -38,6 +38,12 @@ import { applyDensity } from "../../shell/density.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
+import {
+  type OutlineModeChoice,
+  outlineModeChoices,
+  outlineModeLabels,
+  useOutlineMode,
+} from "../../viewer/outline-mode.ts";
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -211,6 +217,7 @@ function LoadedSettings({
   const [personal, setPersonal] = useState<Personal>(settings.personal);
   const [device, setDevice] = useState<Device>(deviceDefaults);
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
+  const [outlineMode, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const [channels, setChannels] = useState<Partial<Record<RowKey, Channel>>>({});
   const [signedOutAt, setSignedOutAt] = useState<{ count: number; at: Date } | null>(null);
@@ -431,6 +438,14 @@ function LoadedSettings({
             `${presetName(value)} is your default preset. Settings a task locks still follow the task.`,
           );
         }}
+      />
+    ),
+    outlineMode: () => (
+      <Segments
+        label="Outline display"
+        value={outlineMode}
+        pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
+        onChange={(value) => setOutlineMode(value as OutlineModeChoice)}
       />
     ),
     modelWarnings: () =>
