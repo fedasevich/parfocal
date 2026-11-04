@@ -14076,7 +14076,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/ExportFormat",
+              "$ref": "#/components/schemas/parfocal_api__reviewed_export__ExportFormat",
               "default": "geojson"
             }
           },
@@ -14117,6 +14117,168 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Exportreviewedlayer"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/slides/{slide_id}/export": {
+      "get": {
+        "tags": [
+          "annotations"
+        ],
+        "summary": "Export Slide Objects",
+        "operationId": "exportSlideObjects",
+        "parameters": [
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/parfocal_api__annotation_exports__ExportFormat",
+              "default": "geojson"
+            }
+          },
+          {
+            "name": "result_set_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Result Set Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every annotation on the slide and, when named, every object of a run",
+            "content": {
+              "application/geo+json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/flatgeobuf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -34670,14 +34832,6 @@
         ],
         "title": "Evaluation"
       },
-      "ExportFormat": {
-        "type": "string",
-        "enum": [
-          "geojson",
-          "parfocal"
-        ],
-        "title": "ExportFormat"
-      },
       "ExportKind": {
         "type": "string",
         "enum": [
@@ -46921,6 +47075,15 @@
         ],
         "title": "ZoomAround"
       },
+      "parfocal_api__annotation_exports__ExportFormat": {
+        "type": "string",
+        "enum": [
+          "geojson",
+          "flatgeobuf",
+          "parfocal"
+        ],
+        "title": "ExportFormat"
+      },
       "parfocal_api__availability__Note": {
         "type": "string",
         "maxLength": 200,
@@ -46939,6 +47102,14 @@
         "type": "string",
         "maxLength": 120,
         "minLength": 1
+      },
+      "parfocal_api__reviewed_export__ExportFormat": {
+        "type": "string",
+        "enum": [
+          "geojson",
+          "parfocal"
+        ],
+        "title": "ExportFormat"
       },
       "parfocal_api__taxonomy__Colour": {
         "type": "string",

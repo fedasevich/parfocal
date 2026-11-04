@@ -4033,6 +4033,13 @@ export const getGetReviewOrderResponseMock = (
 
 export const getExportReviewedLayerResponseMock = (): ExportReviewedLayer200 => ({});
 
+export const getExportSlideObjectsResponseMock = (): Blob =>
+  faker.helpers.arrayElement([
+    new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
+    new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
+    new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
+  ]);
+
 export const getListAnnouncementsResponseMock = (): Announcement[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
@@ -12490,6 +12497,30 @@ export const getExportReviewedLayerMockHandler = (
   );
 };
 
+export const getExportSlideObjectsMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/export",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getExportSlideObjectsResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListAnnouncementsMockHandler = (
   overrideResponse?:
     | Announcement[]
@@ -15631,6 +15662,7 @@ export const getParfocalAPIMock = () => [
   getAddRunToTaskSlideMockHandler(),
   getGetReviewOrderMockHandler(),
   getExportReviewedLayerMockHandler(),
+  getExportSlideObjectsMockHandler(),
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getEndAnnouncementMockHandler(),
