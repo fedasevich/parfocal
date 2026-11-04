@@ -1749,7 +1749,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-023.
   Size: M.
 
-- [ ] DS-038 · Flow page density token
+- [x] DS-038 · Flow page density token
   Flow pages keep the mock's fixed 20 px gap in the main column (`.fp-main`) while other pages tighten in compact density (DS-033). The owner chose on 2026-11-04 to add a flow page token, 20 px in comfortable and 14 px in compact.
   Done when a test reads the computed gap of `.fp-main` as 20 px and 14 px in the two densities, and the flow page stories show both.
   Depends on DS-023, DS-033.
