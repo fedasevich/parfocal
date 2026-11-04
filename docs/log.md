@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- DS-035 (warn tag contrast) found the light warn tag already at 4.73:1 since DS-005 moved --warn to #804d00. A tokens test now pins 4.5:1 for the warn tag tint on page, chrome, chrome-2 and chrome-3 in both themes, and axe passes on the 28 tag and table story runs.
 - DS-038 (flow page density token) added --density-flow-page-gap, 20 px comfortable and 14 px compact, which FlowPage's main column (data-slot flow-main) uses. FlowComfortable and FlowCompact stories and a density spec read the computed gap in both densities.
 - INGEST-021 (upload wizard) first part: Upload opens a live Files, Check and Upload wizard that sorts dropped files in the browser (ADR 0232), a drop on a project opens it, the jobs tray lists the uploads, and the upload engine loads lazily to stay under the first-page budget (25 bytes spare). Uploads do not yet reach a case or slide.
 - INGEST-030 (name the OME-TIFF reader after tifffile) renamed Reader.TIFFSLIDE to Reader.TIFFFILE and migration 0083 rewrites stored tiffslide readers to tifffile. The owner's unpushed ADJ-008 branch also uses 0083, so it renumbers to 0084 on merge.

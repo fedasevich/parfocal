@@ -1732,7 +1732,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-026.
   Size: M.
 
-- [ ] DS-035 · Warn tag contrast in the light theme
+- [x] DS-035 · Warn tag contrast in the light theme
   DS-026 (table) found the amber "warn" status tag at 4.3:1 against the light page background, below the 4.5:1 axe needs.
   Done when the warn tag passes 4.5:1 in both themes, the colour measurement scripts agree, and axe passes on every story that shows it.
   Size: S.
