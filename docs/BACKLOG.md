@@ -2114,7 +2114,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on AIP-005.
   Size: M.
 
-- [ ] CASE-009 · Viewed ring
+- [x] CASE-009 · Viewed ring
   Share of tissue seen at 10× or more, in the top bar, opens peek on click.
   Done when tests check it against the coverage raster.
   Size: S.
