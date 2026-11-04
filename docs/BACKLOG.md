@@ -546,7 +546,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-000.
   Size: S.
 
-- [ ] FOUND-029 · Headroom in the first-page bundle budget
+- [x] FOUND-029 · Headroom in the first-page bundle budget
   INGEST-021 (upload wizard) left the first-page bundle at 349,999 of 350,000 gzip bytes in `perf-budgets.json`, so the next change to the main chunk fails the budget. Find what the first page loads that it does not need and move it into lazy chunks until at least 10 KB is free, without raising the budget.
   Done when the budget check passes with at least 10,000 bytes spare and the E2E suite stays green.
   Size: S.
