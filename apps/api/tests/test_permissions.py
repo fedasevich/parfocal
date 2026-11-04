@@ -34,6 +34,7 @@ from parfocal_api.tables import (
     annotations,
     announcements,
     api_tokens,
+    display_presets,
     invitations,
     jobs,
     legal_holds,
@@ -207,6 +208,8 @@ class Workspace:
     result_upload: SeededUpload = field(default_factory=lambda: SeededUpload())
     waiting_result: SeededUpload = field(default_factory=lambda: SeededUpload())
     leftover_result: SeededUpload = field(default_factory=lambda: SeededUpload())
+    display_preset: uuid.UUID = field(default_factory=uuid.uuid4)
+    doomed_preset: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
     def annotations(self) -> str:
@@ -237,6 +240,8 @@ NEEDS_A_TASK = frozenset(
         "reopenSlideReview",
         "saveVerdict",
         "clearVerdict",
+        "getMyDisplay",
+        "chooseMyDisplay",
         "saveOpinion",
         "submitFirstRead",
         "createThread",
@@ -563,6 +568,18 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1"
     ),
     "getReviewTaskStates": lambda w: Call("GET", f"/api/review-tasks/{w.task}/states"),
+    "getMyDisplay": lambda w: Call("GET", f"/api/review-tasks/{w.task}/my-display"),
+    "chooseMyDisplay": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.task}/my-display", {"settings": {"width": 3}}
+    ),
+    "listDisplayPresets": lambda _: Call("GET", "/api/display-presets"),
+    "saveDisplayPreset": lambda _: Call(
+        "POST", "/api/display-presets", {"name": f"Matrix {uuid.uuid4().hex[:8]}", "settings": {}}
+    ),
+    "changeDisplayPreset": lambda w: Call(
+        "PATCH", f"/api/display-presets/{w.display_preset}", {"settings": {"width": 1}}
+    ),
+    "deleteDisplayPreset": lambda w: Call("DELETE", f"/api/display-presets/{w.doomed_preset}"),
     "listThreads": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads"),
     "listMentionableMembers": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/mentionable"
@@ -983,7 +1000,22 @@ async def seed_task(
     return task_id
 
 
-async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
+async def seed_presets(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
+) -> tuple[uuid.UUID, uuid.UUID]:
+    made = [
+        await connection.scalar(
+            insert(display_presets)
+            .values(tenant_id=tenant_id, user_id=user_id, name=name, settings={})
+            .returning(display_presets.c.id)
+        )
+        for name in ("Matrix kept", "Matrix doomed")
+    ]
+    kept, doomed = [uuid.UUID(str(made_id)) for made_id in made]
+    return kept, doomed
+
+
+async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEARCHER) -> Workspace:
     engine = create_async_engine(async_database_url(with_database(OWNER_URL, database)))
     slug = f"perm-{uuid.uuid4().hex[:10]}"
     try:
@@ -1235,6 +1267,9 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
                 )
                 for _ in range(2)
             ]
+            kept_preset, doomed_preset = await seed_presets(
+                connection, tenant_id, people[presets_for]
+            )
             assert isinstance(reassignment, uuid.UUID)
             assert isinstance(nudge, uuid.UUID)
             await connection.execute(
@@ -1425,6 +1460,8 @@ async def seed(database: str, lead: Seat = RESEARCHER) -> Workspace:
             thread,
             doomed_thread,
             *uploads_made,
+            display_preset=kept_preset,
+            doomed_preset=doomed_preset,
         )
     finally:
         await engine.dispose()
@@ -1492,7 +1529,9 @@ async def seed_upload(
 def workspaces(database: str, storage: StorageLocation) -> dict[Seat, Workspace]:
     assert storage.bucket
     return {
-        seat: asyncio.run(seed(database, seat if seat.role is Role.RESEARCHER else RESEARCHER))
+        seat: asyncio.run(
+            seed(database, seat if seat.role is Role.RESEARCHER else RESEARCHER, seat)
+        )
         for seat in SEATS
     }
 

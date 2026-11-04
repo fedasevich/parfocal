@@ -132,6 +132,10 @@ class AuditAction(StrEnum):
     PATIENT_DATA_EXPORTED = "patient.data-exported"
     PATIENT_ERASED = "patient.erased"
     TASK_COUNTS_AS_CHANGED = "task.counts-as-changed"
+    TASK_DISPLAY_CHANGED = "task.display-changed"
+    DISPLAY_PRESET_SAVED = "display-preset.saved"
+    DISPLAY_PRESET_CHANGED = "display-preset.changed"
+    DISPLAY_PRESET_DELETED = "display-preset.deleted"
 
 
 class AuditTarget(StrEnum):
@@ -154,6 +158,7 @@ class AuditTarget(StrEnum):
     LEGAL_HOLD = "legal-hold"
     PATIENT = "patient"
     THREAD = "thread"
+    DISPLAY_PRESET = "display-preset"
 
 
 @dataclass(frozen=True)

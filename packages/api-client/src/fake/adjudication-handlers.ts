@@ -24,6 +24,7 @@ import {
 } from "../generated/api.msw.ts";
 import type { Evaluation } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
+import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   fakeQueueScene,
@@ -288,6 +289,8 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
     task_id: taskId,
     sample: false,
     decisions: decisionsOf(taskId),
+    display: taskDisplayFor(task().code),
+    presets: [],
     classes: [tumor],
     overall: [tumor],
     dice: { Tumor: numbers.dice },

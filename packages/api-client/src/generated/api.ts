@@ -469,6 +469,7 @@ export const AuditTarget = {
   "legal-hold": "legal-hold",
   patient: "patient",
   thread: "thread",
+  "display-preset": "display-preset",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -552,6 +553,13 @@ export const BuiltInTemplate = {
   segmentation: "segmentation",
   "cell-typing": "cell-typing",
   "reader-study": "reader-study",
+} as const;
+
+export type ButtonPlace = (typeof ButtonPlace)[keyof typeof ButtonPlace];
+
+export const ButtonPlace = {
+  card: "card",
+  "under-slide": "under-slide",
 } as const;
 
 export type CaseSource = (typeof CaseSource)[keyof typeof CaseSource];
@@ -831,6 +839,14 @@ export const Code = {
   "bad-pattern": "bad-pattern",
 } as const;
 
+export type ColourBy = (typeof ColourBy)[keyof typeof ColourBy];
+
+export const ColourBy = {
+  class: "class",
+  score: "score",
+  decision: "decision",
+} as const;
+
 export type ComparisonWidth = (typeof ComparisonWidth)[keyof typeof ComparisonWidth];
 
 export const ComparisonWidth = {
@@ -880,6 +896,15 @@ export interface Completion {
   /** @maxItems 10000 */
   parts: ClaimedPart[];
 }
+
+export type ConfidenceShown = (typeof ConfidenceShown)[keyof typeof ConfidenceShown];
+
+export const ConfidenceShown = {
+  number: "number",
+  word: "word",
+  colour: "colour",
+  hidden: "hidden",
+} as const;
 
 export type ConfusionMatrixWidth = (typeof ConfusionMatrixWidth)[keyof typeof ConfusionMatrixWidth];
 
@@ -1044,11 +1069,88 @@ export interface DisagreementReasons {
   style?: ChartStyle;
 }
 
+export type DrawAs = (typeof DrawAs)[keyof typeof DrawAs];
+
+export const DrawAs = {
+  outline: "outline",
+  fill: "fill",
+  dots: "dots",
+} as const;
+
+export interface OtherSets {
+  reviewed_layer?: boolean;
+  /** @maxItems 20 */
+  result_set_ids?: string[];
+}
+
+export type ObjectOrder = (typeof ObjectOrder)[keyof typeof ObjectOrder];
+
+export const ObjectOrder = {
+  ai: "ai",
+  "largest-first": "largest-first",
+  "least-sure-first": "least-sure-first",
+  random: "random",
+} as const;
+
+export type ZoomAround = (typeof ZoomAround)[keyof typeof ZoomAround];
+
+export const ZoomAround = {
+  fit: "fit",
+  tight: "tight",
+  context: "context",
+} as const;
+
+export interface DisplaySettings {
+  draw_as?: DrawAs;
+  /**
+   * @minimum 1
+   * @maximum 3
+   */
+  width?: number;
+  /**
+   * @minimum 20
+   * @maximum 100
+   */
+  opacity?: number;
+  colour_by?: ColourBy;
+  id_labels?: boolean;
+  confidence?: ConfidenceShown;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  heatmap?: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  score_cutoff?: number;
+  other_sets?: OtherSets;
+  order?: ObjectOrder;
+  zoom?: ZoomAround;
+  move_on?: boolean;
+  buttons?: ButtonPlace;
+}
+
+export interface DisplayChoice {
+  preset_id?: string | null;
+  settings: DisplaySettings;
+}
+
 /**
  * @minLength 1
  * @maxLength 200
  */
 export type DisplayName = string;
+
+export interface DisplayPreset {
+  id: string;
+  name: string;
+  task_id: string | null;
+  settings: DisplaySettings;
+  created_at: string;
+  updated_at: string;
+}
 
 export type Download = (typeof Download)[keyof typeof Download];
 
@@ -1171,6 +1273,33 @@ export interface OpinionOut {
   texts: string[];
 }
 
+export type Lockable = (typeof Lockable)[keyof typeof Lockable];
+
+export const Lockable = {
+  confidence: "confidence",
+  heatmap: "heatmap",
+  "score-cutoff": "score-cutoff",
+  "other-sets": "other-sets",
+  order: "order",
+} as const;
+
+/**
+ * @minLength 5
+ * @maxLength 120
+ */
+export type LockReason = string;
+
+export interface TaskDisplaySettings {
+  defaults?: DisplaySettings;
+  locks?: Partial<Record<Lockable, LockReason>>;
+}
+
+export interface PresetUse {
+  user_id: string;
+  preset: string | null;
+  objects: number;
+}
+
 export interface Evaluation {
   task_id: string;
   sample: boolean;
@@ -1189,6 +1318,8 @@ export interface Evaluation {
    */
   reasons: [string, number][];
   opinions: OpinionOut[];
+  display: TaskDisplaySettings;
+  presets: PresetUse[];
 }
 
 export type ExportFormat = (typeof ExportFormat)[keyof typeof ExportFormat];
@@ -2076,6 +2207,14 @@ export interface Mute {
   created_at: string;
 }
 
+export interface MyDisplay {
+  task: TaskDisplaySettings;
+  preset_id: string | null;
+  preset: string;
+  settings: DisplaySettings;
+  presets: DisplayPreset[];
+}
+
 export type MySettingLayersPersonal = { [key: string]: unknown };
 
 export interface MySettingLayers {
@@ -2384,6 +2523,23 @@ export interface PreferenceChanges {
   preferences: PreferenceChange[];
 }
 
+/**
+ * @minLength 1
+ * @maxLength 40
+ */
+export type PresetName = string;
+
+export interface PresetChange {
+  name?: PresetName | null;
+  settings?: DisplaySettings | null;
+}
+
+export interface PresetDraft {
+  name: PresetName;
+  task_id?: string | null;
+  settings: DisplaySettings;
+}
+
 export type TaskSplit = (typeof TaskSplit)[keyof typeof TaskSplit];
 
 export const TaskSplit = {
@@ -2400,6 +2556,7 @@ export interface Presets {
   start_mode?: StartMode;
   split?: TaskSplit;
   decision?: DecisionSettings;
+  display?: DisplaySettings;
 }
 
 export interface PrivacyChange {
@@ -3067,6 +3224,7 @@ export interface ReviewTask {
   study_template_id: string | null;
   study_template_version: number | null;
   decision: DecisionSettings;
+  display: TaskDisplaySettings;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -3098,6 +3256,7 @@ export interface ReviewTaskDetail {
   study_template_id: string | null;
   study_template_version: number | null;
   decision: DecisionSettings;
+  display: TaskDisplaySettings;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -3540,6 +3699,7 @@ export interface TaskChange {
   due_on?: string | null;
   reminder_days?: Reminders | null;
   decision?: DecisionSettings | null;
+  display?: TaskDisplaySettings | null;
 }
 
 export interface TaskDraft {
@@ -3570,6 +3730,7 @@ export interface TaskDraft {
   study_template_id?: string | null;
   study_template_version?: number | null;
   decision?: DecisionSettings | null;
+  display?: TaskDisplaySettings | null;
 }
 
 export interface TaskInvitationDraft {
@@ -3805,6 +3966,7 @@ export interface Verdict {
   updated_at: string;
   reopened_at?: string | null;
   reopened_note?: string | null;
+  preset?: string | null;
 }
 
 /**
@@ -4000,6 +4162,10 @@ export type SearchParams = {
 
 export type ListVerdictsParams = {
   reviewer_id?: string | null;
+};
+
+export type ListDisplayPresetsParams = {
+  task_id?: string | null;
 };
 
 export type ListThreadsParams = {
@@ -28358,6 +28524,1043 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getMyDisplayResponse200 = {
+  data: MyDisplay;
+  status: 200;
+};
+
+export type getMyDisplayResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyDisplayResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyDisplayResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyDisplayResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyDisplayResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyDisplayResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyDisplayResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMyDisplayResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyDisplayResponseSuccess = getMyDisplayResponse200 & {
+  headers: Headers;
+};
+export type getMyDisplayResponseError = (
+  | getMyDisplayResponse400
+  | getMyDisplayResponse401
+  | getMyDisplayResponse403
+  | getMyDisplayResponse404
+  | getMyDisplayResponse409
+  | getMyDisplayResponse422
+  | getMyDisplayResponse429
+  | getMyDisplayResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyDisplayResponse = getMyDisplayResponseSuccess | getMyDisplayResponseError;
+
+export const getGetMyDisplayUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/my-display`;
+};
+
+/**
+ * @summary Get My Display
+ */
+export const getMyDisplay = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyDisplayResponse> => {
+  return apiFetch<getMyDisplayResponse>(getGetMyDisplayUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyDisplayQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/my-display`] as const;
+};
+
+export const getGetMyDisplayQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyDisplayQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyDisplay>>> = ({ signal }) =>
+    getMyDisplay(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetMyDisplayQueryResult = NonNullable<Awaited<ReturnType<typeof getMyDisplay>>>;
+export type GetMyDisplayQueryError = Problem;
+
+export function useGetMyDisplay<TData = Awaited<ReturnType<typeof getMyDisplay>>, TError = Problem>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyDisplay>>,
+          TError,
+          Awaited<ReturnType<typeof getMyDisplay>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyDisplay<TData = Awaited<ReturnType<typeof getMyDisplay>>, TError = Problem>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyDisplay>>,
+          TError,
+          Awaited<ReturnType<typeof getMyDisplay>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyDisplay<TData = Awaited<ReturnType<typeof getMyDisplay>>, TError = Problem>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Display
+ */
+
+export function useGetMyDisplay<TData = Awaited<ReturnType<typeof getMyDisplay>>, TError = Problem>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyDisplayQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type chooseMyDisplayResponse200 = {
+  data: MyDisplay;
+  status: 200;
+};
+
+export type chooseMyDisplayResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type chooseMyDisplayResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type chooseMyDisplayResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type chooseMyDisplayResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type chooseMyDisplayResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type chooseMyDisplayResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type chooseMyDisplayResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type chooseMyDisplayResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type chooseMyDisplayResponseSuccess = chooseMyDisplayResponse200 & {
+  headers: Headers;
+};
+export type chooseMyDisplayResponseError = (
+  | chooseMyDisplayResponse400
+  | chooseMyDisplayResponse401
+  | chooseMyDisplayResponse403
+  | chooseMyDisplayResponse404
+  | chooseMyDisplayResponse409
+  | chooseMyDisplayResponse422
+  | chooseMyDisplayResponse429
+  | chooseMyDisplayResponse500
+) & {
+  headers: Headers;
+};
+
+export type chooseMyDisplayResponse = chooseMyDisplayResponseSuccess | chooseMyDisplayResponseError;
+
+export const getChooseMyDisplayUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/my-display`;
+};
+
+/**
+ * @summary Choose My Display
+ */
+export const chooseMyDisplay = async (
+  taskId: string,
+  displayChoice: DisplayChoice,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<chooseMyDisplayResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<chooseMyDisplayResponse>(getChooseMyDisplayUrl(taskId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(displayChoice),
+  });
+};
+
+export const getChooseMyDisplayMutationKey = () => ["chooseMyDisplay"] as const;
+
+export const getChooseMyDisplayMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof chooseMyDisplay>>,
+    TError,
+    ChooseMyDisplayMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof chooseMyDisplay>>,
+  TError,
+  ChooseMyDisplayMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChooseMyDisplayMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof chooseMyDisplay>>,
+    ChooseMyDisplayMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return chooseMyDisplay(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChooseMyDisplayMutationResult = NonNullable<
+  Awaited<ReturnType<typeof chooseMyDisplay>>
+>;
+export type ChooseMyDisplayMutationBody = DisplayChoice;
+export type ChooseMyDisplayMutationError = Problem;
+export type ChooseMyDisplayMutationVariables = { taskId: string; data: DisplayChoice };
+
+/**
+ * @summary Choose My Display
+ */
+export const useChooseMyDisplay = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof chooseMyDisplay>>,
+      TError,
+      ChooseMyDisplayMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof chooseMyDisplay>>,
+  TError,
+  ChooseMyDisplayMutationVariables,
+  TContext
+> => {
+  return useMutation(getChooseMyDisplayMutationOptions(options), queryClient);
+};
+
+export type listDisplayPresetsResponse200 = {
+  data: DisplayPreset[];
+  status: 200;
+};
+
+export type listDisplayPresetsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listDisplayPresetsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listDisplayPresetsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listDisplayPresetsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listDisplayPresetsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listDisplayPresetsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listDisplayPresetsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listDisplayPresetsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listDisplayPresetsResponseSuccess = listDisplayPresetsResponse200 & {
+  headers: Headers;
+};
+export type listDisplayPresetsResponseError = (
+  | listDisplayPresetsResponse400
+  | listDisplayPresetsResponse401
+  | listDisplayPresetsResponse403
+  | listDisplayPresetsResponse404
+  | listDisplayPresetsResponse409
+  | listDisplayPresetsResponse422
+  | listDisplayPresetsResponse429
+  | listDisplayPresetsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listDisplayPresetsResponse =
+  | listDisplayPresetsResponseSuccess
+  | listDisplayPresetsResponseError;
+
+export const getListDisplayPresetsUrl = (params?: ListDisplayPresetsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/display-presets?${stringifiedParams}`
+    : `/api/display-presets`;
+};
+
+/**
+ * @summary List Display Presets
+ */
+export const listDisplayPresets = async (
+  params?: ListDisplayPresetsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listDisplayPresetsResponse> => {
+  return apiFetch<listDisplayPresetsResponse>(getListDisplayPresetsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDisplayPresetsQueryKey = (params?: ListDisplayPresetsParams) => {
+  return [`/api/display-presets`, ...(params ? [params] : [])] as const;
+};
+
+export const getListDisplayPresetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDisplayPresets>>,
+  TError = Problem,
+>(
+  params?: ListDisplayPresetsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisplayPresets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDisplayPresetsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDisplayPresets>>> = ({ signal }) =>
+    listDisplayPresets(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDisplayPresets>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListDisplayPresetsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDisplayPresets>>
+>;
+export type ListDisplayPresetsQueryError = Problem;
+
+export function useListDisplayPresets<
+  TData = Awaited<ReturnType<typeof listDisplayPresets>>,
+  TError = Problem,
+>(
+  params: undefined | ListDisplayPresetsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisplayPresets>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDisplayPresets>>,
+          TError,
+          Awaited<ReturnType<typeof listDisplayPresets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDisplayPresets<
+  TData = Awaited<ReturnType<typeof listDisplayPresets>>,
+  TError = Problem,
+>(
+  params?: ListDisplayPresetsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDisplayPresets>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDisplayPresets>>,
+          TError,
+          Awaited<ReturnType<typeof listDisplayPresets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDisplayPresets<
+  TData = Awaited<ReturnType<typeof listDisplayPresets>>,
+  TError = Problem,
+>(
+  params?: ListDisplayPresetsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisplayPresets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Display Presets
+ */
+
+export function useListDisplayPresets<
+  TData = Awaited<ReturnType<typeof listDisplayPresets>>,
+  TError = Problem,
+>(
+  params?: ListDisplayPresetsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDisplayPresets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListDisplayPresetsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveDisplayPresetResponse201 = {
+  data: DisplayPreset;
+  status: 201;
+};
+
+export type saveDisplayPresetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveDisplayPresetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveDisplayPresetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveDisplayPresetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveDisplayPresetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveDisplayPresetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveDisplayPresetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveDisplayPresetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveDisplayPresetResponseSuccess = saveDisplayPresetResponse201 & {
+  headers: Headers;
+};
+export type saveDisplayPresetResponseError = (
+  | saveDisplayPresetResponse400
+  | saveDisplayPresetResponse401
+  | saveDisplayPresetResponse403
+  | saveDisplayPresetResponse404
+  | saveDisplayPresetResponse409
+  | saveDisplayPresetResponse422
+  | saveDisplayPresetResponse429
+  | saveDisplayPresetResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveDisplayPresetResponse =
+  | saveDisplayPresetResponseSuccess
+  | saveDisplayPresetResponseError;
+
+export const getSaveDisplayPresetUrl = () => {
+  return `/api/display-presets`;
+};
+
+/**
+ * @summary Save Display Preset
+ */
+export const saveDisplayPreset = async (
+  presetDraft: PresetDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveDisplayPresetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveDisplayPresetResponse>(getSaveDisplayPresetUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(presetDraft),
+  });
+};
+
+export const getSaveDisplayPresetMutationKey = () => ["saveDisplayPreset"] as const;
+
+export const getSaveDisplayPresetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveDisplayPreset>>,
+    TError,
+    SaveDisplayPresetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveDisplayPreset>>,
+  TError,
+  SaveDisplayPresetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveDisplayPresetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveDisplayPreset>>,
+    SaveDisplayPresetMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveDisplayPreset(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveDisplayPresetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveDisplayPreset>>
+>;
+export type SaveDisplayPresetMutationBody = PresetDraft;
+export type SaveDisplayPresetMutationError = Problem;
+export type SaveDisplayPresetMutationVariables = { data: PresetDraft };
+
+/**
+ * @summary Save Display Preset
+ */
+export const useSaveDisplayPreset = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveDisplayPreset>>,
+      TError,
+      SaveDisplayPresetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveDisplayPreset>>,
+  TError,
+  SaveDisplayPresetMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveDisplayPresetMutationOptions(options), queryClient);
+};
+
+export type changeDisplayPresetResponse200 = {
+  data: DisplayPreset;
+  status: 200;
+};
+
+export type changeDisplayPresetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeDisplayPresetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeDisplayPresetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeDisplayPresetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeDisplayPresetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeDisplayPresetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeDisplayPresetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeDisplayPresetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeDisplayPresetResponseSuccess = changeDisplayPresetResponse200 & {
+  headers: Headers;
+};
+export type changeDisplayPresetResponseError = (
+  | changeDisplayPresetResponse400
+  | changeDisplayPresetResponse401
+  | changeDisplayPresetResponse403
+  | changeDisplayPresetResponse404
+  | changeDisplayPresetResponse409
+  | changeDisplayPresetResponse422
+  | changeDisplayPresetResponse429
+  | changeDisplayPresetResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeDisplayPresetResponse =
+  | changeDisplayPresetResponseSuccess
+  | changeDisplayPresetResponseError;
+
+export const getChangeDisplayPresetUrl = (presetId: string) => {
+  return `/api/display-presets/${presetId}`;
+};
+
+/**
+ * @summary Change Display Preset
+ */
+export const changeDisplayPreset = async (
+  presetId: string,
+  presetChange: PresetChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeDisplayPresetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeDisplayPresetResponse>(getChangeDisplayPresetUrl(presetId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(presetChange),
+  });
+};
+
+export const getChangeDisplayPresetMutationKey = () => ["changeDisplayPreset"] as const;
+
+export const getChangeDisplayPresetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeDisplayPreset>>,
+    TError,
+    ChangeDisplayPresetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeDisplayPreset>>,
+  TError,
+  ChangeDisplayPresetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeDisplayPresetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeDisplayPreset>>,
+    ChangeDisplayPresetMutationVariables
+  > = (props) => {
+    const { presetId, data } = props ?? {};
+
+    return changeDisplayPreset(presetId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeDisplayPresetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeDisplayPreset>>
+>;
+export type ChangeDisplayPresetMutationBody = PresetChange;
+export type ChangeDisplayPresetMutationError = Problem;
+export type ChangeDisplayPresetMutationVariables = { presetId: string; data: PresetChange };
+
+/**
+ * @summary Change Display Preset
+ */
+export const useChangeDisplayPreset = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeDisplayPreset>>,
+      TError,
+      ChangeDisplayPresetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeDisplayPreset>>,
+  TError,
+  ChangeDisplayPresetMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeDisplayPresetMutationOptions(options), queryClient);
+};
+
+export type deleteDisplayPresetResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteDisplayPresetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteDisplayPresetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteDisplayPresetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteDisplayPresetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteDisplayPresetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteDisplayPresetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteDisplayPresetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteDisplayPresetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteDisplayPresetResponseSuccess = deleteDisplayPresetResponse204 & {
+  headers: Headers;
+};
+export type deleteDisplayPresetResponseError = (
+  | deleteDisplayPresetResponse400
+  | deleteDisplayPresetResponse401
+  | deleteDisplayPresetResponse403
+  | deleteDisplayPresetResponse404
+  | deleteDisplayPresetResponse409
+  | deleteDisplayPresetResponse422
+  | deleteDisplayPresetResponse429
+  | deleteDisplayPresetResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteDisplayPresetResponse =
+  | deleteDisplayPresetResponseSuccess
+  | deleteDisplayPresetResponseError;
+
+export const getDeleteDisplayPresetUrl = (presetId: string) => {
+  return `/api/display-presets/${presetId}`;
+};
+
+/**
+ * @summary Delete Display Preset
+ */
+export const deleteDisplayPreset = async (
+  presetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteDisplayPresetResponse> => {
+  return apiFetch<deleteDisplayPresetResponse>(getDeleteDisplayPresetUrl(presetId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDisplayPresetMutationKey = () => ["deleteDisplayPreset"] as const;
+
+export const getDeleteDisplayPresetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDisplayPreset>>,
+    TError,
+    DeleteDisplayPresetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDisplayPreset>>,
+  TError,
+  DeleteDisplayPresetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteDisplayPresetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDisplayPreset>>,
+    DeleteDisplayPresetMutationVariables
+  > = (props) => {
+    const { presetId } = props ?? {};
+
+    return deleteDisplayPreset(presetId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDisplayPresetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDisplayPreset>>
+>;
+
+export type DeleteDisplayPresetMutationError = Problem;
+export type DeleteDisplayPresetMutationVariables = { presetId: string };
+
+/**
+ * @summary Delete Display Preset
+ */
+export const useDeleteDisplayPreset = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteDisplayPreset>>,
+      TError,
+      DeleteDisplayPresetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDisplayPreset>>,
+  TError,
+  DeleteDisplayPresetMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteDisplayPresetMutationOptions(options), queryClient);
+};
 
 export type listThreadsResponse200 = {
   data: Thread[];

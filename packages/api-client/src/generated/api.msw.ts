@@ -27,6 +27,7 @@ import type {
   CreatedServiceAccount,
   CreatedUpload,
   DisagreementReasons,
+  DisplayPreset,
   EmailSchedule,
   EmergencyGrant,
   EndedSessions,
@@ -63,6 +64,7 @@ import type {
   ModelShown,
   MultiPolygonGeometry,
   Mute,
+  MyDisplay,
   MySettingLayers,
   MyTask,
   Neighbours,
@@ -151,14 +153,18 @@ import {
   Asked,
   Availability,
   BuiltInTemplate,
+  ButtonPlace,
   CaseRule,
   CaseSource,
   Certainty,
   ChartStyle,
   Code,
+  ColourBy,
+  ConfidenceShown,
   Decision,
   DecisionStyle,
   Download,
+  DrawAs,
   EmailDigest,
   FailureClass,
   HitKind,
@@ -174,6 +180,7 @@ import {
   MuteSubject,
   MyStatus,
   NotificationKind,
+  ObjectOrder,
   Ordering,
   Outcome,
   Plan,
@@ -214,6 +221,7 @@ import {
   VerdictValue,
   ViewerPart,
   Why,
+  ZoomAround,
 } from "./api.ts";
 
 export const getGetHealthResponseMock = (
@@ -3047,6 +3055,32 @@ export const getCreateReviewTaskResponseMock = (
       null,
     ]),
   },
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
+  },
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -3124,6 +3158,32 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
         null,
       ]),
     },
+    display: {
+      defaults: {
+        draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+        width: faker.number.int({ min: 1, max: 3 }),
+        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+        id_labels: faker.datatype.boolean(),
+        confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+        heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+        score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        other_sets: {
+          reviewed_layer: faker.datatype.boolean(),
+          result_set_ids: Array.from(
+            { length: faker.number.int({ min: 1, max: 20 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.uuid()),
+        },
+        order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+        zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+        move_on: faker.datatype.boolean(),
+        buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+      },
+      locks: {
+        [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+      },
+    },
     counts_as_changes: Array.from(
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
@@ -3189,6 +3249,32 @@ export const getGetReviewTaskResponseMock = (
       faker.string.alpha({ length: { min: 2, max: 200 } }),
       null,
     ]),
+  },
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
   },
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
@@ -3266,6 +3352,32 @@ export const getChangeReviewTaskResponseMock = (
       faker.string.alpha({ length: { min: 2, max: 200 } }),
       null,
     ]),
+  },
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
   },
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
@@ -3373,6 +3485,32 @@ export const getAddTaskReviewerResponseMock = (
       faker.string.alpha({ length: { min: 2, max: 200 } }),
       null,
     ]),
+  },
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
   },
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
@@ -4286,6 +4424,7 @@ export const getSaveVerdictResponseMock = (
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     null,
   ]),
+  preset: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   ...overrideResponse,
 });
 
@@ -4310,7 +4449,275 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       null,
     ]),
+    preset: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
   }));
+
+export const getGetMyDisplayResponseMock = (
+  overrideResponse: Partial<Extract<MyDisplay, object>> = {},
+): MyDisplay => ({
+  task: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
+  },
+  preset_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  preset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  settings: {
+    draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+    width: faker.number.int({ min: 1, max: 3 }),
+    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+    id_labels: faker.datatype.boolean(),
+    confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+    heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+    score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    other_sets: {
+      reviewed_layer: faker.datatype.boolean(),
+      result_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 20 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    },
+    order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+    zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+    move_on: faker.datatype.boolean(),
+    buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+  },
+  presets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      settings: {
+        draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+        width: faker.number.int({ min: 1, max: 3 }),
+        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+        id_labels: faker.datatype.boolean(),
+        confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+        heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+        score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        other_sets: {
+          reviewed_layer: faker.datatype.boolean(),
+          result_set_ids: Array.from(
+            { length: faker.number.int({ min: 1, max: 20 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.uuid()),
+        },
+        order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+        zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+        move_on: faker.datatype.boolean(),
+        buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+      },
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getChooseMyDisplayResponseMock = (
+  overrideResponse: Partial<Extract<MyDisplay, object>> = {},
+): MyDisplay => ({
+  task: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
+  },
+  preset_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  preset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  settings: {
+    draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+    width: faker.number.int({ min: 1, max: 3 }),
+    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+    id_labels: faker.datatype.boolean(),
+    confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+    heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+    score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    other_sets: {
+      reviewed_layer: faker.datatype.boolean(),
+      result_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 20 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    },
+    order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+    zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+    move_on: faker.datatype.boolean(),
+    buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+  },
+  presets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      settings: {
+        draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+        width: faker.number.int({ min: 1, max: 3 }),
+        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+        id_labels: faker.datatype.boolean(),
+        confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+        heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+        score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        other_sets: {
+          reviewed_layer: faker.datatype.boolean(),
+          result_set_ids: Array.from(
+            { length: faker.number.int({ min: 1, max: 20 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.uuid()),
+        },
+        order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+        zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+        move_on: faker.datatype.boolean(),
+        buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+      },
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListDisplayPresetsResponseMock = (): DisplayPreset[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    settings: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getSaveDisplayPresetResponseMock = (
+  overrideResponse: Partial<Extract<DisplayPreset, object>> = {},
+): DisplayPreset => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  settings: {
+    draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+    width: faker.number.int({ min: 1, max: 3 }),
+    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+    id_labels: faker.datatype.boolean(),
+    confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+    heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+    score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    other_sets: {
+      reviewed_layer: faker.datatype.boolean(),
+      result_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 20 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    },
+    order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+    zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+    move_on: faker.datatype.boolean(),
+    buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+  },
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getChangeDisplayPresetResponseMock = (
+  overrideResponse: Partial<Extract<DisplayPreset, object>> = {},
+): DisplayPreset => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  settings: {
+    draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+    width: faker.number.int({ min: 1, max: 3 }),
+    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+    id_labels: faker.datatype.boolean(),
+    confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+    heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+    score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    other_sets: {
+      reviewed_layer: faker.datatype.boolean(),
+      result_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 20 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    },
+    order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+    zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+    move_on: faker.datatype.boolean(),
+    buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+  },
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
 
 export const getListThreadsResponsePointGeometryMock = (
   overrideResponse: Partial<PointGeometry> = {},
@@ -5461,6 +5868,42 @@ export const getGetTaskEvaluationResponseMock = (
       ),
     }),
   ),
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
+  },
+  presets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      preset: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      objects: faker.number.int(),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -5784,6 +6227,27 @@ export const getListStudyTemplatesResponseMock = (): StudyTemplateSummary[] =>
           faker.string.alpha({ length: { min: 2, max: 200 } }),
           null,
         ]),
+      },
+      display: {
+        draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+        width: faker.number.int({ min: 1, max: 3 }),
+        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+        id_labels: faker.datatype.boolean(),
+        confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+        heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+        score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        other_sets: {
+          reviewed_layer: faker.datatype.boolean(),
+          result_set_ids: Array.from(
+            { length: faker.number.int({ min: 1, max: 20 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.uuid()),
+        },
+        order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+        zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+        move_on: faker.datatype.boolean(),
+        buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
       },
     },
     id: faker.string.uuid(),
@@ -6123,6 +6587,27 @@ export const getCreateStudyTemplateResponseMock = (
         null,
       ]),
     },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -6461,6 +6946,27 @@ export const getGetStudyTemplateResponseMock = (
         null,
       ]),
     },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -6798,6 +7304,27 @@ export const getEditStudyTemplateResponseMock = (
         faker.string.alpha({ length: { min: 2, max: 200 } }),
         null,
       ]),
+    },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
     },
   },
   id: faker.string.uuid(),
@@ -7145,6 +7672,27 @@ export const getGetStudyTemplateVersionResponseMock = (
         null,
       ]),
     },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -7483,6 +8031,27 @@ export const getRetireStudyTemplateResponseMock = (
         null,
       ]),
     },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
   },
   id: faker.string.uuid(),
   version: faker.number.int(),
@@ -7820,6 +8389,27 @@ export const getRestoreStudyTemplateResponseMock = (
         faker.string.alpha({ length: { min: 2, max: 200 } }),
         null,
       ]),
+    },
+    display: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
     },
   },
   id: faker.string.uuid(),
@@ -11727,6 +12317,141 @@ export const getListVerdictsMockHandler = (
   );
 };
 
+export const getGetMyDisplayMockHandler = (
+  overrideResponse?:
+    | MyDisplay
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<MyDisplay> | MyDisplay),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/my-display",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMyDisplayResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getChooseMyDisplayMockHandler = (
+  overrideResponse?:
+    | MyDisplay
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<MyDisplay> | MyDisplay),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/my-display",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChooseMyDisplayResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListDisplayPresetsMockHandler = (
+  overrideResponse?:
+    | DisplayPreset[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DisplayPreset[]> | DisplayPreset[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/display-presets",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListDisplayPresetsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveDisplayPresetMockHandler = (
+  overrideResponse?:
+    | DisplayPreset
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<DisplayPreset> | DisplayPreset),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/display-presets",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveDisplayPresetResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getChangeDisplayPresetMockHandler = (
+  overrideResponse?:
+    | DisplayPreset
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0],
+      ) => Promise<DisplayPreset> | DisplayPreset),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/display-presets/:presetId",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeDisplayPresetResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteDisplayPresetMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/display-presets/:presetId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getListThreadsMockHandler = (
   overrideResponse?:
     | Thread[]
@@ -13582,6 +14307,12 @@ export const getParfocalAPIMock = () => [
   getSaveVerdictMockHandler(),
   getClearVerdictMockHandler(),
   getListVerdictsMockHandler(),
+  getGetMyDisplayMockHandler(),
+  getChooseMyDisplayMockHandler(),
+  getListDisplayPresetsMockHandler(),
+  getSaveDisplayPresetMockHandler(),
+  getChangeDisplayPresetMockHandler(),
+  getDeleteDisplayPresetMockHandler(),
   getListThreadsMockHandler(),
   getCreateThreadMockHandler(),
   getListMentionableMembersMockHandler(),

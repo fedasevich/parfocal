@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 31 |
-| `personal` | 58 |
+| `personal` | 65 |
 | `secret` | 9 |
-| `operational` | 570 |
+| `operational` | 580 |
 | `public` | 0 |
 
 ## annotation_versions
@@ -183,6 +183,31 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `edits_settled_at` | operational |
 | `note` | phi |
 | `decided_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## display_choices
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `user_id` | personal |
+| `preset_id` | personal |
+| `settings` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## display_presets
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `task_id` | operational |
+| `name` | personal |
+| `settings` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -670,6 +695,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `counts_as` | operational |
 | `counts_as_changes` | personal |
 | `question` | operational |
+| `display` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -998,6 +1024,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `note` | phi |
 | `reopened_at` | operational |
 | `reopened_note` | phi |
+| `preset` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 
