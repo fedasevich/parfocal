@@ -2694,7 +2694,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 15, mock 12.
   Size: M.
 
-- [ ] COLLAB-004 · Thread popover
+- [x] COLLAB-004 · Thread popover
   Title, resolve, close, messages with relative time, reply field, measurement embed.
   Done when component tests cover the popover.
   Size: S.
