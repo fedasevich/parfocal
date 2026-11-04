@@ -471,6 +471,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
     "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
     "getCellSummary": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-summary"),
+    "exportSlideObjects": lambda w: Call(
+        "GET", f"/api/slides/{w.slide}/export?format=flatgeobuf&result_set_id={w.result_set}"
+    ),
     "createResultSet": lambda w: Call(
         "POST", f"/api/slides/{w.slide}/result-sets", {"name": "Matrix model"}
     ),

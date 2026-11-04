@@ -83,7 +83,7 @@ from parfocal_api.tables import (
     verdicts,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells
+from parfocal_common.chunk_store import Cell, build_cells, write_cells
 from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
@@ -520,20 +520,38 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         .returning(result_sets.c.id)
     )
     assert isinstance(summary_set, uuid.UUID)
-    await connection.execute(
-        update(result_sets).where(result_sets.c.id == summary_set).values(status="ready")
-    )
     cell_number = 100_000_000 + uuid.uuid4().int % 800_000_000
     seeded.markers.add(str(cell_number))
-    summary = build_cells(
+    built = build_cells(
         seeded.tenant_id,
         case.loose_slide_id,
         summary_set,
         [Cell(cell_number, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
         1,
-    ).summary
+    )
     async with httpx2.AsyncClient(timeout=30) as http:
-        await ObjectResultStore(ObjectStore(TEST_STORAGE, http)).put(summary.key, summary.data)
+        entries = await write_cells(ObjectResultStore(ObjectStore(TEST_STORAGE, http)), built)
+    await connection.execute(
+        insert(result_chunks),
+        [
+            {
+                "tenant_id": seeded.tenant_id,
+                "result_set_id": summary_set,
+                "chunk": entry.chunk,
+                "x": entry.x,
+                "y": entry.y,
+                "width": entry.width,
+                "height": entry.height,
+                "cell_count": entry.cell_count,
+                "vertex_count": entry.vertex_count,
+                "object_key": entry.object_key,
+            }
+            for entry in entries
+        ],
+    )
+    await connection.execute(
+        update(result_sets).where(result_sets.c.id == summary_set).values(status="ready")
+    )
     seeded.ids["summary_set"] = summary_set
     task_name = f"Task {uuid.uuid4().hex[:8]}"
     first_read = f"First read {uuid.uuid4().hex[:8]}"
@@ -1292,6 +1310,10 @@ GET_ROUTES = {
     ),
     "listAnnotations": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"
+    ),
+    "exportSlideObjects": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/slides/{a.ids['slide']}/export?result_set_id={a.ids['summary_set']}",
     ),
     "getAnnotation": Route(
         Exposure.TENANT,

@@ -1467,13 +1467,6 @@ export interface Evaluation {
   presets: PresetUse[];
 }
 
-export type ExportFormat = (typeof ExportFormat)[keyof typeof ExportFormat];
-
-export const ExportFormat = {
-  geojson: "geojson",
-  parfocal: "parfocal",
-} as const;
-
 export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
 
 export const ExportKind = {
@@ -4291,6 +4284,23 @@ export interface WorkspaceSettingsChange {
   locked?: string[];
 }
 
+export type ParfocalApiAnnotationExportsExportFormat =
+  (typeof ParfocalApiAnnotationExportsExportFormat)[keyof typeof ParfocalApiAnnotationExportsExportFormat];
+
+export const ParfocalApiAnnotationExportsExportFormat = {
+  geojson: "geojson",
+  flatgeobuf: "flatgeobuf",
+  parfocal: "parfocal",
+} as const;
+
+export type ParfocalApiReviewedExportExportFormat =
+  (typeof ParfocalApiReviewedExportExportFormat)[keyof typeof ParfocalApiReviewedExportExportFormat];
+
+export const ParfocalApiReviewedExportExportFormat = {
+  geojson: "geojson",
+  parfocal: "parfocal",
+} as const;
+
 export type ListProjectsParams = {
   archived?: boolean;
 };
@@ -4420,12 +4430,17 @@ export type GetReviewOrderParams = {
 };
 
 export type ExportReviewedLayerParams = {
-  format?: ExportFormat;
+  format?: ParfocalApiReviewedExportExportFormat;
   reviewer_id?: string | null;
   consensus?: boolean;
 };
 
 export type ExportReviewedLayer200 = { [key: string]: unknown };
+
+export type ExportSlideObjectsParams = {
+  format?: ParfocalApiAnnotationExportsExportFormat;
+  result_set_id?: string | null;
+};
 
 export type GetSlideNeighboursParams = {
   from: ListKind;
@@ -23501,6 +23516,234 @@ export function useExportReviewedLayer<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportReviewedLayerQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportSlideObjectsResponse200ApplicationGeoJson = {
+  data: Blob;
+  status: 200;
+};
+
+export type exportSlideObjectsResponse200ApplicationFlatgeobuf = {
+  data: Blob;
+  status: 200;
+};
+
+export type exportSlideObjectsResponse200ApplicationJson = {
+  data: Blob;
+  status: 200;
+};
+
+export type exportSlideObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportSlideObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportSlideObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportSlideObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportSlideObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportSlideObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportSlideObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportSlideObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportSlideObjectsResponseSuccess = (
+  | exportSlideObjectsResponse200ApplicationGeoJson
+  | exportSlideObjectsResponse200ApplicationFlatgeobuf
+  | exportSlideObjectsResponse200ApplicationJson
+) & {
+  headers: Headers;
+};
+export type exportSlideObjectsResponseError = (
+  | exportSlideObjectsResponse400
+  | exportSlideObjectsResponse401
+  | exportSlideObjectsResponse403
+  | exportSlideObjectsResponse404
+  | exportSlideObjectsResponse409
+  | exportSlideObjectsResponse422
+  | exportSlideObjectsResponse429
+  | exportSlideObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportSlideObjectsResponse =
+  | exportSlideObjectsResponseSuccess
+  | exportSlideObjectsResponseError;
+
+export const getExportSlideObjectsUrl = (slideId: string, params?: ExportSlideObjectsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/export?${stringifiedParams}`
+    : `/api/slides/${slideId}/export`;
+};
+
+/**
+ * @summary Export Slide Objects
+ */
+export const exportSlideObjects = async (
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportSlideObjectsResponse> => {
+  return apiFetch<exportSlideObjectsResponse>(getExportSlideObjectsUrl(slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportSlideObjectsQueryKey = (
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+) => {
+  return [`/api/slides/${slideId}/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportSlideObjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportSlideObjects>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportSlideObjectsQueryKey(slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportSlideObjects>>> = ({ signal }) =>
+    exportSlideObjects(slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportSlideObjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportSlideObjects>>
+>;
+export type ExportSlideObjectsQueryError = Problem;
+
+export function useExportSlideObjects<
+  TData = Awaited<ReturnType<typeof exportSlideObjects>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params: undefined | ExportSlideObjectsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportSlideObjects>>,
+          TError,
+          Awaited<ReturnType<typeof exportSlideObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportSlideObjects<
+  TData = Awaited<ReturnType<typeof exportSlideObjects>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportSlideObjects>>,
+          TError,
+          Awaited<ReturnType<typeof exportSlideObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportSlideObjects<
+  TData = Awaited<ReturnType<typeof exportSlideObjects>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Slide Objects
+ */
+
+export function useExportSlideObjects<
+  TData = Awaited<ReturnType<typeof exportSlideObjects>>,
+  TError = Problem,
+>(
+  slideId: string,
+  params?: ExportSlideObjectsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSlideObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportSlideObjectsQueryOptions(slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
