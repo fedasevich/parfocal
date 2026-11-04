@@ -192,3 +192,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0202](0202-v1-model-line-up-per-tier.md) | The v1 model line-up is PathoSAM AIS and HoVer-NeXt for nuclei, the MONAI CAMELYON model for tumor, and PathoSAM for interactive outlines, all non-commercial or unconfirmed | Accepted | 2026-11-03 |
 | [0227](0227-self-hosted-plex-with-optional-font-display.md) | IBM Plex is vendored into the tokens package, loads with font-display optional, and a source scan keeps every size on the type scale | Accepted | 2026-11-03 |
 | [0228](0228-queue-decisions-stored-beside-the-old-choice-and-look-again-reopens-decisions.md) | A queue decision keeps the old choice column beside the new answer, and Ask both to look again marks the reviewers' decisions reopened instead of deleting them | Accepted | 2026-11-03 |
+| [0229](0229-slide-camera-remembered-per-device.md) | A slide's camera is remembered on the device across visits | Accepted | 2026-11-04 |
+| [0230](0230-threads-on-any-slide-with-an-optional-task.md) | Comment threads live on any slide, and the task is optional | Accepted | 2026-11-04 |

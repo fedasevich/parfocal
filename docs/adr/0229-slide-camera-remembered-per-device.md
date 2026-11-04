@@ -1,4 +1,4 @@
-# XXXX. A slide's camera is remembered on the device across visits
+# 0229. A slide's camera is remembered on the device across visits
 
 - Date: 2026-11-04
 - Status: Accepted

@@ -1,4 +1,4 @@
-# XXXX. Comment threads live on any slide, and the task is optional
+# 0230. Comment threads live on any slide, and the task is optional
 
 - Date: 2026-11-04
 - Status: Accepted
