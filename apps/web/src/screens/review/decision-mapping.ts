@@ -104,7 +104,11 @@ export function rawOfDecision(
   return classes.find((item) => item.id === verdict.answer_class_id)?.name ?? verdict.answer;
 }
 
-export function countsAs(style: ReviewStyle, raw: string, object: ReviewObject | undefined): Count {
+export function countsAs(
+  style: ReviewStyle,
+  raw: string,
+  object: Pick<ReviewObject, "class_name"> | undefined,
+): Count {
   if (raw === "unsure") return "unsure";
   if (style.kind === "agree") return raw === "disagree" ? "disagree" : "agree";
   if (style.kind === "yesno") return raw === "yes" ? "agree" : "disagree";

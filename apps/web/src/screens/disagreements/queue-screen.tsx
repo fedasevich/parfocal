@@ -4,12 +4,14 @@ import {
   useGetDisagreementQueue,
   useGetProject,
   useGetReviewTask,
+  useListProjectClasses,
   useNudgeReviewer,
   useSendToAdjudicator,
   useUpdateQueuedObject,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { KeyValueList } from "@parfocal/ui/components/connect-model";
+import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import {
   EvidenceList,
@@ -33,20 +35,27 @@ import { useRouterLink } from "../../shell/router-link.tsx";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
+import { type ReviewStyle, toReviewStyle } from "../review/decision-mapping.ts";
+import { answersOf } from "../review/decision-style.ts";
 import type { Camera } from "../review/slide-still.tsx";
 import { SlideStill } from "../review/slide-still.tsx";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
 import {
-  type Answer,
-  answerText,
+  allClosed,
   answerTone,
-  answerWord,
   canSend,
   claimText,
+  countOf,
+  filterCounts,
+  filterRows,
   isClosed,
+  nextOpen,
+  type QueueFilter,
   rowLabel,
   rowTag,
   stillOf,
+  styledText,
+  styledWord,
 } from "./text.ts";
 
 export type QueueScene =
@@ -59,8 +68,6 @@ export type QueueScene =
   | "edited";
 
 const sentKeys = ["A1:T4", "A1:T5", "A1:T1·C145"];
-
-type Filter = "all" | "rev" | "ai";
 
 type SendDraft = { keys: string[]; excluded: string[] };
 
@@ -79,13 +86,23 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const project = okData(
     useGetProject(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,
   );
+  const classList = okData(
+    useListProjectClasses(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,
+  );
+  const style = toReviewStyle(task?.decision);
+  const classes = (classList ?? []).map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.colour,
+  }));
+  const look = { style, classes };
   const person = usePeople();
   const nameOf = (userId: string | null | undefined) => person(userId)?.name;
   const renderLink = useRouterLink();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useMockToast();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<QueueFilter>("all");
   const [selectedKey, setSelectedKey] = useState(firstSelected(scene));
   const [checked, setChecked] = useState<string[]>(
     scene === "selected" || scene === "sendadj" ? sentKeys : [],
@@ -112,18 +129,20 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
     setCamera(null);
   };
 
-  const decide = (target: QueueRow, raw: Answer) => {
+  const decide = (target: QueueRow, raw: string) => {
     const note = notes[target.key]?.trim() || null;
     update.mutate({
       taskId,
       slideId: target.slide_id,
       object: target.object,
-      data: { action: "decide", raw, note },
+      data: {
+        action: "decide",
+        raw,
+        counts_as: countOf(style, raw, target.ai.class_name),
+        note,
+      },
     });
-    const at = rows.indexOf(target);
-    const next = [...rows.slice(at + 1), ...rows.slice(0, at)].find(
-      (candidate) => !isClosed(candidate),
-    );
+    const next = nextOpen(rows, target);
     if (next) select(next.key);
   };
 
@@ -132,10 +151,10 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
       if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
       if (send || nudging || locked || !row || checked.length > 0) return;
       if (row.state === "with-adjudicator" || row.state === "adjudicated") return;
-      const raw = ({ k: "agree", x: "disagree", u: "unsure" } as const)[
-        event.key.toLowerCase() as "k" | "x" | "u"
-      ];
-      if (raw) {
+      const raw = answersOf(style, classes, { class_name: row.ai.class_name }).find(
+        (item) => item.key.toLowerCase() === event.key.toLowerCase(),
+      )?.raw;
+      if (raw !== undefined) {
         event.preventDefault();
         decide(row, raw);
       }
@@ -144,15 +163,13 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const nDiffer = rows.filter((item) => item.tag !== "bothai").length;
-  const shown = rows.filter(
-    (item) => filter === "all" || (filter === "ai") === (item.tag === "bothai"),
-  );
+  const counts = filterCounts(rows);
+  const shown = filterRows(rows, filter);
   const resolved = rows.filter((item) =>
     ["decided", "left-open", "adjudicated"].includes(item.state),
   ).length;
   const withAdjudicator = rows.filter((item) => item.state === "with-adjudicator").length;
-  const allClosed = rows.length > 0 && rows.every(isClosed);
+  const everyClosed = allClosed(rows);
   const lockedName = nameOf(locked?.user_id) ?? "A reviewer";
   const sub = locked
     ? `The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
@@ -239,9 +256,9 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 Preview the adjudicator view
               </Button>
               <Button
-                variant={allClosed ? "primary" : "default"}
+                variant={everyClosed ? "primary" : "default"}
                 title={
-                  allClosed
+                  everyClosed
                     ? "Every object is decided, left open or with the adjudicator"
                     : "Sign-off lists what is still open"
                 }
@@ -260,16 +277,16 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
             className="mb-2"
             value={filter}
             disabled={Boolean(locked)}
-            onValueChange={(value) => setFilter(value as Filter)}
+            onValueChange={(value) => setFilter(value as QueueFilter)}
             options={[
-              { value: "all", label: `All ${rows.length}` },
-              { value: "rev", label: `Reviewers differ ${nDiffer}` },
-              { value: "ai", label: `Both vs AI ${rows.length - nDiffer}` },
+              { value: "all", label: `All ${counts.all}` },
+              { value: "rev", label: `Reviewers differ ${counts.rev}` },
+              { value: "ai", label: `Both vs AI ${counts.ai}` },
             ]}
           />
           <QueueTable aria-label="Queued objects">
             {shown.map((item) => {
-              const tag = rowTag(item, nameOf);
+              const tag = rowTag(item, nameOf, look);
               return (
                 <QueueRowView
                   key={item.key}
@@ -329,7 +346,9 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       <StatusTag tone="accent">open again</StatusTag>
                     ) : (
                       <>
-                        <StatusTag tone={answerTone[answer.raw]}>{answerText(answer)}</StatusTag>
+                        <StatusTag tone={answerTone[countOf(style, answer.raw, row.ai.class_name)]}>
+                          {styledText(style, answer, classes, row.ai.class_name)}
+                        </StatusTag>
                         {answer.note ? <QuotedNote>{answer.note}</QuotedNote> : null}
                       </>
                     )}
@@ -338,8 +357,10 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 <EvidenceRow icon="check" title="Decision">
                   {row.decision ? (
                     <>
-                      <StatusTag tone={answerTone[row.decision.raw]}>
-                        {answerWord[row.decision.raw]}
+                      <StatusTag
+                        tone={answerTone[countOf(style, row.decision.raw, row.ai.class_name)]}
+                      >
+                        {styledWord(style, row.decision.raw, classes, row.ai.class_name)}
                       </StatusTag>
                       {row.state === "adjudicated" ? (
                         <small className="text-caption text-fg-dim">
@@ -387,6 +408,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 <DecidePanel
                   row={row}
                   rows={rows}
+                  look={look}
                   note={notes[row.key] ?? row.decision?.note ?? ""}
                   nameOf={nameOf}
                   person={person}
@@ -475,12 +497,13 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
 type DecidePanelProps = {
   row: QueueRow;
   rows: QueueRow[];
+  look: { style: ReviewStyle; classes: ProjectClass[] };
   note: string;
   reviewerIds: string[];
   nameOf: (userId: string | null | undefined) => string | undefined;
   person: ReturnType<typeof usePeople>;
   onNote: (text: string) => void;
-  onDecide: (raw: Answer) => void;
+  onDecide: (raw: string) => void;
   onLeaveOpen: () => void;
   onSend: (keys: string[], excluded: string[]) => void;
   onEdit: () => void;
@@ -494,6 +517,7 @@ const linkClass =
 function DecidePanel({
   row,
   rows,
+  look,
   note,
   reviewerIds,
   nameOf,
@@ -506,7 +530,7 @@ function DecidePanel({
   onLookAgain,
   onKeep,
 }: DecidePanelProps) {
-  const tag = rowTag(row, nameOf);
+  const tag = rowTag(row, nameOf, look);
   const label = rowLabel(row);
   const head = (
     <div className="flex items-center justify-between gap-2">
@@ -546,7 +570,11 @@ function DecidePanel({
           tight
           rows={[
             { icon: "user", label: "Decided by", value: nameOf(row.decision.by_user_id) ?? "" },
-            { icon: "check", label: "Decision", value: answerWord[row.decision.raw] },
+            {
+              icon: "check",
+              label: "Decision",
+              value: styledWord(look.style, row.decision.raw, look.classes, row.ai.class_name),
+            },
             {
               icon: "clock",
               label: "When",
@@ -594,12 +622,17 @@ function DecidePanel({
         </div>
       ) : null}
       <DecisionButtons
-        decisionStyle="agree"
+        decisionStyle={look.style.kind}
+        classes={look.classes}
+        aiClass={row.ai.class_name}
+        range={{ agreeFrom: look.style.agreeFrom, disagreeTo: look.style.disagreeTo }}
         label={`Your decision on ${row.object}`}
         value={row.state === "decided" ? row.decision?.raw : undefined}
-        onValueChange={(raw) => onDecide(raw as Answer)}
+        onValueChange={onDecide}
       />
-      <p className="m-0 text-body-sm text-fg-dim">{mapping}</p>
+      {look.style.kind === "agree" ? (
+        <p className="m-0 text-body-sm text-fg-dim">{mapping}</p>
+      ) : null}
       {row.state === "declined" && row.adjudicator ? (
         <div className="grid gap-2 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">
           <Person {...personProp(person(row.adjudicator.user_id))} size={20} />

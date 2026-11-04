@@ -22,7 +22,7 @@ import {
   ReportSheet,
 } from "@parfocal/ui/components/evaluation-report";
 import type { ReactNode } from "react";
-import { answerWord } from "../disagreements/text.ts";
+import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import {
@@ -385,7 +385,7 @@ function Appendix({
               row.object,
               row.slide_label,
               nameOf(answer.user_id),
-              answerWord[answer.raw],
+              answerWord[answerOf(answer.raw)],
             ]),
           )}
         />
@@ -414,11 +414,11 @@ function Appendix({
               <td>{row.slide_label}</td>
               {report.reviewer_ids.map((id) => {
                 const answer = row.answers.find((item) => item.user_id === id);
-                return <td key={id}>{answer ? answerWord[answer.raw] : ""}</td>;
+                return <td key={id}>{answer ? answerWord[answerOf(answer.raw)] : ""}</td>;
               })}
               <td>
                 {row.decision
-                  ? answerWord[row.decision.raw]
+                  ? answerWord[answerOf(row.decision.raw)]
                   : row.state === "left-open"
                     ? "Left open"
                     : "Open"}

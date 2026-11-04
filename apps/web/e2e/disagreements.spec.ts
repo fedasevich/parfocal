@@ -149,6 +149,39 @@ test("deciding a row moves on, and three rows go to Anna", async ({ page }) => {
   );
 });
 
+test("a queue resolves with decisions, three objects sent to Anna and two left open", async ({
+  page,
+}) => {
+  await page.goto(`${base}/disagreements?scene=queue`);
+  const decide = page.getByRole("complementary", { name: "Decide" });
+  const signOff = page.getByRole("button", { name: "Go to sign-off" });
+  await expect(signOff).toHaveAttribute("title", "Sign-off lists what is still open");
+  await decide.getByRole("button", { name: /Agree/ }).click();
+  await expect(page.getByText("1 resolved")).toBeVisible();
+  for (const label of ["T4 on A1", "T5 on A1", "T1·C145 on A1"]) {
+    await page.getByRole("checkbox", { name: `Select ${label}` }).click();
+  }
+  await decide.getByRole("button", { name: "Send to an adjudicator" }).click();
+  const modal = page.getByRole("dialog", { name: "Send to an adjudicator" });
+  await modal.getByRole("combobox").fill("Anna");
+  await modal.getByRole("option", { name: /Anna Kopecká/ }).click();
+  await modal.getByRole("button", { name: /Send 3 objects/ }).click();
+  await expect(modal).toHaveCount(0);
+  await expect(page.getByText("3 with the adjudicator")).toBeVisible();
+  await page.getByRole("button", { name: /^T1·C212/ }).click();
+  await decide.getByRole("button", { name: "Leave open" }).click();
+  await page.getByRole("button", { name: /^T1 tumor_031/ }).click();
+  await decide.getByRole("button", { name: "Leave open" }).click();
+  await expect(signOff).toHaveAttribute("title", "Sign-off lists what is still open");
+  await page.getByRole("button", { name: /^T2·C88/ }).click();
+  await decide.getByRole("button", { name: /Disagree/ }).click();
+  await expect(signOff).toHaveAttribute(
+    "title",
+    "Every object is decided, left open or with the adjudicator",
+  );
+  await expect(page.getByText("4 resolved · 3 with the adjudicator")).toBeVisible();
+});
+
 test("the adjudicator decides all three and goes back to My work", async ({ page }) => {
   await page.goto(`${base}/disagreements?scene=adjudicate`);
   await expect(page.getByText("Reviewer A", { exact: true })).toBeVisible();

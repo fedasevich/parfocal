@@ -28,7 +28,7 @@ const aiClaimSchema = z.object({ class_name: z.string(), score: z.number() });
 
 export const queueAnswerSchema = z.object({
   user_id: z.string(),
-  raw: answer,
+  raw: z.string(),
   reason: z.string().nullable(),
   note: z.string().nullable(),
 });
@@ -48,7 +48,7 @@ export const queueRowSchema = z.object({
   state: z.enum(QueueRowState),
   decision: z
     .object({
-      raw: answer,
+      raw: z.string(),
       note: z.string().nullable(),
       by_user_id: z.string(),
       at: z.iso.datetime({ offset: true }),
@@ -103,7 +103,8 @@ export const useGetDisagreementQueue = <TData = getDisagreementQueueResponse, TE
 
 export type QueuedObjectUpdate = {
   action: (typeof QueueAction)[keyof typeof QueueAction];
-  raw?: (typeof QueueAnswer)[keyof typeof QueueAnswer];
+  raw?: string;
+  counts_as?: (typeof QueueAnswer)[keyof typeof QueueAnswer];
   note?: string | null;
 };
 

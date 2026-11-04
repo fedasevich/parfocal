@@ -1,4 +1,6 @@
 import type { QueueAnswerRecord, QueueRow } from "@parfocal/api-client";
+import { answersFor, type ProjectClass } from "@parfocal/ui/lib/decision-answers";
+import { countsAs, type ReviewStyle } from "../review/decision-mapping.ts";
 import { cellShapes, regionShapes } from "../review/slide-geometry.ts";
 import type { StillView } from "../review/slide-still.tsx";
 
@@ -12,11 +14,14 @@ export const answerWord: Record<Answer, string> = {
   unsure: "Not sure",
 };
 
+export const answerOf = (raw: string): Answer =>
+  raw === "agree" || raw === "disagree" ? raw : "unsure";
+
 export const answerTone: Record<Answer, Tone> = { agree: "ok", disagree: "bad", unsure: "warn" };
 
 const shortReason = (reason: string) => reason.replace(/^Need a /, "").toLowerCase();
 
-export const answerText = (answer: Pick<QueueAnswerRecord, "raw" | "reason">) =>
+export const answerText = (answer: { raw: Answer; reason: string | null }) =>
   `${answerWord[answer.raw]}${answer.reason ? ` · ${shortReason(answer.reason)}` : ""}`;
 
 export const tagText: Record<QueueRow["tag"], string> = {
@@ -36,15 +41,19 @@ const firstName = (name: string | undefined) => name?.split(" ")[0] ?? "";
 export function rowTag(
   row: QueueRow,
   nameOf: (userId: string | null | undefined) => string | undefined,
+  look: { style: ReviewStyle; classes: ProjectClass[] },
 ): { label: string; tone: Tone } {
   const who = nameOf(row.adjudicator?.user_id) ?? "the adjudicator";
   if (row.state === "decided" && row.decision) {
-    return { label: answerWord[row.decision.raw], tone: answerTone[row.decision.raw] };
+    return {
+      label: styledWord(look.style, row.decision.raw, look.classes, row.ai.class_name),
+      tone: answerTone[countOf(look.style, row.decision.raw, row.ai.class_name)],
+    };
   }
   if (row.state === "adjudicated" && row.decision) {
     return {
-      label: `${answerWord[row.decision.raw]} · ${firstName(who)}`,
-      tone: answerTone[row.decision.raw],
+      label: `${styledWord(look.style, row.decision.raw, look.classes, row.ai.class_name)} · ${firstName(who)}`,
+      tone: answerTone[countOf(look.style, row.decision.raw, row.ai.class_name)],
     };
   }
   if (row.state === "left-open") return { label: "left open", tone: "neutral" };
@@ -90,4 +99,47 @@ export function adjudicatorWhy(a: Anonymous, b: Anonymous) {
         : "Neither reviewer is sure";
   }
   return `One reviewer ${verb[a.raw]}, the other ${verb[b.raw]}`;
+}
+
+export function countOf(style: ReviewStyle, raw: string, aiClass: string): Answer {
+  return countsAs(style, raw, { class_name: aiClass });
+}
+
+export function styledWord(
+  style: ReviewStyle,
+  raw: string,
+  classes: ProjectClass[],
+  aiClass: string,
+): string {
+  const found = answersFor(style.kind, classes).find((item) => item.raw === raw);
+  if (found === undefined) return answerWord[countOf(style, raw, aiClass)];
+  return style.kind === "certainty" ? `${found.raw} · ${found.label}` : found.label;
+}
+
+export function styledText(
+  style: ReviewStyle,
+  answer: Pick<QueueAnswerRecord, "raw" | "reason">,
+  classes: ProjectClass[],
+  aiClass: string,
+): string {
+  const word = styledWord(style, answer.raw, classes, aiClass);
+  return `${word}${answer.reason ? ` · ${shortReason(answer.reason)}` : ""}`;
+}
+
+export type QueueFilter = "all" | "rev" | "ai";
+
+export const filterRows = (rows: QueueRow[], filter: QueueFilter) =>
+  rows.filter((item) => filter === "all" || (filter === "ai") === (item.tag === "bothai"));
+
+export const filterCounts = (rows: QueueRow[]) => ({
+  all: rows.length,
+  rev: rows.filter((item) => item.tag !== "bothai").length,
+  ai: rows.filter((item) => item.tag === "bothai").length,
+});
+
+export const allClosed = (rows: QueueRow[]) => rows.length > 0 && rows.every(isClosed);
+
+export function nextOpen(rows: QueueRow[], from: QueueRow): QueueRow | undefined {
+  const at = rows.indexOf(from);
+  return [...rows.slice(at + 1), ...rows.slice(0, at)].find((candidate) => !isClosed(candidate));
 }

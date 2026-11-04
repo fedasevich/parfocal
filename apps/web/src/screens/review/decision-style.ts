@@ -15,7 +15,7 @@ export const showsClaim = (style: ReviewStyle) =>
 export function answersOf(
   style: ReviewStyle,
   classes: ProjectClass[],
-  object: ReviewObject | undefined,
+  object: Pick<ReviewObject, "class_name"> | undefined,
 ): DecisionAnswer[] {
   return answersFor(style.kind, classes, object?.class_name, {
     agreeFrom: style.agreeFrom,
