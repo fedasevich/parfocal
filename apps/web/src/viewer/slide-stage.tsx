@@ -20,6 +20,7 @@ import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
+import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
@@ -45,25 +46,37 @@ type Phase =
   | { readonly state: "ready"; readonly fittedMs: number }
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
-type ViewerTool =
-  | "hand"
-  | "ruler"
-  | "select"
-  | "polygon"
-  | "freehand"
-  | "rectangle"
-  | "ellipse"
-  | "marker";
+type ViewerTool = string;
 
-const toolOfAction: Readonly<Record<string, ViewerTool>> = {
-  tselect: "select",
-  truler: "ruler",
-  tpoly: "polygon",
-  tfree: "freehand",
-  trect: "rectangle",
-  tellipse: "ellipse",
-  tmarker: "marker",
+const liveTools = new Set([
+  "ruler",
+  "select",
+  "polygon",
+  "freehand",
+  "rectangle",
+  "ellipse",
+  "marker",
+]);
+
+const toolOfAction: Readonly<Record<string, ViewerTool>> = Object.fromEntries(
+  annotateRail
+    .flat()
+    .flatMap((item) => (item.action === undefined ? [] : [[item.action, item.tool]])),
+);
+
+const railActions = annotateRail.flatMap((group) =>
+  group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
+);
+
+const toolNameOfRail: Readonly<Record<string, ViewerTool>> = {
+  poly: "polygon",
+  free: "freehand",
+  rect: "rectangle",
+  marker: "marker",
+  ellipse: "ellipse",
 };
+
+const stageToolOf = (railTool: string): ViewerTool => toolNameOfRail[railTool] ?? railTool;
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
@@ -211,17 +224,28 @@ function OpenedSlide({
     setHostNode(node);
   }, []);
   const [tool, setTool] = useState<ViewerTool>("hand");
-  const toolBindings = useBindings(
-    ["annotate"],
-    ["truler", "tselect", "tpoly", "tfree", "trect", "tellipse", "tmarker"],
-  );
+  const toolBindings = useBindings(["annotate"], railActions);
   const onToolKey = useCallback(({ phase, action }: { phase: string; action: string }) => {
-    const pressed = toolOfAction[action];
-    if (phase !== "press" || pressed === undefined) return;
+    const railTool = toolOfAction[action];
+    if (phase !== "press" || railTool === undefined) return;
+    const pressed = stageToolOf(railTool);
+    if (pressed === "hand") {
+      setTool("hand");
+      return;
+    }
     setTool((current) => (current === pressed ? "hand" : pressed));
   }, []);
   useHotkeys(toolBindings, onToolKey);
   const leaveTool = useCallback(() => setTool("hand"), []);
+  const waiting = !liveTools.has(tool) && tool !== "hand";
+  useEffect(() => {
+    if (!waiting) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTool("hand");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [waiting]);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
@@ -400,55 +424,28 @@ function OpenedSlide({
             onLeave={leaveTool}
           />
           <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
-            <ToolRailButton
-              icon="select"
-              label="Select"
-              action="tselect"
-              pressed={tool === "select"}
-              onPressedChange={(on) => setTool(on ? "select" : "hand")}
-            />
-            <ToolRailButton
-              icon="poly"
-              label="Polygon"
-              action="tpoly"
-              pressed={tool === "polygon"}
-              onPressedChange={(on) => setTool(on ? "polygon" : "hand")}
-            />
-            <ToolRailButton
-              icon="free"
-              label="Freehand"
-              action="tfree"
-              pressed={tool === "freehand"}
-              onPressedChange={(on) => setTool(on ? "freehand" : "hand")}
-            />
-            <ToolRailButton
-              icon="rect"
-              label="Rectangle"
-              action="trect"
-              pressed={tool === "rectangle"}
-              onPressedChange={(on) => setTool(on ? "rectangle" : "hand")}
-            />
-            <ToolRailButton
-              icon="ellipse"
-              label="Ellipse"
-              action="tellipse"
-              pressed={tool === "ellipse"}
-              onPressedChange={(on) => setTool(on ? "ellipse" : "hand")}
-            />
-            <ToolRailButton
-              icon="marker"
-              label="Count marker"
-              action="tmarker"
-              pressed={tool === "marker"}
-              onPressedChange={(on) => setTool(on ? "marker" : "hand")}
-            />
-            <ToolRailButton
-              icon="ruler"
-              label="Ruler"
-              action="truler"
-              pressed={tool === "ruler"}
-              onPressedChange={(on) => setTool(on ? "ruler" : "hand")}
-            />
+            {annotateRail.map((group) => (
+              <div
+                key={group.map((item) => item.tool).join("-")}
+                className="flex flex-col border-b border-line last:border-b-0"
+              >
+                {group.map((item) => {
+                  const stageTool = stageToolOf(item.tool);
+                  return (
+                    <ToolRailButton
+                      key={item.tool}
+                      icon={item.icon}
+                      label={item.label}
+                      ai={item.ai ?? false}
+                      {...(item.action === undefined ? {} : { action: item.action })}
+                      data-tool={item.tool}
+                      pressed={tool === stageTool}
+                      onPressedChange={(on) => setTool(on ? stageTool : "hand")}
+                    />
+                  );
+                })}
+              </div>
+            ))}
           </div>
           <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
             {tool === "marker" || markersOf(annotations).length > 0 ? (
