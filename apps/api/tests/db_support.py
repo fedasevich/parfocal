@@ -109,6 +109,10 @@ class ApiAs:
     def principal(self) -> Principal | None:
         return self.acting.principal
 
+    @principal.setter
+    def principal(self, principal: Principal | None) -> None:
+        self.acting.principal = principal
+
     def __call__(self, principal: Principal) -> TestClient:
         self.acting.principal = principal
         return self.client
