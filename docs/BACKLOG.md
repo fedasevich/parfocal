@@ -2232,7 +2232,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on NAV-012, ANN-004.
   Size: S.
 
-- [ ] NAV-014 · Area navigation in the engine viewer
+- [x] NAV-014 · Area navigation in the engine viewer
   NAV-004 (area list and go to area) built the list, G then n, [ and ], row clicks and visited marks on the prototype full viewer. On the live route the area keys do not reach the engine. Fly to each area's bounds through the engine, which records view history itself, and mark visits from the engine's magnification.
   Done when a browser test on a real slide steps through the areas with ] and [, marks one visited past 10x and goes back with Alt+Left.
   Depends on NAV-004.
