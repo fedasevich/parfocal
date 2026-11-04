@@ -2608,6 +2608,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-030, ANN-002, ANN-005, ANN-008, ANN-021, SHELL-004, TASK-014. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: L.
 
+
+- [ ] ANN-032 · Check state on AI objects
+  Each AI object on an annotate slide is unchecked, confirmed, edited or deleted. One key confirms the selected object, which keeps its geometry and gets the origin `ai-confirmed`, and editing or deleting it also counts as checked. The slide shows how many objects in the check scope are checked.
+  Done when API tests cover confirm, undo of a confirm and the counts, and component tests cover the key, the mark on a confirmed object and the progress line.
+  Depends on ANN-030, TASK-015. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
+  Size: M.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
@@ -4161,9 +4167,9 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Display locks, such as confidence hidden for a round, also keep a reviewer blind to part of the AI. They are TASK-011 (display defaults, locks and presets, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
 
 - [ ] TASK-005 · New review task stepper
-  A flow page that starts with the kind, review AI results or annotate, then Slides, Reviewers, What to check (review tasks only), How it runs, and Send. For an annotate task, Slides may include slides with no result set and How it runs holds the blind first switch (COLLAB-017), where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
+  A flow page that starts with the kind, review AI results or annotate, then Slides, Reviewers, What to check (review tasks only), How it runs, and Send. For an annotate task, the first step offers the presets of TASK-015, Slides may include slides with no result set, What to check holds the check options, and How it runs holds the blind first switch (COLLAB-017), where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
   Done when component tests cover each step, the estimate, each decision style with its Counts as line and a refused mapping with no agree or no disagree answer, and E2E creates a task from the project page and from the end of an upload.
-  Depends on TASK-001, TASK-013, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
+  Depends on TASK-001, TASK-013, TASK-015, DS-020, DS-022, GUIDE-015. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
   Size: L.
 
 - [x] TASK-006 · Invitations to a task
@@ -4211,17 +4217,23 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on EVAL-007, GUIDE-012. Refs [ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md) (study templates as workspace rows).
 
 - [ ] TASK-013 · Annotate task kind
-  A task is `review` (the default) or `annotate` ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), annotate tasks on one shared layer). An annotate task pins one ready result set per slide or none, takes the scope whole slide, snapshots the project classes, stores no review order and refuses decisions, opinion-form answers per object, review edits and the queue with `not-a-review-task`. Ready follows the slide's ingest status. Removing a class that task annotations use is refused.
+  A task is `review` (the default) or `annotate` ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), annotate tasks on one shared layer). An annotate task pins one ready result set per slide or none, takes no scope or the check options of TASK-015, snapshots the project classes, stores no review order and refuses decisions, opinion-form answers per object, review edits and the queue with `not-a-review-task`. Ready follows the slide's ingest status. Removing a class that task annotations use is refused.
   Done when API tests create an annotate task on slides with no result set and with one, refuse a decision in it, derive Ready from the slide alone, list old tasks as `review`, refuse deleting a used class, and the isolation test covers the new columns.
   Depends on TASK-001, PROJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
 - [ ] TASK-014 · Check and sign off an annotate slide
-  Each assigned expert marks a slide checked, or checked with "nothing to mark" when it is empty, and can uncheck it until sign-off. The task owner signs a slide off once every assigned expert has checked it, with a warning for open threads (COLLAB-012). After sign-off the shared layer is locked, and a change by the owner goes to the change log (ADJ-005).
+  Each assigned expert marks a slide checked, or checked with "nothing to mark" when it is empty, and can uncheck it until sign-off. The task owner signs a slide off once every assigned expert has checked it and, when the task's sign-off rule asks for it, every AI object in the check scope is checked (TASK-015), with a warning for open threads (COLLAB-012). After sign-off the shared layer is locked, and a change by the owner goes to the change log (ADJ-005).
   Done when API tests cover checking, nothing to mark, unchecking, a refused sign-off with an unchecked expert, sign-off, a refused edit after it and an owner change with its log entry, and E2E checks two slides and signs one off.
   Depends on TASK-013, ANN-030, ADJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
+
+- [ ] TASK-015 · Check options and presets on annotate tasks
+  An annotate task stores its check options ([ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md), check options and presets on annotate tasks): a check scope from the TASK-012 scope kinds, the check order (least sure first or by position), the sign-off rule (every object in the scope checked, or only a warning) and the export of unchecked AI objects (left out by default, or included as `ai-unchecked`). Objects that a model run inside the task adds join the scope as they land. The review order job (GUIDE-013) runs for tasks with a check scope. The presets "Annotate by hand", "Check a whole-slide run", "Check a sample", "Fix AI on selected areas" and "Mixed" fill in the options.
+  Done when API tests create a task from each preset, change an option after a preset, store the least sure first order for a check scope, add the objects of a new run to the scope, and refuse sign-off with an unchecked object when the rule requires it.
+  Depends on TASK-013, TASK-012, GUIDE-013. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
+  Size: M.
 ## 44 GUIDE · Decisions, guided review and the opinion form
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
@@ -4337,6 +4349,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 
 
 ---
+
+- [ ] GUIDE-019 · Guided check in Annotate
+  Steps through the AI objects in an annotate task's check scope in the task's order, least sure first by default, inside the Annotate workspace. Confirm, fix and delete sit on keys, and the drawing and one-click tools stay at hand for what the AI missed. Objects that a running model adds join the queue.
+  Done when E2E checks a slide by keyboard only in least sure first order, fixes one object and draws a missed one, and component tests cover the queue growing during a run.
+  Depends on ANN-032, ANN-031, GUIDE-002. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
+  Size: M.
 
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
@@ -4478,15 +4496,15 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 ---
 
 - [ ] EVAL-013 · How the experts changed the AI
-  For an annotate task with result sets, per slide and class: AI objects kept, edited and deleted, objects added, and by whom, with totals, in the evaluation API and as report blocks.
+  For an annotate task with result sets, per slide and class: AI objects confirmed, edited, deleted and left unchecked, objects added, and by whom, with totals, in the evaluation API and as report blocks.
   Done when unit tests reproduce hand-counted values on a fixture task with two experts and three classes, including a slide with no result set.
-  Depends on ANN-030, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Depends on ANN-030, ANN-032, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
 - [ ] EVAL-014 · Training dataset export
-  Exports the signed-off slides of an annotate task as GeoJSON per slide, each object with its class name, key and colour, origin, pseudonymous author letter and full ID, in the form QuPath reads, plus a manifest with the slides, microns per pixel, level-0 sizes, the class snapshot, the annotators, the sign-off and a checksum per file. AI objects nobody deleted are exported with the origin `ai`.
+  Exports the signed-off slides of an annotate task as GeoJSON per slide, each object with its class name, key and colour, origin, pseudonymous author letter and full ID, in the form QuPath reads, plus a manifest with the slides, microns per pixel, level-0 sizes, the class snapshot, the annotators, the sign-off and a checksum per file. Origins are `human`, `ai-confirmed` and `ai-edited`. Unchecked AI objects are left out unless the task includes them as `ai-unchecked` ({A}), and the manifest records the check options and how many were left out.
   Done when round-trip tests re-import every GeoJSON file with no loss, a schema test validates the manifest, and a test opens an exported file in QuPath's GeoJSON reader or a fixture of its format.
-  Depends on TASK-014, ANN-024. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
+  Depends on TASK-014, ANN-024, ANN-032. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
 - [ ] EVAL-015 · Patch and mask export
@@ -4540,7 +4558,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 ---
 
 - [ ] JOBS-007 · Run a model on a selection in Annotate
-  In the Annotate workspace the selection or the current view can be sent to a model run (JOBS-001 already takes both scopes). The result streams onto the slide, and in an annotate task its objects are AI objects the experts can fix in the shared layer.
+  In the Annotate workspace the selection or the current view can be sent to a model run (JOBS-001 already takes both scopes). The result streams onto the slide, and in an annotate task its objects are AI objects the experts can fix in the shared layer, and they join the task's check scope (TASK-015).
   Done when component tests cover the selection and view scopes from the Annotate workspace, and E2E runs a model on a drawn selection and fixes one of its objects.
   Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.
   Size: M.
