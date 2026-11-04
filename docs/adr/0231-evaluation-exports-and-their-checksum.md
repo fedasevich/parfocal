@@ -1,7 +1,7 @@
 # 0231. Evaluation exports are rendered on request and carry a checksum of the evaluation JSON
 
 - Date: 2026-11-04
-- Status: Accepted
+- Status: Proposed
 - Deciders: Yurii Fedas (standing approval)
 - Backlog: EVAL-003 (exports), changes ADR 0083 until an export worker exists, ADJ-004 (sign-off) and EVAL-008 (report from template blocks) build on it
 

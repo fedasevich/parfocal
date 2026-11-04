@@ -194,3 +194,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0228](0228-queue-decisions-stored-beside-the-old-choice-and-look-again-reopens-decisions.md) | A queue decision keeps the old choice column beside the new answer, and Ask both to look again marks the reviewers' decisions reopened instead of deleting them | Accepted | 2026-11-03 |
 | [0229](0229-slide-camera-remembered-per-device.md) | A slide's camera is remembered on the device across visits | Accepted | 2026-11-04 |
 | [0230](0230-threads-on-any-slide-with-an-optional-task.md) | Comment threads live on any slide, and the task is optional | Accepted | 2026-11-04 |
+| [0231](0231-evaluation-exports-and-their-checksum.md) | Evaluation exports are rendered on request and carry a checksum of the evaluation JSON | Proposed | 2026-11-04 |
+| [0232](0232-upload-wizard-sorts-dropped-files-in-the-browser-first.md) | The upload wizard sorts dropped files in the browser first and the server confirms | Proposed | 2026-11-04 |

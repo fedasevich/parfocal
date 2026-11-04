@@ -1,7 +1,7 @@
-# 0231. The upload wizard sorts dropped files in the browser first and the server confirms
+# 0232. The upload wizard sorts dropped files in the browser first and the server confirms
 
 - Date: 2026-11-04
-- Status: Accepted
+- Status: Proposed
 - Deciders: Yurii Fedas
 - Backlog: INGEST-021 (upload wizard with slides and results). Touches CASES-024 (sorting dropped files into cases), RSET-004 (pairing results with slides), INGEST-022 (per-file problems in the Check step) and INGEST-024 (upload progress with steps per slide)
 
