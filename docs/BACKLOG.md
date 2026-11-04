@@ -2412,7 +2412,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-014.
   Size: S.
 
-- [ ] REVIEW-024 · Model warnings on the full viewer
+- [x] REVIEW-024 · Model warnings on the full viewer
   REVIEW-023 (model warnings in the inspector) built `ModelWarningsBlock`, but no screen has the typer metadata (calibration, test set accuracy and shares, validated sites) or the personal `model_warnings` setting to pass in. Add the metadata to the fake result set and the API contract, call `slideStatistics` on the slide's cells, and put the block under AiSays in full-viewer.tsx, gated by `model_warnings`.
   Give the fake typers calibration evidence too, because without it the Word confidence preset (preset 3 on task RT-14) falls back to percent since REVIEW-022.
   Done when a component test shows the block on a slide whose typer trips a rule and hides it when the setting is off.
