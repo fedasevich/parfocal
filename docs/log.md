@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- TASK-011 (display defaults, locks and presets) stores a task's display defaults and up to five reasoned locks from its study template, reviewer presets and per-task choice (migration 0085), refuses locked changes with display-setting-locked, stamps the preset on each decision and counts presets in the evaluation. ADR 0233 records the preset stamped on the server. The web still uses the getTaskDisplay draft until VIZ-007 moves to /my-display.
 - VIEW-051 (triangulate off the main thread) added createPolygonBatchInWorker with transferred buffers. A 1M polygon batch drops from one 1.3 s long task to a longest main-thread gap of 8.7 to 24.5 ms with identical pixels, though one loaded run hit 74 ms. Nothing calls it yet, so the nucleus result loading should switch to it.
 - WL-013 (hide names) rewrites API responses while Initials only is on: display names and known full names in free text become initials and emails keep only initials and domain, through setResponseTransform in the api-client fetcher. hide-names.spec.ts checks Team, comments, Home, My work and admin People. The toggle still resets on reload and patient names keep their own setting.
 - FOUND-029 (first-page bundle headroom) moved the command palette body and the session lock screen behind lazy imports, so the first page fell from 349,999 to 337,624 gzip bytes with 12,376 spare under the unchanged budget.

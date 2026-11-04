@@ -4141,7 +4141,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: M.
 
-- [ ] TASK-011 · Display defaults, locks and presets
+- [x] TASK-011 · Display defaults, locks and presets
   A task holds display defaults preset by its study template and changed in the New review task flow: draw as, width, opacity, colour by, ID labels, confidence as a number, a word, a colour or hidden, the heatmap, the score cutoff, the other result sets, the order, the zoom around the object, moving on by itself and where the buttons sit. The task may lock confidence, the heatmap, the score cutoff, the other result sets and the order, each with a reason of 5 to 120 characters, and the API refuses a reviewer's change to a locked value. A reviewer saves presets with a name of 1 to 40 characters, unique among their presets, for one task or for all their tasks. Every decision stores the preset in force, the task default or a preset's name, and the evaluation returns who used which preset on how many objects for the report's Methods block and its Preset column ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when API tests cover the defaults from two templates, each lockable setting with and without a reason, a refused change to a locked value, saving, renaming and deleting presets with a refused duplicate name, the preset stored with a decision, and the preset counts in the evaluation, with isolation and audit.
   Depends on TASK-001, EVAL-007, GUIDE-015. Refs mock: task/locks, mock: layers/locked, mock: layers/preset, doc 44.
