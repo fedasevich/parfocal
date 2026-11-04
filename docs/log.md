@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-04
 
+- OBJ-005 (ID labels) CI fixes: the inspector side panel body now scrolls in the shared ScrollArea for axe, slide progress queries wait for real IDs, and Vite runs with --no-turbo-fast-api-calls after a V8 crash on CI (unproven). TODO: the Linux goldens for viv-overlay-id-labels and viv-overlay-stack, which depend on the runner's monospace font.
 - LAB-000 (lab research check) ticked: the decisions agent read POC doc 34 with the owner's leave, it matched, and ADR 0189 (developer drawer) is accepted.
 - SEC-018 (incident response runbook) ticked on the owner's answer 42 of 2026-11-04: standard defaults (24 hours to workspaces, 72 hours to the authority, the owner as lead), a paper tabletop recorded, ADR 0186 accepted. TODO: a private place for full breach records.
 - Applied the owner's answers of 2026-11-04 (SEC-021, GDPR documents on generic defaults): six ADRs accepted, two new ADRs (threads on any slide, camera kept per device), seven new tasks, GDPR and incident defaults with a paper tabletop, and the zone and type wording reviewed in ADR 0194 in place of a pathologist.
