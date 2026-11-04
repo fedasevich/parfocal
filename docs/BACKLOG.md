@@ -2090,7 +2090,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs kit W19.
   Size: M.
 
-- [ ] CASE-016 · Systematic scan on the real tissue mask
+- [x] CASE-016 · Systematic scan on the real tissue mask
   CASE-006 (AI state: no tumor flagged) steps a 10x field through a tissue mask traced from the mock `overview.jpg` on a 50 pixel grid (apps/web/src/screens/review/tissue-mask.ts). Serve the slide's real tissue mask from the API (VIEW-049 delivers the tissue box) and size the 10x field from the real viewport.
   Done when a browser test on a real slide steps the scan with ] and reaches full coverage of the stored mask.
   Depends on CASE-006, VIEW-049.
