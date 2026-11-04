@@ -1,8 +1,8 @@
 # 0197. The Annotate key map stays as the kit has it, and the client does geometry with Clipper2, earcut through math.gl, flatbush and a small planar module of its own
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Yurii Fedas
+- Status: Accepted
+- Deciders: Yurii Fedas (accepted 2026-11-04, M stays only for the count marker and every key can be rebound in CMD-006)
 - Backlog: ANN-000 (research check). Touches ANN-002 (annotate rail), ANN-006 (freehand), ANN-010 (brush), ANN-016 (grouping rules), ANN-018 (hit testing at scale) and ANN-023 (GeoJSON import).
 
 ## Context

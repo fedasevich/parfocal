@@ -1,8 +1,8 @@
 # 0185. The smart minimap is one XState machine with a size mode, a fade flag and a peek overlay, placed by scoring the four corners
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Parfocal agents, owner to review
+- Status: Accepted
+- Deciders: Parfocal agents, owner (accepted 2026-11-04 with the three answers below)
 - Backlog: NAV-000 (research check for navigation aids). Sets the target for NAV-006 (smart minimap state machine), NAV-007 (minimap placement scoring), NAV-008 (minimap content), NAV-009 (minimap settings) and NAV-010 (whole-slide peek).
 
 ## Context
@@ -39,7 +39,7 @@ One XState machine, `minimapMachine`, with three parallel regions. The kit edge 
 | `locator` | 92 px, no header or footer, no badges | the current area | focus mode (one-cell review) is entered from `area` |
 | `travel` | 250 px, header and footer, route line to the target | whole slide | G then n, or `]` |
 
-Edges from the kit: `hidden` to `reading` on zoom in, `reading` to `area` past 20x, `area` to `locator` on focus mode, `locator` to `area` on Esc, `reading` to `travel` on G then n, `travel` to `reading` on arrival. The kit draws only these. The plain inverses follow from the same guards and NAV-006 builds them: `reading` to `hidden` when more than half the tissue is back on screen, and `area` to `reading` below 20x. A second `]` during travel skips to the target, as NAV-011 (travel animation and route line) says. TODO: the kit starts travel only from `reading`. Whether G then n from `area` or `locator` also enters travel is left to NAV-006 to settle with the owner.
+Edges from the kit: `hidden` to `reading` on zoom in, `reading` to `area` past 20x, `area` to `locator` on focus mode, `locator` to `area` on Esc, `reading` to `travel` on G then n, `travel` to `reading` on arrival. The kit draws only these. The plain inverses follow from the same guards and NAV-006 builds them: `reading` to `hidden` when more than half the tissue is back on screen, and `area` to `reading` below 20x. A second `]` during travel skips to the target, as NAV-011 (travel animation and route line) says. The kit starts travel only from `reading`. The owner chose on 2026-11-04 that G then n, or `]`, starts travel from any visible mode, so `area` and `locator` also go to `travel`, and arrival returns to the mode the camera's zoom now calls for.
 
 **Fade region**: `clear` or `faded`, faded at 28% opacity while the pointer is within 40 px of the box. A click on a faded map still opens the peek.
 
@@ -65,11 +65,11 @@ Hot points and weights, from the mock: points along the tumor edge in view at 3 
 | Fade distance | within 40 px of the pointer | only while the pointer is over the box | NAV-006 |
 | No move while panning | never while panning | placement is recomputed every frame | NAV-007 |
 | Hot points in the cells scene | current cell 50 plus every cell to check at 4, legend blocked | current cell only, no legend block | NAV-007 |
-| Kit inputs with no weight in the mock | open thread, floating cells panel, proposals and pins | none | NAV-007 chooses weights and records them here or in a new record |
+| Kit inputs with no weight in the mock | open thread, floating cells panel, proposals and pins | none | NAV-007 chooses the weights and records them here, as the owner agreed on 2026-11-04 |
 | Minimap setting | When useful, Always, Never, default When useful | the catalogue now says `useful`, `always` or `never`, default `useful`, and `shownMinimap` in `minimap-box.ts` applies it | done in NAV-009 |
 | When useful text | appears once half or less of the tissue is on screen | Settings help says "once you zoom past the whole slide" | NAV-009 |
 | Full viewer | the map shows in the full viewer | `full-viewer.tsx` passes `minimap={false}` | NAV-006 |
-| Guided review | the kit gives the smart minimap to the full viewer only | `slide-still.tsx` draws its own fixed 136 px map top right | NAV-006 decides whether guided review moves to `SmartMinimap` |
+| Guided review | the kit gives the smart minimap to the full viewer only | `slide-still.tsx` draws its own fixed 136 px map top right | Guided review drops its fixed map and uses `SmartMinimap`, as the owner chose on 2026-11-04. GUIDE-002 (guided review) builds it, or NAV-006 if it lands first |
 
 ## Consequences
 

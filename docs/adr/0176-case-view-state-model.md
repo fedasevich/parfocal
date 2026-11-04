@@ -4,6 +4,7 @@
 - Status: Accepted
 - Deciders: Parfocal agents, owner to review
 - Backlog: CASE-000 (research check for the case view). Read by CASE-003 (per-slide view memory) and the rest of the CASE epic (slide view).
+- Partly superseded: the camera memory that lives only while the case is open is replaced by [a slide's camera remembered on the device across visits](0229-slide-camera-remembered-per-device.md) (2026-11-04).
 
 ## Context
 

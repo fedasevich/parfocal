@@ -1,8 +1,8 @@
 # 0189. The developer drawer keeps the ten sections of the mock, and the debug handle is `window.__parfocal`
 
 - Date: 2026-11-03
-- Status: Proposed
-- Deciders: Parfocal agents, owner to review
+- Status: Accepted
+- Deciders: Parfocal agents, owner (accepted 2026-11-04 after the doc 34 check)
 - Backlog: LAB-000 (research check for the developer drawer). Shapes LAB-001 (developer drawer), LAB-002 (performance HUD), LAB-003 (sample slides and synthetic data), LAB-004 (pan sweep benchmark and export) and LAB-005 (debug handle).
 
 ## Context
@@ -28,7 +28,28 @@ The zones per section in the port are these.
 | Measure | HUD | Show the HUD, Corner, Frame probe, Readouts on the Viv route, Only on the WebGPU route |
 | Reference | URL and debug handle | URL parameters (23), Model bench page (6), Debug handle (20 members) |
 
-POC doc 34 was not read. The POC repository is private, it is not attached to this session, and attaching it was refused. Nothing in this repository quotes its lab-tagged leaves. So this record confirms the list against the kit, the mock and the code only.
+POC doc 34 (every action in the viewer, as a tree) was read on 2026-11-04, after the owner allowed one session to read the private POC repository. Every leaf it tags `lab` has a home in the ten sections.
+
+| Doc 34 lab leaf | Section in the drawer |
+|---|---|
+| `?src=`, the 20 slide format buttons | Tiles and source, as 15 sample slides and 5 large files |
+| CAMELYON16 buttons T016, T009, T001, T002 and clear | Annotations, CAMELYON16 annotations |
+| Renderer switch WebGPU, Viv WebGL2, deck.gl | Renderer |
+| Wheel mode auto, zoom, pan | Renderer, Mouse wheel, and also in Settings because doc 34 says doctors need it |
+| Synthetic nuclei off to 1M | Annotations |
+| Culling, interpolation, prefetch ahead and show vector | Renderer, marked WebGPU only as doc 34 marks them |
+| Level of detail, which had no control on screen | Annotations, now with a control |
+| Synthetic heatmap, grid 128, 256, 512 and reseed | Heatmap |
+| Type confidence calibration chip, band counts and share ranges | Typing and confidence |
+| HUD | HUD |
+| `?seg=` provider and `?modelpause=off` | Models |
+| Groups panel footer with run pieces and bytes | HUD, as the annotation readouts LAB-002 already lists |
+| Pan sweep and benchmark CSV export | Benchmark |
+| `?probe` frame probe | HUD |
+| `bench-models.html` | URL and debug handle, Model bench page |
+| `window.__wsi` and the lab URL parameters | URL and debug handle |
+
+Two differences, both deliberate. Doc 34's handle also reaches `slideJob.loadJob(id)` and `slideJob.denseSpot()`, which the mock's 20 members leave out. Whole-slide jobs now run on the server through the AI pipeline, so the Whole-slide job section loads a job and the handle needs no job members. Doc 34's HUD cannot be hidden, and the drawer's HUD section can hide it, as LAB-002 asks.
 
 ## Options considered
 
@@ -51,4 +72,4 @@ The debug handle is `window.__parfocal`, as LAB-005 says. `__wsi` named the POC,
 - LAB-003 loads the 15 sample slides and 5 large files of Tiles and source, and the synthetic counts are off, 10k, 100k, 500k and 1M.
 - LAB-004 exports the 16 CSV columns the Benchmark section lists.
 - LAB-005 changes the reference text in `developer-screen.tsx` from `window.__wsi` to `window.__parfocal`.
-- TODO: check the drawer against doc 34's lab-tagged leaves once a session can read the POC repository, then set this record to Accepted or amend it.
+- The check against doc 34's lab-tagged leaves is done (above), and the owner accepted this record on 2026-11-04.
