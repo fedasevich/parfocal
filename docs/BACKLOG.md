@@ -3174,7 +3174,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-001, AISEG-011, AISEG-015. Refs doc 26.
   Size: M.
 
-- [ ] AISEG-011 · Sub-pixel contour tracing
+- [x] AISEG-011 · Sub-pixel contour tracing
   Done when unit tests show traced outlines cover at least 98% of mask area at 20× (pixel-centre rings covered 80%).
   Refs doc 26.
   Size: S.
