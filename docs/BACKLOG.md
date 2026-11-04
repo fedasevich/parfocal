@@ -4252,7 +4252,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Size: M.
 
 
-- [ ] TASK-015 · Check options and presets on annotate tasks
+- [x] TASK-015 · Check options and presets on annotate tasks
   An annotate task stores its check options ([ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md), check options and presets on annotate tasks): a check scope from the TASK-012 scope kinds, the check order (least sure first or by position), the sign-off rule (every object in the scope checked, or only a warning) and the export of unchecked AI objects (left out by default, or included as `ai-unchecked`). Objects that a model run inside the task adds join the scope as they land. The review order job (GUIDE-013) runs for tasks with a check scope. The presets "Annotate by hand", "Check a whole-slide run", "Check a sample", "Fix AI on selected areas" and "Mixed" fill in the options.
   Done when API tests create a task from each preset, change an option after a preset, store the least sure first order for a check scope, add the objects of a new run to the scope, and refuse sign-off with an unchecked object when the rule requires it.
   Depends on TASK-013, TASK-012, GUIDE-013. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
