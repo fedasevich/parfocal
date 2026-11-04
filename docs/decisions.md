@@ -26,6 +26,24 @@ To take every recommendation at once, write "all recommended" here:
 
 Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Left and Alt+Right for view history), 43a (record number visible in initials mode), 50a (class keys 1 to 9) and 60a (no Model warnings block when there are none).
 
+## 64. Who sees the workspace security contact, from SEC-029 (security contact for each workspace)
+
+Admins set the contact in Admin, Workspace settings. Researchers without admin rights can also read it, because the existing workspace settings permission gives them view access, and reviewers cannot see it.
+
+- a. Keep it readable by researchers and admins. (recommended)
+- b. Admins only.
+
+Your choice:
+
+## 65. A de-identified workspace with no security contact, from SEC-029
+
+The contact is required only before a workspace holds clinical data. A de-identified workspace may leave it empty, and breach notices then go to the workspace owners.
+
+- a. Keep that fallback to the owners. (recommended)
+- b. Require the contact in every workspace.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
