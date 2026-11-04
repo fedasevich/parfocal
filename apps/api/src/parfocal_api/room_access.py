@@ -11,7 +11,7 @@ from sqlalchemy import select
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ForbiddenError, NotFoundError, ProblemError
-from parfocal_api.project_access import require_slide_reading
+from parfocal_api.project_access import require_reading, require_slide_reading
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import PrivacyMode, projects, slides
 from parfocal_api.tile_access import sign_capability
@@ -23,6 +23,7 @@ ROOM_PROTOCOL = "parfocal-room-v1"
 
 
 class RoomKind(StrEnum):
+    PROJECT = "project"
     SLIDE = "slide"
     TASK = "task"
     USER = "user"
@@ -80,6 +81,20 @@ async def slide_project(
     return cast("uuid.UUID", row.project_id)
 
 
+async def readable_project(
+    connection: TenantConnection, principal: MemberPrincipal, project_id: uuid.UUID
+) -> uuid.UUID:
+    privacy_mode = (
+        await connection.execute(select(projects.c.privacy_mode).where(projects.c.id == project_id))
+    ).scalar_one_or_none()
+    if privacy_mode is None:
+        raise NotFoundError("Room not found")
+    await require_reading(
+        connection, principal, project_id, PrivacyMode(privacy_mode), "Room not found"
+    )
+    return project_id
+
+
 async def room_project(
     connection: TenantConnection, principal: MemberPrincipal, kind: RoomKind, room_id: uuid.UUID
 ) -> uuid.UUID | None:
@@ -87,6 +102,8 @@ async def room_project(
         if room_id != principal.user_id:
             raise NotFoundError("Room not found")
         return None
+    if kind is RoomKind.PROJECT:
+        return await readable_project(connection, principal, room_id)
     if kind is RoomKind.SLIDE:
         return await slide_project(connection, principal, room_id)
     task, _ = await readable_task(connection, principal, room_id)

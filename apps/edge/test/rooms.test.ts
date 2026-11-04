@@ -148,7 +148,7 @@ class Edge {
     const room = this.room(name);
     if (new URL(request.url).pathname === "/connect") {
       const socket = new FakeSocket();
-      room.join(
+      await room.join(
         socket as unknown as WebSocket,
         JSON.parse(request.headers.get("X-Room-Seat") ?? "") as Seat,
       );
@@ -380,6 +380,8 @@ describe("fan-out", () => {
     const edge = new Edge();
     const anna = await edge.join({});
     const ben = await edge.join({ user: BEN });
+    anna.sent.length = 0;
+    ben.sent.length = 0;
     const room = edge.room(`${TENANT}/${SLIDE}`);
     await room.webSocketMessage(
       anna as unknown as WebSocket,
@@ -391,6 +393,85 @@ describe("fan-out", () => {
     await room.webSocketMessage(anna as unknown as WebSocket, "x".repeat(5000));
     assert.equal(anna.closed?.code, CLOSE_TOO_BIG);
     assert.equal(ben.closed, null);
+  });
+});
+
+describe("presence", () => {
+  const joined = (user: string) => ({ kind: "presence.joined", ids: { user } });
+  const left = (user: string) => ({ kind: "presence.left", ids: { user } });
+
+  test("a newcomer learns who is here and the others learn of the newcomer", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({});
+    assert.deepEqual(anna.events(), []);
+    const ben = await edge.join({ user: BEN });
+    assert.deepEqual(anna.events(), [joined(BEN)]);
+    assert.deepEqual(ben.events(), [joined(ANNA)]);
+  });
+
+  test("a second tab of the same person is not a new arrival or a departure", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({});
+    const benFirst = await edge.join({ user: BEN });
+    const benSecond = await edge.join({ user: BEN });
+    assert.deepEqual(anna.events(), [joined(BEN)]);
+    assert.deepEqual(benSecond.events(), [joined(ANNA)]);
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    benFirst.close(1000, "left");
+    await room.webSocketClose(benFirst as unknown as WebSocket, 1000);
+    assert.deepEqual(anna.events(), [joined(BEN)]);
+    benSecond.close(1000, "left");
+    await room.webSocketClose(benSecond as unknown as WebSocket, 1000);
+    assert.deepEqual(anna.events(), [joined(BEN), left(BEN)]);
+  });
+
+  test("leaving, expiry and removal each tell the others the person left", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({});
+    const ben = await edge.join({ user: BEN, expires: NOW + 60 });
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    edge.now = NOW + 61;
+    await room.alarm();
+    assert.equal(ben.closed?.code, CLOSE_EXPIRED);
+    assert.deepEqual(anna.events(), [joined(BEN), left(BEN)]);
+    edge.now = NOW;
+    const again = await edge.join({ user: BEN });
+    await edge.internal("revoke", { tenant: TENANT, user: BEN, project: null });
+    assert.equal(again.closed?.code, CLOSE_REMOVED);
+    assert.deepEqual(anna.events(), [joined(BEN), left(BEN), joined(BEN), left(BEN)]);
+    assert.deepEqual(again.events(), [joined(ANNA)]);
+  });
+
+  test("the project room learns which slide each person is viewing", async () => {
+    const edge = new Edge();
+    const projectRoom = `project:${PROJECT}`;
+    const slideId = SLIDE.slice(6);
+    await edge.join({});
+    const watcher = await edge.join({ room: projectRoom, user: BEN });
+    assert.deepEqual(watcher.events(), [
+      { kind: "presence.joined", ids: { slide: slideId, user: ANNA } },
+    ]);
+    const late = await edge.join({ room: projectRoom, user: BEN });
+    assert.deepEqual(late.events(), [
+      { kind: "presence.joined", ids: { slide: slideId, user: ANNA } },
+    ]);
+    const anna = edge.state(`${TENANT}/${SLIDE}`).sockets[0];
+    assert.ok(anna);
+    anna.close(1000, "left");
+    await edge.room(`${TENANT}/${SLIDE}`).webSocketClose(anna as unknown as WebSocket, 1000);
+    assert.deepEqual(watcher.events().at(-1), {
+      kind: "presence.left",
+      ids: { slide: slideId, user: ANNA },
+    });
+    assert.deepEqual([...edge.state(`${TENANT}/${projectRoom}`).stored.keys()], []);
+  });
+
+  test("presence stays inside its tenant", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({});
+    const outsider = await edge.join({ tenant: OTHER_TENANT, user: BEN });
+    assert.deepEqual(anna.events(), []);
+    assert.deepEqual(outsider.events(), []);
   });
 });
 
