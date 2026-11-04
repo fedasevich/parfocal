@@ -26,6 +26,13 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
 import { debugHandleName } from "../../debug-handle.ts";
+import {
+  camelyonSlides,
+  countOf,
+  fieldChipFor,
+  nucleiChipFor,
+  syntheticCounts,
+} from "../../lab/synthetic-data.ts";
 import { SlideStill } from "../review/slide-still.tsx";
 import { BenchSection } from "./bench-section.tsx";
 import {
@@ -69,10 +76,27 @@ function Segments({
   );
 }
 
-function Pick({ label, value, items }: { label: string; value: string; items: string[] }) {
+function Pick({
+  label,
+  value,
+  items,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  items: string[];
+  onChange?: (value: string) => void;
+}) {
   const [current, setCurrent] = useState(value);
   return (
-    <Select value={current} onValueChange={(next) => setCurrent(String(next ?? value))}>
+    <Select
+      value={current}
+      onValueChange={(next) => {
+        const chosen = String(next ?? value);
+        setCurrent(chosen);
+        onChange?.(chosen);
+      }}
+    >
       <SelectTrigger size="sm" aria-label={label} className="min-w-[200px]">
         <SelectValue>{current}</SelectValue>
       </SelectTrigger>
@@ -169,6 +193,9 @@ export function DeveloperScreen({
   const route = routeName(renderer, text("backend", "webgl"));
   const sample = text("sample", "IDR OME-Zarr");
   const hud = on("hud", true);
+  const nucleiCount = countOf(text("nuclei", "100k"));
+  const nucleiChip = nucleiChipFor(nucleiCount);
+  const fieldChip = fieldChipFor(text("grid", "256"));
 
   const bodies: Record<DeveloperSection, () => ReactNode> = {
     renderer: () => (
@@ -410,11 +437,19 @@ export function DeveloperScreen({
     },
     annot: () => (
       <>
-        <DevZone title="Synthetic nuclei">
+        <DevZone
+          title="Synthetic nuclei"
+          end={nucleiChip ? <StatusTag tone="accent">{nucleiChip}</StatusTag> : null}
+        >
           <DevRow label="Count" hint="Off, 10k, 100k, 500k or 1M">
-            <Pick label="Count" value="100k" items={["Off", "10k", "100k", "500k", "1M"]} />
+            <Pick
+              label="Count"
+              value="100k"
+              items={syntheticCounts.map((entry) => entry.label)}
+              onChange={(next) => set("nuclei", next)}
+            />
           </DevRow>
-          {live("100,000 nuclei queued in 41 ms")}
+          {live(`${nucleiCount.toLocaleString("en-US")} nuclei queued`)}
         </DevZone>
         <DevZone title="Level of detail">
           <DevRow
@@ -436,7 +471,7 @@ export function DeveloperScreen({
           note="Real tumor outlines from CAMELYON16, drawn over the slide."
         >
           <div className="flex flex-wrap gap-2">
-            {["T016", "T009", "T001", "T002"].map((name) => (
+            {camelyonSlides.map((name) => (
               <Button key={name} size="sm">
                 {name}
               </Button>
@@ -514,6 +549,9 @@ export function DeveloperScreen({
           )}
         </DevRow>
         <DevRow label="Synthetic field" hint="A new random field for the synthetic source">
+          {text("hsrc", "tumor") === "syn" ? (
+            <StatusTag tone="accent">{fieldChip}</StatusTag>
+          ) : null}
           <Button size="sm">Reseed</Button>
         </DevRow>
       </DevZone>

@@ -1,5 +1,6 @@
 import type { DeveloperNavGroup, HudBox } from "@parfocal/ui/components/developer-drawer";
 import { benchmarkColumns } from "../../lab/pan-sweep.ts";
+import { sampleCatalogue } from "../../lab/synthetic-data.ts";
 import type { SceneOf } from "../scenes.ts";
 
 export type DeveloperScene = SceneOf<"developer">;
@@ -77,31 +78,13 @@ export const colourMaps: Record<string, string> = {
   turbo: "#30123b, #4686fb, #1ae4b6, #a2fc3c, #fabd2e, #e4460a, #7a0403",
 };
 
-export const sampleSlides: [string, string][] = [
-  ["IDR OME-Zarr", "OME-Zarr v0.4, the default"],
-  ["Zarr v3 shard", "Zarr v3, sharded"],
-  ["TIFF", "Pyramidal TIFF"],
-  ["SVS", "Aperio"],
-  ["SVS small", "Aperio, small file"],
-  ["SVS J2K rgb", "Aperio, JPEG 2000 RGB"],
-  ["SVS J2K ycc", "Aperio, JPEG 2000 YCbCr"],
-  ["NDPI", "Hamamatsu"],
-  ["BIF", "Roche Ventana"],
-  ["AVS", "AVS"],
-  ["SCN", "Leica"],
-  ["Philips", "Philips TIFF"],
-  ["Huron", "Huron TIFF"],
-  ["Huron raw", "Huron, raw strips"],
-  ["CAMELYON local", "CAMELYON16 TIFF on this disk"],
-];
+export const sampleSlides: [string, string][] = sampleCatalogue
+  .filter((slide) => slide.group === "format")
+  .map((slide) => [slide.name, slide.detail]);
 
-export const bigSlides: [string, string][] = [
-  ["NDPI 13.6 Gpx", "Hamamatsu"],
-  ["NDPI 6.9 GB", "Hamamatsu"],
-  ["BIF 9.9 Gpx", "Roche Ventana"],
-  ["Philips 13 Gpx", "Philips TIFF"],
-  ["SCN 1 Gpx", "Leica"],
-];
+export const bigSlides: [string, string][] = sampleCatalogue
+  .filter((slide) => slide.group === "big")
+  .map((slide) => [slide.name, slide.detail]);
 
 export const vivReadouts: HudBox[] = [
   [
