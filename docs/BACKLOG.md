@@ -572,7 +572,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when API tests create a project for the user's tenant and another tenant's user gets 404 for it.
   Depends on IAM-003, PROJ-001. Met by PROJ-001 and ADAPT-004: `test_projects.py` creates a project in the user's workspace and `test_another_workspace_gets_nothing` gets 404 from another workspace, and `slides` belongs to a project ([ADR 0063](adr/0063-cases-and-slides-in-projects.md)).
 
-- [ ] SKEL-004 · Upload one SVS and its result file into a project
+- [x] SKEL-004 · Upload one SVS and its result file into a project
   Presigned multipart upload, objects land under the tenant's prefix, a slide row and a result set row are created.
   Done when an E2E test uploads CMU-1-Small-Region.svs with a small GeoJSON and both show in the project.
   Depends on INGEST-001, INGEST-002, RSET-001.
