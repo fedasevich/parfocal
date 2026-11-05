@@ -391,3 +391,74 @@ test("a comment pin lands under the pointer when zoomed in and stays put through
   expect(out.zoom).toBeLessThan(camera.zoom);
   expectNear(await styleAt(draft), onScreen(out, box, point));
 });
+
+test("pressing Shift without moving snaps the ruler and its readout live, and releasing frees it", async ({
+  page,
+}) => {
+  const { box } = await openSlide(page);
+  await page.keyboard.press("l");
+  await zoomIn(page, box, 1);
+  const line = page.getByTestId("ruler-layer").locator("line").first();
+  const label = page.getByTestId("ruler-layer").locator("text").first();
+  await page.mouse.move(box.x + 200, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 240, { steps: 2 });
+  const free = await label.textContent();
+  await page.keyboard.down("Shift");
+  await expect
+    .poll(async () => {
+      const ends = await lineEnds(line);
+      return Math.abs(ends.y2 - ends.y1);
+    })
+    .toBeLessThan(0.01);
+  expect(await label.textContent()).toBe(free);
+  await page.keyboard.up("Shift");
+  await expect.poll(async () => (await lineEnds(line)).y2).toBeCloseTo(240, 0);
+  await page.mouse.up();
+});
+
+test("pressing Shift without moving snaps the arrow draft live", async ({ page }) => {
+  const { box } = await openSlide(page);
+  await page.keyboard.press("Shift+L");
+  await settledCamera(page);
+  await page.mouse.move(box.x + 200, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 240, { steps: 2 });
+  const draft = page.getByTestId("arrow-draft").locator("path").first();
+  const endY = async () =>
+    Number(/L([-\d.]+) ([-\d.]+) M/.exec((await draft.getAttribute("d")) ?? "")?.[2]);
+  expect(await endY()).toBeCloseTo(240, 0);
+  await page.keyboard.down("Shift");
+  await expect.poll(endY).toBeCloseTo(200, 1);
+  await page.keyboard.up("Shift");
+  await expect.poll(endY).toBeCloseTo(240, 0);
+  await page.mouse.up();
+  await expect(page.getByTestId("arrow-shape")).toHaveCount(1);
+});
+
+test("switching tools or leaving the field keeps typed text instead of losing it", async ({
+  page,
+}) => {
+  const { box, stage } = await openSlide(page);
+  await page.keyboard.press("t");
+  await settledCamera(page);
+  const draft = page.getByTestId("text-draft");
+  const shapes = page.getByTestId("text-shape");
+  await page.mouse.click(box.x + 300, box.y + 200);
+  await page.keyboard.type("stroma");
+  await draft.evaluate((node) => (node as HTMLInputElement).blur());
+  await expect(shapes).toHaveCount(1);
+  await expect(draft).toHaveCount(0);
+
+  await page.mouse.click(box.x + 400, box.y + 300);
+  await page.keyboard.type("vessel");
+  await page.getByRole("button", { name: "Count marker" }).click();
+  await expect(stage).toHaveAttribute("data-tool", "marker");
+  await expect(shapes).toHaveCount(2);
+
+  await page.keyboard.press("t");
+  await page.mouse.click(box.x + 500, box.y + 400);
+  await draft.evaluate((node) => (node as HTMLInputElement).blur());
+  await expect(draft).toHaveCount(0);
+  await expect(shapes).toHaveCount(2);
+});

@@ -1,6 +1,7 @@
 import { RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AnnotationDocument, addShape } from "../annotations/document.ts";
+import { bindShiftRefresh } from "../annotations/shift-refresh.ts";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -41,6 +42,7 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
     let anchor: Point | null = null;
     let pointerId: number | null = null;
     let screenStart: Point | null = null;
+    let lastPointer: { clientX: number; clientY: number } | null = null;
 
     const slidePoint = (event: MouseEvent): Point => {
       const bounds = stage.getBoundingClientRect();
@@ -49,6 +51,16 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
     const endPoint = (event: MouseEvent, from: Point): Point => {
       const raw = slidePoint(event);
       return event.shiftKey ? snapToAngle(from, raw) : raw;
+    };
+    const refreshEnd = (shiftHeld: boolean) => {
+      if (anchor === null || lastPointer === null) return;
+      const raw = screenToSlide(
+        latest.current.engine.getCamera(),
+        stage.getBoundingClientRect(),
+        lastPointer.clientX,
+        lastPointer.clientY,
+      );
+      setDraft({ from: anchor, to: shiftHeld ? snapToAngle(anchor, raw) : raw });
     };
     const commit = (segment: Segment) => {
       const { document: next } = addShape(latest.current.doc, {
@@ -61,6 +73,7 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
       anchor = null;
       pointerId = null;
       screenStart = null;
+      lastPointer = null;
       setDraft(null);
     };
 
@@ -72,11 +85,13 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
       pointerId = event.pointerId;
       anchor = slidePoint(event);
       screenStart = { x: event.clientX, y: event.clientY };
+      lastPointer = { clientX: event.clientX, clientY: event.clientY };
       setDraft({ from: anchor, to: anchor });
     };
     const move = (event: PointerEvent) => {
       if (anchor === null || event.pointerId !== pointerId) return;
       event.stopImmediatePropagation();
+      lastPointer = { clientX: event.clientX, clientY: event.clientY };
       setDraft({ from: anchor, to: endPoint(event, anchor) });
     };
     const up = (event: PointerEvent) => {
@@ -99,7 +114,9 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
+    const leaveShift = bindShiftRefresh(stage.ownerDocument, refreshEnd);
     return () => {
+      leaveShift();
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);

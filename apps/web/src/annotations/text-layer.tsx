@@ -94,7 +94,9 @@ export function TextLayer({
   useEffect(() => {
     if (!active) {
       dropped.current = null;
-      setDraft(null);
+      const open = draftRef.current;
+      if (open !== null && cleanText(open.text) !== "") commit(open);
+      else setDraft(null);
       return;
     }
     const click = (event: PointerEvent) => {
@@ -115,6 +117,13 @@ export function TextLayer({
   }, [active, stage, commit, setDraft]);
 
   const focusOnMount = useCallback((node: HTMLInputElement | null) => node?.focus(), []);
+
+  const onInputBlur = () => {
+    const open = draftRef.current;
+    if (open === null || open !== draft) return;
+    if (cleanText(open.text) === "") drop();
+    else commit(open);
+  };
 
   const onInputKey = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -165,6 +174,7 @@ export function TextLayer({
           maxLength={maxTextLength}
           onChange={(event) => setDraft({ point: draft.point, text: event.target.value })}
           onKeyDown={onInputKey}
+          onBlur={onInputBlur}
           className="pointer-events-auto absolute h-7 w-48 -translate-y-1/2 rounded-ctl border border-accent bg-chrome px-2 text-body-sm text-fg outline-none"
           style={{ left: where.x, top: where.y }}
         />

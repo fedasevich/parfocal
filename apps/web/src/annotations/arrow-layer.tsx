@@ -10,6 +10,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { addArrow, arrowEndsOf, arrowHead, arrowsOf } from "./marks.ts";
+import { bindShiftRefresh } from "./shift-refresh.ts";
 import { useStageRect } from "./stage-size.ts";
 
 type ArrowLayerProps = {
@@ -62,6 +63,7 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     let anchor: Point | null = null;
     let pointerId: number | null = null;
     let screenStart: Point | null = null;
+    let lastPointer: { clientX: number; clientY: number } | null = null;
 
     const slidePoint = (event: MouseEvent): Point =>
       screenToSlide(
@@ -74,10 +76,21 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
       const raw = slidePoint(event);
       return event.shiftKey ? snapToAngle(from, raw) : raw;
     };
+    const refreshEnd = (shiftHeld: boolean) => {
+      if (anchor === null || lastPointer === null) return;
+      const raw = screenToSlide(
+        latest.current.engine.getCamera(),
+        stage.getBoundingClientRect(),
+        lastPointer.clientX,
+        lastPointer.clientY,
+      );
+      setDraft({ from: anchor, to: shiftHeld ? snapToAngle(anchor, raw) : raw });
+    };
     const cancel = () => {
       anchor = null;
       pointerId = null;
       screenStart = null;
+      lastPointer = null;
       setDraft(null);
     };
 
@@ -89,11 +102,13 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
       pointerId = event.pointerId;
       anchor = slidePoint(event);
       screenStart = { x: event.clientX, y: event.clientY };
+      lastPointer = { clientX: event.clientX, clientY: event.clientY };
       setDraft({ from: anchor, to: anchor });
     };
     const move = (event: PointerEvent) => {
       if (anchor === null || event.pointerId !== pointerId) return;
       event.stopImmediatePropagation();
+      lastPointer = { clientX: event.clientX, clientY: event.clientY };
       setDraft({ from: anchor, to: endPoint(event, anchor) });
     };
     const up = (event: PointerEvent) => {
@@ -120,7 +135,9 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
+    const leaveShift = bindShiftRefresh(stage.ownerDocument, refreshEnd);
     return () => {
+      leaveShift();
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
