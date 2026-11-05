@@ -302,7 +302,7 @@ function summaryOf(
     }
     return {
       title: `Metastasis likely, ${formatMm(state.size)}`,
-      chip: categoryIfConfirmed[state.category],
+      chip: categoryShort[state.category],
       action: {
         label: "Start",
         title: `Start with area ${state.lead.number}`,
@@ -321,7 +321,7 @@ function summaryOf(
     const done = state.steps.filter((step) => step.done).length;
     return {
       title: `Small cluster, about ${formatMm(state.size)}`,
-      chip: `${categoryShort[state.category]} so far`,
+      chip: categoryShort[state.category],
       ...(done === 0
         ? {
             action: {
@@ -348,7 +348,7 @@ function StagingSummary({
   onToggle: () => void;
 }) {
   return (
-    <div data-slot="staging-summary" className="flex min-h-10 items-center gap-2">
+    <div data-slot="staging-summary" className="flex min-h-10 min-w-0 items-center gap-2">
       <button
         type="button"
         aria-expanded={open}
