@@ -2641,6 +2641,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Review each tool on the live slide while panning and zooming and fix every jump or misplaced point at its root, leaving the shared screen to slide conversion to ANN-033 (the select and drawing tools hardening).
   Done when each tool has a reproducing test for every defect found plus many new interaction tests for zoom levels, pan, fast pointer moves, snap, deletion and undo.
   Size: M.
+
+- [ ] ANN-035 · Figma style point editing and multi-shape moves
+  Enter or double-click on a shape starts point editing and Esc leaves it. Hovering an edge shows a ghost midpoint to drag in a new point, vertices select by click, Shift+click or marquee and move or nudge together, and Backspace, Delete or Alt+click remove them but never below 3. Several shapes, markers, arrows, text and pins select together under one box that drags, nudges with the arrow keys (Shift for bigger steps) and deletes. Double-click on text or an arrow edits it, and Space held pans in the middle of any gesture.
+  Done when interaction and browser tests cover each gesture and each undo.
+  Depends on ANN-033, ANN-034.
+  Size: M.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
