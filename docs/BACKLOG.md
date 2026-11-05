@@ -3996,6 +3996,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
 
+- [ ] PILOT-008 · Owner walkthrough of the whole app
+  A guided walkthrough for the owner on staging that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. Staging gets a seed command that loads every account, project and slide the script needs and resets it between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.
+  Done when an E2E test walks every step of the script on staging, the seed command resets staging to the script's start, and the owner has done one pass whose notes are logged and turned into tasks.
+  Depends on ANN-031, TASK-014, AINUC-013, COLLAB-016, JOBS-007, EVAL-014, CMP-007, ONB-006, ADMIN-007, PROTO-010.
+  Size: L.
+
 ---
 
 ## 40 PROJ · Projects, privacy modes, class taxonomy and templates
