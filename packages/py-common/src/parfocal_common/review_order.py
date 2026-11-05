@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from parfocal_common.cell_chunks import decode
+from parfocal_common.chunk_store import GRID
 from parfocal_common.object_ids import Letter
 from parfocal_common.scope import Candidate, ObjectKey, Scope, in_scope, sample
 
@@ -16,12 +17,15 @@ UNCALIBRATED = 1.0
 PROBABILITY_FLOOR = 1e-7
 BYTE = 255
 PACKED = struct.Struct("<cI")
+BAND_HEIGHT = GRID
+NO_CENTRE = math.nan
 
 
 @dataclass(frozen=True)
 class Rated:
     key: ObjectKey
     certainty: int | None
+    centre: tuple[float, float] | None = None
 
 
 def calibrated(probabilities: Sequence[int], class_index: int, temperature: float) -> int:
@@ -52,6 +56,18 @@ def least_sure_first(objects: Iterable[Rated], seed: int, slide_key: str) -> lis
     unscored = sorted(key for key, value in certainty.items() if value is None)
     random.Random(f"{seed}:{slide_key}").shuffle(unscored)
     return [key for _, key in scored] + unscored
+
+
+def band_key(item: Rated, band_height: float) -> tuple[int, int, float, ObjectKey]:
+    if item.centre is None:
+        return 1, 0, 0.0, item.key
+    x, y = item.centre
+    band = math.floor(y / band_height)
+    return 0, band, x if band % 2 == 0 else -x, item.key
+
+
+def by_position(objects: Iterable[Rated], band_height: float = BAND_HEIGHT) -> list[ObjectKey]:
+    return [item.key for item in sorted(objects, key=lambda item: band_key(item, band_height))]
 
 
 def pack(keys: Iterable[ObjectKey]) -> bytes:
@@ -124,7 +140,7 @@ class CellChunk:
     def rated(self, keys: Iterable[ObjectKey], temperature: float = UNCALIBRATED) -> list[Rated]:
         wanted = {number for letter, number in keys if letter is Letter.CELL}
         return [
-            Rated((Letter.CELL, number), self.certainty(index, temperature))
+            Rated((Letter.CELL, number), self.certainty(index, temperature), self.centre(index))
             for index, number in enumerate(self.numbers)
             if number in wanted
         ]
@@ -147,17 +163,27 @@ def scoped_cells(
 class CellPool:
     numbers: array[int] = field(default_factory=lambda: array("I"))
     certainty: array[int] = field(default_factory=lambda: array("h"))
+    xs: array[float] = field(default_factory=lambda: array("d"))
+    ys: array[float] = field(default_factory=lambda: array("d"))
 
     def add(self, chunk: CellChunk, temperature: float = UNCALIBRATED) -> None:
         self.numbers.extend(chunk.numbers)
         for index in range(len(chunk)):
             value = chunk.certainty(index, temperature)
             self.certainty.append(NO_CERTAINTY if value is None else value)
+            x, y = chunk.centre(index) or (NO_CENTRE, NO_CENTRE)
+            self.xs.append(x)
+            self.ys.append(y)
 
     def sample(self, count: int, seed: int, slide_key: str) -> list[Rated]:
         chosen = set(sample(self.numbers, count, seed, slide_key))
+        placed = zip(self.numbers, self.certainty, self.xs, self.ys, strict=True)
         return [
-            Rated((Letter.CELL, number), None if value == NO_CERTAINTY else value)
-            for number, value in zip(self.numbers, self.certainty, strict=True)
+            Rated(
+                (Letter.CELL, number),
+                None if value == NO_CERTAINTY else value,
+                None if math.isnan(x) else (x, y),
+            )
+            for number, value, x, y in placed
             if number in chosen
         ]

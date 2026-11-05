@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -82,6 +83,7 @@ def result_set(
     regions: list[Region],
     cells: bool = False,
     job: uuid.UUID | None = None,
+    placed: Sequence[tuple[int, int, int]] = (),
 ) -> uuid.UUID:
     set_id = uuid.UUID(
         str(
@@ -101,6 +103,13 @@ def result_set(
             f"ST_GeomFromText('POLYGON((0 0,{number}0 0,{number}0 9,0 9,0 0))', 0), "
             f"{sql(class_index)}, {sql(score)}, {sql(probabilities)})",
         )
+    for number, x, y in placed:
+        owner(
+            database,
+            "INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry) "
+            f"VALUES ('{tenant}', '{set_id}', 'region', {number}, ST_GeomFromText('POLYGON(("
+            f"{x} {y},{x + 10} {y},{x + 10} {y + 10},{x} {y + 10},{x} {y}))', 0))",
+        )
     owner(
         database,
         "INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry, score) "
@@ -113,7 +122,8 @@ def result_set(
             put_chunk(chunk_key(prefix, chunk), chunk_bytes(rows, probs))
     owner(
         database,
-        f"UPDATE result_sets SET status = 'ready', region_count = {len(regions)}, zone_count = 1, "
+        f"UPDATE result_sets SET status = 'ready', region_count = {len(regions) + len(placed)}, "
+        "zone_count = 1, "
         f"job_id = {sql(job and str(job))} WHERE id = '{set_id}'",
     )
     return set_id

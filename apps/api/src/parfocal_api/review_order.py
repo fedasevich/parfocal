@@ -54,6 +54,7 @@ from parfocal_common.review_order import (
     CellChunk,
     CellPool,
     Rated,
+    by_position,
     certainty_of,
     least_sure_first,
     pack,
@@ -182,6 +183,8 @@ async def ordered_regions(
                 result_objects.c.score,
                 result_objects.c.probabilities,
                 roi_on(slide_id, result_objects.c.geometry).label("inside_roi"),
+                func.ST_X(func.ST_Centroid(result_objects.c.geometry)).label("x"),
+                func.ST_Y(func.ST_Centroid(result_objects.c.geometry)).label("y"),
             ).where(
                 result_objects.c.result_set_id == set_id,
                 result_objects.c.kind == ResultObjectKind.REGION,
@@ -195,7 +198,9 @@ async def ordered_regions(
     chosen = set(in_scope(scope, candidates, str(slide_id)))
     return [
         Rated(
-            (Letter.REGION, row.number), certainty_of(row.class_index, row.score, row.probabilities)
+            (Letter.REGION, row.number),
+            certainty_of(row.class_index, row.score, row.probabilities),
+            (row.x, row.y),
         )
         for row in rows
         if (Letter.REGION, row.number) in chosen
@@ -344,7 +349,7 @@ async def order_of_slide(
             for item in [*regions, *cells]:
                 rated.setdefault(item.key, item)
     if not least_sure:
-        return sorted(rated)
+        return by_position(rated.values())
     return least_sure_first(list(rated.values()), seed, str(slide_id))
 
 

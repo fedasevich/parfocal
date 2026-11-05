@@ -1,14 +1,16 @@
 import uuid
+from dataclasses import replace
 from typing import Any
 
 import pytest
 from db_support import ApiAs
 from order_support import run_orders
-from test_review_order import UNSCORED, Ordered, ordered, result_set
+from test_review_order import SCORED, UNSCORED, Ordered, ordered, result_set
 from workspace_support import owner
 
 from parfocal_common.object_ids import ObjectId
 from parfocal_common.review_order import unpack
+from parfocal_common.scope import sample
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -43,6 +45,9 @@ PRESETS: dict[str, dict[str, Any]] = {
     "mixed": BY_HAND
     | {"preset": "mixed", "scope": [{"kind": "all-objects", "count": None, "score": None}]},
 }
+
+
+PLACED = [(7, 20, 3000), (8, 90, 3000)]
 
 
 def annotate(api: ApiAs, o: Ordered, slide: int = 0, pinned: bool = True, **extra: Any) -> Any:
@@ -142,8 +147,16 @@ def test_an_option_changes_after_a_preset(api: ApiAs, database: str) -> None:
 
 def test_a_check_scope_stores_the_least_sure_first_order(api: ApiAs, database: str) -> None:
     o = ordered(database, api)
+    placed = result_set(
+        database, o.tenant, o.project, o.slides[0], SCORED, cells=True, placed=PLACED
+    )
     task = made(api, o, preset="check-whole-slide-run")
-    by_position = made(api, o, preset="check-whole-slide-run", check={"order": "position"})
+    by_position = made(
+        api,
+        replace(o, sets=[placed, o.sets[1]]),
+        preset="check-whole-slide-run",
+        check={"order": "position"},
+    )
     by_hand = made(api, o)
     run_orders(database, o.tenant)
     order = stored_order(database, task, o.slides[0])
@@ -152,10 +165,52 @@ def test_a_check_scope_stores_the_least_sure_first_order(api: ApiAs, database: s
     assert regions[:4] == ["T2", "T3", "T5", "T1"]
     assert order.index("C1") < order.index("C2") < order.index("C3")
     assert stored_order(database, by_position, o.slides[0]) == [
-        *(f"C{n}" for n in range(1, 7)),
         *(f"T{n}" for n in range(1, 7)),
+        *(f"C{n}" for n in range(1, 7)),
+        "T8",
+        "T7",
     ]
     assert stored_order(database, by_hand, o.slides[0]) == []
+
+
+def sample_seed(database: str, task: str) -> int:
+    rows = owner(
+        database, f"SELECT check_options->'scope'->0->>'seed' FROM review_tasks WHERE id = '{task}'"
+    )
+    return int(str(rows[0][0]))
+
+
+def test_the_researcher_sets_the_sample_size(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    boss = api(o.people["owner"])
+    task = made(
+        api,
+        o,
+        preset="check-sample",
+        check={"scope": [{"kind": "random-cells", "count": 3}]},
+    )
+    assert boss.get(f"/api/review-tasks/{task}").json()["check"]["scope"] == [
+        {"kind": "random-cells", "count": 3, "score": None}
+    ]
+    run_orders(database, o.tenant)
+    seed = sample_seed(database, task)
+    picked = [f"C{n}" for n in sample(range(1, 7), 3, seed, str(o.slides[0]))]
+    assert sorted(stored_order(database, task, o.slides[0])) == sorted(picked)
+    smaller = boss.patch(
+        f"/api/review-tasks/{task}",
+        json={"check": {"scope": [{"kind": "random-cells", "count": 2}]}},
+    )
+    assert smaller.status_code == 200, smaller.text
+    assert smaller.json()["check"]["scope"][0]["count"] == 2
+    assert sample_seed(database, task) == seed
+    run_orders(database, o.tenant)
+    assert sorted(stored_order(database, task, o.slides[0])) == [
+        f"C{n}" for n in sample(range(1, 7), 2, seed, str(o.slides[0]))
+    ]
+    refused = annotate(
+        api, o, preset="check-sample", check={"scope": [{"kind": "random-cells", "count": 0}]}
+    )
+    assert refused.status_code == 422
 
 
 def test_the_objects_of_a_new_run_join_the_check_scope(api: ApiAs, database: str) -> None:

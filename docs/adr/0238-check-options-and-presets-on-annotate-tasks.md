@@ -25,7 +25,7 @@ Option 2.
 - Every AI object on an annotate slide has a check state: unchecked, confirmed, edited or deleted. One key confirms an object, and editing or deleting it also counts as checked. A confirmed object keeps its geometry and gets the origin `ai-confirmed`.
 - A task's check options are:
   - the check scope, the scope kinds of TASK-012 (a task scope as a list of kinds), such as all AI objects, objects below a score, a random sample of N or objects inside drawn regions;
-  - the check order, least sure first (the GUIDE-012 order, stored per task slide) or by position;
+  - the check order, least sure first (the GUIDE-012 order, stored per task slide) or by position. By position follows the slide, not the object IDs, because IDs follow the processing tiles. Objects are grouped into bands one chunk grid high (2048 level 0 pixels) by their centre, each band runs left to right and the next right to left, and the object ID breaks ties;
   - the sign-off rule, which either requires every object in the check scope to be checked or only warns;
   - the export of unchecked AI objects, left out (the default) or included with the origin `ai-unchecked`.
 - Objects that a model run inside the task adds, on a selection or the whole slide, join the check scope as they land.
@@ -33,7 +33,7 @@ Option 2.
 - The new task stepper offers presets that only fill in the options:
   - "Annotate by hand" has no result set and no check scope;
   - "Check a whole-slide run" checks every AI object least sure first and requires all to be checked;
-  - "Check a sample" checks a random sample least sure first, and the rest stays unchecked and out of the export;
+  - "Check a sample" checks a random sample least sure first, and the rest stays unchecked and out of the export. The researcher sets the sample size, the preset only prefills 200, and the sample is drawn with a seed stored on the task so it stays the same between loads and after other options change;
   - "Fix AI on selected areas" checks objects inside the drawn regions;
   - "Mixed" checks AI least sure first and lets experts draw what it missed.
 - Review tasks are unchanged.
