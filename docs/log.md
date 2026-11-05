@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-05
 
+- PILOT-008 (owner walkthrough) now says the owner wants to see the UX of every variant, not only the main paths. PILOT-008
 - Added TEST-020 (showcase seed over every feature and the 28 public fixture slides in R2) at the owner's request, with a coverage test so later features add their variants. PILOT-008 (owner walkthrough) now runs over it. TEST-020
 - Added PILOT-008 (owner walkthrough of the whole app) at the owner's request, a staged script over seeded data near the end of the build so the owner can try every screen and list fixes. PILOT-008
 - ANN-035 (Figma style point editing), correction: commit 42bbb1c1 adds 41 unit tests and 7 browser specs, not 43 and 8.
