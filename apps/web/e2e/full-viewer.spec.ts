@@ -221,9 +221,11 @@ test("G then n flies to each area, the brackets step through them and each is vi
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.setViewportSize({ width: 1280, height: 900 });
   const links = await viewerLinks(page);
   await page.goto(hrefOf(links, "Full viewer · Objects tab"));
+  const fold = panel(page).getByRole("button", { name: /Metastasis likely/ });
+  await expect(fold).toBeVisible();
+  if ((await fold.getAttribute("aria-expanded")) === "false") await fold.click();
   const list = panel(page).getByLabel("Areas, largest first");
   const rows = list.locator("[data-slot=region-row]");
   await expect(rows.first()).toContainText("Largest, sets the category");
