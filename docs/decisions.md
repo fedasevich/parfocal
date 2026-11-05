@@ -33,7 +33,7 @@ Admins set the contact in Admin, Workspace settings. Researchers without admin r
 - a. Keep it readable by researchers and admins. (recommended)
 - b. Admins only.
 
-Your choice:
+Your choice:A
 
 ## 65. A de-identified workspace with no security contact, from SEC-029
 
@@ -42,7 +42,7 @@ The contact is required only before a workspace holds clinical data. A de-identi
 - a. Keep that fallback to the owners. (recommended)
 - b. Require the contact in every workspace.
 
-Your choice:
+Your choice: A
 
 ## 66. Typed search text in the search page URL, from SEC-010 (PHI-safe telemetry)
 
@@ -50,6 +50,25 @@ The search page keeps the typed text in its address, `/search?q=...`, so a typed
 
 - a. Move the text out of the URL into page state, so a search link opens empty. (recommended)
 - b. Keep it in the URL so searches can be shared and reloaded.
+
+Your choice: b, but check what is the industry standard
+
+
+## 67. Alt to draw an arrow or ruler from its centre, from ANN-034 (hardening the count, arrow, text, ruler and comment pin tools)
+
+Figma draws from the centre while Alt or Option is held. QuPath has no such convention, and pathologists mostly measure from one edge of a structure to the other.
+
+- a. No for the ruler, and add it for the arrow only if users ask. (recommended)
+- b. Add it to both now, the Figma way.
+
+Your choice: a
+
+## 68. Comment pins in the select tool, from ANN-035 (Figma style point editing and multi-shape moves)
+
+The select tool now picks markers, arrows, text and every drawn shape together, and Backspace or Delete removes the selection. Comment pins live in the document's pin table with a thread on the server, not in the shape table, so selecting a pin and pressing Delete would delete a comment thread with one key and no confirmation. Pins keep their own popover with a delete action.
+
+- a. Leave pins out of the select tool, delete them only from their popover. (recommended)
+- b. Let the select tool pick and move pins, and have Delete ask before removing the thread.
 
 Your choice:
 

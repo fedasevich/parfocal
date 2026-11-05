@@ -2647,6 +2647,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when interaction and browser tests cover each gesture and each undo.
   Depends on ANN-033, ANN-034.
   Size: M.
+
+- [ ] ANN-036 · Save arrows, text and rulers
+  Arrow, text and ruler shapes live only in the browser today, because the save step turns only polygons and markers into saved annotations, and a text edit would not count as a change. Save all three with their text and reload them on the slide, and treat a text edit as a change that syncs.
+  Done when API and save queue tests cover create, edit, delete and reload of each kind, and a browser test reloads the page and finds them.
+  Depends on ANN-035.
+  Size: M.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
