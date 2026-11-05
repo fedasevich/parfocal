@@ -82,6 +82,8 @@ test("the map fills in and staging areas appear as the job streams while the vie
   const startReach = Number(await reached.getAttribute("data-reached"));
   const staging = panel.locator("[data-slot=staging-cards]");
   await expect(staging).toHaveAttribute("data-state", "running");
+  const fold = staging.getByRole("button", { name: /Still reading/ });
+  if ((await fold.getAttribute("aria-expanded")) === "false") await fold.click();
   await expect(staging.getByTestId("next-area")).toHaveCount(1);
   await expect
     .poll(async () => Number(await reached.getAttribute("data-reached")), { timeout: 30_000 })

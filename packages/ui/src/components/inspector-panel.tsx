@@ -16,6 +16,7 @@ import {
 } from "@parfocal/ui/lib/inspector-tabs";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { useState } from "react";
 
 type TemplateLineProps = React.ComponentProps<"div"> & {
   template: InspectorTemplate;
@@ -57,7 +58,12 @@ type InspectorPanelProps = Omit<SidePanelProps, "tabs" | "head" | "defaultTab"> 
   bodies: Record<InspectorTabName, InspectorBody>;
   staging?: Omit<AnalysisCardsProps, "parts"> | undefined;
   defaultTab?: InspectorTabName;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 };
+
+const shortScreen = () =>
+  typeof window !== "undefined" && window.matchMedia?.("(max-height: 820px)").matches === true;
 
 function inspectorTabs(
   counts: InspectorCounts,
@@ -78,8 +84,17 @@ function InspectorPanel({
   counts,
   bodies,
   staging,
+  collapsed,
+  onCollapsedChange,
   ...props
 }: InspectorPanelProps) {
+  const [ownCollapsed, setOwnCollapsed] = useState(shortScreen);
+  const folded = collapsed ?? ownCollapsed;
+  const setFolded = (next: boolean) => {
+    if (collapsed === undefined) setOwnCollapsed(next);
+    onCollapsedChange?.(next);
+  };
+  const onStart = staging?.onStart;
   return (
     <SidePanel
       dense
@@ -88,7 +103,22 @@ function InspectorPanel({
       head={
         <>
           <TemplateLine template={template} />
-          {staging ? <AnalysisCards parts={parts} {...staging} /> : null}
+          {staging ? (
+            <AnalysisCards
+              parts={parts}
+              {...staging}
+              collapsed={folded}
+              onCollapsedChange={setFolded}
+              {...(onStart
+                ? {
+                    onStart: (object: string) => {
+                      onStart(object);
+                      setFolded(true);
+                    },
+                  }
+                : {})}
+            />
+          ) : null}
         </>
       }
     />

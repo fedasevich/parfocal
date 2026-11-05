@@ -4,6 +4,7 @@ import { InspectorCard, RegionRow, StagingHero } from "@parfocal/ui/components/i
 import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
 import { NoTumorCard } from "@parfocal/ui/components/systematic-scan";
+import { CategoryTag } from "@parfocal/ui/components/tag";
 import {
   type AiArea,
   type AiState,
@@ -29,6 +30,7 @@ import type { ModelWarning } from "@parfocal/ui/lib/model-warnings";
 import type { ScanSummary } from "@parfocal/ui/lib/systematic-scan";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { useId } from "react";
 
 const categoryIfConfirmed: Record<StagingCategory, string> = {
   macro: "Macro if confirmed",
@@ -80,6 +82,8 @@ type StagingCardsProps = React.ComponentProps<"section"> &
     onSubmit?: () => void;
     scan?: ScanSummary | null;
     onScan?: () => void;
+    collapsed?: boolean;
+    onCollapsedChange?: (collapsed: boolean) => void;
   };
 
 function rowKind(area: RankedArea, settled: boolean) {
@@ -274,6 +278,105 @@ function AreaList({ areas, ...props }: AreaListOwnProps) {
   return <AreaRows areas={state.areas} settled={settled} {...props} />;
 }
 
+type Summary = {
+  title: string;
+  chip?: string;
+  action?: { label: string; title: string; run: () => void };
+  note?: string;
+};
+
+function summaryOf(
+  state: ReturnType<typeof aiState>,
+  onStart: ((object: string) => void) | undefined,
+  onSubmit: (() => void) | undefined,
+): Summary | null {
+  if (state.kind === "running")
+    return { title: `Still reading, ${areaWord(state.areas.length)} so far` };
+  if (state.kind === "pre-read") {
+    if (state.phase === "settled") {
+      return {
+        title: `${state.pn}, ${formatMm(state.size)}, settled`,
+        chip: state.pn,
+        action: { label: "Submit", title: "Submit", run: () => onSubmit?.() },
+      };
+    }
+    return {
+      title: `Metastasis likely, ${formatMm(state.size)}`,
+      chip: categoryIfConfirmed[state.category],
+      action: {
+        label: "Start",
+        title: `Start with area ${state.lead.number}`,
+        run: () => onStart?.(state.lead.object),
+      },
+    };
+  }
+  if (state.kind === "small-cluster") {
+    if (state.phase === "settled") {
+      return {
+        title: `${state.pn}, ${formatMm(state.size)}, settled`,
+        chip: state.pn,
+        action: { label: "Submit", title: "Submit", run: () => onSubmit?.() },
+      };
+    }
+    const done = state.steps.filter((step) => step.done).length;
+    return {
+      title: `Small cluster, about ${formatMm(state.size)}`,
+      chip: `${categoryShort[state.category]} so far`,
+      ...(done === 0
+        ? {
+            action: {
+              label: "Start",
+              title: `Start with area ${state.lead.number}`,
+              run: () => onStart?.(state.lead.object),
+            },
+          }
+        : { note: `${done} of ${state.steps.length} steps` }),
+    };
+  }
+  return null;
+}
+
+function StagingSummary({
+  summary,
+  open,
+  controls,
+  onToggle,
+}: {
+  summary: Summary;
+  open: boolean;
+  controls: string;
+  onToggle: () => void;
+}) {
+  return (
+    <div data-slot="staging-summary" className="flex min-h-10 items-center gap-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={controls}
+        title={open ? "Fold the staging card" : "Show the staging card"}
+        onClick={onToggle}
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent p-0 text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <span className="min-w-0 truncate text-body-sm font-semibold">{summary.title}</span>
+        {summary.chip ? <CategoryTag className="shrink-0">{summary.chip}</CategoryTag> : null}
+        <Icon name="down" className={cn("ml-auto shrink-0", open && "rotate-180")} />
+      </button>
+      {open ? null : summary.action ? (
+        <Button
+          variant="primary"
+          size="sm"
+          title={summary.action.title}
+          onClick={summary.action.run}
+        >
+          {summary.action.label}
+        </Button>
+      ) : summary.note ? (
+        <span className="shrink-0 text-caption text-fg-dim">{summary.note}</span>
+      ) : null}
+    </div>
+  );
+}
+
 function StagingCards({
   areas,
   running = false,
@@ -289,10 +392,15 @@ function StagingCards({
   visited,
   roleOf,
   onGoTo,
+  collapsed = false,
+  onCollapsedChange,
   className,
   ...props
 }: StagingCardsProps) {
+  const id = useId();
   const state = aiState({ areas, running });
+  const summary = onCollapsedChange ? summaryOf(state, onStart, onSubmit) : null;
+  const folded = summary !== null && collapsed;
   const staged = state.kind === "pre-read" || state.kind === "small-cluster";
   const settled = staged && state.phase === "settled";
   return (
@@ -301,90 +409,108 @@ function StagingCards({
       data-state={state.kind}
       data-phase={staged ? state.phase : undefined}
       aria-label="Staging"
-      className={cn("grid gap-3 border-b border-line bg-chrome p-5", className)}
+      data-collapsed={folded || undefined}
+      className={cn(
+        "grid gap-3 border-b border-line bg-chrome",
+        folded ? "px-5 py-1" : "p-5",
+        className,
+      )}
       {...props}
     >
-      {state.kind === "running" ? (
-        <div data-slot="staging-hero" className="grid gap-2">
-          <h3 className="m-0 mt-0.5 text-title leading-tight font-semibold">
-            Still reading, {areaWord(state.areas.length)} so far
-          </h3>
-          <p className="m-0 text-body-sm leading-normal text-fg-dim">
-            Areas join the list as they are found. The category waits until the whole slide is read.
-          </p>
-        </div>
-      ) : state.kind === "small-cluster" ? (
-        <>
-          <ClusterHero state={state} />
-          {settled ? null : <ClusterSteps state={state} />}
-        </>
-      ) : state.kind === "pre-read" ? (
-        settled ? (
-          <StagingHero
-            title={`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
-            category={state.pn}
-            sub={`Suggested ${state.pn}. Area ${state.lead.number} is confirmed and measured, so the smaller areas cannot change the category.`}
-            range={{
-              min: scaleMin,
-              max: scaleMax,
-              low: clampToScale(state.size),
-              high: clampToScale(state.size),
-              point: clampToScale(state.size),
-              cuts: [microMm, macroMm],
-              ...scaleMarks(state),
-            }}
-          />
-        ) : (
-          <StagingHero
-            title={`${findingWords("Metastasis", state.lead.probability, wording, typer)}, largest about ${formatMm(state.size)}`}
-            category={categoryIfConfirmed[state.category]}
-            sub={`${areaWord(state.areas.length)}, largest first. Confirm and measure area ${state.lead.number} to settle the category.`}
-            range={{
-              min: scaleMin,
-              max: scaleMax,
-              low: clampToScale(state.size * (1 - aiSizeError)),
-              high: clampToScale(state.size * (1 + aiSizeError)),
-              point: clampToScale(state.size),
-              cuts: [microMm, macroMm],
-              ...scaleMarks(state),
-            }}
-          />
-        )
-      ) : (
-        <NoTumorCard scan={scan} onScan={onScan} onSubmit={onSubmit} />
-      )}
-      <ModelWarningsBlock warnings={warnings} />
-      {showList && (state.areas.length || state.kind === "running") ? (
-        <AreaRows
-          areas={state.areas}
-          settled={settled}
-          running={state.kind === "running"}
-          current={current}
-          visited={visited}
-          roleOf={roleOf}
-          onGoTo={onGoTo}
+      {summary ? (
+        <StagingSummary
+          summary={summary}
+          open={!folded}
+          controls={id}
+          onToggle={() => onCollapsedChange?.(!collapsed)}
         />
       ) : null}
-      {staged ? (
-        <div data-slot="staging-footer" className="flex items-center justify-between gap-2">
-          {settled ? (
+      {folded ? null : (
+        <div id={id} className="grid gap-3">
+          {state.kind === "running" ? (
+            <div data-slot="staging-hero" className="grid gap-2">
+              <h3 className="m-0 mt-0.5 text-title leading-tight font-semibold">
+                Still reading, {areaWord(state.areas.length)} so far
+              </h3>
+              <p className="m-0 text-body-sm leading-normal text-fg-dim">
+                Areas join the list as they are found. The category waits until the whole slide is
+                read.
+              </p>
+            </div>
+          ) : state.kind === "small-cluster" ? (
             <>
-              <span className="text-body-sm text-fg-dim">The category is settled.</span>
-              <Button variant="primary" size="sm" onClick={onSubmit}>
-                Submit
-              </Button>
+              <ClusterHero state={state} />
+              {settled ? null : <ClusterSteps state={state} />}
             </>
+          ) : state.kind === "pre-read" ? (
+            settled ? (
+              <StagingHero
+                title={`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
+                category={state.pn}
+                sub={`Suggested ${state.pn}. Area ${state.lead.number} is confirmed and measured, so the smaller areas cannot change the category.`}
+                range={{
+                  min: scaleMin,
+                  max: scaleMax,
+                  low: clampToScale(state.size),
+                  high: clampToScale(state.size),
+                  point: clampToScale(state.size),
+                  cuts: [microMm, macroMm],
+                  ...scaleMarks(state),
+                }}
+              />
+            ) : (
+              <StagingHero
+                title={`${findingWords("Metastasis", state.lead.probability, wording, typer)}, largest about ${formatMm(state.size)}`}
+                category={categoryIfConfirmed[state.category]}
+                sub={`${areaWord(state.areas.length)}, largest first. Confirm and measure area ${state.lead.number} to settle the category.`}
+                range={{
+                  min: scaleMin,
+                  max: scaleMax,
+                  low: clampToScale(state.size * (1 - aiSizeError)),
+                  high: clampToScale(state.size * (1 + aiSizeError)),
+                  point: clampToScale(state.size),
+                  cuts: [microMm, macroMm],
+                  ...scaleMarks(state),
+                }}
+              />
+            )
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={onStart ? () => onStart(state.lead.object) : undefined}
-            >
-              Start with area {state.lead.number}
-            </Button>
+            <NoTumorCard scan={scan} onScan={onScan} onSubmit={onSubmit} />
           )}
+          <ModelWarningsBlock warnings={warnings} />
+          {showList && (state.areas.length || state.kind === "running") ? (
+            <AreaRows
+              areas={state.areas}
+              settled={settled}
+              running={state.kind === "running"}
+              current={current}
+              visited={visited}
+              roleOf={roleOf}
+              onGoTo={onGoTo}
+            />
+          ) : null}
+          {staged ? (
+            <div data-slot="staging-footer" className="flex items-center justify-between gap-2">
+              {settled ? (
+                <>
+                  <span className="text-body-sm text-fg-dim">The category is settled.</span>
+                  <Button variant="primary" size="sm" onClick={onSubmit}>
+                    Submit
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={onStart ? () => onStart(state.lead.object) : undefined}
+                >
+                  Start with area {state.lead.number}
+                </Button>
+              )}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      )}
     </section>
   );
 }

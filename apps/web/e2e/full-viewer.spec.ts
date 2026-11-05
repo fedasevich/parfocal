@@ -186,6 +186,11 @@ test("the staging cards show only in a project with the sentinel node template",
   await page.goto(href);
   const staging = panel(page).getByRole("region", { name: "Staging" });
   await expect(staging).toBeVisible();
+  const fold = staging.getByRole("button", { name: /Metastasis likely/ });
+  await expect(fold).toHaveAttribute("aria-expanded", "false");
+  await expect(staging.getByRole("button", { name: "Start" })).toBeVisible();
+  await fold.click();
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
   await expect(staging).toContainText("Metastasis likely, largest about");
   await expect(staging).toContainText("if confirmed");
   const templateLine = panel(page).locator('[data-slot="template-line"]');
@@ -216,6 +221,7 @@ test("G then n flies to each area, the brackets step through them and each is vi
   page,
 }) => {
   test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
   const links = await viewerLinks(page);
   await page.goto(hrefOf(links, "Full viewer · Objects tab"));
   const list = panel(page).getByLabel("Areas, largest first");

@@ -42,7 +42,14 @@ function SidePanel({
       style={{ width }}
       {...props}
     >
-      {head}
+      {head ? (
+        <div
+          data-slot="side-panel-head"
+          className="flex max-h-[55%] min-h-0 shrink-0 flex-col overflow-y-auto"
+        >
+          {head}
+        </div>
+      ) : null}
       <Tabs
         {...(value === undefined ? { defaultValue: defaultTab ?? tabs[0]?.value } : { value })}
         onValueChange={(next) => onValueChange?.(String(next))}
