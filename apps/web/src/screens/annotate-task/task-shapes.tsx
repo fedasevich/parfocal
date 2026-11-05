@@ -102,7 +102,7 @@ export function TaskShapes({
           const colour = classOf[object.classKey].colour;
           const unchecked = object.kind === "ai" && object.check === "unchecked";
           const chosen = object.id === selected;
-          const human = object.origin === "human";
+          const human = showOrigins && object.origin === "human";
           return (
             <g
               key={object.id}
@@ -142,7 +142,7 @@ export function TaskShapes({
                 vectorEffect="non-scaling-stroke"
                 pointerEvents="none"
               />
-              {chosen || showOrigins ? <Badge object={object} scale={scale} full={chosen} /> : null}
+              {showOrigins ? <Badge object={object} scale={scale} full={chosen} /> : null}
               {pendingIds.includes(object.id) ? (
                 <circle
                   data-pending={object.id}
@@ -161,7 +161,7 @@ export function TaskShapes({
                 <ChangedDot
                   object={object}
                   scale={scale}
-                  gap={chosen || showOrigins ? badgeRadius * 2 + 6 : 6}
+                  gap={showOrigins ? badgeRadius * 2 + 6 : 6}
                 />
               ) : null}
             </g>

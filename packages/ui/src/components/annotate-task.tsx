@@ -222,40 +222,6 @@ function AiResultToggle({
   );
 }
 
-type OriginsToggleProps = Omit<React.ComponentProps<"label">, "onChange"> & {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-};
-
-function OriginsToggle({ checked, onCheckedChange, className, ...props }: OriginsToggleProps) {
-  const id = useId();
-  return (
-    <label
-      data-slot="origins-toggle"
-      className={cn(
-        "flex cursor-pointer items-center justify-between gap-3 rounded-zone border border-line bg-surf-panel px-3 py-2.5",
-        className,
-      )}
-      {...props}
-    >
-      <span className="grid min-w-0 gap-0.5">
-        <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
-          Show who checked
-        </b>
-        <small id={`${id}-sub`} className="text-caption text-fg-dim">
-          A dot beside each object, coloured by who made or checked it.
-        </small>
-      </span>
-      <Switch
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-labelledby={`${id}-name`}
-        aria-describedby={`${id}-sub`}
-      />
-    </label>
-  );
-}
-
 type CheckCounts = { confirmed: number; edited: number; deleted: number; total: number };
 
 function checkedOf(counts: CheckCounts) {
@@ -985,8 +951,6 @@ export {
   type Origin,
   OriginCard,
   OriginMark,
-  OriginsToggle,
-  type OriginsToggleProps,
   originNames,
   type Preset,
   type PresetKey,

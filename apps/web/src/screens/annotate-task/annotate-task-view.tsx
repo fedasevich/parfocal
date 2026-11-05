@@ -7,13 +7,13 @@ import {
   checkedOf,
   OriginCard,
   OriginMark,
-  OriginsToggle,
   RunProgress,
   type RunState,
   RunTiles,
   SignOffCard,
 } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
+import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
@@ -105,7 +105,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
   const [objects, setObjects] = useState(() => startObjects(scene, people));
   const [selected, setSelected] = useState<string | null>(startSelected(scene));
   const [showAi, setShowAi] = useState(scene !== "ai-off");
-  const [showOrigins, setShowOrigins] = useState(scene === "origins");
+  const [showOrigins, setShowOrigins] = useState(false);
   const [slide, setSlide] = useState<SlideState>(startSlide(scene));
   const [tab, setTab] = useState(scene === "ai-off" ? "display" : "objects");
   const [tool, setTool] = useState("select");
@@ -260,7 +260,6 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
         resultName={resultName}
         count={running ? runTileTotal * cellsPerTile : aiObjectCount}
       />
-      <OriginsToggle checked={showOrigins} onCheckedChange={setShowOrigins} />
       {empty ? null : (
         <Zone title="Check progress" sub="Scope: all AI objects, least sure first">
           <CheckProgress counts={counts} scope="AI objects" />
@@ -383,6 +382,15 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
               <ContextPill>
                 {showAi ? `AI result on · ${resultName}` : "AI result hidden"}
               </ContextPill>
+              <ContextDivider />
+              <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap">
+                <Checkbox
+                  checked={showOrigins}
+                  onCheckedChange={(value) => setShowOrigins(value)}
+                  aria-label="Who made it"
+                />
+                Who made it
+              </label>
               {empty ? null : (
                 <>
                   <ContextDivider />
