@@ -4,6 +4,8 @@ const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y
 const staging = (page: Page) => page.locator('[data-slot="staging-cards"]');
 const tabs = ["Objects", "Display", "Comments", "Opinion"];
 
+test.use({ viewport: { width: 1280, height: 900 } });
+
 test("the sentinel node template puts the staging cards on top of the tabs", async ({ page }) => {
   await page.goto(story("components-analysis-cards--sentinel-node-staging"));
   await expect(staging(page)).toHaveCount(1);
@@ -18,10 +20,12 @@ test("the sentinel node template puts the staging cards on top of the tabs", asy
   await expect(rows.nth(0)).toContainText("macro");
   await expect(rows.nth(1)).toContainText("micro");
   await expect(rows.nth(2)).toContainText("ITC");
-  const card = await staging(page).boundingBox();
-  const cardBottom = (card?.y ?? 0) + (card?.height ?? 0);
+  const head = await page.locator('[data-slot="side-panel-head"]').boundingBox();
+  const headBottom = (head?.y ?? 0) + (head?.height ?? 0);
+  const cardTop = (await staging(page).boundingBox())?.y ?? Number.POSITIVE_INFINITY;
   const tabTop = (await page.getByRole("tab", { name: "Objects" }).boundingBox())?.y ?? 0;
-  expect(cardBottom).toBeLessThanOrEqual(tabTop);
+  expect(cardTop).toBeLessThan(headBottom);
+  expect(headBottom).toBeLessThanOrEqual(tabTop);
 });
 
 for (const [name, id] of [
