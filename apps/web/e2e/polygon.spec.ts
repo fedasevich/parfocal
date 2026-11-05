@@ -92,6 +92,19 @@ async function cameraOf(page: Page) {
   return (await page.getByTestId("slide-host").getAttribute("data-camera")) ?? "";
 }
 
+async function settled(page: Page) {
+  let last = await cameraOf(page);
+  await expect
+    .poll(async () => {
+      await page.waitForTimeout(120);
+      const now = await cameraOf(page);
+      const same = now === last;
+      last = now;
+      return same;
+    })
+    .toBe(true);
+}
+
 test("a keyboard pan during a draft keeps the rubber band end under the cursor", async ({
   page,
 }) => {
@@ -111,6 +124,7 @@ test("a keyboard pan during a draft keeps the rubber band end under the cursor",
   const end = await rubberEnd(page);
   expect(Math.abs(end.x - 300)).toBeLessThan(0.5);
   expect(Math.abs(end.y - 300)).toBeLessThan(0.5);
+  await settled(page);
   await page.mouse.click(box.x + 300, box.y + 300);
   const after = await vertexPositions(page);
   expect(Math.abs((after[2]?.x ?? 0) - 300)).toBeLessThan(0.5);
@@ -201,4 +215,33 @@ test("a wheel zoom in the middle of a draft keeps the next click under the point
   await page.keyboard.up("Shift");
   expect(Math.abs(snapped.x - 380)).toBeLessThan(0.5);
   expect(Math.abs(snapped.y - 200)).toBeLessThan(0.5);
+});
+
+test("Backspace removes the last vertex of a draft and Space held pans in the middle of it", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await page.keyboard.press("p");
+  for (const [x, y] of corners.slice(0, 3)) await page.mouse.click(box.x + x, box.y + y);
+  await expect(page.getByTestId("polygon-layer")).toHaveAttribute("data-drafting", "3");
+  await page.keyboard.press("Backspace");
+  await expect(page.getByTestId("polygon-layer")).toHaveAttribute("data-drafting", "2");
+  const before = await vertexPositions(page);
+  const camera = await cameraOf(page);
+  await page.mouse.move(box.x + 500, box.y + 400);
+  await page.keyboard.down("Space");
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 380, { steps: 4 });
+  await page.mouse.up();
+  await page.keyboard.up("Space");
+  await expect.poll(() => cameraOf(page)).not.toBe(camera);
+  await expect(page.getByTestId("polygon-layer")).toHaveAttribute("data-drafting", "2");
+  await expect
+    .poll(() => vertexPositions(page).then((v) => (v[0]?.x ?? 0) - (before[0]?.x ?? 0)))
+    .toBeLessThan(-60);
+  await page.mouse.click(box.x + 380, box.y + 360);
+  const after = await vertexPositions(page);
+  expect(after).toHaveLength(3);
+  expect(Math.abs((after[2]?.x ?? 0) - 380)).toBeLessThan(0.5);
 });

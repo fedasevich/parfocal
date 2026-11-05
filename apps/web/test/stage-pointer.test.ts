@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
+  bindSpacePan,
   capturePointer,
   interruptMotion,
   releasePointer,
@@ -170,5 +171,92 @@ describe("stage pointer helpers", () => {
       interruptMotion({ getMotion: () => motion, stopMotion: () => stopped.push(motion) });
     }
     assert.deepEqual(stopped, ["coasting", "flying"]);
+  });
+});
+
+describe("Space held pans in any tool", () => {
+  function panRig(gesturing: () => boolean) {
+    const view = new EventTarget();
+    const stage = {
+      style: { cursor: "crosshair" },
+      ownerDocument: { defaultView: view as unknown as Window },
+    } as unknown as HTMLElement;
+    const calls: string[] = [];
+    const engine = {
+      startDrag: (at: { clientX: number; clientY: number }) =>
+        calls.push(`start ${at.clientX},${at.clientY}`),
+      dragTo: (at: { clientX: number; clientY: number }) =>
+        calls.push(`drag ${at.clientX},${at.clientY}`),
+      endDrag: () => calls.push("end"),
+      stopMotion: () => calls.push("stop"),
+    };
+    const pan = bindSpacePan(stage, { engine: () => engine, gesturing, typing: () => false });
+    const key = (type: "keydown" | "keyup", key = " ", repeat = false) => {
+      const event = Object.assign(new Event(type, { cancelable: true }), { key, repeat });
+      view.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    return { pan, stage, calls, key, view };
+  }
+
+  test("holding Space is reported, shows a hand and swallows the page scroll", () => {
+    const r = panRig(() => false);
+    assert.equal(r.pan.held(), false);
+    assert.equal(r.key("keydown"), true);
+    assert.equal(r.pan.held(), true);
+    assert.equal(r.stage.style.cursor, "grab");
+    assert.equal(r.key("keydown", " ", true), true);
+    r.key("keyup");
+    assert.equal(r.pan.held(), false);
+    assert.equal(r.stage.style.cursor, "crosshair");
+    assert.deepEqual(r.calls, []);
+  });
+
+  test("other keys and a window blur are handled sensibly", () => {
+    const r = panRig(() => false);
+    assert.equal(r.key("keydown", "a"), false);
+    assert.equal(r.pan.held(), false);
+    r.key("keydown");
+    r.view.dispatchEvent(new Event("blur"));
+    assert.equal(r.pan.held(), false);
+    assert.equal(r.stage.style.cursor, "crosshair");
+  });
+
+  test("Space in the middle of a gesture drags the camera from the last pointer until released", () => {
+    let busy = true;
+    const r = panRig(() => busy);
+    r.pan.track({ clientX: 100, clientY: 100 });
+    r.key("keydown");
+    assert.equal(r.pan.panning(), true);
+    assert.equal(r.pan.steer({ clientX: 120, clientY: 90 }), true);
+    assert.equal(r.pan.steer({ clientX: 140, clientY: 80 }), true);
+    r.key("keyup");
+    assert.equal(r.pan.panning(), false);
+    assert.equal(r.pan.steer({ clientX: 150, clientY: 80 }), false);
+    busy = false;
+    assert.deepEqual(r.calls, ["start 100,100", "drag 120,90", "drag 140,80", "end", "stop"]);
+  });
+
+  test("Space with no gesture starts nothing, because the engine takes the press itself", () => {
+    const r = panRig(() => false);
+    r.pan.track({ clientX: 100, clientY: 100 });
+    r.key("keydown");
+    assert.equal(r.pan.panning(), false);
+    assert.equal(r.pan.steer({ clientX: 120, clientY: 90 }), false);
+    assert.deepEqual(r.calls, []);
+  });
+
+  test("releasing the pointer or disposing ends a pan in flight", () => {
+    const r = panRig(() => true);
+    r.pan.track({ clientX: 1, clientY: 1 });
+    r.key("keydown");
+    r.pan.release();
+    r.pan.release();
+    assert.deepEqual(r.calls, ["start 1,1", "end", "stop"]);
+    r.key("keyup");
+    r.key("keydown");
+    r.pan.dispose();
+    assert.deepEqual(r.calls, ["start 1,1", "end", "stop", "start 1,1", "end", "stop"]);
+    assert.equal(r.stage.style.cursor, "crosshair");
   });
 });

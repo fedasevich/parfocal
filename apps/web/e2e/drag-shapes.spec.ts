@@ -161,3 +161,35 @@ test("a window resize in the middle of a drag keeps the start corner on its slid
   expect(Math.abs((after[2]?.y ?? 0) - 260)).toBeLessThan(0.5);
   await page.mouse.up();
 });
+
+test("Alt draws a rectangle from its centre and Space held pans in the middle of a drag", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await page.keyboard.press("r");
+  await page.mouse.move(box.x + 300, box.y + 300);
+  await page.mouse.down();
+  await page.keyboard.down("Alt");
+  await page.mouse.move(box.x + 400, box.y + 350, { steps: 3 });
+  const layer = page.getByTestId("drag-layer").first();
+  await expect(layer).toHaveAttribute("data-from-centre", "true");
+  const preview = pathPoints(await page.getByTestId("drag-preview").getAttribute("d"));
+  expect(Math.abs((preview[0]?.x ?? 0) - 200)).toBeLessThan(0.5);
+  expect(Math.abs((preview[0]?.y ?? 0) - 250)).toBeLessThan(0.5);
+  expect(Math.abs((preview[2]?.x ?? 0) - 400)).toBeLessThan(0.5);
+  await page.keyboard.up("Alt");
+  const camera = await cameraOf(page);
+  await page.keyboard.down("Space");
+  await page.mouse.move(box.x + 350, box.y + 350, { steps: 3 });
+  await page.keyboard.up("Space");
+  await expect.poll(() => cameraOf(page)).not.toBe(camera);
+  await expect(layer).toHaveAttribute("data-drawing", "1");
+  await page.mouse.move(box.x + 420, box.y + 360, { steps: 2 });
+  await page.mouse.up();
+  const shape = page.getByTestId("polygon-shape");
+  await expect(shape).toHaveCount(1);
+  const bounds = (await shape.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  expect(Math.abs(bounds.x + bounds.width - (box.x + 421))).toBeLessThan(2);
+  expect(Math.abs(bounds.y + bounds.height - (box.y + 361))).toBeLessThan(2);
+});

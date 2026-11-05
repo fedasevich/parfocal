@@ -4,7 +4,13 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import { finishStroke, strokeSamples } from "./freehand.ts";
 import type { Point } from "./polygon-draft.ts";
-import { capturePointer, interruptMotion, releasePointer, slideAt } from "./stage-pointer.ts";
+import {
+  bindSpacePan,
+  capturePointer,
+  interruptMotion,
+  releasePointer,
+  slideAt,
+} from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
 
 type FreehandLayerProps = {
@@ -28,9 +34,13 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       return;
     }
     let drawing: { id: number; points: Point[] } | null = null;
+    const pan = bindSpacePan(stage, {
+      engine: () => latest.current.engine,
+      gesturing: () => drawing !== null,
+    });
     const toSlide = (event: PointerEvent): Point => slideAt(latest.current.engine, stage, event);
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || drawing !== null) return;
+      if (event.button !== 0 || drawing !== null || pan.held()) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);
@@ -39,8 +49,12 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       setStroke(drawing.points);
     };
     const move = (event: PointerEvent) => {
-      if (drawing === null || event.pointerId !== drawing.id) return;
+      if (drawing === null || event.pointerId !== drawing.id) {
+        pan.track(event);
+        return;
+      }
       event.stopImmediatePropagation();
+      if (pan.steer(event)) return;
       for (const sample of strokeSamples(event)) drawing.points.push(toSlide(sample));
       setStroke([...drawing.points]);
     };
@@ -49,6 +63,7 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       event.stopImmediatePropagation();
       const points = drawing.points;
       drawing = null;
+      pan.release();
       releasePointer(stage, event.pointerId);
       setStroke([]);
       const closed = finishStroke(points, screenScale(latest.current.engine.getCamera()));
@@ -57,17 +72,24 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
     const cancel = (event: PointerEvent) => {
       if (drawing === null || event.pointerId !== drawing.id) return;
       drawing = null;
+      pan.release();
       setStroke([]);
     };
     const abandon = () => {
       drawing = null;
+      pan.release();
       setStroke([]);
+    };
+    const doubleClick = (event: MouseEvent) => {
+      event.stopImmediatePropagation();
+      event.preventDefault();
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
     stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: abandon });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
@@ -75,6 +97,8 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
       stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("dblclick", doubleClick, true);
+      pan.dispose();
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);

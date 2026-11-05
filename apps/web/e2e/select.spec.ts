@@ -24,6 +24,20 @@ async function drawRuler(page: Page, box: { x: number; y: number }) {
   await page.keyboard.press("Escape");
 }
 
+async function settled(page: Page) {
+  const host = page.getByTestId("slide-host");
+  let last = await host.getAttribute("data-camera");
+  await expect
+    .poll(async () => {
+      await page.waitForTimeout(120);
+      const now = await host.getAttribute("data-camera");
+      const same = now === last;
+      last = now;
+      return same;
+    })
+    .toBe(true);
+}
+
 const lineOf = (page: Page) => page.getByTestId("ruler-layer").locator("line").first();
 
 test("V arms the select tool, a click picks the ruler and an empty click drops it", async ({
@@ -187,11 +201,158 @@ test("a keyboard pan in the middle of a move keeps the grabbed point under the p
   await page.keyboard.down("ArrowRight");
   await page.waitForTimeout(250);
   await page.keyboard.up("ArrowRight");
-  await page.waitForTimeout(600);
+  await settled(page);
   await page.mouse.move(box.x + 321, box.y + 260);
   await page.mouse.up();
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   const bounds = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   expect(Math.abs(bounds.x + 1 + 100 - (box.x + 321))).toBeLessThan(1.5);
   expect(Math.abs(bounds.y + 1 + 50 - (box.y + 260))).toBeLessThan(1.5);
+});
+
+const layer = (page: Page) => page.getByTestId("select-layer");
+
+test("double-click enters point editing, selected points move together and Esc leaves", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.dblclick(box.x + 300, box.y + 250);
+  await expect(layer(page)).toHaveAttribute("data-editing", "1");
+  await page.mouse.click(box.x + 400, box.y + 300);
+  await expect(layer(page)).toHaveAttribute("data-vertices", "2");
+  await page.keyboard.down("Shift");
+  await page.mouse.click(box.x + 200, box.y + 300);
+  await page.keyboard.up("Shift");
+  await expect(layer(page)).toHaveAttribute("data-vertices", "2,3");
+  await page.mouse.move(box.x + 400, box.y + 300);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 340, { steps: 3 });
+  await page.mouse.up();
+  const handles = await handlePositions(page);
+  expect(Math.abs((handles[2]?.x ?? 0) - 420)).toBeLessThan(0.5);
+  expect(Math.abs((handles[2]?.y ?? 0) - 340)).toBeLessThan(0.5);
+  expect(Math.abs((handles[3]?.x ?? 0) - 220)).toBeLessThan(0.5);
+  expect(Math.abs((handles[3]?.y ?? 0) - 340)).toBeLessThan(0.5);
+  await page.keyboard.press("Backspace");
+  await expect(page.getByTestId("polygon-shape")).toHaveAttribute("data-points", "4");
+  await page.keyboard.press("Escape");
+  await expect(layer(page)).toHaveAttribute("data-editing", "");
+  await expect(layer(page)).toHaveAttribute("data-selected", "1");
+  await page.keyboard.press("Escape");
+  await expect(layer(page)).toHaveAttribute("data-selected", "");
+  await expect(stage).toHaveAttribute("data-tool", "select");
+});
+
+test("hovering an edge in edit mode offers a midpoint that drags in a new point", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.click(box.x + 300, box.y + 250);
+  await page.keyboard.press("Enter");
+  await expect(layer(page)).toHaveAttribute("data-editing", "1");
+  await page.mouse.move(box.x + 300, box.y + 201);
+  await expect(layer(page)).toHaveAttribute("data-hover", "midpoint");
+  await expect(page.getByTestId("select-midpoint")).toHaveCount(1);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 300, box.y + 150, { steps: 3 });
+  await page.mouse.up();
+  await expect(page.getByTestId("polygon-shape")).toHaveAttribute("data-points", "5");
+  await expect(layer(page)).toHaveAttribute("data-vertices", "1");
+  const handles = await handlePositions(page);
+  expect(Math.abs((handles[1]?.x ?? 0) - 300)).toBeLessThan(0.5);
+  expect(Math.abs((handles[1]?.y ?? 0) - 149)).toBeLessThan(0.5);
+  await page.keyboard.press("Meta+z");
+  await expect(page.getByTestId("polygon-shape")).toHaveAttribute("data-points", "4");
+});
+
+test("select all, arrow nudges and Backspace act on every selected shape and undo brings them back", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.keyboard.press("r");
+  await page.mouse.move(box.x + 500, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 600, box.y + 300, { steps: 3 });
+  await page.mouse.up();
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(2);
+  await page.keyboard.press("v");
+  await page.keyboard.press("Meta+a");
+  await expect(layer(page)).toHaveAttribute("data-selected", "1,2");
+  await expect(page.getByTestId("select-group")).toHaveCount(1);
+  const before = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0 };
+  const camera = await page.getByTestId("slide-host").getAttribute("data-camera");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect
+    .poll(async () => ((await outlineOf(page).boundingBox())?.x ?? 0) - before.x)
+    .toBeCloseTo(1, 0);
+  const after = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0 };
+  expect(Math.abs(after.y - before.y - 10)).toBeLessThan(0.5);
+  expect(await page.getByTestId("slide-host").getAttribute("data-camera")).toBe(camera);
+  await page.keyboard.press("Backspace");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
+  await expect(layer(page)).toHaveAttribute("data-selected", "");
+  await page.keyboard.press("Meta+z");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(2);
+  await page.keyboard.press("Meta+z");
+  await page.keyboard.press("Meta+z");
+  const restored = (await page.getByTestId("polygon-shape").first().boundingBox()) ?? {
+    x: 0,
+    y: 0,
+  };
+  expect(Math.abs(restored.x - (box.x + 199))).toBeLessThan(1);
+});
+
+test("Alt drag duplicates the selection and hovering shows the shape a click would pick", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await expect(layer(page)).toHaveAttribute("data-hover", "shape");
+  await expect(page.getByTestId("select-hover")).toHaveCount(1);
+  await page.mouse.move(box.x + 700, box.y + 500);
+  await expect(layer(page)).toHaveAttribute("data-hover", "");
+  await page.mouse.click(box.x + 300, box.y + 250);
+  await page.keyboard.down("Alt");
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 350, box.y + 400, { steps: 4 });
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(2);
+  await expect(layer(page)).toHaveAttribute("data-selected", "2");
+  const copy = (await page.getByTestId("polygon-shape").nth(1).boundingBox()) ?? { x: 0, y: 0 };
+  expect(Math.abs(copy.x - (box.x + 249))).toBeLessThan(1);
+  expect(Math.abs(copy.y - (box.y + 349))).toBeLessThan(1);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+});
+
+test("double-click on a text label with the select tool edits it in place", async ({ page }) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await page.keyboard.press("t");
+  await page.mouse.click(box.x + 300, box.y + 300);
+  await page.keyboard.type("note");
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("text-shape")).toHaveText("note");
+  await page.keyboard.press("v");
+  await expect(stage).toHaveAttribute("data-tool", "select");
+  await page.mouse.dblclick(box.x + 304, box.y + 300);
+  const input = page.getByTestId("text-draft");
+  await expect(input).toHaveValue("note");
+  await page.keyboard.press("End");
+  await page.keyboard.type(" more");
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("text-shape")).toHaveText("note more");
+  await expect(stage).toHaveAttribute("data-tool", "select");
+  await page.keyboard.press("Meta+z");
+  await expect(page.getByTestId("text-shape")).toHaveText("note");
 });

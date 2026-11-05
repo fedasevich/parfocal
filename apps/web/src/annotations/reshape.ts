@@ -1,5 +1,5 @@
 import type { Point } from "../measure/ruler-maths.ts";
-import { at, type Geometry, isClosedKind, type Shape } from "./shapes.ts";
+import { at, type Geometry, geometryRules, isClosedKind, type Shape } from "./shapes.ts";
 
 export interface Handle {
   readonly id: number;
@@ -119,4 +119,48 @@ export function removeVertex(shape: Shape, id: number): Geometry {
   points.set(shape.points.subarray(0, id * 2), 0);
   points.set(shape.points.subarray((id + 1) * 2), id * 2);
   return geometryOf(points);
+}
+
+export interface Midpoint {
+  readonly edge: Edge;
+  readonly at: Point;
+}
+
+export function midpointsOf(shape: Shape): Midpoint[] {
+  if (!canInsertVertex(shape)) return [];
+  return edgesOf(shape).map((edge) => ({
+    edge,
+    at: { x: (edge.a.x + edge.b.x) / 2, y: (edge.a.y + edge.b.y) / 2 },
+  }));
+}
+
+export function moveVertices(
+  shape: Shape,
+  ids: readonly number[],
+  dx: number,
+  dy: number,
+): Geometry {
+  const points = shape.points.slice();
+  for (const id of new Set(ids)) {
+    if (id < 0 || id >= vertexCount(shape)) continue;
+    points[id * 2] = at(shape.points, id * 2) + dx;
+    points[id * 2 + 1] = at(shape.points, id * 2 + 1) + dy;
+  }
+  return geometryOf(points);
+}
+
+export function canRemoveVertices(shape: Shape, ids: readonly number[]): boolean {
+  const doomed = new Set(ids.filter((id) => id >= 0 && id < vertexCount(shape)));
+  if (doomed.size === 0 || !vertexKinds.has(shape.kind) || !isReshapable(shape)) return false;
+  return vertexCount(shape) - doomed.size >= geometryRules[shape.kind].minVertices;
+}
+
+export function removeVertices(shape: Shape, ids: readonly number[]): Geometry | null {
+  if (!canRemoveVertices(shape, ids)) return null;
+  const doomed = new Set(ids);
+  const kept: number[] = [];
+  for (let id = 0; id < vertexCount(shape); id += 1) {
+    if (!doomed.has(id)) kept.push(at(shape.points, id * 2), at(shape.points, id * 2 + 1));
+  }
+  return geometryOf(Float32Array.from(kept));
 }

@@ -8,6 +8,7 @@ import {
   createDocument,
   promoteRunPiece,
   updateGroup,
+  updateShape,
 } from "../src/annotations/document.ts";
 import { runFromProposals } from "../src/annotations/runs.ts";
 import { createSelectTool, type SelectTool } from "../src/annotations/select-tool.ts";
@@ -19,7 +20,7 @@ import type {
 } from "../src/screens/input-traces/trace-format.ts";
 import { screenScale, screenToSlide, slideToScreen } from "../src/viewer/viewer-engine.ts";
 
-type Modifiers = { shiftKey?: boolean };
+type Modifiers = { shiftKey?: boolean; altKey?: boolean };
 
 const none = { ctrlKey: false, shiftKey: false, altKey: false, metaKey: false };
 
@@ -498,7 +499,335 @@ describe("select tool double click", () => {
   test("a double click on a shape is kept from zooming and on empty space is left to the camera", () => {
     const r = rig(twoSquares);
     assert.equal(r.tool.handle(viewerInput(doubleClick(200, 200))), true);
+    assert.equal(r.tool.state().editing, 1);
+    assert.equal(r.tool.handle(viewerInput(doubleClick(900, 900))), true);
+    assert.equal(r.tool.state().editing, null);
     assert.equal(r.tool.handle(viewerInput(doubleClick(900, 900))), false);
+  });
+});
+
+describe("select tool point editing", () => {
+  function editingSquare() {
+    const r = rig(twoSquares);
+    r.replay(click(200, 200));
+    assert.equal(r.tool.edit(1), true);
+    return r;
+  }
+
+  test("Enter style entry needs a sole reshapable selectable shape", () => {
+    const r = rig(twoSquares);
+    assert.equal(r.tool.edit(1), true);
+    assert.deepEqual(r.ids(), [1]);
+    assert.equal(r.tool.state().editing, 1);
+    assert.equal(r.tool.edit(99), false);
+    const marks = rig(
+      (doc) => addShape(doc, { kind: "point", points: Float32Array.of(50, 50) }).document,
+    );
+    assert.equal(marks.tool.edit(1), false);
+  });
+
+  test("leaving edit mode keeps the shape selected and drops the vertex selection", () => {
+    const r = editingSquare();
+    r.replay(click(300, 300));
+    assert.deepEqual(r.tool.state().vertices, [2]);
+    assert.equal(r.tool.edit(null), true);
+    assert.equal(r.tool.state().editing, null);
+    assert.deepEqual(r.tool.state().vertices, []);
+    assert.deepEqual(r.ids(), [1]);
+    assert.equal(r.tool.edit(null), false);
+  });
+
+  test("a click on a vertex selects it and Shift click adds and removes vertices", () => {
+    const r = editingSquare();
+    r.replay(click(300, 300));
+    assert.deepEqual(r.tool.state().vertices, [2]);
+    r.replay(click(100, 100, { shiftKey: true }));
+    assert.deepEqual(r.tool.state().vertices, [0, 2]);
+    r.replay(click(300, 300, { shiftKey: true }));
+    assert.deepEqual(r.tool.state().vertices, [0]);
+    r.replay(click(300, 100));
+    assert.deepEqual(r.tool.state().vertices, [1]);
+  });
+
+  test("a marquee in edit mode selects the vertices inside it and a click on empty clears them", () => {
+    const r = editingSquare();
+    r.replay(drag([250, 50], [350, 350]));
+    assert.deepEqual(r.tool.state().vertices, [1, 2]);
+    assert.deepEqual(r.ids(), [1]);
+    r.replay(drag([50, 250], [150, 350], { shiftKey: true }));
+    assert.deepEqual(r.tool.state().vertices, [1, 2, 3]);
+    r.replay(click(900, 900));
+    assert.deepEqual(r.tool.state().vertices, []);
+    assert.equal(r.tool.state().editing, 1);
+  });
+
+  test("dragging a selected vertex moves every selected vertex together in one commit", () => {
+    const r = editingSquare();
+    r.replay(drag([250, 50], [350, 350]));
+    r.replay(drag([300, 300], [320, 340]));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 320, 140, 320, 340, 100, 300]);
+    assert.deepEqual(r.commits, ["Reshape"]);
+  });
+
+  test("dragging an unselected vertex selects only it and moves only it", () => {
+    const r = editingSquare();
+    r.replay(drag([250, 50], [350, 350]));
+    r.replay(drag([100, 100], [90, 80]));
+    assert.deepEqual(r.tool.state().vertices, [0]);
+    assert.deepEqual(pointsOf(r.doc(), 1), [90, 80, 300, 100, 300, 300, 100, 300]);
+  });
+
+  test("arrow nudges move the selected vertices by one screen pixel, ten with Shift", () => {
+    const r = editingSquare();
+    r.replay(drag([250, 50], [350, 350]));
+    assert.equal(r.tool.nudge(1, 0), true);
+    assert.equal(r.tool.nudge(0, 10), true);
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 301, 110, 301, 310, 100, 300]);
+    assert.deepEqual(r.commits, ["Nudge", "Nudge"]);
+    r.replay(click(900, 900));
+    assert.equal(r.tool.nudge(1, 0), false);
+  });
+
+  test("nudges scale with the pixel size so a step is always one screen pixel", () => {
+    const r = rig(twoSquares, 4);
+    r.replay(click(200, 200));
+    r.tool.edit(1);
+    r.replay(click(300, 300));
+    r.tool.nudge(1, 0);
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(4, 6), [304, 300]);
+  });
+
+  test("Delete removes the selected vertices but never below three for a polygon", () => {
+    const r = rig(
+      (doc) =>
+        addShape(doc, {
+          kind: "polygon",
+          points: Float32Array.of(0, 0, 100, 0, 100, 100, 50, 150, 0, 100),
+        }).document,
+    );
+    r.replay(click(50, 50));
+    r.tool.edit(1);
+    r.replay(click(100, 100, { shiftKey: true }));
+    r.replay(click(50, 150, { shiftKey: true }));
+    assert.deepEqual(r.tool.state().vertices, [2, 3]);
+    assert.equal(r.tool.removeSelected(), true);
+    assert.deepEqual(pointsOf(r.doc(), 1), [0, 0, 100, 0, 0, 100]);
+    assert.deepEqual(r.commits, ["Remove points"]);
+    r.replay(click(100, 0));
+    assert.equal(r.tool.removeSelected(), false);
+    assert.deepEqual(pointsOf(r.doc(), 1), [0, 0, 100, 0, 0, 100]);
+    assert.equal(r.tool.state().editing, 1);
+  });
+
+  test("Alt click on a vertex removes it without starting a drag", () => {
+    const r = editingSquare();
+    r.replay(click(300, 300, { altKey: true }));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 300, 100, 100, 300]);
+    assert.deepEqual(r.commits, ["Remove point"]);
+    assert.equal(r.tool.state().gesture, "idle");
+    r.replay(click(300, 100, { altKey: true }));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 300, 100, 100, 300]);
+  });
+
+  test("hovering an edge shows a midpoint and dragging it inserts a point in one commit", () => {
+    const r = editingSquare();
+    r.replay([pointer("pointermove", 200, 100)]);
+    const hover = r.tool.state().hover;
+    assert.equal(hover?.kind, "midpoint");
+    assert.deepEqual(hover?.kind === "midpoint" ? hover.at : null, { x: 200, y: 100 });
+    r.replay(drag([201, 101], [220, 60]));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 219, 59, 300, 100, 300, 300, 100, 300]);
+    assert.deepEqual(r.tool.state().vertices, [1]);
+    assert.deepEqual(r.commits, ["Add point"]);
+  });
+
+  test("Escape in the middle of a midpoint drag takes the new point away again", () => {
+    const r = editingSquare();
+    r.replay(drag([200, 100], [220, 60]).slice(0, 3));
+    assert.equal(pointsOf(r.doc(), 1).length, 10);
+    r.tool.cancel();
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 300, 100, 300, 300, 100, 300]);
+    assert.deepEqual(r.tool.state().vertices, []);
+    assert.deepEqual(r.commits, []);
+  });
+
+  test("the midpoint is only offered in edit mode and edge hover reports the edge otherwise", () => {
+    const r = rig(twoSquares);
+    r.replay(click(200, 200));
+    r.replay([pointer("pointermove", 200, 100)]);
+    assert.equal(r.tool.state().hover?.kind, "edge");
+    r.replay([pointer("pointermove", 300, 300)]);
+    assert.equal(r.tool.state().hover?.kind, "vertex");
+    r.replay([pointer("pointermove", 550, 150)]);
+    assert.deepEqual(r.tool.state().hover, { kind: "shape", id: 2 });
+    r.replay([pointer("pointermove", 900, 900)]);
+    assert.equal(r.tool.state().hover, null);
+  });
+
+  test("select all in edit mode selects every vertex", () => {
+    const r = editingSquare();
+    r.tool.selectAll();
+    assert.deepEqual(r.tool.state().vertices, [0, 1, 2, 3]);
+  });
+
+  test("pressing another shape leaves edit mode and selects that shape", () => {
+    const r = editingSquare();
+    r.replay(click(550, 150));
+    assert.equal(r.tool.state().editing, null);
+    assert.deepEqual(r.ids(), [2]);
+  });
+
+  test("a double click on an edge in edit mode adds a point and on a vertex removes it", () => {
+    const r = editingSquare();
+    r.replay([viewerInput(doubleClick(200, 100))].map(() => doubleClick(200, 100)));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 200, 100, 300, 100, 300, 300, 100, 300]);
+    assert.deepEqual(r.tool.state().vertices, [1]);
+    r.replay([doubleClick(200, 100)]);
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 300, 100, 300, 300, 100, 300]);
+  });
+
+  test("pruning after an undo drops vertices that no longer exist and leaves edit mode when the shape went", () => {
+    const r = editingSquare();
+    r.tool.selectAll();
+    const smaller = updateShape(r.doc(), 1, {
+      geometry: { points: Float32Array.of(0, 0, 10, 0, 0, 10), ringStarts: Uint32Array.of(0, 3) },
+    }).document;
+    r.tool.prune(smaller);
+    assert.deepEqual(r.tool.state().vertices, [0, 1, 2]);
+    r.tool.prune(createDocument());
+    assert.equal(r.tool.state().editing, null);
+    assert.deepEqual(r.ids(), []);
+  });
+});
+
+describe("select tool with several shapes", () => {
+  function bothSelected() {
+    const r = rig(twoSquares);
+    r.tool.selectAll();
+    assert.deepEqual(r.ids(), [1, 2]);
+    return r;
+  }
+
+  test("Delete removes every selected shape in one commit and clears the selection", () => {
+    const r = bothSelected();
+    assert.equal(r.tool.removeSelected(), true);
+    assert.equal(r.doc().shapes.size, 0);
+    assert.deepEqual(r.ids(), []);
+    assert.deepEqual(r.commits, ["Delete"]);
+    assert.equal(r.tool.removeSelected(), false);
+  });
+
+  test("arrow nudges move every selected shape by one screen pixel, ten with Shift", () => {
+    const r = bothSelected();
+    r.tool.nudge(-1, 0);
+    r.tool.nudge(0, 10);
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [99, 110]);
+    assert.deepEqual(pointsOf(r.doc(), 2).slice(0, 2), [499, 110]);
+    assert.deepEqual(r.commits, ["Nudge", "Nudge"]);
+  });
+
+  test("a drag from one selected shape moves both and Shift locks the axis", () => {
+    const r = bothSelected();
+    r.replay(drag([550, 150], [580, 210], { shiftKey: true }));
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [100, 160]);
+    assert.deepEqual(pointsOf(r.doc(), 2).slice(0, 2), [500, 160]);
+    assert.deepEqual(r.commits, ["Move"]);
+  });
+
+  test("Alt drag duplicates the selection and moves the copies in one commit", () => {
+    const r = bothSelected();
+    r.replay(
+      drag([200, 200], [240, 200], {}, 4).map((event) =>
+        event.type === "dblclick" || event.type === "wheel" ? event : { ...event, altKey: true },
+      ),
+    );
+    assert.equal(r.doc().shapes.size, 4);
+    assert.deepEqual(r.ids(), [3, 4]);
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [100, 100]);
+    assert.deepEqual(pointsOf(r.doc(), 3).slice(0, 2), [140, 100]);
+    assert.deepEqual(pointsOf(r.doc(), 4).slice(0, 2), [540, 100]);
+    assert.deepEqual(r.commits, ["Duplicate"]);
+  });
+
+  test("Escape during an Alt drag removes the copies again", () => {
+    const r = bothSelected();
+    const events = drag([200, 200], [240, 200])
+      .slice(0, 3)
+      .map((event) => ({ ...event, altKey: true }));
+    r.replay(events);
+    assert.equal(r.doc().shapes.size, 4);
+    r.tool.cancel();
+    assert.equal(r.doc().shapes.size, 2);
+    assert.deepEqual(r.ids(), [1, 2]);
+  });
+
+  test("select all skips hidden and locked shapes", () => {
+    const r = rig((doc) => {
+      const two = twoSquares(doc);
+      const group = addGroup(two, "hidden");
+      const grouped = updateShape(group.document, 2, { groupId: group.group.id }).document;
+      return updateGroup(grouped, group.group.id, { hidden: true }).document;
+    });
+    r.tool.selectAll();
+    assert.deepEqual(r.ids(), [1]);
+  });
+
+  test("markers and text are picked within twelve screen pixels and move with the others", () => {
+    const r = rig((doc) => {
+      const marker = addShape(twoSquares(doc), {
+        kind: "point",
+        points: Float32Array.of(700, 700),
+      });
+      return addShape(marker.document, {
+        kind: "text",
+        points: Float32Array.of(800, 800),
+        text: "note",
+      }).document;
+    });
+    r.replay(click(709, 700));
+    assert.deepEqual(r.ids(), [3]);
+    r.replay(click(808, 808, { shiftKey: true }));
+    assert.deepEqual(r.ids(), [3, 4]);
+    r.replay(click(715, 700, { shiftKey: true }));
+    assert.deepEqual(r.ids(), [3, 4]);
+    r.replay(drag([700, 700], [710, 720]));
+    assert.deepEqual(pointsOf(r.doc(), 3), [710, 720]);
+    assert.deepEqual(pointsOf(r.doc(), 4), [810, 820]);
+    r.replay(drag([650, 650], [850, 850]));
+    assert.deepEqual(r.ids(), [3, 4]);
+  });
+
+  test("a double click on text asks the host to edit it instead of entering point editing", () => {
+    const edited: number[] = [];
+    let doc = addShape(createDocument(), {
+      kind: "text",
+      points: Float32Array.of(800, 800),
+      text: "note",
+    }).document;
+    const tool = createSelectTool({
+      document: () => doc,
+      setDocument: (next) => {
+        doc = next;
+      },
+      toSlide: (point) => ({ x: point.clientX, y: point.clientY }),
+      pixelSize: () => 1,
+      editText: (id) => edited.push(id),
+    });
+    assert.equal(tool.handle(viewerInput(doubleClick(800, 800))), true);
+    assert.deepEqual(edited, [1]);
+    assert.equal(tool.state().editing, null);
+    assert.deepEqual(tool.state().ids, [1]);
+  });
+
+  test("a double click on an arrow enters point editing of its ends", () => {
+    const r = rig(
+      (doc) => addShape(doc, { kind: "arrow", points: Float32Array.of(0, 0, 100, 100) }).document,
+    );
+    r.replay([doubleClick(50, 50)]);
+    assert.equal(r.tool.state().editing, 1);
+    r.replay(drag([100, 100], [120, 130]));
+    assert.deepEqual(pointsOf(r.doc(), 1), [0, 0, 120, 130]);
+    assert.equal(r.tool.removeSelected(), false);
   });
 });
 

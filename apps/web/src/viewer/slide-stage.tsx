@@ -486,6 +486,7 @@ function OpenedSlide({
               document={annotations}
               onDocumentChange={setAnnotations}
               onCommit={saved.commit}
+              onEditText={(id) => textControl.current?.edit(id)}
             />
             <PinLayer
               engine={session.engine}

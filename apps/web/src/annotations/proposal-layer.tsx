@@ -3,6 +3,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { slideToScreen } from "../viewer/viewer-engine.ts";
 import type { Proposal } from "./proposals.ts";
 import { at } from "./shapes.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type ProposalLayerProps = {
   engine: ViewerEngine;
@@ -23,8 +24,8 @@ export function ProposalLayer({
   onDiscard,
 }: ProposalLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   if (proposals.length === 0) return null;
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
 
   return (
     <>

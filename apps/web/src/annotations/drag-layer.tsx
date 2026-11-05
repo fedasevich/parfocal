@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
-import { type DragKind, dragCorner, dragOutline, finishDrag } from "./drag-shape.ts";
+import { type DragKind, dragFrame, dragOutline, finishDrag } from "./drag-shape.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
+  bindSpacePan,
   capturePointer,
   interruptMotion,
   releasePointer,
@@ -21,7 +22,7 @@ type DragLayerProps = {
   onClose: (points: Float32Array) => void;
 };
 
-type Drag = { id: number; start: Point; pointer: Point; equal: boolean };
+type Drag = { id: number; start: Point; pointer: Point; equal: boolean; centred: boolean };
 
 export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
@@ -37,8 +38,12 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       return;
     }
     let current: Drag | null = null;
+    const pan = bindSpacePan(stage, {
+      engine: () => latest.current.engine,
+      gesturing: () => current !== null,
+    });
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || current !== null) return;
+      if (event.button !== 0 || current !== null || pan.held()) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);
@@ -48,13 +53,23 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
         start: slideAt(latest.current.engine, stage, event),
         pointer: stagePoint(stage, event),
         equal: event.shiftKey,
+        centred: event.altKey,
       };
       setDrag(current);
     };
     const move = (event: PointerEvent) => {
-      if (current === null || event.pointerId !== current.id) return;
+      if (current === null || event.pointerId !== current.id) {
+        pan.track(event);
+        return;
+      }
       event.stopImmediatePropagation();
-      current = { ...current, pointer: stagePoint(stage, event), equal: event.shiftKey };
+      if (pan.steer(event)) return;
+      current = {
+        ...current,
+        pointer: stagePoint(stage, event),
+        equal: event.shiftKey,
+        centred: event.altKey,
+      };
       setDrag(current);
     };
     const up = (event: PointerEvent) => {
@@ -62,13 +77,14 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       event.stopImmediatePropagation();
       const finished = current;
       current = null;
+      pan.release();
       releasePointer(stage, event.pointerId);
       setDrag(null);
       const outline = finishDrag(
         latest.current.kind,
         finished.start,
         slideAt(latest.current.engine, stage, event),
-        event.shiftKey,
+        { equalSides: event.shiftKey, fromCentre: event.altKey },
         screenScale(latest.current.engine.getCamera()),
       );
       if (outline !== null) latest.current.onClose(outline);
@@ -76,17 +92,24 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
     const cancel = (event: PointerEvent) => {
       if (current === null || event.pointerId !== current.id) return;
       current = null;
+      pan.release();
       setDrag(null);
     };
     const abandon = () => {
       current = null;
+      pan.release();
       setDrag(null);
+    };
+    const doubleClick = (event: MouseEvent) => {
+      event.stopImmediatePropagation();
+      event.preventDefault();
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
     stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => current !== null, peel: abandon });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
@@ -94,6 +117,8 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
       stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("dblclick", doubleClick, true);
+      pan.dispose();
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);
@@ -101,7 +126,8 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
   let path = "";
   if (drag !== null) {
     const end = screenToSlide(camera, rect, drag.pointer.x, drag.pointer.y);
-    const outline = dragOutline(kind, drag.start, dragCorner(drag.start, end, drag.equal));
+    const frame = dragFrame(drag.start, end, { equalSides: drag.equal, fromCentre: drag.centred });
+    const outline = dragOutline(kind, frame.a, frame.b);
     for (let i = 0; i < outline.length; i += 2) {
       const p = slideToScreen(camera, rect, { x: outline[i] ?? 0, y: outline[i + 1] ?? 0 });
       path += `${i === 0 ? "M" : "L"}${p.x} ${p.y} `;
@@ -114,6 +140,7 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       data-testid="drag-layer"
       data-drawing={drag === null ? 0 : 1}
       data-equal-sides={drag?.equal ? "true" : "false"}
+      data-from-centre={drag?.centred ? "true" : "false"}
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 size-full overflow-visible"
     >

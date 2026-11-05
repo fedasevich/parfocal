@@ -1,5 +1,6 @@
 import { type RefObject, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
+import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -14,6 +15,7 @@ import {
 } from "./polygon-draft.ts";
 import { at } from "./shapes.ts";
 import {
+  bindSpacePan,
   capturePointer,
   interruptMotion,
   releasePointer,
@@ -93,6 +95,10 @@ export function PolygonLayer({
       return;
     }
     let pressed: { id: number; x: number; y: number } | null = null;
+    const pan = bindSpacePan(stage, {
+      engine: () => latest.current.engine,
+      gesturing: () => pressed !== null,
+    });
     let lastClose: TimedPoint | null = null;
     const toSlide = (event: MouseEvent): Point => {
       const point = slideAt(latest.current.engine, stage, event);
@@ -112,7 +118,7 @@ export function PolygonLayer({
     };
 
     const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || pan.held()) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);
@@ -120,15 +126,23 @@ export function PolygonLayer({
       pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
     };
     const move = (event: PointerEvent) => {
-      if (pressed !== null) event.stopImmediatePropagation();
       setPointer({ ...stagePoint(stage, event), shift: event.shiftKey });
+      if (pressed === null) {
+        pan.track(event);
+        return;
+      }
+      event.stopImmediatePropagation();
+      pan.steer(event);
     };
     const up = (event: PointerEvent) => {
       if (pressed === null || event.pointerId !== pressed.id) return;
       event.stopImmediatePropagation();
       const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
+      const panned = pan.panning();
       pressed = null;
+      pan.release();
       releasePointer(stage, event.pointerId);
+      if (panned) return;
       if (moved > clickSlopScreenPixels) return;
       const click = { ...stagePoint(stage, event), time: event.timeStamp };
       if (echoesClose(lastClose, click)) return;
@@ -157,7 +171,14 @@ export function PolygonLayer({
     };
     const key = (event: KeyboardEvent) => {
       shiftChanged(event);
+      if (isTyping(event.target)) return;
       if (event.key === "Enter") apply(closeDraft(latest.current.draft));
+      if (event.key === "Backspace" && latest.current.draft.length > 0) {
+        event.preventDefault();
+        const next = latest.current.draft.slice(0, -1);
+        latest.current.draft = next;
+        setDraft(next);
+      }
     };
 
     stage.addEventListener("pointerdown", down, true);
@@ -186,6 +207,7 @@ export function PolygonLayer({
       stage.removeEventListener("dblclick", doubleClick, true);
       window.removeEventListener("keydown", key);
       window.removeEventListener("keyup", shiftChanged);
+      pan.dispose();
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);

@@ -1,6 +1,6 @@
 import { type AnnotationDocument, addShape } from "./document.ts";
 import type { Point } from "./polygon-draft.ts";
-import { at, type Shape } from "./shapes.ts";
+import { at, type Shape, type ShapeId } from "./shapes.ts";
 
 export const arrowHeadScreenPixels = 14;
 
@@ -10,7 +10,11 @@ export const maxTextLength = 200;
 
 export type ArrowEnds = { readonly from: Point; readonly to: Point };
 
-export type TextDraft = { readonly point: Point; readonly text: string };
+export type TextDraft = {
+  readonly point: Point;
+  readonly text: string;
+  readonly id?: ShapeId;
+};
 
 export function addArrow(doc: AnnotationDocument, ends: ArrowEnds): AnnotationDocument {
   return addShape(doc, {

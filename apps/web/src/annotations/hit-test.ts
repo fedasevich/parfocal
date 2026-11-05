@@ -86,9 +86,17 @@ export function isSelectable(doc: AnnotationDocument, shape: Shape): boolean {
   return !isShapeHidden(doc, shape) && !isShapeLocked(doc, shape);
 }
 
-export function pickShape(doc: AnnotationDocument, p: Point, tolerance: number): Shape | null {
+const markKinds: ReadonlySet<string> = new Set(["point", "text"]);
+
+export function pickShape(
+  doc: AnnotationDocument,
+  p: Point,
+  tolerance: number,
+  markTolerance = tolerance,
+): Shape | null {
   const stack = [...doc.shapes.values()].reverse().filter((shape) => isSelectable(doc, shape));
-  const onOutline = stack.find((shape) => distanceToOutline(shape, p) <= tolerance);
+  const reach = (shape: Shape) => (markKinds.has(shape.kind) ? markTolerance : tolerance);
+  const onOutline = stack.find((shape) => distanceToOutline(shape, p) <= reach(shape));
   if (onOutline) return onOutline;
   return stack.find((shape) => isInsideFill(shape, p)) ?? null;
 }

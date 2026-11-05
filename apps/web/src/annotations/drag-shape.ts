@@ -13,6 +13,19 @@ export function dragCorner(start: Point, end: Point, equalSides: boolean): Point
   return { x: start.x + (dx < 0 ? -side : side), y: start.y + (dy < 0 ? -side : side) };
 }
 
+export type DragModifiers = { readonly equalSides: boolean; readonly fromCentre: boolean };
+
+export type DragFrame = { readonly a: Point; readonly b: Point };
+
+export function dragFrame(start: Point, end: Point, modifiers: DragModifiers): DragFrame {
+  const corner = dragCorner(start, end, modifiers.equalSides);
+  if (!modifiers.fromCentre) return { a: start, b: corner };
+  return {
+    a: { x: 2 * start.x - corner.x, y: 2 * start.y - corner.y },
+    b: corner,
+  };
+}
+
 export function dragOutline(kind: DragKind, start: Point, corner: Point): Float32Array {
   if (kind === "rectangle") {
     return Float32Array.of(
@@ -43,12 +56,14 @@ export function finishDrag(
   kind: DragKind,
   start: Point,
   end: Point,
-  equalSides: boolean,
+  modifiers: DragModifiers | boolean,
   scale: number,
 ): Float32Array | null {
-  const corner = dragCorner(start, end, equalSides);
-  const width = Math.abs(corner.x - start.x) * scale;
-  const height = Math.abs(corner.y - start.y) * scale;
+  const chosen =
+    typeof modifiers === "boolean" ? { equalSides: modifiers, fromCentre: false } : modifiers;
+  const frame = dragFrame(start, end, chosen);
+  const width = Math.abs(frame.b.x - frame.a.x) * scale;
+  const height = Math.abs(frame.b.y - frame.a.y) * scale;
   if (width < minimumDragScreenPixels || height < minimumDragScreenPixels) return null;
-  return dragOutline(kind, start, corner);
+  return dragOutline(kind, frame.a, frame.b);
 }

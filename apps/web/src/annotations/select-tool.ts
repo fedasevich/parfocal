@@ -1,31 +1,55 @@
 import type { DoubleClickInput, InputPoint, PointerInput } from "@parfocal/viewer-engine";
 import { minimumDragScreenPixels, type Point, snapToAngle } from "../measure/ruler-maths.ts";
-import { type AnnotationDocument, moveShape, updateShape } from "./document.ts";
-import { extentOfCorners, pickShape, projectOnSegment, shapesInExtent } from "./hit-test.ts";
+import { deleteShapes } from "./clear.ts";
+import { type AnnotationDocument, addShape, moveShape, updateShape } from "./document.ts";
+import {
+  extentOfCorners,
+  isSelectable,
+  pickShape,
+  projectOnSegment,
+  shapesInExtent,
+} from "./hit-test.ts";
 import {
   canInsertVertex,
   canRemoveVertex,
+  canRemoveVertices,
   type Edge,
   edgesOf,
   type Handle,
   handlesOf,
   insertVertex,
+  isReshapable,
+  midpointsOf,
   moveEdge,
   moveHandle,
+  moveVertices,
   neighbourOf,
   removeVertex,
+  removeVertices,
 } from "./reshape.ts";
 import type { Extent, Geometry, Shape, ShapeId } from "./shapes.ts";
 
 export const hitTolerancePx = 6;
+export const markHitTolerancePx = 12;
 export const handleRadiusPx = 8;
+export const nudgeStepPx = 1;
+export const fastNudgeStepPx = 10;
 
 export type SelectGesture = "idle" | "press" | "move" | "marquee" | "vertex" | "edge";
+
+export type Hover =
+  | { readonly kind: "shape"; readonly id: ShapeId }
+  | { readonly kind: "vertex"; readonly id: ShapeId; readonly vertex: number }
+  | { readonly kind: "edge"; readonly id: ShapeId; readonly edge: Edge; readonly at: Point }
+  | { readonly kind: "midpoint"; readonly id: ShapeId; readonly edge: Edge; readonly at: Point };
 
 export interface SelectState {
   readonly ids: readonly ShapeId[];
   readonly gesture: SelectGesture;
   readonly marquee: Extent | null;
+  readonly editing: ShapeId | null;
+  readonly vertices: readonly number[];
+  readonly hover: Hover | null;
 }
 
 export interface SelectHost {
@@ -34,6 +58,7 @@ export interface SelectHost {
   readonly toSlide: (at: InputPoint) => Point;
   readonly pixelSize: () => number;
   readonly commit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
+  readonly editText?: (id: ShapeId) => void;
 }
 
 export type SelectInput = PointerInput | DoubleClickInput;
@@ -45,6 +70,10 @@ export interface SelectTool {
   readonly subscribe: (listener: () => void) => () => void;
   readonly select: (ids: readonly ShapeId[]) => void;
   readonly prune: (doc?: AnnotationDocument) => void;
+  readonly edit: (id: ShapeId | null) => boolean;
+  readonly selectAll: () => void;
+  readonly nudge: (dxPx: number, dyPx: number) => boolean;
+  readonly removeSelected: () => boolean;
 }
 
 type Press = {
@@ -53,24 +82,52 @@ type Press = {
   readonly slide: Point;
   readonly base: AnnotationDocument;
   readonly baseIds: readonly ShapeId[];
+  readonly baseVertices: readonly number[];
   readonly shift: boolean;
+  readonly alt: boolean;
+  work: AnnotationDocument;
   moved: boolean;
 };
 
 type Gesture =
   | (Press & { readonly kind: "shape"; readonly shapeId: ShapeId; readonly wasSelected: boolean })
   | (Press & { readonly kind: "empty" })
-  | (Press & { readonly kind: "vertex"; readonly shapeId: ShapeId; readonly handle: Handle })
+  | (Press & {
+      readonly kind: "vertex";
+      readonly shapeId: ShapeId;
+      readonly handle: Handle;
+      readonly label: string;
+    })
   | (Press & { readonly kind: "edge"; readonly shapeId: ShapeId; readonly edge: Edge });
 
-const idle: SelectState = { ids: [], gesture: "idle", marquee: null };
+const idle: SelectState = {
+  ids: [],
+  gesture: "idle",
+  marquee: null,
+  editing: null,
+  vertices: [],
+  hover: null,
+};
 
-function sameIds(a: readonly ShapeId[], b: readonly ShapeId[]): boolean {
+function sameList(a: readonly number[], b: readonly number[]): boolean {
   return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
-function sorted(ids: Iterable<ShapeId>): ShapeId[] {
+function sorted(ids: Iterable<number>): number[] {
   return [...new Set(ids)].sort((a, b) => a - b);
+}
+
+function sameHover(a: Hover | null, b: Hover | null): boolean {
+  if (a === null || b === null) return a === b;
+  if (a.kind !== b.kind || a.id !== b.id) return false;
+  if (a.kind === "vertex" && b.kind === "vertex") return a.vertex === b.vertex;
+  if (
+    (a.kind === "edge" || a.kind === "midpoint") &&
+    (b.kind === "edge" || b.kind === "midpoint")
+  ) {
+    return a.edge.from === b.edge.from && a.at.x === b.at.x && a.at.y === b.at.y;
+  }
+  return true;
 }
 
 export function lockAxis(from: Point, to: Point): Point {
@@ -87,23 +144,39 @@ export function createSelectTool(host: SelectHost): SelectTool {
   const set = (patch: Partial<SelectState>) => {
     const next = { ...state, ...patch };
     const changed =
-      !sameIds(next.ids, state.ids) ||
+      !sameList(next.ids, state.ids) ||
+      !sameList(next.vertices, state.vertices) ||
       next.gesture !== state.gesture ||
-      next.marquee !== state.marquee;
+      next.marquee !== state.marquee ||
+      next.editing !== state.editing ||
+      !sameHover(next.hover, state.hover);
     if (!changed) return;
-    state = sameIds(next.ids, state.ids) ? { ...next, ids: state.ids } : next;
+    state = {
+      ...next,
+      ids: sameList(next.ids, state.ids) ? state.ids : next.ids,
+      vertices: sameList(next.vertices, state.vertices) ? state.vertices : next.vertices,
+    };
     for (const listener of listeners) listener();
   };
 
   const screenOf = (input: InputPoint): Point => ({ x: input.clientX, y: input.clientY });
   const handleRadius = () => handleRadiusPx * host.pixelSize();
   const tolerance = () => hitTolerancePx * host.pixelSize();
+  const markTolerance = () => markHitTolerancePx * host.pixelSize();
+
+  const pick = (doc: AnnotationDocument, p: Point) =>
+    pickShape(doc, p, tolerance(), markTolerance());
+
+  const editShape = (): Shape | null =>
+    state.editing === null ? null : (host.document().shapes.get(state.editing) ?? null);
 
   const soleShape = (): Shape | null => {
     const [only, ...rest] = state.ids;
     if (only === undefined || rest.length > 0) return null;
     return host.document().shapes.get(only) ?? null;
   };
+
+  const handleShape = (): Shape | null => editShape() ?? soleShape();
 
   const handleAt = (shape: Shape, p: Point): Handle | null => {
     let best: Handle | null = null;
@@ -112,6 +185,19 @@ export function createSelectTool(host: SelectHost): SelectTool {
       const distance = Math.hypot(handle.x - p.x, handle.y - p.y);
       if (distance <= bestDistance) {
         best = handle;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  };
+
+  const midpointAt = (shape: Shape, p: Point) => {
+    let best: { edge: Edge; at: Point } | null = null;
+    let bestDistance = handleRadius();
+    for (const midpoint of midpointsOf(shape)) {
+      const distance = Math.hypot(midpoint.at.x - p.x, midpoint.at.y - p.y);
+      if (distance <= bestDistance) {
+        best = midpoint;
         bestDistance = distance;
       }
     }
@@ -131,40 +217,129 @@ export function createSelectTool(host: SelectHost): SelectTool {
     return best;
   };
 
-  const startPress = (input: PointerInput): Press => ({
-    pointerId: input.pointerId,
-    screen: screenOf(input),
-    slide: host.toSlide(input),
-    base: host.document(),
-    baseIds: state.ids,
-    shift: input.shiftKey,
-    moved: false,
-  });
+  const hoverAt = (p: Point): Hover | null => {
+    const shape = handleShape();
+    if (shape) {
+      const handle = handleAt(shape, p);
+      if (handle) return { kind: "vertex", id: shape.id, vertex: handle.id };
+      if (state.editing !== null) {
+        const midpoint = midpointAt(shape, p);
+        if (midpoint) return { kind: "midpoint", id: shape.id, ...midpoint };
+      }
+      const edge = edgeAt(shape, p);
+      if (edge) return { kind: "edge", id: shape.id, ...edge };
+    }
+    const hit = pick(host.document(), p);
+    return hit ? { kind: "shape", id: hit.id } : null;
+  };
+
+  const commit = (before: AnnotationDocument, after: AnnotationDocument, label: string) => {
+    if (after !== before) host.commit?.(before, after, label);
+  };
+
+  const apply = (before: AnnotationDocument, after: AnnotationDocument, label: string) => {
+    host.setDocument(after);
+    commit(before, after, label);
+  };
+
+  const startPress = (input: PointerInput): Press => {
+    const base = host.document();
+    return {
+      pointerId: input.pointerId,
+      screen: screenOf(input),
+      slide: host.toSlide(input),
+      base,
+      work: base,
+      baseIds: state.ids,
+      baseVertices: state.vertices,
+      shift: input.shiftKey,
+      alt: input.altKey,
+      moved: false,
+    };
+  };
+
+  const pressHandle = (press: Press, shape: Shape, handle: Handle): boolean => {
+    if (state.editing !== null && press.alt) {
+      if (canRemoveVertices(shape, [handle.id])) {
+        const geometry = removeVertices(shape, [handle.id]);
+        if (geometry) {
+          apply(
+            press.base,
+            updateShape(press.base, shape.id, { geometry }).document,
+            "Remove point",
+          );
+          set({ vertices: [] });
+        }
+      }
+      return true;
+    }
+    let vertices = state.vertices;
+    if (state.editing !== null) {
+      if (press.shift) {
+        vertices = vertices.includes(handle.id)
+          ? vertices.filter((id) => id !== handle.id)
+          : sorted([...vertices, handle.id]);
+      } else if (!vertices.includes(handle.id)) {
+        vertices = [handle.id];
+      }
+    }
+    gesture = { ...press, kind: "vertex", shapeId: shape.id, handle, label: "Reshape" };
+    set({ gesture: "press", vertices });
+    return true;
+  };
+
+  const pressMidpoint = (press: Press, shape: Shape, midpoint: { edge: Edge; at: Point }) => {
+    const geometry = insertVertex(shape, midpoint.edge, midpoint.at);
+    const work = updateShape(press.base, shape.id, { geometry }).document;
+    const inserted = work.shapes.get(shape.id);
+    const handle = inserted
+      ? (handlesOf(inserted).find((candidate) => candidate.id === midpoint.edge.from + 1) ?? null)
+      : null;
+    if (!inserted || !handle) return false;
+    host.setDocument(work);
+    gesture = {
+      ...press,
+      work,
+      kind: "vertex",
+      shapeId: shape.id,
+      handle,
+      label: "Add point",
+      moved: true,
+    };
+    set({ gesture: "vertex", vertices: [handle.id] });
+    return true;
+  };
 
   const down = (input: PointerInput): boolean => {
     if (input.button !== 0) return false;
     if (gesture !== null) return true;
     const press = startPress(input);
-    const sole = soleShape();
-    if (sole) {
-      const handle = handleAt(sole, press.slide);
-      if (handle) {
-        gesture = { ...press, kind: "vertex", shapeId: sole.id, handle };
-        set({ gesture: "press" });
-        return true;
+    const shape = handleShape();
+    if (shape) {
+      const handle = handleAt(shape, press.slide);
+      if (handle) return pressHandle(press, shape, handle);
+      if (state.editing !== null && canInsertVertex(shape)) {
+        const midpoint = midpointAt(shape, press.slide);
+        if (midpoint && pressMidpoint(press, shape, midpoint)) return true;
       }
-      const edge = edgeAt(sole, press.slide);
+      const edge = edgeAt(shape, press.slide);
       if (edge) {
-        gesture = { ...press, kind: "edge", shapeId: sole.id, edge: edge.edge };
-        set({ gesture: "press" });
+        gesture = { ...press, kind: "edge", shapeId: shape.id, edge: edge.edge };
+        set({ gesture: "press", vertices: [edge.edge.from, edge.edge.to].sort((a, b) => a - b) });
         return true;
       }
     }
-    const hit = pickShape(press.base, press.slide, tolerance());
+    const hit = pick(press.base, press.slide);
     if (hit) {
-      const wasSelected = state.ids.includes(hit.id);
+      const leaving = state.editing !== null && hit.id !== state.editing;
+      const wasSelected = !leaving && state.ids.includes(hit.id);
       gesture = { ...press, kind: "shape", shapeId: hit.id, wasSelected };
-      set({ gesture: "press", ids: wasSelected || press.shift ? state.ids : [hit.id] });
+      set({
+        gesture: "press",
+        editing: leaving ? null : state.editing,
+        vertices: leaving ? [] : state.vertices,
+        ids: wasSelected || (press.shift && !leaving) ? state.ids : [hit.id],
+      });
       return true;
     }
     gesture = { ...press, kind: "empty" };
@@ -177,11 +352,32 @@ export function createSelectTool(host: SelectHost): SelectTool {
     return { x: target.x - current.slide.x, y: target.y - current.slide.y };
   };
 
+  const duplicateSelection = (current: Extract<Gesture, { kind: "shape" }>) => {
+    let next = current.base;
+    const copies: ShapeId[] = [];
+    for (const id of state.ids) {
+      const original = current.base.shapes.get(id);
+      if (!original) continue;
+      const added = addShape(next, {
+        kind: original.kind,
+        points: original.points.slice(),
+        ringStarts: original.ringStarts.slice(),
+        classKey: original.classKey,
+        groupId: original.groupId,
+        text: original.text,
+      });
+      next = added.document;
+      copies.push(added.shape.id);
+    }
+    current.work = next;
+    set({ ids: copies });
+  };
+
   const applyMove = (current: Extract<Gesture, { kind: "shape" }>, at: Point, shift: boolean) => {
     const delta = slideDelta(current, at, shift);
-    let next = current.base;
+    let next = current.work;
     for (const id of state.ids) {
-      if (current.base.shapes.has(id)) next = moveShape(next, id, delta.x, delta.y).document;
+      if (current.work.shapes.has(id)) next = moveShape(next, id, delta.x, delta.y).document;
     }
     host.setDocument(next);
   };
@@ -191,7 +387,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
     at: Point,
     shift: boolean,
   ) => {
-    const shape = current.base.shapes.get(current.shapeId);
+    const shape = current.work.shapes.get(current.shapeId);
     if (!shape) return;
     const carried = {
       x: current.handle.x + at.x - current.slide.x,
@@ -199,8 +395,16 @@ export function createSelectTool(host: SelectHost): SelectTool {
     };
     const anchor = shift ? neighbourOf(shape, current.handle.id) : null;
     const target = anchor ? snapToAngle(anchor, carried) : carried;
-    const geometry = moveHandle(shape, current.handle.id, target);
-    host.setDocument(updateShape(current.base, shape.id, { geometry }).document);
+    const together = state.editing !== null && state.vertices.length > 1;
+    const geometry = together
+      ? moveVertices(
+          shape,
+          state.vertices,
+          target.x - current.handle.x,
+          target.y - current.handle.y,
+        )
+      : moveHandle(shape, current.handle.id, target);
+    host.setDocument(updateShape(current.work, shape.id, { geometry }).document);
   };
 
   const applyEdge = (current: Extract<Gesture, { kind: "edge" }>, at: Point, shift: boolean) => {
@@ -218,7 +422,20 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   const applyMarquee = (current: Gesture, at: Point) => {
     const area = extentOfCorners(current.slide, at);
-    const inside = shapesInExtent(current.base, area).map((shape) => shape.id);
+    const shape = editShape();
+    if (shape) {
+      const inside = handlesOf(shape)
+        .filter((handle) => handle.x >= area[0] && handle.x <= area[2])
+        .filter((handle) => handle.y >= area[1] && handle.y <= area[3])
+        .map((handle) => handle.id);
+      set({
+        gesture: "marquee",
+        marquee: area,
+        vertices: sorted(current.shift ? [...current.baseVertices, ...inside] : inside),
+      });
+      return;
+    }
+    const inside = shapesInExtent(current.base, area).map((candidate) => candidate.id);
     set({
       gesture: "marquee",
       marquee: area,
@@ -228,7 +445,10 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   const move = (input: PointerInput): boolean => {
     const current = gesture;
-    if (current === null || input.pointerId !== current.pointerId) return false;
+    if (current === null || input.pointerId !== current.pointerId) {
+      if (current === null) set({ hover: hoverAt(host.toSlide(input)) });
+      return false;
+    }
     const travelled = Math.hypot(
       input.clientX - current.screen.x,
       input.clientY - current.screen.y,
@@ -237,21 +457,22 @@ export function createSelectTool(host: SelectHost): SelectTool {
     const at = host.toSlide(input);
     if (!current.moved) {
       current.moved = true;
-      if (current.kind === "shape" && !state.ids.includes(current.shapeId)) {
-        set({ ids: [current.shapeId] });
+      if (current.kind === "shape") {
+        if (!state.ids.includes(current.shapeId)) set({ ids: [current.shapeId] });
+        if (current.alt) duplicateSelection(current);
       }
     }
     switch (current.kind) {
       case "shape":
-        set({ gesture: "move" });
+        set({ gesture: "move", hover: null });
         applyMove(current, at, input.shiftKey);
         break;
       case "vertex":
-        set({ gesture: "vertex" });
+        set({ gesture: "vertex", hover: null });
         applyVertex(current, at, input.shiftKey);
         break;
       case "edge":
-        set({ gesture: "edge" });
+        set({ gesture: "edge", hover: null });
         applyEdge(current, at, input.shiftKey);
         break;
       case "empty":
@@ -272,14 +493,17 @@ export function createSelectTool(host: SelectHost): SelectTool {
         set({ ids: [current.shapeId] });
       }
     }
-    if (current.kind === "empty" && !current.shift) set({ ids: [] });
+    if (current.kind === "empty") {
+      if (state.editing !== null) set({ vertices: [] });
+      else if (!current.shift) set({ ids: [] });
+    }
   };
 
-  const labelOf: Record<Gesture["kind"], string> = {
-    shape: "Move",
-    vertex: "Reshape",
-    edge: "Reshape",
-    empty: "Select",
+  const labelOf = (current: Gesture): string => {
+    if (current.kind === "vertex") return current.label;
+    if (current.kind === "edge") return "Reshape";
+    if (current.kind === "shape") return current.alt ? "Duplicate" : "Move";
+    return "Select";
   };
 
   const up = (input: PointerInput): boolean => {
@@ -290,7 +514,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
     set({ gesture: "idle", marquee: null });
     if (current.moved && current.kind !== "empty") {
       const after = host.document();
-      if (after !== current.base) host.commit?.(current.base, after, labelOf[current.kind]);
+      commit(current.base, after, labelOf(current));
     }
     return true;
   };
@@ -299,37 +523,125 @@ export function createSelectTool(host: SelectHost): SelectTool {
     const current = gesture;
     if (current === null) return false;
     gesture = null;
-    if (current.moved && current.kind !== "empty") host.setDocument(current.base);
-    set({ gesture: "idle", marquee: null, ids: current.baseIds });
+    if (host.document() !== current.base) host.setDocument(current.base);
+    set({
+      gesture: "idle",
+      marquee: null,
+      ids: current.baseIds,
+      vertices:
+        current.kind === "vertex" && current.label === "Add point" ? [] : current.baseVertices,
+    });
+    return true;
+  };
+
+  const edit = (id: ShapeId | null): boolean => {
+    if (id === null) {
+      if (state.editing === null) return false;
+      set({ editing: null, vertices: [] });
+      return true;
+    }
+    const shape = host.document().shapes.get(id);
+    if (!shape || !isReshapable(shape) || !isSelectable(host.document(), shape)) return false;
+    set({ ids: [id], editing: id, vertices: [] });
     return true;
   };
 
   const doubleClick = (input: DoubleClickInput): boolean => {
     if (input.button !== 0) return false;
     const at = host.toSlide(input);
-    const sole = soleShape();
-    if (sole) {
-      const handle = handleAt(sole, at);
+    const shape = handleShape();
+    if (shape) {
+      const handle = handleAt(shape, at);
       if (handle) {
-        if (canRemoveVertex(sole)) apply(sole, removeVertex(sole, handle.id), "Remove point");
+        if (canRemoveVertex(shape)) {
+          apply(
+            host.document(),
+            updateShape(host.document(), shape.id, { geometry: removeVertex(shape, handle.id) })
+              .document,
+            "Remove point",
+          );
+          set({ vertices: [] });
+        }
         return true;
       }
-      const edge = edgeAt(sole, at);
+      const edge = edgeAt(shape, at);
       if (edge) {
-        if (canInsertVertex(sole)) {
-          apply(sole, insertVertex(sole, edge.edge, edge.at), "Add point");
+        if (canInsertVertex(shape)) {
+          applyGeometry(shape, insertVertex(shape, edge.edge, edge.at), "Add point");
+          set({ vertices: [edge.edge.from + 1] });
         }
         return true;
       }
     }
-    return pickShape(host.document(), at, tolerance()) !== null;
+    const hit = pick(host.document(), at);
+    if (hit === null) {
+      if (state.editing === null) return false;
+      edit(null);
+      return true;
+    }
+    if (hit.kind === "text") {
+      set({ ids: [hit.id], editing: null, vertices: [] });
+      host.editText?.(hit.id);
+      return true;
+    }
+    if (!edit(hit.id)) set({ ids: [hit.id] });
+    return true;
   };
 
-  const apply = (shape: Shape, geometry: Geometry, label: string) => {
+  const applyGeometry = (shape: Shape, geometry: Geometry, label: string) => {
     const before = host.document();
-    const after = updateShape(before, shape.id, { geometry }).document;
-    host.setDocument(after);
-    host.commit?.(before, after, label);
+    apply(before, updateShape(before, shape.id, { geometry }).document, label);
+  };
+
+  const nudge = (dxPx: number, dyPx: number): boolean => {
+    const before = host.document();
+    const dx = dxPx * host.pixelSize();
+    const dy = dyPx * host.pixelSize();
+    const shape = editShape();
+    if (shape) {
+      if (state.vertices.length === 0) return false;
+      applyGeometry(shape, moveVertices(shape, state.vertices, dx, dy), "Nudge");
+      return true;
+    }
+    if (state.ids.length === 0) return false;
+    let next = before;
+    for (const id of state.ids) {
+      if (next.shapes.has(id)) next = moveShape(next, id, dx, dy).document;
+    }
+    apply(before, next, "Nudge");
+    return true;
+  };
+
+  const removeSelected = (): boolean => {
+    const before = host.document();
+    const shape = editShape();
+    if (shape) {
+      const geometry = removeVertices(shape, state.vertices);
+      if (geometry === null) return false;
+      applyGeometry(shape, geometry, "Remove points");
+      set({ vertices: [] });
+      return true;
+    }
+    if (state.ids.length === 0) return false;
+    apply(before, deleteShapes(before, state.ids).document, "Delete");
+    set({ ids: [], hover: null });
+    return true;
+  };
+
+  const selectAll = () => {
+    const doc = host.document();
+    const shape = editShape();
+    if (shape) {
+      set({ vertices: handlesOf(shape).map((handle) => handle.id) });
+      return;
+    }
+    set({
+      ids: sorted(
+        [...doc.shapes.values()]
+          .filter((candidate) => isSelectable(doc, candidate))
+          .map((s) => s.id),
+      ),
+    });
   };
 
   return {
@@ -355,11 +667,32 @@ export function createSelectTool(host: SelectHost): SelectTool {
       return () => listeners.delete(listener);
     },
     select(ids) {
-      set({ ids: sorted(ids) });
+      const next = sorted(ids);
+      const keepEditing = state.editing !== null && sameList(next, [state.editing]);
+      set({
+        ids: next,
+        editing: keepEditing ? state.editing : null,
+        vertices: keepEditing ? state.vertices : [],
+      });
     },
     prune(doc = host.document()) {
       const kept = state.ids.filter((id) => doc.shapes.has(id));
-      if (kept.length !== state.ids.length) set({ ids: kept });
+      const editing =
+        state.editing !== null && doc.shapes.has(state.editing) ? state.editing : null;
+      const shape = editing === null ? null : doc.shapes.get(editing);
+      const count = shape ? handlesOf(shape).length : 0;
+      const vertices = state.vertices.filter((id) => id < count);
+      if (
+        kept.length !== state.ids.length ||
+        editing !== state.editing ||
+        vertices.length !== state.vertices.length
+      ) {
+        set({ ids: kept, editing, vertices });
+      }
     },
+    edit,
+    selectAll,
+    nudge,
+    removeSelected,
   };
 }
