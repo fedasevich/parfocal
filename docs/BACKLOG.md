@@ -2590,7 +2590,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests export a 100k-run result and count every feature.
   Size: M.
 
-- [ ] ANN-025 · Review CSV export
+- [x] ANN-025 · Review CSV export
   Model type against final class per reviewed shape.
   Done when a unit test checks columns and counts.
   Size: S.
