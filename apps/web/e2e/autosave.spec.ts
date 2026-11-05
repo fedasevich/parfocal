@@ -90,6 +90,7 @@ test("edits made while the network is cut for 30 seconds are all saved once it r
   expect(await guardWarns(page)).toBe(false);
 
   await page.reload();
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await expect(shapes).toHaveCount(3);
 });
@@ -114,6 +115,7 @@ test("an edit undone while offline never reaches the server", async ({ page }) =
     window.__networkDown = false;
   });
   await page.reload();
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await expect(shapes).toHaveCount(0);
 });

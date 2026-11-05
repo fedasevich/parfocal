@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-05
 
+- CI repair on PR 7: browser (web) failed 16 tests because a fresh page on the unbundled dev server needs about 4 to 7 s (673 requests) to show the full viewer, over the 5 s default assertion timeout. apps/web playwright now uses a 15 s expect timeout, autosave waits for the stage to be ready after its reload, and result-sets-display retries its first switch check. The failing specs passed 76 of 77 with 2 workers locally, then the last one 6 of 6. FOUND-026 (browser tests against a built app) is the lasting fix. browser (ui): gallery flag action is a 24px target, the staging summary has a focus ring, and the sentinel specs use a 900 px window above the PROTO-020 fold.
 - COLLAB-007 (who else is viewing a slide) made @parfocal/edge a real dependency of apps/web, which broke the typecheck guard test that probed it as an undeclared package. The probe now imports @parfocal/latency-proxy, which web does not declare. pnpm test:guards passes 11 of 11.
 - PILOT-008 (owner walkthrough) now says the owner wants to see the UX of every variant, not only the main paths. PILOT-008
 - Added TEST-020 (showcase seed over every feature and the 28 public fixture slides in R2) at the owner's request, with a coverage test so later features add their variants. PILOT-008 (owner walkthrough) now runs over it. TEST-020
