@@ -4,15 +4,17 @@ import {
   BlindFirstSwitch,
   CheckOptions,
   type CheckOptionValues,
+  ChoiceCards,
+  checkSummary,
   type PresetKey,
   PresetPicker,
 } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep, SummaryRows } from "@parfocal/ui/components/flow-page";
 import { PersonAvatar } from "@parfocal/ui/components/person";
-import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { okData } from "../placeholder.tsx";
@@ -37,10 +39,10 @@ const slideRows = [
 ];
 
 const scopeNames = {
-  none: "Nothing to check",
-  all: "All AI objects",
-  sample: "A random sample",
-  regions: "Objects inside regions",
+  none: "Nothing, experts only draw",
+  all: "Every AI cell",
+  sample: "A random sample of about 50 AI cells",
+  regions: "AI cells inside the areas you draw",
 } as const;
 
 type NewAnnotateTaskProps = {
@@ -62,6 +64,7 @@ const presetOptions = (key: PresetKey): CheckOptionValues =>
 export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotateTaskProps) {
   const project = okData(useGetProject(projectId).data);
   const people = useTaskPeople();
+  const navigate = useNavigate();
   const [chosen, setChosen] = useState<PresetKey>(preset);
   const [options, setOptions] = useState(() => presetOptions(preset));
   const [blind, setBlind] = useState(false);
@@ -118,17 +121,33 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
     >
       {step === "kind" ? (
         <>
-          <Zone title="Kind" sub="Annotate tasks have no decisions, the experts make the data.">
-            <SegmentedControl
-              aria-label="Kind of task"
+          <Zone title="Kind">
+            <ChoiceCards
+              legend="What the experts do"
               value="annotate"
-              options={[
-                { value: "review", label: "Review AI results" },
-                { value: "annotate", label: "Annotate" },
+              onValueChange={(next) => {
+                if (next === "review") {
+                  void navigate({ to: "/projects/$projectId/tasks/new", params: { projectId } });
+                }
+              }}
+              choices={[
+                {
+                  value: "review",
+                  title: "Review AI results",
+                  text: "Experts decide whether the AI result is right, without drawing.",
+                },
+                {
+                  value: "annotate",
+                  title: "Annotate",
+                  text: "Experts draw cells and fix what the AI found. The output is training data.",
+                },
               ]}
             />
           </Zone>
-          <Zone title="Preset" sub="Pick the setup that is closest to your study.">
+          <Zone
+            title="Starting point"
+            sub="A suggestion only. It fills in the next steps, and you can change every setting there."
+          >
             <PresetPicker value={chosen} onValueChange={choosePreset} />
           </Zone>
         </>
@@ -186,7 +205,7 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
           title="What to check"
           sub={
             hasResult
-              ? "The preset filled these in. Change any of them."
+              ? `${checkSummary(options)} The preset filled these in, change any of them.`
               : "The preset Annotate by hand has no result set, so there is nothing to check."
           }
         >
@@ -214,22 +233,37 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
               },
               { label: "Experts", value: "3 experts", onChange: () => onStep("experts") },
               {
-                label: "Check scope",
-                value: `${scopeNames[options.scope]}${options.scope === "none" ? "" : options.order === "least-sure" ? ", least sure first" : ", by position"}`,
+                label: "Experts check",
+                value: scopeNames[options.scope],
                 onChange: () => onStep("check"),
               },
               {
-                label: "Sign-off rule",
-                value: options.rule === "require" ? "All must be checked" : "Only warn",
-                onChange: () => onStep("check"),
-              },
-              {
-                label: "Unchecked AI objects",
+                label: "Unchecked AI cells",
                 value: options.exportUnchecked
-                  ? "Included in the export"
+                  ? "Exported marked as not checked"
                   : "Left out of the export",
                 onChange: () => onStep("check"),
               },
+              ...(options.scope === "none"
+                ? []
+                : [
+                    {
+                      label: "Start with",
+                      value:
+                        options.order === "least-sure"
+                          ? "The cells the AI was least sure of"
+                          : "Top left to bottom right",
+                      onChange: () => onStep("check"),
+                    },
+                    {
+                      label: "Finishing a slide",
+                      value:
+                        options.rule === "require"
+                          ? "Only when every cell in scope is checked"
+                          : "Allowed with cells left unchecked",
+                      onChange: () => onStep("check"),
+                    },
+                  ]),
               {
                 label: "Blind first",
                 value: blind ? "On" : "Off",

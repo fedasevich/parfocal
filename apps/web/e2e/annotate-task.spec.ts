@@ -28,7 +28,7 @@ const hrefOf = (links: { name: string; href: string }[], name: string) => {
 };
 
 const shows: Record<string, string> = {
-  "Annotate task · Origin marks": "Last changed by",
+  "Annotate task · Origin marks": "Edited by",
   "Annotate task · AI result hidden": "AI result hidden",
   "Annotate task · Checking AI objects": "21 of 46 checked",
   "Annotate task · Slide checked": "You checked this slide",
@@ -38,11 +38,11 @@ const shows: Record<string, string> = {
   "Annotate task · Run cancelled": "Run cancelled, finished tiles kept",
   "Annotate task · Colleagues' changes": "3 changes by Anna Kopecká and Simona Marková",
   "New annotate task · Kind and presets": "Check a whole-slide run",
-  "New annotate task · What to check · whole-slide run": "Least sure first",
-  "New annotate task · What to check · a sample": "Random sample",
+  "New annotate task · What to check · whole-slide run": "least sure first",
+  "New annotate task · What to check · a sample": "Check a random sample",
   "New annotate task · What to check · by hand": "has no result set",
   "New annotate task · How it runs · blind first": "Blind first",
-  "New annotate task · Send": "Left out of the export",
+  "New annotate task · Send": "The cells the AI was least sure of",
 };
 
 for (const part of parts) {
@@ -192,15 +192,17 @@ test("a preset fills in the check options and the stepper carries them to Send",
   await flow.getByRole("button", { name: "Next" }).click();
   await flow.getByRole("button", { name: "Next" }).click();
   await flow.getByRole("button", { name: "Next" }).click();
-  await expect(flow.getByRole("radio", { name: "All AI objects" })).toBeDisabled();
+  await expect(flow.getByRole("radio", { name: "Check every AI cell" })).toBeDisabled();
   await page.goto(hrefOf(links, "New annotate task · What to check · whole-slide run"));
-  await expect(page.getByRole("radio", { name: "Least sure first" })).toBeChecked();
-  await page.getByRole("radio", { name: "By position" }).click();
-  await page.getByRole("switch", { name: "Export unchecked AI objects" }).click();
-  await expect(page.getByText("Included in the export")).toBeVisible();
+  await expect(
+    page.getByRole("radio", { name: "The cells the AI was least sure of" }),
+  ).toBeChecked();
+  await page.getByRole("radio", { name: "Top left to bottom right" }).click();
+  await page.getByRole("radio", { name: /Export them marked as not checked/ }).click();
+  await expect(page.getByText(/exported marked as not checked/)).toBeVisible();
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("switch", { name: /Blind first/ }).click();
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Included in the export")).toBeVisible();
-  await expect(page.getByText("By position").first()).toBeVisible();
+  await expect(page.getByText("Exported marked as not checked")).toBeVisible();
+  await expect(page.getByText("Top left to bottom right").first()).toBeVisible();
 });

@@ -7,6 +7,7 @@ import {
   checkedOf,
   OriginCard,
   OriginMark,
+  OriginsToggle,
   RunProgress,
   type RunState,
   RunTiles,
@@ -104,6 +105,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
   const [objects, setObjects] = useState(() => startObjects(scene, people));
   const [selected, setSelected] = useState<string | null>(startSelected(scene));
   const [showAi, setShowAi] = useState(scene !== "ai-off");
+  const [showOrigins, setShowOrigins] = useState(scene === "origins");
   const [slide, setSlide] = useState<SlideState>(startSlide(scene));
   const [tab, setTab] = useState(scene === "ai-off" ? "display" : "objects");
   const [tool, setTool] = useState("select");
@@ -258,6 +260,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
         resultName={resultName}
         count={running ? runTileTotal * cellsPerTile : aiObjectCount}
       />
+      <OriginsToggle checked={showOrigins} onCheckedChange={setShowOrigins} />
       {empty ? null : (
         <Zone title="Check progress" sub="Scope: all AI objects, least sure first">
           <CheckProgress counts={counts} scope="AI objects" />
@@ -353,7 +356,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
             ),
           );
         }}
-        underlay={() => (
+        underlay={({ camera }) => (
           <>
             {running ? (
               <RunTiles
@@ -365,7 +368,13 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
                 runningTile={runState === "running" ? runOrder[tilesDone] : undefined}
               />
             ) : null}
-            <TaskShapes objects={visible} selected={selected} pendingIds={pendingIds} />
+            <TaskShapes
+              objects={visible}
+              selected={selected}
+              scale={camera.scale}
+              showOrigins={showOrigins}
+              pendingIds={pendingIds}
+            />
           </>
         )}
         overlay={() => (

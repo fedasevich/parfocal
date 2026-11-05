@@ -4,7 +4,6 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { RadioGroup, RadioRow } from "@parfocal/ui/components/radio-group";
-import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -211,6 +210,40 @@ function AiResultToggle({
         </b>
         <small id={`${id}-sub`} className="text-caption text-fg-dim">
           {resultName} · {count} objects
+        </small>
+      </span>
+      <Switch
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        aria-labelledby={`${id}-name`}
+        aria-describedby={`${id}-sub`}
+      />
+    </label>
+  );
+}
+
+type OriginsToggleProps = Omit<React.ComponentProps<"label">, "onChange"> & {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+};
+
+function OriginsToggle({ checked, onCheckedChange, className, ...props }: OriginsToggleProps) {
+  const id = useId();
+  return (
+    <label
+      data-slot="origins-toggle"
+      className={cn(
+        "flex cursor-pointer items-center justify-between gap-3 rounded-zone border border-line bg-surf-panel px-3 py-2.5",
+        className,
+      )}
+      {...props}
+    >
+      <span className="grid min-w-0 gap-0.5">
+        <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
+          Show who checked
+        </b>
+        <small id={`${id}-sub`} className="text-caption text-fg-dim">
+          A dot beside each object, coloured by who made or checked it.
         </small>
       </span>
       <Switch
@@ -568,98 +601,169 @@ type CheckOptionsProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   onValuesChange: (values: CheckOptionValues) => void;
 };
 
-function OptionRow({
-  label,
-  help,
-  children,
-}: {
-  label: string;
-  help: string;
-  children: React.ReactNode;
-}) {
+type Choice = { value: string; title: string; text: string; disabled?: boolean };
+
+type ChoiceCardsProps = Omit<React.ComponentProps<"fieldset">, "onChange"> & {
+  legend: string;
+  value: string;
+  choices: Choice[];
+  onValueChange: (value: string) => void;
+};
+
+function ChoiceCards({
+  legend,
+  value,
+  choices,
+  onValueChange,
+  className,
+  ...props
+}: ChoiceCardsProps) {
   return (
-    <div className="grid gap-1.5 border-b border-line pb-3.5 last:border-b-0 last:pb-0">
-      <span className="text-body-sm font-semibold text-fg">{label}</span>
-      {children}
-      <small className="text-caption text-fg-dim">{help}</small>
-    </div>
+    <fieldset
+      data-slot="choice-cards"
+      className={cn("m-0 grid min-w-0 gap-2 border-0 p-0", className)}
+      {...props}
+    >
+      <legend className="mb-2 p-0 text-body-sm font-semibold text-fg">{legend}</legend>
+      <RadioGroup
+        aria-label={legend}
+        value={value}
+        onValueChange={(next) => onValueChange(next as string)}
+        className="grid gap-2"
+      >
+        {choices.map((choice) => (
+          <RadioRow
+            key={choice.value}
+            value={choice.value}
+            title={choice.title}
+            text={choice.text}
+            disabled={choice.disabled ?? false}
+            className={cn(
+              "rounded-zone border px-3.5 py-3",
+              value === choice.value ? "border-accent bg-accent-soft" : "border-line bg-surf-panel",
+            )}
+          />
+        ))}
+      </RadioGroup>
+    </fieldset>
   );
+}
+
+const scopePhrases: Record<CheckScopeKind, string> = {
+  none: "",
+  all: "every AI cell",
+  sample: "a random sample of about 50 AI cells",
+  regions: "the AI cells inside the areas you draw",
+};
+
+function checkSummary(values: CheckOptionValues) {
+  const exported = values.exportUnchecked
+    ? "unchecked AI cells are exported marked as not checked"
+    : "unchecked AI cells are left out of the export";
+  if (!values.hasResult) return "There is no AI result, so experts only draw.";
+  if (values.scope === "none")
+    return `Experts only draw, nobody checks the AI cells, and ${exported}.`;
+  const order =
+    values.order === "least-sure" ? "least sure first" : "from top left to bottom right";
+  const finish =
+    values.rule === "require"
+      ? "a slide cannot finish until they are all checked"
+      : "a slide can finish with some left unchecked";
+  return `Experts check ${scopePhrases[values.scope]}, ${order}, ${finish}, and ${exported}.`;
 }
 
 function CheckOptions({ values, onValuesChange, className, ...props }: CheckOptionsProps) {
   const set = (patch: Partial<CheckOptionValues>) => onValuesChange({ ...values, ...patch });
-  const noScope = values.scope === "none";
+  const noResult = !values.hasResult;
   return (
-    <div
-      data-slot="check-options"
-      className={cn("grid gap-3.5 rounded-zone border border-line bg-surf-panel p-4", className)}
-      {...props}
-    >
-      <OptionRow
-        label="Check scope"
-        help={
-          values.hasResult
-            ? "Objects that a model run in the task adds join the scope as they land."
-            : "This task has no result set, so there is nothing for the experts to check."
-        }
-      >
-        <SegmentedControl
-          aria-label="Check scope"
-          fill
-          value={values.scope}
-          onValueChange={(next) => set({ scope: next as CheckScopeKind })}
-          options={[
-            { value: "none", label: "Nothing" },
-            { value: "all", label: "All AI objects", disabled: !values.hasResult },
-            { value: "sample", label: "Random sample", disabled: !values.hasResult },
-            { value: "regions", label: "Inside regions", disabled: !values.hasResult },
-          ]}
-        />
-      </OptionRow>
-      <OptionRow
-        label="Check order"
-        help="Least sure first starts with the objects the model was least sure of."
-      >
-        <SegmentedControl
-          aria-label="Check order"
-          fill
-          value={values.order}
-          onValueChange={(next) => set({ order: next as CheckOrder })}
-          options={[
-            { value: "least-sure", label: "Least sure first", disabled: noScope },
-            { value: "position", label: "By position", disabled: noScope },
-          ]}
-        />
-      </OptionRow>
-      <OptionRow
-        label="Sign-off rule"
-        help="Decides what happens when the owner signs a slide off with objects left unchecked."
-      >
-        <SegmentedControl
-          aria-label="Sign-off rule"
-          fill
-          value={values.rule}
-          onValueChange={(next) => set({ rule: next as SignOffRule })}
-          options={[
-            { value: "require", label: "All must be checked", disabled: noScope },
-            { value: "warn", label: "Only warn", disabled: noScope },
-          ]}
-        />
-      </OptionRow>
-      <OptionRow
-        label="Export unchecked AI objects"
-        help="Left out by default. When included they carry the origin ai-unchecked."
-      >
-        <label className="flex items-center gap-2.5 text-body-sm text-fg">
-          <Switch
-            checked={values.exportUnchecked}
-            disabled={noScope}
-            onCheckedChange={(next) => set({ exportUnchecked: next })}
-            aria-label="Export unchecked AI objects"
+    <div data-slot="check-options" className={cn("grid gap-5", className)} {...props}>
+      <ChoiceCards
+        legend="What experts check"
+        value={values.scope}
+        onValueChange={(next) => set({ scope: next as CheckScopeKind })}
+        choices={[
+          { value: "none", title: "Check nothing", text: "Experts only draw." },
+          {
+            value: "all",
+            title: "Check every AI cell",
+            text: "Each cell is confirmed, fixed or deleted.",
+            disabled: noResult,
+          },
+          {
+            value: "sample",
+            title: "Check a random sample",
+            text: "About 50 cells are checked, the rest stays unchecked.",
+            disabled: noResult,
+          },
+          {
+            value: "regions",
+            title: "Check inside areas I draw",
+            text: "Only the cells inside those areas.",
+            disabled: noResult,
+          },
+        ]}
+      />
+      {values.scope === "none" ? (
+        <p className="m-0 text-body-sm text-fg-dim">
+          Nothing to check, so the order and the finishing rule do not apply.
+        </p>
+      ) : (
+        <>
+          <ChoiceCards
+            legend="Start with"
+            value={values.order}
+            onValueChange={(next) => set({ order: next as CheckOrder })}
+            choices={[
+              {
+                value: "least-sure",
+                title: "The cells the AI was least sure of",
+                text: "The doubtful cells are seen first, while experts are fresh.",
+              },
+              {
+                value: "position",
+                title: "Top left to bottom right",
+                text: "Experts sweep the slide in reading order.",
+              },
+            ]}
           />
-          {values.exportUnchecked ? "Included in the export" : "Left out of the export"}
-        </label>
-      </OptionRow>
+          <ChoiceCards
+            legend="Finishing a slide"
+            value={values.rule}
+            onValueChange={(next) => set({ rule: next as SignOffRule })}
+            choices={[
+              {
+                value: "require",
+                title: "Only when every cell in scope is checked",
+                text: "The owner cannot sign a slide off while checks are missing.",
+              },
+              {
+                value: "warn",
+                title: "Allowed with cells left unchecked",
+                text: "The owner sees a warning and can still sign off.",
+              },
+            ]}
+          />
+        </>
+      )}
+      <ChoiceCards
+        legend="Unchecked AI cells in the export"
+        value={values.exportUnchecked ? "include" : "leave-out"}
+        onValueChange={(next) => set({ exportUnchecked: next === "include" })}
+        choices={[
+          {
+            value: "leave-out",
+            title: "Leave them out",
+            text: "The training data holds only cells a person checked or drew.",
+            disabled: noResult,
+          },
+          {
+            value: "include",
+            title: "Export them marked as not checked",
+            text: "Cells outside the sample or areas are kept, labelled so you can filter them.",
+            disabled: noResult,
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -873,12 +977,16 @@ export {
   type CheckScopeKind,
   type CheckState,
   CheckStateTag,
+  ChoiceCards,
   checkedOf,
+  checkSummary,
   type HistoryEntry,
   type ModelInfo,
   type Origin,
   OriginCard,
   OriginMark,
+  OriginsToggle,
+  type OriginsToggleProps,
   originNames,
   type Preset,
   type PresetKey,
