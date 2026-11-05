@@ -1,9 +1,12 @@
+import csv
+import io
 import json
 import uuid
 from enum import StrEnum
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi.responses import Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -40,12 +43,15 @@ LETTERS = {"region": Letter.REGION, "cell": Letter.CELL}
 class ExportFormat(StrEnum):
     GEOJSON = "geojson"
     PARFOCAL = "parfocal"
+    CSV = "csv"
 
 
 class ConsensusForOwnersError(OtherReviewerError):
     code = "consensus-for-owners"
     title = "Only project owners and viewers export the consensus"
 
+
+CLASS_COLUMNS = ("object_id", "path", "kind", "model_class", "final_class", "changed")
 
 router = APIRouter(
     prefix="/api/review-tasks/{task_id}/slides/{slide_id}/export", tags=["review-tasks"]
@@ -343,8 +349,33 @@ def as_parfocal(items: list[dict[str, Any]], model: str, slide_label: str) -> di
     }
 
 
+def as_class_csv(items: list[dict[str, Any]]) -> str:
+    out = io.StringIO()
+    writer = csv.DictWriter(out, fieldnames=CLASS_COLUMNS, lineterminator="\n")
+    writer.writeheader()
+    for entry in items:
+        details = entry["parfocal"]
+        model_class = details.get(
+            "ai_class", entry["class"] if details.get("consensus") == "agree" else None
+        )
+        writer.writerow(
+            {
+                "object_id": entry["id"],
+                "path": details["path"],
+                "kind": entry["kind"],
+                "model_class": model_class or "",
+                "final_class": entry["class"] or "",
+                "changed": ";".join(details["changed"]),
+            }
+        )
+    return out.getvalue()
+
+
 @router.get(
-    "", operation_id="exportReviewedLayer", **require(Permission.SEE_SLIDES, emergency=True)
+    "",
+    operation_id="exportReviewedLayer",
+    response_model=dict[str, Any],
+    **require(Permission.SEE_SLIDES, emergency=True),
 )
 async def export_reviewed_layer(
     task_id: uuid.UUID,
@@ -354,7 +385,7 @@ async def export_reviewed_layer(
     format: ExportFormat = ExportFormat.GEOJSON,
     reviewer_id: uuid.UUID | None = None,
     consensus: bool = False,
-) -> dict[str, Any]:
+) -> Any:
     row = await review_slide(connection, principal, task_id, slide_id)
     whole = reads_whole(
         await project_grant(connection, principal, row.project_id, Permission.SEE_SLIDES)
@@ -378,6 +409,12 @@ async def export_reviewed_layer(
         await require_ai_shown(connection, principal, row.project_id, slide_id)
         items = await layer_items(connection, row, reviewer, names)
         model = f"{set_name} reviewed"
+    if format is ExportFormat.CSV:
+        return Response(
+            as_class_csv(items),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="reviewed-classes.csv"'},
+        )
     if format is ExportFormat.GEOJSON:
         return as_geojson(items)
     _, _, slide_label = await path_parts(connection, slide_id)

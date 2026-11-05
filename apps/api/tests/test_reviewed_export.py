@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 from typing import Any
 
@@ -121,3 +123,43 @@ def test_layers_are_exported_by_their_reviewer_or_an_owner(api: ApiAs, database:
     as_owner = api(r.people["owner"]).get(f"{r.base}/export", params={"reviewer_id": first_id})
     assert len(as_owner.json()["features"]) == 3
     assert owner(database, "SELECT 1") == [(1,)]
+
+
+def test_the_class_csv_lists_the_model_class_against_the_final_class_per_shape(
+    api: ApiAs, database: str
+) -> None:
+    r = first_reviewed(api, database)
+    response = api(r.people["first"]).get(f"{r.base}/export", params={"format": "csv"})
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"].startswith("text/csv")
+    lines = list(csv.DictReader(io.StringIO(response.text)))
+    assert list(lines[0]) == [
+        "object_id",
+        "path",
+        "kind",
+        "model_class",
+        "final_class",
+        "changed",
+    ]
+    geojson = exported(api, r, "first")
+    assert len(lines) == len(geojson["features"])
+    assert sum(1 for line in lines if line["kind"] == "region") == sum(
+        1 for f in geojson["features"] if f["properties"]["objectType"] == "annotation"
+    )
+    assert sum(1 for line in lines if line["kind"] == "cell") == 1
+    by_id = {line["object_id"]: line for line in lines}
+    assert by_id["T1"]["model_class"] != ""
+    assert by_id["T1"]["final_class"] == "Tumor"
+    assert "retyped" in by_id["T1"]["changed"]
+    assert "T2" not in by_id
+    added = [line for line in lines if line["changed"] == "added"]
+    assert {line["model_class"] for line in added} == {""}
+    assert any(line["final_class"] == "Tumor" for line in added)
+
+    consensus = api(r.people["owner"]).get(
+        f"{r.base}/export", params={"format": "csv", "consensus": "true"}
+    )
+    assert consensus.status_code == 200, consensus.text
+    assert len(list(csv.DictReader(io.StringIO(consensus.text)))) == len(
+        exported(api, r, "owner", consensus="true")["features"]
+    )

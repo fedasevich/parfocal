@@ -4376,6 +4376,7 @@ export type ParfocalApiReviewedExportExportFormat =
 export const ParfocalApiReviewedExportExportFormat = {
   geojson: "geojson",
   parfocal: "parfocal",
+  csv: "csv",
 } as const;
 
 export type ListProjectsParams = {

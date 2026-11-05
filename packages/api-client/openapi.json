@@ -47107,7 +47107,8 @@
         "type": "string",
         "enum": [
           "geojson",
-          "parfocal"
+          "parfocal",
+          "csv"
         ],
         "title": "ExportFormat"
       },
