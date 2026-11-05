@@ -2637,7 +2637,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when each tool has a reproducing test for every jump found plus many new interaction tests for zoom levels, pan during a draft, fast and coalesced pointer moves, pointer leaving the canvas, snap and undo.
   Size: M.
 
-- [ ] ANN-034 · Harden the count, arrow, text, ruler and comment pin tools
+- [x] ANN-034 · Harden the count, arrow, text, ruler and comment pin tools
   Review each tool on the live slide while panning and zooming and fix every jump or misplaced point at its root, leaving the shared screen to slide conversion to ANN-033 (the select and drawing tools hardening).
   Done when each tool has a reproducing test for every defect found plus many new interaction tests for zoom levels, pan, fast pointer moves, snap, deletion and undo.
   Size: M.

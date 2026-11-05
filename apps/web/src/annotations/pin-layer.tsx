@@ -13,10 +13,12 @@ import { okData } from "../screens/placeholder.tsx";
 import { pinThread } from "../screens/review/comment-pin.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { bindClickPress, clickSlopScreenPixels } from "./click-press.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { PinThread } from "./pin-thread.tsx";
 import { movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
+import { useStageRect } from "./stage-size.ts";
 import { popoverSpot } from "./thread-popover.ts";
 
 type PinLayerProps = {
@@ -30,8 +32,6 @@ type PinLayerProps = {
   onDocumentChange: (next: AnnotationDocument) => void;
   onCommit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
 };
-
-const clickSlopScreenPixels = 3;
 
 const onPinOrThread = (event: Event) =>
   event.target instanceof Element &&
@@ -106,6 +106,7 @@ export function PinLayer({
   onCommit,
 }: PinLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const people = usePeople();
   const queryClient = useQueryClient();
   const listed = useListThreads(taskId ?? "", slideId, undefined, {
@@ -140,29 +141,18 @@ export function PinLayer({
 
   useEffect(() => {
     if (!active) return;
-    let pressed: { id: number; x: number; y: number } | null = null;
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0 || onPinOrThread(event)) return;
-      pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    };
-    const up = (event: PointerEvent) => {
-      if (pressed === null || event.pointerId !== pressed.id || event.button !== 0) return;
-      const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
-      pressed = null;
-      if (moved > clickSlopScreenPixels) return;
-      event.stopImmediatePropagation();
-      const current = latest.current.engine.getCamera();
-      setDraft(screenToSlide(current, stage.getBoundingClientRect(), event.clientX, event.clientY));
-    };
-    stage.addEventListener("pointerdown", down, true);
-    stage.addEventListener("pointerup", up, true);
-    return () => {
-      stage.removeEventListener("pointerdown", down, true);
-      stage.removeEventListener("pointerup", up, true);
-    };
+    return bindClickPress(stage, {
+      engine: () => latest.current.engine,
+      ignore: onPinOrThread,
+      onClick: (event) => {
+        const current = latest.current.engine.getCamera();
+        setDraft(
+          screenToSlide(current, stage.getBoundingClientRect(), event.clientX, event.clientY),
+        );
+      },
+    });
   }, [active, stage]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const draftAt = draft ? slideToScreen(camera, rect, draft) : null;
   const toleranceNow = () => pinHitScreenPixels / 2 ** latest.current.engine.getCamera().zoom;
 

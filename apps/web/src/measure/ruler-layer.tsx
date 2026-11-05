@@ -1,6 +1,7 @@
 import { RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AnnotationDocument, addShape } from "../annotations/document.ts";
+import { useStageRect } from "../annotations/stage-size.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
@@ -20,36 +21,16 @@ type RulerLayerProps = {
   stage: HTMLElement;
   active: boolean;
   document: AnnotationDocument;
-  onDocumentChange: (next: AnnotationDocument) => void;
+  onApply: (next: AnnotationDocument, label: string) => void;
 };
 
-type Size = { width: number; height: number };
-
-function useStageSize(stage: HTMLElement): Size {
-  const [size, setSize] = useState<Size>({ width: stage.clientWidth, height: stage.clientHeight });
-  useEffect(() => {
-    const observer = new ResizeObserver(() =>
-      setSize({ width: stage.clientWidth, height: stage.clientHeight }),
-    );
-    observer.observe(stage);
-    return () => observer.disconnect();
-  }, [stage]);
-  return size;
-}
-
-export function RulerLayer({
-  engine,
-  stage,
-  active,
-  document: doc,
-  onDocumentChange,
-}: RulerLayerProps) {
+export function RulerLayer({ engine, stage, active, document: doc, onApply }: RulerLayerProps) {
   const escRegistry = useEscRegistry();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
-  const size = useStageSize(stage);
+  const rect = useStageRect(stage);
   const [draft, setDraft] = useState<Segment | null>(null);
-  const latest = useRef({ doc, onDocumentChange, engine });
-  latest.current = { doc, onDocumentChange, engine };
+  const latest = useRef({ doc, onApply, engine });
+  latest.current = { doc, onApply, engine };
   const spacing = engine.getSlide()?.micronsPerPixel ?? null;
 
   useEffect(() => {
@@ -74,7 +55,7 @@ export function RulerLayer({
         kind: "ruler",
         points: rulerPoints(segment),
       });
-      latest.current.onDocumentChange(next);
+      latest.current.onApply(next, "Add ruler");
     };
     const cancel = () => {
       anchor = null;
@@ -128,7 +109,6 @@ export function RulerLayer({
     };
   }, [active, stage, escRegistry]);
 
-  const rect = { left: 0, top: 0, width: size.width, height: size.height };
   const drawn: { key: string; segment: Segment; dashed: boolean }[] = [];
   for (const shape of doc.shapes.values()) {
     if (shape.kind === "ruler") {

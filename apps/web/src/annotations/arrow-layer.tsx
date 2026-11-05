@@ -10,6 +10,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { addArrow, arrowEndsOf, arrowHead, arrowsOf } from "./marks.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type ArrowLayerProps = {
   engine: ViewerEngine;
@@ -47,6 +48,7 @@ function ArrowMark({ drawing }: { drawing: ArrowDrawing }) {
 
 export function ArrowLayer({ engine, stage, active, document: doc, onApply }: ArrowLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const [draft, setDraft] = useState<Segment | null>(null);
   const escRegistry = useEscRegistry();
   const latest = useRef({ doc, onApply, engine });
@@ -108,21 +110,26 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
       stage.releasePointerCapture(event.pointerId);
       cancel();
     };
+    const doubleClick = (event: MouseEvent) => {
+      event.stopImmediatePropagation();
+      event.preventDefault();
+    };
 
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
+    stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("dblclick", doubleClick, true);
       leaveRung?.();
       cancel();
     };
   }, [active, stage, escRegistry]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const drawings: ArrowDrawing[] = arrowsOf(doc).map((shape) => {
     const ends = arrowEndsOf(shape);
     return {

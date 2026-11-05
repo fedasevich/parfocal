@@ -425,7 +425,7 @@ function OpenedSlide({
               stage={hostNode}
               active={tool === "ruler"}
               document={annotations}
-              onDocumentChange={setAnnotations}
+              onApply={saved.apply}
             />
             <PolygonLayer
               engine={session.engine}

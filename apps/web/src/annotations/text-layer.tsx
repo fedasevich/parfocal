@@ -10,6 +10,7 @@ import {
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { bindClickPress } from "./click-press.ts";
 import type { AnnotationDocument } from "./document.ts";
 import {
   addText,
@@ -19,6 +20,7 @@ import {
   textPointOf,
   textsOf,
 } from "./marks.ts";
+import { useStageRect } from "./stage-size.ts";
 
 export type TextControl = { readonly restore: () => boolean };
 
@@ -31,8 +33,6 @@ type TextLayerProps = {
   control: RefObject<TextControl | null>;
 };
 
-const clickSlopScreenPixels = 3;
-
 export function TextLayer({
   engine,
   stage,
@@ -42,6 +42,7 @@ export function TextLayer({
   control,
 }: TextLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const [draft, setDraftState] = useState<TextDraft | null>(null);
   const draftRef = useRef<TextDraft | null>(null);
   const dropped = useRef<TextDraft | null>(null);
@@ -96,17 +97,7 @@ export function TextLayer({
       setDraft(null);
       return;
     }
-    let pressed: { id: number; x: number; y: number } | null = null;
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
-      pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    };
-    const up = (event: PointerEvent) => {
-      if (pressed === null || event.pointerId !== pressed.id || event.button !== 0) return;
-      const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
-      pressed = null;
-      if (moved > clickSlopScreenPixels) return;
-      event.stopImmediatePropagation();
+    const click = (event: PointerEvent) => {
       const open = draftRef.current;
       if (open !== null) commit(open);
       dropped.current = null;
@@ -120,12 +111,7 @@ export function TextLayer({
         text: "",
       });
     };
-    stage.addEventListener("pointerdown", down, true);
-    stage.addEventListener("pointerup", up, true);
-    return () => {
-      stage.removeEventListener("pointerdown", down, true);
-      stage.removeEventListener("pointerup", up, true);
-    };
+    return bindClickPress(stage, { engine: () => latest.current.engine, onClick: click });
   }, [active, stage, commit, setDraft]);
 
   const focusOnMount = useCallback((node: HTMLInputElement | null) => node?.focus(), []);
@@ -147,7 +133,6 @@ export function TextLayer({
     }
   };
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const texts = textsOf(doc);
   const where = draft === null ? null : slideToScreen(camera, rect, draft.point);
 

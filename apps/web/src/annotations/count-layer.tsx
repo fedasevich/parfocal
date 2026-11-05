@@ -1,10 +1,12 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { bindClickPress } from "./click-press.ts";
 import { markerHitScreenPixels, markerNear, markerPoint, markersOf } from "./count-markers.ts";
 import type { AnnotationDocument } from "./document.ts";
 import type { Point } from "./polygon-draft.ts";
 import type { ShapeId } from "./shapes.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type CountLayerProps = {
   engine: ViewerEngine;
@@ -16,8 +18,6 @@ type CountLayerProps = {
   onRemove: (id: ShapeId) => void;
 };
 
-const clickSlopScreenPixels = 3;
-
 export function CountLayer({
   engine,
   stage,
@@ -28,22 +28,13 @@ export function CountLayer({
   onRemove,
 }: CountLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const latest = useRef({ doc, onDrop, onRemove, engine });
   latest.current = { doc, onDrop, onRemove, engine };
 
   useEffect(() => {
     if (!active) return;
-    let pressed: { id: number; x: number; y: number } | null = null;
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
-      pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    };
-    const up = (event: PointerEvent) => {
-      if (pressed === null || event.pointerId !== pressed.id || event.button !== 0) return;
-      const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
-      pressed = null;
-      if (moved > clickSlopScreenPixels) return;
-      event.stopImmediatePropagation();
+    const click = (event: PointerEvent) => {
       const current = latest.current.engine.getCamera();
       const point = screenToSlide(
         current,
@@ -62,15 +53,9 @@ export function CountLayer({
       }
       latest.current.onDrop(point);
     };
-    stage.addEventListener("pointerdown", down, true);
-    stage.addEventListener("pointerup", up, true);
-    return () => {
-      stage.removeEventListener("pointerdown", down, true);
-      stage.removeEventListener("pointerup", up, true);
-    };
+    return bindClickPress(stage, { engine: () => latest.current.engine, onClick: click });
   }, [active, stage]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const markers = markersOf(doc);
 
   return (
