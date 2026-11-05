@@ -2632,7 +2632,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-030, TASK-015, PROTO-020. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 
-- [ ] ANN-033 · Harden the select, polygon, freehand, rectangle and ellipse tools
+- [x] ANN-033 · Harden the select, polygon, freehand, rectangle and ellipse tools
   Points jump while drawing and editing. Review each tool against the live slide while panning and zooming, find and fix every jump at its root, including the shared screen to slide conversion and pointer capture.
   Done when each tool has a reproducing test for every jump found plus many new interaction tests for zoom levels, pan during a draft, fast and coalesced pointer moves, pointer leaving the canvas, snap and undo.
   Size: M.

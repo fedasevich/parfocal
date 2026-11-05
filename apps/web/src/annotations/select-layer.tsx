@@ -2,11 +2,13 @@ import type { PointerInput } from "@parfocal/viewer-engine";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
-import { screenScale, screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { handlesOf } from "./reshape.ts";
 import { createSelectTool, type SelectTool } from "./select-tool.ts";
 import { at, isClosedKind, outlineOf, type Shape } from "./shapes.ts";
+import { capturePointer, interruptMotion, slideAt } from "./stage-pointer.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type SelectLayerProps = {
   engine: ViewerEngine;
@@ -72,13 +74,7 @@ export function useSelectTool(
           latest.current = { ...latest.current, doc: next };
           latest.current.onDocumentChange(next);
         },
-        toSlide: (point) =>
-          screenToSlide(
-            engine.getCamera(),
-            stage.getBoundingClientRect(),
-            point.clientX,
-            point.clientY,
-          ),
+        toSlide: (point) => slideAt(engine, stage, point),
         pixelSize: () => 1 / screenScale(engine.getCamera()),
         commit: (before, after, label) => latest.current.onCommit?.(before, after, label),
       }),
@@ -95,6 +91,7 @@ export function SelectLayer({
   onCommit,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const tool = useSelectTool(engine, stage, doc, onDocumentChange, onCommit);
   const state = useSyncExternalStore(tool.subscribe, tool.state);
   const escRegistry = useEscRegistry();
@@ -114,7 +111,10 @@ export function SelectLayer({
       if (!consumed) return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      if (event.type === "pointerdown") stage.setPointerCapture(event.pointerId);
+      if (event.type === "pointerdown") {
+        interruptMotion(engine);
+        capturePointer(stage, event.pointerId);
+      }
     };
     const doubleClick = (event: MouseEvent) => {
       const consumed = tool.handle({
@@ -146,11 +146,10 @@ export function SelectLayer({
       leaveRung?.();
       tool.cancel();
     };
-  }, [active, stage, tool, escRegistry]);
+  }, [active, stage, tool, escRegistry, engine]);
 
   if (!active) return null;
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const project = (x: number, y: number) => slideToScreen(camera, rect, { x, y });
   const selected = state.ids
     .map((id) => doc.shapes.get(id))

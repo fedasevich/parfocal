@@ -5,7 +5,9 @@ import { polygonPointsOf, polygonToGeoJson } from "../src/annotations/geojson.ts
 import {
   clickDraft,
   closeDraft,
+  closeEchoMs,
   type DraftStep,
+  echoesClose,
   type Point,
   type PolygonDraft,
 } from "../src/annotations/polygon-draft.ts";
@@ -116,5 +118,25 @@ describe("polygon GeoJSON", () => {
       ),
       null,
     );
+  });
+});
+
+describe("the second click of a double-click that closed a polygon", () => {
+  const close = { x: 200, y: 150, time: 1000 };
+
+  test("is swallowed when it lands within the close radius and the double-click interval", () => {
+    assert.equal(echoesClose(close, { x: 203, y: 148, time: 1180 }), true);
+  });
+
+  test("is a fresh click once it lands farther away", () => {
+    assert.equal(echoesClose(close, { x: 230, y: 150, time: 1100 }), false);
+  });
+
+  test("is a fresh click once the interval has passed", () => {
+    assert.equal(echoesClose(close, { x: 200, y: 150, time: 1000 + closeEchoMs + 1 }), false);
+  });
+
+  test("never matches before any polygon was closed", () => {
+    assert.equal(echoesClose(null, { x: 200, y: 150, time: 1001 }), false);
   });
 });

@@ -105,3 +105,93 @@ test("Escape in the middle of a move puts the ruler back", async ({ page }) => {
   expect(Number(await lineOf(page).getAttribute("x1"))).toBeCloseTo(before, 1);
   await expect(stage).toHaveAttribute("data-tool", "select");
 });
+
+async function drawRectangle(page: Page, box: { x: number; y: number }) {
+  await page.keyboard.press("r");
+  await page.mouse.move(box.x + 200, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 400, box.y + 300, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+  await page.keyboard.press("v");
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-tool", "select");
+}
+
+async function handlePositions(page: Page) {
+  return page.getByTestId("select-handle").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      x: Number(node.getAttribute("cx")),
+      y: Number(node.getAttribute("cy")),
+    })),
+  );
+}
+
+const outlineOf = (page: Page) => page.getByTestId("select-outline").locator("path").first();
+
+test("a corner grabbed off centre keeps its grab offset instead of jumping to the pointer", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.click(box.x + 300, box.y + 250);
+  await expect(page.getByTestId("select-handle")).toHaveCount(4);
+  await page.mouse.move(box.x + 406, box.y + 305);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 430, box.y + 330, { steps: 3 });
+  const during = await handlePositions(page);
+  expect(Math.abs((during[2]?.x ?? 0) - 424)).toBeLessThan(0.5);
+  expect(Math.abs((during[2]?.y ?? 0) - 325)).toBeLessThan(0.5);
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+  const after = await handlePositions(page);
+  expect(Math.abs((after[2]?.x ?? 0) - 424)).toBeLessThan(0.5);
+  expect(Math.abs((after[2]?.y ?? 0) - 325)).toBeLessThan(0.5);
+});
+
+test("after a wheel zoom a move still follows the pointer", async ({ page }) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.move(box.x + 300, box.y + 250);
+  const camera = await page.getByTestId("slide-host").getAttribute("data-camera");
+  await page.mouse.wheel(0, -300);
+  await expect
+    .poll(() => page.getByTestId("slide-host").getAttribute("data-camera"))
+    .not.toBe(camera);
+  await page.waitForTimeout(500);
+  await page.mouse.click(box.x + 300, box.y + 250);
+  await expect(page.getByTestId("select-outline")).toHaveCount(1);
+  const before = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 360, box.y + 290, { steps: 4 });
+  await page.mouse.up();
+  const after = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  expect(Math.abs(after.x - before.x - 60)).toBeLessThan(1);
+  expect(Math.abs(after.y - before.y - 40)).toBeLessThan(1);
+  expect(Math.abs(after.width - before.width)).toBeLessThan(1);
+});
+
+test("a keyboard pan in the middle of a move keeps the grabbed point under the pointer", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await drawRectangle(page, box);
+  await page.mouse.click(box.x + 300, box.y + 250);
+  await expect(page.getByTestId("select-outline")).toHaveCount(1);
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 320, box.y + 260, { steps: 2 });
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(250);
+  await page.keyboard.up("ArrowRight");
+  await page.waitForTimeout(600);
+  await page.mouse.move(box.x + 321, box.y + 260);
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+  const bounds = (await outlineOf(page).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  expect(Math.abs(bounds.x + 1 + 100 - (box.x + 321))).toBeLessThan(1.5);
+  expect(Math.abs(bounds.y + 1 + 50 - (box.y + 260))).toBeLessThan(1.5);
+});

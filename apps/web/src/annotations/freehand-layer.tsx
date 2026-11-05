@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
-import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import { finishStroke, strokeSamples } from "./freehand.ts";
 import type { Point } from "./polygon-draft.ts";
+import { capturePointer, interruptMotion, releasePointer, slideAt } from "./stage-pointer.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type FreehandLayerProps = {
   engine: ViewerEngine;
@@ -14,6 +16,7 @@ type FreehandLayerProps = {
 
 export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const [stroke, setStroke] = useState<readonly Point[]>([]);
   const escRegistry = useEscRegistry();
   const latest = useRef({ onClose, engine });
@@ -25,18 +28,13 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       return;
     }
     let drawing: { id: number; points: Point[] } | null = null;
-    const toSlide = (event: PointerEvent): Point =>
-      screenToSlide(
-        latest.current.engine.getCamera(),
-        stage.getBoundingClientRect(),
-        event.clientX,
-        event.clientY,
-      );
+    const toSlide = (event: PointerEvent): Point => slideAt(latest.current.engine, stage, event);
     const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || drawing !== null) return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      stage.setPointerCapture(event.pointerId);
+      interruptMotion(latest.current.engine);
+      capturePointer(stage, event.pointerId);
       drawing = { id: event.pointerId, points: [toSlide(event)] };
       setStroke(drawing.points);
     };
@@ -49,31 +47,38 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
     const up = (event: PointerEvent) => {
       if (drawing === null || event.pointerId !== drawing.id) return;
       event.stopImmediatePropagation();
-      stage.releasePointerCapture(event.pointerId);
       const points = drawing.points;
       drawing = null;
+      releasePointer(stage, event.pointerId);
       setStroke([]);
-      const scale = 2 ** latest.current.engine.getCamera().zoom;
-      const closed = finishStroke(points, scale);
+      const closed = finishStroke(points, screenScale(latest.current.engine.getCamera()));
       if (closed !== null) latest.current.onClose(closed);
     };
-    const cancel = () => {
+    const cancel = (event: PointerEvent) => {
+      if (drawing === null || event.pointerId !== drawing.id) return;
+      drawing = null;
+      setStroke([]);
+    };
+    const abandon = () => {
       drawing = null;
       setStroke([]);
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
-    const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: cancel });
+    stage.addEventListener("pointercancel", cancel, true);
+    stage.addEventListener("lostpointercapture", cancel, true);
+    const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: abandon });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("pointercancel", cancel, true);
+      stage.removeEventListener("lostpointercapture", cancel, true);
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const path = stroke
     .map((point, index) => {
       const p = slideToScreen(camera, rect, point);

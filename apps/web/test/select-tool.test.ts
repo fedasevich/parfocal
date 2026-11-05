@@ -17,6 +17,7 @@ import type {
   TraceEvent,
   TracePointerEvent,
 } from "../src/screens/input-traces/trace-format.ts";
+import { screenScale, screenToSlide, slideToScreen } from "../src/viewer/viewer-engine.ts";
 
 type Modifiers = { shiftKey?: boolean };
 
@@ -357,10 +358,16 @@ describe("select tool vertex reshape", () => {
     assert.deepEqual(r.commits, ["Reshape"]);
   });
 
-  test("a vertex is grabbed within eight screen pixels", () => {
+  test("a vertex grabbed within eight screen pixels keeps its grab offset instead of jumping", () => {
     const r = selectedSquare();
     r.replay(drag([305, 305], [340, 360]));
-    assert.deepEqual(pointsOf(r.doc(), 1).slice(4, 6), [340, 360]);
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(4, 6), [335, 355]);
+  });
+
+  test("a vertex grabbed off centre with Shift snaps the carried point, not the pointer", () => {
+    const r = selectedSquare();
+    r.replay(drag([304, 303], [304, 403], { shiftKey: true }));
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(4, 6), [300, 400]);
   });
 
   test("Shift snaps the segment from the neighbouring vertex to a multiple of 45 degrees", () => {
@@ -386,6 +393,16 @@ describe("select tool vertex reshape", () => {
     );
     r.replay(click(200, 180));
     r.replay(drag([300, 250], [400, 400]));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 400, 400]);
+  });
+
+  test("a rectangle corner grabbed off centre keeps its grab offset", () => {
+    const r = rig(
+      (doc) =>
+        addShape(doc, { kind: "rectangle", points: Float32Array.of(100, 100, 300, 250) }).document,
+    );
+    r.replay(click(200, 180));
+    r.replay(drag([305, 255], [405, 405]));
     assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 400, 400]);
   });
 
@@ -505,5 +522,145 @@ describe("select tool state", () => {
     r.tool.select([1, 2, 7]);
     r.tool.prune();
     assert.deepEqual(r.ids(), [1, 2]);
+  });
+});
+
+describe("select tool under a moving camera", () => {
+  type Camera = { x: number; y: number; zoom: number };
+  const view = { left: 10.5, top: 55.25, width: 800, height: 600 };
+
+  function cameraRig(setup: (doc: AnnotationDocument) => AnnotationDocument, start: Camera) {
+    let camera = start;
+    let doc = setup(createDocument());
+    const commits: string[] = [];
+    const tool = createSelectTool({
+      document: () => doc,
+      setDocument: (next) => {
+        doc = next;
+      },
+      toSlide: (point) => screenToSlide(camera, view, point.clientX, point.clientY),
+      pixelSize: () => 1 / screenScale(camera),
+      commit: (_before, _after, label) => commits.push(label),
+    });
+    const screenOf = (slide: { x: number; y: number }) => slideToScreen(camera, view, slide);
+    return {
+      tool,
+      doc: () => doc,
+      commits,
+      replay: (events: readonly TraceEvent[]) =>
+        events.map((event) => tool.handle(viewerInput(event))),
+      ids: () => tool.state().ids,
+      screenOf,
+      setCamera: (next: Camera) => {
+        camera = next;
+      },
+    };
+  }
+
+  const zooms = [-3, -1, 0, 1.5, 3.7];
+
+  for (const zoom of zooms) {
+    test(`at zoom ${zoom} a moved shape lands under the pointer`, () => {
+      const r = cameraRig(twoSquares, { x: 200, y: 200, zoom });
+      const grab = r.screenOf({ x: 150, y: 150 });
+      const drop = { x: grab.x + 37, y: grab.y - 23 };
+      r.replay(click(grab.x, grab.y));
+      r.replay(drag([grab.x, grab.y], [drop.x, drop.y]));
+      const moved = Float32Array.from(pointsOf(r.doc(), 1));
+      const corner = r.screenOf({ x: at(moved, 0), y: at(moved, 1) });
+      const expected = r.screenOf({ x: 100, y: 100 });
+      assert.ok(Math.abs(corner.x - (expected.x + 37)) < 1e-3, `x ${corner.x}`);
+      assert.ok(Math.abs(corner.y - (expected.y - 23)) < 1e-3, `y ${corner.y}`);
+    });
+
+    test(`at zoom ${zoom} a vertex drag keeps its grab offset in slide units`, () => {
+      const r = cameraRig(twoSquares, { x: 200, y: 200, zoom });
+      const vertex = r.screenOf({ x: 300, y: 300 });
+      r.replay(click(r.screenOf({ x: 150, y: 150 }).x, r.screenOf({ x: 150, y: 150 }).y));
+      r.replay(drag([vertex.x + 5, vertex.y + 5], [vertex.x + 45, vertex.y + 65]));
+      const moved = Float32Array.from(pointsOf(r.doc(), 1));
+      const landed = r.screenOf({ x: at(moved, 4), y: at(moved, 5) });
+      assert.ok(Math.abs(landed.x - (vertex.x + 40)) < 1e-3, `x ${landed.x}`);
+      assert.ok(Math.abs(landed.y - (vertex.y + 60)) < 1e-3, `y ${landed.y}`);
+    });
+  }
+
+  test("a pan in the middle of a move keeps the shape under the pointer", () => {
+    const r = cameraRig(twoSquares, { x: 200, y: 200, zoom: 0 });
+    const grab = r.screenOf({ x: 150, y: 150 });
+    r.replay(click(grab.x, grab.y));
+    r.replay(drag([grab.x, grab.y], [grab.x + 20, grab.y]).slice(0, -1));
+    r.setCamera({ x: 260, y: 170, zoom: 0 });
+    r.replay([
+      pointer("pointermove", grab.x + 20, grab.y),
+      pointer("pointerup", grab.x + 20, grab.y),
+    ]);
+    const moved = Float32Array.from(pointsOf(r.doc(), 1));
+    const grabbedPoint = r.screenOf({ x: at(moved, 0) + 50, y: at(moved, 1) + 50 });
+    assert.ok(Math.abs(grabbedPoint.x - (grab.x + 20)) < 1e-3, `x ${grabbedPoint.x}`);
+    assert.ok(Math.abs(grabbedPoint.y - grab.y) < 1e-3, `y ${grabbedPoint.y}`);
+    assert.deepEqual(r.commits, ["Move"]);
+  });
+
+  test("a zoom in the middle of a marquee keeps the far corner under the pointer", () => {
+    const r = cameraRig(twoSquares, { x: 300, y: 300, zoom: 0 });
+    const from = r.screenOf({ x: 50, y: 50 });
+    r.replay([
+      pointer("pointerdown", from.x, from.y),
+      pointer("pointermove", from.x + 100, from.y + 100),
+    ]);
+    r.setCamera({ x: 300, y: 300, zoom: 1 });
+    r.replay([pointer("pointermove", from.x + 100, from.y + 100)]);
+    const marquee = r.tool.state().marquee;
+    assert.ok(marquee !== null);
+    const far = r.screenOf({ x: marquee[2], y: marquee[3] });
+    assert.ok(Math.abs(far.x - (from.x + 100)) < 1e-3);
+    assert.ok(Math.abs(far.y - (from.y + 100)) < 1e-3);
+    assert.deepEqual(marquee.slice(0, 2), [50, 50]);
+  });
+
+  test("a zoom in the middle of a vertex drag keeps the vertex under the pointer", () => {
+    const r = cameraRig(twoSquares, { x: 200, y: 200, zoom: 0 });
+    const pick = r.screenOf({ x: 150, y: 150 });
+    r.replay(click(pick.x, pick.y));
+    const vertex = r.screenOf({ x: 300, y: 300 });
+    r.replay([
+      pointer("pointerdown", vertex.x, vertex.y),
+      pointer("pointermove", vertex.x + 10, vertex.y),
+    ]);
+    r.setCamera({ x: 220, y: 180, zoom: 2 });
+    r.replay([
+      pointer("pointermove", vertex.x + 10, vertex.y),
+      pointer("pointerup", vertex.x + 10, vertex.y),
+    ]);
+    const moved = Float32Array.from(pointsOf(r.doc(), 1));
+    const landed = r.screenOf({ x: at(moved, 4), y: at(moved, 5) });
+    assert.ok(Math.abs(landed.x - (vertex.x + 10)) < 1e-3, `x ${landed.x}`);
+    assert.ok(Math.abs(landed.y - vertex.y) < 1e-3, `y ${landed.y}`);
+  });
+
+  test("undo after a reshape restores the vertex and keeps the selection", () => {
+    const r = cameraRig(twoSquares, { x: 200, y: 200, zoom: 1 });
+    const pick = r.screenOf({ x: 150, y: 150 });
+    r.replay(click(pick.x, pick.y));
+    const vertex = r.screenOf({ x: 300, y: 300 });
+    const before = r.doc();
+    r.replay(drag([vertex.x, vertex.y], [vertex.x + 30, vertex.y + 30]));
+    assert.notDeepEqual(pointsOf(r.doc(), 1), pointsOf(before, 1));
+    r.tool.prune(before);
+    assert.deepEqual(pointsOf(before, 1), [100, 100, 300, 100, 300, 300, 100, 300]);
+    assert.deepEqual(r.ids(), [1]);
+  });
+
+  test("a stray move after the pointer was cancelled changes nothing", () => {
+    const r = cameraRig(twoSquares, { x: 200, y: 200, zoom: 0 });
+    const grab = r.screenOf({ x: 150, y: 150 });
+    r.replay(click(grab.x, grab.y));
+    r.replay([pointer("pointerdown", grab.x, grab.y), pointer("pointermove", grab.x + 20, grab.y)]);
+    r.replay([pointer("pointercancel", grab.x + 20, grab.y)]);
+    const consumed = r.replay([pointer("pointermove", grab.x + 80, grab.y + 80)]);
+    assert.deepEqual(consumed, [false]);
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [100, 100]);
+    assert.equal(r.tool.state().gesture, "idle");
   });
 });

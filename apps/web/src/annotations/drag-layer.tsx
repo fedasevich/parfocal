@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
-import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { screenScale, screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { type DragKind, dragCorner, dragOutline, finishDrag } from "./drag-shape.ts";
 import type { Point } from "./polygon-draft.ts";
+import {
+  capturePointer,
+  interruptMotion,
+  releasePointer,
+  slideAt,
+  stagePoint,
+} from "./stage-pointer.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type DragLayerProps = {
   engine: ViewerEngine;
@@ -13,10 +21,11 @@ type DragLayerProps = {
   onClose: (points: Float32Array) => void;
 };
 
-type Drag = { id: number; start: Point; end: Point; equal: boolean };
+type Drag = { id: number; start: Point; pointer: Point; equal: boolean };
 
 export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const [drag, setDrag] = useState<Drag | null>(null);
   const escRegistry = useEscRegistry();
   const latest = useRef({ onClose, engine, kind });
@@ -28,65 +37,71 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       return;
     }
     let current: Drag | null = null;
-    const toSlide = (event: PointerEvent): Point =>
-      screenToSlide(
-        latest.current.engine.getCamera(),
-        stage.getBoundingClientRect(),
-        event.clientX,
-        event.clientY,
-      );
     const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || current !== null) return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      stage.setPointerCapture(event.pointerId);
-      const start = toSlide(event);
-      current = { id: event.pointerId, start, end: start, equal: event.shiftKey };
+      interruptMotion(latest.current.engine);
+      capturePointer(stage, event.pointerId);
+      current = {
+        id: event.pointerId,
+        start: slideAt(latest.current.engine, stage, event),
+        pointer: stagePoint(stage, event),
+        equal: event.shiftKey,
+      };
       setDrag(current);
     };
     const move = (event: PointerEvent) => {
       if (current === null || event.pointerId !== current.id) return;
       event.stopImmediatePropagation();
-      current = { ...current, end: toSlide(event), equal: event.shiftKey };
+      current = { ...current, pointer: stagePoint(stage, event), equal: event.shiftKey };
       setDrag(current);
     };
     const up = (event: PointerEvent) => {
       if (current === null || event.pointerId !== current.id) return;
       event.stopImmediatePropagation();
-      stage.releasePointerCapture(event.pointerId);
-      const finished = { ...current, end: toSlide(event), equal: event.shiftKey };
+      const finished = current;
       current = null;
+      releasePointer(stage, event.pointerId);
       setDrag(null);
-      const scale = 2 ** latest.current.engine.getCamera().zoom;
       const outline = finishDrag(
         latest.current.kind,
         finished.start,
-        finished.end,
-        finished.equal,
-        scale,
+        slideAt(latest.current.engine, stage, event),
+        event.shiftKey,
+        screenScale(latest.current.engine.getCamera()),
       );
       if (outline !== null) latest.current.onClose(outline);
     };
-    const cancel = () => {
+    const cancel = (event: PointerEvent) => {
+      if (current === null || event.pointerId !== current.id) return;
+      current = null;
+      setDrag(null);
+    };
+    const abandon = () => {
       current = null;
       setDrag(null);
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
-    const leaveRung = escRegistry?.add("drag", { open: () => current !== null, peel: cancel });
+    stage.addEventListener("pointercancel", cancel, true);
+    stage.addEventListener("lostpointercapture", cancel, true);
+    const leaveRung = escRegistry?.add("drag", { open: () => current !== null, peel: abandon });
     return () => {
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("pointercancel", cancel, true);
+      stage.removeEventListener("lostpointercapture", cancel, true);
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   let path = "";
   if (drag !== null) {
-    const outline = dragOutline(kind, drag.start, dragCorner(drag.start, drag.end, drag.equal));
+    const end = screenToSlide(camera, rect, drag.pointer.x, drag.pointer.y);
+    const outline = dragOutline(kind, drag.start, dragCorner(drag.start, end, drag.equal));
     for (let i = 0; i < outline.length; i += 2) {
       const p = slideToScreen(camera, rect, { x: outline[i] ?? 0, y: outline[i + 1] ?? 0 });
       path += `${i === 0 ? "M" : "L"}${p.x} ${p.y} `;

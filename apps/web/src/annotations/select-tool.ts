@@ -193,8 +193,12 @@ export function createSelectTool(host: SelectHost): SelectTool {
   ) => {
     const shape = current.base.shapes.get(current.shapeId);
     if (!shape) return;
+    const carried = {
+      x: current.handle.x + at.x - current.slide.x,
+      y: current.handle.y + at.y - current.slide.y,
+    };
     const anchor = shift ? neighbourOf(shape, current.handle.id) : null;
-    const target = anchor ? snapToAngle(anchor, at) : at;
+    const target = anchor ? snapToAngle(anchor, carried) : carried;
     const geometry = moveHandle(shape, current.handle.id, target);
     host.setDocument(updateShape(current.base, shape.id, { geometry }).document);
   };

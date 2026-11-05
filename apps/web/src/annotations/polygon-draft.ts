@@ -8,8 +8,16 @@ export type DraftStep =
 
 export const closeRadiusScreenPixels = 8;
 export const minimumVertices = 3;
+export const closeEchoMs = 500;
+
+export type TimedPoint = Point & { readonly time: number };
 
 const near = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y) <= closeRadiusScreenPixels;
+
+export function echoesClose(close: TimedPoint | null, click: TimedPoint): boolean {
+  if (close === null) return false;
+  return click.time - close.time <= closeEchoMs && near(close, click);
+}
 
 export function closeDraft(draft: PolygonDraft): DraftStep {
   if (draft.length < minimumVertices) return { kind: "draft", draft };

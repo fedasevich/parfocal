@@ -6,11 +6,21 @@ import type { AnnotationDocument } from "./document.ts";
 import {
   clickDraft,
   closeDraft,
+  echoesClose,
   type Point,
   type PolygonDraft,
   snapTo45,
+  type TimedPoint,
 } from "./polygon-draft.ts";
 import { at } from "./shapes.ts";
+import {
+  capturePointer,
+  interruptMotion,
+  releasePointer,
+  slideAt,
+  stagePoint,
+} from "./stage-pointer.ts";
+import { useStageRect } from "./stage-size.ts";
 
 type PolygonLayerProps = {
   engine: ViewerEngine;
@@ -22,6 +32,8 @@ type PolygonLayerProps = {
 };
 
 export type DraftControl = { readonly depth: () => number; readonly pop: () => void };
+
+type Pointer = Point & { readonly shift: boolean };
 
 const clickSlopScreenPixels = 3;
 
@@ -46,8 +58,9 @@ export function PolygonLayer({
   draftControl,
 }: PolygonLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
   const [draft, setDraft] = useState<PolygonDraft>([]);
-  const [hover, setHover] = useState<Point | null>(null);
+  const [pointer, setPointer] = useState<Pointer | null>(null);
   const escRegistry = useEscRegistry();
   const latest = useRef({ draft, onClose, engine });
   latest.current = { draft, onClose, engine };
@@ -76,22 +89,17 @@ export function PolygonLayer({
         if (step.kind === "closed") latest.current.onClose(step.points);
       }
       setDraft([]);
-      setHover(null);
+      setPointer(null);
       return;
     }
     let pressed: { id: number; x: number; y: number } | null = null;
-    const bounds = () => stage.getBoundingClientRect();
+    let lastClose: TimedPoint | null = null;
     const toSlide = (event: MouseEvent): Point => {
-      const point = screenToSlide(
-        latest.current.engine.getCamera(),
-        bounds(),
-        event.clientX,
-        event.clientY,
-      );
+      const point = slideAt(latest.current.engine, stage, event);
       return event.shiftKey ? snapTo45(latest.current.draft, point) : point;
     };
     const toScreen = (point: Point): Point =>
-      slideToScreen(latest.current.engine.getCamera(), bounds(), point);
+      slideToScreen(latest.current.engine.getCamera(), stage.getBoundingClientRect(), point);
     const apply = (next: ReturnType<typeof clickDraft>) => {
       if (next.kind === "closed") {
         setDraft([]);
@@ -107,39 +115,60 @@ export function PolygonLayer({
       if (event.button !== 0) return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      stage.setPointerCapture(event.pointerId);
+      interruptMotion(latest.current.engine);
+      capturePointer(stage, event.pointerId);
       pressed = { id: event.pointerId, x: event.clientX, y: event.clientY };
     };
     const move = (event: PointerEvent) => {
       if (pressed !== null) event.stopImmediatePropagation();
-      setHover(toSlide(event));
+      setPointer({ ...stagePoint(stage, event), shift: event.shiftKey });
     };
     const up = (event: PointerEvent) => {
       if (pressed === null || event.pointerId !== pressed.id) return;
       event.stopImmediatePropagation();
-      stage.releasePointerCapture(event.pointerId);
       const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
       pressed = null;
+      releasePointer(stage, event.pointerId);
       if (moved > clickSlopScreenPixels) return;
-      apply(clickDraft(latest.current.draft, toSlide(event), toScreen));
+      const click = { ...stagePoint(stage, event), time: event.timeStamp };
+      if (echoesClose(lastClose, click)) return;
+      const next = clickDraft(latest.current.draft, toSlide(event), toScreen);
+      if (next.kind === "closed") lastClose = click;
+      apply(next);
+    };
+    const cancel = (event: PointerEvent) => {
+      if (pressed === null || event.pointerId !== pressed.id) return;
+      pressed = null;
+    };
+    const leave = () => {
+      if (pressed === null) setPointer(null);
     };
     const doubleClick = (event: MouseEvent) => {
       event.stopImmediatePropagation();
       event.preventDefault();
       apply(closeDraft(latest.current.draft));
     };
+    const shiftChanged = (event: KeyboardEvent) => {
+      if (event.key !== "Shift") return;
+      const shift = event.type === "keydown";
+      setPointer((current) =>
+        current === null || current.shift === shift ? current : { ...current, shift },
+      );
+    };
     const key = (event: KeyboardEvent) => {
-      if (event.key === "Enter") {
-        apply(closeDraft(latest.current.draft));
-        return;
-      }
+      shiftChanged(event);
+      if (event.key === "Enter") apply(closeDraft(latest.current.draft));
     };
 
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
+    stage.addEventListener("pointercancel", cancel, true);
+    stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("pointerleave", leave, true);
     stage.addEventListener("dblclick", doubleClick, true);
     window.addEventListener("keydown", key);
+    window.addEventListener("keyup", shiftChanged);
     const leaveRung = escRegistry?.add("draft", {
       open: () => latest.current.draft.length > 0,
       peel: () => {
@@ -151,17 +180,26 @@ export function PolygonLayer({
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("pointercancel", cancel, true);
+      stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("pointerleave", leave, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       window.removeEventListener("keydown", key);
+      window.removeEventListener("keyup", shiftChanged);
       leaveRung?.();
     };
   }, [active, stage, escRegistry]);
 
-  const rect = { left: 0, top: 0, width: stage.clientWidth, height: stage.clientHeight };
   const project = (point: Point) => slideToScreen(camera, rect, point);
   const saved = [...doc.shapes.values()].filter((shape) => shape.kind === "polygon");
   const draftScreen = draft.map(project);
-  const rubber = hover !== null && draft.length > 0 ? [...draftScreen, project(hover)] : null;
+  const hover =
+    pointer === null
+      ? null
+      : pointer.shift
+        ? project(snapTo45(draft, screenToSlide(camera, rect, pointer.x, pointer.y)))
+        : pointer;
+  const rubber = hover !== null && draft.length > 0 ? [...draftScreen, hover] : null;
 
   return (
     <svg
@@ -184,6 +222,7 @@ export function PolygonLayer({
       ))}
       {rubber ? (
         <path
+          data-testid="polygon-rubber"
           d={pathOf(rubber, false)}
           fill="none"
           className="stroke-accent"
