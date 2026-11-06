@@ -304,6 +304,7 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
         await connection.execute(
             select(
                 review_task_slides.c.slide_id,
+                review_task_slides.c.signed_off_at,
                 result_sets.c.status,
                 result_sets.c.source,
                 ingested(),
@@ -330,7 +331,7 @@ async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
                 for row in assigned
             },
             open_disagreements=open_disagreements.get(slide.slide_id, 0),
-            signed_off=task.signed_off_at is not None,
+            signed_off=task.signed_off_at is not None or slide.signed_off_at is not None,
             ingested=slide.ingested,
         )
         states.append(

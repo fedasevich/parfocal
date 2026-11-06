@@ -226,6 +226,8 @@ class Workspace:
     adjudicator: uuid.UUID = field(default_factory=uuid.uuid4)
     report_link: uuid.UUID = field(default_factory=uuid.uuid4)
     annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
+    checked_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
+    ready_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
 
@@ -276,6 +278,8 @@ NEEDS_A_TASK = frozenset(
         "addRunToTaskSlide",
         "changeSharedObject",
         "deleteSharedObject",
+        "checkAnnotateSlide",
+        "uncheckAnnotateSlide",
     }
 )
 
@@ -543,6 +547,18 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "deleteSharedObject": lambda w: Call(
         "DELETE", f"{w.shared_layer}/objects/{w.doomed_layer_object}?version=1"
+    ),
+    "getAnnotateSlideStatus": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.annotate_task}/slides/{w.slide}/check-status"
+    ),
+    "checkAnnotateSlide": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.annotate_task}/slides/{w.slide}/check"
+    ),
+    "uncheckAnnotateSlide": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.checked_annotate_task}/slides/{w.slide}/uncheck"
+    ),
+    "signOffAnnotateSlide": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.ready_annotate_task}/slides/{w.slide}/sign-off"
     ),
     "search": lambda _: Call("GET", "/api/search?q=A1"),
     "getSlideNeighbours": lambda w: Call(
@@ -1038,13 +1054,14 @@ async def seed_annotate_task(
     slide_id: uuid.UUID,
     result_set_id: uuid.UUID,
     user_id: uuid.UUID,
+    number: int = 90,
 ) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
     task_id = await connection.scalar(
         insert(review_tasks)
         .values(
             tenant_id=tenant_id,
             project_id=project_id,
-            number=90,
+            number=number,
             name="Seeded annotate task",
             kind="annotate",
             class_snapshot=[],
@@ -1069,7 +1086,11 @@ async def seed_annotate_task(
     )
     await connection.execute(
         insert(review_assignments).values(
-            tenant_id=tenant_id, task_id=task_id, slide_id=slide_id, user_id=user_id
+            tenant_id=tenant_id,
+            task_id=task_id,
+            slide_id=slide_id,
+            user_id=user_id,
+            submitted_at=None if number == 90 else func.now(),
         )
     )
     kept, doomed = [
@@ -1081,13 +1102,13 @@ async def seed_annotate_task(
                 slide_id=slide_id,
                 task_id=task_id,
                 kind="region",
-                number=number,
+                number=object_number,
                 geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
                 created_by_user_id=user_id,
             )
             .returning(annotations.c.id)
         )
-        for number in (90, 91)
+        for object_number in (number * 2 - 90, number * 2 - 89)
     ]
     assert isinstance(kept, uuid.UUID)
     assert isinstance(doomed, uuid.UUID)
@@ -1376,6 +1397,20 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 result_set,
                 people[lead],
             )
+            checked_annotate_task, ready_annotate_task = [
+                (
+                    await seed_annotate_task(
+                        connection,
+                        tenant_id,
+                        case.project_id,
+                        case.loose_slide_id,
+                        result_set,
+                        people[lead],
+                        number,
+                    )
+                )[0]
+                for number in (91, 92)
+            ]
             submitted_task, ready_task, signed_task, versioned_task = [
                 await seed_task(
                     connection,
@@ -1706,6 +1741,8 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             adjudicator=adjudicator,
             report_link=report_link,
             annotate_task=annotate_task,
+            checked_annotate_task=checked_annotate_task,
+            ready_annotate_task=ready_annotate_task,
             layer_object=layer_object,
             doomed_layer_object=doomed_layer_object,
         )

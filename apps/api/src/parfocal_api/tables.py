@@ -1659,11 +1659,20 @@ review_task_slides = Table(
         server_default=text("'{}'"),
         info=OPERATIONAL,
     ),
+    Column("signed_off_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "signed_off_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
     UniqueConstraint("task_id", "position"),
     ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
     ForeignKeyConstraint(["task_id", "kind"], ["review_tasks.id", "review_tasks.kind"]),
     CheckConstraint("kind = 'annotate' OR result_set_id IS NOT NULL", name="result_set"),
     CheckConstraint("kind = 'annotate' OR cardinality(run_set_ids) = 0", name="run_sets"),
+    CheckConstraint("kind = 'annotate' OR signed_off_at IS NULL", name="slide_sign_off"),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
         ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]
@@ -1688,6 +1697,9 @@ review_assignments = Table(
     Column("first_read_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("first_read", JSONB(none_as_null=True), nullable=True, info=PHI),
     Column("released_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "nothing_to_mark", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL
+    ),
     ForeignKeyConstraint(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
@@ -1695,6 +1707,7 @@ review_assignments = Table(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
     CheckConstraint("(first_read_at IS NULL) = (first_read IS NULL)", name="first_read_pair"),
+    CheckConstraint("NOT nothing_to_mark OR submitted_at IS NOT NULL", name="nothing_to_mark"),
 )
 
 

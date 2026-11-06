@@ -11,6 +11,7 @@ import type {
   AbortedUpload,
   AcceptedInvitation,
   AdjudicatedObject,
+  AnnotateSlideStatus,
   Annotation,
   AnnotationRef,
   AnnotationVersion,
@@ -4061,6 +4062,110 @@ export const getListSharedObjectHistoryResponseMock = (): AnnotationVersion[] =>
     changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
+
+export const getGetAnnotateSlideStatusResponseMock = (
+  overrideResponse: Partial<Extract<AnnotateSlideStatus, object>> = {},
+): AnnotateSlideStatus => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      checked_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      nothing_to_mark: faker.datatype.boolean(),
+    }),
+  ),
+  signed_off_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  signed_off_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  open_threads: faker.number.int(),
+  unchecked_objects: faker.number.int(),
+  all_checked_required: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getCheckAnnotateSlideResponseMock = (
+  overrideResponse: Partial<Extract<AnnotateSlideStatus, object>> = {},
+): AnnotateSlideStatus => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      checked_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      nothing_to_mark: faker.datatype.boolean(),
+    }),
+  ),
+  signed_off_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  signed_off_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  open_threads: faker.number.int(),
+  unchecked_objects: faker.number.int(),
+  all_checked_required: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getUncheckAnnotateSlideResponseMock = (
+  overrideResponse: Partial<Extract<AnnotateSlideStatus, object>> = {},
+): AnnotateSlideStatus => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      checked_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      nothing_to_mark: faker.datatype.boolean(),
+    }),
+  ),
+  signed_off_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  signed_off_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  open_threads: faker.number.int(),
+  unchecked_objects: faker.number.int(),
+  all_checked_required: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getSignOffAnnotateSlideResponseMock = (
+  overrideResponse: Partial<Extract<AnnotateSlideStatus, object>> = {},
+): AnnotateSlideStatus => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      checked_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      nothing_to_mark: faker.datatype.boolean(),
+    }),
+  ),
+  signed_off_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  signed_off_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  open_threads: faker.number.int(),
+  unchecked_objects: faker.number.int(),
+  all_checked_required: faker.datatype.boolean(),
+  ...overrideResponse,
+});
 
 export const getAddRunToTaskSlideResponseMock = (
   overrideResponse: Partial<Extract<TaskSlide, object>> = {},
@@ -12627,6 +12732,102 @@ export const getListSharedObjectHistoryMockHandler = (
   );
 };
 
+export const getGetAnnotateSlideStatusMockHandler = (
+  overrideResponse?:
+    | AnnotateSlideStatus
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AnnotateSlideStatus> | AnnotateSlideStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/check-status",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetAnnotateSlideStatusResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCheckAnnotateSlideMockHandler = (
+  overrideResponse?:
+    | AnnotateSlideStatus
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AnnotateSlideStatus> | AnnotateSlideStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/check",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCheckAnnotateSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUncheckAnnotateSlideMockHandler = (
+  overrideResponse?:
+    | AnnotateSlideStatus
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AnnotateSlideStatus> | AnnotateSlideStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/uncheck",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getUncheckAnnotateSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSignOffAnnotateSlideMockHandler = (
+  overrideResponse?:
+    | AnnotateSlideStatus
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AnnotateSlideStatus> | AnnotateSlideStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/sign-off",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSignOffAnnotateSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getAddRunToTaskSlideMockHandler = (
   overrideResponse?:
     | TaskSlide
@@ -15907,6 +16108,10 @@ export const getParfocalAPIMock = () => [
   getChangeSharedObjectMockHandler(),
   getDeleteSharedObjectMockHandler(),
   getListSharedObjectHistoryMockHandler(),
+  getGetAnnotateSlideStatusMockHandler(),
+  getCheckAnnotateSlideMockHandler(),
+  getUncheckAnnotateSlideMockHandler(),
+  getSignOffAnnotateSlideMockHandler(),
   getAddRunToTaskSlideMockHandler(),
   getGetReviewOrderMockHandler(),
   getExportReviewedLayerMockHandler(),
