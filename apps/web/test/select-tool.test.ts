@@ -651,6 +651,30 @@ describe("select tool point editing", () => {
     assert.deepEqual(r.commits, []);
   });
 
+  test("a handle is grabbed from a wider ring than it is drawn, wider still for touch", () => {
+    const r = rig(twoSquares);
+    r.replay(click(200, 200));
+    r.replay([pointer("pointermove", 308, 308)]);
+    assert.equal(r.tool.state().hover?.kind, "vertex");
+    r.replay([pointer("pointermove", 314, 314)]);
+    assert.notEqual(r.tool.state().hover?.kind, "vertex");
+    r.replay([{ ...pointer("pointermove", 314, 314), pointerType: "touch" }]);
+    assert.equal(r.tool.state().hover?.kind, "vertex");
+    r.replay(drag([308, 308], [348, 348]));
+    assert.deepEqual(pointsOf(r.doc(), 1), [100, 100, 300, 100, 340, 340, 100, 300]);
+  });
+
+  test("on a tiny shape the handle ring shrinks so the body still moves the shape", () => {
+    const r = rig(
+      (doc) => addShape(doc, { kind: "polygon", points: square(100, 100, 20) }).document,
+    );
+    r.replay(click(110, 110));
+    r.replay([pointer("pointermove", 110, 110)]);
+    assert.notEqual(r.tool.state().hover?.kind, "vertex");
+    r.replay([pointer("pointermove", 126, 126)]);
+    assert.equal(r.tool.state().hover?.kind, "vertex");
+  });
+
   test("the midpoint is only offered in edit mode and edge hover reports the edge otherwise", () => {
     const r = rig(twoSquares);
     r.replay(click(200, 200));

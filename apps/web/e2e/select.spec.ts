@@ -126,6 +126,26 @@ test("dragging an end handle of the selected ruler reshapes it", async ({ page }
   expect(endAfter - endBefore).toBeGreaterThan(40);
 });
 
+test("an end handle is grabbed from 10 px away and the other end stays put", async ({ page }) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await drawRuler(page, box);
+  await page.keyboard.press("v");
+  await page.mouse.click(box.x + 300, box.y + 200);
+  const startBefore = Number(await lineOf(page).getAttribute("x1"));
+  const endBefore = Number(await lineOf(page).getAttribute("x2"));
+  await page.mouse.move(box.x + 410, box.y + 200);
+  await expect(page.getByTestId("select-handle-aim")).toHaveCount(1);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 450, box.y + 200, { steps: 6 });
+  await page.mouse.up();
+  const startAfter = Number(await lineOf(page).getAttribute("x1"));
+  const endAfter = Number(await lineOf(page).getAttribute("x2"));
+  expect(Math.abs(startAfter - startBefore)).toBeLessThan(1);
+  expect(endAfter - endBefore).toBeGreaterThan(35);
+  expect(endAfter - endBefore).toBeLessThan(45);
+});
+
 test("Escape in the middle of a move puts the ruler back", async ({ page }) => {
   const stage = await openSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };

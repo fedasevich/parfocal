@@ -33,6 +33,9 @@ import type { Extent, Geometry, Shape, ShapeId } from "./shapes.ts";
 export const hitTolerancePx = 6;
 export const markHitTolerancePx = 12;
 export const handleRadiusPx = 8;
+export const handleHitRadiusPx = 12;
+export const touchHandleHitRadiusPx = 22;
+export const midpointHitRadiusPx = 10;
 export const nudgeStepPx = 1;
 export const fastNudgeStepPx = 10;
 
@@ -163,7 +166,29 @@ export function createSelectTool(host: SelectHost): SelectTool {
   };
 
   const screenOf = (input: InputPoint): Point => ({ x: input.clientX, y: input.clientY });
-  const handleRadius = () => handleRadiusPx * host.pixelSize();
+  let coarse = false;
+  const spacing = new WeakMap<Shape, number>();
+  const spacingOf = (shape: Shape): number => {
+    const known = spacing.get(shape);
+    if (known !== undefined) return known;
+    const handles = handlesOf(shape);
+    let nearest = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < handles.length; i += 1) {
+      for (let j = i + 1; j < handles.length; j += 1) {
+        const a = handles[i];
+        const b = handles[j];
+        if (a && b) nearest = Math.min(nearest, Math.hypot(a.x - b.x, a.y - b.y));
+      }
+    }
+    spacing.set(shape, nearest);
+    return nearest;
+  };
+  const reachOf = (shape: Shape, radiusPx: number) => {
+    const wanted =
+      (coarse ? Math.max(radiusPx, touchHandleHitRadiusPx) : radiusPx) * host.pixelSize();
+    const floor = handleRadiusPx * host.pixelSize();
+    return Math.min(wanted, Math.max(floor, spacingOf(shape) / 2));
+  };
   const tolerance = () => hitTolerancePx * host.pixelSize();
   const markTolerance = () => markHitTolerancePx * host.pixelSize();
 
@@ -183,7 +208,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   const handleAt = (shape: Shape, p: Point): Handle | null => {
     let best: Handle | null = null;
-    let bestDistance = handleRadius();
+    let bestDistance = reachOf(shape, handleHitRadiusPx);
     for (const handle of handlesOf(shape)) {
       const distance = Math.hypot(handle.x - p.x, handle.y - p.y);
       if (distance <= bestDistance) {
@@ -196,7 +221,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   const midpointAt = (shape: Shape, p: Point) => {
     let best: { edge: Edge; at: Point } | null = null;
-    let bestDistance = handleRadius();
+    let bestDistance = reachOf(shape, midpointHitRadiusPx);
     for (const midpoint of midpointsOf(shape)) {
       const distance = Math.hypot(midpoint.at.x - p.x, midpoint.at.y - p.y);
       if (distance <= bestDistance) {
@@ -667,6 +692,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   return {
     handle(input) {
+      if (input.kind !== "dblclick") coarse = input.pointerType === "touch";
       switch (input.kind) {
         case "down":
           return down(input);

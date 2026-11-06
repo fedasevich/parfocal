@@ -343,18 +343,31 @@ export function SelectLayer({
         ? handlesOf(handled).map((handle) => {
             const p = project(handle.x, handle.y);
             const chosen = state.editing !== null && state.vertices.includes(handle.id);
+            const aimed =
+              hover?.kind === "vertex" && hover.id === handled.id && hover.vertex === handle.id;
             return (
-              <circle
-                key={handle.id}
-                data-testid="select-handle"
-                data-selected={chosen ? "true" : "false"}
-                cx={p.x}
-                cy={p.y}
-                r={5}
-                fill={chosen ? "currentColor" : "#fff"}
-                className={chosen ? "stroke-accent text-accent" : "stroke-accent"}
-                strokeWidth={2}
-              />
+              <g key={handle.id}>
+                {aimed ? (
+                  <circle
+                    data-testid="select-handle-aim"
+                    cx={p.x}
+                    cy={p.y}
+                    r={9}
+                    className="fill-accent/20 stroke-none"
+                  />
+                ) : null}
+                <circle
+                  data-testid="select-handle"
+                  data-selected={chosen ? "true" : "false"}
+                  data-aimed={aimed ? "true" : "false"}
+                  cx={p.x}
+                  cy={p.y}
+                  r={5}
+                  fill={chosen ? "currentColor" : "#fff"}
+                  className={chosen ? "stroke-accent text-accent" : "stroke-accent"}
+                  strokeWidth={2}
+                />
+              </g>
             );
           })
         : null}
