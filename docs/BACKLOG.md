@@ -4431,7 +4431,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-001, ADJ-006, ADJ-007, ADJ-008, GUIDE-015. Refs mock: disagree/queue, mock: disagree/selected, mock: disagree/sendadj, mock: disagree/sent, mock: disagree/lockedqueue, mock: disagree/declined, mock: disagree/edited, doc 40 D7, doc 44.
   Size: L.
 
-- [ ] ADJ-003 · Adjudicator view
+- [x] ADJ-003 · Adjudicator view
   The adjudicator opens the sent objects from their own entry in My work, as in "Daniel Hruška asked you to decide 3 objects in RT-14". The view is guided review's layout with the review top bar in its adjudication form. Each object shows why it was queued, the AI's line as the task's confidence setting and locks allow, and Reviewer A and Reviewer B with their answers, reasons and notes, never a name or an avatar, then the buttons and keys of the task's decision style and a note. The adjudicator cannot edit outlines or classes. A decision moves to the next sent object, and after the last the card says they are all decided and that the researcher is told ([ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, left open and anonymous adjudicators).
   Done when component tests cover an object with each reason for queueing and the all decided state, an API test shows that no reviewer name, avatar or note author reaches the adjudicator, and E2E adjudicates the sent objects and the researcher sees the decisions in the queue.
   Depends on ADJ-002, ADJ-008, GUIDE-002, GUIDE-015. Refs mock: disagree/adjudicate, mock: disagree/adjdone, mock: worklist/anna, doc 44.
