@@ -503,6 +503,9 @@ export function mergeFile(
   fileName: string,
   names: ClassNames = sameClassNames,
 ): Merged {
+  if (file.shapes.length === 0 && file.groups.length === 0) {
+    throw new UnreadableFileError("The file holds no shapes");
+  }
   const top = addGroup(doc, fileName);
   let next = top.document;
   const groupIds = new Map<number, GroupId>();

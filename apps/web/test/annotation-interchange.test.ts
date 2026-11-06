@@ -264,5 +264,7 @@ describe("annotation import and export", () => {
   test("a file that is neither GeoJSON nor an export is refused", () => {
     assert.throws(() => readFile("not json"), UnreadableFileError);
     assert.throws(() => readFile('{"hello":"world"}'), UnreadableFileError);
+    const empty = readFile('{"type":"FeatureCollection","features":[]}');
+    assert.throws(() => mergeFile(createDocument(), empty, "empty.geojson"), UnreadableFileError);
   });
 });
