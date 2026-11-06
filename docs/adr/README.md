@@ -210,3 +210,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0244](0244-evaluation-versions-and-changes-after-sign-off.md) | Evaluation versions are stored rows, and owner changes after sign-off need a reason | Accepted | 2026-11-06 |
 | [0245](0245-link-imports-fetched-by-the-worker-behind-an-address-check.md) | Link imports are fetched by the worker behind an address check | Accepted | 2026-11-06 |
 | [0246](0246-pathosam-onnx-export-contract.md) | PathoSAM exports to ONNX with the legacy TorchScript exporter, a square traced orig_im_size and a gate against PyTorch | Accepted | 2026-11-06 |
+| [0247](0247-annotate-slide-checks-and-sign-off.md) | Annotate slide checks and sign-off per slide | Accepted | 2026-11-06 |

@@ -1,4 +1,4 @@
-# XXXX. Annotate slide checks and sign-off per slide
+# 0247. Annotate slide checks and sign-off per slide
 
 - Date: 2026-11-06
 - Status: Accepted
