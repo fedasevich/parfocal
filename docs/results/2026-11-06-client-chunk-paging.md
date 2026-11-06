@@ -45,11 +45,12 @@ A repeat run a few minutes later, while four other agents used the same machine,
 - The scenario is usable in 110 ms on this machine, about 30 times under the 4 s target and 30 times under the POC's 3.3 s. It is a loopback with no bandwidth limit, so it measures the client's CPU work and not a network. On a link the summary's 23.4 MB dominates, as the [paging spike](2026-10-18-cell-chunk-paging-spike.md) found at 50 Mbit/s (assumption: the same holds for this data).
 - Memory stays at 75.3 to 75.4 MiB (79.0 MB) after a full sweep, 75 percent of the 100 MiB target. Of that, the summary is 41.8 MB and the resident chunks are 35.2 MB at the budget. Nearly all of it is typed arrays, which is why the JS heap alone is 1.9 MB and is not the right number to budget.
 - The 4,000,000 vertex budget holds: the most resident at any view was 3,988,309.
-- Not measured: peak memory while the summary downloads and inflates (compressed and inflated copies can exist together), the explicit `DecompressionStream` path at this size (only unit tests cover it), a hosted CI runner, drawing, and real cells instead of random ones.
+- Not measured: peak memory while the summary downloads and inflates (compressed and inflated copies can exist together), the explicit `DecompressionStream` path at this size (only unit tests cover it), drawing, and real cells instead of random ones.
 
 ## Follow-ups
 
 - [ADR 0242](../adr/0242-client-chunk-paging-for-large-nuclei-sets.md) (the client keeps the summary whole and pages full chunks under a vertex budget) records the design.
 - Two rows in `perf-budgets.json` (`nuclei.paging-open-ms` and `nuclei.paging-memory-bytes`) guard these numbers.
-- TODO: record the hosted-runner numbers from the first browser CI run and tighten the time headroom.
+- The first hosted CI run measured the open time at 340 ms, three times the Mac, so `nuclei.paging-open-ms` has baseline 340 ms and limit 1000 ms. The spec still asserts the 4 s target.
+- TODO: record more hosted-runner numbers and tighten the time headroom.
 - TODO: measure a real HoVer-NeXt result once one is imported.
