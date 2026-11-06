@@ -1,4 +1,4 @@
-# XXXX. The detector runner stitches full-resolution PathoSAM AIS maps over 512 px windows and runs them on onnxruntime
+# 0248. The detector runner stitches full-resolution PathoSAM AIS maps over 512 px windows and runs them on onnxruntime
 
 - Date: 2026-11-06
 - Status: Accepted
