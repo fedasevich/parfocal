@@ -78,10 +78,11 @@ test("objects sent to Anna reach her anonymously and her decisions resolve them"
   const picked = queue.rows.filter((row) => ["T4", "T5", "T1·C145"].includes(row.object));
   await sendToAdjudicator(rt14, {
     adjudicator_user_id: people.AK.id,
-    note: null,
+    note: "Please look at the edges",
     objects: picked.map((row) => ({ slide_id: row.slide_id, object: row.object })),
   });
   const mine = (await getMyAdjudication(rt14)).data;
+  assert.equal(mine.note, "Please look at the edges");
   assert.equal(mine.objects.length, 3);
   assert.equal(mine.asked_by_user_id, people.DH.id);
   assert.ok(!JSON.stringify(mine).includes(people.LM.id));
@@ -92,8 +93,19 @@ test("objects sent to Anna reach her anonymously and her decisions resolve them"
     taskId: rt14,
     slideId: first.slide_id,
     object: first.object,
-    data: { raw: "disagree" },
+    data: { raw: "disagree", note: "Crush artefact, not tumor" },
   });
+  const decided = (await getMyAdjudication(rt14)).data.objects.find(
+    (item) => item.object === first.object,
+  );
+  assert.equal(decided?.decision, "disagree");
+  assert.equal(decided?.decision_note, "Crush artefact, not tumor");
+  const row = (await getDisagreementQueue(rt14)).data.rows.find(
+    (item) => item.object === first.object,
+  );
+  assert.equal(row?.state, "adjudicated");
+  assert.equal(row?.decision?.raw, "disagree");
+  assert.equal(row?.decision?.note, "Crush artefact, not tumor");
   const summary = await summaryOf(rt14);
   assert.deepEqual(summary.queue.by_adjudicator, [{ user_id: people.AK.id, count: 1 }]);
   assert.deepEqual(summary.queue.with_adjudicator, [{ user_id: people.AK.id, count: 2 }]);

@@ -1,10 +1,13 @@
 import {
   getGetMyAdjudicationQueryKey,
+  resolveSetting,
   useDecideAdjudication,
   useGetMe,
   useGetMyAdjudication,
+  useGetMySettingLayers,
   useGetReviewTask,
   useGetTaskDisplay,
+  useListProjectClasses,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { KeyValueList } from "@parfocal/ui/components/connect-model";
@@ -20,6 +23,7 @@ import { SlidesPopover } from "@parfocal/ui/components/review-popovers";
 import { ReviewTopBar } from "@parfocal/ui/components/review-top-bar";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
+import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -29,18 +33,19 @@ import { personOf } from "../../shell/global-shell.tsx";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { reviewConfidence } from "../review/ai-wording.ts";
+import { toReviewStyle } from "../review/decision-mapping.ts";
+import { answersOf, showsClaim } from "../review/decision-style.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import {
-  type Answer,
-  adjudicatorWhy,
-  answerOf,
-  answerText,
-  answerTone,
-  answerWord,
-  stillOf,
-} from "./text.ts";
+  adjudicatorCard,
+  allDecidedHeading,
+  decidedRows,
+  sentNoteLine,
+} from "./adjudicator-card.ts";
+import { countOf, stillOf } from "./text.ts";
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
@@ -59,6 +64,24 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const task = okData(useGetReviewTask(taskId).data);
   const display = okData(useGetTaskDisplay(taskId).data);
   const me = okData(useGetMe().data);
+  const classList = okData(
+    useListProjectClasses(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,
+  );
+  const myLayers = okData(useGetMySettingLayers().data);
+  const look = {
+    style: toReviewStyle(task?.decision),
+    classes: (classList ?? []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      color: item.colour,
+    })),
+  };
+  const wording = resolveSetting("confidence_wording", {
+    lab: myLayers?.lab ?? { values: {}, locked: [] },
+    personal: myLayers?.personal ?? {},
+    device: {},
+  }).value;
+  const confidence = reviewConfidence(display, null, [], wording);
   const person = usePeople();
   const renderLink = useRouterLink();
   const navigate = useNavigate();
@@ -66,6 +89,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const [index, setIndex] = useState(0);
   const [tab, setTab] = useState("review");
   const [camera, setCamera] = useState<Camera | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const decideMutation = useDecideAdjudication({
     mutation: {
       onSuccess: () =>
@@ -74,10 +98,11 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   });
   const objects = adjudication?.objects ?? [];
   const decided = objects.filter((object) => object.decision !== null);
+  const counted = decidedRows(decided, look);
   const counts = {
-    agree: decided.filter((object) => object.decision === "agree").length,
-    disagree: decided.filter((object) => object.decision === "disagree").length,
-    unsure: decided.filter((object) => object.decision === "unsure").length,
+    agree: counted.filter((row) => row.tone === "ok").length,
+    disagree: counted.filter((row) => row.tone === "bad").length,
+    unsure: counted.filter((row) => row.tone === "warn").length,
     open: objects.length - decided.length,
   };
   const allDone = objects.length > 0 && counts.open === 0;
@@ -87,13 +112,13 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
     setIndex(((next % objects.length) + objects.length) % objects.length);
     setCamera(null);
   };
-  const decide = (raw: Answer) => {
+  const decide = (raw: string) => {
     if (!current) return;
     decideMutation.mutate({
       taskId,
       slideId: current.slide_id,
       object: current.object,
-      data: { raw },
+      data: { raw, note: notes[current.key]?.trim() || null },
     });
     const at = objects.indexOf(current);
     const next = [...objects.slice(at + 1), ...objects.slice(0, at)].find(
@@ -105,10 +130,12 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey || allDone) return;
-      const raw = ({ k: "agree", x: "disagree", u: "unsure" } as const)[
-        event.key.toLowerCase() as "k" | "x" | "u"
-      ];
-      if (raw) {
+      const raw = current
+        ? answersOf(look.style, look.classes, { class_name: current.ai.class_name }).find(
+            (item) => item.key.toLowerCase() === event.key.toLowerCase(),
+          )?.raw
+        : undefined;
+      if (raw !== undefined) {
         event.preventDefault();
         decide(raw);
       }
@@ -119,25 +146,28 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
 
   const shown = allDone ? objects[objects.length - 1] : current;
   const percent = objects.length ? Math.round((100 * decided.length) / objects.length) : 0;
+  const card = current ? adjudicatorCard(current, look, confidence) : null;
+  const sentLine = sentNoteLine(asker, adjudication?.note ?? null);
   const review = allDone ? (
     <div className="grid content-start gap-4 p-1">
       <Icon name="check" size="lg" className="text-ok" />
       <h2 className="m-0 text-title font-semibold text-fg">
-        All {objects.length} decided. {asker} is told.
+        {allDecidedHeading(objects.length, asker)}
       </h2>
       <p className="m-0 text-body-sm text-fg-dim">
         Your decisions sit next to the reviewers' answers and never replace them.
       </p>
       <KeyValueList
         tight
-        rows={objects.map((object) => ({
-          icon: object.kind === "cell" ? "target" : "flag",
-          label: object.object,
-          value: object.decision ? (
-            <StatusTag tone={answerTone[object.decision]}>{answerWord[object.decision]}</StatusTag>
-          ) : (
-            ""
-          ),
+        rows={decidedRows(objects, look).map((row) => ({
+          icon: row.kind === "cell" ? "target" : "flag",
+          label: row.object,
+          value:
+            row.word !== null && row.tone !== null ? (
+              <StatusTag tone={row.tone}>{row.word}</StatusTag>
+            ) : (
+              ""
+            ),
         }))}
       />
       <Button
@@ -147,12 +177,13 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         Back to My work
       </Button>
     </div>
-  ) : current ? (
+  ) : current && card ? (
     <div className="grid content-start gap-4">
       <div className="flex items-center justify-between">
         <span className="text-body-sm text-fg-dim">{asker} asked you to decide</span>
         <ObjectIdTag size="lg">{current.object}</ObjectIdTag>
       </div>
+      {sentLine ? <QuotedNote>{sentLine}</QuotedNote> : null}
       <ProgressDots
         current={objects.indexOf(current)}
         onJump={goTo}
@@ -160,47 +191,48 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         items={objects.map((object) => ({
           key: object.key,
           label: object.object,
-          value: object.decision,
+          value:
+            object.decision === null
+              ? null
+              : countOf(look.style, object.decision, object.ai.class_name),
         }))}
       />
       <div className="grid gap-1">
-        <small className="text-body-sm font-semibold text-fg">
-          {adjudicatorWhy(
-            { ...current.reviewer_a, raw: answerOf(current.reviewer_a.raw) },
-            { ...current.reviewer_b, raw: answerOf(current.reviewer_b.raw) },
-          )}
-        </small>
-        <h2 className="m-0 text-title font-semibold text-fg">
-          The AI says {current.object} is {current.ai.class_name.toLowerCase()},{" "}
-          {Math.round(current.ai.score * 100)}% sure.
-        </h2>
-        <p className="m-0 text-body-sm text-fg-dim">
-          {current.kind === "cell"
-            ? "Cell in the sample"
-            : `${current.size_mm?.toFixed(2).replace(/0$/, "")} mm across`}
-        </p>
+        <small className="text-body-sm font-semibold text-fg">{card.why}</small>
+        {card.hiddenNote ? <p className="m-0 text-body-sm text-fg-dim">{card.hiddenNote}</p> : null}
+        {card.above ? <p className="m-0 text-body-sm text-fg-dim">{card.above}</p> : null}
+        <h2 className="m-0 text-title font-semibold text-fg">{card.headline}</h2>
+        {card.sub ? <p className="m-0 text-body-sm text-fg-dim">{card.sub}</p> : null}
       </div>
       <EvidenceList>
-        {(
-          [
-            ["A", current.reviewer_a],
-            ["B", current.reviewer_b],
-          ] as const
-        ).map(([letter, answer]) => (
-          <EvidenceRow key={letter} icon="user" title={`Reviewer ${letter}`}>
-            <StatusTag tone={answerTone[answerOf(answer.raw)]}>
-              {answerText({ ...answer, raw: answerOf(answer.raw) })}
-            </StatusTag>
-            {answer.note ? <QuotedNote>{answer.note}</QuotedNote> : null}
+        {card.reviewers.map((line) => (
+          <EvidenceRow key={line.letter} icon="user" title={`Reviewer ${line.letter}`}>
+            <StatusTag tone={line.tone}>{line.text}</StatusTag>
+            {line.note ? <QuotedNote>{line.note}</QuotedNote> : null}
           </EvidenceRow>
         ))}
       </EvidenceList>
       <DecisionButtons
-        decisionStyle="agree"
+        decisionStyle={look.style.kind}
+        classes={look.classes}
+        aiClass={current.ai.class_name}
+        range={{ agreeFrom: look.style.agreeFrom, disagreeTo: look.style.disagreeTo }}
         label={`Your decision on ${current.object}`}
         value={current.decision ?? undefined}
-        onValueChange={(raw) => decide(raw as Answer)}
+        onValueChange={decide}
       />
+      <div className="grid gap-1.5">
+        <label htmlFor="adjudication-note" className="text-body-sm font-semibold">
+          Note for the record <span className="font-normal text-fg-dim">Optional</span>
+        </label>
+        <Textarea
+          id="adjudication-note"
+          rows={2}
+          placeholder="Why you decided this"
+          value={notes[current.key] ?? current.decision_note ?? ""}
+          onChange={(event) => setNotes({ ...notes, [current.key]: event.target.value })}
+        />
+      </div>
       <p className="m-0 text-center text-body-sm text-fg-dim">
         Reviewers stay anonymous to you, so the decision is about the tissue.
       </p>
@@ -278,7 +310,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               camera={camera}
               onCameraChange={setCamera}
               regionDecisions={{}}
-              claimHidden={false}
+              claimHidden={!showsClaim(look.style)}
               showIds
               slideName={shown.slide_label}
             />
@@ -293,7 +325,14 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
             {
               value: "display",
               label: "Display",
-              body: <DisplayTab display={display} preset={null} extraLocks={[]} />,
+              body: (
+                <DisplayTab
+                  display={display}
+                  preset={null}
+                  extraLocks={[]}
+                  confidence={confidence === "frequency" ? "word" : confidence}
+                />
+              ),
             },
           ]}
         />

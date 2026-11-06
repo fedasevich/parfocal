@@ -191,15 +191,39 @@ test("a queue resolves with decisions, three objects sent to Anna and two left o
   await expect(page.getByText("4 resolved · 3 with the adjudicator")).toBeVisible();
 });
 
-test("the adjudicator decides all three and goes back to My work", async ({ page }) => {
+test("the adjudicator decides all three and the researcher sees them in the queue", async ({
+  page,
+}) => {
   await page.goto(`${base}/disagreements?scene=adjudicate`);
   await expect(page.getByText("Reviewer A", { exact: true })).toBeVisible();
   await expect(page.getByText("Lenka Malá")).toHaveCount(0);
-  for (const label of ["T4", "T5", "T1·C145"]) {
-    await expect(page.getByText(`The AI says ${label} is`)).toBeVisible();
-    await page.getByRole("button", { name: /Disagree/ }).click();
-  }
+  await expect(page.getByText("One reviewer asked for a second look, the other")).toBeVisible();
+  await expect(page.getByText("The AI says T4 is tumor, 58% sure.")).toBeVisible();
+  await page.keyboard.press("x");
+  await expect(
+    page.getByText("One reviewer agrees with the AI, the other disagrees"),
+  ).toBeVisible();
+  await page
+    .getByRole("textbox", { name: /Note for the record/ })
+    .fill("Crush artefact at the edge");
+  await page.getByRole("button", { name: /Disagree/ }).click();
+  await expect(page.getByText("The AI says this is a tumor cell")).toBeVisible();
+  await expect(page.getByText("Both reviewers disagree with the AI")).toBeVisible();
+  await page.getByRole("button", { name: /Not sure/ }).click();
   await expect(page.getByText("All 3 decided. Daniel is told.")).toBeVisible();
+  await page.evaluate(() => {
+    window.history.pushState({}, "", window.location.pathname);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(page.getByText("3 resolved")).toBeVisible();
+  const done = page.getByRole("row", { name: /T5/ });
+  await expect(done).toContainText("Disagree");
+  await expect(page.getByRole("row", { name: /T1·C145/ })).toContainText("Not sure");
+});
+
+test("the adjudicator can go back to My work once everything is decided", async ({ page }) => {
+  await page.goto(`${base}/disagreements?scene=adjudicate`);
+  for (let at = 0; at < 3; at += 1) await page.getByRole("button", { name: /Agree/ }).click();
   await page.getByRole("button", { name: "Back to My work" }).click();
   await expect(page).toHaveURL(/\/my-work\?scene=anna/);
 });
