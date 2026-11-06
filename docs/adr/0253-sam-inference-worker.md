@@ -1,4 +1,4 @@
-# XXXX. One inference worker creates sessions one at a time and answers only the latest prompt
+# 0253. One inference worker creates sessions one at a time and answers only the latest prompt
 
 - Date: 2026-11-06
 - Status: Accepted

@@ -216,3 +216,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0250](0250-sam-graph-per-execution-provider.md) | Each execution provider loads its own PathoSAM encoder, and both load the int8 weight-only AIS decoder | Accepted | 2026-11-06 |
 | [0251](0251-browser-model-cache-in-cache-storage.md) | Browser models are cached in Cache Storage, checked by header, and revalidated by ETag in the background | Accepted | 2026-11-06 |
 | [0252](0252-clinical-report-storage-per-case.md) | A clinical report is stored per case in columns, with deposits in rows, signed versions as snapshots and the node taken from the slide's block | Accepted | 2026-11-06 |
+| [0253](0253-sam-inference-worker.md) | One inference worker creates sessions one at a time and answers only the latest prompt | Accepted | 2026-11-06 |
