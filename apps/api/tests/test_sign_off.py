@@ -206,7 +206,7 @@ def test_changes_after_sign_off_are_listed_with_who_when_and_what(
     )
     assert "Changes after sign-off" in pdf
     assert reason in pdf
-    assert named[0][0] in pdf
+    assert str(named[0][0]) in pdf
 
 
 def test_the_report_flags_and_lists_changes_after_sign_off() -> None:
