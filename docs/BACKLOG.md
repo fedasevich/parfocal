@@ -3239,7 +3239,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when an ADR names them with MLEVAL numbers and the confidence display table of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) is rerun for the chosen typer.
   Size: M.
 
-- [ ] AINUC-001 · Detector runner
+- [x] AINUC-001 · Detector runner
   Tile, infer at the model's microns per pixel, trace instances, write chunks. Must not recreate the POC's quadratic post-processing. PathoSAM AIS as [ADR 0202](adr/0202-v1-model-line-up-per-tier.md) sets, 512 px windows with a 64 px halo, best 0.25 and fast 0.33 µm/px, smoothed outlines, never HoVer-Net.
   Done when a test on a fixed region matches the reference output and a throughput test records seconds per mm².
   Depends on AIP-006, AIP-009. Refs docs 17, 19, 26.
