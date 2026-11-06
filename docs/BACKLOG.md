@@ -4317,7 +4317,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-002, RSET-007. Refs mock: guided/disagree.
   Size: M.
 
-- [ ] GUIDE-004 · Undo after a decision
+- [x] GUIDE-004 · Undo after a decision
   Every decision shows what was recorded with an Undo (DS-021), which restores the decision and the position.
   Done when E2E undoes a decision on the last object of a slide and the slide is open again.
   Depends on GUIDE-002, DS-021. Refs doc 40 G2.
