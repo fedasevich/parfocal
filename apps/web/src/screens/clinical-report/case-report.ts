@@ -257,8 +257,7 @@ export function assembleReport(input: AssemblyInput): Assembly {
     user_id: member.user_id,
     role: member.role,
     sign_out: member.sign_out ?? ("never" as const),
-    covers_case:
-      member.role !== "viewer" && (member.sign_out === "own" || member.sign_out === "any"),
+    covers_case: server.signers.includes(member.user_id),
   }));
   const specimen = caseDetail.specimens[0];
   const values = valuesOfCaseReport(server, input.previous);

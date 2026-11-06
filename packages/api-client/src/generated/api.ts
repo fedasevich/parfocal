@@ -956,6 +956,7 @@ export interface CaseReport {
   staging: CaseReportStaging | null;
   findings: CaseReportFindings;
   blockers: CaseReportBlocker[];
+  signers: string[];
   cosigner_user_id: string | null;
   sent_by_user_id: string | null;
   return_note: string | null;

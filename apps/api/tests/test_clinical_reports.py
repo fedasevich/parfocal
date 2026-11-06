@@ -370,6 +370,23 @@ def test_findings_draw_on_the_case_decisions(api: ApiAs, database: str, clinic: 
     ]
 
 
+def test_signers_are_the_members_who_cover_this_case(
+    api: ApiAs, database: str, clinic: Clinic
+) -> None:
+    owner(
+        database,
+        f"UPDATE project_members SET sign_out = 'own' "
+        f"WHERE project_id = '{clinic.project}' AND user_id = '{clinic.junior.user_id}'",
+    )
+    before = created(api, clinic)
+    assert before["signers"] == [str(clinic.lead.user_id)]
+    assign(api, database, clinic.lead, clinic.project, clinic.first, clinic.junior)
+    after = api(clinic.lead).get(clinic.url).json()
+    assert sorted(after["signers"]) == sorted(
+        [str(clinic.lead.user_id), str(clinic.junior.user_id)]
+    )
+
+
 def test_isolation(api: ApiAs, database: str, clinic: Clinic) -> None:
     created(api, clinic)
     outside = api(clinic.outsider).get(clinic.url)

@@ -36,6 +36,7 @@ from parfocal_api.tables import (
     project_members,
     projects,
     review_assignments,
+    review_tasks,
     slides,
 )
 
@@ -182,3 +183,47 @@ async def signs_out_case(
         .where(slides.c.case_id == case_id)
     )
     return covers_case(right, assigned=bool(await connection.scalar(select(own.exists()))))
+
+
+async def case_signers(connection: AsyncConnection, case_id: uuid.UUID) -> list[uuid.UUID]:
+    project = (
+        await connection.execute(
+            select(projects.c.id, projects.c.privacy_mode)
+            .select_from(cases)
+            .join(projects, projects.c.id == cases.c.project_id)
+            .where(cases.c.id == case_id)
+        )
+    ).one_or_none()
+    if project is None:
+        return []
+    members = (
+        await connection.execute(
+            select(project_members.c.user_id, project_members.c.role, project_members.c.sign_out)
+            .where(project_members.c.project_id == project.id)
+            .order_by(project_members.c.user_id)
+        )
+    ).all()
+    assigned = set(
+        (
+            await connection.scalars(
+                select(review_assignments.c.user_id)
+                .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
+                .join(slides, slides.c.id == review_assignments.c.slide_id)
+                .where(
+                    slides.c.case_id == case_id,
+                    review_assignments.c.released_at.is_(None),
+                    review_tasks.c.archived_at.is_(None),
+                )
+            )
+        ).all()
+    )
+    return [
+        member.user_id
+        for member in members
+        if covers_case(
+            sign_out_right(
+                PrivacyMode(project.privacy_mode), ProjectRole(member.role), member.sign_out
+            ),
+            member.user_id in assigned,
+        )
+    ]

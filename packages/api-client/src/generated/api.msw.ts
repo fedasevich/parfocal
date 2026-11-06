@@ -820,6 +820,9 @@ export const getCreateCaseReportResponseMock = (
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
   ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   return_note: faker.helpers.arrayElement([
@@ -931,6 +934,9 @@ export const getGetCaseReportResponseMock = (
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
   ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   return_note: faker.helpers.arrayElement([
@@ -1041,6 +1047,9 @@ export const getUpdateCaseReportResponseMock = (
       ]),
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
+  ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
   ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1218,6 +1227,9 @@ export const getAddCaseReportDepositResponseMock = (
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
   ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   return_note: faker.helpers.arrayElement([
@@ -1328,6 +1340,9 @@ export const getRemoveCaseReportDepositResponseMock = (
       ]),
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
+  ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
   ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1440,6 +1455,9 @@ export const getSendCaseReportForCosignResponseMock = (
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
   ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   return_note: faker.helpers.arrayElement([
@@ -1550,6 +1568,9 @@ export const getReturnCaseReportResponseMock = (
       ]),
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
+  ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
   ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -1662,6 +1683,9 @@ export const getSignCaseReportResponseMock = (
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
   ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   return_note: faker.helpers.arrayElement([
@@ -1772,6 +1796,9 @@ export const getAmendCaseReportResponseMock = (
       ]),
       deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     }),
+  ),
+  signers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
   ),
   cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),

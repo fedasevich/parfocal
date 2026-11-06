@@ -15,8 +15,10 @@ import type {
 import { cases, people, slides } from "./scenario.ts";
 import {
   type ClinicalCase,
+  canSignCase,
   clinicalCases,
   clinicalProject,
+  clinicalRoles,
   clinicalTemplates,
 } from "./scenario-clinical.ts";
 import { fakeView } from "./view.ts";
@@ -227,6 +229,9 @@ const reportOf = (caseId: string, stored: Stored, item: ClinicalCase): CaseRepor
         })),
     },
     blockers: blockersOf(stored, staging),
+    signers: Object.keys(clinicalRoles)
+      .filter((key) => canSignCase(key, item))
+      .map((key) => people[key as keyof typeof people].id),
     cosigner_user_id: stored.cosigner,
     sent_by_user_id: stored.sentBy,
     return_note: null,
