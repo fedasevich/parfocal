@@ -112,6 +112,33 @@ test("Undo takes a decision back inside 4 seconds and leaves the slide centre fr
   await expect(toast).toHaveCount(0);
 });
 
+test("Undo on the last object of a slide opens the slide again at that object", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openGuided(page);
+  const agree = review(page).getByRole("button", { name: /Agree/ }).first();
+  const position = page.getByText(/^Object \d+ of 55 on this slide$/);
+  await agree.click();
+  for (let cell = 0; cell < 5; cell += 1) {
+    const at = await position.innerText();
+    await agree.click();
+    await expect(position).not.toHaveText(at);
+  }
+  const lastObject = await position.innerText();
+  await agree.click();
+  await expect(page.getByText("Slide 8 is done")).toBeVisible();
+  const toast = undoHost(page).locator('[data-slot="toast"]');
+  await expect(toast).toContainText("agree");
+  await page.clock.fastForward(1500);
+  await toast.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("Slide 8 is done")).toHaveCount(0);
+  await expect(position).toHaveText(lastObject);
+  await expect(page.getByRole("img", { name: /, 1 open$/ })).toBeVisible();
+  await agree.click();
+  await expect(page.getByText("Slide 8 is done")).toBeVisible();
+});
+
 test("the decision toast is gone after 4 seconds and the decision stays", async ({ page }) => {
   await page.clock.install();
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
