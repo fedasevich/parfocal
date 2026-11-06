@@ -3136,7 +3136,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when an ADR picks encoder and decoder per tier, backed by MLEVAL numbers.
   Size: L.
 
-- [ ] AISEG-001 · ONNX export pipeline
+- [x] AISEG-001 · ONNX export pipeline
   Export encoder, decoder, batch decoder and AIS decoder, with the square `orig_im_size` trace and verification against PyTorch.
   Done when the verification test reports IoU 1.0 for fp32 and at least 0.96 for quantised graphs.
   Refs [`poc/server/tools/export_pathosam_onnx.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/export_pathosam_onnx.py), `verify_pathosam.py`, doc 12.
