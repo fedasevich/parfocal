@@ -1,7 +1,7 @@
-# XXXX. A clinical report is stored per case in columns, with deposits in rows, signed versions as snapshots and the node taken from the slide's block
+# 0252. A clinical report is stored per case in columns, with deposits in rows, signed versions as snapshots and the node taken from the slide's block
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: Claude, for the owner
 - Backlog: REPORT-024 (clinical report model and API). Builds on [ADR 0134](0134-clinical-report-per-case-with-sign-out-and-co-sign.md) (clinical report per case with sign-out and co-sign) and [ADR 0086](0086-node-staging-rules.md) (node staging rules)
 
