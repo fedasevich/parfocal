@@ -1,7 +1,7 @@
-# XXXX. Evaluation versions are stored rows, and owner changes after sign-off need a reason
+# 0244. Evaluation versions are stored rows, and owner changes after sign-off need a reason
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (standing approval)
 - Backlog: ADJ-004 (sign-off as a soft lock), builds on [ADR 0080](0080-disagreement-rule-and-sign-off.md) (disagreement rule and sign-off) and [ADR 0231](0231-evaluation-exports-and-their-checksum.md) (evaluation exports and their checksum), feeds ADJ-005 (changes after sign-off)
 
