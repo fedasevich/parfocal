@@ -3261,7 +3261,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a test fetches the summary for 1.6M nuclei under 25 MB.
   Refs doc 31, [ADR 0126](adr/0126-cell-chunks-in-object-storage-with-a-summary-index.md) (cell chunks in object storage with a summary index), whose summary file already holds these fields, with the bounding-box `diagonal` as the size.
 
-- [ ] AINUC-005 · Chunk paging in the client
+- [x] AINUC-005 · Chunk paging in the client
   Keep the summary, LRU of full chunks under a vertex budget, fetch the view plus margin nearest first, page automatically above 200k nuclei, keep deletions and promotions stable across eviction.
   Done when the doc 31 scenario (1.6M nuclei) is usable in under 4 s at under 100 MB heap in the perf suite.
   Refs [`poc/src/segment/paged-result.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/paged-result.ts), [`poc/src/app/paged-loader.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/paged-loader.ts).
