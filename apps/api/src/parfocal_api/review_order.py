@@ -396,7 +396,9 @@ async def checked_keys(
     }
 
 
-async def unchecked_objects(connection: AsyncConnection, task_id: uuid.UUID) -> int:
+async def unchecked_objects(
+    connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID | None = None
+) -> int:
     with_sets = set(
         await connection.scalars(
             select(review_task_slides.c.slide_id).where(
@@ -418,6 +420,7 @@ async def unchecked_objects(connection: AsyncConnection, task_id: uuid.UUID) -> 
     return sum(
         (row.slide_id, letter, number) not in checked
         for row in orders
+        if slide_id is None or row.slide_id == slide_id
         for letter, number in unpack(bytes(row.objects))
     )
 

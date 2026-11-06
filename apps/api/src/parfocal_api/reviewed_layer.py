@@ -191,6 +191,7 @@ async def task_slide(
                 review_tasks.c.tenant_id,
                 review_tasks.c.kind,
                 review_tasks.c.signed_off_at,
+                review_task_slides.c.signed_off_at.label("slide_signed_off_at"),
                 review_tasks.c.decision_style,
                 review_tasks.c.counts_as,
                 projects.c.privacy_mode,

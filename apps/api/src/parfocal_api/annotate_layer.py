@@ -10,6 +10,7 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.annotate_sign_off import LayerChange, log_layer_change, owner_change_allowed
 from parfocal_api.annotations import (
     LETTERS,
     AnnotationDraft,
@@ -196,10 +197,28 @@ async def readable_layer(
 
 
 async def editable_layer(
-    connection: AsyncConnection, principal: Principal, task_id: uuid.UUID, slide_id: uuid.UUID
+    connection: AsyncConnection,
+    principal: Principal,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    reason: str | None = None,
 ) -> Any:
-    await readable_layer(connection, principal, task_id, slide_id)
+    row = await readable_layer(connection, principal, task_id, slide_id)
+    if await owner_change_allowed(connection, principal, row, reason):
+        return row
     return await assigned_slide(connection, principal, task_id, slide_id, review=False)
+
+
+async def logged(
+    connection: AsyncConnection,
+    principal: Principal,
+    row: Any,
+    code: str,
+    change: LayerChange,
+    reason: str | None,
+) -> None:
+    if row.slide_signed_off_at is not None and reason is not None:
+        await log_layer_change(connection, principal, row, code, change, reason)
 
 
 def announce(
@@ -251,12 +270,15 @@ async def create_shared_object(
     connection: TenantConnection,
     background: BackgroundTasks,
     live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> LayerObject:
-    row = await editable_layer(connection, principal, task_id, slide_id)
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
     slide = SimpleNamespace(id=slide_id, project_id=row.project_id)
     (made,) = await add(connection, principal, slide, [draft], task_id=task_id)
     announce(background, live, row, made.id)
-    return await layer_object(connection, task_id, slide_id, made.id)
+    result = await layer_object(connection, task_id, slide_id, made.id)
+    await logged(connection, principal, row, result.code, LayerChange.ADDED, reason)
+    return result
 
 
 async def ai_shape(
@@ -311,8 +333,9 @@ async def change_ai_object(
     connection: TenantConnection,
     background: BackgroundTasks,
     live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> LayerObject:
-    row = await editable_layer(connection, principal, task_id, slide_id)
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
     found = ai_object(object_id)
     if found.split:
         raise NotAnAiObjectError("Only whole AI objects are copied into the layer")
@@ -355,6 +378,8 @@ async def change_ai_object(
     change = AnnotationChange.DELETED if draft.deleted else AnnotationChange.EDITED
     await record_versions(connection, [made], change, principal)
     announce(background, live, row, made)
+    logged_as = LayerChange.DELETED if draft.deleted else LayerChange.EDITED
+    await logged(connection, principal, row, found.text(ascii=True), logged_as, reason)
     return await layer_object(connection, task_id, slide_id, made)
 
 
@@ -399,8 +424,9 @@ async def change_shared_object(
     connection: TenantConnection,
     background: BackgroundTasks,
     live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> LayerObject:
-    row = await editable_layer(connection, principal, task_id, slide_id)
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
     current = await layer_object(connection, task_id, slide_id, annotation_id)
     values: dict[str, Any] = {}
     if edit.geometry is not None:
@@ -413,6 +439,7 @@ async def change_shared_object(
         connection, principal, row, annotation_id, edit.version, values, AnnotationChange.EDITED
     )
     announce(background, live, row, annotation_id)
+    await logged(connection, principal, row, saved.code, LayerChange.EDITED, reason)
     return saved
 
 
@@ -431,9 +458,10 @@ async def delete_shared_object(
     connection: TenantConnection,
     background: BackgroundTasks,
     live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> Response:
-    row = await editable_layer(connection, principal, task_id, slide_id)
-    await save(
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
+    gone = await save(
         connection,
         principal,
         row,
@@ -443,6 +471,7 @@ async def delete_shared_object(
         AnnotationChange.DELETED,
     )
     announce(background, live, row, annotation_id)
+    await logged(connection, principal, row, gone.code, LayerChange.DELETED, reason)
     return Response(status_code=204)
 
 

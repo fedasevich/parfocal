@@ -316,6 +316,23 @@ export interface Anchor {
   offset?: Position | null;
 }
 
+export interface ExpertCheck {
+  user_id: string;
+  checked_at: string | null;
+  nothing_to_mark: boolean;
+}
+
+export interface AnnotateSlideStatus {
+  task_id: string;
+  slide_id: string;
+  experts: ExpertCheck[];
+  signed_off_at: string | null;
+  signed_off_by_user_id: string | null;
+  open_threads: number;
+  unchecked_objects: number;
+  all_checked_required: boolean;
+}
+
 export type AnnotationGeometry = { [key: string]: unknown };
 
 export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
@@ -895,6 +912,10 @@ export interface CheckChange {
   order?: CheckOrder | null;
   sign_off?: SignOffRule | null;
   unchecked_export?: UncheckedExport | null;
+}
+
+export interface CheckDraft {
+  nothing_to_mark?: boolean;
 }
 
 export type CheckPreset = (typeof CheckPreset)[keyof typeof CheckPreset];
@@ -4598,11 +4619,24 @@ export type GetReviewedLayerParams = {
   reviewer_id?: string | null;
 };
 
+export type CreateSharedObjectParams = {
+  reason?: string | null;
+};
+
+export type ChangeAiObjectParams = {
+  reason?: string | null;
+};
+
+export type ChangeSharedObjectParams = {
+  reason?: string | null;
+};
+
 export type DeleteSharedObjectParams = {
   /**
    * @minimum 1
    */
   version: number;
+  reason?: string | null;
 };
 
 export type GetReviewOrderParams = {
@@ -22370,8 +22404,24 @@ export type createSharedObjectResponse =
   | createSharedObjectResponseSuccess
   | createSharedObjectResponseError;
 
-export const getCreateSharedObjectUrl = (taskId: string, slideId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects`;
+export const getCreateSharedObjectUrl = (
+  taskId: string,
+  slideId: string,
+  params?: CreateSharedObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects`;
 };
 
 /**
@@ -22381,6 +22431,7 @@ export const createSharedObject = async (
   taskId: string,
   slideId: string,
   annotationDraft: AnnotationDraft,
+  params?: CreateSharedObjectParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<createSharedObjectResponse> => {
   const getHeaders = (
@@ -22402,7 +22453,7 @@ export const createSharedObject = async (
     }
     return headers;
   };
-  return apiFetch<createSharedObjectResponse>(getCreateSharedObjectUrl(taskId, slideId), {
+  return apiFetch<createSharedObjectResponse>(getCreateSharedObjectUrl(taskId, slideId, params), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
@@ -22440,9 +22491,9 @@ export const getCreateSharedObjectMutationOptions = <
     Awaited<ReturnType<typeof createSharedObject>>,
     CreateSharedObjectMutationVariables
   > = (props) => {
-    const { taskId, slideId, data } = props ?? {};
+    const { taskId, slideId, data, params } = props ?? {};
 
-    return createSharedObject(taskId, slideId, data, requestOptions);
+    return createSharedObject(taskId, slideId, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -22457,6 +22508,7 @@ export type CreateSharedObjectMutationVariables = {
   taskId: string;
   slideId: string;
   data: AnnotationDraft;
+  params?: CreateSharedObjectParams;
 };
 
 /**
@@ -22545,8 +22597,25 @@ export type changeAiObjectResponseError = (
 
 export type changeAiObjectResponse = changeAiObjectResponseSuccess | changeAiObjectResponseError;
 
-export const getChangeAiObjectUrl = (taskId: string, slideId: string, objectId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}`;
+export const getChangeAiObjectUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ChangeAiObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}`;
 };
 
 /**
@@ -22557,6 +22626,7 @@ export const changeAiObject = async (
   slideId: string,
   objectId: string,
   aiObjectEdit: AiObjectEdit,
+  params?: ChangeAiObjectParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<changeAiObjectResponse> => {
   const getHeaders = (
@@ -22578,7 +22648,7 @@ export const changeAiObject = async (
     }
     return headers;
   };
-  return apiFetch<changeAiObjectResponse>(getChangeAiObjectUrl(taskId, slideId, objectId), {
+  return apiFetch<changeAiObjectResponse>(getChangeAiObjectUrl(taskId, slideId, objectId, params), {
     ...options,
     method: "PUT",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
@@ -22613,9 +22683,9 @@ export const getChangeAiObjectMutationOptions = <TError = Problem, TContext = un
     Awaited<ReturnType<typeof changeAiObject>>,
     ChangeAiObjectMutationVariables
   > = (props) => {
-    const { taskId, slideId, objectId, data } = props ?? {};
+    const { taskId, slideId, objectId, data, params } = props ?? {};
 
-    return changeAiObject(taskId, slideId, objectId, data, requestOptions);
+    return changeAiObject(taskId, slideId, objectId, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -22629,6 +22699,7 @@ export type ChangeAiObjectMutationVariables = {
   slideId: string;
   objectId: string;
   data: AiObjectEdit;
+  params?: ChangeAiObjectParams;
 };
 
 /**
@@ -22719,8 +22790,25 @@ export type changeSharedObjectResponse =
   | changeSharedObjectResponseSuccess
   | changeSharedObjectResponseError;
 
-export const getChangeSharedObjectUrl = (taskId: string, slideId: string, annotationId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}`;
+export const getChangeSharedObjectUrl = (
+  taskId: string,
+  slideId: string,
+  annotationId: string,
+  params?: ChangeSharedObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/objects/${annotationId}`;
 };
 
 /**
@@ -22731,6 +22819,7 @@ export const changeSharedObject = async (
   slideId: string,
   annotationId: string,
   annotationEdit: AnnotationEdit,
+  params?: ChangeSharedObjectParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<changeSharedObjectResponse> => {
   const getHeaders = (
@@ -22753,7 +22842,7 @@ export const changeSharedObject = async (
     return headers;
   };
   return apiFetch<changeSharedObjectResponse>(
-    getChangeSharedObjectUrl(taskId, slideId, annotationId),
+    getChangeSharedObjectUrl(taskId, slideId, annotationId, params),
     {
       ...options,
       method: "PATCH",
@@ -22793,9 +22882,9 @@ export const getChangeSharedObjectMutationOptions = <
     Awaited<ReturnType<typeof changeSharedObject>>,
     ChangeSharedObjectMutationVariables
   > = (props) => {
-    const { taskId, slideId, annotationId, data } = props ?? {};
+    const { taskId, slideId, annotationId, data, params } = props ?? {};
 
-    return changeSharedObject(taskId, slideId, annotationId, data, requestOptions);
+    return changeSharedObject(taskId, slideId, annotationId, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -22811,6 +22900,7 @@ export type ChangeSharedObjectMutationVariables = {
   slideId: string;
   annotationId: string;
   data: AnnotationEdit;
+  params?: ChangeSharedObjectParams;
 };
 
 /**
@@ -23252,6 +23342,692 @@ export function useListSharedObjectHistory<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getAnnotateSlideStatusResponse200 = {
+  data: AnnotateSlideStatus;
+  status: 200;
+};
+
+export type getAnnotateSlideStatusResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAnnotateSlideStatusResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAnnotateSlideStatusResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAnnotateSlideStatusResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAnnotateSlideStatusResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAnnotateSlideStatusResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAnnotateSlideStatusResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getAnnotateSlideStatusResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAnnotateSlideStatusResponseSuccess = getAnnotateSlideStatusResponse200 & {
+  headers: Headers;
+};
+export type getAnnotateSlideStatusResponseError = (
+  | getAnnotateSlideStatusResponse400
+  | getAnnotateSlideStatusResponse401
+  | getAnnotateSlideStatusResponse403
+  | getAnnotateSlideStatusResponse404
+  | getAnnotateSlideStatusResponse409
+  | getAnnotateSlideStatusResponse422
+  | getAnnotateSlideStatusResponse429
+  | getAnnotateSlideStatusResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAnnotateSlideStatusResponse =
+  | getAnnotateSlideStatusResponseSuccess
+  | getAnnotateSlideStatusResponseError;
+
+export const getGetAnnotateSlideStatusUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/check-status`;
+};
+
+/**
+ * @summary Get Annotate Slide Status
+ */
+export const getAnnotateSlideStatus = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAnnotateSlideStatusResponse> => {
+  return apiFetch<getAnnotateSlideStatusResponse>(getGetAnnotateSlideStatusUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnnotateSlideStatusQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/check-status`] as const;
+};
+
+export const getGetAnnotateSlideStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnnotateSlideStatusQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnnotateSlideStatus>>> = ({ signal }) =>
+    getAnnotateSlideStatus(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAnnotateSlideStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnnotateSlideStatus>>
+>;
+export type GetAnnotateSlideStatusQueryError = Problem;
+
+export function useGetAnnotateSlideStatus<
+  TData = Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnotateSlideStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnnotateSlideStatus<
+  TData = Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnotateSlideStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAnnotateSlideStatus<
+  TData = Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Annotate Slide Status
+ */
+
+export function useGetAnnotateSlideStatus<
+  TData = Awaited<ReturnType<typeof getAnnotateSlideStatus>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAnnotateSlideStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAnnotateSlideStatusQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type checkAnnotateSlideResponse200 = {
+  data: AnnotateSlideStatus;
+  status: 200;
+};
+
+export type checkAnnotateSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type checkAnnotateSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type checkAnnotateSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type checkAnnotateSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type checkAnnotateSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type checkAnnotateSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type checkAnnotateSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type checkAnnotateSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type checkAnnotateSlideResponseSuccess = checkAnnotateSlideResponse200 & {
+  headers: Headers;
+};
+export type checkAnnotateSlideResponseError = (
+  | checkAnnotateSlideResponse400
+  | checkAnnotateSlideResponse401
+  | checkAnnotateSlideResponse403
+  | checkAnnotateSlideResponse404
+  | checkAnnotateSlideResponse409
+  | checkAnnotateSlideResponse422
+  | checkAnnotateSlideResponse429
+  | checkAnnotateSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type checkAnnotateSlideResponse =
+  | checkAnnotateSlideResponseSuccess
+  | checkAnnotateSlideResponseError;
+
+export const getCheckAnnotateSlideUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/check`;
+};
+
+/**
+ * @summary Check Annotate Slide
+ */
+export const checkAnnotateSlide = async (
+  taskId: string,
+  slideId: string,
+  checkDraftNull?: CheckDraft | null,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<checkAnnotateSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<checkAnnotateSlideResponse>(getCheckAnnotateSlideUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(checkDraftNull),
+  });
+};
+
+export const getCheckAnnotateSlideMutationKey = () => ["checkAnnotateSlide"] as const;
+
+export const getCheckAnnotateSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof checkAnnotateSlide>>,
+    TError,
+    CheckAnnotateSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof checkAnnotateSlide>>,
+  TError,
+  CheckAnnotateSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCheckAnnotateSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof checkAnnotateSlide>>,
+    CheckAnnotateSlideMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return checkAnnotateSlide(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CheckAnnotateSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof checkAnnotateSlide>>
+>;
+export type CheckAnnotateSlideMutationBody = CheckDraft | null | undefined;
+export type CheckAnnotateSlideMutationError = Problem;
+export type CheckAnnotateSlideMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data?: CheckDraft | null;
+};
+
+/**
+ * @summary Check Annotate Slide
+ */
+export const useCheckAnnotateSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof checkAnnotateSlide>>,
+      TError,
+      CheckAnnotateSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof checkAnnotateSlide>>,
+  TError,
+  CheckAnnotateSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getCheckAnnotateSlideMutationOptions(options), queryClient);
+};
+
+export type uncheckAnnotateSlideResponse200 = {
+  data: AnnotateSlideStatus;
+  status: 200;
+};
+
+export type uncheckAnnotateSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type uncheckAnnotateSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type uncheckAnnotateSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type uncheckAnnotateSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type uncheckAnnotateSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type uncheckAnnotateSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type uncheckAnnotateSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type uncheckAnnotateSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type uncheckAnnotateSlideResponseSuccess = uncheckAnnotateSlideResponse200 & {
+  headers: Headers;
+};
+export type uncheckAnnotateSlideResponseError = (
+  | uncheckAnnotateSlideResponse400
+  | uncheckAnnotateSlideResponse401
+  | uncheckAnnotateSlideResponse403
+  | uncheckAnnotateSlideResponse404
+  | uncheckAnnotateSlideResponse409
+  | uncheckAnnotateSlideResponse422
+  | uncheckAnnotateSlideResponse429
+  | uncheckAnnotateSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type uncheckAnnotateSlideResponse =
+  | uncheckAnnotateSlideResponseSuccess
+  | uncheckAnnotateSlideResponseError;
+
+export const getUncheckAnnotateSlideUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/uncheck`;
+};
+
+/**
+ * @summary Uncheck Annotate Slide
+ */
+export const uncheckAnnotateSlide = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<uncheckAnnotateSlideResponse> => {
+  return apiFetch<uncheckAnnotateSlideResponse>(getUncheckAnnotateSlideUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getUncheckAnnotateSlideMutationKey = () => ["uncheckAnnotateSlide"] as const;
+
+export const getUncheckAnnotateSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uncheckAnnotateSlide>>,
+    TError,
+    UncheckAnnotateSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uncheckAnnotateSlide>>,
+  TError,
+  UncheckAnnotateSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUncheckAnnotateSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uncheckAnnotateSlide>>,
+    UncheckAnnotateSlideMutationVariables
+  > = (props) => {
+    const { taskId, slideId } = props ?? {};
+
+    return uncheckAnnotateSlide(taskId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UncheckAnnotateSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uncheckAnnotateSlide>>
+>;
+
+export type UncheckAnnotateSlideMutationError = Problem;
+export type UncheckAnnotateSlideMutationVariables = { taskId: string; slideId: string };
+
+/**
+ * @summary Uncheck Annotate Slide
+ */
+export const useUncheckAnnotateSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof uncheckAnnotateSlide>>,
+      TError,
+      UncheckAnnotateSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof uncheckAnnotateSlide>>,
+  TError,
+  UncheckAnnotateSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getUncheckAnnotateSlideMutationOptions(options), queryClient);
+};
+
+export type signOffAnnotateSlideResponse200 = {
+  data: AnnotateSlideStatus;
+  status: 200;
+};
+
+export type signOffAnnotateSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type signOffAnnotateSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type signOffAnnotateSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type signOffAnnotateSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type signOffAnnotateSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type signOffAnnotateSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type signOffAnnotateSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type signOffAnnotateSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type signOffAnnotateSlideResponseSuccess = signOffAnnotateSlideResponse200 & {
+  headers: Headers;
+};
+export type signOffAnnotateSlideResponseError = (
+  | signOffAnnotateSlideResponse400
+  | signOffAnnotateSlideResponse401
+  | signOffAnnotateSlideResponse403
+  | signOffAnnotateSlideResponse404
+  | signOffAnnotateSlideResponse409
+  | signOffAnnotateSlideResponse422
+  | signOffAnnotateSlideResponse429
+  | signOffAnnotateSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type signOffAnnotateSlideResponse =
+  | signOffAnnotateSlideResponseSuccess
+  | signOffAnnotateSlideResponseError;
+
+export const getSignOffAnnotateSlideUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/sign-off`;
+};
+
+/**
+ * @summary Sign Off Annotate Slide
+ */
+export const signOffAnnotateSlide = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<signOffAnnotateSlideResponse> => {
+  return apiFetch<signOffAnnotateSlideResponse>(getSignOffAnnotateSlideUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSignOffAnnotateSlideMutationKey = () => ["signOffAnnotateSlide"] as const;
+
+export const getSignOffAnnotateSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signOffAnnotateSlide>>,
+    TError,
+    SignOffAnnotateSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signOffAnnotateSlide>>,
+  TError,
+  SignOffAnnotateSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSignOffAnnotateSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signOffAnnotateSlide>>,
+    SignOffAnnotateSlideMutationVariables
+  > = (props) => {
+    const { taskId, slideId } = props ?? {};
+
+    return signOffAnnotateSlide(taskId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SignOffAnnotateSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof signOffAnnotateSlide>>
+>;
+
+export type SignOffAnnotateSlideMutationError = Problem;
+export type SignOffAnnotateSlideMutationVariables = { taskId: string; slideId: string };
+
+/**
+ * @summary Sign Off Annotate Slide
+ */
+export const useSignOffAnnotateSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof signOffAnnotateSlide>>,
+      TError,
+      SignOffAnnotateSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof signOffAnnotateSlide>>,
+  TError,
+  SignOffAnnotateSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getSignOffAnnotateSlideMutationOptions(options), queryClient);
+};
 
 export type addRunToTaskSlideResponse200 = {
   data: TaskSlide;
