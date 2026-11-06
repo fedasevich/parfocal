@@ -37,6 +37,7 @@ import {
 } from "./decision-style.ts";
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
+import { useGuidedCoach } from "./guided-coach.ts";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
@@ -180,7 +181,20 @@ function GuidedBody({
   );
   const { answers: opinion, change: changeOpinion } = useOpinionDraft(session, setup.dropAnswers);
   const [failed, setFailed] = useState(setup.submitFail);
-  const tabNow: GuidedTab = setup.coach ? "review" : (tab ?? setup.tab);
+  const coach = useGuidedCoach(session.meId, scene === undefined && objectId === undefined);
+  const coachOn = setup.coach || coach.open;
+  const startReview = () => {
+    if (setup.coach) {
+      void navigate({
+        to: "/tasks/$taskId/guided",
+        params: { taskId: session.taskId },
+        search: { slide: session.slideId, scene: "region" },
+      });
+      return;
+    }
+    coach.dismiss();
+  };
+  const tabNow: GuidedTab = coachOn ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
   const currentId = current?.object ?? "";
   useRememberResume(
@@ -541,7 +555,7 @@ function GuidedBody({
       </button>
     ) : null;
 
-  const coachTips = setup.coach ? (
+  const coachTips = coachOn ? (
     <div className="grid gap-3">
       <CoachTip n={3}>
         Answer with one of the buttons, or press{" "}
@@ -554,18 +568,7 @@ function GuidedBody({
       <CoachTip n={4}>
         The next object comes by itself. The dots take you back to any of them.
       </CoachTip>
-      <Button
-        variant="primary"
-        size="lg"
-        className="w-fit"
-        onClick={() =>
-          void navigate({
-            to: "/tasks/$taskId/guided",
-            params: { taskId: session.taskId },
-            search: { slide: session.slideId, scene: "region" },
-          })
-        }
-      >
+      <Button variant="primary" size="lg" className="w-fit" onClick={startReview}>
         Got it, start
       </Button>
     </div>
@@ -773,6 +776,7 @@ function GuidedBody({
     <main className="flex h-dvh min-w-0 flex-col bg-page text-fg" data-scene={scene ?? "region"}>
       <ReviewTop
         mode="guided"
+        onHowItWorks={coach.reopen}
         object={currentId || undefined}
         session={session}
         counts={counts}
@@ -813,7 +817,7 @@ function GuidedBody({
                 onClose={finishRedraw}
               />
               {canvasIssue}
-              {setup.coach ? (
+              {coachOn ? (
                 <>
                   <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
                     The AI found this. It is outlined in white.
