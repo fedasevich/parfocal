@@ -26,6 +26,7 @@ export interface ServeOptions {
 const contentTypes: Readonly<Record<string, string>> = {
   ".html": "text/html",
   ".js": "text/javascript",
+  ".mjs": "text/javascript",
   ".css": "text/css",
   ".wasm": "application/wasm",
 };

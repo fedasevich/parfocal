@@ -5,8 +5,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import onnx
 import torch
+from numpy.typing import NDArray
+from onnx import numpy_helper
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from onnxruntime.quantization.matmul_nbits_quantizer import (
     DefaultWeightOnlyQuantConfig,
@@ -185,6 +188,10 @@ def export_ais_decoder(decoder: InstanceDecoder, folder: Path) -> Exported:
     )
 
 
+def finished(target: Path, started: float) -> Exported:
+    return Exported(target.name, target.stat().st_size / 1e6, time.perf_counter() - started)
+
+
 def quantise_uint8(folder: Path) -> Exported:
     target = folder / GRAPHS.encoder_uint8
     started = time.perf_counter()
@@ -195,7 +202,7 @@ def quantise_uint8(folder: Path) -> Exported:
         per_channel=True,
         extra_options={"MatMulConstBOnly": True},
     )
-    return Exported(target.name, target.stat().st_size / 1e6, time.perf_counter() - started)
+    return finished(target, started)
 
 
 def quantise_q4(folder: Path) -> Exported:
@@ -207,7 +214,76 @@ def quantise_q4(folder: Path) -> Exported:
     quantizer = MatMulNBitsQuantizer(onnx.load(str(folder / GRAPHS.encoder)), algo_config=config)
     quantizer.process()
     quantizer.model.save_model_to_file(str(target), use_external_data_format=False)
-    return Exported(target.name, target.stat().st_size / 1e6, time.perf_counter() - started)
+    return finished(target, started)
+
+
+def quantise_ais_uint8(folder: Path) -> Exported:
+    target = folder / GRAPHS.ais_decoder_uint8
+    started = time.perf_counter()
+    quantize_dynamic(
+        model_input=str(folder / GRAPHS.ais_decoder),
+        model_output=str(target),
+        op_types_to_quantize=["Conv"],
+        weight_type=QuantType.QUInt8,
+        per_channel=True,
+    )
+    return finished(target, started)
+
+
+WEIGHT_CHANNEL_AXIS = {"Conv": 0, "ConvTranspose": 1}
+
+
+def int8_per_channel(
+    weights: NDArray[np.float32], axis: int
+) -> tuple[NDArray[np.int8], NDArray[np.float32]]:
+    others = tuple(index for index in range(weights.ndim) if index != axis)
+    peak = np.abs(weights).max(axis=others, keepdims=True)
+    scale = np.where(peak > 0, peak / 127.0, 1.0).astype(np.float32)
+    quantised = np.clip(np.rint(weights / scale), -127, 127).astype(np.int8)
+    return quantised, scale.reshape(-1)
+
+
+def dequantised_weights(model: onnx.ModelProto) -> onnx.ModelProto:
+    graph = model.graph
+    initializers = {tensor.name: tensor for tensor in graph.initializer}
+    nodes: list[onnx.NodeProto] = []
+    for node in graph.node:
+        axis = WEIGHT_CHANNEL_AXIS.get(node.op_type)
+        weight = initializers.get(node.input[1]) if axis is not None else None
+        if axis is None or weight is None:
+            nodes.append(node)
+            continue
+        quantised, scale = int8_per_channel(numpy_helper.to_array(weight), axis)
+        name = weight.name
+        graph.initializer.remove(weight)
+        graph.initializer.extend(
+            [
+                numpy_helper.from_array(quantised, f"{name}_int8"),
+                numpy_helper.from_array(scale, f"{name}_scale"),
+                numpy_helper.from_array(np.zeros_like(scale, dtype=np.int8), f"{name}_zero"),
+            ]
+        )
+        nodes.append(
+            onnx.helper.make_node(
+                "DequantizeLinear",
+                [f"{name}_int8", f"{name}_scale", f"{name}_zero"],
+                [name],
+                axis=axis,
+            )
+        )
+        nodes.append(node)
+    del graph.node[:]
+    graph.node.extend(nodes)
+    return model
+
+
+def quantise_ais_int8_weights(folder: Path) -> Exported:
+    target = folder / GRAPHS.ais_decoder_int8_weights
+    started = time.perf_counter()
+    model = dequantised_weights(onnx.load(str(folder / GRAPHS.ais_decoder)))
+    onnx.checker.check_model(model)
+    onnx.save(model, str(target))
+    return finished(target, started)
 
 
 def export_all(folder: Path) -> list[Exported]:
@@ -221,14 +297,25 @@ def export_all(folder: Path) -> list[Exported]:
             export_ais_decoder(load_instance_decoder(), folder),
             export_ais_decoder_full(load_instance_decoder(), folder),
         ]
-    return [*exported, quantise_uint8(folder), quantise_q4(folder)]
+    return [
+        *exported,
+        quantise_uint8(folder),
+        quantise_q4(folder),
+        *quantise_ais(folder),
+    ]
+
+
+def quantise_ais(folder: Path) -> list[Exported]:
+    return [quantise_ais_uint8(folder), quantise_ais_int8_weights(folder)]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Export PathoSAM to the browser ONNX graphs")
     parser.add_argument("--out", type=Path, default=onnx_dir())
+    parser.add_argument("--ais-only", action="store_true")
     args = parser.parse_args()
-    for graph in export_all(args.out):
+    graphs = quantise_ais(args.out) if args.ais_only else export_all(args.out)
+    for graph in graphs:
         print(f"{graph.name:<32} {graph.megabytes:7.1f} MB {graph.seconds:6.1f} s")
     return 0
 

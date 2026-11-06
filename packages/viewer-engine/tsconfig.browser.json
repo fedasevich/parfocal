@@ -1,4 +1,4 @@
 {
   "extends": "@parfocal/typescript-config/browser.json",
-  "include": ["browser/page"]
+  "include": ["browser/page", "sam-bench/page"]
 }
