@@ -3148,7 +3148,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-001. Refs doc 14.
   Size: L.
 
-- [ ] AISEG-003 · Browser model cache
+- [x] AISEG-003 · Browser model cache
   Cache Storage, persistent storage request, background revalidation with ETag, protobuf header check before caching, "loaded from cache" or "downloaded N MB" message.
   Done when tests cover first load, cached load and a corrupted cache entry.
   Depends on AISEG-002. Refs docs 14, 15.
