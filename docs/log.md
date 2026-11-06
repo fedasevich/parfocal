@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-06
+
+- CI repair on PR 7, second pass: browser (web) was down to 2 failed and 1 flaky. outline-modes opens a real slide twice and reloads under the 30 s default test limit, now 90 s like review-popovers. job-window read the Jobs tray while it was still closing after Undo and never reopened it, so it now waits for the closing tray to leave. review-popovers read the Full viewer link from the prototype index a second time, and that link follows the resume slide, which Next slide had just moved to A2. It now reuses the A1 address. The three specs passed 64 of 64 with 2 workers and 4 repeats.
+
 ## 2026-11-05
 
 - CI repair on PR 7: browser (web) failed 16 tests because a fresh page on the unbundled dev server needs about 4 to 7 s (673 requests) to show the full viewer, over the 5 s default assertion timeout. apps/web playwright now uses a 15 s expect timeout, autosave waits for the stage to be ready after its reload, and result-sets-display retries its first switch check. The failing specs passed 76 of 77 with 2 workers locally, then the last one 6 of 6. FOUND-026 (browser tests against a built app) is the lasting fix. browser (ui): gallery flag action is a 24px target, the staging summary has a focus ring, and the sentinel specs use a 900 px window above the PROTO-020 fold.

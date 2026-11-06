@@ -29,12 +29,13 @@ test("the full viewer ring shows Next slide and the slide chip lists the case", 
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto(await fullViewerUrl(page));
+  const firstSlide = await fullViewerUrl(page);
+  await page.goto(firstSlide);
   await page.getByRole("button", { name: /% done/ }).click();
   const progress = page.getByRole("dialog", { name: "Review progress" });
   await progress.getByRole("button", { name: /Next slide/ }).click();
   await expect(page).not.toHaveURL(new RegExp(`slides/${a1}`));
-  await page.goto(await fullViewerUrl(page));
+  await page.goto(firstSlide);
   await page.getByRole("button", { name: /^A1/ }).first().click();
   const slides = page.getByRole("dialog", { name: "Slides in this case and task" });
   await expect(slides).toContainText("Slides in this case");
