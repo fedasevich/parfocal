@@ -18,7 +18,7 @@ const levelTable = {
 export const slideFileName = "slide.tiff";
 export const unavailablePrefix = "missing-";
 
-const tilePath = /^\/tiles\/([^/]+)\/(levels\.json|slide\.tiff)$/;
+const tilePath = /^\/tiles\/([^/]+)\/(levels\.json|slide\.tiff|original\.tif)$/;
 
 function rangeOf(header: string | undefined, size: number): [number, number] | null {
   const match = header?.match(/^bytes=(\d*)-(\d*)$/);

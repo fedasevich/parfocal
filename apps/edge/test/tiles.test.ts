@@ -235,6 +235,27 @@ describe("the tile gateway", () => {
     assert.equal(await response.text(), "[]");
   });
 
+  test("a sample slide reads the one shared original its token names", async () => {
+    const bucket = lab();
+    const folder = "samples/camelyon16/tumor_001/";
+    bucket.put(`${folder}original.svs`, bytesOf(SIZE, 4));
+    const token = await tokenFor({ folder, restricted: [] });
+    const response = await request(bucket, ORIGINAL, token, "bytes=0-99");
+    assert.equal(response.status, 206);
+    assert.deepEqual(new Uint8Array(await response.arrayBuffer()), bytesOf(SIZE, 4).slice(0, 100));
+    assert.deepEqual(bucket.reads, [`${folder}original.svs`]);
+  });
+
+  test("a token naming a folder outside the sample files is malformed", async () => {
+    const key = await signingKey(SECRET);
+    for (const folder of [`t/${OTHER_TENANT}/s/${OTHER_SLIDE}/`, "samples/camelyon16/../x/", ""]) {
+      assert.deepEqual(await verifyCapability(await tokenFor({ folder }), key, NOW), {
+        ok: false,
+        reason: "malformed",
+      });
+    }
+  });
+
   test("refuses a missing, forged or expired token", async () => {
     const bucket = lab();
     const missing = await request(bucket, ORIGINAL, null, "bytes=0-99");

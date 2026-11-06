@@ -7,6 +7,7 @@ export type Capability = {
   readonly size: number;
   readonly restricted: readonly ByteRange[];
   readonly expires: number;
+  readonly folder?: string;
 };
 
 export type Verdict =
@@ -14,6 +15,7 @@ export type Verdict =
   | { readonly ok: false; readonly reason: "malformed" | "bad-signature" | "expired" };
 
 const TOKEN_VERSION = 1;
+const SHARED_FOLDER = /^samples\/camelyon16\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
 const encoder = new TextEncoder();
 
 export function fromBase64Url(text: string): Uint8Array<ArrayBuffer> | null {
@@ -60,7 +62,7 @@ function capabilityOf(claims: unknown): Capability | null {
   if (typeof claims !== "object" || claims === null) {
     return null;
   }
-  const { v, t, s, o, n, d, e } = claims as Record<string, unknown>;
+  const { v, t, s, o, n, d, e, p } = claims as Record<string, unknown>;
   if (
     v !== TOKEN_VERSION ||
     typeof t !== "string" ||
@@ -69,7 +71,8 @@ function capabilityOf(claims: unknown): Capability | null {
     !Number.isSafeInteger(n) ||
     !Number.isSafeInteger(e) ||
     !Array.isArray(d) ||
-    !d.every(isRange)
+    !d.every(isRange) ||
+    (p !== undefined && (typeof p !== "string" || !SHARED_FOLDER.test(p)))
   ) {
     return null;
   }
@@ -80,6 +83,7 @@ function capabilityOf(claims: unknown): Capability | null {
     size: n as number,
     restricted: d,
     expires: e as number,
+    ...(p === undefined ? {} : { folder: p }),
   };
 }
 
@@ -124,6 +128,7 @@ export async function signCapability(capability: Capability, key: CryptoKey): Pr
     e: capability.expires,
     n: capability.size,
     o: capability.original,
+    ...(capability.folder === undefined ? {} : { p: capability.folder }),
     s: capability.slide,
     t: capability.tenant,
     v: TOKEN_VERSION,

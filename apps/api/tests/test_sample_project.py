@@ -2,10 +2,17 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from pydantic import SecretStr
+from storage_support import with_store
 from test_reviewed_layer import Review, review
+from test_tile_access import SECRET, claims_of
 from workspace_support import owner
 
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.sample_files import SampleFile, facts_key
+from parfocal_api.sample_project import SAMPLE_SLIDES
+from parfocal_common.ingest import sample_folder, sample_original_key
+from parfocal_common.object_store import ObjectStore, StorageLocation
 
 pytestmark = pytest.mark.db
 
@@ -110,3 +117,74 @@ def test_the_sample_is_left_out_of_every_evaluation(api: ApiAs, database: str) -
     assert real.status_code == 200, real.text
     assert week(api, r.people["first"]) == (1, 1)
     assert api(person).get(f"/api/review-tasks/{r.task}/evaluation").json()["sample"] is False
+
+
+SAMPLE_BYTES = 70_000
+
+
+def stored_sample(label: str) -> SampleFile:
+    facts = SampleFile(
+        original_key=sample_original_key(label, f"{label}.tif"),
+        file_bytes=SAMPLE_BYTES,
+        sha256="0" * 64,
+        format="generic-tiff",
+        variant=None,
+        reader="tifffile",
+        width=2048,
+        height=1536,
+        level_count=3,
+        mpp_x=0.243,
+        mpp_y=0.243,
+        objective_power=40.0,
+        notices=[],
+    )
+    folder = sample_folder(label)
+
+    async def put(store: ObjectStore) -> None:
+        await store.put_object(
+            f"{folder}restricted-ranges.json", b'{"ranges": []}', "application/json"
+        )
+        await store.put_object(
+            facts_key(label), facts.model_dump_json().encode(), "application/json"
+        )
+
+    with_store(put)
+    return facts
+
+
+def test_a_seeded_sample_slide_points_at_the_shared_file_and_gets_a_tile_token(
+    api: ApiAs, database: str, storage: StorageLocation
+) -> None:
+    assert storage.bucket
+    stored = {label: stored_sample(label) for label in SAMPLE_SLIDES}
+    api.app.settings = api.app.settings.model_copy(update={"tile_token_key": SecretStr(SECRET)})
+    r = review(api, database)
+    person = r.people["owner"]
+    project = create_sample(api, person)["id"]
+    rows = owner(
+        database,
+        "SELECT id, label, original_key, file_bytes, sha256, format, width, published_at "
+        f"FROM slides WHERE project_id = '{project}'",
+    )
+    assert {row[1]: (row[2], row[3], row[4], row[5], row[6]) for row in rows} == {
+        label: (facts.original_key, SAMPLE_BYTES, facts.sha256, "generic-tiff", 2048)
+        for label, facts in stored.items()
+    }
+    assert all(row[7] is not None for row in rows)
+    slide = next(row[0] for row in rows if row[1] == "tumor_001")
+    access = api(person).get(f"/api/slides/{slide}/tile-access")
+    assert access.status_code == 200, access.text
+    body = access.json()
+    assert (body["base_path"], body["original"], body["format"]) == (
+        f"/tiles/{slide}/",
+        "original.tif",
+        "generic-tiff",
+    )
+    claims = claims_of(body["token"])
+    assert (claims["s"], claims["p"], claims["o"], claims["n"], claims["d"]) == (
+        str(slide),
+        "samples/camelyon16/tumor_001/",
+        "original.tif",
+        SAMPLE_BYTES,
+        [],
+    )

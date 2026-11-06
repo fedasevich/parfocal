@@ -189,8 +189,11 @@ def slide_prefixes(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> tuple[str, str]
     return slide_prefix(tenant_id, slide_id), restricted_prefix(tenant_id, slide_id)
 
 
+RESTRICTED_RANGES_NAME = "restricted-ranges.json"
+
+
 def restricted_ranges_key(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> str:
-    return f"{slide_prefix(tenant_id, slide_id)}restricted-ranges.json"
+    return f"{slide_prefix(tenant_id, slide_id)}{RESTRICTED_RANGES_NAME}"
 
 
 def original_key(tenant_id: uuid.UUID, slide_id: uuid.UUID, name: str) -> str:
@@ -223,3 +226,19 @@ async def enqueue_ingest(
     upload_id: uuid.UUID,
 ) -> uuid.UUID:
     return await enqueue(connection, PLAN, tenant_id, project_id, job_input(upload_id))
+
+
+SAMPLE_FILES_PREFIX = "samples/camelyon16/"
+SAMPLE_FACTS_NAME = "facts.json"
+
+
+def sample_folder(label: str) -> str:
+    return f"{SAMPLE_FILES_PREFIX}{label}/"
+
+
+def sample_original_key(label: str, name: str) -> str:
+    return f"{sample_folder(label)}original{original_suffix(name)}"
+
+
+def folder_of(key: str) -> str:
+    return f"{PurePosixPath(key).parent}/"
