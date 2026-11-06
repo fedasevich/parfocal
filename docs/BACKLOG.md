@@ -3166,7 +3166,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-004, AISEG-011, AISEG-015, ANN-002, ANN-017. Refs docs 13, 14, 20 §2.7.
   Size: M.
 
-- [ ] AISEG-006 · Hover preview
+- [x] AISEG-006 · Hover preview
   Dashed outline on pointer move with no rest delay, about 60 ms from pointer to outline in the POC, one request in flight, latest position only, cached by prompt, only when the embedding is cached. Can be turned off.
   Done when a manual measurement on the owner's Mac, recorded as a result file, shows pointer-to-outline latency under 100 ms ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Depends on AISEG-005, AISEG-007. Refs doc 15.
