@@ -1,6 +1,7 @@
 import {
   type CountsAsChange,
   type Evaluation,
+  type EvaluationChange,
   type EvaluationReport,
   type EvaluationReportBlock,
   type EvaluationReportFormat,
@@ -44,6 +45,7 @@ type PagesProps = {
   report: EvaluationReport;
   evaluation: Evaluation | undefined;
   queue: QueueRow[];
+  changes: EvaluationChange[];
   blocks: PageBlock[];
   format: EvaluationReportFormat;
   templateVersion: number;
@@ -55,6 +57,9 @@ type PagesProps = {
 
 const dayMonth = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+export const changedLine = (count: number, version: number) =>
+  `Changed after sign-off · ${count} change${count === 1 ? "" : "s"} listed at the end · the checksum is of v${version} as signed`;
 
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -304,23 +309,26 @@ function ComparisonBlock({
   );
 }
 
-function Closing({ report, queue, format, nameOf }: PagesProps) {
+function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
   const leftOpen = queue.filter((row) => row.state === "left-open");
   return (
     <>
       <ReportBlock title="Changes after sign-off">
-        {report.changes.length ? (
+        {changes.length ? (
           <table className="w-full border-collapse text-[8.5px]">
             <tbody>
-              {report.changes.map((change) => (
-                <tr key={`${change.object}-${change.at}`} className="border-b border-[#ddd]">
+              {changes.map((change) => (
+                <tr
+                  key={`${change.version}-${change.object}-${change.at}`}
+                  className="border-b border-[#ddd]"
+                >
                   <td className="py-1 font-mono font-semibold">
                     {change.object} on {change.slide_label}
                   </td>
                   <td>
                     {change.text} · "{change.reason}"
                   </td>
-                  <td>{nameOf(change.by_user_id)}</td>
+                  <td>{change.by_user_id ? nameOf(change.by_user_id) : ""}</td>
                   <td className="text-right">
                     {dayMonth(change.at)}, {time(change.at)}
                   </td>
@@ -437,7 +445,7 @@ export function ReportPage({
   pages,
   ...props
 }: PagesProps & { page: number; plan: LayoutPage; pages: number }) {
-  const { report, blocks, format, templateVersion, nameOf, selected, onSelect } = props;
+  const { report, changes, blocks, format, templateVersion, nameOf, selected, onSelect } = props;
   const status = report.signed_at ? ` · signed ${dayMonth(report.signed_at)}` : " · draft";
   const footer = `${report.task_code} · Evaluation v${report.version}${status}`;
   return (
@@ -465,6 +473,7 @@ export function ReportPage({
             lines={[
               `${report.task_code} · ${report.model}`,
               `Evaluation v${report.version}${status}`,
+              ...(changes.length ? [changedLine(changes.length, report.version)] : []),
             ]}
           />
           <ReportFacts

@@ -444,7 +444,7 @@ def as_change(row: Any, labels: dict[uuid.UUID, str]) -> EvaluationChange:
         at=row.changed_at,
         object=row.object_id,
         slide_label=labels.get(row.slide_id, ""),
-        text=CHANGE_TEXTS.get(row.change, row.change),
+        text=CHANGE_TEXTS.get(row.change) or row.change,
         reason=row.reason,
     )
 

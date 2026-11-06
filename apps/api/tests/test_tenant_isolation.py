@@ -1269,6 +1269,9 @@ GET_ROUTES = {
     "getSignOffSummary": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/sign-off-summary"
     ),
+    "listEvaluationChanges": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation-changes"
+    ),
     "exportTaskEvaluation": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/exports/objects.csv",

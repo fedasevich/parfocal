@@ -249,6 +249,18 @@ test("signing with single sign-on shows the signed version, and v2 needs a reaso
   ).toBeVisible();
 });
 
+test("a started v2 offers Sign v2, which opens the checks for v2", async ({ page }) => {
+  await page.goto(`${base}/sign-off?scene=amend`);
+  const amend = page.getByRole("dialog", { name: "Start Evaluation v2" });
+  await amend.getByRole("textbox", { name: "Reason" }).fill("Measured again on deeper levels");
+  await amend.getByRole("button", { name: /Start v2/ }).click();
+  const modal = page.getByRole("dialog", { name: "Sign off RT-14" });
+  await expect(modal.getByText("Evaluation v2 · draft")).toBeVisible();
+  await expect(modal.getByRole("button", { name: "Start v2" })).toHaveCount(0);
+  await modal.getByRole("button", { name: "Sign v2" }).click();
+  await expect(page.getByRole("dialog", { name: "Sign off RT-14 · v2" })).toBeVisible();
+});
+
 test("the report arranges blocks, previews the PDF and keeps the arrangement", async ({ page }) => {
   await page.goto(`${base}/evaluation`);
   await page.getByRole("button", { name: "Arrange blocks and format" }).click();

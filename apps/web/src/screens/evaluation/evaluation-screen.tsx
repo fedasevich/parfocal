@@ -5,6 +5,7 @@ import {
   useGetEvaluationReport,
   useGetReviewTask,
   useGetTaskEvaluation,
+  useListEvaluationChanges,
   useListReviewTasks,
   useListStudyTemplates,
 } from "@parfocal/api-client";
@@ -76,6 +77,10 @@ function EvaluationBody({
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
   const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
+  const logged = okData(useListEvaluationChanges(taskId).data);
+  const changes = (logged?.changes ?? []).filter(
+    (change) => change.version === logged?.signed_version,
+  );
   const templates = okData(useListStudyTemplates().data) ?? [];
   const others = (okData(useListReviewTasks(report.project.id).data) ?? []).filter(
     (other) => other.id !== taskId,
@@ -104,6 +109,7 @@ function EvaluationBody({
     report,
     evaluation,
     queue,
+    changes,
     blocks,
     format,
     pages: pageCount,
@@ -247,10 +253,9 @@ function EvaluationBody({
             ) : (
               <StatusTag tone="neutral">Evaluation v{report.version} · draft</StatusTag>
             )}
-            {report.changes.length ? (
+            {changes.length ? (
               <StatusTag tone="warn">
-                {report.changes.length} change{report.changes.length === 1 ? "" : "s"} after
-                sign-off
+                Changed after sign-off · {changes.length} change{changes.length === 1 ? "" : "s"}
               </StatusTag>
             ) : null}
             {arranging ? (

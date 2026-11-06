@@ -14,6 +14,7 @@ import { type EvaluationReport, evaluationReportSchema } from "../draft/evaluati
 import {
   getGetSignOffSummaryMockHandler,
   getGetTaskEvaluationMockHandler,
+  getListEvaluationChangesMockHandler,
   getListMyAdjudicationsMockHandler,
   getSendToAdjudicatorMockHandler,
   getSignOffReviewTaskMockHandler,
@@ -22,6 +23,8 @@ import {
 import type {
   AdjudicationDraft,
   Evaluation,
+  EvaluationChange,
+  EvaluationChanges,
   MyAdjudication,
   QueuedObject,
   SignOffSummary,
@@ -257,16 +260,7 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
     signature: state.signed
       ? { by_user_id: idOf(signature.by), at: signature.at, checksum: signature.checksum }
       : null,
-    changes: state.signed
-      ? changesAfterSignOff.map((change) => ({
-          by_user_id: idOf(change.by),
-          at: change.at,
-          object: change.object,
-          slide_label: change.slideLabel,
-          text: change.text,
-          reason: change.reason,
-        }))
-      : [],
+    changes: loggedChanges(state.signed),
     next_version: state.nextVersion
       ? {
           version: 2,
@@ -345,6 +339,26 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
   };
 };
 
+const loggedChanges = (signed: boolean): EvaluationChange[] =>
+  signed
+    ? changesAfterSignOff.map((change) => ({
+        version: 1,
+        by_user_id: idOf(change.by),
+        at: change.at,
+        object: change.object,
+        slide_label: change.slideLabel,
+        text: change.text,
+        reason: change.reason,
+      }))
+    : [];
+
+export const toEvaluationChanges = (taskId: string): EvaluationChanges => ({
+  task_id: taskId,
+  signed_version: queueState().signed ? 1 : null,
+  checksum: queueState().signed ? signature.checksum : null,
+  changes: loggedChanges(queueState().signed),
+});
+
 export const toEvaluationReport = (taskId: string): EvaluationReport => {
   const current = task();
   const project = projectByCode(current.project);
@@ -383,16 +397,7 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
       })),
     })),
     opinion_question: opinionQuestion.text,
-    changes: queueState().signed
-      ? changesAfterSignOff.map((change) => ({
-          by_user_id: idOf(change.by),
-          at: change.at,
-          object: change.object,
-          slide_label: change.slideLabel,
-          text: change.text,
-          reason: change.reason,
-        }))
-      : [],
+    changes: loggedChanges(queueState().signed),
   });
 };
 
@@ -535,6 +540,7 @@ export function adjudicationHandlers(): RequestHandler[] {
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
     getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),
     getGetSignOffSummaryMockHandler(({ params }) => toSignOffSummary(String(params.taskId))),
+    getListEvaluationChangesMockHandler(({ params }) => toEvaluationChanges(String(params.taskId))),
     getStartEvaluationVersionMockHandler(async ({ request }) => {
       const body = (await request.json()) as { reason: string };
       startNextVersion(body.reason, scenarioNow);
