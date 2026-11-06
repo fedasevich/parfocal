@@ -3160,7 +3160,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-003. Refs doc 14.
   Size: M.
 
-- [ ] AISEG-005 · Smart select tool
+- [x] AISEG-005 · Smart select tool
   Click is a positive point, Shift+click extends, right-click or Alt+click is a negative point, drag is a box prompt, Backspace removes the last point, Enter accepts, Esc discards. The best of the candidate masks is chosen, never derived boxes. Refinement feeds the previous logits through `mask_input`, and the output stays the best of four.
   Done when interaction tests cover each gesture and an accuracy smoke test on fixtures meets the MLEVAL baseline.
   Depends on AISEG-004, AISEG-011, AISEG-015, ANN-002, ANN-017. Refs docs 13, 14, 20 §2.7.
