@@ -558,6 +558,21 @@ export {
 export type { SamReply, SamRequest } from "./sam/protocol.ts";
 export type { SamRuntime, SamSession, SamTensor } from "./sam/runtime.ts";
 export {
+  type BestMask,
+  bestMask,
+  fittedLogits,
+  modelToSlide,
+  patchContains,
+  type SamFrame,
+  type SamPatchGeometry,
+  type SamPlanePoint,
+  samFrame,
+  samPixelMean,
+  samPixelStd,
+  samPixels,
+  slideToModel,
+} from "./sam/smart-prompt.ts";
+export {
   graphRunsOn,
   type SamGraph,
   type SamProvider,

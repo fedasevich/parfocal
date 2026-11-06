@@ -5,6 +5,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { loadSmartServices, type SmartServicesContext } from "../aiseg/smart-services.ts";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
@@ -27,6 +28,7 @@ import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.ts
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SaveStatus } from "../annotations/save-status.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
+import { SmartLayer } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
@@ -76,7 +78,11 @@ const railActions = annotateRail.flatMap((group) =>
   group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
 );
 
-type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
+type Session = {
+  readonly engine: ViewerEngine;
+  readonly module: ViewerModule;
+  readonly open: SmartServicesContext["open"];
+};
 
 type Grant = {
   readonly token: string;
@@ -389,26 +395,27 @@ function OpenedSlide({
     void loadViewerEngine().then((engine) => {
       if (disposed) return;
       const access = engine.createSlideAccess((previous) => grantFor(slideId, previous));
+      const open = async () => {
+        const grant = await access.grant();
+        return engine.signedOpenRequest({
+          access: access.access,
+          basePath: grant.basePath,
+          original: grant.original,
+          identifiedFormat: grant.format ?? null,
+        });
+      };
       const viewport = engine.mountSlideViewport({
         container,
         slideId,
         route: { onError: fail },
-        resolve: async () => {
-          const grant = await access.grant();
-          return engine.signedOpenRequest({
-            access: access.access,
-            basePath: grant.basePath,
-            original: grant.original,
-            identifiedFormat: grant.format ?? null,
-          });
-        },
+        resolve: open,
       });
       dispose = () => viewport.dispose();
       viewport.ready
         .then(() => viewport.route()?.whenIdle())
         .then(() => {
           if (disposed) return;
-          setSession({ engine: viewport.engine, module: engine });
+          setSession({ engine: viewport.engine, module: engine, open });
           setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
         })
         .catch(fail);
@@ -450,7 +457,7 @@ function OpenedSlide({
         data-coverage-seen={coverage?.share.seen}
         data-coverage-pending={coverage?.pending}
         data-coverage-basis={coverage?.share.basis}
-        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair!"
+        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair!"
       >
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
         {session && hostNode ? (
@@ -533,6 +540,17 @@ function OpenedSlide({
               micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
               onDocumentChange={setAnnotations}
               onCommit={saved.commit}
+            />
+            <SmartLayer
+              engine={session.engine}
+              stage={hostNode}
+              slideId={slideId}
+              active={tool === "smart"}
+              document={annotations}
+              activeClass={activeClass}
+              loader={loadSmartServices}
+              openRequest={session.open}
+              onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
             {workspace === "annotate" || tool !== restingTool || proposalCount > 0 ? (
