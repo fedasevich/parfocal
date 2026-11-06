@@ -66,6 +66,9 @@ class Resources:
     work_dir: Path
     copy_part_bytes: int = DEFAULT_COPY_PART_BYTES
     store_class: type[ObjectStore] = ObjectStore
+    link_trusted_origins: tuple[str, ...] = ()
+    link_read_seconds: float = 30.0
+    link_fetch_seconds: float = 3600.0
 
 
 @cache
@@ -75,6 +78,9 @@ def resources_from_environment() -> Resources:
         storage=settings.storage(),
         work_dir=Path(settings.ingest_work_dir),
         copy_part_bytes=settings.ingest_copy_part_bytes,
+        link_trusted_origins=tuple(settings.link_trusted_origins),
+        link_read_seconds=settings.link_read_seconds,
+        link_fetch_seconds=settings.link_fetch_seconds,
     )
 
 

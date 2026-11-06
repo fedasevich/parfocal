@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_common.jobs import Step, StepRun, Workflow, enqueue
+from parfocal_common.link_imports import LINK_IMPORT_FAILURES
 from parfocal_common.result_imports import IMPORT_FAILURES
 
 KIND = "ingest"
@@ -126,6 +127,7 @@ FAILURES: Mapping[str, str] = {
     ),
     Failure.CHECK_STOPPED: "Checking this file was stopped before it finished. Upload it again.",
     **IMPORT_FAILURES,
+    **LINK_IMPORT_FAILURES,
 }
 GENERIC_FAILURE = "Parfocal could not take this file in."
 

@@ -10673,6 +10673,272 @@
         "x-permission-write": true
       }
     },
+    "/api/projects/{project_id}/source-files": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "List Source Files",
+        "operationId": "listSourceFiles",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "title": "Address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceListing"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides"
+      }
+    },
+    "/api/projects/{project_id}/link-imports": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Import From Link",
+        "operationId": "importFromLink",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkImport"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/review-tasks": {
       "post": {
         "tags": [
@@ -31804,6 +32070,11 @@
         ],
         "title": "AddedDraft"
       },
+      "Address": {
+        "type": "string",
+        "maxLength": 2048,
+        "minLength": 1
+      },
       "AdjudicatedObject": {
         "properties": {
           "adjudication_id": {
@@ -36441,6 +36712,66 @@
           "coordinates"
         ],
         "title": "LineStringGeometry"
+      },
+      "LinkImport": {
+        "properties": {
+          "started": {
+            "items": {
+              "$ref": "#/components/schemas/StartedFile"
+            },
+            "type": "array",
+            "title": "Started"
+          },
+          "left_out": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Left Out"
+          }
+        },
+        "type": "object",
+        "required": [
+          "started",
+          "left_out"
+        ],
+        "title": "LinkImport"
+      },
+      "LinkImportRequest": {
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "names": {
+            "items": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "names"
+        ],
+        "title": "LinkImportRequest"
+      },
+      "LinkRefusal": {
+        "type": "string",
+        "enum": [
+          "link-scheme",
+          "link-address",
+          "link-redirects",
+          "link-too-large",
+          "link-size-unknown",
+          "link-unreachable",
+          "link-status",
+          "link-timeout"
+        ],
+        "title": "LinkRefusal"
       },
       "ListKind": {
         "type": "string",
@@ -44173,10 +44504,177 @@
         ],
         "title": "SortingRequest"
       },
+      "SourceCase": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "case_id"
+        ],
+        "title": "SourceCase"
+      },
+      "SourceFile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "size_gb": {
+            "type": "number",
+            "title": "Size Gb"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "in_project": {
+            "type": "boolean",
+            "title": "In Project"
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceCase"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refused": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LinkRefusal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail",
+          "size_gb",
+          "size_bytes",
+          "in_project",
+          "case",
+          "refused",
+          "message",
+          "result"
+        ],
+        "title": "SourceFile"
+      },
+      "SourceListing": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "link",
+              "storage"
+            ],
+            "title": "Kind"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SourceFile"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "others": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Others"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "kind",
+          "files",
+          "others"
+        ],
+        "title": "SourceListing"
+      },
       "SourceName": {
         "type": "string",
         "maxLength": 120,
         "minLength": 1
+      },
+      "SourceResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail"
+        ],
+        "title": "SourceResult"
       },
       "SpecimenDetail": {
         "properties": {
@@ -44404,6 +44902,35 @@
           "viewer"
         ],
         "title": "StartMode"
+      },
+      "StartedFile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Upload Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/UploadKind"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "upload_id",
+          "kind",
+          "job_id"
+        ],
+        "title": "StartedFile"
       },
       "State": {
         "type": "string",

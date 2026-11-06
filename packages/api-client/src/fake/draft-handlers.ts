@@ -82,7 +82,6 @@ export {
   getGetProjectImportsMockHandler,
   getGetProjectOverviewMockHandler,
   getGetUploadBatchMockHandler,
-  getListSourceFilesMockHandler,
 } from "./project-handlers.ts";
 export {
   getGetSlideAgreementMockHandler,

@@ -24,6 +24,7 @@ import type {
 } from "../generated/api.ts";
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
+import { linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
 import { storedResume } from "./resume-handlers.ts";
 import {
   type PersonKey,
@@ -341,6 +342,8 @@ const projectNotFound = () =>
 
 export function scenarioHandlers(): RequestHandler[] {
   return [
+    sourceFilesHandler(),
+    linkImportHandler(),
     getGetSessionMockHandler(() => toSession()),
     getGetMeMockHandler(() => toMe()),
     getGetMyHomeMockHandler(() =>

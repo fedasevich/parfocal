@@ -13,6 +13,7 @@ from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
 from parfocal_common.jobs import work
 from parfocal_common.object_store import ObjectStore
+from parfocal_ingest.link_fetch import link_fetch_workflow
 from parfocal_ingest.result_import import result_import_workflow
 from parfocal_ingest.workflow import Resources, ingest_workflow
 
@@ -71,11 +72,17 @@ def status_of(api: ApiAs, who: MemberPrincipal, upload: dict[str, Any]) -> dict[
     return response.json()
 
 
-def run_worker(database: str, tenant_id: uuid.UUID, work_dir: Path) -> int:
+def run_worker(
+    database: str, tenant_id: uuid.UUID, work_dir: Path, trusted: tuple[str, ...] = ()
+) -> int:
     def resources() -> Resources:
-        return Resources(TEST_STORAGE, work_dir)
+        return Resources(TEST_STORAGE, work_dir, link_trusted_origins=trusted)
 
-    workflows = [ingest_workflow(resources), result_import_workflow(resources)]
+    workflows = [
+        ingest_workflow(resources),
+        result_import_workflow(resources),
+        link_fetch_workflow(resources),
+    ]
 
     async def go() -> int:
         engine = create_engine(with_database(APP_URL, database))

@@ -176,6 +176,12 @@ export interface AddedDraft {
   class_id?: string | null;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 2048
+ */
+export type Address = string;
+
 export type Why = (typeof Why)[keyof typeof Why];
 
 export const Why = {
@@ -2105,6 +2111,47 @@ export interface LegalHoldDraft {
   reason: string;
 }
 
+export type UploadKind = (typeof UploadKind)[keyof typeof UploadKind];
+
+export const UploadKind = {
+  slide: "slide",
+  result: "result",
+} as const;
+
+export interface StartedFile {
+  name: string;
+  upload_id: string;
+  kind: UploadKind;
+  job_id: string;
+}
+
+export interface LinkImport {
+  started: StartedFile[];
+  left_out: string[];
+}
+
+export interface LinkImportRequest {
+  address: Address;
+  /**
+   * @minItems 1
+   * @items.maxLength 255
+   */
+  names: string[];
+}
+
+export type LinkRefusal = (typeof LinkRefusal)[keyof typeof LinkRefusal];
+
+export const LinkRefusal = {
+  "link-scheme": "link-scheme",
+  "link-address": "link-address",
+  "link-redirects": "link-redirects",
+  "link-too-large": "link-too-large",
+  "link-size-unknown": "link-size-unknown",
+  "link-unreachable": "link-unreachable",
+  "link-status": "link-status",
+  "link-timeout": "link-timeout",
+} as const;
+
 export type ListKind = (typeof ListKind)[keyof typeof ListKind];
 
 export const ListKind = {
@@ -3958,6 +4005,42 @@ export interface SortingRequest {
   result_decisions?: ResultDecision[];
 }
 
+export interface SourceCase {
+  label: string;
+  case_id: string | null;
+}
+
+export interface SourceResult {
+  name: string;
+  detail: string;
+}
+
+export interface SourceFile {
+  name: string;
+  detail: string;
+  size_gb: number;
+  size_bytes: number | null;
+  in_project: boolean;
+  case: SourceCase | null;
+  refused: LinkRefusal | null;
+  message: string | null;
+  result: SourceResult | null;
+}
+
+export type SourceListingKind = (typeof SourceListingKind)[keyof typeof SourceListingKind];
+
+export const SourceListingKind = {
+  link: "link",
+  storage: "storage",
+} as const;
+
+export interface SourceListing {
+  address: string;
+  kind: SourceListingKind;
+  files: SourceFile[];
+  others: string[];
+}
+
 export interface SplitPart {
   geometry: Geometry;
   class_id?: string | null;
@@ -4227,13 +4310,6 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
-export type UploadKind = (typeof UploadKind)[keyof typeof UploadKind];
-
-export const UploadKind = {
-  slide: "slide",
-  result: "result",
-} as const;
-
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
@@ -4478,6 +4554,14 @@ export type CompleteUploadParams = {
    * @maxLength 512
    */
   key: string;
+};
+
+export type ListSourceFilesParams = {
+  /**
+   * @minLength 1
+   * @maxLength 2048
+   */
+  address: string;
 };
 
 export type ResolveReviewObjectParams = {
@@ -19164,6 +19248,376 @@ export const useApplyDroppedFiles = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getApplyDroppedFilesMutationOptions(options), queryClient);
+};
+
+export type listSourceFilesResponse200 = {
+  data: SourceListing;
+  status: 200;
+};
+
+export type listSourceFilesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSourceFilesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSourceFilesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSourceFilesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSourceFilesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSourceFilesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSourceFilesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSourceFilesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSourceFilesResponseSuccess = listSourceFilesResponse200 & {
+  headers: Headers;
+};
+export type listSourceFilesResponseError = (
+  | listSourceFilesResponse400
+  | listSourceFilesResponse401
+  | listSourceFilesResponse403
+  | listSourceFilesResponse404
+  | listSourceFilesResponse409
+  | listSourceFilesResponse422
+  | listSourceFilesResponse429
+  | listSourceFilesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSourceFilesResponse = listSourceFilesResponseSuccess | listSourceFilesResponseError;
+
+export const getListSourceFilesUrl = (projectId: string, params: ListSourceFilesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/source-files?${stringifiedParams}`
+    : `/api/projects/${projectId}/source-files`;
+};
+
+/**
+ * @summary List Source Files
+ */
+export const listSourceFiles = async (
+  projectId: string,
+  params: ListSourceFilesParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSourceFilesResponse> => {
+  return apiFetch<listSourceFilesResponse>(getListSourceFilesUrl(projectId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSourceFilesQueryKey = (projectId: string, params?: ListSourceFilesParams) => {
+  return [`/api/projects/${projectId}/source-files`, ...(params ? [params] : [])] as const;
+};
+
+export const getListSourceFilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSourceFiles>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ListSourceFilesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSourceFilesQueryKey(projectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSourceFiles>>> = ({ signal }) =>
+    listSourceFiles(projectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSourceFilesQueryResult = NonNullable<Awaited<ReturnType<typeof listSourceFiles>>>;
+export type ListSourceFilesQueryError = Problem;
+
+export function useListSourceFiles<
+  TData = Awaited<ReturnType<typeof listSourceFiles>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ListSourceFilesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceFiles>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceFiles>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSourceFiles<
+  TData = Awaited<ReturnType<typeof listSourceFiles>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ListSourceFilesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceFiles>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceFiles>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSourceFiles<
+  TData = Awaited<ReturnType<typeof listSourceFiles>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ListSourceFilesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Source Files
+ */
+
+export function useListSourceFiles<
+  TData = Awaited<ReturnType<typeof listSourceFiles>>,
+  TError = Problem,
+>(
+  projectId: string,
+  params: ListSourceFilesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSourceFilesQueryOptions(projectId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type importFromLinkResponse202 = {
+  data: LinkImport;
+  status: 202;
+};
+
+export type importFromLinkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type importFromLinkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type importFromLinkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type importFromLinkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type importFromLinkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type importFromLinkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type importFromLinkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type importFromLinkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type importFromLinkResponseSuccess = importFromLinkResponse202 & {
+  headers: Headers;
+};
+export type importFromLinkResponseError = (
+  | importFromLinkResponse400
+  | importFromLinkResponse401
+  | importFromLinkResponse403
+  | importFromLinkResponse404
+  | importFromLinkResponse409
+  | importFromLinkResponse422
+  | importFromLinkResponse429
+  | importFromLinkResponse500
+) & {
+  headers: Headers;
+};
+
+export type importFromLinkResponse = importFromLinkResponseSuccess | importFromLinkResponseError;
+
+export const getImportFromLinkUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/link-imports`;
+};
+
+/**
+ * @summary Import From Link
+ */
+export const importFromLink = async (
+  projectId: string,
+  linkImportRequest: LinkImportRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<importFromLinkResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<importFromLinkResponse>(getImportFromLinkUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(linkImportRequest),
+  });
+};
+
+export const getImportFromLinkMutationKey = () => ["importFromLink"] as const;
+
+export const getImportFromLinkMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importFromLink>>,
+    TError,
+    ImportFromLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importFromLink>>,
+  TError,
+  ImportFromLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportFromLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importFromLink>>,
+    ImportFromLinkMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return importFromLink(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportFromLinkMutationResult = NonNullable<Awaited<ReturnType<typeof importFromLink>>>;
+export type ImportFromLinkMutationBody = LinkImportRequest;
+export type ImportFromLinkMutationError = Problem;
+export type ImportFromLinkMutationVariables = { projectId: string; data: LinkImportRequest };
+
+/**
+ * @summary Import From Link
+ */
+export const useImportFromLink = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importFromLink>>,
+      TError,
+      ImportFromLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importFromLink>>,
+  TError,
+  ImportFromLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportFromLinkMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

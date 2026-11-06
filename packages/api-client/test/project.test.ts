@@ -140,7 +140,11 @@ test("the upload batch pairs its results and names three problems", async () => 
 });
 
 test("a source listing and the automatic imports answer for the project", async () => {
-  const listing = (await listSourceFiles(p07.id, "s3://fnvltava-scans/sentinel/2026-10/")).data;
+  const response = await listSourceFiles(p07.id, {
+    address: "s3://fnvltava-scans/sentinel/2026-10/",
+  });
+  assert.equal(response.status, 200);
+  const listing = response.data;
   assert.equal(listing.kind, "storage");
   assert.equal(listing.files.filter((file) => file.in_project).length, 1);
   const imports = (await getProjectImports(p07.id)).data;

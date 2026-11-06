@@ -29,6 +29,7 @@ import { formatBytes, sameFile } from "../../upload/entries.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
 import { FolderShape, GroupHead, RemoveButton, ResultRow, SlideBlock } from "./files-step.tsx";
+import { LinkImport } from "./link-import.tsx";
 import { createLiveModel, freshLiveState, type LiveModel, type LiveState } from "./live-model.ts";
 import { FileIcon, FileList, FileRow, TextLink, Thumb, useCrumbLink } from "./parts.tsx";
 import { plural } from "./state.ts";
@@ -261,6 +262,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             state={state}
             set={set}
             projectId={project.id}
+            projectCode={project.code}
             scene={shown}
             dragging={dragging}
             take={take}
@@ -411,6 +413,7 @@ function FilesStep({
   state,
   set,
   projectId,
+  projectCode,
   scene,
   dragging,
   take,
@@ -419,6 +422,7 @@ function FilesStep({
   state: LiveState;
   set: Change;
   projectId: string;
+  projectCode: string;
   scene: LiveScene;
   dragging: boolean;
   take: (items: DroppedItem[]) => void;
@@ -426,6 +430,7 @@ function FilesStep({
   const navigate = useNavigate();
   const adding = useRef<HTMLInputElement>(null);
   const [addingTo, setAddingTo] = useState<DropRecord | null>(null);
+  const [source, setSource] = useState<"computer" | "link">("computer");
   const formats = (
     <button
       type="button"
@@ -442,10 +447,33 @@ function FilesStep({
       What files work?
     </button>
   );
+  const sourceSwitch = (
+    <div className="flex items-center gap-3">
+      <SegmentedControl
+        aria-label="Where the files are"
+        value={source}
+        onValueChange={(value) => setSource(value === "link" ? "link" : "computer")}
+        options={[
+          { value: "computer", label: "From this computer" },
+          { value: "link", label: "From a link or storage" },
+        ]}
+      />
+      <span className="flex-1" />
+      {formats}
+    </div>
+  );
+  if (scene === "empty" && source === "link") {
+    return (
+      <>
+        {sourceSwitch}
+        <LinkImport projectId={projectId} projectCode={projectCode} />
+      </>
+    );
+  }
   if (scene === "empty") {
     return (
       <>
-        <div className="flex justify-end">{formats}</div>
+        {sourceSwitch}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] items-stretch gap-(--space-zone)">
           <div
             data-testid="drop-area"

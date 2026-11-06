@@ -56,6 +56,7 @@ import type {
   LayerObject,
   LegalHold,
   LineStringGeometry,
+  LinkImport,
   Marked,
   Me,
   Member,
@@ -131,6 +132,7 @@ import type {
   SlideTable,
   SlideTissue,
   Sorting,
+  SourceListing,
   StudyTemplate,
   StudyTemplateSummary,
   StudyTemplateVersion,
@@ -190,6 +192,7 @@ import {
   JobStatus,
   Laterality,
   Layer,
+  LinkRefusal,
   Metric,
   ModelHost,
   ModelMakes,
@@ -3027,6 +3030,63 @@ export const getApplyDroppedFilesResponseMock = (
   ),
   new_cases: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListSourceFilesResponseMock = (
+  overrideResponse: Partial<Extract<SourceListing, object>> = {},
+): SourceListing => ({
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(["link", "storage"] as const),
+  files: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    size_gb: faker.number.float({ fractionDigits: 2 }),
+    size_bytes: faker.helpers.arrayElement([faker.number.int(), null]),
+    in_project: faker.datatype.boolean(),
+    case: faker.helpers.arrayElement([
+      {
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      },
+      null,
+    ]),
+    refused: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(LinkRefusal)),
+      null,
+    ]),
+    message: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    result: faker.helpers.arrayElement([
+      {
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      null,
+    ]),
+  })),
+  others: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getImportFromLinkResponseMock = (
+  overrideResponse: Partial<Extract<LinkImport, object>> = {},
+): LinkImport => ({
+  started: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      upload_id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+      job_id: faker.string.uuid(),
+    }),
+  ),
+  left_out: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
   ...overrideResponse,
 });
@@ -11933,6 +11993,52 @@ export const getApplyDroppedFilesMockHandler = (
   );
 };
 
+export const getListSourceFilesMockHandler = (
+  overrideResponse?:
+    | SourceListing
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SourceListing> | SourceListing),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/source-files",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSourceFilesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getImportFromLinkMockHandler = (
+  overrideResponse?:
+    | LinkImport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LinkImport> | LinkImport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/link-imports",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getImportFromLinkResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -15637,6 +15743,8 @@ export const getParfocalAPIMock = () => [
   getLeaveResultOutMockHandler(),
   getSortDroppedFilesMockHandler(),
   getApplyDroppedFilesMockHandler(),
+  getListSourceFilesMockHandler(),
+  getImportFromLinkMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),
