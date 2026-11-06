@@ -3,7 +3,7 @@ import {
   answersFor,
   type DecisionAnswer,
   type ProjectClass,
-} from "@parfocal/ui/components/decision-buttons";
+} from "@parfocal/ui/lib/decision-answers";
 import { type ReviewConfidence, sureText } from "./ai-wording.ts";
 import type { Count, ReviewStyle } from "./decision-mapping.ts";
 

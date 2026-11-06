@@ -105,7 +105,7 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
   const decision = live.adjudicated
     ? {
         raw: live.adjudicated.raw,
-        note: null,
+        note: live.adjudicated.note ?? null,
         by_user_id: idOf(adjudicator),
         at: live.adjudicated.at,
       }
@@ -163,6 +163,11 @@ const forAdjudicator = (live: LiveRow) =>
   live.adjudicator?.by === adjudicator &&
   (live.state === "with-adjudicator" || live.state === "adjudicated");
 
+const sentNote = () =>
+  queueRows
+    .map((seed) => liveRow(queueKey(seed)))
+    .find((live) => forAdjudicator(live) && live.adjudicator?.note)?.adjudicator?.note ?? null;
+
 const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
   const live = liveRow(queueKey(seed));
   return adjudicationObjectSchema.parse({
@@ -176,6 +181,7 @@ const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
     reviewer_a: answerOf(seed, reviewerA),
     reviewer_b: answerOf(seed, reviewerB),
     decision: live.adjudicated?.raw ?? null,
+    decision_note: live.adjudicated?.note ?? null,
   });
 };
 
@@ -183,6 +189,7 @@ export const toMyAdjudication = (taskId: string): MyAdjudicationTask =>
   myAdjudicationTaskSchema.parse({
     task_id: taskId,
     asked_by_user_id: idOf(researcher),
+    note: sentNote(),
     objects: queueRows
       .filter((seed) => forAdjudicator(liveRow(queueKey(seed))))
       .map(toAdjudicationObject),
@@ -473,10 +480,10 @@ export const getDecideAdjudicationMockHandler = (overrideResponse?: Adjudication
     async ({ params, request }) => {
       const seed = seedOf(params.slideId, decodeURIComponent(params.object));
       if (seed === undefined) return HttpResponse.json({ status: 404 }, { status: 404 });
-      const body = (await request.json()) as { raw: AdjudicationObject["reviewer_a"]["raw"] };
+      const body = (await request.json()) as { raw: string; note?: string | null };
       Object.assign(liveRow(queueKey(seed)), {
         state: "adjudicated",
-        adjudicated: { raw: body.raw, at: scenarioNow },
+        adjudicated: { raw: body.raw, at: scenarioNow, note: body.note?.trim() || null },
       });
       return HttpResponse.json(overrideResponse ?? toAdjudicationObject(seed));
     },

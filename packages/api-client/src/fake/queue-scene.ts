@@ -43,7 +43,7 @@ export type LiveRow = {
   state: LiveRowState;
   decision: { raw: QueueValue; note: string | null; by: PersonKey; at: string } | null;
   adjudicator: { by: PersonKey; note: string | null } | null;
-  adjudicated: { raw: QueueValue; at: string } | null;
+  adjudicated: { raw: string; at: string; note?: string | null } | null;
   edited: boolean;
 };
 

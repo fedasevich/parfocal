@@ -225,3 +225,55 @@ def test_another_workspace_and_other_members_cannot_touch_adjudications(
         database, f"SELECT count(*) FROM adjudication_objects WHERE task_id = '{r.task}'"
     )
     assert counted == [(1,)]
+
+
+REVIEWER_KEYS = {"reviewer", "answer", "value", "reasons", "note"}
+OBJECT_KEYS = {
+    "adjudication_id",
+    "task_id",
+    "slide_id",
+    "object",
+    "why",
+    "style",
+    "note",
+    "sent_at",
+    "reviewer_decisions",
+    "decision",
+}
+DECISION_KEYS = {"answer", "answer_class_id", "value", "note"}
+
+
+def test_the_adjudicator_gets_letters_reasons_and_notes_with_no_author_of_any_of_them(
+    api: ApiAs, database: str
+) -> None:
+    r, task = queued(api, database)
+    assert send(api, r, task, "third", ["T1", "T2"], note="Edges please").status_code == 201
+    taken = api(r.people["third"]).put(
+        f"/api/adjudications/{r.task}/{r.slide}/T1",
+        json={"answer": "disagree", "note": "Fold, not tumor"},
+    )
+    assert taken.status_code == 200, taken.text
+    seen = api(r.people["third"]).get("/api/adjudications/objects", params={"task_id": str(r.task)})
+    assert seen.status_code == 200, seen.text
+    for item in [*seen.json(), taken.json()]:
+        assert set(item) == OBJECT_KEYS
+        assert all(set(given) == REVIEWER_KEYS for given in item["reviewer_decisions"])
+        assert [given["reviewer"] for given in item["reviewer_decisions"]] == ["A", "B"]
+    found = by_object(seen.json())
+    t1, t2 = found["T1"], found["T2"]
+    assert t1["decision"] is not None
+    assert set(t1["decision"]) == DECISION_KEYS
+    assert t1["decision"]["note"] == "Fold, not tumor"
+    assert t2["decision"] is None
+    assert t1["note"] == "Edges please"
+    assert sorted(len(given["reasons"]) for given in t1["reviewer_decisions"]) == [0, 1]
+    assert t1["reviewer_decisions"][0]["note"] != t1["reviewer_decisions"][1]["note"]
+    identities = owner(
+        database,
+        "SELECT display_name, initials FROM users "
+        f"WHERE id IN ('{r.people['first'].user_id}', '{r.people['second'].user_id}')",
+    )
+    text = json.dumps(seen.json())
+    for name, initials in identities:
+        assert str(name) not in text
+        assert f'"{initials}"' not in text

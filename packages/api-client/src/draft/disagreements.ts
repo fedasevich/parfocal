@@ -22,8 +22,6 @@ export const QueueAction = {
   keepDecisions: "keep-decisions",
 } as const;
 
-const answer = z.enum(QueueAnswer);
-
 const aiClaimSchema = z.object({ class_name: z.string(), score: z.number() });
 
 export const queueAnswerSchema = z.object({
@@ -171,7 +169,8 @@ export const adjudicationObjectSchema = z.object({
   size_mm: z.number().nullable(),
   reviewer_a: anonymousAnswerSchema,
   reviewer_b: anonymousAnswerSchema,
-  decision: answer.nullable(),
+  decision: z.string().nullable(),
+  decision_note: z.string().nullable(),
 });
 
 export type AdjudicationObject = z.infer<typeof adjudicationObjectSchema>;
@@ -179,6 +178,7 @@ export type AdjudicationObject = z.infer<typeof adjudicationObjectSchema>;
 export const myAdjudicationTaskSchema = z.object({
   task_id: z.string(),
   asked_by_user_id: z.string(),
+  note: z.string().nullable(),
   objects: z.array(adjudicationObjectSchema),
 });
 
@@ -220,7 +220,7 @@ export type DecideAdjudicationMutationVariables = {
   taskId: string;
   slideId: string;
   object: string;
-  data: { raw: (typeof QueueAnswer)[keyof typeof QueueAnswer] };
+  data: { raw: string; note?: string | null };
 };
 
 export const getDecideAdjudicationUrl = (taskId: string, slideId: string, object: string) =>
