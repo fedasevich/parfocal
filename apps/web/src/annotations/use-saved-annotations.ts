@@ -63,6 +63,7 @@ export type SavedAnnotations = {
   readonly removeMarker: (id: ShapeId) => void;
   readonly commit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   readonly apply: (next: AnnotationDocument, label: string) => void;
+  readonly latest: () => AnnotationDocument;
   readonly undo: () => string | null;
   readonly redo: () => string | null;
   readonly fold: (id: EntryId, change: (doc: AnnotationDocument) => AnnotationDocument) => void;
@@ -322,9 +323,12 @@ export function useSavedAnnotations(
     [queue, setDocument],
   );
 
+  const latest = useCallback(() => current.current, []);
+
   return {
     document,
     setDocument,
+    latest,
     savePolygon,
     saveMarker,
     removeMarker,
