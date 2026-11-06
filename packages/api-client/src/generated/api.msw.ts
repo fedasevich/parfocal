@@ -12143,6 +12143,25 @@ export const getAmendCaseReportMockHandler = (
   );
 };
 
+export const getDownloadCaseReportPdfMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/versions/:number/pdf",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
 export const getListProjectClassesMockHandler = (
   overrideResponse?:
     | ProjectClass[]
@@ -17490,6 +17509,7 @@ export const getParfocalAPIMock = () => [
   getReturnCaseReportMockHandler(),
   getSignCaseReportMockHandler(),
   getAmendCaseReportMockHandler(),
+  getDownloadCaseReportPdfMockHandler(),
   getListProjectClassesMockHandler(),
   getSetProjectClassesMockHandler(),
   getListClassMappingsMockHandler(),

@@ -1,5 +1,6 @@
 import {
   type CaseReport,
+  getDownloadCaseReportPdfUrl,
   useAmendCaseReport,
   useListCases,
   useSendCaseReportForCosign,
@@ -440,11 +441,15 @@ function ReportFlow({
             <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>Amend</Button>
             <Button
               variant="primary"
-              onClick={() =>
-                toast.show({
-                  text: `${data.case.label}_report_v${report.amend ? 2 : 1}.pdf saved to Downloads`,
-                })
-              }
+              onClick={() => {
+                const number = live ? serverRef.current.version : report.amend ? 2 : 1;
+                if (live) {
+                  const link = document.createElement("a");
+                  link.href = getDownloadCaseReportPdfUrl(projectId, caseId, number);
+                  link.click();
+                }
+                toast.show({ text: `${data.case.label}_report_v${number}.pdf saved to Downloads` });
+              }}
             >
               <Icon name="download" />
               Download PDF
@@ -712,7 +717,7 @@ function ReportFlow({
           failed={mock === "ssofail" && sceneModalOpen}
           pending={signOut.isPending}
           onClose={closeModal}
-          onSign={(_method, doneWith) => {
+          onSign={(method, doneWith) => {
             const finish = (server: CaseReport | null) => {
               setReport((current) => ({
                 ...current,
@@ -738,7 +743,7 @@ function ReportFlow({
                   return;
                 }
                 signOut.mutate(
-                  { projectId, caseId },
+                  { projectId, caseId, data: { confirmed_with: method } },
                   {
                     onSuccess: (response) => {
                       if (response.status !== 200) return doneWith(false);

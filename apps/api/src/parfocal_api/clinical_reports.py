@@ -1,3 +1,4 @@
+import re
 import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -5,12 +6,15 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 from fastapi import APIRouter
+from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.clinical_report_pdf import facts_of, pdf_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.evaluation_versions import ConfirmedWith
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
@@ -34,6 +38,7 @@ from parfocal_api.tables import (
     clinical_reports,
     project_members,
     slides,
+    users,
     verdicts,
 )
 from parfocal_common.node_staging import STAGES, Category, category_of
@@ -203,6 +208,11 @@ class CaseReportCosign(BaseModel):
     cosigner_user_id: uuid.UUID
 
 
+class CaseReportSignOut(BaseModel):
+    confirmed_with: ConfirmedWith = "sso"
+    identity_answered: bool = True
+
+
 class CaseReportReturn(BaseModel):
     note: Reason
 
@@ -245,6 +255,11 @@ class SizeNeededError(ConflictError):
 class CannotSignOutError(ForbiddenError):
     code = "cannot-sign-out"
     title = "Your Can sign out right does not cover this case"
+
+
+class SingleSignOnSilentError(ConflictError):
+    code = "single-sign-on-did-not-answer"
+    title = "Single sign-on did not answer, so nothing was signed"
 
 
 class NotCosignerError(ForbiddenError):
@@ -551,9 +566,12 @@ async def require_unblocked(connection: AsyncConnection, case_id: uuid.UUID) -> 
     return report
 
 
-async def snapshot(connection: AsyncConnection, case_id: uuid.UUID) -> dict[str, Any]:
+async def snapshot(
+    connection: AsyncConnection, case_id: uuid.UUID, confirmed_with: str | None = None
+) -> dict[str, Any]:
     report = await report_of(connection, case_id)
     return {
+        "confirmed_with": confirmed_with,
         "values": CaseReportValues.model_validate(report.model_dump()).model_dump(mode="json"),
         "staging": report.staging.model_dump(mode="json") if report.staging else None,
     }
@@ -566,6 +584,7 @@ async def sign_version(
     state: CaseReportState,
     reason: str | None = None,
     reported_by: uuid.UUID | None = None,
+    confirmed_with: str | None = None,
 ) -> None:
     number = row.version + 1
     await connection.execute(
@@ -573,7 +592,7 @@ async def sign_version(
             tenant_id=row.tenant_id,
             report_id=row.id,
             number=number,
-            content=await snapshot(connection, row.case_id),
+            content=await snapshot(connection, row.case_id, confirmed_with),
             reason=reason,
             signed_by_user_id=user_id_of(principal),
             reported_by_user_id=reported_by,
@@ -898,7 +917,9 @@ async def sign_clinical_report(
     case_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    confirmation: CaseReportSignOut | None = None,
 ) -> CaseReport:
+    confirmation = confirmation or CaseReportSignOut()
     row = await writable(connection, principal, project_id, case_id)
     state = CaseReportState(row.state)
     if state in SIGNED:
@@ -908,8 +929,17 @@ async def sign_clinical_report(
     if not await signs_out_case(connection, principal, case_id):
         raise CannotSignOutError
     await require_unblocked(connection, case_id)
+    if confirmation.confirmed_with == "sso" and not confirmation.identity_answered:
+        raise SingleSignOnSilentError
     reported_by = row.sent_by_user_id if state is CaseReportState.SENT else None
-    await sign_version(connection, row, principal, CaseReportState.SIGNED, reported_by=reported_by)
+    await sign_version(
+        connection,
+        row,
+        principal,
+        CaseReportState.SIGNED,
+        reported_by=reported_by,
+        confirmed_with=confirmation.confirmed_with,
+    )
     await audit(
         connection,
         principal,
@@ -917,6 +947,7 @@ async def sign_clinical_report(
         row,
         version=row.version + 1,
         co_signed=reported_by is not None,
+        confirmed_with=confirmation.confirmed_with,
     )
     return await report_of(connection, case_id)
 
@@ -952,3 +983,67 @@ async def amend_clinical_report(
         fields=changed,
     )
     return await report_of(connection, case_id)
+
+
+def safe_name(label: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]", "_", label)
+
+
+@router.get(
+    "/versions/{number}/pdf",
+    operation_id="downloadCaseReportPdf",
+    response_class=Response,
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def download_clinical_report_pdf(
+    project_id: uuid.UUID,
+    case_id: uuid.UUID,
+    number: int,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> Response:
+    await clinical_case(connection, principal, project_id, case_id)
+    row = await report_row(connection, case_id)
+    version = (
+        await connection.execute(
+            select(clinical_report_versions).where(
+                clinical_report_versions.c.report_id == row.id,
+                clinical_report_versions.c.number == number,
+            )
+        )
+    ).one_or_none()
+    if version is None:
+        raise NotFoundError("Report version not found")
+    names = dict(
+        (
+            await connection.execute(
+                select(users.c.id, users.c.display_name).where(
+                    users.c.id.in_(
+                        [
+                            user
+                            for user in (version.signed_by_user_id, version.reported_by_user_id)
+                            if user is not None
+                        ]
+                    )
+                )
+            )
+        ).all()
+    )
+    label = str(await connection.scalar(select(cases.c.label).where(cases.c.id == case_id)))
+    facts = facts_of(
+        label,
+        TEMPLATES[ClinicalTemplate(row.template)].name,
+        number,
+        version.content,
+        names.get(version.signed_by_user_id, "an unknown member"),
+        version.signed_at,
+        names.get(version.reported_by_user_id),
+        version.reason,
+    )
+    return Response(
+        pdf_of(facts, version.signed_at),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name(label)}_report_v{number}.pdf"'
+        },
+    )

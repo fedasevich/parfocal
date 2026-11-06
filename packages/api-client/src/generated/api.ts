@@ -995,6 +995,16 @@ export interface CaseReportReturn {
   note: string;
 }
 
+/**
+ * @pattern ^(sso|password)$
+ */
+export type ConfirmedWith = string;
+
+export interface CaseReportSignOut {
+  confirmed_with?: ConfirmedWith;
+  identity_answered?: boolean;
+}
+
 export interface CaseReportValues {
   specimen: string | null;
   category: NodeCategory | null;
@@ -1311,11 +1321,6 @@ export const ConfidenceShown = {
   colour: "colour",
   hidden: "hidden",
 } as const;
-
-/**
- * @pattern ^(sso|password)$
- */
-export type ConfirmedWith = string;
 
 export type ConfusionMatrixWidth = (typeof ConfusionMatrixWidth)[keyof typeof ConfusionMatrixWidth];
 
@@ -9451,11 +9456,33 @@ export const getSignCaseReportUrl = (projectId: string, caseId: string) => {
 export const signCaseReport = async (
   projectId: string,
   caseId: string,
+  caseReportSignOutNull?: CaseReportSignOut | null,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<signCaseReportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
   return apiFetch<signCaseReportResponse>(getSignCaseReportUrl(projectId, caseId), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseReportSignOutNull),
   });
 };
 
@@ -9486,18 +9513,22 @@ export const getSignCaseReportMutationOptions = <TError = Problem, TContext = un
     Awaited<ReturnType<typeof signCaseReport>>,
     SignCaseReportMutationVariables
   > = (props) => {
-    const { projectId, caseId } = props ?? {};
+    const { projectId, caseId, data } = props ?? {};
 
-    return signCaseReport(projectId, caseId, requestOptions);
+    return signCaseReport(projectId, caseId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
 export type SignCaseReportMutationResult = NonNullable<Awaited<ReturnType<typeof signCaseReport>>>;
-
+export type SignCaseReportMutationBody = CaseReportSignOut | null | undefined;
 export type SignCaseReportMutationError = Problem;
-export type SignCaseReportMutationVariables = { projectId: string; caseId: string };
+export type SignCaseReportMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data?: CaseReportSignOut | null;
+};
 
 /**
  * @summary Sign Clinical Report
@@ -9693,6 +9724,235 @@ export const useAmendCaseReport = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getAmendCaseReportMutationOptions(options), queryClient);
 };
+
+export type downloadCaseReportPdfResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type downloadCaseReportPdfResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type downloadCaseReportPdfResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type downloadCaseReportPdfResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type downloadCaseReportPdfResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type downloadCaseReportPdfResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type downloadCaseReportPdfResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type downloadCaseReportPdfResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type downloadCaseReportPdfResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type downloadCaseReportPdfResponseSuccess = downloadCaseReportPdfResponse200 & {
+  headers: Headers;
+};
+export type downloadCaseReportPdfResponseError = (
+  | downloadCaseReportPdfResponse400
+  | downloadCaseReportPdfResponse401
+  | downloadCaseReportPdfResponse403
+  | downloadCaseReportPdfResponse404
+  | downloadCaseReportPdfResponse409
+  | downloadCaseReportPdfResponse422
+  | downloadCaseReportPdfResponse429
+  | downloadCaseReportPdfResponse500
+) & {
+  headers: Headers;
+};
+
+export type downloadCaseReportPdfResponse =
+  | downloadCaseReportPdfResponseSuccess
+  | downloadCaseReportPdfResponseError;
+
+export const getDownloadCaseReportPdfUrl = (projectId: string, caseId: string, number: number) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf`;
+};
+
+/**
+ * @summary Download Clinical Report Pdf
+ */
+export const downloadCaseReportPdf = async (
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<downloadCaseReportPdfResponse> => {
+  return apiFetch<downloadCaseReportPdfResponse>(
+    getDownloadCaseReportPdfUrl(projectId, caseId, number),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getDownloadCaseReportPdfQueryKey = (
+  projectId: string,
+  caseId: string,
+  number: number,
+) => {
+  return [
+    `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf`,
+  ] as const;
+};
+
+export const getDownloadCaseReportPdfQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDownloadCaseReportPdfQueryKey(projectId, caseId, number);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadCaseReportPdf>>> = ({ signal }) =>
+    downloadCaseReportPdf(projectId, caseId, number, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      caseId !== null &&
+      caseId !== undefined &&
+      number !== null &&
+      number !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type DownloadCaseReportPdfQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadCaseReportPdf>>
+>;
+export type DownloadCaseReportPdfQueryError = Problem;
+
+export function useDownloadCaseReportPdf<
+  TData = Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+          TError,
+          Awaited<ReturnType<typeof downloadCaseReportPdf>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadCaseReportPdf<
+  TData = Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+          TError,
+          Awaited<ReturnType<typeof downloadCaseReportPdf>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadCaseReportPdf<
+  TData = Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download Clinical Report Pdf
+ */
+
+export function useDownloadCaseReportPdf<
+  TData = Awaited<ReturnType<typeof downloadCaseReportPdf>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadCaseReportPdfQueryOptions(projectId, caseId, number, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listProjectClassesResponse200 = {
   data: ProjectClass[];

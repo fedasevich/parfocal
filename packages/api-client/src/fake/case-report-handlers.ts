@@ -7,6 +7,7 @@ import type {
   CaseReportCosign,
   CaseReportDeposit,
   CaseReportSignature,
+  CaseReportSignOut,
   CaseReportStaging,
   NewCaseReportDeposit,
   NodeCategory,
@@ -359,15 +360,32 @@ export const caseReportHandlers = (): RequestHandler[] => [
       return null;
     });
   }),
-  http.post<{ caseId: string }>(`${base}/sign`, ({ params }) =>
-    withReport(params.caseId, (stored, _item, staged) => {
+  http.post<{ caseId: string }>(`${base}/sign`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as CaseReportSignOut | null;
+    return withReport(params.caseId, (stored, _item, staged) => {
       if (signedState(stored)) return wrongState();
       if (blockersOf(stored, stagingOf(stored, staged)).length)
         return problem(409, "report-blocked", "The report has things to finish");
+      if (body?.confirmed_with === "sso" && body.identity_answered === false)
+        return problem(
+          409,
+          "single-sign-on-did-not-answer",
+          "Single sign-on did not answer, so nothing was signed",
+        );
       sign(stored, "signed", null);
       return null;
-    }),
-  ),
+    });
+  }),
+  http.get<{ caseId: string; number: string }>(`${base}/versions/:number/pdf`, ({ params }) => {
+    const version = readStore().get(params.caseId)?.versions[Number(params.number) - 1];
+    if (version === undefined) return problem(404, "not-found", "Version not found");
+    return new HttpResponse("%PDF-1.4\n%fake clinical report\n", {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="report_v${params.number}.pdf"`,
+      },
+    });
+  }),
   http.post<{ caseId: string }>(`${base}/amendments`, async ({ params, request }) => {
     const body = (await request.json()) as CaseReportAmendment;
     return withReport(params.caseId, (stored, _item, staged) => {

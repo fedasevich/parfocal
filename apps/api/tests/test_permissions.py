@@ -611,6 +611,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createCaseReport": lambda w: Call("POST", case_report(w, "report-fresh")),
     "getCaseReport": lambda w: Call("GET", case_report(w)),
     "getCaseReportVersion": lambda w: Call("GET", f"{case_report(w, 'report-signed')}/versions/1"),
+    "downloadCaseReportPdf": lambda w: Call(
+        "GET", f"{case_report(w, 'report-signed')}/versions/1/pdf"
+    ),
     "updateCaseReport": lambda w: Call("PATCH", case_report(w), {"comment": "Matrix"}),
     "addCaseReportDeposit": lambda w: Call(
         "POST",
