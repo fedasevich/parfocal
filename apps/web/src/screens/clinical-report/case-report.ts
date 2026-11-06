@@ -319,7 +319,11 @@ export function assembleReport(input: AssemblyInput): Assembly {
   if (phase !== "editing") report.seen = stepKeys.filter((key) => hasKey(data, key));
   if (phase === "sent" && server.cosigner_user_id) {
     report.cosigner = server.cosigner_user_id;
-    report.sent = { to: server.cosigner_user_id, at: "", id: "" };
+    report.sent = {
+      to: server.cosigner_user_id,
+      at: server.sent_at ? stampOf(server.sent_at) : "",
+      id: "",
+    };
   }
   if (phase === "signed") {
     report.signed = signedOf(server, userId);
@@ -334,8 +338,8 @@ export function signedOf(server: CaseReport, userId: string): Report["signed"] {
   if (!last) return null;
   const reporter = last.reported_by_user_id;
   return {
-    by: reporter ?? last.signed_by_user_id ?? userId,
-    co: reporter ? last.signed_by_user_id : null,
+    by: last.signed_by_user_id ?? userId,
+    co: reporter,
     at: stampOf(server.versions[0]?.signed_at ?? last.signed_at),
   };
 }

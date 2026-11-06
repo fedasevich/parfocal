@@ -5,6 +5,7 @@ import {
   useListCases,
   useSendCaseReportForCosign,
   useSignCaseReport,
+  useWithdrawCaseReport,
 } from "@parfocal/api-client";
 import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
@@ -12,6 +13,7 @@ import { ReportDocument } from "@parfocal/ui/components/clinical-report";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
 import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
+import { Zone } from "@parfocal/ui/components/zone";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
@@ -24,6 +26,7 @@ import {
   changeBetween,
   issuesOfBlockers,
   signedOf,
+  stampOf,
   valuesOfCaseReport,
 } from "./case-report.ts";
 import { DepositModal, ReasonModal, SignModal } from "./modals.tsx";
@@ -148,6 +151,7 @@ function ReportFlow({
   const person = usePeople();
   const signOut = useSignCaseReport();
   const send = useSendCaseReportForCosign();
+  const withdraw = useWithdrawCaseReport();
   const amend = useAmendCaseReport();
   const { writer, keep: remember } = useReportWriter(projectId, caseId);
   const savedRef = useRef<Values>(valuesOfCaseReport(loaded.server, flow.draft.values));
@@ -409,8 +413,11 @@ function ReportFlow({
           {
             onSuccess: (response) => {
               if (response.status !== 200) return;
-              remember(response);
-              setReport((current) => ({ ...current, sent: { to, at: "", id: "" } }));
+              const at = remember(response).sent_at;
+              setReport((current) => ({
+                ...current,
+                sent: { to, at: at ? stampOf(at) : "", id: "" },
+              }));
               sentTo();
             },
             onError: (error) => complain(error, "The report could not be sent. Try again."),
@@ -462,23 +469,40 @@ function ReportFlow({
     bar = (
       <FlowBar
         back={
-          live ? (
-            back("Back to the project")
-          ) : (
-            <Button
-              onClick={() => {
-                const was = report.sent;
-                if (!was) return;
+          <Button
+            aria-disabled={withdraw.isPending}
+            onClick={() => {
+              const was = report.sent;
+              if (!was) return;
+              const withdrawn = () => {
                 setReport((current) => ({ ...current, sent: null }));
                 toast.show({
                   text: "The request is withdrawn. The report is a draft again.",
-                  undo: () => setReport((current) => ({ ...current, sent: was })),
+                  ...(live
+                    ? {}
+                    : { undo: () => setReport((current) => ({ ...current, sent: was })) }),
                 });
-              }}
-            >
-              Withdraw the request
-            </Button>
-          )
+              };
+              if (!live) {
+                withdrawn();
+                return;
+              }
+              withdraw.mutate(
+                { projectId, caseId },
+                {
+                  onSuccess: (response) => {
+                    if (response.status !== 200) return;
+                    remember(response);
+                    withdrawn();
+                  },
+                  onError: (error) =>
+                    complain(error, "The request could not be withdrawn. Try again."),
+                },
+              );
+            }}
+          >
+            Withdraw the request
+          </Button>
         }
         hint="You are told when it is signed or returned."
         next={renderLink({
@@ -645,6 +669,9 @@ function ReportFlow({
       >
         {done ? <DonePanel {...stepProps} /> : null}
         {sent ? <SentPanel {...stepProps} /> : null}
+        {!done && !sent && live && loaded.server.state === "returned" ? (
+          <ReturnedNote server={loaded.server} name={nameOf} />
+        ) : null}
         {!done && !sent && page === "findings" ? <FindingsStep {...stepProps} /> : null}
         {!done && !sent && page === "staging" ? <StagingStep {...stepProps} /> : null}
         {!done && !sent && page === "text" ? <TextStep {...stepProps} /> : null}
@@ -814,5 +841,35 @@ function ReportFlow({
       ) : null}
       {toast.view}
     </>
+  );
+}
+
+const changeNames: Record<string, string> = {
+  specimen: "specimen",
+  category: "category",
+  nodes_examined: "nodes examined",
+  extranodal: "extranodal extension",
+  diagnosis: "final diagnosis",
+  microscopic: "microscopic",
+  comment: "comment",
+  deposits: "deposits",
+};
+
+function ReturnedNote({ server, name }: { server: CaseReport; name: (id: string) => string }) {
+  const from = server.cosigner_user_id ? name(server.cosigner_user_id) : "The co-signer";
+  const changes = server.changes.map((key) => changeNames[key] ?? key);
+  return (
+    <Zone
+      title={`Returned by ${from}`}
+      sub={
+        changes.length
+          ? `Changed by ${from.split(" ")[0]}: ${andJoin(changes)}. Fix it and send it again.`
+          : "No values changed. Fix it and send it again."
+      }
+    >
+      <blockquote className="m-0 border-l-2 border-line-strong pl-3 text-body-sm text-fg">
+        {server.return_note}
+      </blockquote>
+    </Zone>
   );
 }

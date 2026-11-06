@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 43 |
+| `phi` | 44 |
 | `personal` | 84 |
 | `secret` | 10 |
-| `operational` | 672 |
+| `operational` | 673 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -240,6 +240,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `comment` | phi |
 | `cosigner_user_id` | personal |
 | `sent_by_user_id` | personal |
+| `sent_content` | phi |
+| `sent_at` | operational |
 | `return_note` | phi |
 | `version` | operational |
 | `created_by_user_id` | personal |

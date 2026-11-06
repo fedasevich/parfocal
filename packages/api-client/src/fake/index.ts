@@ -5,7 +5,7 @@ import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
-import { caseReportHandlers } from "./case-report-handlers.ts";
+import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
@@ -43,6 +43,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adjudicationHandlers(),
     ...caseHandlers(),
     ...caseReportHandlers(),
+    ...cosignRequestHandlers(),
     ...createdRecordHandlers(),
     ...uploadHandlers(),
     ...settingsHandlers(),

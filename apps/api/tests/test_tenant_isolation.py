@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import cache
+from typing import Any
 
 import httpx2
 import numpy as np
@@ -1171,7 +1172,7 @@ async def seed_clinical_deposits(connection: AsyncConnection, seeded: Seeded) ->
 
 async def seed_clinical_report_versions(connection: AsyncConnection, seeded: Seeded) -> None:
     diagnosis = f"Diagnosis {uuid.uuid4().hex[:12]}"
-    values = {
+    values: dict[str, Any] = {
         "specimen": None,
         "category": None,
         "nodes_examined": None,

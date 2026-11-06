@@ -1,6 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
-import { type CosignRequest, cosignRequestSchema } from "../draft/list-my-cosign-requests.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
@@ -13,7 +12,6 @@ import { reviewDraftOperations } from "./review-handlers.ts";
 import {
   cases,
   checklist,
-  cosignRequests,
   people,
   projectByCode,
   reviewTasks,
@@ -122,22 +120,6 @@ const taskByCode = (code: string) => {
   return task;
 };
 
-export const toMyCosignRequests = (): CosignRequest[] =>
-  cosignRequests
-    .filter((item) => item.to === fakeView().viewer)
-    .map((item) => {
-      const project = projectByCode(item.project);
-      return cosignRequestSchema.parse({
-        id: item.id,
-        from_user_id: people[item.from].id,
-        case_id: cases.find((candidate) => candidate.label === item.caseLabel)?.id ?? null,
-        case_label: item.caseLabel,
-        slide_id: slideByIndex(item.slide).id,
-        project: { id: project.id, code: project.code, name: project.name },
-        sent_at: item.sentAt,
-      });
-    });
-
 export const toChecklist = (): Checklist =>
   checklistSchema.parse({
     hidden: !fakeView().firstWeek,
@@ -164,11 +146,6 @@ export const toSlideThreads = (slideId: string): SlideThread[] =>
       }),
     );
 
-export const getListMyCosignRequestsMockHandler = (overrideResponse?: CosignRequest[]) =>
-  http.get("*/api/me/cosign-requests", () =>
-    HttpResponse.json(overrideResponse ?? toMyCosignRequests()),
-  );
-
 export const getGetMyChecklistMockHandler = (overrideResponse?: Checklist) =>
   http.get("*/api/me/checklist", () => HttpResponse.json(overrideResponse ?? toChecklist()));
 
@@ -178,12 +155,6 @@ export const getListSlideThreadsMockHandler = (overrideResponse?: SlideThread[])
   );
 
 export const draftOperations: DraftOperation[] = [
-  {
-    operationId: "listMyCosignRequests",
-    method: "get",
-    path: "/api/me/cosign-requests",
-    handler: () => getListMyCosignRequestsMockHandler(),
-  },
   {
     operationId: "getMyChecklist",
     method: "get",
