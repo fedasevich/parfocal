@@ -4346,7 +4346,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-006, GUIDE-002, GUIDE-009. Refs mock: guided/done, mock: guided/required, mock: case, doc 44.
   Size: M.
 
-- [ ] GUIDE-008 · How this works
+- [x] GUIDE-008 · How this works
   A first-time coach in guided review with four numbered tips, reopened from How this works.
   Done when component tests cover the coach and its dismissal per user.
   Depends on GUIDE-002. Refs mock: guided/first.
