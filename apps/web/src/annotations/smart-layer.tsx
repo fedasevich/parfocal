@@ -357,7 +357,7 @@ export function SmartLayer({
         <div
           data-testid="smart-status"
           role="status"
-          className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-xs"
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-caption"
         >
           {snapshot.phase === "thinking" ? "Outlining" : snapshot.message}
         </div>
