@@ -520,6 +520,21 @@ export {
 export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
 export {
+  createModelCache,
+  describeModelLoad,
+  hasOnnxProtobufHeader,
+  type ModelCache,
+  type ModelCacheEntryStore,
+  type ModelCacheOptions,
+  type ModelCacheStorage,
+  ModelDownloadError,
+  type ModelFetch,
+  type ModelLoad,
+  type ModelSource,
+  type ModelStorageManager,
+  type Revalidation,
+} from "./sam/model-cache.ts";
+export {
   graphRunsOn,
   type SamGraph,
   type SamProvider,
