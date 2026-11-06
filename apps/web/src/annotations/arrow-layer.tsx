@@ -8,7 +8,7 @@ import {
 } from "../measure/ruler-maths.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
-import type { AnnotationDocument } from "./document.ts";
+import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import { addArrow, arrowEndsOf, arrowHead, arrowsOf } from "./marks.ts";
 import { bindShiftRefresh } from "./shift-refresh.ts";
 import { useStageRect } from "./stage-size.ts";
@@ -147,15 +147,17 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     };
   }, [active, stage, escRegistry]);
 
-  const drawings: ArrowDrawing[] = arrowsOf(doc).map((shape) => {
-    const ends = arrowEndsOf(shape);
-    return {
-      key: String(shape.id),
-      from: slideToScreen(camera, rect, ends.from),
-      to: slideToScreen(camera, rect, ends.to),
-      dashed: false,
-    };
-  });
+  const drawings: ArrowDrawing[] = arrowsOf(doc)
+    .filter((shape) => !isShapeHidden(doc, shape))
+    .map((shape) => {
+      const ends = arrowEndsOf(shape);
+      return {
+        key: String(shape.id),
+        from: slideToScreen(camera, rect, ends.from),
+        to: slideToScreen(camera, rect, ends.to),
+        dashed: false,
+      };
+    });
   if (draft !== null) {
     drawings.push({
       key: "draft",

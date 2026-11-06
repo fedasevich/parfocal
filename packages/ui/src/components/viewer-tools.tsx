@@ -322,19 +322,30 @@ type LayerRow = {
   proposal?: boolean;
   count: number;
   child?: boolean;
+  depth?: number;
   locked?: boolean;
   current?: boolean;
+  target?: boolean;
+  plain?: boolean;
+  hasChildren?: boolean;
+  inheritedOff?: boolean;
 };
 
 function LayerList({
   rows,
   hidden = [],
   onToggle,
+  onLock,
+  onColour,
+  onPick,
   className,
 }: {
   rows: LayerRow[];
   hidden?: string[];
   onToggle?: (key: string) => void;
+  onLock?: (key: string) => void;
+  onColour?: (key: string, hex: string) => void;
+  onPick?: (key: string) => void;
   className?: string;
 }) {
   return (
@@ -345,37 +356,102 @@ function LayerList({
     >
       {rows.map((row) => {
         const off = hidden.includes(row.key);
+        const swatch = (
+          <i
+            aria-hidden="true"
+            className="size-2.5 rounded-[3px]"
+            style={
+              row.proposal
+                ? { background: "var(--c-prop)", boxShadow: "0 0 0 1.5px #ffffff" }
+                : { background: row.colour }
+            }
+          />
+        );
         return (
           <li
             key={row.key}
+            data-key={row.key}
             data-current={row.current || undefined}
+            data-target={row.target || undefined}
+            data-hidden={off || undefined}
+            data-locked={row.locked || undefined}
             className={cn(
-              "grid grid-cols-[16px_10px_1fr_auto_24px_18px] items-center gap-1.75 rounded-md px-1 py-1 text-body-sm text-fg-dim data-current:bg-accent-soft data-current:text-fg",
+              "grid items-center gap-1.75 rounded-md px-1 py-1 text-body-sm text-fg-dim data-current:bg-accent-soft data-current:text-fg data-target:bg-accent-soft data-target:text-fg",
+              onLock
+                ? "grid-cols-[16px_10px_1fr_auto_24px_24px]"
+                : "grid-cols-[16px_10px_1fr_auto_24px_18px]",
               row.child && "pl-5.5",
+              row.inheritedOff && "opacity-50",
             )}
+            style={row.depth ? { paddingLeft: `${row.depth * 14 + 4}px` } : undefined}
           >
-            {row.child ? <span /> : <Icon name="caret" className="text-fg-faint" />}
-            <i
-              aria-hidden="true"
-              className="size-2.5 rounded-[3px]"
-              style={
-                row.proposal
-                  ? { background: "var(--c-prop)", boxShadow: "0 0 0 1.5px #ffffff" }
-                  : { background: row.colour }
-              }
-            />
-            <span className="truncate">{row.name}</span>
+            {row.child || row.depth ? (
+              <span />
+            ) : (
+              <Icon
+                name="caret"
+                className={cn("text-fg-faint", row.hasChildren === false && "opacity-30")}
+              />
+            )}
+            {onColour && !row.plain && !row.proposal ? (
+              <label className="relative grid size-2.5 cursor-pointer place-items-center">
+                {swatch}
+                <input
+                  type="color"
+                  aria-label={`Colour of ${row.name}`}
+                  value={row.colour.startsWith("#") ? row.colour : "#888888"}
+                  onChange={(event) => onColour(row.key, event.target.value)}
+                  className="absolute inset-0 size-full cursor-pointer opacity-0"
+                />
+              </label>
+            ) : (
+              swatch
+            )}
+            {onPick && !row.plain ? (
+              <button
+                type="button"
+                aria-pressed={row.target ?? false}
+                aria-label={`New shapes go to ${row.name}`}
+                title="New shapes go here"
+                onClick={() => onPick(row.key)}
+                className="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-inherit"
+              >
+                {row.name}
+              </button>
+            ) : (
+              <span className="truncate">{row.name}</span>
+            )}
             <span className="font-mono text-caption text-fg-faint">{row.count}</span>
-            <button
-              type="button"
-              aria-pressed={!off}
-              aria-label={`${off ? "Show" : "Hide"} ${row.name}`}
-              onClick={() => onToggle?.(row.key)}
-              className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
-            >
-              <Icon name={off ? "eye-off" : "eye"} />
-            </button>
-            {row.locked ? <Icon name="lock" label="Locked" className="text-fg-faint" /> : <span />}
+            {row.plain ? (
+              <span />
+            ) : (
+              <button
+                type="button"
+                aria-pressed={!off}
+                aria-label={`${off ? "Show" : "Hide"} ${row.name}`}
+                onClick={() => onToggle?.(row.key)}
+                className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
+              >
+                <Icon name={off ? "eye-off" : "eye"} />
+              </button>
+            )}
+            {row.plain ? (
+              <span />
+            ) : onLock ? (
+              <button
+                type="button"
+                aria-pressed={row.locked ?? false}
+                aria-label={`${row.locked ? "Unlock" : "Lock"} ${row.name}`}
+                onClick={() => onLock(row.key)}
+                className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
+              >
+                <Icon name={row.locked ? "lock" : "unlock"} />
+              </button>
+            ) : row.locked ? (
+              <Icon name="lock" label="Locked" className="text-fg-faint" />
+            ) : (
+              <span />
+            )}
           </li>
         );
       })}

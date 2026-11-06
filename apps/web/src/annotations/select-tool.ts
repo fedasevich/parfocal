@@ -9,6 +9,7 @@ import {
   projectOnSegment,
   shapesInExtent,
 } from "./hit-test.ts";
+import { groupShapes, ungroupShapes } from "./layers.ts";
 import {
   canInsertVertex,
   canRemoveVertex,
@@ -74,6 +75,8 @@ export interface SelectTool {
   readonly selectAll: () => void;
   readonly nudge: (dxPx: number, dyPx: number) => boolean;
   readonly removeSelected: () => boolean;
+  readonly groupSelected: () => boolean;
+  readonly ungroupSelected: () => boolean;
 }
 
 type Press = {
@@ -628,6 +631,24 @@ export function createSelectTool(host: SelectHost): SelectTool {
     return true;
   };
 
+  const groupSelected = () => {
+    if (state.ids.length === 0 || state.gesture !== "idle") return false;
+    const before = host.document();
+    const made = groupShapes(before, state.ids);
+    if (made === null) return false;
+    apply(before, made.document, "Group");
+    return true;
+  };
+
+  const ungroupSelected = () => {
+    if (state.ids.length === 0 || state.gesture !== "idle") return false;
+    const before = host.document();
+    const after = ungroupShapes(before, state.ids);
+    if (after === before) return false;
+    apply(before, after, "Ungroup");
+    return true;
+  };
+
   const selectAll = () => {
     const doc = host.document();
     const shape = editShape();
@@ -694,5 +715,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
     selectAll,
     nudge,
     removeSelected,
+    groupSelected,
+    ungroupSelected,
   };
 }

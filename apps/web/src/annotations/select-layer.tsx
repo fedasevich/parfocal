@@ -194,6 +194,13 @@ export function SelectLayer({
         tool.selectAll();
         return;
       }
+      if (command && event.key.toLowerCase() === "g") {
+        const done = event.shiftKey ? tool.ungroupSelected() : tool.groupSelected();
+        if (!done) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
       if (command) return;
       if (event.key === "Enter") {
         if (current.gesture !== "idle") return;

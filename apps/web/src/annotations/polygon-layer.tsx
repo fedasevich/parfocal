@@ -3,7 +3,7 @@ import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
-import type { AnnotationDocument } from "./document.ts";
+import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import {
   clickDraft,
   closeDraft,
@@ -213,7 +213,9 @@ export function PolygonLayer({
   }, [active, stage, escRegistry]);
 
   const project = (point: Point) => slideToScreen(camera, rect, point);
-  const saved = [...doc.shapes.values()].filter((shape) => shape.kind === "polygon");
+  const saved = [...doc.shapes.values()].filter(
+    (shape) => shape.kind === "polygon" && !isShapeHidden(doc, shape),
+  );
   const draftScreen = draft.map(project);
   const hover =
     pointer === null

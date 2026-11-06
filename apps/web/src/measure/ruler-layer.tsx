@@ -1,6 +1,6 @@
 import { RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { type AnnotationDocument, addShape } from "../annotations/document.ts";
+import { type AnnotationDocument, addShape, isShapeHidden } from "../annotations/document.ts";
 import { bindShiftRefresh } from "../annotations/shift-refresh.ts";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
@@ -128,7 +128,7 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
 
   const drawn: { key: string; segment: Segment; dashed: boolean }[] = [];
   for (const shape of doc.shapes.values()) {
-    if (shape.kind === "ruler") {
+    if (shape.kind === "ruler" && !isShapeHidden(doc, shape)) {
       drawn.push({ key: String(shape.id), segment: segmentOfRuler(shape), dashed: false });
     }
   }

@@ -3,7 +3,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { bindClickPress } from "./click-press.ts";
 import { markerHitScreenPixels, markerNear, markerPoint, markersOf } from "./count-markers.ts";
-import type { AnnotationDocument } from "./document.ts";
+import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import type { Point } from "./polygon-draft.ts";
 import type { ShapeId } from "./shapes.ts";
 import { useStageRect } from "./stage-size.ts";
@@ -56,7 +56,7 @@ export function CountLayer({
     return bindClickPress(stage, { engine: () => latest.current.engine, onClick: click });
   }, [active, stage]);
 
-  const markers = markersOf(doc);
+  const markers = markersOf(doc).filter((shape) => !isShapeHidden(doc, shape));
 
   return (
     <svg

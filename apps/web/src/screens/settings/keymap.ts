@@ -168,6 +168,8 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         { note: "Delete does the same. In a polygon draft it removes the last point" },
       ],
       ["selectall", "Select all shapes, or all points in edit mode", ["⌘A"], "fig"],
+      ["group", "Group the selected shapes", ["⌘G"], "fig"],
+      ["ungroup", "Ungroup the selected shapes", ["⇧⌘G"], "fig"],
       [
         "aclass",
         "Class n for new shapes, or re-class the selection",
