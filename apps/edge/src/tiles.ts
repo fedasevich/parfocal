@@ -102,7 +102,8 @@ function bounds(span: Span | null, size: number): readonly [number, number] | nu
 }
 
 function slideKey(capability: Capability, name: string): string {
-  return `t/${capability.tenant}/s/${capability.slide}/${name}`;
+  const folder = capability.folder ?? `t/${capability.tenant}/s/${capability.slide}/`;
+  return `${folder}${name}`;
 }
 
 function objectHeaders(object: R2Object): Headers {

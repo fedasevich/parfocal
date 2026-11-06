@@ -721,6 +721,10 @@ export const sampleProject = {
   counts: { cases: 1, slides: 4, resultSets: 2, reviewedPercent: 0 },
 };
 
+export const sampleSlides = ["tumor_001", "tumor_002", "tumor_003", "normal_001"].map(
+  (label, index) => ({ id: uuid(5, 101 + index), label }),
+);
+
 export const threads = [
   {
     id: uuid(15, 1),

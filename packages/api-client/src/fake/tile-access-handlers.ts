@@ -1,5 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { TileAccess } from "../generated/api.ts";
+import { sampleSlides } from "./scenario.ts";
 
 export const fakeTileLifetimeSeconds = 600;
 
@@ -8,7 +9,7 @@ export const toTileAccess = (slideId: string, now: Date = new Date()): TileAcces
   expires_at: new Date(now.getTime() + fakeTileLifetimeSeconds * 1000).toISOString(),
   lifetime_seconds: fakeTileLifetimeSeconds,
   base_path: `/tiles/${slideId}/`,
-  original: "slide.tiff",
+  original: sampleSlides.some((sample) => sample.id === slideId) ? "original.tif" : "slide.tiff",
   format: "generic-tiff",
 });
 

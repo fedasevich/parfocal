@@ -19,7 +19,7 @@ from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
 from parfocal_api.tables import PrivacyMode, projects, slides
 from parfocal_api.uploads import Settings
-from parfocal_common.ingest import restricted_ranges_key
+from parfocal_common.ingest import RESTRICTED_RANGES_NAME, folder_of, slide_prefix
 from parfocal_common.object_store import ObjectStore, StorageError
 
 TOKEN_VERSION = 1
@@ -107,10 +107,10 @@ def parsed_ranges(body: bytes) -> list[ByteRange]:
 
 
 async def restricted_ranges(
-    store: ObjectStore, tenant_id: uuid.UUID, slide_id: uuid.UUID, file_bytes: int
+    store: ObjectStore, folder: str, file_bytes: int
 ) -> Sequence[ByteRange]:
     try:
-        return parsed_ranges(await store.get_object(restricted_ranges_key(tenant_id, slide_id)))
+        return parsed_ranges(await store.get_object(f"{folder}{RESTRICTED_RANGES_NAME}"))
     except StorageError as error:
         if error.status == 404:
             return [(0, file_bytes)]
@@ -174,7 +174,8 @@ async def get_tile_access(
             slide_id,
             tenant_id=row.tenant_id,
         )
-    ranges = await restricted_ranges(store, row.tenant_id, slide_id, row.file_bytes)
+    folder = folder_of(row.original_key)
+    ranges = await restricted_ranges(store, folder, row.file_bytes)
     expires = now + TOKEN_SECONDS
     original = PurePosixPath(row.original_key).name
     claims = {
@@ -184,6 +185,8 @@ async def get_tile_access(
         "d": [list(span) for span in ranges],
         "e": expires,
     }
+    if folder != slide_prefix(row.tenant_id, slide_id):
+        claims["p"] = folder
     return TileAccess(
         token=sign_capability(secret, claims),
         expires_at=datetime.fromtimestamp(expires, UTC),

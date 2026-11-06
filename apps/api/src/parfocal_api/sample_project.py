@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, actor_of
 from parfocal_api.class_templates import TaxonomyTemplate
-from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ConflictError
@@ -31,6 +31,7 @@ from parfocal_api.result_sets import (
 )
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
+from parfocal_api.sample_files import stored_sample_file
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -43,6 +44,7 @@ from parfocal_api.tables import (
     review_tasks,
     slides,
 )
+from parfocal_common.object_store import ObjectStore
 
 SAMPLE_NAME = "Sample · sentinel nodes"
 SAMPLE_TASK = "Try a review"
@@ -99,13 +101,15 @@ async def live_sample(connection: AsyncConnection) -> uuid.UUID | None:
 
 
 async def seed_slides(
-    connection: AsyncConnection, tenant_id: uuid.UUID, project_id: uuid.UUID
+    connection: AsyncConnection, store: ObjectStore, tenant_id: uuid.UUID, project_id: uuid.UUID
 ) -> list[uuid.UUID]:
     created: list[uuid.UUID] = []
     for label in SAMPLE_SLIDES:
+        stored = await stored_sample_file(store, label)
+        file = {} if stored is None else {**stored.model_dump(), "published_at": func.now()}
         slide_id = await connection.scalar(
             slides.insert()
-            .values(tenant_id=tenant_id, project_id=project_id, label=label, stain="H&E")
+            .values(tenant_id=tenant_id, project_id=project_id, label=label, stain="H&E", **file)
             .returning(slides.c.id)
         )
         assert isinstance(slide_id, uuid.UUID)
@@ -145,7 +149,7 @@ async def seed_results(
 
 
 async def seed(
-    connection: AsyncConnection, principal: MemberPrincipal, results: Results
+    connection: AsyncConnection, store: ObjectStore, principal: MemberPrincipal, results: Results
 ) -> uuid.UUID:
     project = await create_project(
         ProjectDraft(
@@ -160,7 +164,7 @@ async def seed(
     await connection.execute(
         update(projects).where(projects.c.id == project.id).values(sample=True)
     )
-    slide_ids = await seed_slides(connection, principal.tenant_id, project.id)
+    slide_ids = await seed_slides(connection, store, principal.tenant_id, project.id)
     reviewed = await seed_results(connection, principal, project.id, slide_ids)
     await create_review_task(
         project.id,
@@ -198,7 +202,11 @@ async def seed(
     **require(Permission.CREATE_CASES, write=True),
 )
 async def create_sample_project(
-    response: Response, principal: CurrentPrincipal, connection: TenantConnection, results: Results
+    response: Response,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    store: Store,
+    results: Results,
 ) -> Project:
     if not isinstance(principal, MemberPrincipal):
         raise OnlyMembersCreateProjectsError
@@ -213,7 +221,9 @@ async def create_sample_project(
     if existing is not None:
         response.status_code = 200
         return await project_of(connection, principal, existing)
-    return await project_of(connection, principal, await seed(connection, principal, results))
+    return await project_of(
+        connection, principal, await seed(connection, store, principal, results)
+    )
 
 
 @router.delete(
