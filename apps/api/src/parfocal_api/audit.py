@@ -1,7 +1,7 @@
 import hashlib
 import json
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -89,6 +89,7 @@ class AuditAction(StrEnum):
     TASK_FIRST_READ_SUBMITTED = "task.first-read-submitted"
     TASK_SIGNED_OFF = "task.signed-off"
     TASK_SLIDE_CHECKED = "task.slide-checked"
+    ANNOTATION_IMPORTED = "annotation.imported"
     TASK_SLIDE_UNCHECKED = "task.slide-unchecked"
     TASK_SLIDE_SIGNED_OFF = "task.slide-signed-off"
     TASK_REOPENED = "task.reopened"
@@ -257,6 +258,38 @@ async def record(
             target_id=target_id,
             details=canonical(details or {}),
         )
+    )
+
+
+async def record_many(
+    connection: AsyncConnection,
+    actor: Actor,
+    action: AuditAction,
+    target_type: AuditTarget,
+    target_ids: Sequence[uuid.UUID],
+    *,
+    tenant_id: uuid.UUID | None = None,
+    details: dict[str, Any] | None = None,
+) -> None:
+    if not target_ids:
+        return
+    actor_id = actor.service_id
+    if actor.subject is not None:
+        actor_id = await pseudonym_of(connection, actor.subject)
+    await connection.execute(
+        insert(audit_events),
+        [
+            {
+                "tenant_id": tenant_id,
+                "actor_kind": actor.kind,
+                "actor_id": actor_id,
+                "action": action,
+                "target_type": target_type,
+                "target_id": target_id,
+                "details": canonical(details or {}),
+            }
+            for target_id in target_ids
+        ],
     )
 
 

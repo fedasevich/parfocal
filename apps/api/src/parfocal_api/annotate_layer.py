@@ -24,6 +24,7 @@ from parfocal_api.annotations import (
     code_of,
     record_versions,
 )
+from parfocal_api.audit import AuditAction, AuditTarget
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Permission, require
@@ -46,6 +47,7 @@ from parfocal_api.tables import (
     AnnotationOrigin,
     annotation_versions,
     annotations,
+    audit_events,
     result_objects,
 )
 from parfocal_api.task_kinds import annotate_only
@@ -219,6 +221,21 @@ async def logged(
 ) -> None:
     if row.slide_signed_off_at is not None and reason is not None:
         await log_layer_change(connection, principal, row, code, change, reason)
+
+
+async def imported_from(connection: AsyncConnection, annotation_id: uuid.UUID) -> str | None:
+    details = await connection.scalar(
+        select(audit_events.c.details)
+        .where(
+            audit_events.c.target_type == AuditTarget.ANNOTATION,
+            audit_events.c.target_id == annotation_id,
+            audit_events.c.action == AuditAction.ANNOTATION_IMPORTED,
+        )
+        .order_by(audit_events.c.seq)
+        .limit(1)
+    )
+    name = None if details is None else json.loads(details).get("file_name")
+    return name if isinstance(name, str) else None
 
 
 def announce(
@@ -501,6 +518,7 @@ async def list_shared_object_history(
         .where(annotation_versions.c.annotation_id == annotation_id)
         .order_by(annotation_versions.c.version)
     )
+    file_name = await imported_from(connection, annotation_id)
     return [
         AnnotationVersion(
             version=item.version,
@@ -509,6 +527,7 @@ async def list_shared_object_history(
             class_id=item.class_id,
             changed_by_user_id=item.changed_by_user_id,
             changed_at=item.changed_at,
+            file_name=file_name if item.change == AnnotationChange.CREATED else None,
         )
         for item in rows
     ]
