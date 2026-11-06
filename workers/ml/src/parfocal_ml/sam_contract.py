@@ -49,6 +49,7 @@ class Graphs:
     decoder: str = "pathosam.decoder.onnx"
     batch_decoder: str = "pathosam.decoder_batch.onnx"
     ais_decoder: str = "pathosam.ais_decoder.onnx"
+    ais_decoder_full: str = "pathosam.ais_decoder_full.onnx"
 
 
 GRAPHS = Graphs()
