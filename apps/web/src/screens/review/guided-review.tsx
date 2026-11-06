@@ -292,6 +292,7 @@ function GuidedBody({
         decisions.restore(currentId, kept);
         setIndex(index);
         setShowDone(false);
+        setWhole(false);
       },
     });
     if (style.kind === "agree" && value === "disagree") {
