@@ -21,6 +21,8 @@ import type {
   AuditExport,
   Candidate,
   CaseDetail,
+  CaseReport,
+  CaseReportVersion,
   CaseSummary,
   ChoiceQuestion,
   ClassMapping,
@@ -173,6 +175,9 @@ import {
   Availability,
   BuiltInTemplate,
   ButtonPlace,
+  CaseReportBlockerCode,
+  CaseReportState,
+  CaseReportStep,
   CaseRule,
   CaseSource,
   Certainty,
@@ -180,6 +185,7 @@ import {
   CheckKind,
   CheckOrder,
   CheckPreset,
+  ClinicalTemplate,
   Code,
   ColourBy,
   ConfidenceShown,
@@ -188,6 +194,7 @@ import {
   Download,
   DrawAs,
   EmailDigest,
+  Extranodal,
   FailureClass,
   HitKind,
   IngestStatus,
@@ -202,6 +209,7 @@ import {
   ModelTier,
   MuteSubject,
   MyStatus,
+  NodeCategory,
   NotificationKind,
   ObjectOrder,
   Ordering,
@@ -628,6 +636,1070 @@ export const getSetProjectMemberSignOutResponseMock = (
     faker.helpers.arrayElement(Object.values(SignOutWarning)),
     null,
   ]),
+  ...overrideResponse,
+});
+
+export const getCreateCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getUpdateCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetCaseReportVersionResponseMock = (
+  overrideResponse: Partial<Extract<CaseReportVersion, object>> = {},
+): CaseReportVersion => ({
+  number: faker.number.int(),
+  signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  reason: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  values: {
+    specimen: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    category: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(NodeCategory)),
+      null,
+    ]),
+    nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+    extranodal: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(Extranodal)),
+      null,
+    ]),
+    diagnosis: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    microscopic: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    comment: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        id: faker.string.uuid(),
+        slide_id: faker.string.uuid(),
+        object_id: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        largest: faker.datatype.boolean(),
+      }),
+    ),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getAddCaseReportDepositResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getRemoveCaseReportDepositResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSendCaseReportForCosignResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getReturnCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSignCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getAmendCaseReportResponseMock = (
+  overrideResponse: Partial<Extract<CaseReport, object>> = {},
+): CaseReport => ({
+  specimen: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  category: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(NodeCategory)),
+    null,
+  ]),
+  nodes_examined: faker.helpers.arrayElement([faker.number.int(), null]),
+  extranodal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(Extranodal)),
+    null,
+  ]),
+  diagnosis: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  microscopic: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  comment: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      largest: faker.datatype.boolean(),
+    }),
+  ),
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(CaseReportState)),
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    steps: faker.helpers.arrayElements(Object.values(CaseReportStep)),
+  },
+  staging: faker.helpers.arrayElement([
+    {
+      largest_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      suggested_category: faker.helpers.arrayElement(Object.values(NodeCategory)),
+      suggested_pn: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      nodes_positive: faker.number.int(),
+      contradicts: faker.datatype.boolean(),
+      confirmed: faker.datatype.boolean(),
+    },
+    null,
+  ]),
+  findings: {
+    decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        decision: faker.helpers.arrayElement(Object.values(VerdictValue)),
+      }),
+    ),
+    measurements: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({
+      slide_id: faker.string.uuid(),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      length_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    })),
+  },
+  blockers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      code: faker.helpers.arrayElement(Object.values(CaseReportBlockerCode)),
+      field: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      deposit_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    }),
+  ),
+  cosigner_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  sent_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  return_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  version: faker.number.int(),
+  versions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -10706,6 +11778,230 @@ export const getSetProjectMemberSignOutMockHandler = (
   );
 };
 
+export const getCreateCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateCaseReportResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCaseReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getUpdateCaseReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetCaseReportVersionMockHandler = (
+  overrideResponse?:
+    | CaseReportVersion
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<CaseReportVersion> | CaseReportVersion),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/versions/:number",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCaseReportVersionResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAddCaseReportDepositMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/deposits",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAddCaseReportDepositResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRemoveCaseReportDepositMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/deposits/:depositId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRemoveCaseReportDepositResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSendCaseReportForCosignMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/send",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSendCaseReportForCosignResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReturnCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/return",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReturnCaseReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSignCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/sign",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSignCaseReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAmendCaseReportMockHandler = (
+  overrideResponse?:
+    | CaseReport
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CaseReport> | CaseReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/cases/:caseId/clinical-report/amendments",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAmendCaseReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListProjectClassesMockHandler = (
   overrideResponse?:
     | ProjectClass[]
@@ -16019,6 +17315,16 @@ export const getParfocalAPIMock = () => [
   getRemoveProjectMemberMockHandler(),
   getCreateSampleProjectMockHandler(),
   getSetProjectMemberSignOutMockHandler(),
+  getCreateCaseReportMockHandler(),
+  getGetCaseReportMockHandler(),
+  getUpdateCaseReportMockHandler(),
+  getGetCaseReportVersionMockHandler(),
+  getAddCaseReportDepositMockHandler(),
+  getRemoveCaseReportDepositMockHandler(),
+  getSendCaseReportForCosignMockHandler(),
+  getReturnCaseReportMockHandler(),
+  getSignCaseReportMockHandler(),
+  getAmendCaseReportMockHandler(),
   getListProjectClassesMockHandler(),
   getSetProjectClassesMockHandler(),
   getListClassMappingsMockHandler(),

@@ -145,6 +145,14 @@ class AuditAction(StrEnum):
     REPORT_LINK_CREATED = "report-link.created"
     REPORT_LINK_REVOKED = "report-link.revoked"
     REPORT_LINK_OPENED = "report-link.opened"
+    CLINICAL_REPORT_CREATED = "clinical-report.created"
+    CLINICAL_REPORT_CHANGED = "clinical-report.changed"
+    CLINICAL_DEPOSIT_ADDED = "clinical-report.deposit-added"
+    CLINICAL_DEPOSIT_REMOVED = "clinical-report.deposit-removed"
+    CLINICAL_REPORT_SENT = "clinical-report.sent"
+    CLINICAL_REPORT_RETURNED = "clinical-report.returned"
+    CLINICAL_REPORT_SIGNED = "clinical-report.signed"
+    CLINICAL_REPORT_AMENDED = "clinical-report.amended"
 
 
 class AuditTarget(StrEnum):
@@ -169,6 +177,7 @@ class AuditTarget(StrEnum):
     THREAD = "thread"
     DISPLAY_PRESET = "display-preset"
     REPORT_LINK = "report-link"
+    CLINICAL_REPORT = "clinical-report"
 
 
 @dataclass(frozen=True)

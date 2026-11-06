@@ -605,6 +605,7 @@ export const AuditTarget = {
   thread: "thread",
   "display-preset": "display-preset",
   "report-link": "report-link",
+  "clinical-report": "clinical-report",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -828,6 +829,191 @@ export interface CaseImport {
  * @maxLength 100
  */
 export type CaseLabel = string;
+
+export type NodeCategory = (typeof NodeCategory)[keyof typeof NodeCategory];
+
+export const NodeCategory = {
+  none: "none",
+  itc: "itc",
+  micro: "micro",
+  macro: "macro",
+} as const;
+
+export type Extranodal = (typeof Extranodal)[keyof typeof Extranodal];
+
+export const Extranodal = {
+  present: "present",
+  absent: "absent",
+  na: "na",
+} as const;
+
+export interface CaseReportDeposit {
+  id: string;
+  slide_id: string;
+  object_id: string | null;
+  size_mm: number | null;
+  note: string | null;
+  largest: boolean;
+}
+
+export type CaseReportState = (typeof CaseReportState)[keyof typeof CaseReportState];
+
+export const CaseReportState = {
+  draft: "draft",
+  sent: "sent",
+  returned: "returned",
+  signed: "signed",
+  amended: "amended",
+} as const;
+
+export type ClinicalTemplate = (typeof ClinicalTemplate)[keyof typeof ClinicalTemplate];
+
+export const ClinicalTemplate = {
+  "sentinel-node": "sentinel-node",
+  "lymph-node-excision": "lymph-node-excision",
+} as const;
+
+export type CaseReportStep = (typeof CaseReportStep)[keyof typeof CaseReportStep];
+
+export const CaseReportStep = {
+  findings: "findings",
+  staging: "staging",
+  text: "text",
+  sign: "sign",
+} as const;
+
+export interface CaseReportTemplate {
+  key: ClinicalTemplate;
+  name: string;
+  version: number;
+  steps: CaseReportStep[];
+}
+
+export interface CaseReportStaging {
+  largest_mm: number | null;
+  suggested_category: NodeCategory;
+  suggested_pn: string;
+  nodes_positive: number;
+  contradicts: boolean;
+  confirmed: boolean;
+}
+
+export interface CaseReportDecision {
+  slide_id: string;
+  object_id: string;
+  decision: VerdictValue;
+}
+
+export interface CaseReportMeasurement {
+  slide_id: string;
+  object_id: string;
+  length_mm: number | null;
+}
+
+export interface CaseReportFindings {
+  decisions: CaseReportDecision[];
+  measurements: CaseReportMeasurement[];
+}
+
+export type CaseReportBlockerCode =
+  (typeof CaseReportBlockerCode)[keyof typeof CaseReportBlockerCode];
+
+export const CaseReportBlockerCode = {
+  "required-field-empty": "required-field-empty",
+  "deposit-without-size": "deposit-without-size",
+  "category-not-confirmed": "category-not-confirmed",
+} as const;
+
+export interface CaseReportBlocker {
+  code: CaseReportBlockerCode;
+  field?: string | null;
+  deposit_id?: string | null;
+}
+
+export interface CaseReportSignature {
+  number: number;
+  signed_by_user_id: string | null;
+  reported_by_user_id: string | null;
+  signed_at: string;
+  reason: string | null;
+}
+
+export interface CaseReport {
+  specimen: string | null;
+  category: NodeCategory | null;
+  nodes_examined: number | null;
+  extranodal: Extranodal | null;
+  diagnosis: string | null;
+  microscopic: string | null;
+  comment: string | null;
+  deposits: CaseReportDeposit[];
+  id: string;
+  project_id: string;
+  case_id: string;
+  state: CaseReportState;
+  template: CaseReportTemplate;
+  staging: CaseReportStaging | null;
+  findings: CaseReportFindings;
+  blockers: CaseReportBlocker[];
+  cosigner_user_id: string | null;
+  sent_by_user_id: string | null;
+  return_note: string | null;
+  version: number;
+  versions: CaseReportSignature[];
+}
+
+export interface CaseReportChange {
+  specimen?: string | null;
+  category?: NodeCategory | null;
+  confirm_category?: boolean;
+  nodes_examined?: number | null;
+  extranodal?: Extranodal | null;
+  diagnosis?: string | null;
+  microscopic?: string | null;
+  comment?: string | null;
+}
+
+export interface CaseReportAmendment {
+  /**
+   * @minLength 10
+   * @maxLength 300
+   */
+  reason: string;
+  change: CaseReportChange;
+}
+
+export interface CaseReportCosign {
+  cosigner_user_id: string;
+}
+
+export interface CaseReportReturn {
+  /**
+   * @minLength 10
+   * @maxLength 300
+   */
+  note: string;
+}
+
+export interface CaseReportValues {
+  specimen: string | null;
+  category: NodeCategory | null;
+  nodes_examined: number | null;
+  extranodal: Extranodal | null;
+  diagnosis: string | null;
+  microscopic: string | null;
+  comment: string | null;
+  deposits: CaseReportDeposit[];
+}
+
+export interface CaseReportVersion {
+  number: number;
+  signed_by_user_id: string | null;
+  reported_by_user_id: string | null;
+  signed_at: string;
+  reason: string | null;
+  values: CaseReportValues;
+  staging: CaseReportStaging | null;
+}
 
 export type CaseRule = (typeof CaseRule)[keyof typeof CaseRule];
 
@@ -2589,6 +2775,13 @@ export interface Neighbours {
   position: number;
   total: number;
   at_end: boolean;
+}
+
+export interface NewCaseReportDeposit {
+  slide_id: string;
+  object_id?: string | null;
+  size_mm?: number | null;
+  note?: string | null;
 }
 
 export interface NoteDraft {
@@ -7694,6 +7887,1759 @@ export const useSetProjectMemberSignOut = <TError = Problem, TContext = unknown>
   TContext
 > => {
   return useMutation(getSetProjectMemberSignOutMutationOptions(options), queryClient);
+};
+
+export type createCaseReportResponse201 = {
+  data: CaseReport;
+  status: 201;
+};
+
+export type createCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createCaseReportResponseSuccess = createCaseReportResponse201 & {
+  headers: Headers;
+};
+export type createCaseReportResponseError = (
+  | createCaseReportResponse400
+  | createCaseReportResponse401
+  | createCaseReportResponse403
+  | createCaseReportResponse404
+  | createCaseReportResponse409
+  | createCaseReportResponse422
+  | createCaseReportResponse429
+  | createCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type createCaseReportResponse =
+  | createCaseReportResponseSuccess
+  | createCaseReportResponseError;
+
+export const getCreateCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report`;
+};
+
+/**
+ * @summary Create Clinical Report
+ */
+export const createCaseReport = async (
+  projectId: string,
+  caseId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createCaseReportResponse> => {
+  return apiFetch<createCaseReportResponse>(getCreateCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateCaseReportMutationKey = () => ["createCaseReport"] as const;
+
+export const getCreateCaseReportMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCaseReport>>,
+    TError,
+    CreateCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCaseReport>>,
+  TError,
+  CreateCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCaseReport>>,
+    CreateCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId } = props ?? {};
+
+    return createCaseReport(projectId, caseId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCaseReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createCaseReport>>
+>;
+
+export type CreateCaseReportMutationError = Problem;
+export type CreateCaseReportMutationVariables = { projectId: string; caseId: string };
+
+/**
+ * @summary Create Clinical Report
+ */
+export const useCreateCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createCaseReport>>,
+      TError,
+      CreateCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createCaseReport>>,
+  TError,
+  CreateCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateCaseReportMutationOptions(options), queryClient);
+};
+
+export type getCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type getCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCaseReportResponseSuccess = getCaseReportResponse200 & {
+  headers: Headers;
+};
+export type getCaseReportResponseError = (
+  | getCaseReportResponse400
+  | getCaseReportResponse401
+  | getCaseReportResponse403
+  | getCaseReportResponse404
+  | getCaseReportResponse409
+  | getCaseReportResponse422
+  | getCaseReportResponse429
+  | getCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCaseReportResponse = getCaseReportResponseSuccess | getCaseReportResponseError;
+
+export const getGetCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report`;
+};
+
+/**
+ * @summary Get Clinical Report
+ */
+export const getCaseReport = async (
+  projectId: string,
+  caseId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCaseReportResponse> => {
+  return apiFetch<getCaseReportResponse>(getGetCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCaseReportQueryKey = (projectId: string, caseId: string) => {
+  return [`/api/projects/${projectId}/cases/${caseId}/clinical-report`] as const;
+};
+
+export const getGetCaseReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCaseReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCaseReportQueryKey(projectId, caseId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCaseReport>>> = ({ signal }) =>
+    getCaseReport(projectId, caseId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && caseId !== null && caseId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCaseReportQueryResult = NonNullable<Awaited<ReturnType<typeof getCaseReport>>>;
+export type GetCaseReportQueryError = Problem;
+
+export function useGetCaseReport<
+  TData = Awaited<ReturnType<typeof getCaseReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCaseReport>>,
+          TError,
+          Awaited<ReturnType<typeof getCaseReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCaseReport<
+  TData = Awaited<ReturnType<typeof getCaseReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCaseReport>>,
+          TError,
+          Awaited<ReturnType<typeof getCaseReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCaseReport<
+  TData = Awaited<ReturnType<typeof getCaseReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Clinical Report
+ */
+
+export function useGetCaseReport<
+  TData = Awaited<ReturnType<typeof getCaseReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCaseReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCaseReportQueryOptions(projectId, caseId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type updateCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type updateCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type updateCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateCaseReportResponseSuccess = updateCaseReportResponse200 & {
+  headers: Headers;
+};
+export type updateCaseReportResponseError = (
+  | updateCaseReportResponse400
+  | updateCaseReportResponse401
+  | updateCaseReportResponse403
+  | updateCaseReportResponse404
+  | updateCaseReportResponse409
+  | updateCaseReportResponse422
+  | updateCaseReportResponse429
+  | updateCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateCaseReportResponse =
+  | updateCaseReportResponseSuccess
+  | updateCaseReportResponseError;
+
+export const getUpdateCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report`;
+};
+
+/**
+ * @summary Update Clinical Report
+ */
+export const updateCaseReport = async (
+  projectId: string,
+  caseId: string,
+  caseReportChange: CaseReportChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateCaseReportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateCaseReportResponse>(getUpdateCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseReportChange),
+  });
+};
+
+export const getUpdateCaseReportMutationKey = () => ["updateCaseReport"] as const;
+
+export const getUpdateCaseReportMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCaseReport>>,
+    TError,
+    UpdateCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateCaseReport>>,
+  TError,
+  UpdateCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateCaseReport>>,
+    UpdateCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId, data } = props ?? {};
+
+    return updateCaseReport(projectId, caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCaseReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateCaseReport>>
+>;
+export type UpdateCaseReportMutationBody = CaseReportChange;
+export type UpdateCaseReportMutationError = Problem;
+export type UpdateCaseReportMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data: CaseReportChange;
+};
+
+/**
+ * @summary Update Clinical Report
+ */
+export const useUpdateCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateCaseReport>>,
+      TError,
+      UpdateCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateCaseReport>>,
+  TError,
+  UpdateCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateCaseReportMutationOptions(options), queryClient);
+};
+
+export type getCaseReportVersionResponse200 = {
+  data: CaseReportVersion;
+  status: 200;
+};
+
+export type getCaseReportVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCaseReportVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCaseReportVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCaseReportVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCaseReportVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCaseReportVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCaseReportVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCaseReportVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCaseReportVersionResponseSuccess = getCaseReportVersionResponse200 & {
+  headers: Headers;
+};
+export type getCaseReportVersionResponseError = (
+  | getCaseReportVersionResponse400
+  | getCaseReportVersionResponse401
+  | getCaseReportVersionResponse403
+  | getCaseReportVersionResponse404
+  | getCaseReportVersionResponse409
+  | getCaseReportVersionResponse422
+  | getCaseReportVersionResponse429
+  | getCaseReportVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCaseReportVersionResponse =
+  | getCaseReportVersionResponseSuccess
+  | getCaseReportVersionResponseError;
+
+export const getGetCaseReportVersionUrl = (projectId: string, caseId: string, number: number) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}`;
+};
+
+/**
+ * @summary Get Clinical Report Version
+ */
+export const getCaseReportVersion = async (
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCaseReportVersionResponse> => {
+  return apiFetch<getCaseReportVersionResponse>(
+    getGetCaseReportVersionUrl(projectId, caseId, number),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetCaseReportVersionQueryKey = (
+  projectId: string,
+  caseId: string,
+  number: number,
+) => {
+  return [`/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}`] as const;
+};
+
+export const getGetCaseReportVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCaseReportVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetCaseReportVersionQueryKey(projectId, caseId, number);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCaseReportVersion>>> = ({ signal }) =>
+    getCaseReportVersion(projectId, caseId, number, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      caseId !== null &&
+      caseId !== undefined &&
+      number !== null &&
+      number !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCaseReportVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCaseReportVersion>>
+>;
+export type GetCaseReportVersionQueryError = Problem;
+
+export function useGetCaseReportVersion<
+  TData = Awaited<ReturnType<typeof getCaseReportVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCaseReportVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getCaseReportVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCaseReportVersion<
+  TData = Awaited<ReturnType<typeof getCaseReportVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCaseReportVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getCaseReportVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCaseReportVersion<
+  TData = Awaited<ReturnType<typeof getCaseReportVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Clinical Report Version
+ */
+
+export function useGetCaseReportVersion<
+  TData = Awaited<ReturnType<typeof getCaseReportVersion>>,
+  TError = Problem,
+>(
+  projectId: string,
+  caseId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCaseReportVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCaseReportVersionQueryOptions(projectId, caseId, number, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type addCaseReportDepositResponse201 = {
+  data: CaseReport;
+  status: 201;
+};
+
+export type addCaseReportDepositResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type addCaseReportDepositResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type addCaseReportDepositResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type addCaseReportDepositResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type addCaseReportDepositResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type addCaseReportDepositResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type addCaseReportDepositResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type addCaseReportDepositResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type addCaseReportDepositResponseSuccess = addCaseReportDepositResponse201 & {
+  headers: Headers;
+};
+export type addCaseReportDepositResponseError = (
+  | addCaseReportDepositResponse400
+  | addCaseReportDepositResponse401
+  | addCaseReportDepositResponse403
+  | addCaseReportDepositResponse404
+  | addCaseReportDepositResponse409
+  | addCaseReportDepositResponse422
+  | addCaseReportDepositResponse429
+  | addCaseReportDepositResponse500
+) & {
+  headers: Headers;
+};
+
+export type addCaseReportDepositResponse =
+  | addCaseReportDepositResponseSuccess
+  | addCaseReportDepositResponseError;
+
+export const getAddCaseReportDepositUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/deposits`;
+};
+
+/**
+ * @summary Add Clinical Deposit
+ */
+export const addCaseReportDeposit = async (
+  projectId: string,
+  caseId: string,
+  newCaseReportDeposit: NewCaseReportDeposit,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<addCaseReportDepositResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<addCaseReportDepositResponse>(getAddCaseReportDepositUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(newCaseReportDeposit),
+  });
+};
+
+export const getAddCaseReportDepositMutationKey = () => ["addCaseReportDeposit"] as const;
+
+export const getAddCaseReportDepositMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addCaseReportDeposit>>,
+    TError,
+    AddCaseReportDepositMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addCaseReportDeposit>>,
+  TError,
+  AddCaseReportDepositMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddCaseReportDepositMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addCaseReportDeposit>>,
+    AddCaseReportDepositMutationVariables
+  > = (props) => {
+    const { projectId, caseId, data } = props ?? {};
+
+    return addCaseReportDeposit(projectId, caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddCaseReportDepositMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addCaseReportDeposit>>
+>;
+export type AddCaseReportDepositMutationBody = NewCaseReportDeposit;
+export type AddCaseReportDepositMutationError = Problem;
+export type AddCaseReportDepositMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data: NewCaseReportDeposit;
+};
+
+/**
+ * @summary Add Clinical Deposit
+ */
+export const useAddCaseReportDeposit = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addCaseReportDeposit>>,
+      TError,
+      AddCaseReportDepositMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addCaseReportDeposit>>,
+  TError,
+  AddCaseReportDepositMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddCaseReportDepositMutationOptions(options), queryClient);
+};
+
+export type removeCaseReportDepositResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type removeCaseReportDepositResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type removeCaseReportDepositResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type removeCaseReportDepositResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type removeCaseReportDepositResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type removeCaseReportDepositResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type removeCaseReportDepositResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type removeCaseReportDepositResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type removeCaseReportDepositResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type removeCaseReportDepositResponseSuccess = removeCaseReportDepositResponse200 & {
+  headers: Headers;
+};
+export type removeCaseReportDepositResponseError = (
+  | removeCaseReportDepositResponse400
+  | removeCaseReportDepositResponse401
+  | removeCaseReportDepositResponse403
+  | removeCaseReportDepositResponse404
+  | removeCaseReportDepositResponse409
+  | removeCaseReportDepositResponse422
+  | removeCaseReportDepositResponse429
+  | removeCaseReportDepositResponse500
+) & {
+  headers: Headers;
+};
+
+export type removeCaseReportDepositResponse =
+  | removeCaseReportDepositResponseSuccess
+  | removeCaseReportDepositResponseError;
+
+export const getRemoveCaseReportDepositUrl = (
+  projectId: string,
+  caseId: string,
+  depositId: string,
+) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/deposits/${depositId}`;
+};
+
+/**
+ * @summary Remove Clinical Deposit
+ */
+export const removeCaseReportDeposit = async (
+  projectId: string,
+  caseId: string,
+  depositId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<removeCaseReportDepositResponse> => {
+  return apiFetch<removeCaseReportDepositResponse>(
+    getRemoveCaseReportDepositUrl(projectId, caseId, depositId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveCaseReportDepositMutationKey = () => ["removeCaseReportDeposit"] as const;
+
+export const getRemoveCaseReportDepositMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeCaseReportDeposit>>,
+    TError,
+    RemoveCaseReportDepositMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeCaseReportDeposit>>,
+  TError,
+  RemoveCaseReportDepositMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveCaseReportDepositMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeCaseReportDeposit>>,
+    RemoveCaseReportDepositMutationVariables
+  > = (props) => {
+    const { projectId, caseId, depositId } = props ?? {};
+
+    return removeCaseReportDeposit(projectId, caseId, depositId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveCaseReportDepositMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeCaseReportDeposit>>
+>;
+
+export type RemoveCaseReportDepositMutationError = Problem;
+export type RemoveCaseReportDepositMutationVariables = {
+  projectId: string;
+  caseId: string;
+  depositId: string;
+};
+
+/**
+ * @summary Remove Clinical Deposit
+ */
+export const useRemoveCaseReportDeposit = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeCaseReportDeposit>>,
+      TError,
+      RemoveCaseReportDepositMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeCaseReportDeposit>>,
+  TError,
+  RemoveCaseReportDepositMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveCaseReportDepositMutationOptions(options), queryClient);
+};
+
+export type sendCaseReportForCosignResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type sendCaseReportForCosignResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type sendCaseReportForCosignResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type sendCaseReportForCosignResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type sendCaseReportForCosignResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type sendCaseReportForCosignResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type sendCaseReportForCosignResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type sendCaseReportForCosignResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type sendCaseReportForCosignResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type sendCaseReportForCosignResponseSuccess = sendCaseReportForCosignResponse200 & {
+  headers: Headers;
+};
+export type sendCaseReportForCosignResponseError = (
+  | sendCaseReportForCosignResponse400
+  | sendCaseReportForCosignResponse401
+  | sendCaseReportForCosignResponse403
+  | sendCaseReportForCosignResponse404
+  | sendCaseReportForCosignResponse409
+  | sendCaseReportForCosignResponse422
+  | sendCaseReportForCosignResponse429
+  | sendCaseReportForCosignResponse500
+) & {
+  headers: Headers;
+};
+
+export type sendCaseReportForCosignResponse =
+  | sendCaseReportForCosignResponseSuccess
+  | sendCaseReportForCosignResponseError;
+
+export const getSendCaseReportForCosignUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/send`;
+};
+
+/**
+ * @summary Send Clinical Report
+ */
+export const sendCaseReportForCosign = async (
+  projectId: string,
+  caseId: string,
+  caseReportCosign: CaseReportCosign,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<sendCaseReportForCosignResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<sendCaseReportForCosignResponse>(
+    getSendCaseReportForCosignUrl(projectId, caseId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(caseReportCosign),
+    },
+  );
+};
+
+export const getSendCaseReportForCosignMutationKey = () => ["sendCaseReportForCosign"] as const;
+
+export const getSendCaseReportForCosignMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendCaseReportForCosign>>,
+    TError,
+    SendCaseReportForCosignMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendCaseReportForCosign>>,
+  TError,
+  SendCaseReportForCosignMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSendCaseReportForCosignMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendCaseReportForCosign>>,
+    SendCaseReportForCosignMutationVariables
+  > = (props) => {
+    const { projectId, caseId, data } = props ?? {};
+
+    return sendCaseReportForCosign(projectId, caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendCaseReportForCosignMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendCaseReportForCosign>>
+>;
+export type SendCaseReportForCosignMutationBody = CaseReportCosign;
+export type SendCaseReportForCosignMutationError = Problem;
+export type SendCaseReportForCosignMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data: CaseReportCosign;
+};
+
+/**
+ * @summary Send Clinical Report
+ */
+export const useSendCaseReportForCosign = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendCaseReportForCosign>>,
+      TError,
+      SendCaseReportForCosignMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof sendCaseReportForCosign>>,
+  TError,
+  SendCaseReportForCosignMutationVariables,
+  TContext
+> => {
+  return useMutation(getSendCaseReportForCosignMutationOptions(options), queryClient);
+};
+
+export type returnCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type returnCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type returnCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type returnCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type returnCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type returnCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type returnCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type returnCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type returnCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type returnCaseReportResponseSuccess = returnCaseReportResponse200 & {
+  headers: Headers;
+};
+export type returnCaseReportResponseError = (
+  | returnCaseReportResponse400
+  | returnCaseReportResponse401
+  | returnCaseReportResponse403
+  | returnCaseReportResponse404
+  | returnCaseReportResponse409
+  | returnCaseReportResponse422
+  | returnCaseReportResponse429
+  | returnCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type returnCaseReportResponse =
+  | returnCaseReportResponseSuccess
+  | returnCaseReportResponseError;
+
+export const getReturnCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/return`;
+};
+
+/**
+ * @summary Return Clinical Report
+ */
+export const returnCaseReport = async (
+  projectId: string,
+  caseId: string,
+  caseReportReturn: CaseReportReturn,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<returnCaseReportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<returnCaseReportResponse>(getReturnCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseReportReturn),
+  });
+};
+
+export const getReturnCaseReportMutationKey = () => ["returnCaseReport"] as const;
+
+export const getReturnCaseReportMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof returnCaseReport>>,
+    TError,
+    ReturnCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof returnCaseReport>>,
+  TError,
+  ReturnCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReturnCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof returnCaseReport>>,
+    ReturnCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId, data } = props ?? {};
+
+    return returnCaseReport(projectId, caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReturnCaseReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof returnCaseReport>>
+>;
+export type ReturnCaseReportMutationBody = CaseReportReturn;
+export type ReturnCaseReportMutationError = Problem;
+export type ReturnCaseReportMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data: CaseReportReturn;
+};
+
+/**
+ * @summary Return Clinical Report
+ */
+export const useReturnCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof returnCaseReport>>,
+      TError,
+      ReturnCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof returnCaseReport>>,
+  TError,
+  ReturnCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getReturnCaseReportMutationOptions(options), queryClient);
+};
+
+export type signCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type signCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type signCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type signCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type signCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type signCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type signCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type signCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type signCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type signCaseReportResponseSuccess = signCaseReportResponse200 & {
+  headers: Headers;
+};
+export type signCaseReportResponseError = (
+  | signCaseReportResponse400
+  | signCaseReportResponse401
+  | signCaseReportResponse403
+  | signCaseReportResponse404
+  | signCaseReportResponse409
+  | signCaseReportResponse422
+  | signCaseReportResponse429
+  | signCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type signCaseReportResponse = signCaseReportResponseSuccess | signCaseReportResponseError;
+
+export const getSignCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/sign`;
+};
+
+/**
+ * @summary Sign Clinical Report
+ */
+export const signCaseReport = async (
+  projectId: string,
+  caseId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<signCaseReportResponse> => {
+  return apiFetch<signCaseReportResponse>(getSignCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSignCaseReportMutationKey = () => ["signCaseReport"] as const;
+
+export const getSignCaseReportMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signCaseReport>>,
+    TError,
+    SignCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signCaseReport>>,
+  TError,
+  SignCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSignCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signCaseReport>>,
+    SignCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId } = props ?? {};
+
+    return signCaseReport(projectId, caseId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SignCaseReportMutationResult = NonNullable<Awaited<ReturnType<typeof signCaseReport>>>;
+
+export type SignCaseReportMutationError = Problem;
+export type SignCaseReportMutationVariables = { projectId: string; caseId: string };
+
+/**
+ * @summary Sign Clinical Report
+ */
+export const useSignCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof signCaseReport>>,
+      TError,
+      SignCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof signCaseReport>>,
+  TError,
+  SignCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getSignCaseReportMutationOptions(options), queryClient);
+};
+
+export type amendCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type amendCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type amendCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type amendCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type amendCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type amendCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type amendCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type amendCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type amendCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type amendCaseReportResponseSuccess = amendCaseReportResponse200 & {
+  headers: Headers;
+};
+export type amendCaseReportResponseError = (
+  | amendCaseReportResponse400
+  | amendCaseReportResponse401
+  | amendCaseReportResponse403
+  | amendCaseReportResponse404
+  | amendCaseReportResponse409
+  | amendCaseReportResponse422
+  | amendCaseReportResponse429
+  | amendCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type amendCaseReportResponse = amendCaseReportResponseSuccess | amendCaseReportResponseError;
+
+export const getAmendCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/amendments`;
+};
+
+/**
+ * @summary Amend Clinical Report
+ */
+export const amendCaseReport = async (
+  projectId: string,
+  caseId: string,
+  caseReportAmendment: CaseReportAmendment,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<amendCaseReportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<amendCaseReportResponse>(getAmendCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseReportAmendment),
+  });
+};
+
+export const getAmendCaseReportMutationKey = () => ["amendCaseReport"] as const;
+
+export const getAmendCaseReportMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof amendCaseReport>>,
+    TError,
+    AmendCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof amendCaseReport>>,
+  TError,
+  AmendCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAmendCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof amendCaseReport>>,
+    AmendCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId, data } = props ?? {};
+
+    return amendCaseReport(projectId, caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AmendCaseReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof amendCaseReport>>
+>;
+export type AmendCaseReportMutationBody = CaseReportAmendment;
+export type AmendCaseReportMutationError = Problem;
+export type AmendCaseReportMutationVariables = {
+  projectId: string;
+  caseId: string;
+  data: CaseReportAmendment;
+};
+
+/**
+ * @summary Amend Clinical Report
+ */
+export const useAmendCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof amendCaseReport>>,
+      TError,
+      AmendCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof amendCaseReport>>,
+  TError,
+  AmendCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getAmendCaseReportMutationOptions(options), queryClient);
 };
 
 export type listProjectClassesResponse200 = {
