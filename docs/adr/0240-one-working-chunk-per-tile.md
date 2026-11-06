@@ -1,4 +1,4 @@
-# 0237. A whole-slide run writes one working chunk per tile and resumes from its job units
+# 0240. A whole-slide run writes one working chunk per tile and resumes from its job units
 
 - Date: 2026-11-06
 - Status: Accepted

@@ -203,3 +203,6 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0237](0237-annotate-tasks-on-one-shared-layer.md) | A task is a review task or an annotate task, and experts annotate on one shared layer per task slide | Accepted | 2026-11-04 |
 | [0238](0238-check-options-and-presets-on-annotate-tasks.md) | Annotate tasks get check options (scope, least sure first order, sign-off rule, export of unchecked AI) and presets for each research setup | Accepted | 2026-11-04 |
 | [0239](0239-shared-layer-rows-in-the-annotations-table.md) | Shared layer objects as rows of the annotations table | Accepted | 2026-11-04 |
+| [0240](0240-one-working-chunk-per-tile.md) | A whole-slide run writes one working chunk per tile and resumes from its job units | Accepted | 2026-11-06 |
+| [0241](0241-gpu-worker-pool-limits.md) | GPU worker pool: one Modal function per model family, capped containers and scale to zero | Accepted | 2026-11-06 |
+| [0242](0242-client-chunk-paging-for-large-nuclei-sets.md) | The client keeps the summary whole and pages full chunks under a vertex budget | Accepted | 2026-11-06 |

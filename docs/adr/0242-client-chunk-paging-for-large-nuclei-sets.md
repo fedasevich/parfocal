@@ -1,4 +1,4 @@
-# 0237. The client keeps the summary whole and pages full chunks under a vertex budget
+# 0242. The client keeps the summary whole and pages full chunks under a vertex budget
 
 - Date: 2026-11-06
 - Status: Accepted

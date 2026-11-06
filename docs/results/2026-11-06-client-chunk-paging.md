@@ -49,7 +49,7 @@ A repeat run a few minutes later, while four other agents used the same machine,
 
 ## Follow-ups
 
-- [ADR 0237](../adr/0237-client-chunk-paging-for-large-nuclei-sets.md) (the client keeps the summary whole and pages full chunks under a vertex budget) records the design.
+- [ADR 0242](../adr/0242-client-chunk-paging-for-large-nuclei-sets.md) (the client keeps the summary whole and pages full chunks under a vertex budget) records the design.
 - Two rows in `perf-budgets.json` (`nuclei.paging-open-ms` and `nuclei.paging-memory-bytes`) guard these numbers.
 - TODO: record the hosted-runner numbers from the first browser CI run and tighten the time headroom.
 - TODO: measure a real HoVer-NeXt result once one is imported.

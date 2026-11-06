@@ -1,7 +1,7 @@
-# 0237. GPU worker pool: one Modal function per model family, capped containers and scale to zero
+# 0241. GPU worker pool: one Modal function per model family, capped containers and scale to zero
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: agent doing AIP-006 (GPU worker pool), for the owner to confirm
 - Backlog: AIP-006 (GPU worker pool). Builds on [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture), [ADR 0150](0150-gpu-serving-on-t4-and-l4-class-cards.md) (GPU serving on T4 and L4 class cards) and [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier). Feeds AINUC-001 (detector runner) and SEC-026 (isolated parsing of uploaded files)
 

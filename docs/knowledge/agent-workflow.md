@@ -98,7 +98,7 @@ The agent prompt always says:
 - Read the task with `board.py show ID` and only the docs it lists. Grep for what already exists and build on it.
 - Run `pnpm install` first, and `uv sync` when Python is touched.
 - Build the tests that the "Done when" line names, and compare screens with the mock by number.
-- Name new ADRs `docs/adr/0237-short-title.md`, with a `# 0237. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
+- Name new ADRs `docs/adr/XXXX-short-title.md`, with a `# XXXX. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
 - Do not edit `docs/BACKLOG.md`, `docs/log.md`, `docs/decisions.md`, `docs/board/` or READMEs (except the results index). Do not claim, note, tick or push.
 - Never use the word "verdict", and write no code comments.
 - Use a distinct `PARFOCAL_E2E_PORT` from 5190 to 5199 and stop the dev server before finishing.

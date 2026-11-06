@@ -196,7 +196,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, loopback server sending gzip files with Content-Encoding gzip, no latency proxy",
       "check": "packages/viewer-engine/browser/nuclei-paging.spec.ts",
-      "adr": "docs/adr/0237-client-chunk-paging-for-large-nuclei-sets.md",
+      "adr": "docs/adr/0242-client-chunk-paging-for-large-nuclei-sets.md",
       "result": "docs/results/2026-11-06-client-chunk-paging.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -209,7 +209,7 @@
       "limit": 94800000,
       "environment": "Chrome headless with SwiftShader, loopback server sending gzip files with Content-Encoding gzip, no latency proxy",
       "check": "packages/viewer-engine/browser/nuclei-paging.spec.ts",
-      "adr": "docs/adr/0237-client-chunk-paging-for-large-nuclei-sets.md",
+      "adr": "docs/adr/0242-client-chunk-paging-for-large-nuclei-sets.md",
       "result": "docs/results/2026-11-06-client-chunk-paging.md"
     }
   ]
