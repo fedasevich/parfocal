@@ -4437,7 +4437,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-002, ADJ-008, GUIDE-002, GUIDE-015. Refs mock: disagree/adjudicate, mock: disagree/adjdone, mock: worklist/anna, doc 44.
   Size: M.
 
-- [ ] ADJ-004 · Sign-off as a soft lock
+- [x] ADJ-004 · Sign-off as a soft lock
   Before signing, a one-column modal lists what is complete, each open item with a Go to link. Signing is allowed only when every assigned reviewer has submitted every slide and every queued object is decided or left open on purpose ([ADR 0080](adr/0080-disagreement-rule-and-sign-off.md), amended by [ADR 0133](adr/0133-queue-decisions-in-the-task-style-left-open-and-anonymous-adjudicators.md), queue decisions in the task's style, proposed). Objects left open show as an allowed warning and are named in the report. Signing confirms with single sign-on, with the password as a fallback when single sign-on does not answer, makes Evaluation v1 with a checksum and notifies reviewers. The exports leave the sign step and come after it, and starting v2 needs a reason. The owner can still change things, every change is logged, and reopening is possible.
   Signing also stores the report's block list (EVAL-008).
   Done when API tests cover signing, a change after sign-off with its log entry and reopening, and E2E signs off a task.
