@@ -22,7 +22,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
-from parfocal_api.sign_out import signs_out_case
+from parfocal_api.sign_out import case_signers, signs_out_case
 from parfocal_api.slide_areas import MICRONS_PER_MM
 from parfocal_api.tables import (
     AnnotationKind,
@@ -172,6 +172,7 @@ class CaseReport(CaseReportValues):
     staging: CaseReportStaging | None
     findings: CaseReportFindings
     blockers: list[CaseReportBlocker]
+    signers: list[uuid.UUID]
     cosigner_user_id: uuid.UUID | None
     sent_by_user_id: uuid.UUID | None
     sent_at: datetime | None
@@ -538,6 +539,7 @@ async def report_of(connection: AsyncConnection, case_id: uuid.UUID) -> CaseRepo
         staging=staging,
         findings=await findings_of(connection, case_id),
         blockers=blockers_of(row, rows, staging),
+        signers=await case_signers(connection, case_id),
         cosigner_user_id=row.cosigner_user_id,
         sent_by_user_id=row.sent_by_user_id,
         sent_at=row.sent_at,

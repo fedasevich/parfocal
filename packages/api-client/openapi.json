@@ -36650,6 +36650,14 @@
             "type": "array",
             "title": "Blockers"
           },
+          "signers": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Signers"
+          },
           "cosigner_user_id": {
             "anyOf": [
               {
@@ -36744,6 +36752,7 @@
           "staging",
           "findings",
           "blockers",
+          "signers",
           "cosigner_user_id",
           "sent_by_user_id",
           "sent_at",

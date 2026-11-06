@@ -26,6 +26,7 @@ const serverReport = (): CaseReport => ({
   staging: null,
   findings: { decisions: [], measurements: [] },
   blockers: [],
+  signers: [],
   cosigner_user_id: null,
   sent_by_user_id: null,
   sent_at: null,

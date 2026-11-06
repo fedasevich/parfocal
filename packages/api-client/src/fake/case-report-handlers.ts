@@ -17,9 +17,11 @@ import type {
 import { cases, people, slides } from "./scenario.ts";
 import {
   type ClinicalCase,
+  canSignCase,
   clinicalCases,
   clinicalProject,
   clinicalProjectRef,
+  clinicalRoles,
   clinicalTemplates,
   cosignSent,
 } from "./scenario-clinical.ts";
@@ -90,8 +92,6 @@ const problem = (status: number, code: string, title: string) =>
 const sizeOf = (size: string) => Number(size);
 
 const categoryOf = (mm: number): NodeCategory => (mm > 2 ? "macro" : mm > 0.2 ? "micro" : "itc");
-
-const nodeOf = (label: string) => Number(/\d+/.exec(label)?.[0] ?? 1);
 
 const slideIdOf = (item: ClinicalCase, key: string) =>
   slides.find((slide) => slide.caseLabel === item.label && slide.label === key)?.id ??
@@ -284,6 +284,9 @@ const reportOf = (caseId: string, stored: Stored, item: ClinicalCase): CaseRepor
         })),
     },
     blockers: blockersOf(stored, staging),
+    signers: Object.keys(clinicalRoles)
+      .filter((key) => canSignCase(key, item))
+      .map((key) => people[key as keyof typeof people].id),
     cosigner_user_id: stored.cosigner,
     sent_by_user_id: stored.sentBy ?? (fallback ? people[cosignSent.from].id : null),
     sent_at: stored.sentAt ?? (fallback ? cosignSent.sentAt : null),
