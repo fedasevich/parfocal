@@ -125,12 +125,20 @@ class Signature(BaseModel):
 
 
 class EvaluationChange(BaseModel):
+    version: int
     by_user_id: uuid.UUID | None
     at: datetime
     object: str
     slide_label: str
     text: str
     reason: str
+
+
+class EvaluationChanges(BaseModel):
+    task_id: uuid.UUID
+    signed_version: int | None
+    checksum: str | None
+    changes: list[EvaluationChange]
 
 
 class SignOffSummary(BaseModel):
@@ -414,17 +422,55 @@ async def result_set_of(connection: AsyncConnection, task: Any) -> ResultSetFact
     )
 
 
-async def changes_of(connection: AsyncConnection, task_id: uuid.UUID, version: int) -> list[Any]:
+async def changes_of(
+    connection: AsyncConnection, task_id: uuid.UUID, version: int | None = None
+) -> list[Any]:
+    query = select(evaluation_changes).where(evaluation_changes.c.task_id == task_id)
+    if version is not None:
+        query = query.where(evaluation_changes.c.version == version)
     return list(
         (
             await connection.execute(
-                select(evaluation_changes)
-                .where(
-                    evaluation_changes.c.task_id == task_id, evaluation_changes.c.version == version
-                )
-                .order_by(evaluation_changes.c.changed_at, evaluation_changes.c.id)
+                query.order_by(evaluation_changes.c.changed_at, evaluation_changes.c.id)
             )
         ).all()
+    )
+
+
+def as_change(row: Any, labels: dict[uuid.UUID, str]) -> EvaluationChange:
+    return EvaluationChange(
+        version=row.version,
+        by_user_id=row.changed_by_user_id,
+        at=row.changed_at,
+        object=row.object_id,
+        slide_label=labels.get(row.slide_id, ""),
+        text=CHANGE_TEXTS.get(row.change) or row.change,
+        reason=row.reason,
+    )
+
+
+CHANGE_TEXTS = {"added": "Added", "edited": "Edited", "deleted": "Deleted"}
+
+
+@router.get(
+    "/evaluation-changes",
+    operation_id="listEvaluationChanges",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_evaluation_changes(
+    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> EvaluationChanges:
+    _, whole = await readable_task(connection, principal, task_id)
+    if not whole:
+        raise EvaluationHiddenError
+    signed = last_signed(await versions_of(connection, task_id))
+    changes = await changes_of(connection, task_id)
+    labels = await labels_of(connection, {row.slide_id for row in changes})
+    return EvaluationChanges(
+        task_id=task_id,
+        signed_version=signed.number if signed else None,
+        checksum=signed.checksum if signed else None,
+        changes=[as_change(row, labels) for row in changes],
     )
 
 
@@ -473,16 +519,6 @@ async def get_sign_off_summary(
         )
         if signed
         else None,
-        changes=[
-            EvaluationChange(
-                by_user_id=row.changed_by_user_id,
-                at=row.changed_at,
-                object=row.object_id,
-                slide_label=labels.get(row.slide_id, ""),
-                text=row.change,
-                reason=row.reason,
-            )
-            for row in changes
-        ],
+        changes=[as_change(row, labels) for row in changes],
         next_version=as_started(draft) if draft is not None and signed is not None else None,
     )

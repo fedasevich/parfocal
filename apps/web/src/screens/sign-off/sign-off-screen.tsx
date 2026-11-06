@@ -89,6 +89,7 @@ function SignOffModal({
   const queryClient = useQueryClient();
   const toast = useMockToast();
   const [amending, setAmending] = useState(scene === "amend");
+  const [signingNext, setSigningNext] = useState(false);
   const [picked, setPicked] = useState(["pdf", "csv", "json"]);
   const refresh = () =>
     Promise.all([
@@ -107,8 +108,9 @@ function SignOffModal({
         {
           onSuccess: () => {
             done(true);
+            setSigningNext(false);
             void refresh();
-            toast.show("Evaluation v1 is signed. Reviewers are told.");
+            toast.show(`Evaluation v${signingVersion} is signed. Reviewers are told.`);
           },
           onError: () => done(false),
         },
@@ -117,10 +119,11 @@ function SignOffModal({
   const toProject = () =>
     void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab: "tasks" } });
   const subtitle = `${taskName} · Sentinel node AI evaluation`;
+  const signingVersion = summary?.next_version?.version ?? summary?.version ?? 1;
   if (!summary) return null;
   const nameOf = (userId: string) => person(userId)?.name ?? "";
 
-  if (summary.signature) {
+  if (summary.signature && !signingNext) {
     const signed = summary.signature;
     return (
       <>
@@ -133,7 +136,11 @@ function SignOffModal({
           hint="Changes after sign-off are logged, and the report marks them."
           showCancel={false}
           secondaryAction={
-            summary.next_version ? null : (
+            summary.next_version ? (
+              <Button onClick={() => setSigningNext(true)}>
+                Sign v{summary.next_version.version}
+              </Button>
+            ) : (
               <Button onClick={() => setAmending(true)}>Start v2</Button>
             )
           }
@@ -286,7 +293,11 @@ function SignOffModal({
         open
         onOpenChange={closeOn(toProject)}
         width={560}
-        title={`Sign off ${taskCode}`}
+        title={
+          summary.next_version
+            ? `Sign off ${taskCode} · v${summary.next_version.version}`
+            : `Sign off ${taskCode}`
+        }
         subtitle={subtitle}
         hint={
           blockers.length

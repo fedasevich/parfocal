@@ -1766,12 +1766,20 @@ export interface Evaluation {
 }
 
 export interface EvaluationChange {
+  version: number;
   by_user_id: string | null;
   at: string;
   object: string;
   slide_label: string;
   text: string;
   reason: string;
+}
+
+export interface EvaluationChanges {
+  task_id: string;
+  signed_version: number | null;
+  checksum: string | null;
+  changes: EvaluationChange[];
 }
 
 export interface EvaluationVersionStarted {
@@ -40420,6 +40428,207 @@ export const useStartEvaluationVersion = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getStartEvaluationVersionMutationOptions(options), queryClient);
 };
+
+export type listEvaluationChangesResponse200 = {
+  data: EvaluationChanges;
+  status: 200;
+};
+
+export type listEvaluationChangesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listEvaluationChangesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listEvaluationChangesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listEvaluationChangesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listEvaluationChangesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listEvaluationChangesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listEvaluationChangesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listEvaluationChangesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listEvaluationChangesResponseSuccess = listEvaluationChangesResponse200 & {
+  headers: Headers;
+};
+export type listEvaluationChangesResponseError = (
+  | listEvaluationChangesResponse400
+  | listEvaluationChangesResponse401
+  | listEvaluationChangesResponse403
+  | listEvaluationChangesResponse404
+  | listEvaluationChangesResponse409
+  | listEvaluationChangesResponse422
+  | listEvaluationChangesResponse429
+  | listEvaluationChangesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listEvaluationChangesResponse =
+  | listEvaluationChangesResponseSuccess
+  | listEvaluationChangesResponseError;
+
+export const getListEvaluationChangesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation-changes`;
+};
+
+/**
+ * @summary List Evaluation Changes
+ */
+export const listEvaluationChanges = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listEvaluationChangesResponse> => {
+  return apiFetch<listEvaluationChangesResponse>(getListEvaluationChangesUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEvaluationChangesQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation-changes`] as const;
+};
+
+export const getListEvaluationChangesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEvaluationChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEvaluationChangesQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvaluationChanges>>> = ({ signal }) =>
+    listEvaluationChanges(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListEvaluationChangesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEvaluationChanges>>
+>;
+export type ListEvaluationChangesQueryError = Problem;
+
+export function useListEvaluationChanges<
+  TData = Awaited<ReturnType<typeof listEvaluationChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEvaluationChanges>>,
+          TError,
+          Awaited<ReturnType<typeof listEvaluationChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEvaluationChanges<
+  TData = Awaited<ReturnType<typeof listEvaluationChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEvaluationChanges>>,
+          TError,
+          Awaited<ReturnType<typeof listEvaluationChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEvaluationChanges<
+  TData = Awaited<ReturnType<typeof listEvaluationChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Evaluation Changes
+ */
+
+export function useListEvaluationChanges<
+  TData = Awaited<ReturnType<typeof listEvaluationChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEvaluationChanges>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListEvaluationChangesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getSignOffSummaryResponse200 = {
   data: SignOffSummary;

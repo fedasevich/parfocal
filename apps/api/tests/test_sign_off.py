@@ -1,15 +1,20 @@
+from dataclasses import replace
+from datetime import date
+
 import pytest
 from db_support import ApiAs
 from test_disagreements import queued_review
+from test_evaluation_exports import text_of
+from test_locales import REPORT
 from workspace_support import owner
 
 from parfocal_api.evaluation_exports import CHECKSUM_HEADER
-
-pytestmark = pytest.mark.db
+from parfocal_api.report_template import ReportChange, render_report
 
 REASON = {"reason": "Measured again on deeper levels of A1"}
 
 
+@pytest.mark.db
 def test_signing_makes_version_one_with_a_checksum_and_tells_the_reviewers(
     api: ApiAs, database: str
 ) -> None:
@@ -69,6 +74,7 @@ def test_signing_makes_version_one_with_a_checksum_and_tells_the_reviewers(
     assert (again.status_code, again.json()["code"]) == (409, "already-signed-off")
 
 
+@pytest.mark.db
 def test_the_owner_changes_a_decision_after_sign_off_and_the_change_is_logged(
     api: ApiAs, database: str
 ) -> None:
@@ -104,6 +110,7 @@ def test_the_owner_changes_a_decision_after_sign_off_and_the_change_is_logged(
     assert all(row == (None, None) for row in logged[:-1])
 
 
+@pytest.mark.db
 def test_reopening_needs_a_reason_and_signing_again_makes_version_two(
     api: ApiAs, database: str
 ) -> None:
@@ -159,3 +166,61 @@ def test_reopening_needs_a_reason_and_signing_again_makes_version_two(
     no_reason = api(r.people["owner"]).post(f"{task}/reopen")
     assert no_reason.status_code == 422
     assert api(r.people["owner"]).post(f"{task}/reopen", json=REASON).status_code == 200
+
+
+@pytest.mark.db
+def test_changes_after_sign_off_are_listed_with_who_when_and_what(
+    api: ApiAs, database: str
+) -> None:
+    r, task = queued_review(api, database)
+    decide = f"{task}/disagreements/{r.slide}"
+    api(r.people["owner"]).put(f"{decide}/T1", json={"answer": "agree"})
+    api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "disagree"})
+    unsigned = api(r.people["owner"]).get(f"{task}/evaluation-changes").json()
+    assert (unsigned["signed_version"], unsigned["changes"]) == (None, [])
+    assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
+    reason = "Second look on level 3"
+    changed = api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "agree", "reason": reason})
+    assert changed.status_code == 200, changed.text
+
+    listed = api(r.people["owner"]).get(f"{task}/evaluation-changes")
+    assert listed.status_code == 200, listed.text
+    body = listed.json()
+    signature = api(r.people["owner"]).get(f"{task}/sign-off-summary").json()["signature"]
+    assert (body["signed_version"], body["checksum"]) == (1, signature["checksum"])
+    assert [
+        (item["version"], item["object"], item["text"], item["reason"], item["by_user_id"])
+        for item in body["changes"]
+    ] == [(1, "T2", "Decided agree", reason, str(r.people["owner"].user_id))]
+    assert body["changes"][0]["slide_label"]
+    assert body["changes"][0]["at"]
+    hidden = api(r.people["first"]).get(f"{task}/evaluation-changes")
+    assert (hidden.status_code, hidden.json()["code"]) == (403, "evaluation-hidden")
+
+    exported = api(r.people["owner"]).get(f"{task}/evaluation/exports/annotations.json")
+    assert exported.headers[CHECKSUM_HEADER] == signature["checksum"]
+    assert exported.json()["evaluation"]["changes_after_sign_off"] == 1
+    pdf = text_of(api(r.people["owner"]).get(f"{task}/evaluation/exports/report.pdf").content)
+    named = owner(
+        database, f"SELECT display_name FROM users WHERE id = '{r.people['owner'].user_id}'"
+    )
+    assert "Changes after sign-off" in pdf
+    assert reason in pdf
+    assert named[0][0] in pdf
+
+
+def test_the_report_flags_and_lists_changes_after_sign_off() -> None:
+    assert "Changed after sign-off" not in render_report(REPORT).source
+    change = ReportChange(
+        object_id="T2",
+        slide="A1",
+        change="Decided agree",
+        reason="Second look on level 3",
+        by="Jana Novak",
+        on=date(2026, 11, 5),
+    )
+    source = render_report(replace(REPORT, changes=(change,))).source
+    assert "Changed after sign-off. The checksum is of the evaluation as signed" in source
+    assert "Changes after sign-off" in source
+    for value in ("T2", "Decided agree", "Second look on level 3", "Jana Novak", "05/11/2026"):
+        assert value in source

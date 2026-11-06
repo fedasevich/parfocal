@@ -18,6 +18,7 @@ from parfocal_api.locales import (
 from parfocal_api.report_template import (
     EVERY_BLOCK,
     REPORT_MESSAGES,
+    ReportChange,
     ReportClass,
     ReportCompared,
     ReportData,
@@ -108,6 +109,16 @@ FULL_REPORT = replace(
         ),
     ),
     compared={str(OTHER_TASK): ReportCompared("COMPARED-SENTINEL", {"dice": 0.4})},
+    changes=(
+        ReportChange(
+            object_id="T1",
+            slide="SLIDE-SENTINEL",
+            change="CHANGE-SENTINEL",
+            reason="WHY-SENTINEL",
+            by="REVIEWER-SENTINEL",
+            on=date(2026, 11, 4),
+        ),
+    ),
 )
 EMPTY_REPORT = ReportData(
     project_name="PROJECT-SENTINEL",
@@ -143,6 +154,8 @@ REPORT_VALUES = (
     "REASON-SENTINEL",
     "QUESTION-SENTINEL",
     "METHODS-SENTINEL",
+    "CHANGE-SENTINEL",
+    "WHY-SENTINEL",
     "sha256:0123abcd",
     *(block.title for block in FULL_BLOCKS),
 )

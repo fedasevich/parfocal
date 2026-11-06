@@ -50,6 +50,18 @@ test("the seeded report shows its header, pages and the sentinel node blocks", a
   expect(headers.slice(3).every((name) => name.trim().length > 0)).toBe(true);
 });
 
+test("a change after sign-off flags the report and is listed at the end", async ({ page }) => {
+  await page.goto(url("report"));
+  await expect(page.getByText("Changed after sign-off · 1 change", { exact: true })).toBeVisible();
+  const first = page.getByRole("article", { name: "Page 1 of 3" });
+  await expect(
+    first.getByText(/Changed after sign-off · 1 change listed at the end/),
+  ).toBeVisible();
+  const logged = page.getByRole("row", { name: /T4 on A1/ });
+  await expect(logged).toContainText("disagree changed to not sure");
+  await expect(logged).toContainText("second look with the CK slide");
+});
+
 test("the side panel offers the template, the PDF preview, arrange and the downloads", async ({
   page,
 }) => {

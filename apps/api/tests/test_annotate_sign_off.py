@@ -133,6 +133,21 @@ def test_sign_off_waits_for_every_expert_and_locks_the_layer(api: ApiAs, databas
             str(o.people["owner"].user_id),
         )
     ]
+    listed = api(o.people["owner"]).get(f"/api/review-tasks/{task}/evaluation-changes")
+    assert listed.status_code == 200, listed.text
+    assert [
+        (item["object"], item["text"], item["reason"], item["by_user_id"])
+        for item in listed.json()["changes"]
+    ] == [
+        (
+            kept.json()["code"],
+            "Edited",
+            "Outline follows the margin",
+            str(o.people["owner"].user_id),
+        )
+    ]
+    hidden = api(o.people["first"]).get(f"/api/review-tasks/{task}/evaluation-changes")
+    assert problem(hidden) == (403, "evaluation-hidden")
     states = api(o.people["owner"]).get(f"/api/review-tasks/{task}/states")
     by_slide = {item["slide_id"]: item["state"] for item in states.json()["slides"]}
     assert by_slide[str(o.slides[1])] == "signed-off"
