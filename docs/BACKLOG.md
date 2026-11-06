@@ -1115,7 +1115,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-021, RSET-001, OBJ-001. Refs mock: upload/progress, mock: upload/done, doc 39.
   Size: M.
 
-- [ ] INGEST-025 · Import slides from a link
+- [x] INGEST-025 · Import slides from a link
   Besides files from the computer, the user can give a link to slides on another server. In v1 that is an HTTPS link or an object-storage link (S3 or Azure, usually presigned). The server, not the browser, reads what the link holds and lists the slides with their size and the project and case each matches (file name or embedded slide ID). It leaves out slides the project already has and downloads the chosen ones into the same quarantine as browser uploads (INGEST-001), so the normal workflow and status follow, and result files next to the slides are imported as result sets (RSET-001). Fetching is protected against server-side request forgery: allowed schemes only, no private or link-local addresses after DNS resolution or redirects, size and time limits, and no platform credentials sent to the link.
   Done when API tests refuse private addresses, redirects to them and oversize files, E2E imports a fixture slide from a test HTTP server into a project, a duplicate is left out by checksum, and the imported slide goes through INGEST-003 to published.
   Depends on INGEST-001, INGEST-003, INGEST-021. Refs mock 4 "From a link", kit W36, kit Flow 7, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
