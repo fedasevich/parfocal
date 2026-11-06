@@ -70,6 +70,34 @@ The select tool now picks markers, arrows, text and every drawn shape together, 
 - a. Leave pins out of the select tool, delete them only from their popover. (recommended)
 - b. Let the select tool pick and move pins, and have Delete ask before removing the thread.
 
+Your choice:b
+
+## 69. What counts as a lymph node in a clinical report, from REPORT-024 (clinical report model and API)
+
+A clinical report counts positive nodes, but the database has no node number. [ADR 0252](adr/0252-clinical-report-storage-per-case.md) (clinical report storage per case) counts a node as the slide's tissue block when it has one, otherwise the slide itself, so two slides cut from one block count as one node.
+
+- a. A node is the slide's block, else the slide, as built. (recommended)
+- b. Give each slide in a case its own node number that the user sets.
+
+Your choice:
+
+## 70. The checksum after changes to a signed evaluation, from ADJ-005 (changes after sign-off)
+
+The owner can change decisions after sign-off with a reason, so the exported numbers no longer match the checksum stored at signing. [ADR 0257](adr/0257-changes-after-sign-off-keep-the-signed-checksum.md) (changes after sign-off keep the signed checksum) keeps the signed checksum, flags the report as changed after sign-off and lists every change with who, when, what and why. It can be reversed.
+
+- a. Keep the signed checksum and flag the changes, as built. (recommended)
+- b. Recompute the checksum after every change, so it matches the export but no longer proves what was signed.
+- c. Freeze the evaluation at signing and export only that until v2 is signed.
+
+Your choice:
+
+## 71. A duplicate left out of a link import, from INGEST-025 (import slides from a link)
+
+A link import leaves out a slide whose checksum is already in the project. The upload status now shows it as failed with the reason duplicate, which looks like an error.
+
+- a. Show it as "Skipped, already in this project" with its own neutral status. (recommended)
+- b. Keep it as failed with the reason duplicate.
+
 Your choice:
 
 ## The review column, what each task waits for
