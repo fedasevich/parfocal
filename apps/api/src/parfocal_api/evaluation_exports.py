@@ -47,6 +47,7 @@ from parfocal_api.study_templates import BUILT_INS, template_at
 from parfocal_api.tables import (
     BuiltInTemplate,
     annotations,
+    evaluation_versions,
     projects,
     result_sets,
     review_task_slides,
@@ -55,7 +56,7 @@ from parfocal_api.tables import (
 from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import ObjectId, ObjectPath
-from parfocal_common.report_blocks import Comparison, ReportBlock, ReportFormat
+from parfocal_common.report_blocks import BLOCKS, Comparison, ReportBlock, ReportFormat
 
 CHECKSUM_HEADER = "X-Parfocal-Evaluation-Checksum"
 VERSION_HEADER = "X-Parfocal-Evaluation-Version"
@@ -141,8 +142,36 @@ def checksum_of(evaluation: Evaluation) -> str:
     return "sha256:" + hashlib.sha256(canonical).hexdigest()
 
 
-def version_of(task: Any, evaluation: Evaluation) -> Version:
+async def signed_row(connection: AsyncConnection, task: Any) -> Any | None:
+    if task.signed_off_at is None:
+        return None
+    return (
+        await connection.execute(
+            select(evaluation_versions)
+            .where(
+                evaluation_versions.c.task_id == task.id,
+                evaluation_versions.c.signed_at.is_not(None),
+            )
+            .order_by(evaluation_versions.c.number.desc())
+            .limit(1)
+        )
+    ).one_or_none()
+
+
+async def version_of(connection: AsyncConnection, task: Any, evaluation: Evaluation) -> Version:
+    stored = await signed_row(connection, task)
+    if stored is not None:
+        return Version(number=stored.number, checksum=stored.checksum, signed_at=stored.signed_at)
     return Version(number=1, checksum=checksum_of(evaluation), signed_at=task.signed_off_at)
+
+
+async def signed_layout(
+    connection: AsyncConnection, task: Any
+) -> tuple[tuple[ReportBlock, ...], ReportFormat]:
+    stored = await signed_row(connection, task)
+    if stored is None or stored.blocks is None or stored.format is None:
+        return await task_layout(connection, task)
+    return tuple(BLOCKS.validate_python(stored.blocks)), ReportFormat.model_validate(stored.format)
 
 
 async def task_layout(
@@ -400,7 +429,7 @@ async def rendered_report(
     project_name = await connection.scalar(
         select(projects.c.name).where(projects.c.id == task.project_id)
     )
-    blocks, report_format = await task_layout(connection, task)
+    blocks, report_format = await signed_layout(connection, task)
     data = report_data(
         evaluation,
         str(project_name),
@@ -457,7 +486,7 @@ async def export_task_evaluation(
     if not whole:
         raise EvaluationHiddenError
     evaluation = await evaluate(connection, task)
-    version = version_of(task, evaluation)
+    version = await version_of(connection, task, evaluation)
     content: str | bytes
     match kind:
         case ExportKind.PDF:

@@ -10,24 +10,21 @@ import {
   type QueueRow,
   queueRowSchema,
 } from "../draft/disagreements.ts";
+import { type EvaluationReport, evaluationReportSchema } from "../draft/evaluation-report.ts";
 import {
-  type EvaluationReport,
-  type EvaluationVersionStarted,
-  evaluationReportSchema,
-  type SignOffSummary,
-  signOffSummarySchema,
-} from "../draft/evaluation-report.ts";
-import {
+  getGetSignOffSummaryMockHandler,
   getGetTaskEvaluationMockHandler,
   getListMyAdjudicationsMockHandler,
   getSendToAdjudicatorMockHandler,
   getSignOffReviewTaskMockHandler,
+  getStartEvaluationVersionMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   AdjudicationDraft,
   Evaluation,
   MyAdjudication,
   QueuedObject,
+  SignOffSummary,
 } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
@@ -221,7 +218,7 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
       count: toThreads(current.id, slide.id, false).length,
     }))
     .filter((row) => row.count > 0);
-  return signOffSummarySchema.parse({
+  return {
     task_id: taskId,
     version: 1,
     reviewer_ids: current.reviewers.map(idOf),
@@ -271,7 +268,7 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
           started_at: state.nextVersion.at,
         }
       : null,
-  });
+  };
 };
 
 const decisionsOf = (taskId: string): Evaluation["decisions"] => {
@@ -485,26 +482,6 @@ export const getDecideAdjudicationMockHandler = (overrideResponse?: Adjudication
     },
   );
 
-export const getGetSignOffSummaryMockHandler = (overrideResponse?: SignOffSummary) =>
-  http.get<{ taskId: string }>(`${taskPath}/sign-off-summary`, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toSignOffSummary(params.taskId)),
-  );
-
-export const getStartEvaluationVersionMockHandler = (overrideResponse?: EvaluationVersionStarted) =>
-  http.post<{ taskId: string }>(`${taskPath}/evaluation-versions`, async ({ request }) => {
-    const body = (await request.json()) as { reason: string };
-    startNextVersion(body.reason, scenarioNow);
-    return HttpResponse.json(
-      overrideResponse ?? {
-        version: 2,
-        reason: body.reason,
-        by_user_id: idOf(researcher),
-        started_at: scenarioNow,
-      },
-      { status: 201 },
-    );
-  });
-
 export const getGetEvaluationReportMockHandler = (overrideResponse?: EvaluationReport) =>
   http.get<{ taskId: string }>(`${taskPath}/evaluation-report`, ({ params }) =>
     HttpResponse.json(overrideResponse ?? toEvaluationReport(params.taskId)),
@@ -538,18 +515,6 @@ export const adjudicationDraftOperations: DraftOperation[] = [
     handler: () => getDecideAdjudicationMockHandler(),
   },
   {
-    operationId: "getSignOffSummary",
-    method: "get",
-    path: `${taskApi}/sign-off-summary`,
-    handler: () => getGetSignOffSummaryMockHandler(),
-  },
-  {
-    operationId: "startEvaluationVersion",
-    method: "post",
-    path: `${taskApi}/evaluation-versions`,
-    handler: () => getStartEvaluationVersionMockHandler(),
-  },
-  {
     operationId: "getEvaluationReport",
     method: "get",
     path: `${taskApi}/evaluation-report`,
@@ -562,6 +527,17 @@ export function adjudicationHandlers(): RequestHandler[] {
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
     getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),
+    getGetSignOffSummaryMockHandler(({ params }) => toSignOffSummary(String(params.taskId))),
+    getStartEvaluationVersionMockHandler(async ({ request }) => {
+      const body = (await request.json()) as { reason: string };
+      startNextVersion(body.reason, scenarioNow);
+      return {
+        version: 2,
+        reason: body.reason,
+        by_user_id: idOf(researcher),
+        started_at: scenarioNow,
+      };
+    }),
     getSignOffReviewTaskMockHandler(({ params }) => {
       signQueueTask();
       return toTaskStates(

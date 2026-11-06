@@ -71,9 +71,8 @@ async def get_notification_target(
                 task, whole = await readable_task(connection, principal, row.target_id)
             except NotFoundError as error:
                 raise TargetGoneError from error
-            if kind is TargetKind.EVALUATION and not whole:
-                raise TargetGoneError
-            return Target(kind=kind, project_id=task.project_id, task_id=task.id)
+            shown = kind if whole else TargetKind.TASK
+            return Target(kind=shown, project_id=task.project_id, task_id=task.id)
         case TargetKind.SLIDE:
             project_id = await project_of(
                 connection,

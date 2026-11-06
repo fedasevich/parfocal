@@ -20,6 +20,7 @@ from parfocal_api.tables import ResultSource, ResultStatus
 
 ASSIGNED, OWNER, OTHER = Actor.ASSIGNED_REVIEWER, Actor.OWNER, Actor.OTHER
 
+REOPEN = {"reason": "Measured again on deeper levels"}
 MOVES = [
     (Move.SUBMIT, MoveFacts(ASSIGNED, signed_off=False), None),
     (Move.SUBMIT, MoveFacts(ASSIGNED, signed_off=False, submitted=True), Refused.ALREADY_SUBMITTED),
@@ -154,7 +155,7 @@ def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, databa
     assert (locked.status_code, locked.json()["code"]) == (409, "task-signed-off")
     edit = api(r.people["first"]).put(f"{slide}/edits/T2", json={"deleted": True})
     assert (edit.status_code, edit.json()["code"]) == (409, "task-signed-off")
-    assert api(r.people["owner"]).post(f"{task}/reopen").status_code == 200
+    assert api(r.people["owner"]).post(f"{task}/reopen", json=REOPEN).status_code == 200
     reopened = api(r.people["first"]).post(f"{slide}/reopen")
     assert reopened.status_code == 200, reopened.text
     assert states(api, r, "owner") == [("in-review", pair("in-review", "submitted"))]

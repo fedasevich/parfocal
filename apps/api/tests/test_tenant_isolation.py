@@ -35,6 +35,8 @@ from parfocal_api.tables import (
     display_choices,
     display_presets,
     emergency_grants,
+    evaluation_changes,
+    evaluation_versions,
     hidden_models,
     invitations,
     job_steps,
@@ -1051,6 +1053,36 @@ async def seed_report_links(connection: AsyncConnection, seeded: Seeded) -> None
     seeded.markers.add(str(link))
 
 
+async def seed_evaluation_versions(connection: AsyncConnection, seeded: Seeded) -> None:
+    checksum = f"sha256:{uuid.uuid4().hex}"
+    await connection.execute(
+        insert(evaluation_versions).values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            number=7,
+            signed_at=func.now(),
+            checksum=checksum,
+        )
+    )
+    seeded.markers.add(checksum)
+
+
+async def seed_evaluation_changes(connection: AsyncConnection, seeded: Seeded) -> None:
+    reason = f"Late change {uuid.uuid4()}"
+    await connection.execute(
+        insert(evaluation_changes).values(
+            tenant_id=seeded.tenant_id,
+            task_id=seeded.ids["task"],
+            version=7,
+            slide_id=seeded.ids["slide"],
+            object_id="T1",
+            change="Decided agree",
+            reason=reason,
+        )
+    )
+    seeded.markers.add(reason)
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -1078,6 +1110,8 @@ SEEDERS: dict[str, Seeder] = {
     "adjudication_objects": seed_adjudication_objects,
     "resume_states": seed_resume_states,
     "report_links": seed_report_links,
+    "evaluation_versions": seed_evaluation_versions,
+    "evaluation_changes": seed_evaluation_changes,
 }
 GET_ROUTES = {
     "findOpenUpload": Route(
@@ -1231,6 +1265,9 @@ GET_ROUTES = {
     "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
     "getTaskEvaluation": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation"
+    ),
+    "getSignOffSummary": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/sign-off-summary"
     ),
     "exportTaskEvaluation": Route(
         Exposure.TENANT,

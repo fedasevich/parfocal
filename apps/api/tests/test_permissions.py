@@ -191,6 +191,7 @@ class Workspace:
     submitted_task: uuid.UUID
     ready_task: uuid.UUID
     signed_task: uuid.UUID
+    versioned_task: uuid.UUID
     queued_task: uuid.UUID
     hidden_task: uuid.UUID
     first_read_task: uuid.UUID
@@ -570,6 +571,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/projects/{w.project}/patients/{w.doomed_patient}"
     ),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
+    "getSignOffSummary": lambda w: Call("GET", f"/api/review-tasks/{w.task}/sign-off-summary"),
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
     ),
@@ -694,7 +696,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/review-tasks/{w.submitted_task}/slides/{w.slide}/reopen"
     ),
     "signOffReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.ready_task}/sign-off"),
-    "reopenReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.signed_task}/reopen"),
+    "reopenReviewTask": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.signed_task}/reopen", {"reason": "Measured again on A1"}
+    ),
+    "startEvaluationVersion": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.versioned_task}/evaluation-versions",
+        {"reason": "Measured again on A1"},
+    ),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
     "addTaskReviewer": lambda w: Call(
         "POST", f"/api/review-tasks/{w.add_task}/reviewers", {"user_id": str(w.lead)}
@@ -784,6 +793,7 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
     [uuid.uuid4()],
+    uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
     uuid.uuid4(),
@@ -1336,7 +1346,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 result_set,
                 people[lead],
             )
-            submitted_task, ready_task, signed_task = [
+            submitted_task, ready_task, signed_task, versioned_task = [
                 await seed_task(
                     connection,
                     tenant_id,
@@ -1345,9 +1355,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     result_set,
                     people[lead],
                     number,
-                    signed=number == 4,
+                    signed=number in (4, 11),
                 )
-                for number in (2, 3, 4)
+                for number in (2, 3, 4, 11)
             ]
             queued_task = await seed_task(
                 connection,
@@ -1639,6 +1649,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             submitted_task,
             ready_task,
             signed_task,
+            versioned_task,
             queued_task,
             hidden_task,
             first_read_task,

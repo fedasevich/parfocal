@@ -9,6 +9,8 @@ from parfocal_api.principals import MemberPrincipal
 
 pytestmark = pytest.mark.db
 
+REOPEN = {"reason": "Measured again on deeper levels"}
+
 
 def verdict(api: ApiAs, r: Review, who: str, object_id: str, body: dict[str, Any]) -> Any:
     return api(r.people[who]).put(f"{r.base}/verdicts/{object_id}", json=body)
@@ -147,7 +149,7 @@ def test_verdicts_lock_at_sign_off_and_open_again_on_reopen(api: ApiAs, database
     late = verdict(api, r, "first", "T1", {"value": "unsure"})
     assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")
     assert api(r.people["first"]).delete(f"{r.base}/verdicts/T1").status_code == 409
-    assert api(r.people["owner"]).post(f"{task}/reopen").status_code == 200
+    assert api(r.people["owner"]).post(f"{task}/reopen", json=REOPEN).status_code == 200
     assert verdict(api, r, "first", "T1", {"value": "unsure"}).status_code == 200
 
 

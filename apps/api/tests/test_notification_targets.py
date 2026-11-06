@@ -123,7 +123,7 @@ def test_a_target_is_refused_to_others_and_when_it_is_out_of_reach(
     assert (stolen.status_code, stolen.json()["code"]) == (404, "notification-not-found")
     evaluation = notification(database, s, "first", NotificationKind.TASK_SIGNED_OFF, task_id)
     hidden = target(api, s, "first", evaluation)
-    assert (hidden.status_code, hidden.json()["code"]) == (404, "target-gone")
+    assert (hidden.status_code, hidden.json()["kind"]) == (200, "task")
     loose = notification(database, s, "third", NotificationKind.RESULT_SET_ADDED, s.slides[0])
     assert target(api, s, "third", loose).json()["code"] == "target-gone"
     gone = notification(database, s, "owner", NotificationKind.EMERGENCY_ACCESS, uuid.uuid4())

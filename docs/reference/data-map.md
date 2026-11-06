@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 33 |
-| `personal` | 75 |
+| `phi` | 35 |
+| `personal` | 78 |
 | `secret` | 10 |
-| `operational` | 618 |
+| `operational` | 637 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -250,6 +250,40 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reason` | phi |
 | `granted_at` | operational |
 | `expires_at` | operational |
+
+## evaluation_changes
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `version` | operational |
+| `slide_id` | operational |
+| `object_id` | operational |
+| `change` | operational |
+| `reason` | phi |
+| `changed_by_user_id` | personal |
+| `changed_at` | operational |
+
+## evaluation_versions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `task_id` | operational |
+| `number` | operational |
+| `reason` | phi |
+| `started_by_user_id` | personal |
+| `started_at` | operational |
+| `signed_at` | operational |
+| `signed_by_user_id` | personal |
+| `confirmed_with` | operational |
+| `checksum` | operational |
+| `evaluation` | operational |
+| `blocks` | operational |
+| `format` | operational |
 
 ## hidden_models
 
