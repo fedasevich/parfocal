@@ -3426,7 +3426,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the scorer reproduces POC numbers on the same inputs.
   Refs [`poc/server/tools/score_*`](https://github.com/fedasevich/pathlogy-poc/tree/master/server/tools), doc 26. Result: [geometric scorer reproduction](results/2026-10-18-geometric-scorer-reproduction.md).
 
-- [ ] MLEVAL-003 · Interactive protocol
+- [x] MLEVAL-003 · Interactive protocol
   Realistic clicks (centroid with jitter), loose boxes, refinement clicks, NoC@85 and NoC@90.
   Done when the harness reproduces doc 26's held-out click and box numbers within tolerance.
   Size: L.
