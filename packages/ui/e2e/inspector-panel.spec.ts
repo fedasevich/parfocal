@@ -7,6 +7,8 @@ const count = (page: Page, name: string) => tab(page, name).locator('[data-slot=
 const staging = (page: Page) => page.locator('[data-slot="staging-cards"]');
 const templateLine = (page: Page) => page.locator('[data-slot="template-line"]');
 
+test.use({ viewport: { width: 1280, height: 900 } });
+
 test("each of the four tabs shows its own count", async ({ page }) => {
   await open(page, "sentinel-node");
   await expect(count(page, "Objects")).toHaveText("4");

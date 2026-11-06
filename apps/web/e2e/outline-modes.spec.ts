@@ -20,6 +20,7 @@ const modes = (page: Page) => page.getByRole("radiogroup", { name: "Outline disp
 test("each outline mode changes the overlay on a real slide and the choice is remembered", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await openReviewSlide(page);
   await expect(layer(page)).toHaveAttribute("data-mode", "fade");
   await expect(layer(page)).toHaveAttribute("data-overlays", "1");

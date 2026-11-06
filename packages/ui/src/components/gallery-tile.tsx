@@ -164,10 +164,12 @@ function GalleryTile({
           data-slot="gallery-tile-flag-action"
           title="May not be a nucleus. Disagree (X)"
           aria-label={`${objectId} may not be a nucleus, disagree`}
-          className="absolute -top-1 -right-1 grid size-3.5 cursor-pointer place-items-center rounded-full border-0 bg-v-disagree p-0 text-white shadow-[0_0_0_2px_var(--chrome)] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 focus-visible:outline-solid"
+          className="absolute -top-2.25 -right-2.25 grid size-6 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-accent focus-visible:outline-solid"
           onClick={onFlagAction}
         >
-          <Icon name="close" className="size-2" />
+          <span className="grid size-3.5 place-items-center rounded-full bg-v-disagree text-white shadow-[0_0_0_2px_var(--chrome)]">
+            <Icon name="close" className="size-2" />
+          </span>
         </button>
       ) : (
         <span

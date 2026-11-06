@@ -355,7 +355,7 @@ function StagingSummary({
         aria-controls={controls}
         title={open ? "Fold the staging card" : "Show the staging card"}
         onClick={onToggle}
-        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent p-0 text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent p-0 text-left text-fg outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-solid"
       >
         <span className="min-w-0 truncate text-body-sm font-semibold">{summary.title}</span>
         {summary.chip ? <CategoryTag className="shrink-0">{summary.chip}</CategoryTag> : null}

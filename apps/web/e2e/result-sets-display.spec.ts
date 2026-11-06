@@ -16,7 +16,7 @@ test("a result set shows dashed behind the task set and hides again", async ({ p
   const outlines = page.locator('[data-slot="other-set-outlines"]');
   await expect(outlines).toHaveCount(0);
   const first = rows.getByRole("switch").first();
-  expect(await first.getAttribute("aria-label")).not.toBe("Your review");
+  await expect(first).not.toHaveAttribute("aria-label", "Your review");
   await first.click();
   await expect(first).toBeChecked();
   await expect(outlines).toHaveCount(1);

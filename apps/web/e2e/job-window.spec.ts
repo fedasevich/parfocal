@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 const tray = (page: Page) => page.getByRole("dialog", { name: "Jobs" });
 
 async function showTray(page: Page) {
+  await expect(tray(page).and(page.locator("[data-closed]"))).toHaveCount(0);
   if ((await tray(page).count()) === 0) {
     await page.getByRole("button", { name: /^Jobs/ }).click();
   }

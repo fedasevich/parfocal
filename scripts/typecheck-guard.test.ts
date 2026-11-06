@@ -31,7 +31,7 @@ test("typecheck fails on an import of a missing export", () => {
 
 test("typecheck fails on an import of an undeclared workspace package", () => {
   const { status, output } = typecheckWebWith(
-    'import { packageName } from "@parfocal/edge";\nexport const probe = packageName;\n',
+    'import { packageName } from "@parfocal/latency-proxy";\nexport const probe = packageName;\n',
   );
   assert.notEqual(status, 0);
   assert.match(output, /TS2307/);
