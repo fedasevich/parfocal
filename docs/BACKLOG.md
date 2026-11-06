@@ -3066,7 +3066,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when engine tests show a job that loses its lease three times fails on the fourth claim, a manual retry claims it again, and a job that succeeds within three claims is unchanged.
   Depends on AIP-008. Refs [ADR 0123](adr/0123-model-runs-are-engine-jobs-per-slide.md) (model runs as engine jobs per slide).
 
-- [ ] AIP-009 · Resumable whole-slide jobs
+- [x] AIP-009 · Resumable whole-slide jobs
   Tissue-masked core tiles with context halo, centroid ownership, tumour-first ordering, chunk per tile, resume by skipping tiles already written.
   Done when a test kills a job halfway and the resumed run produces the same chunks as an uninterrupted run.
   Refs doc 19, [`poc/server/app/nuclei/wsi.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/app/nuclei/wsi.py).
