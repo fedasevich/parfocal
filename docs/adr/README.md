@@ -212,3 +212,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0246](0246-pathosam-onnx-export-contract.md) | PathoSAM exports to ONNX with the legacy TorchScript exporter, a square traced orig_im_size and a gate against PyTorch | Accepted | 2026-11-06 |
 | [0247](0247-annotate-slide-checks-and-sign-off.md) | Annotate slide checks and sign-off per slide | Accepted | 2026-11-06 |
 | [0248](0248-detector-runner-stitches-full-resolution-ais-maps.md) | The detector runner stitches full-resolution PathoSAM AIS maps over 512 px windows and runs them on onnxruntime | Accepted | 2026-11-06 |
+| [0249](0249-shared-sample-slide-files.md) | Sample slides share one stored original, named by a folder claim in the tile token | Accepted | 2026-11-06 |

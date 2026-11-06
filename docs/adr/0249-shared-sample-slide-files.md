@@ -1,7 +1,7 @@
-# XXXX. Sample slides share one stored original, named by a folder claim in the tile token
+# 0249. Sample slides share one stored original, named by a folder claim in the tile token
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: ONB-007 (sample slide files). Builds on ADR 0139 (the sample project) and TILES-001 (signed access to slide bytes)
 
