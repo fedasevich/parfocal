@@ -1,3 +1,5 @@
+import { buttonReleased, keepCapture } from "./stage-pointer.ts";
+
 export const clickSlopScreenPixels = 3;
 
 export type PressEngine = {
@@ -9,7 +11,12 @@ export type PressEngine = {
 
 export type PressStage = Pick<
   HTMLElement,
-  "addEventListener" | "removeEventListener" | "setPointerCapture" | "releasePointerCapture"
+  | "addEventListener"
+  | "removeEventListener"
+  | "setPointerCapture"
+  | "releasePointerCapture"
+  | "hasPointerCapture"
+  | "isConnected"
 >;
 
 export type ClickPressOptions = {
@@ -46,6 +53,10 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
   const move = (event: PointerEvent) => {
     if (press === null || event.pointerId !== press.id) return;
     event.stopImmediatePropagation();
+    if (buttonReleased(event)) {
+      up(event);
+      return;
+    }
     if (!press.dragging) {
       const away = Math.hypot(event.clientX - press.x, event.clientY - press.y);
       if (away <= clickSlopScreenPixels) return;
@@ -72,6 +83,8 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
     if (finished.dragging) options.engine().stopMotion();
   };
 
+  const lost = keepCapture(stage, (id) => press?.id === id, cancel);
+
   const doubleClick = (event: MouseEvent) => {
     event.stopImmediatePropagation();
     event.preventDefault();
@@ -81,14 +94,14 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
   stage.addEventListener("pointermove", move, true);
   stage.addEventListener("pointerup", up, true);
   stage.addEventListener("pointercancel", cancel, true);
-  stage.addEventListener("lostpointercapture", cancel, true);
+  stage.addEventListener("lostpointercapture", lost, true);
   stage.addEventListener("dblclick", doubleClick, true);
   return () => {
     stage.removeEventListener("pointerdown", down, true);
     stage.removeEventListener("pointermove", move, true);
     stage.removeEventListener("pointerup", up, true);
     stage.removeEventListener("pointercancel", cancel, true);
-    stage.removeEventListener("lostpointercapture", cancel, true);
+    stage.removeEventListener("lostpointercapture", lost, true);
     stage.removeEventListener("dblclick", doubleClick, true);
     press = null;
   };

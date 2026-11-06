@@ -193,3 +193,32 @@ test("Alt draws a rectangle from its centre and Space held pans in the middle of
   expect(Math.abs(bounds.x + bounds.width - (box.x + 421))).toBeLessThan(2);
   expect(Math.abs(bounds.y + bounds.height - (box.y + 361))).toBeLessThan(2);
 });
+
+const dragTools = [
+  { tool: "rectangle", key: "r", made: '[data-testid="polygon-shape"]' },
+  { tool: "ellipse", key: "o", made: '[data-testid="polygon-shape"]' },
+  { tool: "freehand", key: "Shift+P", made: '[data-testid="polygon-shape"]' },
+  { tool: "arrow", key: "Shift+L", made: '[data-testid="arrow-shape"]' },
+  { tool: "ruler", key: "l", made: '[data-testid="ruler-layer"] line' },
+];
+
+for (const { tool, key, made } of dragTools) {
+  test(`the ${tool} tool keeps drawing when the browser drops pointer capture mid-drag`, async ({
+    page,
+  }) => {
+    const stage = await openSlide(page);
+    const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+    await page.keyboard.press(key);
+    await expect(stage).toHaveAttribute("data-tool", tool);
+    const before = await page.locator(made).count();
+    await page.mouse.move(box.x + 200, box.y + 200);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 280, box.y + 230, { steps: 4 });
+    await page.getByTestId("slide-host").evaluate((host) => {
+      host.dispatchEvent(new PointerEvent("lostpointercapture", { pointerId: 1, bubbles: true }));
+    });
+    await page.mouse.move(box.x + 400, box.y + 280, { steps: 4 });
+    await page.mouse.up();
+    await expect(page.locator(made)).not.toHaveCount(before);
+  });
+}

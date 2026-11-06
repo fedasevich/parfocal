@@ -16,8 +16,10 @@ import {
 import { at } from "./shapes.ts";
 import {
   bindSpacePan,
+  buttonReleased,
   capturePointer,
   interruptMotion,
+  keepCapture,
   releasePointer,
   slideAt,
   stagePoint,
@@ -132,6 +134,10 @@ export function PolygonLayer({
         return;
       }
       event.stopImmediatePropagation();
+      if (buttonReleased(event)) {
+        up(event);
+        return;
+      }
       pan.steer(event);
     };
     const up = (event: PointerEvent) => {
@@ -154,6 +160,7 @@ export function PolygonLayer({
       if (pressed === null || event.pointerId !== pressed.id) return;
       pressed = null;
     };
+    const lost = keepCapture(stage, (id) => pressed?.id === id, cancel);
     const leave = () => {
       if (pressed === null) setPointer(null);
     };
@@ -185,7 +192,7 @@ export function PolygonLayer({
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
-    stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("lostpointercapture", lost, true);
     stage.addEventListener("pointerleave", leave, true);
     stage.addEventListener("dblclick", doubleClick, true);
     window.addEventListener("keydown", key);
@@ -202,7 +209,7 @@ export function PolygonLayer({
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
-      stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("lostpointercapture", lost, true);
       stage.removeEventListener("pointerleave", leave, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       window.removeEventListener("keydown", key);

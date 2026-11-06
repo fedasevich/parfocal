@@ -11,6 +11,7 @@ import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import { addArrow, arrowEndsOf, arrowHead, arrowsOf } from "./marks.ts";
 import { bindShiftRefresh } from "./shift-refresh.ts";
+import { buttonReleased, capturePointer, keepCapture, releasePointer } from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
 
 type ArrowLayerProps = {
@@ -98,7 +99,7 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
       if (event.button !== 0) return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      stage.setPointerCapture(event.pointerId);
+      capturePointer(stage, event.pointerId);
       pointerId = event.pointerId;
       anchor = slidePoint(event);
       screenStart = { x: event.clientX, y: event.clientY };
@@ -108,6 +109,10 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     const move = (event: PointerEvent) => {
       if (anchor === null || event.pointerId !== pointerId) return;
       event.stopImmediatePropagation();
+      if (buttonReleased(event)) {
+        up(event);
+        return;
+      }
       lastPointer = { clientX: event.clientX, clientY: event.clientY };
       setDraft({ from: anchor, to: endPoint(event, anchor) });
     };
@@ -122,9 +127,10 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
         });
         latest.current.onApply(next, "Add arrow");
       }
-      stage.releasePointerCapture(event.pointerId);
+      releasePointer(stage, event.pointerId);
       cancel();
     };
+    const lost = keepCapture(stage, (id) => anchor !== null && id === pointerId, cancel);
     const doubleClick = (event: MouseEvent) => {
       event.stopImmediatePropagation();
       event.preventDefault();
@@ -133,6 +139,7 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
+    stage.addEventListener("lostpointercapture", lost, true);
     stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => anchor !== null, peel: cancel });
     const leaveShift = bindShiftRefresh(stage.ownerDocument, refreshEnd);
@@ -141,6 +148,7 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("lostpointercapture", lost, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       leaveRung?.();
       cancel();

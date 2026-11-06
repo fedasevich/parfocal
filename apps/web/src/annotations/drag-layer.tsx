@@ -6,8 +6,10 @@ import { type DragKind, dragFrame, dragOutline, finishDrag } from "./drag-shape.
 import type { Point } from "./polygon-draft.ts";
 import {
   bindSpacePan,
+  buttonReleased,
   capturePointer,
   interruptMotion,
+  keepCapture,
   releasePointer,
   slideAt,
   stagePoint,
@@ -63,6 +65,10 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
         return;
       }
       event.stopImmediatePropagation();
+      if (buttonReleased(event)) {
+        up(event);
+        return;
+      }
       if (pan.steer(event)) return;
       current = {
         ...current,
@@ -95,6 +101,7 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       pan.release();
       setDrag(null);
     };
+    const lost = keepCapture(stage, (id) => current?.id === id, cancel);
     const abandon = () => {
       current = null;
       pan.release();
@@ -108,7 +115,7 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
-    stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("lostpointercapture", lost, true);
     stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => current !== null, peel: abandon });
     return () => {
@@ -116,7 +123,7 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
-      stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("lostpointercapture", lost, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       pan.dispose();
       leaveRung?.();

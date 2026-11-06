@@ -6,8 +6,10 @@ import { finishStroke, strokeSamples } from "./freehand.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
   bindSpacePan,
+  buttonReleased,
   capturePointer,
   interruptMotion,
+  keepCapture,
   releasePointer,
   slideAt,
 } from "./stage-pointer.ts";
@@ -54,6 +56,10 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
         return;
       }
       event.stopImmediatePropagation();
+      if (buttonReleased(event)) {
+        up(event);
+        return;
+      }
       if (pan.steer(event)) return;
       for (const sample of strokeSamples(event)) drawing.points.push(toSlide(sample));
       setStroke([...drawing.points]);
@@ -75,6 +81,7 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       pan.release();
       setStroke([]);
     };
+    const lost = keepCapture(stage, (id) => drawing?.id === id, cancel);
     const abandon = () => {
       drawing = null;
       pan.release();
@@ -88,7 +95,7 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
-    stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("lostpointercapture", lost, true);
     stage.addEventListener("dblclick", doubleClick, true);
     const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: abandon });
     return () => {
@@ -96,7 +103,7 @@ export function FreehandLayer({ engine, stage, active, onClose }: FreehandLayerP
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
-      stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("lostpointercapture", lost, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       pan.dispose();
       leaveRung?.();

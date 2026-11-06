@@ -14,7 +14,13 @@ import {
   type SelectTool,
 } from "./select-tool.ts";
 import { at, type Extent, isClosedKind, outlineOf, type Shape, type ShapeId } from "./shapes.ts";
-import { bindSpacePan, capturePointer, interruptMotion, slideAt } from "./stage-pointer.ts";
+import {
+  bindSpacePan,
+  buttonReleased,
+  capturePointer,
+  interruptMotion,
+  slideAt,
+} from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
 
 type SelectLayerProps = {
@@ -166,7 +172,7 @@ export function SelectLayer({
         capturePointer(stage, event.pointerId);
         return;
       }
-      const released = event.type === "pointermove" && dragging && (event.buttons & 1) === 0;
+      const released = event.type === "pointermove" && dragging && buttonReleased(event);
       const input = pointerInput(event);
       const consumed = tool.handle(released ? { ...input, kind: "up" } : input);
       if (!consumed) return;

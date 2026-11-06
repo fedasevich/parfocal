@@ -37,6 +37,21 @@ export function capturePointer(stage: PointerStage, pointerId: number): void {
   }
 }
 
+export const buttonReleased = (event: Pick<PointerEvent, "buttons">): boolean =>
+  (event.buttons & 1) === 0;
+
+export function keepCapture(
+  stage: PointerStage & Pick<HTMLElement, "isConnected">,
+  holding: (pointerId: number) => boolean,
+  cancel: (event: PointerEvent) => void,
+): (event: PointerEvent) => void {
+  return (event) => {
+    if (!holding(event.pointerId)) return;
+    if (stage.isConnected) capturePointer(stage, event.pointerId);
+    else cancel(event);
+  };
+}
+
 export function releasePointer(stage: PointerStage, pointerId: number): void {
   try {
     if (stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId);

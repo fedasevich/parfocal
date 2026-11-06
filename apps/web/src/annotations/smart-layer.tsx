@@ -20,8 +20,10 @@ import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
 import {
   bindSpacePan,
+  buttonReleased,
   capturePointer,
   interruptMotion,
+  keepCapture,
   releasePointer,
   slideAt,
   stagePoint,
@@ -237,6 +239,10 @@ export function SmartLayer({
         return;
       }
       event.stopImmediatePropagation();
+      if (buttonReleased(event)) {
+        up(event);
+        return;
+      }
       if (pan.steer(event)) return;
       const pointer = stagePoint(stage, event);
       current = {
@@ -283,6 +289,7 @@ export function SmartLayer({
       pan.release();
       setPress(null);
     };
+    const lost = keepCapture(stage, (id) => current?.id === id, cancel);
     const menu = (event: Event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -303,7 +310,7 @@ export function SmartLayer({
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointerleave", leave, true);
     stage.addEventListener("pointercancel", cancel, true);
-    stage.addEventListener("lostpointercapture", cancel, true);
+    stage.addEventListener("lostpointercapture", lost, true);
     stage.addEventListener("contextmenu", menu, true);
     stage.addEventListener("dblclick", doubleClick, true);
     window.addEventListener("keydown", key);
@@ -321,7 +328,7 @@ export function SmartLayer({
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointerleave", leave, true);
       stage.removeEventListener("pointercancel", cancel, true);
-      stage.removeEventListener("lostpointercapture", cancel, true);
+      stage.removeEventListener("lostpointercapture", lost, true);
       stage.removeEventListener("contextmenu", menu, true);
       stage.removeEventListener("dblclick", doubleClick, true);
       window.removeEventListener("keydown", key);
