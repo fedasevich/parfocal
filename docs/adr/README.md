@@ -220,3 +220,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0254](0254-project-defaults-as-columns.md) | Project defaults for new tasks and ID matching are typed columns on projects, changed through the project PATCH | Accepted | 2026-11-06 |
 | [0255](0255-smart-select-gestures-and-proposals.md) | Smart select keeps each object as a pending proposal in one model run and takes the best of four candidate masks | Accepted | 2026-11-06 |
 | [0256](0256-embedding-prewarm.md) | The smart session encodes the view centre after 350 ms of stillness and shares one encode per patch | Accepted | 2026-11-06 |
+| [0257](0257-changes-after-sign-off-keep-the-signed-checksum.md) | Changes after sign-off keep the signed checksum and are flagged in the report | Accepted | 2026-11-06 |
