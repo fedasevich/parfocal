@@ -1,7 +1,7 @@
-# XXXX. PathoSAM exports to ONNX with the legacy TorchScript exporter, a square traced orig_im_size and a gate against PyTorch
+# 0246. PathoSAM exports to ONNX with the legacy TorchScript exporter, a square traced orig_im_size and a gate against PyTorch
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AISEG-001 (ONNX export pipeline). Builds on [ADR 0148](0148-browser-ml-runtime-onnxruntime-web.md) (browser models run on onnxruntime-web 1.31.1)
 
