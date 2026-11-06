@@ -2,7 +2,6 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { type ProjectImports, projectImportsSchema } from "../draft/get-project-imports.ts";
 import { type ProjectOverview, projectOverviewSchema } from "../draft/get-project-overview.ts";
 import { type UploadBatch, uploadBatchSchema } from "../draft/get-upload-batch.ts";
-import { type SourceListing, sourceListingSchema } from "../draft/list-source-files.ts";
 import {
   getGetOpinionFormMockHandler,
   getListClassMappingsMockHandler,
@@ -14,11 +13,14 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   ClassMapping,
+  LinkImport,
+  LinkImportRequest,
   OpinionForm,
   ProjectClass,
   ResultSet,
   ReviewTask,
   SlideArea,
+  SourceListing,
   Template,
 } from "../generated/api.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
@@ -273,17 +275,22 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
 export const toSourceListing = (address: string): SourceListing => {
   const listing =
     address === sourceListings.remote.address ? sourceListings.remote : sourceListings.link;
-  return sourceListingSchema.parse({
+  return {
     address: address || listing.address,
     kind: listing.kind,
     files: sourceFiles.map((file) => ({
       name: file.name,
       detail: file.detail,
       size_gb: file.sizeGb,
+      size_bytes: Math.round(file.sizeGb * 1024 ** 3),
       in_project: file.inProject,
+      case: null,
+      refused: null,
+      message: null,
       result: file.result,
     })),
-  });
+    others: [],
+  };
 };
 
 export const toProjectImports = (idOrCode: string): ProjectImports => {
@@ -361,12 +368,24 @@ export const getGetUploadBatchMockHandler = (overrideResponse?: UploadBatch) =>
     HttpResponse.json(overrideResponse ?? toUploadBatch(params.projectId)),
   );
 
-export const getListSourceFilesMockHandler = (overrideResponse?: SourceListing) =>
+export const sourceFilesHandler = (overrideResponse?: SourceListing) =>
   http.get("*/api/projects/:projectId/source-files", ({ request }) =>
     HttpResponse.json(
       overrideResponse ?? toSourceListing(new URL(request.url).searchParams.get("address") ?? ""),
     ),
   );
+
+export const linkImportHandler = () =>
+  http.post("*/api/projects/:projectId/link-imports", async ({ request }) => {
+    const { names } = (await request.json()) as LinkImportRequest;
+    const started: LinkImport["started"] = names.map((name, index) => ({
+      name,
+      upload_id: `00000000-0000-4000-8099-${String(index * 2 + 1).padStart(12, "0")}`,
+      kind: "slide",
+      job_id: `00000000-0000-4000-8099-${String(index * 2 + 2).padStart(12, "0")}`,
+    }));
+    return HttpResponse.json({ started, left_out: [] } satisfies LinkImport, { status: 202 });
+  });
 
 export const getGetProjectImportsMockHandler = (overrideResponse?: ProjectImports) =>
   http.get<{ projectId: string }>("*/api/projects/:projectId/imports", ({ params }) =>
@@ -385,12 +404,6 @@ export const projectDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/projects/{project_id}/upload-batch",
     handler: () => getGetUploadBatchMockHandler(),
-  },
-  {
-    operationId: "listSourceFiles",
-    method: "get",
-    path: "/api/projects/{project_id}/source-files",
-    handler: () => getListSourceFilesMockHandler(),
   },
   {
     operationId: "getProjectImports",

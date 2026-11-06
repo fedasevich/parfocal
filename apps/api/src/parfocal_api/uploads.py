@@ -35,6 +35,7 @@ from parfocal_common.ingest import (
     failure_message,
 )
 from parfocal_common.jobs import JobStatus, StepStatus
+from parfocal_common.link_imports import KIND as LINK_FETCH
 from parfocal_common.object_store import NoSuchUploadError, StorageError, StoredPart
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.part_plan import MAX_PARTS, part_size_for, parts_problem, plan_parts
@@ -719,10 +720,42 @@ async def slide_state(connection: AsyncConnection, row: Any) -> UploadState:
     )
 
 
+async def link_failure(connection: AsyncConnection, row: Any) -> str | None:
+    if row.status != UploadStatus.ABORTED:
+        return None
+    return await connection.scalar(
+        select(jobs.c.error_code)
+        .where(
+            jobs.c.project_id == row.project_id,
+            jobs.c.kind == LINK_FETCH,
+            jobs.c.input["upload_id"].astext == str(row.id),
+            jobs.c.error_code.is_not(None),
+        )
+        .order_by(jobs.c.created_at.desc())
+        .limit(1)
+    )
+
+
+def failed_state(state: UploadState, reason: str) -> UploadState:
+    status, code, message = failed(reason)
+    return state.model_copy(
+        update={
+            "status": status,
+            "step": None,
+            "reason": code,
+            "failure_class": class_of(status, code),
+            "message": message,
+        }
+    )
+
+
 async def state_of(connection: AsyncConnection, row: Any) -> UploadState:
     if row.kind == UploadKind.RESULT:
-        return await result_state(connection, row)
-    return await slide_state(connection, row)
+        state = await result_state(connection, row)
+    else:
+        state = await slide_state(connection, row)
+    reason = await link_failure(connection, row)
+    return failed_state(state, reason) if reason is not None else state
 
 
 @router.get(
@@ -790,6 +823,25 @@ async def list_upload_parts(
     ]
 
 
+async def close_upload(
+    connection: AsyncConnection, row: Any, etag: str | None
+) -> tuple[Any, uuid.UUID | None]:
+    job_id = (
+        await enqueue_ingest(connection, row.tenant_id, row.project_id, row.id)
+        if row.kind == UploadKind.SLIDE
+        else None
+    )
+    finished = (
+        await connection.execute(
+            update(uploads)
+            .where(uploads.c.id == row.id)
+            .values(status=UploadStatus.COMPLETED, closed_at=func.now(), job_id=job_id, etag=etag)
+            .returning(uploads)
+        )
+    ).one()
+    return finished, await queue_if_ready(connection, finished)
+
+
 @router.post(
     COMPANION + "/{upload_id}/complete",
     operation_id="completeUpload",
@@ -813,11 +865,6 @@ async def complete_upload(
     problem = completion_problem(stored, completion.parts, row)
     if problem is not None:
         raise UploadPartsInvalidError(problem)
-    job_id = (
-        await enqueue_ingest(connection, row.tenant_id, row.project_id, row.id)
-        if row.kind == UploadKind.SLIDE
-        else None
-    )
     try:
         completed = await store.complete_multipart_upload(
             row.object_key, row.storage_upload_id, stored
@@ -828,20 +875,7 @@ async def complete_upload(
         if error.code not in REFUSED_COMPLETIONS:
             raise
         raise UploadPartsInvalidError(f"Storage refused the parts with {error.code}") from error
-    finished = (
-        await connection.execute(
-            update(uploads)
-            .where(uploads.c.id == upload_id)
-            .values(
-                status=UploadStatus.COMPLETED,
-                closed_at=func.now(),
-                job_id=job_id,
-                etag=completed.etag or None,
-            )
-            .returning(uploads)
-        )
-    ).one()
-    queued = await queue_if_ready(connection, finished)
+    finished, queued = await close_upload(connection, row, completed.etag or None)
     await audit(connection, principal, AuditAction.UPLOAD_COMPLETED, finished)
     return completed_of(finished, queued)
 

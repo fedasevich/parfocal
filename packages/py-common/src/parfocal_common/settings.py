@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, SecretStr
+from pydantic import AnyHttpUrl, PositiveFloat, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_common.object_store import StorageLocation
@@ -83,6 +83,9 @@ class StorageSettings(ServiceSettings):
     storage_bucket: str = "parfocal-local"
     storage_access_key_id: str = "parfocal"
     storage_secret_access_key: SecretStr = SecretStr("parfocal-local-secret")
+    link_trusted_origins: list[str] = []
+    link_read_seconds: PositiveFloat = 30.0
+    link_fetch_seconds: PositiveFloat = 3600.0
 
     def storage(self) -> StorageLocation:
         return StorageLocation(

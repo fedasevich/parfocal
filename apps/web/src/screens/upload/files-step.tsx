@@ -15,6 +15,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
+import { okData } from "../placeholder.tsx";
 import { FileIcon, FileList, FileName, FileRow, TextLink, Thumb } from "./parts.tsx";
 import {
   gb,
@@ -544,8 +545,9 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
   const address = link
     ? "https://data.cuni.cz/camelyon16/testing/images/"
     : "s3://fnvltava-scans/sentinel/2026-10/";
-  const listing = useListSourceFiles(projectId, address, { query: { enabled: checked } }).data
-    ?.data;
+  const listing = okData(
+    useListSourceFiles(projectId, { address }, { query: { enabled: checked } }).data,
+  );
   const files = listing?.files ?? [];
   const chosen = files.filter((file) => !file.in_project);
   const chosenGb = chosen.reduce((sum, file) => sum + file.size_gb, 0);

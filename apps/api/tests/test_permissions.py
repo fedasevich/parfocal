@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
@@ -6,12 +7,14 @@ from datetime import UTC, datetime
 from functools import cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import httpx2
 import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
+from link_support import Site
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
@@ -286,6 +289,24 @@ def template_body() -> dict[str, Any]:
     }
 
 
+LINK_SITE = Site()
+LINK_SITE.file("/scan.svs", b"slide-bytes")
+LINK_OPERATIONS = frozenset({"listSourceFiles", "importFromLink"})
+
+
+@cache
+def link_site_serving() -> threading.Thread:
+    thread = threading.Thread(target=LINK_SITE.server.serve_forever, daemon=True)
+    thread.start()
+    return thread
+
+
+def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    link_site_serving()
+    trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
+    monkeypatch.setattr(api.app, "settings", trusted)
+
+
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listStudyTemplates": lambda _: Call("GET", "/api/study-templates"),
     "getStudyTemplate": lambda w: Call("GET", f"/api/study-templates/{w.study_template}"),
@@ -327,6 +348,15 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST",
         "/api/uploads/pairings",
         {"project_id": str(w.project), "files": [{"path": "A1.svs"}, {"path": "A1.geojson"}]},
+    ),
+    "listSourceFiles": lambda w: Call(
+        "GET",
+        f"/api/projects/{w.project}/source-files?address={quote(LINK_SITE.url('/scan.svs'))}",
+    ),
+    "importFromLink": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/link-imports",
+        {"address": LINK_SITE.url("/scan.svs"), "names": ["scan.svs"]},
     ),
     "sortDroppedFiles": lambda w: Call(
         "POST",
@@ -1775,8 +1805,14 @@ GUARDED_CASES = [(operation, seat) for operation in sorted(GUARDED_CALLS) for se
 @pytest.mark.db
 @pytest.mark.parametrize(("operation", "seat"), GUARDED_CASES, ids=str)
 def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
-    api: ApiAs, workspaces: dict[Seat, Workspace], operation: str, seat: Seat
+    api: ApiAs,
+    workspaces: dict[Seat, Workspace],
+    operation: str,
+    seat: Seat,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    if operation in LINK_OPERATIONS:
+        trust_link_site(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))

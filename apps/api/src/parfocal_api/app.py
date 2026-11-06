@@ -30,6 +30,7 @@ from parfocal_api import (
     import_checks,
     inbox,
     invitations,
+    link_imports,
     model_run_progress,
     model_runs,
     model_tiers,
@@ -197,6 +198,7 @@ def create_app(
     app.include_router(result_pairing.router)
     app.include_router(import_checks.router)
     app.include_router(case_sorting.router)
+    app.include_router(link_imports.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(task_changes.router)

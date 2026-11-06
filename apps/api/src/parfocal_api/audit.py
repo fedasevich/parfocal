@@ -64,6 +64,7 @@ class AuditAction(StrEnum):
     RESULT_SET_DELETED = "result-set.deleted"
     UPLOAD_COMPLETED = "upload.completed"
     UPLOAD_ABORTED = "upload.aborted"
+    UPLOAD_LINKED = "upload.linked"
     UPLOAD_EXPIRED = "upload.expired"
     MODEL_RUN_STARTED = "model-run.started"
     MODEL_RUN_CANCELLED = "model-run.cancelled"

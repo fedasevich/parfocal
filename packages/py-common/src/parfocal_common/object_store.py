@@ -324,6 +324,14 @@ class ObjectStore:
             datetime.now(UTC),
         )
 
+    async def upload_part(
+        self, key: str, upload_id: str, part_number: int, body: bytes
+    ) -> StoredPart:
+        response = await self.send(
+            "PUT", key, {"partNumber": str(part_number), "uploadId": upload_id}, body
+        )
+        return StoredPart(part_number, len(body), unquote_etag(response.headers.get("etag", "")))
+
     async def put_object(
         self, key: str, body: bytes, content_type: str, *, content_encoding: str | None = None
     ) -> None:
