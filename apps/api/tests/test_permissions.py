@@ -260,6 +260,7 @@ NEEDS_A_TASK = frozenset(
         "removeCaseReportDeposit",
         "sendCaseReportForCosign",
         "returnCaseReport",
+        "withdrawCaseReport",
         "signCaseReport",
         "amendCaseReport",
         "createAnnotation",
@@ -367,7 +368,14 @@ async def seed_case_reports(
             sign_out="any",
         )
     )
-    states = {"fresh": None, "send": "draft", "sign": "draft", "sent": "sent", "signed": "signed"}
+    states = {
+        "fresh": None,
+        "send": "draft",
+        "sign": "draft",
+        "sent": "sent",
+        "withdraw": "sent",
+        "signed": "signed",
+    }
     await connection.execute(
         insert(cases),
         [
@@ -385,8 +393,8 @@ async def seed_case_reports(
         (
             named(f"report-{name}"),
             state,
-            lead if state == "sent" else None,
-            cosigner if state == "sent" else None,
+            (cosigner if name == "withdraw" else lead) if state == "sent" else None,
+            (lead if name == "withdraw" else cosigner) if state == "sent" else None,
             1 if state == "signed" else 0,
         )
         for name, state in states.items()
@@ -631,6 +639,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "returnCaseReport": lambda w: Call(
         "POST", f"{case_report(w, 'report-sent')}/return", {"note": "Matrix return note"}
     ),
+    "withdrawCaseReport": lambda w: Call("POST", f"{case_report(w, 'report-withdraw')}/withdraw"),
     "signCaseReport": lambda w: Call("POST", f"{case_report(w, 'report-sign')}/sign"),
     "amendCaseReport": lambda w: Call(
         "POST",
@@ -855,6 +864,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/projects/{w.project}/case-imports", {"csv": "case\nMatrix", "dry_run": True}
     ),
     "listMyReviewTasks": lambda _: Call("GET", "/api/me/review-tasks"),
+    "listMyCosignRequests": lambda _: Call("GET", "/api/me/cosign-requests"),
     "listTasksAssignedByMe": lambda _: Call("GET", "/api/me/assigned-tasks"),
     "listMySlides": lambda _: Call("GET", "/api/me/slides"),
     "listDisagreements": lambda w: Call("GET", f"/api/review-tasks/{w.task}/disagreements"),

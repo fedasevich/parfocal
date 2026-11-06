@@ -47,11 +47,11 @@ import { Route as ProjectsProjectIdJobsJobIdRouteImport } from "./routes/project
 import { Route as ProjectsProjectIdSlidesSlideIdRouteImport } from "./routes/projects.$projectId.slides.$slideId.tsx";
 import { Route as ProjectsProjectIdTasksNewRouteImport } from "./routes/projects.$projectId.tasks.new.tsx";
 import { Route as ProjectsProjectIdTasksNewAnnotateRouteImport } from "./routes/projects.$projectId.tasks.new-annotate.tsx";
+import { Route as ProjectsProjectIdCasesCaseIdCoSignRouteImport } from "./routes/projects.$projectId.cases.$caseId.co-sign.tsx";
 import { Route as ProjectsProjectIdCasesCaseIdReportRouteImport } from "./routes/projects.$projectId.cases.$caseId.report.tsx";
 import { Route as ProjectsProjectIdCasesCaseIdUploadRouteImport } from "./routes/projects.$projectId.cases.$caseId.upload.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdAnnotateRouteImport } from "./routes/projects.$projectId.slides.$slideId_.annotate.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdAnnotateTaskRouteImport } from "./routes/projects.$projectId.slides.$slideId_.annotate-task.tsx";
-import { Route as ProjectsProjectIdSlidesSlideIdCoSignRouteImport } from "./routes/projects.$projectId.slides.$slideId_.co-sign.tsx";
 import { Route as ProjectsProjectIdSlidesSlideIdLiveRouteImport } from "./routes/projects.$projectId.slides.$slideId_.live.tsx";
 
 const IndexRoute = IndexRouteImport.update({
@@ -252,6 +252,12 @@ const ProjectsProjectIdTasksNewAnnotateRoute =
     path: "/projects/$projectId/tasks/new-annotate",
     getParentRoute: () => rootRouteImport,
   } as any);
+const ProjectsProjectIdCasesCaseIdCoSignRoute =
+  ProjectsProjectIdCasesCaseIdCoSignRouteImport.update({
+    id: "/projects/$projectId/cases/$caseId/co-sign",
+    path: "/projects/$projectId/cases/$caseId/co-sign",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const ProjectsProjectIdCasesCaseIdReportRoute =
   ProjectsProjectIdCasesCaseIdReportRouteImport.update({
     id: "/projects/$projectId/cases/$caseId/report",
@@ -274,12 +280,6 @@ const ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute =
   ProjectsProjectIdSlidesSlideIdAnnotateTaskRouteImport.update({
     id: "/projects/$projectId/slides/$slideId_/annotate-task",
     path: "/projects/$projectId/slides/$slideId/annotate-task",
-    getParentRoute: () => rootRouteImport,
-  } as any);
-const ProjectsProjectIdSlidesSlideIdCoSignRoute =
-  ProjectsProjectIdSlidesSlideIdCoSignRouteImport.update({
-    id: "/projects/$projectId/slides/$slideId_/co-sign",
-    path: "/projects/$projectId/slides/$slideId/co-sign",
     getParentRoute: () => rootRouteImport,
   } as any);
 const ProjectsProjectIdSlidesSlideIdLiveRoute =
@@ -328,11 +328,11 @@ export interface FileRoutesByFullPath {
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/tasks/new-annotate": typeof ProjectsProjectIdTasksNewAnnotateRoute;
+  "/projects/$projectId/cases/$caseId/co-sign": typeof ProjectsProjectIdCasesCaseIdCoSignRoute;
   "/projects/$projectId/cases/$caseId/report": typeof ProjectsProjectIdCasesCaseIdReportRoute;
   "/projects/$projectId/cases/$caseId/upload": typeof ProjectsProjectIdCasesCaseIdUploadRoute;
   "/projects/$projectId/slides/$slideId/annotate": typeof ProjectsProjectIdSlidesSlideIdAnnotateRoute;
   "/projects/$projectId/slides/$slideId/annotate-task": typeof ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute;
-  "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
   "/projects/$projectId/slides/$slideId/live": typeof ProjectsProjectIdSlidesSlideIdLiveRoute;
 }
 export interface FileRoutesByTo {
@@ -374,11 +374,11 @@ export interface FileRoutesByTo {
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/tasks/new-annotate": typeof ProjectsProjectIdTasksNewAnnotateRoute;
+  "/projects/$projectId/cases/$caseId/co-sign": typeof ProjectsProjectIdCasesCaseIdCoSignRoute;
   "/projects/$projectId/cases/$caseId/report": typeof ProjectsProjectIdCasesCaseIdReportRoute;
   "/projects/$projectId/cases/$caseId/upload": typeof ProjectsProjectIdCasesCaseIdUploadRoute;
   "/projects/$projectId/slides/$slideId/annotate": typeof ProjectsProjectIdSlidesSlideIdAnnotateRoute;
   "/projects/$projectId/slides/$slideId/annotate-task": typeof ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute;
-  "/projects/$projectId/slides/$slideId/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
   "/projects/$projectId/slides/$slideId/live": typeof ProjectsProjectIdSlidesSlideIdLiveRoute;
 }
 export interface FileRoutesById {
@@ -421,11 +421,11 @@ export interface FileRoutesById {
   "/projects/$projectId/slides/$slideId": typeof ProjectsProjectIdSlidesSlideIdRoute;
   "/projects/$projectId/tasks/new": typeof ProjectsProjectIdTasksNewRoute;
   "/projects/$projectId/tasks/new-annotate": typeof ProjectsProjectIdTasksNewAnnotateRoute;
+  "/projects/$projectId/cases/$caseId/co-sign": typeof ProjectsProjectIdCasesCaseIdCoSignRoute;
   "/projects/$projectId/cases/$caseId/report": typeof ProjectsProjectIdCasesCaseIdReportRoute;
   "/projects/$projectId/cases/$caseId/upload": typeof ProjectsProjectIdCasesCaseIdUploadRoute;
   "/projects/$projectId/slides/$slideId_/annotate": typeof ProjectsProjectIdSlidesSlideIdAnnotateRoute;
   "/projects/$projectId/slides/$slideId_/annotate-task": typeof ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute;
-  "/projects/$projectId/slides/$slideId_/co-sign": typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
   "/projects/$projectId/slides/$slideId_/live": typeof ProjectsProjectIdSlidesSlideIdLiveRoute;
 }
 export interface FileRouteTypes {
@@ -469,11 +469,11 @@ export interface FileRouteTypes {
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/tasks/new-annotate"
+    | "/projects/$projectId/cases/$caseId/co-sign"
     | "/projects/$projectId/cases/$caseId/report"
     | "/projects/$projectId/cases/$caseId/upload"
     | "/projects/$projectId/slides/$slideId/annotate"
     | "/projects/$projectId/slides/$slideId/annotate-task"
-    | "/projects/$projectId/slides/$slideId/co-sign"
     | "/projects/$projectId/slides/$slideId/live";
   fileRoutesByTo: FileRoutesByTo;
   to:
@@ -515,11 +515,11 @@ export interface FileRouteTypes {
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/tasks/new-annotate"
+    | "/projects/$projectId/cases/$caseId/co-sign"
     | "/projects/$projectId/cases/$caseId/report"
     | "/projects/$projectId/cases/$caseId/upload"
     | "/projects/$projectId/slides/$slideId/annotate"
     | "/projects/$projectId/slides/$slideId/annotate-task"
-    | "/projects/$projectId/slides/$slideId/co-sign"
     | "/projects/$projectId/slides/$slideId/live";
   id:
     | "__root__"
@@ -561,11 +561,11 @@ export interface FileRouteTypes {
     | "/projects/$projectId/slides/$slideId"
     | "/projects/$projectId/tasks/new"
     | "/projects/$projectId/tasks/new-annotate"
+    | "/projects/$projectId/cases/$caseId/co-sign"
     | "/projects/$projectId/cases/$caseId/report"
     | "/projects/$projectId/cases/$caseId/upload"
     | "/projects/$projectId/slides/$slideId_/annotate"
     | "/projects/$projectId/slides/$slideId_/annotate-task"
-    | "/projects/$projectId/slides/$slideId_/co-sign"
     | "/projects/$projectId/slides/$slideId_/live";
   fileRoutesById: FileRoutesById;
 }
@@ -608,11 +608,11 @@ export interface RootRouteChildren {
   ProjectsProjectIdSlidesSlideIdRoute: typeof ProjectsProjectIdSlidesSlideIdRoute;
   ProjectsProjectIdTasksNewRoute: typeof ProjectsProjectIdTasksNewRoute;
   ProjectsProjectIdTasksNewAnnotateRoute: typeof ProjectsProjectIdTasksNewAnnotateRoute;
+  ProjectsProjectIdCasesCaseIdCoSignRoute: typeof ProjectsProjectIdCasesCaseIdCoSignRoute;
   ProjectsProjectIdCasesCaseIdReportRoute: typeof ProjectsProjectIdCasesCaseIdReportRoute;
   ProjectsProjectIdCasesCaseIdUploadRoute: typeof ProjectsProjectIdCasesCaseIdUploadRoute;
   ProjectsProjectIdSlidesSlideIdAnnotateRoute: typeof ProjectsProjectIdSlidesSlideIdAnnotateRoute;
   ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute: typeof ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute;
-  ProjectsProjectIdSlidesSlideIdCoSignRoute: typeof ProjectsProjectIdSlidesSlideIdCoSignRoute;
   ProjectsProjectIdSlidesSlideIdLiveRoute: typeof ProjectsProjectIdSlidesSlideIdLiveRoute;
 }
 
@@ -884,6 +884,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof ProjectsProjectIdTasksNewAnnotateRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/projects/$projectId/cases/$caseId/co-sign": {
+      id: "/projects/$projectId/cases/$caseId/co-sign";
+      path: "/projects/$projectId/cases/$caseId/co-sign";
+      fullPath: "/projects/$projectId/cases/$caseId/co-sign";
+      preLoaderRoute: typeof ProjectsProjectIdCasesCaseIdCoSignRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/projects/$projectId/cases/$caseId/report": {
       id: "/projects/$projectId/cases/$caseId/report";
       path: "/projects/$projectId/cases/$caseId/report";
@@ -910,13 +917,6 @@ declare module "@tanstack/react-router" {
       path: "/projects/$projectId/slides/$slideId/annotate-task";
       fullPath: "/projects/$projectId/slides/$slideId/annotate-task";
       preLoaderRoute: typeof ProjectsProjectIdSlidesSlideIdAnnotateTaskRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/projects/$projectId/slides/$slideId_/co-sign": {
-      id: "/projects/$projectId/slides/$slideId_/co-sign";
-      path: "/projects/$projectId/slides/$slideId/co-sign";
-      fullPath: "/projects/$projectId/slides/$slideId/co-sign";
-      preLoaderRoute: typeof ProjectsProjectIdSlidesSlideIdCoSignRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/projects/$projectId/slides/$slideId_/live": {
@@ -969,6 +969,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsProjectIdTasksNewRoute: ProjectsProjectIdTasksNewRoute,
   ProjectsProjectIdTasksNewAnnotateRoute:
     ProjectsProjectIdTasksNewAnnotateRoute,
+  ProjectsProjectIdCasesCaseIdCoSignRoute:
+    ProjectsProjectIdCasesCaseIdCoSignRoute,
   ProjectsProjectIdCasesCaseIdReportRoute:
     ProjectsProjectIdCasesCaseIdReportRoute,
   ProjectsProjectIdCasesCaseIdUploadRoute:
@@ -977,8 +979,6 @@ const rootRouteChildren: RootRouteChildren = {
     ProjectsProjectIdSlidesSlideIdAnnotateRoute,
   ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute:
     ProjectsProjectIdSlidesSlideIdAnnotateTaskRoute,
-  ProjectsProjectIdSlidesSlideIdCoSignRoute:
-    ProjectsProjectIdSlidesSlideIdCoSignRoute,
   ProjectsProjectIdSlidesSlideIdLiveRoute:
     ProjectsProjectIdSlidesSlideIdLiveRoute,
 };

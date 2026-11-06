@@ -2,10 +2,9 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./telemetry-capture.ts";
 
 const p03 = "00000000-0000-4000-8003-000000000003";
-const a1 = "00000000-0000-4000-8005-000000000001";
 const sentinelCase = "00000000-0000-4000-8004-000000000006";
 const report = `/projects/${p03}/cases/${sentinelCase}/report`;
-const coSign = `/projects/${p03}/slides/${a1}/co-sign`;
+const coSign = `/projects/${p03}/cases/${sentinelCase}/co-sign`;
 
 const scenes: { scene: string; step: string; sees: string }[] = [
   {

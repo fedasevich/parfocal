@@ -2739,6 +2739,8 @@ clinical_reports = Table(
     Column("comment", String(2000), nullable=True, info=PHI),
     person_column("cosigner_user_id"),
     person_column("sent_by_user_id"),
+    Column("sent_content", JSONB(none_as_null=True), nullable=True, info=PHI),
+    Column("sent_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("return_note", String(300), nullable=True, info=PHI),
     Column("version", Integer, nullable=False, server_default="0", info=OPERATIONAL),
     person_column("created_by_user_id"),

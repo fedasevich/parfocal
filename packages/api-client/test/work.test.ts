@@ -75,11 +75,11 @@ test("the viewer decides who is signed in and what they review", async () => {
 
 test("only Anna has objects to adjudicate and only Lenka has a co-sign ask", async () => {
   assert.deepEqual(body(await listMyAdjudications()), []);
-  const asks = (await listMyCosignRequests()).data;
+  const asks = body(await listMyCosignRequests());
   assert.equal(asks[0]?.case_label, "S26-04812");
   assert.equal(asks[0]?.project.code, "P03");
   setFakeView({ viewer: "AK", firstWeek: false });
-  assert.deepEqual((await listMyCosignRequests()).data, []);
+  assert.deepEqual(body(await listMyCosignRequests()), []);
 });
 
 test("an even split gives each reviewer their share of the slides", async () => {

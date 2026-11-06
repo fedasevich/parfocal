@@ -931,6 +931,22 @@ export interface CaseReportBlocker {
   deposit_id?: string | null;
 }
 
+export interface CaseReportValues {
+  specimen: string | null;
+  category: NodeCategory | null;
+  nodes_examined: number | null;
+  extranodal: Extranodal | null;
+  diagnosis: string | null;
+  microscopic: string | null;
+  comment: string | null;
+  deposits: CaseReportDeposit[];
+}
+
+export interface CaseReportSnapshot {
+  values: CaseReportValues;
+  staging: CaseReportStaging | null;
+}
+
 export interface CaseReportSignature {
   number: number;
   signed_by_user_id: string | null;
@@ -958,6 +974,9 @@ export interface CaseReport {
   blockers: CaseReportBlocker[];
   cosigner_user_id: string | null;
   sent_by_user_id: string | null;
+  sent_at: string | null;
+  sent: CaseReportSnapshot | null;
+  changes: string[];
   return_note: string | null;
   version: number;
   versions: CaseReportSignature[];
@@ -1003,17 +1022,6 @@ export type ConfirmedWith = string;
 export interface CaseReportSignOut {
   confirmed_with?: ConfirmedWith;
   identity_answered?: boolean;
-}
-
-export interface CaseReportValues {
-  specimen: string | null;
-  category: NodeCategory | null;
-  nodes_examined: number | null;
-  extranodal: Extranodal | null;
-  diagnosis: string | null;
-  microscopic: string | null;
-  comment: string | null;
-  deposits: CaseReportDeposit[];
 }
 
 export interface CaseReportVersion {
@@ -1351,6 +1359,16 @@ export interface ConfusionMatrix {
   kind: ConfusionMatrixKind;
   classes?: BlockClassName[] | null;
   values?: ConfusionMatrixValues;
+}
+
+export interface CosignRequest {
+  id: string;
+  case_id: string;
+  case_label: string;
+  project: ProjectRef;
+  from_user_id: string;
+  template: CaseReportTemplate;
+  sent_at: string;
 }
 
 /**
@@ -9217,6 +9235,157 @@ export const useSendCaseReportForCosign = <TError = Problem, TContext = unknown>
   return useMutation(getSendCaseReportForCosignMutationOptions(options), queryClient);
 };
 
+export type withdrawCaseReportResponse200 = {
+  data: CaseReport;
+  status: 200;
+};
+
+export type withdrawCaseReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type withdrawCaseReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type withdrawCaseReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type withdrawCaseReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type withdrawCaseReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type withdrawCaseReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type withdrawCaseReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type withdrawCaseReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type withdrawCaseReportResponseSuccess = withdrawCaseReportResponse200 & {
+  headers: Headers;
+};
+export type withdrawCaseReportResponseError = (
+  | withdrawCaseReportResponse400
+  | withdrawCaseReportResponse401
+  | withdrawCaseReportResponse403
+  | withdrawCaseReportResponse404
+  | withdrawCaseReportResponse409
+  | withdrawCaseReportResponse422
+  | withdrawCaseReportResponse429
+  | withdrawCaseReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type withdrawCaseReportResponse =
+  | withdrawCaseReportResponseSuccess
+  | withdrawCaseReportResponseError;
+
+export const getWithdrawCaseReportUrl = (projectId: string, caseId: string) => {
+  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/withdraw`;
+};
+
+/**
+ * @summary Withdraw Clinical Report
+ */
+export const withdrawCaseReport = async (
+  projectId: string,
+  caseId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<withdrawCaseReportResponse> => {
+  return apiFetch<withdrawCaseReportResponse>(getWithdrawCaseReportUrl(projectId, caseId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getWithdrawCaseReportMutationKey = () => ["withdrawCaseReport"] as const;
+
+export const getWithdrawCaseReportMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawCaseReport>>,
+    TError,
+    WithdrawCaseReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawCaseReport>>,
+  TError,
+  WithdrawCaseReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWithdrawCaseReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawCaseReport>>,
+    WithdrawCaseReportMutationVariables
+  > = (props) => {
+    const { projectId, caseId } = props ?? {};
+
+    return withdrawCaseReport(projectId, caseId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawCaseReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawCaseReport>>
+>;
+
+export type WithdrawCaseReportMutationError = Problem;
+export type WithdrawCaseReportMutationVariables = { projectId: string; caseId: string };
+
+/**
+ * @summary Withdraw Clinical Report
+ */
+export const useWithdrawCaseReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof withdrawCaseReport>>,
+      TError,
+      WithdrawCaseReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawCaseReport>>,
+  TError,
+  WithdrawCaseReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getWithdrawCaseReportMutationOptions(options), queryClient);
+};
+
 export type returnCaseReportResponse200 = {
   data: CaseReport;
   status: 200;
@@ -9954,6 +10123,194 @@ export function useDownloadCaseReportPdf<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getDownloadCaseReportPdfQueryOptions(projectId, caseId, number, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listMyCosignRequestsResponse200 = {
+  data: CosignRequest[];
+  status: 200;
+};
+
+export type listMyCosignRequestsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMyCosignRequestsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMyCosignRequestsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMyCosignRequestsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMyCosignRequestsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMyCosignRequestsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMyCosignRequestsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMyCosignRequestsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMyCosignRequestsResponseSuccess = listMyCosignRequestsResponse200 & {
+  headers: Headers;
+};
+export type listMyCosignRequestsResponseError = (
+  | listMyCosignRequestsResponse400
+  | listMyCosignRequestsResponse401
+  | listMyCosignRequestsResponse403
+  | listMyCosignRequestsResponse404
+  | listMyCosignRequestsResponse409
+  | listMyCosignRequestsResponse422
+  | listMyCosignRequestsResponse429
+  | listMyCosignRequestsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMyCosignRequestsResponse =
+  | listMyCosignRequestsResponseSuccess
+  | listMyCosignRequestsResponseError;
+
+export const getListMyCosignRequestsUrl = () => {
+  return `/api/me/cosign-requests`;
+};
+
+/**
+ * @summary List My Cosign Requests
+ */
+export const listMyCosignRequests = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMyCosignRequestsResponse> => {
+  return apiFetch<listMyCosignRequestsResponse>(getListMyCosignRequestsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyCosignRequestsQueryKey = () => {
+  return [`/api/me/cosign-requests`] as const;
+};
+
+export const getListMyCosignRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyCosignRequests>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyCosignRequests>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyCosignRequestsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyCosignRequests>>> = ({ signal }) =>
+    listMyCosignRequests({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyCosignRequests>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMyCosignRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyCosignRequests>>
+>;
+export type ListMyCosignRequestsQueryError = Problem;
+
+export function useListMyCosignRequests<
+  TData = Awaited<ReturnType<typeof listMyCosignRequests>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyCosignRequests>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyCosignRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listMyCosignRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyCosignRequests<
+  TData = Awaited<ReturnType<typeof listMyCosignRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyCosignRequests>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyCosignRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listMyCosignRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyCosignRequests<
+  TData = Awaited<ReturnType<typeof listMyCosignRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyCosignRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List My Cosign Requests
+ */
+
+export function useListMyCosignRequests<
+  TData = Awaited<ReturnType<typeof listMyCosignRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMyCosignRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMyCosignRequestsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

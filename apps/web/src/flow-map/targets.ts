@@ -127,8 +127,8 @@ export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetO
       });
     case "cosign":
       return linkOptions({
-        to: "/projects/$projectId/slides/$slideId/co-sign",
-        params: clinicalSlide,
+        to: "/projects/$projectId/cases/$caseId/co-sign",
+        params: { projectId: ids.clinicalProject, caseId: ids.clinicalCase },
         search: { scene: sceneIn("cosign", scene), as },
       });
   }

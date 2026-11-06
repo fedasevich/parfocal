@@ -1,9 +1,8 @@
 import {
-  type CosignReview,
-  useCosignClinicalReport,
-  useGetClinicalReport,
-  useGetCosignReview,
-  useReturnCosignRequest,
+  type CaseReport,
+  getDownloadCaseReportPdfUrl,
+  useReturnCaseReport,
+  useSignCaseReport,
 } from "@parfocal/api-client";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { CoSignColumns, type CoSignRow } from "@parfocal/ui/components/clinical-report";
@@ -21,17 +20,17 @@ import {
 } from "@parfocal/ui/components/select";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { Zone } from "@parfocal/ui/components/zone";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { formatClock, formatDayMonth } from "../format.ts";
 import { FieldNote } from "../new-task/parts.tsx";
 import { usePeople } from "../people.ts";
 import { QueryState } from "../placeholder.tsx";
+import { signedOf, valuesOfParts } from "./case-report.ts";
 import { ReasonModal, SignModal } from "./modals.tsx";
 import {
   andJoin,
-  type Category,
   type CosignScene,
   categoryOptions,
   depositMm,
@@ -46,35 +45,28 @@ import {
   type Report,
   type ReportData,
   signedAt,
-  toApiValues,
-  toValues,
   type Values,
 } from "./model.ts";
 import { fieldId, useLinkRenderer, useToast } from "./parts.tsx";
+import { type LoadedReport, useCaseReportData, useReportWriter } from "./report-data.ts";
 import { workEmail } from "./report-screen.tsx";
+import { pushValues } from "./report-sync.ts";
 import { DonePanel } from "./steps.tsx";
 
-type CosignScreenProps = { projectId: string; slideId: string; scene: CosignScene };
+type CosignScreenProps = { projectId: string; caseId: string; scene: CosignScene | undefined };
 
 export function CosignScreen(props: CosignScreenProps) {
-  const review = useGetCosignReview(props.projectId, props.slideId);
-  const report = useGetClinicalReport(props.projectId, props.slideId);
-  const data = report.data?.data;
-  const request = review.data?.data;
-  if (!data || !request) {
+  const { loaded, pending, failed } = useCaseReportData(props.projectId, props.caseId);
+  if (!loaded) {
     return (
       <main className="p-8">
-        <QueryState
-          label="the co-sign request"
-          isPending={review.isPending || report.isPending}
-          error={review.error ?? report.error ?? true}
-        >
+        <QueryState label="the co-sign request" isPending={pending} error={failed || !pending}>
           {null}
         </QueryState>
       </main>
     );
   }
-  return <CosignFlow key={props.scene} data={data} request={request} {...props} />;
+  return <CosignFlow key={props.scene ?? "live"} loaded={loaded} {...props} />;
 }
 
 const readOnly = ["pn", "size", "pos"];
@@ -113,18 +105,32 @@ function sections(data: ReportData, from: Values): [string, Row[]][] {
   ];
 }
 
-const aiValues = (request: CosignReview, from: Values) => {
-  const out: Record<string, string> = {
-    size: `${fmtMm(request.ai.largest_mm)} mm`,
-    cat: request.ai.largest_mm > 2 ? "Macrometastasis" : "Micrometastasis",
-  };
+const aiValues = (data: ReportData, from: Values) => {
+  const sizes = data.objects.map((object) => object.ai_size_mm).filter((size) => size > 0);
+  const out: Record<string, string> = {};
+  if (sizes.length) {
+    const largest = Math.max(...sizes);
+    out["size"] = `${fmtMm(largest)} mm`;
+    out["cat"] = largest > 2 ? "Macrometastasis" : "Micrometastasis";
+  }
   for (const deposit of from.deposits) {
-    const ai = request.ai.deposits.find(
+    const ai = data.objects.find(
       (candidate) => candidate.slide === deposit.slide && candidate.object_id === deposit.objectId,
     );
-    if (ai) out[`deps.${deposit.id}`] = `${fmtMm(ai.size_mm)} mm`;
+    if (ai && ai.ai_size_mm > 0) out[`deps.${deposit.id}`] = `${fmtMm(ai.ai_size_mm)} mm`;
   }
   return out;
+};
+
+const sentValues = (loaded: LoadedReport): Values => {
+  const sent = loaded.server.sent;
+  return sent ? valuesOfParts(sent.values, sent.staging, loaded.values) : loaded.values;
+};
+
+const clockOf = (iso: string | null | undefined) => {
+  if (!iso) return "";
+  const at = new Date(iso);
+  return `${formatDayMonth(at)} ${formatClock(at)}`;
 };
 
 function cosignIssues(data: ReportData, values: Values) {
@@ -150,37 +156,54 @@ function cosignIssues(data: ReportData, values: Values) {
 const returnedNote =
   "Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit.";
 
+const sceneValues = (from: Values): Values => ({
+  ...from,
+  deposits: from.deposits.map((deposit, index) =>
+    index === 0 ? { ...deposit, size: "8.0" } : deposit,
+  ),
+  category: "macro",
+  diagnosis:
+    "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
+});
+
 function CosignFlow({
-  data,
-  request,
+  loaded,
+  projectId,
+  caseId,
   scene,
-}: CosignScreenProps & { data: ReportData; request: CosignReview }) {
-  const from = toValues(data, request.values);
-  const [values, setValues] = useState<Values>(() => ({
-    ...from,
-    deposits: from.deposits.map((deposit, index) =>
-      index === 0 ? { ...deposit, size: "8.0" } : deposit,
-    ),
-    category: "macro",
-    diagnosis:
-      "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
-  }));
-  const [returned, setReturned] = useState<{ note: string; at: string } | null>(
-    scene === "returned" ? { note: returnedNote, at: "15 Oct 11:35" } : null,
-  );
+}: CosignScreenProps & { loaded: LoadedReport }) {
+  const data: ReportData = loaded.data;
+  const server = loaded.server;
+  const live = scene === undefined;
+  const from = sentValues(loaded);
+  const [values, setValues] = useState<Values>(() => (live ? loaded.values : sceneValues(from)));
+  const [returned, setReturned] = useState<{ note: string; at: string } | null>(() => {
+    if (scene === "returned") return { note: returnedNote, at: "15 Oct 11:35" };
+    if (live && server.state === "returned") return { note: server.return_note ?? "", at: "" };
+    return null;
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<"return" | "sign" | null>(null);
   const [signed, setSigned] = useState<Report | null>(null);
   const toast = useToast();
   const renderLink = useLinkRenderer();
   const person = usePeople();
-  const returnRequest = useReturnCosignRequest();
-  const cosign = useCosignClinicalReport();
-  const target = { projectId: data.project.id, slideId: data.slides[0]?.id ?? "" };
-  const sender = person(request.from_user_id);
-  const me = person(request.to_user_id);
+  const returnRequest = useReturnCaseReport();
+  const cosign = useSignCaseReport();
+  const { writer, keep } = useReportWriter(projectId, caseId);
+  const saved = useRef<Values>(loaded.values);
+  const meId = data.author_user_id;
+  const senderId = server.sent_by_user_id;
+  const sender = person(senderId);
+  const me = person(meId);
   const senderFirst = sender?.name.split(" ")[0] ?? "The sender";
-  const ai = aiValues(request, from);
+  const ai = aiValues(data, from);
+  const flush = async (): Promise<void> => {
+    const result = await pushValues(writer, saved.current, values);
+    saved.current = result.saved;
+  };
+  const waiting =
+    live && (server.sent === null || server.state === "signed" || server.state === "amended");
   const all = sections(data, from);
   const changed = all
     .flatMap(([, rows]) => rows)
@@ -189,7 +212,10 @@ function CosignFlow({
   const errors = Object.fromEntries(
     issues.filter((issue) => touched[issue.field]).map((issue) => [issue.field, issue.text]),
   );
-  const can = request.co_signer_covers_case;
+  const can =
+    !waiting &&
+    (data.members.find((member) => member.user_id === meId)?.covers_case ?? false) &&
+    (!live || server.cosigner_user_id === meId);
   const set = (patch: Partial<Values>) => setValues((current) => ({ ...current, ...patch }));
   const touch = (field: string) => setTouched((current) => ({ ...current, [field]: true }));
   const projectHref = destinations.project(data.project.id);
@@ -327,14 +353,14 @@ function CosignFlow({
           crumbStart={<SidebarToggle />}
           crumbs={[
             { label: data.project.name, href: `${projectHref}?tab=slides` },
-            { label: `Case ${request.case_label}`, href: `${projectHref}?tab=slides` },
+            { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
             { label: "Clinical report" },
           ]}
           title="Clinical report"
           subtitle={
             <>
-              <span className="font-mono">{request.case_label}</span> · {request.template.name}{" "}
-              {request.template.version}
+              <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
+              {data.template.version}
             </>
           }
           steps={[]}
@@ -356,9 +382,14 @@ function CosignFlow({
               next={
                 <Button
                   variant="primary"
-                  onClick={() =>
-                    toast.show({ text: `${request.case_label}_report_v1.pdf saved to Downloads` })
-                  }
+                  onClick={() => {
+                    if (live) {
+                      const link = document.createElement("a");
+                      link.href = getDownloadCaseReportPdfUrl(projectId, caseId, 1);
+                      link.click();
+                    }
+                    toast.show({ text: `${data.case.label}_report_v1.pdf saved to Downloads` });
+                  }}
                 >
                   <Icon name="download" />
                   Download PDF
@@ -392,16 +423,20 @@ function CosignFlow({
 
   const hint = returned
     ? `${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
-    : !can
-      ? "You cannot sign out in this project. Ask the owner for the right."
-      : issues.length
-        ? `${plural(issues.length, "value")} to fix first.`
-        : changed.length
-          ? `${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
-          : `No changes yet. Co-signing keeps ${senderFirst}'s values.`;
+    : waiting
+      ? "This report is not waiting for your co-sign."
+      : !can
+        ? "You cannot sign out in this project. Ask the owner for the right."
+        : issues.length
+          ? `${plural(issues.length, "value")} to fix first.`
+          : changed.length
+            ? `${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
+            : `No changes yet. Co-signing keeps ${senderFirst}'s values.`;
 
-  const sent = new Date(request.sent_at);
-  const sentText = `${formatDayMonth(sent)} ${formatClock(sent)}`;
+  const sentText = scene ? "15 Oct 11:20" : clockOf(server.sent_at);
+  const returnedTo = returned
+    ? `Returned to ${sender?.name}${returned.at ? `, ${returned.at}` : ""}`
+    : "";
 
   return (
     <>
@@ -413,14 +448,14 @@ function CosignFlow({
         crumbStart={<SidebarToggle />}
         crumbs={[
           { label: data.project.name, href: `${projectHref}?tab=slides` },
-          { label: `Case ${request.case_label}`, href: `${projectHref}?tab=slides` },
+          { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
           { label: "Co-sign" },
         ]}
         title="Co-sign the report"
         subtitle={
           <>
-            <span className="font-mono">{request.case_label}</span> · {request.template.name}{" "}
-            {request.template.version} · drafted by {sender?.name}
+            <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
+            {data.template.version} · drafted by {sender?.name}
           </>
         }
         steps={[]}
@@ -429,9 +464,7 @@ function CosignFlow({
           <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
             <Icon name={returned ? "back" : "users"} className="text-fg-dim" />
             <span>
-              {returned
-                ? `Returned to ${sender?.name}, ${returned.at}`
-                : `${sender?.name} asks you to co-sign · sent ${sentText}`}
+              {returned ? returnedTo : `${sender?.name} asks you to co-sign · sent ${sentText}`}
             </span>
           </p>
         }
@@ -468,9 +501,7 @@ function CosignFlow({
             <div className="flex items-start gap-3">
               <Icon name="back" size="md" className="mt-0.5 text-fg-dim" />
               <div className="grid">
-                <b className="text-body font-semibold">
-                  Returned to {sender?.name}, {returned.at}
-                </b>
+                <b className="text-body font-semibold">{returnedTo}</b>
                 <small className="text-body-sm text-fg-dim">
                   With {plural(changed.length, "change")} and your note
                 </small>
@@ -503,7 +534,7 @@ function CosignFlow({
       {modal === "return" ? (
         <ReasonModal
           title={`Return to ${sender?.name}`}
-          subtitle={`${request.case_label} · ${changed.length ? `${plural(changed.length, "change")} highlighted` : "no changes"}`}
+          subtitle={`${data.case.label} · ${changed.length ? `${plural(changed.length, "change")} highlighted` : "no changes"}`}
           whatLabel="What he gets back"
           what={
             changed.length
@@ -520,18 +551,34 @@ function CosignFlow({
           onClose={() => setModal(null)}
           onSubmit={(note) => {
             setModal(null);
-            returnRequest.mutate({ ...target, data: { note, values: toApiValues(values) } });
-            setReturned({ note, at: "15 Oct 11:35" });
-            toast.show({
-              text: `Returned to ${sender?.name} with your note`,
-              undo: () => setReturned(null),
-            });
+            const done = () => {
+              setReturned({ note, at: live ? clockOf(new Date().toISOString()) : "15 Oct 11:35" });
+              toast.show({
+                text: `Returned to ${sender?.name} with your note`,
+                ...(live ? {} : { undo: () => setReturned(null) }),
+              });
+            };
+            if (!live) {
+              done();
+              return;
+            }
+            flush()
+              .then(() =>
+                returnRequest
+                  .mutateAsync({ projectId, caseId, data: { note } })
+                  .then((response) => {
+                    if (response.status !== 200) throw new Error("not returned");
+                    keep(response);
+                    done();
+                  }),
+              )
+              .catch(() => toast.show({ text: "The report could not be returned. Try again." }));
           }}
         />
       ) : null}
       {modal === "sign" ? (
         <SignModal
-          title={`Co-sign and sign out ${request.case_label}`}
+          title={`Co-sign and sign out ${data.case.label}`}
           subtitle={`Reported by ${sender?.name}, verified by you`}
           rows={[
             {
@@ -542,7 +589,9 @@ function CosignFlow({
             {
               icon: "mail",
               label: "Goes to",
-              value: `${data.case.requested_by}, who requested it`,
+              value: data.case.requested_by
+                ? `${data.case.requested_by}, who requested it`
+                : "The clinician who requested it",
             },
             { icon: "file", label: "What you sign", value: "The report with your changes" },
           ]}
@@ -550,32 +599,42 @@ function CosignFlow({
           failed={false}
           pending={cosign.isPending}
           onClose={() => setModal(null)}
-          onSign={(method, done) =>
-            cosign.mutate(
-              { ...target, data: { method, values: toApiValues(values) } },
-              {
-                onSuccess: () => {
-                  setModal(null);
-                  setSigned({
-                    values: { ...values, ack: true },
-                    mode: "sign",
-                    cosigner: null,
-                    removed: null,
-                    seen: [],
-                    touched: {},
-                    sent: null,
-                    signed: { by: request.to_user_id, co: request.from_user_id, at: signedAt },
-                    v1: values,
-                    amend: null,
-                    showV1: false,
-                    preview: false,
-                  });
-                  toast.show({ text: "Co-signed and signed out. The report names you both." });
-                },
-                onError: () => done(false),
-              },
-            )
-          }
+          onSign={(method, done) => {
+            const finish = (signedServer: CaseReport | null) => {
+              setModal(null);
+              setSigned({
+                values: { ...values, ack: true },
+                mode: "sign",
+                cosigner: null,
+                removed: null,
+                seen: [],
+                touched: {},
+                sent: null,
+                signed: signedServer
+                  ? signedOf(signedServer, meId)
+                  : { by: meId, co: senderId, at: signedAt },
+                v1: values,
+                amend: null,
+                showV1: false,
+                preview: false,
+              });
+              toast.show({ text: "Co-signed and signed out. The report names you both." });
+            };
+            if (!live) {
+              finish(null);
+              return;
+            }
+            flush()
+              .then(() =>
+                cosign
+                  .mutateAsync({ projectId, caseId, data: { confirmed_with: method } })
+                  .then((response) => {
+                    if (response.status !== 200) return done(false);
+                    finish(keep(response));
+                  }),
+              )
+              .catch(() => done(false));
+          }}
         />
       ) : null}
       {toast.view}

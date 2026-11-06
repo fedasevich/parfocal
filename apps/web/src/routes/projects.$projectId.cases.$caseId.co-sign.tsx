@@ -7,7 +7,7 @@ const coSignSearch = z.object({
   scene: z.enum(mockScenes.cosign).optional(),
 });
 
-export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/co-sign")({
+export const Route = createFileRoute("/projects/$projectId/cases/$caseId/co-sign")({
   validateSearch: coSignSearch,
   component: CoSignReview,
 });
@@ -15,11 +15,5 @@ export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/co-s
 function CoSignReview() {
   const params = Route.useParams();
   const search = Route.useSearch();
-  return (
-    <CosignScreen
-      projectId={params.projectId}
-      slideId={params.slideId}
-      scene={search.scene ?? "review"}
-    />
-  );
+  return <CosignScreen projectId={params.projectId} caseId={params.caseId} scene={search.scene} />;
 }

@@ -9,6 +9,8 @@ import type {
   CaseReportSignature,
   CaseReportSignOut,
   CaseReportStaging,
+  CaseReportValues,
+  CosignRequest,
   NewCaseReportDeposit,
   NodeCategory,
 } from "../generated/api.ts";
@@ -17,7 +19,9 @@ import {
   type ClinicalCase,
   clinicalCases,
   clinicalProject,
+  clinicalProjectRef,
   clinicalTemplates,
+  cosignSent,
 } from "./scenario-clinical.ts";
 import { fakeView } from "./view.ts";
 
@@ -37,6 +41,9 @@ type Stored = {
   deposits: StoredDeposit[];
   cosigner: string | null;
   sentBy: string | null;
+  sent?: StoredValues | null;
+  sentAt?: string | null;
+  returnNote?: string | null;
   versions: { signature: CaseReportSignature; values: StoredValues }[];
   next: number;
 };
@@ -183,12 +190,62 @@ const blockersOf = (stored: Stored, staging: CaseReportStaging | null): CaseRepo
   return found;
 };
 
+const scenarioSent = (stored: Stored, item: ClinicalCase): StoredValues | null => {
+  if (item.label !== cosignSent.caseLabel || stored.state !== "draft" || stored.sent) return null;
+  const values = cosignSent.values;
+  return {
+    specimen: values.specimen,
+    category: values.category,
+    nodesExamined: Number(values.examined),
+    extranodal: values.extranodal,
+    diagnosis: values.diagnosis,
+    microscopic: values.microscopic,
+    comment: trimmed(values.comment),
+    deposits: stored.deposits.map((deposit) => {
+      const match = values.deposits.find((candidate) => candidate.object_id === deposit.object_id);
+      return { ...deposit, size_mm: match ? sizeOf(match.size_mm) : deposit.size_mm };
+    }),
+  };
+};
+
+const partsOf = (values: StoredValues, largestId: string | undefined): CaseReportValues => ({
+  specimen: values.specimen,
+  category: values.category,
+  nodes_examined: values.nodesExamined,
+  extranodal: values.extranodal,
+  diagnosis: values.diagnosis,
+  microscopic: values.microscopic,
+  comment: values.comment,
+  deposits: values.deposits.map((deposit) => ({ ...deposit, largest: deposit.id === largestId })),
+});
+
+const depositKey = (deposit: StoredDeposit) =>
+  `${deposit.slide_id}:${deposit.object_id}:${deposit.size_mm}:${deposit.note}`;
+
+const changesOf = (sent: StoredValues, current: StoredValues): string[] => {
+  const pairs: [string, unknown, unknown][] = [
+    ["specimen", sent.specimen, current.specimen],
+    ["category", sent.category, current.category],
+    ["nodes_examined", sent.nodesExamined, current.nodesExamined],
+    ["extranodal", sent.extranodal, current.extranodal],
+    ["diagnosis", sent.diagnosis, current.diagnosis],
+    ["microscopic", sent.microscopic, current.microscopic],
+    ["comment", sent.comment, current.comment],
+  ];
+  const names = pairs.filter(([, before, after]) => before !== after).map(([name]) => name);
+  const before = sent.deposits.map(depositKey).sort().join("|");
+  const after = current.deposits.map(depositKey).sort().join("|");
+  return before === after ? names : [...names, "deposits"];
+};
+
 const reportOf = (caseId: string, stored: Stored, item: ClinicalCase): CaseReport => {
   const template = clinicalTemplates[item.template];
   const staged = template.steps.some((step) => step.key === "staging");
   const staging = stagingOf(stored, staged);
   const largest = largestOf(stored.deposits);
   const firstSlide = slideIdOf(item, item.slide);
+  const fallback = scenarioSent(stored, item);
+  const sent = stored.sent ?? fallback;
   return {
     id: `fake-report-${item.label}`,
     project_id: "",
@@ -228,8 +285,13 @@ const reportOf = (caseId: string, stored: Stored, item: ClinicalCase): CaseRepor
     },
     blockers: blockersOf(stored, staging),
     cosigner_user_id: stored.cosigner,
-    sent_by_user_id: stored.sentBy,
-    return_note: null,
+    sent_by_user_id: stored.sentBy ?? (fallback ? people[cosignSent.from].id : null),
+    sent_at: stored.sentAt ?? (fallback ? cosignSent.sentAt : null),
+    sent: sent
+      ? { values: partsOf(sent, largestOf(sent.deposits)?.id), staging: stagingOf(stored, staged) }
+      : null,
+    changes: sent ? changesOf(sent, valuesOf(stored)) : [],
+    return_note: stored.returnNote ?? null,
     version: stored.versions.length || 1,
     versions: stored.versions.map((version) => version.signature),
   };
@@ -285,7 +347,19 @@ const withReport = (
   return HttpResponse.json(reportOf(caseId, stored, item), { status: 200 });
 };
 
-const editing = (stored: Stored) => stored.state === "draft" || stored.state === "returned";
+const viewerId = () => people[fakeView().viewer].id;
+
+const editing = (stored: Stored) =>
+  stored.state === "draft" ||
+  stored.state === "returned" ||
+  (stored.state === "sent" && stored.cosigner === viewerId());
+
+const clearSent = (stored: Stored) => {
+  stored.cosigner = null;
+  stored.sentBy = null;
+  stored.sent = null;
+  stored.sentAt = null;
+};
 const signedState = (stored: Stored) => stored.state === "signed" || stored.state === "amended";
 
 const wrongState = () => problem(409, "wrong-state", "The report cannot change in this state");
@@ -351,12 +425,44 @@ export const caseReportHandlers = (): RequestHandler[] => [
   http.post<{ caseId: string }>(`${base}/send`, async ({ params, request }) => {
     const body = (await request.json()) as CaseReportCosign;
     return withReport(params.caseId, (stored, _item, staged) => {
-      if (!editing(stored)) return wrongState();
+      if (stored.state !== "draft" && stored.state !== "returned") return wrongState();
       if (blockersOf(stored, stagingOf(stored, staged)).length)
         return problem(409, "report-blocked", "The report has things to finish");
       stored.state = "sent";
       stored.cosigner = body.cosigner_user_id;
-      stored.sentBy = people[fakeView().viewer].id;
+      stored.sentBy = viewerId();
+      stored.sent = valuesOf(stored);
+      stored.sentAt = new Date().toISOString();
+      stored.returnNote = null;
+      return null;
+    });
+  }),
+  http.post<{ caseId: string }>(`${base}/withdraw`, ({ params }) =>
+    withReport(params.caseId, (stored) => {
+      if (stored.state !== "sent") return wrongState();
+      if (stored.sentBy !== viewerId())
+        return problem(403, "not-the-sender", "Only the sender can withdraw the request");
+      stored.state = "draft";
+      clearSent(stored);
+      return null;
+    }),
+  ),
+  http.post<{ caseId: string }>(`${base}/return`, async ({ params, request }) => {
+    const body = (await request.json()) as { note: string };
+    return withReport(params.caseId, (stored, item) => {
+      const scenario = scenarioSent(stored, item);
+      if (scenario && viewerId() === people[cosignSent.to].id) {
+        stored.state = "sent";
+        stored.cosigner = viewerId();
+        stored.sentBy = people[cosignSent.from].id;
+        stored.sent = scenario;
+        stored.sentAt = cosignSent.sentAt;
+      }
+      if (stored.state !== "sent") return wrongState();
+      if (stored.cosigner !== viewerId())
+        return problem(403, "not-the-co-signer", "Only the named co-signer can return it");
+      stored.state = "returned";
+      stored.returnNote = body.note.trim();
       return null;
     });
   }),
@@ -421,4 +527,33 @@ export const caseReportHandlers = (): RequestHandler[] => [
       staging: report.staging,
     });
   }),
+];
+
+const asksOf = (): CosignRequest[] => {
+  const store = readStore();
+  const me = viewerId();
+  return cases.flatMap(({ id: caseId, project: code }) => {
+    const item = code === clinicalProject ? caseItem(caseId) : undefined;
+    if (item === undefined) return [];
+    const stored = store.get(caseId) ?? seedOf(item);
+    const report = reportOf(caseId, stored, item);
+    const scenario = report.state === "draft" && me === people[cosignSent.to].id && report.sent;
+    if (!(report.state === "sent" && stored.cosigner === me) && !scenario) return [];
+    const project = clinicalProjectRef();
+    return [
+      {
+        id: report.id,
+        case_id: caseId,
+        case_label: item.label,
+        project,
+        from_user_id: report.sent_by_user_id ?? "",
+        template: report.template,
+        sent_at: report.sent_at ?? "",
+      },
+    ];
+  });
+};
+
+export const cosignRequestHandlers = (): RequestHandler[] => [
+  http.get("*/api/me/cosign-requests", () => HttpResponse.json(asksOf())),
 ];

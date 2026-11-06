@@ -168,7 +168,7 @@ function MentionRow({ item }: { item: InboxItem }) {
 }
 
 function AsksForYou() {
-  const asks = useListMyCosignRequests().data?.data ?? [];
+  const asks = okData(useListMyCosignRequests().data) ?? [];
   const people = usePeople();
   const goTo = useGoTo();
   if (asks.length === 0) return null;
@@ -178,7 +178,7 @@ function AsksForYou() {
       {asks.map((ask) => {
         const from = people(ask.from_user_id);
         const sent = new Date(ask.sent_at);
-        const open = () => void goTo(destinations.coSign(ask.project.id, ask.slide_id));
+        const open = () => void goTo(destinations.coSign(ask.project.id, ask.case_id));
         return (
           <div
             key={ask.id}
