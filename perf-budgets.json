@@ -183,6 +183,34 @@
       "adr": "docs/adr/0011-hosted-ci-only.md",
       "result": null,
       "todo": "AISEG-006 (hover preview) is not built. Turn this into a CI time budget in Chrome when it lands."
+    },
+    {
+      "id": "nuclei.paging-open-ms",
+      "measures": "Time from opening a 1,607,244 nucleus result to its first 5760 x 3840 px view being resident (summary fetched, inflated and parsed, view plus margin chunks fetched), fastest of three runs",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 110,
+      "limit": 330,
+      "headroom": 3,
+      "headroomReason": "The baseline is almost all CPU work (inflating and parsing 42 MB of summary) on an Apple M4. A hosted runner can be three times slower, and the done-when line allows 4000 ms, which the test asserts as well.",
+      "rttMs": 0,
+      "environment": "Chrome headless with SwiftShader, loopback server sending gzip files with Content-Encoding gzip, no latency proxy",
+      "check": "packages/viewer-engine/browser/nuclei-paging.spec.ts",
+      "adr": "docs/adr/0237-client-chunk-paging-for-large-nuclei-sets.md",
+      "result": "docs/results/2026-11-06-client-chunk-paging.md",
+      "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
+    },
+    {
+      "id": "nuclei.paging-memory-bytes",
+      "measures": "Memory the page holds after opening a 1,607,244 nucleus result, paging a first view and sweeping 41 views, after garbage collection (UASM bytes), largest of three runs",
+      "kind": "bytes",
+      "unit": "bytes",
+      "baseline": 79010301,
+      "limit": 94800000,
+      "environment": "Chrome headless with SwiftShader, loopback server sending gzip files with Content-Encoding gzip, no latency proxy",
+      "check": "packages/viewer-engine/browser/nuclei-paging.spec.ts",
+      "adr": "docs/adr/0237-client-chunk-paging-for-large-nuclei-sets.md",
+      "result": "docs/results/2026-11-06-client-chunk-paging.md"
     }
   ]
 }

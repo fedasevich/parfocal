@@ -321,6 +321,36 @@ export {
   wheelPan,
   wheelPixels,
 } from "./input/wheel.ts";
+export type { CellChunk } from "./nuclei/cell-chunk.ts";
+export { readCellChunk } from "./nuclei/cell-chunk.ts";
+export { CellEdits } from "./nuclei/cell-edits.ts";
+export type { CellSummary, ChunkEntry, Rect as CellRect } from "./nuclei/cell-summary.ts";
+export {
+  NO_ALTERNATIVE,
+  numberOfRow,
+  readCellSummary,
+  rowOfNumber,
+  UNCLASSIFIED,
+  UNSURE_FLAG,
+} from "./nuclei/cell-summary.ts";
+export { ChunkCache, DEFAULT_VERTEX_BUDGET } from "./nuclei/chunk-cache.ts";
+export type {
+  CellSource,
+  LoadedCell,
+  PagedCellsOptions,
+  PagedStats,
+  ShowReport,
+} from "./nuclei/paged-cells.ts";
+export {
+  FETCH_BATCH,
+  fetchBytes,
+  httpCellSource,
+  PAGED_ABOVE,
+  PagedCells,
+  VIEW_PAD,
+} from "./nuclei/paged-cells.ts";
+export type { PfcFile, PfcHeader } from "./nuclei/pfc.ts";
+export { decodePfc, PfcError, readPfc, UnknownPfcVersionError } from "./nuclei/pfc.ts";
 export {
   createPathBatch,
   createPointBatch,
