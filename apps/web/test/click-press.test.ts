@@ -12,12 +12,14 @@ class FakeEvent {
   readonly clientX: number;
   readonly clientY: number;
   readonly button: number;
+  readonly buttons: number;
   constructor(type: string, pointerId: number, clientX: number, clientY: number, button = 0) {
     this.type = type;
     this.pointerId = pointerId;
     this.clientX = clientX;
     this.clientY = clientY;
     this.button = button;
+    this.buttons = type === "pointerdown" || type === "pointermove" ? 1 : 0;
   }
   stopImmediatePropagation() {
     this.stopped = true;
@@ -46,6 +48,8 @@ function fakeStage() {
     releasePointerCapture: (id: number) => {
       captured.splice(captured.indexOf(id), 1);
     },
+    hasPointerCapture: (id: number) => captured.includes(id),
+    isConnected: true,
   };
   const fire = (type: string, pointerId: number, x: number, y: number, button = 0) => {
     const event = new FakeEvent(type, pointerId, x, y, button);
@@ -136,9 +140,19 @@ describe("a click tool press keeps the engine out of the click", () => {
     fire("pointercancel", 1, 60, 10);
     assert.deepEqual(calls, ["start 10,10", "drag 60,10", "stop"]);
     fire("pointerdown", 2, 10, 10);
-    fire("lostpointercapture", 2, 10, 10);
+    fire("pointercancel", 2, 10, 10);
     fire("pointerup", 2, 10, 10);
     assert.deepEqual(clicks, []);
+  });
+
+  test("a press that loses pointer capture takes it back and still clicks on release", () => {
+    const { fire, clicks, captured } = bind();
+    fire("pointerdown", 3, 10, 10);
+    captured.length = 0;
+    fire("lostpointercapture", 3, 10, 10);
+    assert.deepEqual(captured, [3]);
+    fire("pointerup", 3, 10, 10);
+    assert.equal(clicks.length, 1);
   });
 
   test("other pointers and other buttons are left alone", () => {
