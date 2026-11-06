@@ -570,6 +570,9 @@ importers:
       geotiff:
         specifier: 3.0.5
         version: 3.0.5
+      onnxruntime-web:
+        specifier: 1.31.1
+        version: 1.31.1
       zarrita:
         specifier: 0.7.5
         version: 0.7.5
@@ -592,9 +595,6 @@ importers:
       '@types/pngjs':
         specifier: 6.0.5
         version: 6.0.5
-      onnxruntime-web:
-        specifier: 1.31.1
-        version: 1.31.1
       pngjs:
         specifier: 7.0.0
         version: 7.0.0

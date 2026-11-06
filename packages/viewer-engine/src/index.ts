@@ -520,6 +520,27 @@ export {
 export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
 export {
+  createInferenceEngine,
+  defaultEmbeddingCapacity,
+  EngineNotReadyError,
+  type InferenceEngine,
+  type InferenceEngineOptions,
+  type SamBox,
+  type SamEncoded,
+  type SamGraphLoad,
+  type SamOutput,
+  type SamOutputs,
+  type SamPoint,
+  type SamPrompt,
+  type SamPromptOutcome,
+  type SamReady,
+  samEmbeddingDims,
+  samImageSize,
+  samMaskInputSize,
+  UnknownEmbeddingError,
+  UnsupportedGraphInputError,
+} from "./sam/inference-engine.ts";
+export {
   createModelCache,
   describeModelLoad,
   hasOnnxProtobufHeader,
@@ -534,6 +555,8 @@ export {
   type ModelStorageManager,
   type Revalidation,
 } from "./sam/model-cache.ts";
+export type { SamReply, SamRequest } from "./sam/protocol.ts";
+export type { SamRuntime, SamSession, SamTensor } from "./sam/runtime.ts";
 export {
   graphRunsOn,
   type SamGraph,
@@ -543,6 +566,20 @@ export {
   samProvider,
   samVariant,
 } from "./sam/variants.ts";
+export {
+  createSamClient,
+  type SamClient,
+  SamClientClosedError,
+  type SamClientOptions,
+  type SamWorker,
+  SamWorkerError,
+  spawnSamWorker,
+} from "./sam/worker-client.ts";
+export {
+  type SamWorkerDependencies,
+  type SamWorkerScope,
+  startSamWorker,
+} from "./sam/worker-runtime.ts";
 export type {
   CoverageGrid,
   CoverageRaster,
