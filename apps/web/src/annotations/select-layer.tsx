@@ -161,7 +161,14 @@ export function SelectLayer({
         if (tool.state().gesture === "idle") pan.track(event);
       }
       if (event.type === "pointerup" || event.type === "pointercancel") pan.release();
-      const consumed = tool.handle(pointerInput(event));
+      const dragging = tool.state().gesture !== "idle";
+      if (event.type === "lostpointercapture" && dragging && stage.isConnected) {
+        capturePointer(stage, event.pointerId);
+        return;
+      }
+      const released = event.type === "pointermove" && dragging && (event.buttons & 1) === 0;
+      const input = pointerInput(event);
+      const consumed = tool.handle(released ? { ...input, kind: "up" } : input);
       if (!consumed) return;
       event.stopImmediatePropagation();
       event.preventDefault();

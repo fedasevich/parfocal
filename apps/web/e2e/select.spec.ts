@@ -90,6 +90,27 @@ test("dragging a selected ruler moves it and Shift locks the move to one axis", 
   expect(xAfter - xBefore).toBeLessThan(65);
 });
 
+test("a move survives the browser dropping pointer capture in the middle of the drag", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await drawRuler(page, box);
+  await page.keyboard.press("v");
+  const xBefore = Number(await lineOf(page).getAttribute("x1"));
+  await page.mouse.move(box.x + 300, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 330, box.y + 200, { steps: 3 });
+  await page.getByTestId("slide-host").evaluate((host) => {
+    host.dispatchEvent(new PointerEvent("lostpointercapture", { pointerId: 1, bubbles: true }));
+  });
+  await page.mouse.move(box.x + 360, box.y + 200, { steps: 3 });
+  await page.mouse.up();
+  const xAfter = Number(await lineOf(page).getAttribute("x1"));
+  expect(xAfter - xBefore).toBeGreaterThan(55);
+  expect(xAfter - xBefore).toBeLessThan(65);
+});
+
 test("dragging an end handle of the selected ruler reshapes it", async ({ page }) => {
   const stage = await openSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
