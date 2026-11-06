@@ -65,6 +65,9 @@ test("Lenka fills a report from Findings to Sign out, amends it and the earlier 
   await sign.getByRole("button", { name: /Sign with Vltava SSO/ }).click();
   await expect(flow(page).getByText(/Signed out .* by Lenka Malá/)).toBeVisible();
   await expect(flow(page).getByRole("button", { name: "Download PDF" })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await flow(page).getByRole("button", { name: "Download PDF" }).click();
+  expect((await download).suggestedFilename()).toMatch(/_v1\.pdf$/);
 
   await page.reload();
   await expect(flow(page).getByText(/Signed out .* by Lenka Malá/)).toBeVisible();

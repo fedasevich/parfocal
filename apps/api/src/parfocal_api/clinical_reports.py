@@ -1029,7 +1029,7 @@ async def download_clinical_report_pdf(
             )
         ).all()
     )
-    label = await connection.scalar(select(cases.c.label).where(cases.c.id == case_id))
+    label = str(await connection.scalar(select(cases.c.label).where(cases.c.id == case_id)))
     facts = facts_of(
         label,
         TEMPLATES[ClinicalTemplate(row.template)].name,
