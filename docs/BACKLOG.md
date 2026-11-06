@@ -4444,7 +4444,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ADJ-002, ADJ-007, IAM-002. Refs mock: signoff/blocked, mock: signoff/ready, mock: signoff/ssofail, mock: signoff/signed, mock: signoff/amend, doc 40 R2, doc 44.
   Size: L.
 
-- [ ] ADJ-005 · Changes after sign-off
+- [x] ADJ-005 · Changes after sign-off
   The log of changes after sign-off with who, when and what, flagged in the evaluation report.
   Done when API tests list the changes and the report shows the flag.
   Depends on ADJ-004, EVAL-002.
