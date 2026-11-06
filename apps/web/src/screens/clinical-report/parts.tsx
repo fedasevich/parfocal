@@ -1,11 +1,9 @@
-import { useGetClinicalReport, useListClinicalReports } from "@parfocal/api-client";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
-import type { ReportScene } from "./model.ts";
 
 export const fieldId = (field: string) => `report-field-${field.replace(/\./g, "-")}`;
 
@@ -86,22 +84,6 @@ export function useToast() {
     </div>
   ) : null;
   return { show: setToast, view };
-}
-
-export function useReportData(projectId: string, slideId: string, scene: ReportScene) {
-  const rows = useListClinicalReports(projectId, {
-    query: { enabled: scene === "nostaging" },
-  });
-  const excision = rows.data?.data.find((row) => !row.has_staging)?.slide_id;
-  const target = scene === "nostaging" ? excision : slideId;
-  const report = useGetClinicalReport(projectId, target ?? slideId, {
-    query: { enabled: target !== undefined },
-  });
-  return {
-    data: target === undefined ? undefined : report.data?.data,
-    pending: report.isPending || rows.isLoading,
-    failed: Boolean(report.error ?? rows.error),
-  };
 }
 
 export const linkButton =

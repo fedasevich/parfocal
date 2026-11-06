@@ -10,6 +10,7 @@ const ids = {
   task: "rt14",
   slide: "a1",
   clinicalSlide: "c1",
+  clinicalCase: "k1",
 };
 
 const screensOf = () =>

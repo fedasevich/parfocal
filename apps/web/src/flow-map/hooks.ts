@@ -1,4 +1,4 @@
-import { useGetMyHome, useListTenantMembers } from "@parfocal/api-client";
+import { useGetMyHome, useListCases, useListTenantMembers } from "@parfocal/api-client";
 import { avatarColour } from "@parfocal/ui/lib/avatar-colours";
 import { useSyncExternalStore } from "react";
 import { okData } from "../screens/placeholder.tsx";
@@ -19,13 +19,20 @@ export function useScenarioIds(): ScenarioIds | undefined {
   const resume = home?.resume;
   const clinical = home?.projects.find((project) => project.privacy_mode === "clinical");
   const clinicalSlide = clinical?.strip[0];
-  if (!resume || !clinical || !clinicalSlide) return undefined;
+  const clinicalCase = okData(
+    useListCases(
+      { project_id: clinical?.id ?? null },
+      { query: { enabled: clinical !== undefined } },
+    ).data,
+  )?.[0];
+  if (!resume || !clinical || !clinicalSlide || !clinicalCase) return undefined;
   return {
     researchProject: resume.project.id,
     clinicalProject: clinical.id,
     task: resume.task_id,
     slide: resume.slide_id,
     clinicalSlide: clinicalSlide.id,
+    clinicalCase: clinicalCase.id,
   };
 }
 

@@ -46,10 +46,15 @@ test("the server report becomes the form values with a measured and an unmeasure
   assert.equal(values.category, null);
   assert.equal(values.specimen, "Sentinel node, right axilla");
   assert.deepEqual(
-    values.deposits.map((deposit) => [deposit.id, deposit.size, deposit.unmeasured ?? false]),
+    values.deposits.map((deposit) => [
+      deposit.id,
+      deposit.serverId,
+      deposit.size,
+      deposit.unmeasured ?? false,
+    ]),
     [
-      ["d1", "8", false],
-      ["d2", "", true],
+      ["D1", "d1", "8", false],
+      ["D2", "d2", "", true],
     ],
   );
 });

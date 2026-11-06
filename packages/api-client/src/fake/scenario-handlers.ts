@@ -43,6 +43,7 @@ import {
   workspaces,
 } from "./scenario.ts";
 import { adminRightsHolders } from "./scenario-admin.ts";
+import { clinicalCaseForSlide, clinicalProject, signRights } from "./scenario-clinical.ts";
 import { fakeView } from "./view.ts";
 import {
   activeFakeWorkspace,
@@ -100,6 +101,9 @@ const signOutIn = (project: ScenarioProject, role: ProjectRole): SignOutRight | 
   return role === "viewer" ? "never" : "own";
 };
 
+const assignedSignOut = (key: PersonKey): SignOutRight =>
+  clinicalCaseForSlide("").assigned.includes(key) ? (signRights[key] ?? "never") : "never";
+
 export const toProject = (project: ScenarioProject): Project => ({
   id: project.id,
   code: project.code,
@@ -118,7 +122,10 @@ export const toProject = (project: ScenarioProject): Project => ({
     return {
       user_id: people[key].id,
       role,
-      sign_out: signOutIn(project, role),
+      sign_out:
+        project.code === clinicalProject && role !== "viewer"
+          ? assignedSignOut(key)
+          : signOutIn(project, role),
     };
   }),
 });

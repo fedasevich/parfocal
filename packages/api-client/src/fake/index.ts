@@ -5,6 +5,7 @@ import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
+import { caseReportHandlers } from "./case-report-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
@@ -41,6 +42,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...adminHandlers(),
     ...adjudicationHandlers(),
     ...caseHandlers(),
+    ...caseReportHandlers(),
     ...createdRecordHandlers(),
     ...uploadHandlers(),
     ...settingsHandlers(),
@@ -68,6 +70,7 @@ export {
 export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
 export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
 export { resetSlideEdits } from "./case-handlers.ts";
+export { clinicalCaseId, resetFakeCaseReports } from "./case-report-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
 export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
 export {

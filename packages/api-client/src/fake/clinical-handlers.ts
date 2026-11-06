@@ -1,12 +1,9 @@
 import { HttpResponse, http } from "msw";
 import {
   type ClinicalReport,
-  type ClinicalReportRow,
   type ClinicalSignature,
-  type CosignRequestSent,
   type CosignReturn,
   type CosignReview,
-  clinicalReportRowSchema,
   clinicalReportSchema,
   cosignReviewSchema,
 } from "../draft/clinical-report.ts";
@@ -94,16 +91,6 @@ export const toClinicalReport = (slideId: string): ClinicalReport => {
   });
 };
 
-export const toClinicalReportRows = (): ClinicalReportRow[] =>
-  clinicalCases.map((item) =>
-    clinicalReportRowSchema.parse({
-      case_label: item.label,
-      slide_id: item.slides[0]?.id,
-      template: clinicalTemplates[item.template].name,
-      has_staging: item.template === "sentinel-node",
-    }),
-  );
-
 export const toCosignReview = (): CosignReview => {
   const item = clinicalCaseForSlide("");
   const template = clinicalTemplates[item.template];
@@ -146,44 +133,9 @@ export const getGetClinicalReportMockHandler = (overrideResponse?: ClinicalRepor
     HttpResponse.json(overrideResponse ?? toClinicalReport(params.slideId)),
   );
 
-export const getListClinicalReportsMockHandler = (overrideResponse?: ClinicalReportRow[]) =>
-  http.get("*/api/projects/:projectId/clinical-reports", () =>
-    HttpResponse.json(overrideResponse ?? toClinicalReportRows()),
-  );
-
 export const getGetCosignReviewMockHandler = (overrideResponse?: CosignReview) =>
   http.get(`${reportPath}/cosign-request`, () =>
     HttpResponse.json(overrideResponse ?? toCosignReview()),
-  );
-
-export const getSignOutClinicalReportMockHandler = (overrideResponse?: ClinicalSignature) =>
-  http.post(`${reportPath}/sign-out`, () =>
-    HttpResponse.json(overrideResponse ?? signature(1, null), { status: 201 }),
-  );
-
-export const getSendClinicalReportForCosignMockHandler = (overrideResponse?: CosignRequestSent) =>
-  http.post(`${reportPath}/cosign-requests`, async ({ request }) => {
-    const body = (await request.json()) as { cosigner_user_id?: string };
-    const sent: CosignRequestSent = overrideResponse ?? {
-      id: cosignSent.id,
-      to_user_id: body.cosigner_user_id ?? people[cosignSent.to].id,
-      sent_at: cosignSent.sentAt,
-    };
-    return HttpResponse.json(sent, { status: 201 });
-  });
-
-export const getWithdrawCosignRequestMockHandler = () =>
-  http.delete(
-    `${reportPath}/cosign-requests/:requestId`,
-    () => new HttpResponse(null, { status: 204 }),
-  );
-
-export const getAmendClinicalReportMockHandler = (overrideResponse?: ClinicalSignature) =>
-  http.post(`${reportPath}/amendments`, () =>
-    HttpResponse.json(
-      overrideResponse ?? { ...signature(2, null), signed_at: "2026-10-16T09:10:00+02:00" },
-      { status: 201 },
-    ),
   );
 
 export const getReturnCosignRequestMockHandler = (overrideResponse?: CosignReturn) =>
@@ -214,40 +166,10 @@ export const clinicalDraftOperations: DraftOperation[] = [
     handler: () => getGetClinicalReportMockHandler(),
   },
   {
-    operationId: "listClinicalReports",
-    method: "get",
-    path: "/api/projects/{project_id}/clinical-reports",
-    handler: () => getListClinicalReportsMockHandler(),
-  },
-  {
     operationId: "getCosignReview",
     method: "get",
     path: `${reportApi}/cosign-request`,
     handler: () => getGetCosignReviewMockHandler(),
-  },
-  {
-    operationId: "signOutClinicalReport",
-    method: "post",
-    path: `${reportApi}/sign-out`,
-    handler: () => getSignOutClinicalReportMockHandler(),
-  },
-  {
-    operationId: "sendClinicalReportForCosign",
-    method: "post",
-    path: `${reportApi}/cosign-requests`,
-    handler: () => getSendClinicalReportForCosignMockHandler(),
-  },
-  {
-    operationId: "withdrawCosignRequest",
-    method: "delete",
-    path: `${reportApi}/cosign-requests/{request_id}`,
-    handler: () => getWithdrawCosignRequestMockHandler(),
-  },
-  {
-    operationId: "amendClinicalReport",
-    method: "post",
-    path: `${reportApi}/amendments`,
-    handler: () => getAmendClinicalReportMockHandler(),
   },
   {
     operationId: "returnCosignRequest",

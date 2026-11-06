@@ -129,6 +129,7 @@ test("the origin survives a reload through session storage and ignores junk", ()
     task: "rt14",
     slide: "a1",
     clinicalSlide: "c1",
+    clinicalCase: "k1",
   };
   const store = createOriginStore(storage);
   let calls = 0;

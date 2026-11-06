@@ -1,8 +1,9 @@
 import {
-  useAmendClinicalReport,
-  useSendClinicalReportForCosign,
-  useSignOutClinicalReport,
-  useWithdrawCosignRequest,
+  type CaseReport,
+  useAmendCaseReport,
+  useListCases,
+  useSendCaseReportForCosign,
+  useSignCaseReport,
 } from "@parfocal/api-client";
 import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
@@ -11,12 +12,19 @@ import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-p
 import { Icon } from "@parfocal/ui/components/icon";
 import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
 import { useRouter } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { usePeople } from "../people.ts";
-import { QueryState } from "../placeholder.tsx";
+import { okData, QueryState } from "../placeholder.tsx";
+import {
+  amendOf,
+  changeBetween,
+  issuesOfBlockers,
+  signedOf,
+  valuesOfCaseReport,
+} from "./case-report.ts";
 import { DepositModal, ReasonModal, SignModal } from "./modals.tsx";
 import {
   andJoin,
@@ -40,10 +48,11 @@ import {
   signersOf,
   slideOf,
   stepLabel,
-  toApiValues,
   type Values,
 } from "./model.ts";
-import { fieldId, useLinkRenderer, useReportData, useToast } from "./parts.tsx";
+import { fieldId, useLinkRenderer, useToast } from "./parts.tsx";
+import { type LoadedReport, useCaseReportData, useReportWriter } from "./report-data.ts";
+import { pushValues } from "./report-sync.ts";
 import {
   DonePanel,
   FindingsStep,
@@ -67,8 +76,8 @@ export type ReportNavigation = { step?: StepKey | undefined; modal?: ReportModal
 
 type ReportScreenProps = {
   projectId: string;
-  slideId: string;
-  scene: ReportScene;
+  caseId: string;
+  scene: ReportScene | undefined;
   step: StepKey | undefined;
   modal: ReportModal | undefined;
   onNavigate: (to: ReportNavigation) => void;
@@ -77,8 +86,14 @@ type ReportScreenProps = {
 
 export function ReportScreen(props: ReportScreenProps) {
   const owner = useFlowOwner();
-  const { data, pending, failed } = useReportData(props.projectId, props.slideId, props.scene);
-  if (!data) {
+  const cases = useListCases(
+    { project_id: props.projectId },
+    { query: { enabled: props.scene === "nostaging" } },
+  );
+  const excision = okData(cases.data)?.[1]?.id;
+  const caseId = props.scene === "nostaging" ? (excision ?? "") : props.caseId;
+  const { loaded, pending, failed } = useCaseReportData(props.projectId, caseId);
+  if (!loaded) {
     return (
       <main className="p-8">
         <QueryState label="the clinical report" isPending={pending} error={failed || !pending}>
@@ -89,51 +104,87 @@ export function ReportScreen(props: ReportScreenProps) {
   }
   return (
     <ReportFlow
-      key={`${props.scene}-${data.id}-${data.author_user_id}-${owner}`}
+      key={`${props.scene ?? "live"}-${loaded.data.id}-${loaded.data.author_user_id}-${owner}`}
       owner={owner}
-      data={data}
+      loaded={loaded}
       {...props}
+      caseId={caseId}
     />
   );
 }
 
 function ReportFlow({
   owner,
-  data,
+  loaded,
+  projectId,
+  caseId,
   scene,
   step,
   modal,
   onNavigate,
   keep = false,
-}: ReportScreenProps & { data: ReportData; owner: string | undefined }) {
+}: ReportScreenProps & { loaded: LoadedReport; owner: string | undefined }) {
+  const data: ReportData = loaded.data;
+  const live = scene === undefined;
+  const mock: ReportScene = scene ?? "findings";
   const flow = useKeptFlow({
     owner,
     id: `clinical-report:${data.id}`,
     count: data.template.steps.length,
-    draft: sceneReport(data, scene),
+    draft: live ? loaded.report : sceneReport(data, mock, loaded.values),
     at: step === undefined ? undefined : data.template.steps.findIndex((s) => s.key === step),
     keep,
   });
   const { draft: report, setDraft: setReport, forget } = flow;
-  const [sceneModalOpen, setSceneModalOpen] = useState(() => sceneModal[scene] !== undefined);
+  const [sceneModalOpen, setSceneModalOpen] = useState(
+    () => !live && sceneModal[mock] !== undefined,
+  );
   const [focus, setFocus] = useState<string | null>(null);
   const [lastText, setLastText] = useState<"diag" | "micro" | "comment">("micro");
   const toast = useToast();
   const renderLink = useLinkRenderer();
   const router = useRouter();
   const person = usePeople();
-  const signOut = useSignOutClinicalReport();
-  const send = useSendClinicalReportForCosign();
-  const withdraw = useWithdrawCosignRequest();
-  const amend = useAmendClinicalReport();
-  const target = { projectId: data.project.id, slideId: data.slides[0]?.id ?? "" };
+  const signOut = useSignCaseReport();
+  const send = useSendCaseReportForCosign();
+  const amend = useAmendCaseReport();
+  const { writer, keep: remember } = useReportWriter(projectId, caseId);
+  const savedRef = useRef<Values>(valuesOfCaseReport(loaded.server, flow.draft.values));
+  const latest = useRef<Values>(report.values);
+  const serverRef = useRef<CaseReport>(loaded.server);
+  const chain = useRef<Promise<unknown>>(Promise.resolve());
+  const flush = useCallback((): Promise<CaseReport> => {
+    const run = chain.current.then(async () => {
+      const result = await pushValues(writer, savedRef.current, latest.current);
+      savedRef.current = result.saved;
+      if (result.server) {
+        serverRef.current = result.server;
+        const synced = result.saved.deposits;
+        setReport((current) => ({
+          ...current,
+          values: {
+            ...current.values,
+            deposits: current.values.deposits.map((deposit) => {
+              const match = synced.find((candidate) => candidate.id === deposit.id);
+              return match?.serverId && match.serverId !== deposit.serverId
+                ? { ...deposit, serverId: match.serverId }
+                : deposit;
+            }),
+          },
+        }));
+      }
+      return serverRef.current;
+    });
+    chain.current = run.catch(() => undefined);
+    return run;
+  }, [writer, setReport]);
   const steps = data.template.steps;
   const keptStep = keep ? steps[flow.kept?.current ?? -1]?.key : undefined;
-  const wanted = step ?? keptStep ?? sceneStep[scene];
+  const wanted = step ?? keptStep ?? sceneStep[mock];
   const page: StepKey = steps.some((candidate) => candidate.key === wanted) ? wanted : "findings";
   const done = report.signed !== null;
   const sent = !done && report.sent !== null;
-  const openModal = modal ?? (sceneModalOpen ? sceneModal[scene] : undefined);
+  const openModal = modal ?? (sceneModalOpen ? sceneModal[mock] : undefined);
   const all = issuesOf(data, report);
   const errorFor = (list: typeof all) =>
     Object.fromEntries(
@@ -147,6 +198,22 @@ function ReportFlow({
   useEffect(() => {
     if (done || sent) forget();
   }, [done, sent, forget]);
+
+  useEffect(() => {
+    latest.current = report.values;
+    if (!live || done || sent) return;
+    const timer = window.setTimeout(() => {
+      flush().catch(() => toast.show({ text: "The draft could not be saved. Try again." }));
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [live, done, sent, report.values, flush, toast.show]);
+
+  useEffect(
+    () => () => {
+      if (live) void flush().catch(() => undefined);
+    },
+    [live, flush],
+  );
 
   useEffect(() => {
     if (done || sent) return;
@@ -204,7 +271,14 @@ function ReportFlow({
     person,
     onOpenSlide: (objectId) =>
       void router.navigate({
-        href: destinations.slide(data.project.id, target.slideId, undefined, objectId),
+        href: destinations.slide(
+          data.project.id,
+          data.objects.find((candidate) => candidate.object_id === objectId)?.slide ??
+            data.slides[0]?.id ??
+            "",
+          undefined,
+          objectId,
+        ),
       }),
     onAddDeposit: () => onNavigate({ step: page, modal: "deposit" }),
     onRemoveDeposit: (id) => {
@@ -299,6 +373,17 @@ function ReportFlow({
     }
     onNavigate({ step: page, modal: "sign" });
   };
+  const complain = (error: unknown, fallback: string) =>
+    toast.show({ text: error instanceof Error && error.message ? error.message : fallback });
+  const blockedBy = (server: CaseReport) => {
+    const issues = issuesOfBlockers(server.blockers);
+    if (!issues.length) return false;
+    touchAll(issues.map((issue) => issue.field));
+    const first = issues[0];
+    if (first) goTo(first.step, first.field);
+    toast.show({ text: "Some things need finishing first." });
+    return true;
+  };
   const sendNow = () => {
     const blockers = issuesOf(data, report, true);
     if (blockers.length) {
@@ -308,19 +393,30 @@ function ReportFlow({
     }
     const to = report.cosigner;
     if (!to) return;
-    send.mutate(
-      { ...target, data: { cosigner_user_id: to, values: toApiValues(report.values) } },
-      {
-        onSuccess: (response) => {
-          setReport((current) => ({
-            ...current,
-            sent: { to, at: "15 Oct 11:20", id: response.data.id },
-          }));
-          toast.show({ text: `Sent to ${person(to)?.name ?? "the co-signer"} for co-sign` });
-        },
-        onError: () => toast.show({ text: "The report could not be sent. Try again." }),
-      },
-    );
+    const sentTo = () =>
+      toast.show({ text: `Sent to ${person(to)?.name ?? "the co-signer"} for co-sign` });
+    if (!live) {
+      setReport((current) => ({ ...current, sent: { to, at: "15 Oct 11:20", id: "" } }));
+      sentTo();
+      return;
+    }
+    flush()
+      .then((server) => {
+        if (blockedBy(server)) return;
+        send.mutate(
+          { projectId, caseId, data: { cosigner_user_id: to } },
+          {
+            onSuccess: (response) => {
+              if (response.status !== 200) return;
+              remember(response);
+              setReport((current) => ({ ...current, sent: { to, at: "", id: "" } }));
+              sentTo();
+            },
+            onError: (error) => complain(error, "The report could not be sent. Try again."),
+          },
+        );
+      })
+      .catch((error: unknown) => complain(error, "The draft could not be saved. Try again."));
   };
 
   let bar: ReactNode;
@@ -361,26 +457,29 @@ function ReportFlow({
     bar = (
       <FlowBar
         back={
-          <Button
-            onClick={() => {
-              const was = report.sent;
-              if (!was) return;
-              withdraw.mutate({ ...target, requestId: was.id || "request" });
-              setReport((current) => ({ ...current, sent: null }));
-              toast.show({
-                text: "The request is withdrawn. The report is a draft again.",
-                undo: () => setReport((current) => ({ ...current, sent: was })),
-              });
-            }}
-          >
-            Withdraw the request
-          </Button>
+          live ? (
+            back("Back to the project")
+          ) : (
+            <Button
+              onClick={() => {
+                const was = report.sent;
+                if (!was) return;
+                setReport((current) => ({ ...current, sent: null }));
+                toast.show({
+                  text: "The request is withdrawn. The report is a draft again.",
+                  undo: () => setReport((current) => ({ ...current, sent: was })),
+                });
+              }}
+            >
+              Withdraw the request
+            </Button>
+          )
         }
         hint="You are told when it is signed or returned."
         next={renderLink({
-          href: `${projectHref}?tab=slides`,
+          href: live ? destinations.myWork() : `${projectHref}?tab=slides`,
           className: buttonVariants({ variant: "primary" }),
-          children: "Back to the project",
+          children: live ? "Open my work" : "Back to the project",
         })}
       />
     );
@@ -496,7 +595,8 @@ function ReportFlow({
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="clock" className="text-fg-dim" />
       <span>
-        Sent to {person(report.sent?.to)?.name}, {report.sent?.at} · waiting
+        Sent to {person(report.sent?.to)?.name}
+        {report.sent?.at ? `, ${report.sent.at}` : ""} · waiting
       </span>
     </p>
   ) : undefined;
@@ -521,7 +621,8 @@ function ReportFlow({
         subtitle={
           <>
             <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
-            {data.template.version} · assigned to {assigned}
+            {data.template.version}
+            {assigned ? ` · assigned to ${assigned}` : ""}
           </>
         }
         steps={stepStates}
@@ -560,7 +661,7 @@ function ReportFlow({
           data={data}
           caseLabel={data.case.label}
           deposits={report.values.deposits}
-          hand={scene === "dephand" && sceneModalOpen}
+          hand={mock === "dephand" && sceneModalOpen}
           onClose={closeModal}
           onAdd={(deposit) => {
             const id = nextDepositId(report);
@@ -601,34 +702,54 @@ function ReportFlow({
             {
               icon: "mail",
               label: "Goes to",
-              value: `${data.case.requested_by}, who requested it`,
+              value: data.case.requested_by
+                ? `${data.case.requested_by}, who requested it`
+                : "The clinician who requested it",
             },
             { icon: "file", label: "What you sign", value: "The report as it reads now" },
           ]}
           email={workEmail(person(data.author_user_id)?.name ?? "")}
-          failed={scene === "ssofail" && sceneModalOpen}
+          failed={mock === "ssofail" && sceneModalOpen}
           pending={signOut.isPending}
           onClose={closeModal}
-          onSign={(method, doneWith) =>
-            signOut.mutate(
-              { ...target, data: { method, values: toApiValues(report.values) } },
-              {
-                onSuccess: () => {
-                  setReport((current) => ({
-                    ...current,
-                    signed: { by: data.author_user_id, co: null, at: signedAt },
-                    v1: current.values,
-                    preview: false,
-                  }));
+          onSign={(_method, doneWith) => {
+            const finish = (server: CaseReport | null) => {
+              setReport((current) => ({
+                ...current,
+                signed: server
+                  ? signedOf(server, data.author_user_id)
+                  : { by: data.author_user_id, co: null, at: signedAt },
+                v1: current.values,
+                preview: false,
+              }));
+              closeModal();
+              toast.show({
+                text: `${data.case.label} is signed out. It goes to the clinician.`,
+              });
+            };
+            if (!live) {
+              finish(null);
+              return;
+            }
+            flush()
+              .then((server) => {
+                if (blockedBy(server)) {
                   closeModal();
-                  toast.show({
-                    text: `${data.case.label} is signed out. It goes to the clinician.`,
-                  });
-                },
-                onError: () => doneWith(false),
-              },
-            )
-          }
+                  return;
+                }
+                signOut.mutate(
+                  { projectId, caseId },
+                  {
+                    onSuccess: (response) => {
+                      if (response.status !== 200) return doneWith(false);
+                      finish(remember(response));
+                    },
+                    onError: () => doneWith(false),
+                  },
+                );
+              })
+              .catch(() => doneWith(false));
+          }}
         />
       ) : null}
       {openModal === "amend" && done ? (
@@ -648,17 +769,41 @@ function ReportFlow({
           hint="v1 stays readable."
           primary="Amend and sign again"
           tooShort="Give a reason of at least 10 characters."
-          tried={scene === "amend" && sceneModalOpen}
+          tried={mock === "amend" && sceneModalOpen}
           onClose={closeModal}
           onSubmit={(why) => {
             const was = report.amend;
-            amend.mutate({ ...target, data: { reason: why, values: toApiValues(report.values) } });
-            setReport((current) => ({ ...current, amend: { why, at: "16 Oct" }, showV1: false }));
-            closeModal();
-            toast.show({
-              text: "Amended and signed again. Version 1 stays readable.",
-              undo: () => setReport((current) => ({ ...current, amend: was })),
-            });
+            const finish = (server: CaseReport | null) => {
+              setReport((current) => ({
+                ...current,
+                amend: (server ? amendOf(server) : null) ?? { why, at: "16 Oct" },
+                showV1: false,
+              }));
+              closeModal();
+              toast.show({
+                text: "Amended and signed again. Version 1 stays readable.",
+                ...(live
+                  ? {}
+                  : { undo: () => setReport((current) => ({ ...current, amend: was })) }),
+              });
+            };
+            if (!live) {
+              finish(null);
+              return;
+            }
+            amend.mutate(
+              {
+                projectId,
+                caseId,
+                data: { reason: why, change: changeBetween(savedRef.current, report.values) },
+              },
+              {
+                onSuccess: (response) => {
+                  if (response.status === 200) finish(remember(response));
+                },
+                onError: (error) => complain(error, "The amendment could not be saved."),
+              },
+            );
           }}
         />
       ) : null}

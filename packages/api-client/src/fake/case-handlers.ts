@@ -1,6 +1,14 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import type { CaseDetail, SlideDetail, SlideDetailsChange, SlideOrder } from "../generated/api.ts";
+import type {
+  CaseDetail,
+  SlideDetail,
+  SlideDetailsChange,
+  SlideOrder,
+  SpecimenDetail,
+} from "../generated/api.ts";
+import { clinicalCaseOf } from "./case-report-handlers.ts";
 import { cases, projects, type ScenarioSlide, scenarioNow, slides } from "./scenario.ts";
+import { clinicalCases, clinicalProject } from "./scenario-clinical.ts";
 
 type SlideEdit = Partial<Pick<SlideDetail, "label" | "stain" | "block_id" | "level">>;
 
@@ -32,8 +40,12 @@ const toSlideDetail = (slide: ScenarioSlide): SlideDetail => ({
 const slidesOfCase = (caseId: string): ScenarioSlide[] => {
   const found = cases.find((item) => item.id === caseId);
   if (found === undefined) return [];
-  const inCase = slides.filter(
-    (slide) => slide.caseLabel === found.label && slide.project === found.project,
+  const clinical = clinicalCaseOf(caseId);
+  const borrowed = clinical !== undefined && found.project === clinicalProject;
+  const inCase = slides.filter((slide) =>
+    borrowed
+      ? slide.caseLabel === clinical.label && slide.project === "P07"
+      : slide.caseLabel === found.label && slide.project === found.project,
   );
   const order = caseOrders.get(caseId) ?? [];
   const rank = (slide: ScenarioSlide) => {
@@ -41,6 +53,24 @@ const slidesOfCase = (caseId: string): ScenarioSlide[] => {
     return at === -1 ? order.length + inCase.indexOf(slide) : at;
   };
   return [...inCase].sort((first, second) => rank(first) - rank(second));
+};
+
+const specimensOf = (label: string): SpecimenDetail[] => {
+  const clinical = clinicalCases.find((item) => item.label === label);
+  if (clinical === undefined) return [];
+  return [
+    {
+      id: `fake-specimen-${label}`,
+      letter: "A",
+      type: null,
+      site: clinical.site,
+      laterality: "unknown",
+      procedure: null,
+      collected_at: null,
+      received_at: clinical.receivedAt,
+      blocks: [],
+    },
+  ];
 };
 
 export const toCaseDetail = (caseId: string): CaseDetail | null => {
@@ -52,7 +82,7 @@ export const toCaseDetail = (caseId: string): CaseDetail | null => {
   return {
     id: found.id,
     project_id: project.id,
-    label: found.label,
+    label: clinicalCaseOf(caseId)?.label ?? found.label,
     source: "manual",
     patient:
       project.privacy === "clinical"
@@ -65,7 +95,7 @@ export const toCaseDetail = (caseId: string): CaseDetail | null => {
             age_years: null,
           }
         : null,
-    specimens: [],
+    specimens: specimensOf(clinicalCaseOf(caseId)?.label ?? found.label),
     slides: slidesOfCase(caseId).map(toSlideDetail),
   };
 };
