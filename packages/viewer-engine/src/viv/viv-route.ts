@@ -155,6 +155,7 @@ export function createVivRoute(
       canvas: target,
       views: new OrthographicView({ id: vivViewId, controller: false }),
       controller: false,
+      getCursor: () => "inherit",
       viewState: vivViewState(camera),
       layers: [],
       useDevicePixels: options.useDevicePixels ?? true,

@@ -55,6 +55,20 @@ test("V arms the select tool, a click picks the ruler and an empty click drops i
   await expect(page.getByTestId("select-layer")).toHaveAttribute("data-selected", "");
 });
 
+test("the select tool shows an arrow over the slide and the hand tool shows a hand", async ({
+  page,
+}) => {
+  const stage = await openSlide(page);
+  const canvas = page.getByTestId("slide-host").locator("canvas").first();
+  const cursor = () => canvas.evaluate((node) => getComputedStyle(node).cursor);
+  await page.keyboard.press("v");
+  await expect(stage).toHaveAttribute("data-tool", "select");
+  await expect.poll(cursor).toBe("default");
+  await page.keyboard.press("h");
+  await expect(stage).toHaveAttribute("data-tool", "hand");
+  await expect.poll(cursor).toBe("grab");
+});
+
 test("a marquee selects the ruler it touches", async ({ page }) => {
   const stage = await openSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
