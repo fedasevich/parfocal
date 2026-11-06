@@ -67,6 +67,8 @@ export type SmartPress =
 export interface SmartSession {
   press(press: SmartPress): Promise<void>;
   removeLast(): Promise<void>;
+  prewarm(at: { readonly x: number; readonly y: number }): Promise<void>;
+  pausePrewarm(): void;
   snapshot(): SmartSnapshot;
   reset(): void;
   close(): void;
@@ -94,7 +96,8 @@ function newDraft(): Draft {
 
 export function createSmartSession(options: SmartSessionOptions): SmartSession {
   const preset = options.preset ?? "nuclei";
-  const encoded = new Set<string>();
+  const embeddings = new Map<string, Promise<void>>();
+  let prewarmTurn = 0;
   let kept: SmartObject[] = [];
   let draft: Draft | null = null;
   let phase: SmartPhase = "idle";
@@ -131,6 +134,27 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     draft = null;
   }
 
+  function embed(patch: Patch, rgb: Uint8Array, frame: SamFrame): Promise<void> {
+    const id = `${options.slideId}:${patch.key}`;
+    const known = embeddings.get(id);
+    if (known !== undefined) return known;
+    const pending = options.sam.encode(id, samPixels(rgb, frame)).then(
+      (done) => {
+        for (const gone of done.evicted) embeddings.delete(gone);
+      },
+      (error: unknown) => {
+        embeddings.delete(id);
+        throw error;
+      },
+    );
+    embeddings.set(id, pending);
+    return pending;
+  }
+
+  function stopPrewarm() {
+    prewarmTurn += 1;
+  }
+
   async function solve(target: Draft, mine: number): Promise<void> {
     const anchor = anchorOf(target.prompts);
     if (anchor === null) {
@@ -158,12 +182,8 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       const { patch, frame } = target;
       if (patch === null || frame === null || patch.rgb === null) return;
       const id = `${options.slideId}:${patch.key}`;
-      if (!encoded.has(id)) {
-        const done = await options.sam.encode(id, samPixels(patch.rgb, frame));
-        for (const gone of done.evicted) encoded.delete(gone);
-        encoded.add(id);
-        if (mine !== version) return;
-      }
+      await embed(patch, patch.rgb, frame);
+      if (mine !== version) return;
       const outcome = await options.sam.prompt(
         id,
         modelPrompt(frame, target.prompts, target.logits),
@@ -236,6 +256,22 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       return enqueue(() => (mine === version ? solve(target, mine) : Promise.resolve()));
     },
 
+    async prewarm(at) {
+      if (closed) return;
+      prewarmTurn += 1;
+      const turn = prewarmTurn;
+      try {
+        const { patch } = await options.reader.read({ preset, x: at.x, y: at.y });
+        if (turn !== prewarmTurn || closed) return;
+        if (patch.absent || patch.rgb === null || patch.width !== patch.height) return;
+        await embed(patch, patch.rgb, samFrame(patch));
+      } catch {
+        return;
+      }
+    },
+
+    pausePrewarm: stopPrewarm,
+
     snapshot,
 
     reset() {
@@ -250,6 +286,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     close() {
       version += 1;
       closed = true;
+      stopPrewarm();
     },
   };
 }

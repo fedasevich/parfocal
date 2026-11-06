@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPrewarmTrigger } from "../aiseg/smart-prewarm.ts";
 import { nextRunId, smartRunFinished, withSmartRun } from "../aiseg/smart-run.ts";
 import { classifyPress, type SmartPoint } from "../aiseg/smart-select.ts";
 import type {
@@ -141,6 +142,19 @@ export function SmartLayer({
     built.current = false;
     void session.current?.then((value) => value.reset());
   }, [doc]);
+
+  useEffect(() => {
+    if (!active) return;
+    const trigger = createPrewarmTrigger({
+      pause: () => void session.current?.then((value) => value.pausePrewarm()),
+      fire: () => {
+        const centre = screenToSlide(camera, rect, rect.width / 2, rect.height / 2);
+        void sessionPromise().then((value) => value.prewarm(centre));
+      },
+    });
+    trigger.touch();
+    return () => trigger.stop();
+  }, [active, camera, rect, sessionPromise]);
 
   useEffect(() => {
     if (!active) {
