@@ -11,7 +11,7 @@ import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { bindClickPress } from "./click-press.ts";
-import { type AnnotationDocument, updateShape } from "./document.ts";
+import { type AnnotationDocument, isShapeHidden, updateShape } from "./document.ts";
 import {
   addText,
   cleanText,
@@ -165,7 +165,7 @@ export function TextLayer({
     }
   };
 
-  const texts = textsOf(doc);
+  const texts = textsOf(doc).filter((shape) => !isShapeHidden(doc, shape));
   const where = draft === null ? null : slideToScreen(camera, rect, draft.point);
 
   return (

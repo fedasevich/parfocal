@@ -343,6 +343,56 @@ export const ModelTierPicker: Story = {
   },
 };
 
+export const EditableLayers: Story = {
+  render: function Render() {
+    const [hidden, setHidden] = useState<string[]>([]);
+    const [locked, setLocked] = useState<string[]>(["margin"]);
+    const [target, setTarget] = useState("tumor");
+    const [colour, setColour] = useState("#f87171");
+    const flip = (list: string[], set: (next: string[]) => void, key: string) =>
+      set(list.includes(key) ? list.filter((item) => item !== key) : [...list, key]);
+    return (
+      <div className="w-80">
+        <LayerList
+          hidden={hidden}
+          onToggle={(key) => flip(hidden, setHidden, key)}
+          onLock={(key) => flip(locked, setLocked, key)}
+          onColour={(_, hex) => setColour(hex)}
+          onPick={setTarget}
+          rows={[
+            {
+              key: "tumor",
+              name: "Tumor",
+              colour,
+              count: 12,
+              locked: locked.includes("tumor"),
+              target: target === "tumor",
+              hasChildren: true,
+            },
+            {
+              key: "margin",
+              name: "Margin",
+              colour: "#38bdf8",
+              count: 4,
+              depth: 1,
+              locked: locked.includes("margin"),
+              target: target === "margin",
+              inheritedOff: hidden.includes("tumor"),
+            },
+            {
+              key: "ungrouped",
+              name: "Ungrouped",
+              colour: "var(--fg-faint)",
+              count: 3,
+              plain: true,
+            },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+
 export const Layers: Story = {
   render: function Render() {
     const [hidden, setHidden] = useState<string[]>(["stroma"]);

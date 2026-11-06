@@ -22,6 +22,7 @@ import {
   redo,
   undo,
 } from "./history.ts";
+import { intoGroup } from "./layers.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
   type Choice,
@@ -31,7 +32,7 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
-import { at, type Shape, type ShapeId } from "./shapes.ts";
+import { at, type GroupId, type Shape, type ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
 
@@ -65,6 +66,8 @@ export type SavedAnnotations = {
   readonly undo: () => string | null;
   readonly redo: () => string | null;
   readonly fold: (id: EntryId, change: (doc: AnnotationDocument) => AnnotationDocument) => void;
+  readonly target: GroupId | null;
+  readonly setTarget: (id: GroupId | null) => void;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly loaded: boolean;
@@ -81,6 +84,12 @@ export function useSavedAnnotations(
 ): SavedAnnotations {
   const [document, setDocumentState] = useState(createDocument);
   const [loaded, setLoaded] = useState(false);
+  const [target, setTargetState] = useState<GroupId | null>(null);
+  const targetRef = useRef<GroupId | null>(null);
+  const setTarget = useCallback((id: GroupId | null) => {
+    targetRef.current = id;
+    setTargetState(id);
+  }, []);
   const [history, setHistoryState] = useState(createHistory);
   const current = useRef(document);
   const log = useRef(history);
@@ -227,8 +236,9 @@ export function useSavedAnnotations(
     (points: Float32Array, classKey: string | null = null) => {
       const before = current.current;
       const added = addShape(before, { kind: "polygon", points, classKey });
-      setDocument(added.document);
-      recordEdit(before, added.document, "Add outline");
+      const placed = intoGroup(before, added.document, targetRef.current);
+      setDocument(placed);
+      recordEdit(before, placed, "Add outline");
       createFor(added.shape);
     },
     [setDocument, recordEdit, createFor],
@@ -238,8 +248,9 @@ export function useSavedAnnotations(
     (point: Point, classKey: string | null) => {
       const before = current.current;
       const added = dropMarker(before, point, classKey);
-      setDocument(added.document);
-      recordEdit(before, added.document, "Add marker");
+      const placed = intoGroup(before, added.document, targetRef.current);
+      setDocument(placed);
+      recordEdit(before, placed, "Add marker");
       createFor(added.shape);
     },
     [setDocument, recordEdit, createFor],
@@ -261,8 +272,9 @@ export function useSavedAnnotations(
     (next: AnnotationDocument, label: string) => {
       const before = current.current;
       if (next === before) return;
-      setDocument(next);
-      commit(before, next, label);
+      const placed = intoGroup(before, next, targetRef.current);
+      setDocument(placed);
+      commit(before, placed, label);
     },
     [setDocument, commit],
   );
@@ -321,6 +333,8 @@ export function useSavedAnnotations(
     undo: undoLast,
     redo: redoLast,
     fold: foldInto,
+    target,
+    setTarget,
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     loaded,

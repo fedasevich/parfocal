@@ -23,6 +23,7 @@ import { markersOf } from "../annotations/count-markers.ts";
 import { CountPanel } from "../annotations/count-panel.tsx";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
+import { LayersPanel } from "../annotations/layers-panel.tsx";
 import { PinLayer } from "../annotations/pin-layer.tsx";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
@@ -596,6 +597,16 @@ function OpenedSlide({
               ))}
             </div>
             <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
+              {workspace === "annotate" ? (
+                <LayersPanel
+                  document={annotations}
+                  onApply={saved.apply}
+                  classes={classes}
+                  areas={areas}
+                  target={saved.target}
+                  onTarget={saved.setTarget}
+                />
+              ) : null}
               {showsCountPanel(setup, {
                 counting: tool === "marker",
                 markers: markerTotal,

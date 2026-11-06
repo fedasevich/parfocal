@@ -1,4 +1,5 @@
 import { type AnnotationDocument, addShape, removeShape } from "./document.ts";
+import { isSelectable } from "./hit-test.ts";
 import type { Point } from "./polygon-draft.ts";
 import { at, type Shape, type ShapeId } from "./shapes.ts";
 
@@ -28,6 +29,7 @@ export function markerNear(doc: AnnotationDocument, point: Point, radius: number
   let best: ShapeId | null = null;
   let bestDistance = radius;
   for (const shape of markersOf(doc)) {
+    if (!isSelectable(doc, shape)) continue;
     const where = markerPoint(shape);
     const distance = Math.hypot(where.x - point.x, where.y - point.y);
     if (distance <= bestDistance) {
