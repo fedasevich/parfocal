@@ -2621,7 +2621,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 - [ ] ANN-031 · Annotate task on screen
   A slide opened from an annotate task shows the Annotate workspace with the task's classes on keys 1 to 9, the shared layer, the AI result set shown by default with a toggle, origin marks on objects, counts per class, progress across the task's slides and the checked card.
-  Done when component tests cover the class strip from the snapshot, the AI toggle, the origin marks and a slide with no result set, and E2E draws a polygon and a count marker, fixes an AI object and marks the slide checked.
+  Done when component tests cover the class strip from the snapshot, the AI toggle, the origin marks and a slide with no result set, and E2E draws a polygon and a count marker, fixes an AI object, checks two slides and signs one off through the TASK-014 endpoints.
   Depends on ANN-030, ANN-002, ANN-005, ANN-008, ANN-021, SHELL-004, TASK-014, PROTO-020. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: L.
 
