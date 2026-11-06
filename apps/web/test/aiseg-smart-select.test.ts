@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it } from "node:test";
 import { bestMask, samFrame, samImageSize, samPixels, slideToModel } from "@parfocal/viewer-engine";
 import {
   createFakeReader,
@@ -45,6 +45,12 @@ function bounds(ring: Float32Array) {
   return { x0, y0, x1, y1 };
 }
 
+const opened: SmartSession[] = [];
+
+afterEach(() => {
+  for (const session of opened.splice(0)) session.close();
+});
+
 function open() {
   const sam = createFakeSam();
   const changes: SmartSnapshot[] = [];
@@ -54,6 +60,7 @@ function open() {
     sam,
     onChange: (snapshot) => changes.push(snapshot),
   });
+  opened.push(session);
   return { sam, session, changes };
 }
 
@@ -293,6 +300,7 @@ describe("smart select session", () => {
       },
       onChange: () => undefined,
     });
+    opened.push(failing);
     await failing.press(click(1000, 1000));
     assert.equal(failing.snapshot().phase, "failed");
     assert.equal(failing.snapshot().message, "no memory");

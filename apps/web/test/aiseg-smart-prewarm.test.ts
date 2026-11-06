@@ -72,10 +72,13 @@ function slowSam() {
   return { sam, encodes };
 }
 
+const opened: Array<{ close(): void }> = [];
+
 function open() {
   const reader = anchoredReader();
   const { sam, encodes } = slowSam();
   const session = createSmartSession({ slideId: "s", reader, sam, onChange: () => undefined });
+  opened.push(session);
   return { reader, session, encodes };
 }
 
@@ -101,6 +104,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  for (const session of opened.splice(0)) session.close();
   mock.timers.reset();
 });
 

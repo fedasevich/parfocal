@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it } from "node:test";
 import type { SamPrompt, SamPromptOutcome } from "@parfocal/viewer-engine";
 import { createFakeReader, createFakeSam, fakeOutputs } from "../src/aiseg/fake-sam.ts";
 import { createSmartSession, type SmartSam } from "../src/aiseg/smart-session.ts";
@@ -34,6 +34,12 @@ function gated(): Gate {
   };
 }
 
+const opened: Array<{ close(): void }> = [];
+
+afterEach(() => {
+  for (const session of opened.splice(0)) session.close();
+});
+
 function open(sam: SmartSam = createFakeSam()) {
   const hovers: Array<Float32Array | null> = [];
   const session = createSmartSession({
@@ -43,6 +49,7 @@ function open(sam: SmartSam = createFakeSam()) {
     onChange: () => undefined,
     onHover: (ring) => hovers.push(ring),
   });
+  opened.push(session);
   return { session, hovers };
 }
 

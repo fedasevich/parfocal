@@ -65,26 +65,27 @@ for (const { scene, section, title, shows } of settingsScenes) {
   });
 }
 
-test("every developer scene opens", async ({ page }) => {
-  const scenes: [string, string][] = [
-    ["renderer", "Viv switches"],
-    ["tiles", "Sample slides"],
-    ["annot", "Synthetic nuclei"],
-    ["heatmap", "Colormap"],
-    ["models", "MONAI server"],
-    ["typing", "Cell typing"],
-    ["job", "Tile 712 of 1,880, tumor first"],
-    ["bench", "Pan sweep"],
-    ["hud", "Readouts on the Viv route"],
-    ["ref", "Debug handle"],
-    ["webgpu", "Back to Viv"],
-  ];
-  for (const [scene, shows] of scenes) {
+const developerScenes: [string, string][] = [
+  ["renderer", "Viv switches"],
+  ["tiles", "Sample slides"],
+  ["annot", "Synthetic nuclei"],
+  ["heatmap", "Colormap"],
+  ["models", "MONAI server"],
+  ["typing", "Cell typing"],
+  ["job", "Tile 712 of 1,880, tumor first"],
+  ["bench", "Pan sweep"],
+  ["hud", "Readouts on the Viv route"],
+  ["ref", "Debug handle"],
+  ["webgpu", "Back to Viv"],
+];
+
+for (const [scene, shows] of developerScenes) {
+  test(`the ${scene} developer scene opens`, async ({ page }) => {
     await page.goto(`/developer?scene=${scene}`);
     const drawer = page.getByRole("dialog", { name: "Developer" });
     await expect(drawer.getByText(shows).first()).toBeVisible();
-  }
-});
+  });
+}
 
 test("the account menu opens Settings and Shortcuts, and close goes back", async ({ page }) => {
   await page.goto("/");
