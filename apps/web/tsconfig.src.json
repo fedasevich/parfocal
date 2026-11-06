@@ -1,6 +1,6 @@
 {
   "extends": "@parfocal/typescript-config/browser.json",
-  "include": ["src"],
+  "include": ["src", "hover-bench/page"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["vite/client"]

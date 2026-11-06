@@ -6,6 +6,7 @@ import {
   type SamFrame,
   samFrame,
   samPixels,
+  slideToModel,
 } from "@parfocal/viewer-engine";
 import type { PresetPatch, PresetPatchQuery } from "./patch-reader.ts";
 import type { ScalePresetId } from "./scale-presets.ts";
@@ -49,6 +50,7 @@ export interface SmartSessionOptions {
   readonly reader: SmartReader;
   readonly sam: SmartSam;
   readonly onChange: (snapshot: SmartSnapshot) => void;
+  readonly onHover?: (ring: Float32Array | null) => void;
 }
 
 export type SmartPress =
@@ -69,6 +71,8 @@ export interface SmartSession {
   removeLast(): Promise<void>;
   prewarm(at: { readonly x: number; readonly y: number }): Promise<void>;
   pausePrewarm(): void;
+  hover(at: { readonly x: number; readonly y: number }, extend?: boolean): Promise<void>;
+  clearHover(): void;
   snapshot(): SmartSnapshot;
   reset(): void;
   close(): void;
@@ -82,6 +86,25 @@ interface Draft {
   ring: Float32Array | null;
   confidence: number;
 }
+
+interface WarmPatch {
+  readonly id: string;
+  readonly patch: Patch;
+  readonly frame: SamFrame;
+}
+
+interface Answer {
+  readonly ring: Float32Array | null;
+  readonly lowRes: Float32Array;
+  readonly confidence: number;
+}
+
+interface HoverRequest {
+  readonly at: { readonly x: number; readonly y: number };
+  readonly extend: boolean;
+}
+
+export const answerCacheSize = 64;
 
 function newDraft(): Draft {
   return {
@@ -97,6 +120,12 @@ function newDraft(): Draft {
 export function createSmartSession(options: SmartSessionOptions): SmartSession {
   const preset = options.preset ?? "nuclei";
   const embeddings = new Map<string, Promise<void>>();
+  const warm = new Map<string, WarmPatch>();
+  const answers = new Map<string, Answer>();
+  let hoverTurn = 0;
+  let hoverRunning: Promise<void> | null = null;
+  let hoverLatest: HoverRequest | null = null;
+  let hoverKey: string | null = null;
   let prewarmTurn = 0;
   let kept: SmartObject[] = [];
   let draft: Draft | null = null;
@@ -134,16 +163,48 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     draft = null;
   }
 
+  function forget(id: string) {
+    embeddings.delete(id);
+    warm.delete(id);
+    for (const key of answers.keys()) {
+      if (key.startsWith(`${id}|`)) answers.delete(key);
+    }
+  }
+
+  function remember(key: string, answer: Answer) {
+    answers.delete(key);
+    answers.set(key, answer);
+    const oldest = answers.keys().next();
+    if (answers.size > answerCacheSize && !oldest.done) answers.delete(oldest.value);
+  }
+
+  function answerKey(entry: WarmPatch, prompts: SmartPrompts): string {
+    const parts = prompts.points.map((point) => {
+      const at = slideToModel(entry.frame, point);
+      return `${point.positive ? "+" : "-"}${Math.floor(at.x)},${Math.floor(at.y)}`;
+    });
+    return `${entry.id}|${parts.join(";")}`;
+  }
+
+  function warmAt(point: { readonly x: number; readonly y: number }): WarmPatch | null {
+    let found: WarmPatch | null = null;
+    for (const entry of warm.values()) {
+      if (patchContains(entry.patch, point)) found = entry;
+    }
+    return found;
+  }
+
   function embed(patch: Patch, rgb: Uint8Array, frame: SamFrame): Promise<void> {
     const id = `${options.slideId}:${patch.key}`;
     const known = embeddings.get(id);
     if (known !== undefined) return known;
     const pending = options.sam.encode(id, samPixels(rgb, frame)).then(
       (done) => {
-        for (const gone of done.evicted) embeddings.delete(gone);
+        for (const gone of done.evicted) forget(gone);
+        if (embeddings.has(id)) warm.set(id, { id, patch, frame });
       },
       (error: unknown) => {
-        embeddings.delete(id);
+        forget(id);
         throw error;
       },
     );
@@ -164,6 +225,22 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     }
     settle("thinking");
     try {
+      if (target.patch === null && target.prompts.box === null && target.logits === null) {
+        const entry = warmAt(anchor);
+        const known = entry === null ? undefined : answers.get(answerKey(entry, target.prompts));
+        if (entry !== null && known !== undefined && target.prompts.points.length === 1) {
+          target.patch = entry.patch;
+          target.frame = entry.frame;
+          target.logits = known.lowRes;
+          target.ring = known.ring;
+          target.confidence = known.confidence;
+          settle(
+            known.ring === null ? "failed" : "ready",
+            known.ring === null ? "No outline found" : null,
+          );
+          return;
+        }
+      }
       if (target.patch === null) {
         const read = await options.reader.read({ preset, x: anchor.x, y: anchor.y });
         const { patch } = read;
@@ -203,6 +280,62 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     }
   }
 
+  async function previewAt(request: HoverRequest, turn: number): Promise<void> {
+    const entry = warmAt(request.at);
+    if (entry === null) {
+      showHover(null, null);
+      return;
+    }
+    const point = { x: request.at.x, y: request.at.y, positive: true };
+    const extending =
+      request.extend && draft !== null && draft.patch === entry.patch && draft.logits !== null;
+    const prompts = withPoint(extending && draft !== null ? draft.prompts : emptyPrompts, point);
+    const key = answerKey(entry, prompts);
+    if (key === hoverKey) return;
+    let answer = answers.get(key);
+    if (answer === undefined) {
+      const previous = extending && draft !== null ? draft.logits : null;
+      const outcome = await options.sam.prompt(
+        entry.id,
+        modelPrompt(entry.frame, prompts, previous),
+      );
+      if (turn !== hoverTurn || closed || outcome.status === "stale") return;
+      const best = bestMask(outcome.outputs);
+      answer = {
+        ring: maskToSlideRing(best, entry.frame, prompts),
+        lowRes: best.lowRes,
+        confidence: Math.max(0, Math.min(1, best.score)),
+      };
+      if (!extending) remember(key, answer);
+    }
+    showHover(answer.ring, key);
+  }
+
+  function dropHover() {
+    hoverTurn += 1;
+    hoverLatest = null;
+    showHover(null, null);
+  }
+
+  function showHover(ring: Float32Array | null, key: string | null) {
+    if (closed) return;
+    const changed = hoverKey !== key;
+    hoverKey = key;
+    if (changed) options.onHover?.(ring);
+  }
+
+  async function drainHover(): Promise<void> {
+    while (hoverLatest !== null && !closed) {
+      const request = hoverLatest;
+      hoverLatest = null;
+      try {
+        await previewAt(request, hoverTurn);
+      } catch {
+        showHover(null, null);
+      }
+    }
+  }
+
   function enqueue(job: () => Promise<void>): Promise<void> {
     const next = queue.then(job, job);
     queue = next.catch(() => undefined);
@@ -217,6 +350,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
   return {
     press(press) {
       if (closed) return Promise.resolve();
+      dropHover();
       if (startsNewObject(press)) retire();
       else if (draft === null) return Promise.resolve();
       const target = draft ?? newDraft();
@@ -272,9 +406,23 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
 
     pausePrewarm: stopPrewarm,
 
+    hover(at, extend = false) {
+      if (closed || phase === "thinking") return Promise.resolve();
+      hoverLatest = { at, extend };
+      if (hoverRunning === null) {
+        hoverRunning = drainHover().finally(() => {
+          hoverRunning = null;
+        });
+      }
+      return hoverRunning;
+    },
+
+    clearHover: dropHover,
+
     snapshot,
 
     reset() {
+      dropHover();
       version += 1;
       kept = [];
       draft = null;
@@ -284,6 +432,8 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     },
 
     close() {
+      hoverTurn += 1;
+      hoverLatest = null;
       version += 1;
       closed = true;
       stopPrewarm();

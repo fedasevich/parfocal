@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
 import { createPrewarmTrigger } from "../aiseg/smart-prewarm.ts";
 import { nextRunId, smartRunFinished, withSmartRun } from "../aiseg/smart-run.ts";
 import { classifyPress, type SmartPoint } from "../aiseg/smart-select.ts";
@@ -54,6 +55,18 @@ const idle: SmartSnapshot = { kept: [], live: null, phase: "idle", message: null
 
 const positiveColour = "#1f9d55";
 const negativeColour = "#d92d20";
+const hoverColour = "#0891b2";
+
+type Where = (point: { x: number; y: number }) => { x: number; y: number };
+
+function ringPath(ring: Float32Array, where: Where): string {
+  let path = "";
+  for (let i = 0; i < ring.length; i += 2) {
+    const at = where({ x: ring[i] ?? 0, y: ring[i + 1] ?? 0 });
+    path += `${i === 0 ? "M" : "L"}${at.x.toFixed(1)} ${at.y.toFixed(1)}`;
+  }
+  return `${path}Z`;
+}
 
 function typing(target: EventTarget | null): boolean {
   return (
@@ -77,6 +90,10 @@ export function SmartLayer({
   const rect = useStageRect(stage);
   const [snapshot, setSnapshot] = useState<SmartSnapshot>(idle);
   const [press, setPress] = useState<Press | null>(null);
+  const [hoverRing, setHoverRing] = useState<Float32Array | null>(null);
+  const [hoverOn, setHoverOn] = useHoverPreview();
+  const hoverNow = useRef(hoverOn);
+  hoverNow.current = hoverOn;
   const escRegistry = useEscRegistry();
   const latest = useRef({ engine, doc, activeClass, onDocumentChange, loader, openRequest });
   latest.current = { engine, doc, activeClass, onDocumentChange, loader, openRequest };
@@ -99,6 +116,7 @@ export function SmartLayer({
           reader: loaded.reader,
           sam: loaded.sam,
           onChange: setSnapshot,
+          onHover: setHoverRing,
         }),
       );
       session.current.catch((error: unknown) =>
@@ -157,6 +175,12 @@ export function SmartLayer({
   }, [active, camera, rect, sessionPromise]);
 
   useEffect(() => {
+    if (active && hoverOn) return;
+    setHoverRing(null);
+    void session.current?.then((value) => value.clearHover());
+  }, [active, hoverOn]);
+
+  useEffect(() => {
     if (!active) {
       setPress(null);
       return;
@@ -175,6 +199,7 @@ export function SmartLayer({
       event.preventDefault();
       interruptMotion(latest.current.engine);
       capturePointer(stage, event.pointerId);
+      void session.current?.then((value) => value.clearHover());
       current = {
         id: event.pointerId,
         button: event.button,
@@ -190,6 +215,10 @@ export function SmartLayer({
     const move = (event: PointerEvent) => {
       if (current === null || event.pointerId !== current.id) {
         pan.track(event);
+        if (current === null && hoverNow.current && !pan.held() && event.buttons === 0) {
+          const at = slideAt(latest.current.engine, stage, event);
+          void session.current?.then((value) => value.hover(at, event.shiftKey));
+        }
         return;
       }
       event.stopImmediatePropagation();
@@ -232,6 +261,7 @@ export function SmartLayer({
             };
       send((value) => value.press(request));
     };
+    const leave = () => void session.current?.then((value) => value.clearHover());
     const cancel = (event: PointerEvent) => {
       if (current === null || event.pointerId !== current.id) return;
       current = null;
@@ -256,6 +286,7 @@ export function SmartLayer({
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
+    stage.addEventListener("pointerleave", leave, true);
     stage.addEventListener("pointercancel", cancel, true);
     stage.addEventListener("lostpointercapture", cancel, true);
     stage.addEventListener("contextmenu", menu, true);
@@ -273,6 +304,7 @@ export function SmartLayer({
       stage.removeEventListener("pointerdown", down, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
+      stage.removeEventListener("pointerleave", leave, true);
       stage.removeEventListener("pointercancel", cancel, true);
       stage.removeEventListener("lostpointercapture", cancel, true);
       stage.removeEventListener("contextmenu", menu, true);
@@ -328,6 +360,7 @@ export function SmartLayer({
         data-box={prompts.box === null ? 0 : 1}
         data-kept={snapshot.kept.length}
         data-live={live?.ring ? 1 : 0}
+        data-hover={hoverRing === null ? 0 : 1}
         data-confidence={live?.ring ? live.confidence.toFixed(2) : undefined}
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
@@ -352,7 +385,28 @@ export function SmartLayer({
           />
         )}
         {active ? prompts.points.map(marker) : null}
+        {active && hoverOn && hoverRing !== null ? (
+          <path
+            data-testid="smart-hover"
+            d={ringPath(hoverRing, where)}
+            fill="none"
+            stroke={hoverColour}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+          />
+        ) : null}
       </svg>
+      {active ? (
+        <button
+          type="button"
+          data-testid="smart-hover-toggle"
+          aria-pressed={hoverOn}
+          onClick={() => setHoverOn(!hoverOn)}
+          className="absolute bottom-16 left-3 rounded-ctl border border-line bg-chrome px-2 py-1 font-mono text-caption aria-pressed:border-accent"
+        >
+          {hoverOn ? "Hover preview on" : "Hover preview off"}
+        </button>
+      ) : null}
       {active && (snapshot.phase === "thinking" || snapshot.message !== null) ? (
         <div
           data-testid="smart-status"
