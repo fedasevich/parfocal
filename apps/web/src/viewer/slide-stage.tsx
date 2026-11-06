@@ -275,7 +275,7 @@ function OpenedSlide({
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
-  const proposals = useProposals(saved);
+  const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
   const { undo: undoEdit, redo: redoEdit } = saved;

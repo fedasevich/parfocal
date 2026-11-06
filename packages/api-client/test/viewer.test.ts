@@ -13,6 +13,7 @@ import {
   getSlideResultStats,
   listAnnotationLayers,
   listModelTiers,
+  typeOutlines,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -165,4 +166,22 @@ test("PathoSAM's typer scores under the accuracy floor and CAMELYON's does not",
   };
   assert.ok((await accuracy("sam")) < 0.7);
   assert.ok((await accuracy("cam")) >= 0.7);
+});
+
+test("the fake server typer returns one calibrated HoVer-NeXt type per outline", async () => {
+  const square = (x: number) => [x - 8, 8, x + 8, 8, x + 8, 24, x - 8, 24];
+  const { data } = await typeOutlines(a1.id, {
+    outlines: [{ points: square(16) }, { points: square(112) }],
+  });
+  assert.equal(data.typer, "pathosam-hovernext");
+  assert.equal(data.calibrated, true);
+  assert.deepEqual(
+    data.outlines.map((outline) => outline.type),
+    ["tumor", "other"],
+  );
+  for (const outline of data.outlines) {
+    const sum = Object.values(outline.probabilities).reduce((total, share) => total + share, 0);
+    assert.ok(Math.abs(sum - 1) < 1e-9);
+  }
+  await assert.rejects(typeOutlines(a1.id, { outlines: [] }));
 });

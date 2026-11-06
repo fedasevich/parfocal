@@ -104,7 +104,10 @@ export {
   getGetSlideAiProgressMockHandler,
   getGetSlideResultStatsMockHandler,
 } from "./viewer-handlers.ts";
-export { getListAnnotationLayersMockHandler } from "./viewer-tools-handlers.ts";
+export {
+  getListAnnotationLayersMockHandler,
+  getTypeOutlinesMockHandler,
+} from "./viewer-tools-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
