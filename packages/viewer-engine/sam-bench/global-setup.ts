@@ -18,6 +18,13 @@ export function modelsDir(): string {
   return join(cache, "parfocal", "models", "onnx");
 }
 
+export function fixturesDir(): string {
+  const configured = process.env["PARFOCAL_DATASETS_DIR"];
+  if (configured) return join(configured, "smart-select-smoke");
+  const cache = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
+  return join(cache, "parfocal", "datasets", "smart-select-smoke");
+}
+
 export function missingGraphs(graphs: readonly string[]): string[] {
   return graphs.filter((graph) => !existsSync(join(modelsDir(), graph)));
 }
@@ -33,12 +40,15 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       sourcemap: false,
       chunkSizeWarningLimit: 32768,
       rolldownOptions: {
-        input: { "sam-variants": join(pageRoot, "sam-variants.html") },
+        input: {
+          "sam-variants": join(pageRoot, "sam-variants.html"),
+          "smart-select-accuracy": join(pageRoot, "smart-select-accuracy.html"),
+        },
       },
     },
   });
   const served = await serve(
-    { "/app": outDir, "/models": modelsDir() },
+    { "/app": outDir, "/models": modelsDir(), "/fixtures": fixturesDir() },
     { headers: crossOriginIsolated },
   );
   process.env[benchOriginVariable] = served.origin;

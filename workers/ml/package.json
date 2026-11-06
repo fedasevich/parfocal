@@ -6,6 +6,7 @@
     "typecheck": "uv run --package parfocal-ml basedpyright",
     "test": "uv run --package parfocal-ml pytest tests -q",
     "export:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.export",
+    "smoke:fixture": "uv run --package parfocal-ml python -m parfocal_ml.sam_onnx.smoke_fixture",
     "verify:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.verify",
     "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py -m weights -q"
   },
