@@ -40,15 +40,24 @@ export const annotateRail: RailTool[][] = [
 ];
 
 export const toolHints: Record<string, string[]> = {
-  select: ["Drag on empty tissue for a marquee", "⇧ adds to the selection"],
+  select: [
+    "Drag on empty tissue for a marquee",
+    "⇧ adds to the selection",
+    "Double-click an edge to add a point",
+  ],
   hand: ["Drag to pan", "Space+drag pans in any tool"],
-  smart: ["Click a nucleus", "⇧click adds, right-click removes", "Enter accepts"],
+  smart: [
+    "PathoSAM · hover preview on",
+    "Click a nucleus",
+    "⇧click adds, right-click removes",
+    "Enter accepts",
+  ],
   poly: ["Click to add points", "Enter or double-click closes", "⇧ snaps to 45°"],
   free: ["Drag to draw", "Release to close the shape"],
   rect: ["Drag corner to corner", "⇧ makes a square"],
   ellipse: ["Drag corner to corner", "⇧ makes a circle"],
-  marker: ["Click to count", "Class 1 tumor"],
-  ruler: ["Drag to measure", "⇧ snaps to 45°"],
+  marker: ["Click to count", "Class 1 tumor · 23 counted"],
+  ruler: ["Drag to measure", "⇧ snaps to 45°", "Adds M1 to the Objects tab"],
   arrow: ["Drag to point at something"],
   text: ["Click and type", "Enter keeps, Esc drops"],
   comment: ["Click to pin a thread", "Enter posts"],

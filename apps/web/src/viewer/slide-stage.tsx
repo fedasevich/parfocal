@@ -7,6 +7,7 @@ import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
+import { maxClassKeys } from "../annotations/classes.ts";
 import {
   clearAll,
   clearPrompt,
@@ -14,6 +15,8 @@ import {
   needsClearConfirmation,
 } from "../annotations/clear.ts";
 import { ConflictNotice } from "../annotations/conflict-notice.tsx";
+import { contextBarOf, takesActiveClass } from "../annotations/context-bar.ts";
+import { ContextBarView } from "../annotations/context-bar.tsx";
 import { CountLayer } from "../annotations/count-layer.tsx";
 import { markersOf } from "../annotations/count-markers.ts";
 import { CountPanel } from "../annotations/count-panel.tsx";
@@ -47,6 +50,7 @@ import {
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
+import { stageToolOf } from "./stage-tools.ts";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
@@ -71,16 +75,6 @@ const toolOfAction: Readonly<Record<string, ViewerTool>> = Object.fromEntries(
 const railActions = annotateRail.flatMap((group) =>
   group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
 );
-
-const toolNameOfRail: Readonly<Record<string, ViewerTool>> = {
-  poly: "polygon",
-  free: "freehand",
-  rect: "rectangle",
-  marker: "marker",
-  ellipse: "ellipse",
-};
-
-const stageToolOf = (railTool: string): ViewerTool => toolNameOfRail[railTool] ?? railTool;
 
 type Session = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
@@ -318,7 +312,48 @@ function OpenedSlide({
     },
     [classes],
   );
-  useClassKeys(pickSlot, tool === "marker");
+  const classTool = takesActiveClass(tool);
+  useClassKeys(pickSlot, classTool);
+  const pickClassKey = useCallback((classKey: string) => setActiveClass(classKey), []);
+  const activeIndex = classes.findIndex((item) => item.id === activeClass);
+  const activeInfo = activeIndex < 0 ? null : (classes[activeIndex] ?? null);
+  const markerTotal = markersOf(annotations).length;
+  const contextModel = contextBarOf(tool, {
+    activeSlot: activeIndex < 0 || activeIndex >= maxClassKeys ? null : activeIndex + 1,
+    activeName: activeInfo?.name ?? null,
+    counted: markerTotal,
+  });
+  const {
+    pending: pendingProposals,
+    accept: acceptProposals,
+    discard: discardProposals,
+  } = proposals;
+  const proposalCount = pendingProposals.length;
+  useEffect(
+    () => escRegistry.add("run", { open: () => proposalCount > 0, peel: discardProposals }),
+    [escRegistry, proposalCount, discardProposals],
+  );
+  useEffect(() => {
+    if (proposalCount === 0) return;
+    const onEnter = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || event.defaultPrevented) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest("input, textarea, button, [contenteditable]")
+      )
+        return;
+      if ((draftControl.current?.depth() ?? 0) > 0) return;
+      event.preventDefault();
+      acceptProposals();
+    };
+    window.addEventListener("keydown", onEnter);
+    return () => window.removeEventListener("keydown", onEnter);
+  }, [proposalCount, acceptProposals]);
+  const closeShape = useCallback(
+    (points: Float32Array) => saved.savePolygon(points, activeClass),
+    [saved.savePolygon, activeClass],
+  );
   const colourOf = useCallback(
     (classKey: string | null) =>
       classes.find((item) => item.id === classKey)?.colour ?? "var(--color-accent)",
@@ -432,28 +467,28 @@ function OpenedSlide({
               stage={hostNode}
               active={tool === "polygon"}
               document={annotations}
-              onClose={saved.savePolygon}
+              onClose={closeShape}
               draftControl={draftControl}
             />
             <FreehandLayer
               engine={session.engine}
               stage={hostNode}
               active={tool === "freehand"}
-              onClose={saved.savePolygon}
+              onClose={closeShape}
             />
             <DragLayer
               engine={session.engine}
               stage={hostNode}
               kind="rectangle"
               active={tool === "rectangle"}
-              onClose={saved.savePolygon}
+              onClose={closeShape}
             />
             <DragLayer
               engine={session.engine}
               stage={hostNode}
               kind="ellipse"
               active={tool === "ellipse"}
-              onClose={saved.savePolygon}
+              onClose={closeShape}
             />
             <CountLayer
               engine={session.engine}
@@ -499,13 +534,25 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
               onCommit={saved.commit}
             />
-            <ProposalLayer
-              engine={session.engine}
-              stage={hostNode}
-              proposals={proposals.pending}
-              onAccept={proposals.accept}
-              onDiscard={proposals.discard}
-            />
+            <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            {workspace === "annotate" || tool !== restingTool || proposalCount > 0 ? (
+              <ContextBarView
+                model={contextModel}
+                classes={classes}
+                activeClass={activeClass}
+                onPick={pickClassKey}
+                proposals={
+                  proposalCount > 0
+                    ? {
+                        count: proposalCount,
+                        activeName: activeInfo?.name ?? null,
+                        onAccept: acceptProposals,
+                        onDiscard: discardProposals,
+                      }
+                    : null
+                }
+              />
+            ) : null}
             <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
               {setup.rail.map((group) => (
                 <div
@@ -533,7 +580,7 @@ function OpenedSlide({
             <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
               {showsCountPanel(setup, {
                 counting: tool === "marker",
-                markers: markersOf(annotations).length,
+                markers: markerTotal,
               }) ? (
                 <CountPanel
                   document={annotations}
@@ -583,7 +630,7 @@ function OpenedSlide({
               mode={outlineMode}
               tissue={coverage?.tissue ?? null}
             />
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
               <SegmentedControl
                 aria-label="Outline display"
                 value={outlineMode}

@@ -57,7 +57,7 @@ const bodyOf = (shape: Shape): AnnotationDraft | null =>
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
   readonly setDocument: (next: AnnotationDocument) => void;
-  readonly savePolygon: (points: Float32Array) => void;
+  readonly savePolygon: (points: Float32Array, classKey?: string | null) => void;
   readonly saveMarker: (point: Point, classKey: string | null) => void;
   readonly removeMarker: (id: ShapeId) => void;
   readonly commit: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
@@ -224,9 +224,9 @@ export function useSavedAnnotations(
   );
 
   const savePolygon = useCallback(
-    (points: Float32Array) => {
+    (points: Float32Array, classKey: string | null = null) => {
       const before = current.current;
-      const added = addShape(before, { kind: "polygon", points });
+      const added = addShape(before, { kind: "polygon", points, classKey });
       setDocument(added.document);
       recordEdit(before, added.document, "Add outline");
       createFor(added.shape);
