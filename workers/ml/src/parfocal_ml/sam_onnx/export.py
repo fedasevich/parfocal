@@ -98,6 +98,16 @@ class AisDecoder(torch.nn.Module):
         return torch.nn.functional.avg_pool2d(maps, maps.shape[-1] // AIS_OUTPUT_SIZE)
 
 
+def export_ais_decoder_full(decoder: InstanceDecoder, folder: Path) -> Exported:
+    return trace(
+        decoder,
+        (embeddings_dummy(),),
+        folder / GRAPHS.ais_decoder_full,
+        input_names=["image_embeddings"],
+        output_names=["maps"],
+    )
+
+
 def embeddings_dummy() -> torch.Tensor:
     return torch.randn(1, EMBED_DIM, EMBED_SIZE, EMBED_SIZE)
 
@@ -209,6 +219,7 @@ def export_all(folder: Path) -> list[Exported]:
             export_decoder(sam, folder),
             export_batch_decoder(sam, folder),
             export_ais_decoder(load_instance_decoder(), folder),
+            export_ais_decoder_full(load_instance_decoder(), folder),
         ]
     return [*exported, quantise_uint8(folder), quantise_q4(folder)]
 

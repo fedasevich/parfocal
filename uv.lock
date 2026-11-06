@@ -1467,6 +1467,9 @@ export = [
     { name = "torch" },
     { name = "torchvision" },
 ]
+onnx = [
+    { name = "onnxruntime" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1475,6 +1478,7 @@ requires-dist = [
     { name = "onnx", marker = "extra == 'export'", specifier = ">=1.23.2,<1.24" },
     { name = "onnx-ir", marker = "extra == 'export'" },
     { name = "onnxruntime", marker = "extra == 'export'", specifier = "==1.31.1" },
+    { name = "onnxruntime", marker = "extra == 'onnx'", specifier = "==1.31.1" },
     { name = "parfocal-common", editable = "packages/py-common" },
     { name = "pillow", specifier = ">=13.0.0" },
     { name = "scikit-image", specifier = ">=0.26.0" },
@@ -1483,7 +1487,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'export'", specifier = ">=2.15,<2.16" },
     { name = "torchvision", marker = "extra == 'export'" },
 ]
-provides-extras = ["export"]
+provides-extras = ["onnx", "export"]
 
 [[package]]
 name = "pathlib-abc"

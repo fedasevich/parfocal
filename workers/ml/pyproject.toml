@@ -13,6 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+onnx = ["onnxruntime==1.31.1"]
 export = [
     "onnx>=1.23.2,<1.24",
     "onnx-ir",
@@ -33,3 +34,4 @@ parfocal-common = { workspace = true }
 typeCheckingMode = "standard"
 pythonVersion = "3.14"
 exclude = ["spike", "src/parfocal_ml/sam_onnx", "tests/test_sam_onnx.py"]
+extraPaths = ["tests", "../ingest/tests"]
