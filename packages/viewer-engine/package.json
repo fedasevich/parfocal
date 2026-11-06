@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",
     "test": "node --test \"test/**/*.test.ts\"",
     "test:browser": "playwright test",
-    "bench:sam": "playwright test -c playwright.sam.config.ts",
+    "bench:sam": "playwright test -c playwright.sam.config.ts sam-variants",
+    "smoke:smart-select": "playwright test -c playwright.sam.config.ts smart-select-accuracy",
     "traces:record": "vite browser/page --open /trace-recorder.html"
   },
   "imports": {
