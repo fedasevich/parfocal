@@ -181,6 +181,7 @@ def create_app(
     app.include_router(sample_project.router)
     app.include_router(sign_out.router)
     app.include_router(clinical_reports.router)
+    app.include_router(clinical_reports.me_router)
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)

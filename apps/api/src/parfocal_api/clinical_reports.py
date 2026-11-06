@@ -15,6 +15,8 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.clinical_report_pdf import facts_of, pdf_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation_versions import ConfirmedWith
+from parfocal_api.my_work import ProjectRef, project_ref
+from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
@@ -37,6 +39,7 @@ from parfocal_api.tables import (
     clinical_report_versions,
     clinical_reports,
     project_members,
+    projects,
     slides,
     users,
     verdicts,
@@ -155,6 +158,11 @@ class CaseReportValues(BaseModel):
     deposits: list[CaseReportDeposit]
 
 
+class CaseReportSnapshot(BaseModel):
+    values: CaseReportValues
+    staging: CaseReportStaging | None
+
+
 class CaseReport(CaseReportValues):
     id: uuid.UUID
     project_id: uuid.UUID
@@ -166,9 +174,22 @@ class CaseReport(CaseReportValues):
     blockers: list[CaseReportBlocker]
     cosigner_user_id: uuid.UUID | None
     sent_by_user_id: uuid.UUID | None
+    sent_at: datetime | None
+    sent: CaseReportSnapshot | None
+    changes: list[str]
     return_note: str | None
     version: int
     versions: list[CaseReportSignature]
+
+
+class CosignRequest(BaseModel):
+    id: uuid.UUID
+    case_id: uuid.UUID
+    case_label: str
+    project: ProjectRef
+    from_user_id: uuid.UUID
+    template: CaseReportTemplate
+    sent_at: datetime
 
 
 class CaseReportVersion(CaseReportSignature):
@@ -262,6 +283,11 @@ class SingleSignOnSilentError(ConflictError):
     title = "Single sign-on did not answer, so nothing was signed"
 
 
+class NotSenderError(ForbiddenError):
+    code = "not-the-sender"
+    title = "Only the member who sent the report can withdraw the request"
+
+
 class NotCosignerError(ForbiddenError):
     code = "not-the-co-signer"
     title = "Only the named co-signer can act on a report sent for co-sign"
@@ -276,6 +302,7 @@ router = APIRouter(
     prefix="/api/projects/{project_id}/cases/{case_id}/clinical-report",
     tags=["clinical-reports"],
 )
+me_router = APIRouter(prefix="/api/me", tags=["me"])
 
 
 async def clinical_case(
@@ -467,25 +494,55 @@ async def version_rows(
     return [CaseReportSignature.model_validate(row, from_attributes=True) for row in rows]
 
 
+def deposit_content(deposit: CaseReportDeposit) -> tuple[Any, ...]:
+    return (deposit.slide_id, deposit.object_id, deposit.size_mm, deposit.note)
+
+
+def changes_between(sent: CaseReportValues, current: CaseReportValues) -> list[str]:
+    names = [
+        name
+        for name in CaseReportValues.model_fields
+        if name != "deposits" and getattr(sent, name) != getattr(current, name)
+    ]
+    if sorted(map(deposit_content, sent.deposits), key=str) != sorted(
+        map(deposit_content, current.deposits), key=str
+    ):
+        names.append("deposits")
+    return names
+
+
+def template_of(row: Any) -> CaseReportTemplate:
+    spec = TEMPLATES[ClinicalTemplate(row.template)]
+    return CaseReportTemplate(
+        key=row.template, name=spec.name, version=row.template_version, steps=list(spec.steps)
+    )
+
+
 async def report_of(connection: AsyncConnection, case_id: uuid.UUID) -> CaseReport:
     row = await report_row(connection, case_id)
     rows = await deposit_rows(connection, row.id)
-    spec = TEMPLATES[ClinicalTemplate(row.template)]
     staging = staging_of(row, rows)
+    values = values_of(row, rows)
+    sent = (
+        CaseReportSnapshot.model_validate(row.sent_content)
+        if row.sent_content is not None
+        else None
+    )
     return CaseReport(
-        **values_of(row, rows).model_dump(),
+        **values.model_dump(),
         id=row.id,
         project_id=row.project_id,
         case_id=row.case_id,
         state=row.state,
-        template=CaseReportTemplate(
-            key=row.template, name=spec.name, version=row.template_version, steps=list(spec.steps)
-        ),
+        template=template_of(row),
         staging=staging,
         findings=await findings_of(connection, case_id),
         blockers=blockers_of(row, rows, staging),
         cosigner_user_id=row.cosigner_user_id,
         sent_by_user_id=row.sent_by_user_id,
+        sent_at=row.sent_at,
+        sent=sent,
+        changes=changes_between(sent.values, values) if sent else [],
         return_note=row.return_note,
         version=row.version,
         versions=await version_rows(connection, row.id),
@@ -865,6 +922,8 @@ async def send_clinical_report(
             state=CaseReportState.SENT,
             cosigner_user_id=request.cosigner_user_id,
             sent_by_user_id=principal.user_id,
+            sent_content=await snapshot(connection, case_id),
+            sent_at=func.now(),
             return_note=None,
             updated_at=func.now(),
         )
@@ -875,6 +934,44 @@ async def send_clinical_report(
         AuditAction.CLINICAL_REPORT_SENT,
         row,
         cosigner_user_id=str(request.cosigner_user_id),
+    )
+    return await report_of(connection, case_id)
+
+
+@router.post(
+    "/withdraw",
+    operation_id="withdrawCaseReport",
+    **require(Permission.REVIEW, write=True),
+)
+async def withdraw_clinical_report(
+    project_id: uuid.UUID,
+    case_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> CaseReport:
+    row = await writable(connection, principal, project_id, case_id)
+    if CaseReportState(row.state) is not CaseReportState.SENT:
+        raise WrongStateError
+    if row.sent_by_user_id != user_id_of(principal):
+        raise NotSenderError
+    await connection.execute(
+        update(clinical_reports)
+        .where(clinical_reports.c.id == row.id)
+        .values(
+            state=CaseReportState.DRAFT,
+            cosigner_user_id=None,
+            sent_by_user_id=None,
+            sent_content=None,
+            sent_at=None,
+            updated_at=func.now(),
+        )
+    )
+    await audit(
+        connection,
+        principal,
+        AuditAction.CLINICAL_REPORT_WITHDRAWN,
+        row,
+        cosigner_user_id=str(row.cosigner_user_id),
     )
     return await report_of(connection, case_id)
 
@@ -1047,3 +1144,47 @@ async def download_clinical_report_pdf(
             "Content-Disposition": f'attachment; filename="{safe_name(label)}_report_v{number}.pdf"'
         },
     )
+
+
+@me_router.get(
+    "/cosign-requests", operation_id="listMyCosignRequests", **require(Permission.SEE_SLIDES)
+)
+async def list_my_cosign_requests(
+    principal: CurrentPrincipal, connection: TenantConnection
+) -> list[CosignRequest]:
+    me = member_of(principal).user_id
+    rows = await connection.execute(
+        select(
+            clinical_reports,
+            cases.c.label.label("case_label"),
+            projects.c.number.label("project_number"),
+            projects.c.name.label("project_name"),
+        )
+        .join(cases, cases.c.id == clinical_reports.c.case_id)
+        .join(projects, projects.c.id == clinical_reports.c.project_id)
+        .join(
+            project_members,
+            (project_members.c.project_id == clinical_reports.c.project_id)
+            & (project_members.c.user_id == me),
+        )
+        .where(
+            clinical_reports.c.state == CaseReportState.SENT,
+            clinical_reports.c.cosigner_user_id == me,
+            clinical_reports.c.sent_by_user_id.is_not(None),
+            cases.c.deleted_at.is_(None),
+            projects.c.archived_at.is_(None),
+        )
+        .order_by(clinical_reports.c.sent_at.desc().nulls_last(), clinical_reports.c.id)
+    )
+    return [
+        CosignRequest(
+            id=row.id,
+            case_id=row.case_id,
+            case_label=row.case_label,
+            project=project_ref(row),
+            from_user_id=row.sent_by_user_id,
+            template=template_of(row),
+            sent_at=row.sent_at or row.updated_at,
+        )
+        for row in rows
+    ]

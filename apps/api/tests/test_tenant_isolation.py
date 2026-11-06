@@ -1,15 +1,20 @@
 import asyncio
 import hashlib
+import io
+import threading
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from functools import cache
 
 import httpx2
 import numpy as np
 import pytest
 from case_support import seed_case
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
+from link_support import Site
+from pypdf import PdfReader
 from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
@@ -31,6 +36,9 @@ from parfocal_api.tables import (
     audit_people,
     case_requests,
     class_mappings,
+    clinical_deposits,
+    clinical_report_versions,
+    clinical_reports,
     disagreement_decisions,
     display_choices,
     display_presets,
@@ -120,11 +128,51 @@ class Exposure(Enum):
     TENANT = auto()
 
 
+def text_of(response: httpx2.Response) -> str:
+    if response.headers.get("content-type") == "application/pdf":
+        pages = PdfReader(io.BytesIO(response.content)).pages
+        return " ".join(page.extract_text() for page in pages)
+    return response.text
+
+
 @dataclass(frozen=True)
 class Route:
     exposure: Exposure
     path: Callable[[Seeded], str]
     admin_rights: bool = False
+    linked: bool = False
+
+
+LINK_SITE = Site()
+
+
+@cache
+def link_site_serving() -> threading.Thread:
+    thread = threading.Thread(target=LINK_SITE.server.serve_forever, daemon=True)
+    thread.start()
+    return thread
+
+
+def slug_of(seeded: Seeded) -> str:
+    return seeded.subject.removeprefix("subject-")
+
+
+def source_address(seeded: Seeded) -> str:
+    return LINK_SITE.url(f"/{slug_of(seeded)}/")
+
+
+def serve_link_files(seeded: Seeded) -> None:
+    name = f"{slug_of(seeded)}.svs"
+    LINK_SITE.index(f"/{slug_of(seeded)}/", [name])
+    LINK_SITE.file(f"/{slug_of(seeded)}/{name}", b"slide-bytes")
+
+
+def prepared(api: ApiAs, route: Route, monkeypatch: pytest.MonkeyPatch) -> ApiAs:
+    if route.linked:
+        link_site_serving()
+        trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
+        monkeypatch.setattr(api.app, "settings", trusted)
+    return api
 
 
 BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
@@ -1083,6 +1131,69 @@ async def seed_evaluation_changes(connection: AsyncConnection, seeded: Seeded) -
     seeded.markers.add(reason)
 
 
+async def seed_clinical_reports(connection: AsyncConnection, seeded: Seeded) -> None:
+    specimen = f"Specimen {uuid.uuid4().hex[:12]}"
+    report = await connection.scalar(
+        insert(clinical_reports)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            case_id=seeded.ids["case"],
+            template="sentinel-node",
+            template_version=1,
+            state="sent",
+            specimen=specimen,
+            cosigner_user_id=seeded.ids["user"],
+            sent_by_user_id=seeded.ids["user"],
+            sent_at=func.now(),
+            version=1,
+        )
+        .returning(clinical_reports.c.id)
+    )
+    assert isinstance(report, uuid.UUID)
+    seeded.ids["clinical_report"] = report
+    seeded.markers.update({specimen, str(report)})
+
+
+async def seed_clinical_deposits(connection: AsyncConnection, seeded: Seeded) -> None:
+    note = f"Deposit {uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(clinical_deposits).values(
+            tenant_id=seeded.tenant_id,
+            report_id=seeded.ids["clinical_report"],
+            slide_id=seeded.ids["slide"],
+            size_mm=1.5,
+            note=note,
+        )
+    )
+    seeded.markers.add(note)
+
+
+async def seed_clinical_report_versions(connection: AsyncConnection, seeded: Seeded) -> None:
+    diagnosis = f"Diagnosis {uuid.uuid4().hex[:12]}"
+    values = {
+        "specimen": None,
+        "category": None,
+        "nodes_examined": None,
+        "extranodal": None,
+        "diagnosis": diagnosis,
+        "microscopic": None,
+        "comment": None,
+        "deposits": [],
+    }
+    await connection.execute(
+        insert(clinical_report_versions).values(
+            tenant_id=seeded.tenant_id,
+            report_id=seeded.ids["clinical_report"],
+            number=1,
+            content={"confirmed_with": "sso", "values": values, "staging": None},
+            signed_by_user_id=seeded.ids["user"],
+        )
+    )
+    seeded.markers.add(diagnosis)
+    serve_link_files(seeded)
+
+
 SEEDERS: dict[str, Seeder] = {
     "notifications": seed_notifications,
     "notification_mutes": seed_notification_mutes,
@@ -1112,7 +1223,16 @@ SEEDERS: dict[str, Seeder] = {
     "report_links": seed_report_links,
     "evaluation_versions": seed_evaluation_versions,
     "evaluation_changes": seed_evaluation_changes,
+    "clinical_reports": seed_clinical_reports,
+    "clinical_deposits": seed_clinical_deposits,
+    "clinical_report_versions": seed_clinical_report_versions,
 }
+
+
+def case_report(seeded: Seeded) -> str:
+    return f"/api/projects/{seeded.ids['project']}/cases/{seeded.ids['case']}/clinical-report"
+
+
 GET_ROUTES = {
     "findOpenUpload": Route(
         Exposure.TENANT,
@@ -1249,6 +1369,15 @@ GET_ROUTES = {
         lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}/areas",
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
+    "getCaseReport": Route(Exposure.TENANT, lambda a: case_report(a)),
+    "getCaseReportVersion": Route(Exposure.TENANT, lambda a: f"{case_report(a)}/versions/1"),
+    "downloadCaseReportPdf": Route(Exposure.TENANT, lambda a: f"{case_report(a)}/versions/1/pdf"),
+    "listMyCosignRequests": Route(Exposure.TENANT, lambda _: "/api/me/cosign-requests"),
+    "listSourceFiles": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/source-files?address={source_address(a)}",
+        linked=True,
+    ),
     "getRestrictedImage": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/restricted-images/label"
     ),
@@ -1491,24 +1620,25 @@ def test_every_table_is_seeded_by_the_suite(database: str) -> None:
 
 @pytest.mark.parametrize("operation", routes(Exposure.TENANT))
 def test_tenant_routes_show_a_member_their_own_data(
-    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
+    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     a, _ = seeded
     route = GET_ROUTES[operation]
-    response = api(a.member(route.admin_rights)).get(route.path(a))
+    response = prepared(api, route, monkeypatch)(a.member(route.admin_rights)).get(route.path(a))
     assert response.status_code == 200, response.text
-    assert any(marker in response.text for marker in a.markers)
+    assert any(marker in text_of(response) for marker in a.markers)
 
 
 @pytest.mark.parametrize("operation", routes(Exposure.TENANT))
 def test_tenant_routes_show_another_tenant_nothing(
-    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str
+    api: ApiAs, seeded: tuple[Seeded, Seeded], operation: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     a, b = seeded
     route = GET_ROUTES[operation]
-    response = api(b.member(route.admin_rights)).get(route.path(a))
+    response = prepared(api, route, monkeypatch)(b.member(route.admin_rights)).get(route.path(a))
     assert response.status_code in {200, 404}, response.text
-    assert [marker for marker in a.markers if marker in response.text] == []
+    text = text_of(response)
+    assert [marker for marker in a.markers if marker in text] == []
 
 
 @pytest.mark.parametrize("operation", routes(Exposure.PLATFORM))

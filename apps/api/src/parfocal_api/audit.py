@@ -151,6 +151,7 @@ class AuditAction(StrEnum):
     CLINICAL_DEPOSIT_ADDED = "clinical-report.deposit-added"
     CLINICAL_DEPOSIT_REMOVED = "clinical-report.deposit-removed"
     CLINICAL_REPORT_SENT = "clinical-report.sent"
+    CLINICAL_REPORT_WITHDRAWN = "clinical-report.withdrawn"
     CLINICAL_REPORT_RETURNED = "clinical-report.returned"
     CLINICAL_REPORT_SIGNED = "clinical-report.signed"
     CLINICAL_REPORT_AMENDED = "clinical-report.amended"
