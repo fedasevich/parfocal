@@ -473,7 +473,7 @@ export function ReportPage({
             lines={[
               `${report.task_code} · ${report.model}`,
               `Evaluation v${report.version}${status}`,
-              ...(changes.length ? [changedLine(changes.length, report.version)] : []),
+              ...(changes[0] ? [changedLine(changes.length, changes[0].version)] : []),
             ]}
           />
           <ReportFacts

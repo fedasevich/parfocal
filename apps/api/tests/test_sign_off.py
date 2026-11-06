@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 from db_support import ApiAs
 from test_disagreements import queued_review
+from test_evaluation_exports import text_of
 from test_locales import REPORT
 from workspace_support import owner
 
@@ -199,6 +200,13 @@ def test_changes_after_sign_off_are_listed_with_who_when_and_what(
     exported = api(r.people["owner"]).get(f"{task}/evaluation/exports/annotations.json")
     assert exported.headers[CHECKSUM_HEADER] == signature["checksum"]
     assert exported.json()["evaluation"]["changes_after_sign_off"] == 1
+    pdf = text_of(api(r.people["owner"]).get(f"{task}/evaluation/exports/report.pdf").content)
+    named = owner(
+        database, f"SELECT display_name FROM users WHERE id = '{r.people['owner'].user_id}'"
+    )
+    assert "Changes after sign-off" in pdf
+    assert reason in pdf
+    assert named[0][0] in pdf
 
 
 def test_the_report_flags_and_lists_changes_after_sign_off() -> None:
