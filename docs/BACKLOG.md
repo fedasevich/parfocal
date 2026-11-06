@@ -3316,7 +3316,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-011, AINUC-005, PROTO-020. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] AINUC-014 · Type one-click accepts with the server typer
+- [x] AINUC-014 · Type one-click accepts with the server typer
   Accepted outlines from smart select and the auto region tool get calibrated types and the doubt flag.
   Done when a test stores HoVer-NeXt types for seeded accepts, and accepting still works untyped when the typer is offline.
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
