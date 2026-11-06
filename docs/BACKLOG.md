@@ -2532,7 +2532,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-014.
   Size: S.
 
-- [ ] ANN-015 · Layers tab
+- [x] ANN-015 · Layers tab
   Groups with counts, visibility (A toggles overlays), lock, colour, nested children, group by class, cluster, region or source, target layer for new shapes, Cmd+G group and Cmd+Shift+G ungroup.
   Done when component and interaction tests cover each control. Hidden and locked groups are excluded from hit testing.
   Refs mock 11, doc 34 §6.
