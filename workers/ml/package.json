@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "typecheck": "uv run --package parfocal-ml basedpyright",
-    "test": "uv run --package parfocal-ml pytest tests -q"
+    "test": "uv run --package parfocal-ml pytest tests -q",
+    "export:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.export",
+    "verify:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.verify",
+    "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py -m weights -q"
   },
   "dependencies": {
     "@parfocal/py-common": "workspace:*"
