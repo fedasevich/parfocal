@@ -1,4 +1,4 @@
-# XXXX. Browser models are cached in Cache Storage, checked by header, and revalidated by ETag in the background
+# 0251. Browser models are cached in Cache Storage, checked by header, and revalidated by ETag in the background
 
 - Date: 2026-11-06
 - Status: Accepted

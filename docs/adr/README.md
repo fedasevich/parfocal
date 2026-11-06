@@ -214,3 +214,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0248](0248-detector-runner-stitches-full-resolution-ais-maps.md) | The detector runner stitches full-resolution PathoSAM AIS maps over 512 px windows and runs them on onnxruntime | Accepted | 2026-11-06 |
 | [0249](0249-shared-sample-slide-files.md) | Sample slides share one stored original, named by a folder claim in the tile token | Accepted | 2026-11-06 |
 | [0250](0250-sam-graph-per-execution-provider.md) | Each execution provider loads its own PathoSAM encoder, and both load the int8 weight-only AIS decoder | Accepted | 2026-11-06 |
+| [0251](0251-browser-model-cache-in-cache-storage.md) | Browser models are cached in Cache Storage, checked by header, and revalidated by ETag in the background | Accepted | 2026-11-06 |
