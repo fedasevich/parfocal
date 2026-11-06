@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 43 |
 | `personal` | 84 |
 | `secret` | 10 |
-| `operational` | 667 |
+| `operational` | 672 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -638,6 +638,11 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_by_user_id` | personal |
 | `sample` | operational |
 | `clinical_template` | operational |
+| `blinded` | operational |
+| `ai_hidden_first_read` | operational |
+| `study_template_id` | operational |
+| `match_iou` | operational |
+| `match_distance_um` | operational |
 
 ## rate_counters
 

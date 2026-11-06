@@ -123,6 +123,89 @@ def test_an_owner_changes_the_project_and_each_change_is_audited(api: ApiAs, dat
     assert details == [('{"fields":["colour","name","template"]}',)]
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("blinded", False),
+        ("ai_hidden_first_read", True),
+        ("match_iou", 0.6),
+        ("match_distance_um", 6.5),
+    ],
+)
+def test_each_review_default_is_kept_and_audited(
+    api: ApiAs, database: str, field: str, value: Any
+) -> None:
+    people = team(database).people
+    project = made(api, people["owner"])
+    assert (project["blinded"], project["ai_hidden_first_read"]) == (True, False)
+    assert (project["match_iou"], project["match_distance_um"]) == (0.5, 4.0)
+    assert project["study_template_id"] is None
+    changed = api(people["owner"]).patch(f"{PROJECTS}/{project['id']}", json={field: value})
+    assert changed.status_code == 200, changed.text
+    assert changed.json()[field] == value
+    details = owner(
+        database,
+        f"SELECT details FROM audit_events WHERE target_id = '{project['id']}' "
+        "AND action = 'project.changed'",
+    )
+    assert details == [(f'{{"fields":["{field}"]}}',)]
+
+
+@pytest.mark.parametrize(("field", "value"), [("match_iou", 0), ("match_distance_um", 51)])
+def test_matching_thresholds_stay_in_range(
+    api: ApiAs, database: str, field: str, value: float
+) -> None:
+    people = team(database).people
+    project = made(api, people["owner"])
+    refused = api(people["owner"]).patch(f"{PROJECTS}/{project['id']}", json={field: value})
+    assert refused.status_code == 422
+
+
+def test_the_default_study_template_must_be_live_in_this_workspace(
+    api: ApiAs, database: str
+) -> None:
+    people = team(database).people
+    project = made(api, people["owner"])
+    path = f"{PROJECTS}/{project['id']}"
+    template = api(people["owner"]).get("/api/study-templates").json()[0]["id"]
+    chosen = api(people["owner"]).patch(path, json={"study_template_id": template})
+    assert chosen.status_code == 200, chosen.text
+    assert chosen.json()["study_template_id"] == template
+    unknown = api(people["owner"]).patch(path, json={"study_template_id": str(uuid.uuid4())})
+    assert (unknown.status_code, unknown.json()["code"]) == (400, "study-template-unknown")
+    details = owner(
+        database,
+        f"SELECT details FROM audit_events WHERE target_id = '{project['id']}' "
+        "AND action = 'project.changed'",
+    )
+    assert details == [('{"fields":["study_template_id"]}',)]
+
+
+def test_only_a_clinical_project_picks_a_clinical_report_template(
+    api: ApiAs, database: str
+) -> None:
+    people = team(database).people
+    plain = made(api, people["owner"])
+    assert plain["clinical_template"] is None
+    refused = api(people["owner"]).patch(
+        f"{PROJECTS}/{plain['id']}", json={"clinical_template": "lymph-node-excision"}
+    )
+    assert (refused.status_code, refused.json()["code"]) == (409, "clinical-template-only")
+    clinical = made(api, people["owner"], privacy_mode="clinical")
+    assert clinical["clinical_template"] == "sentinel-node"
+    changed = api(people["owner"]).patch(
+        f"{PROJECTS}/{clinical['id']}", json={"clinical_template": "lymph-node-excision"}
+    )
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["clinical_template"] == "lymph-node-excision"
+    details = owner(
+        database,
+        f"SELECT details FROM audit_events WHERE target_id = '{clinical['id']}' "
+        "AND action = 'project.changed'",
+    )
+    assert details == [('{"fields":["clinical_template"]}',)]
+
+
 def test_only_owners_change_a_project(api: ApiAs, database: str) -> None:
     people = team(database).people
     project = made(api, people["owner"])

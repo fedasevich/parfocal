@@ -2453,6 +2453,18 @@ export interface Marked {
   unread: number;
 }
 
+/**
+ * @maximum 50
+ * @exclusiveMinimum 0
+ */
+export type MatchDistance = number;
+
+/**
+ * @maximum 1
+ * @exclusiveMinimum 0
+ */
+export type MatchIou = number;
+
 export interface Workspace {
   tenant_id: string;
   role: Role;
@@ -3216,6 +3228,12 @@ export interface Project {
   privacy_mode: PrivacyMode;
   template: AnalysisTemplate;
   viewer_parts: ViewerPart[];
+  blinded: boolean;
+  ai_hidden_first_read: boolean;
+  study_template_id: string | null;
+  clinical_template: ClinicalTemplate | null;
+  match_iou: number;
+  match_distance_um: number;
   archived_at: string | null;
   created_at: string;
   sample: boolean;
@@ -3239,6 +3257,12 @@ export interface ProjectChange {
   name?: ProjectName | null;
   colour?: ParfocalApiProjectsColour | null;
   template?: AnalysisTemplate | null;
+  blinded?: boolean | null;
+  ai_hidden_first_read?: boolean | null;
+  study_template_id?: string | null;
+  clinical_template?: ClinicalTemplate | null;
+  match_iou?: MatchIou | null;
+  match_distance_um?: MatchDistance | null;
 }
 
 export interface ProjectClass {
