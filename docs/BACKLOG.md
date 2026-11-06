@@ -4279,7 +4279,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, PROJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] TASK-014 · Check and sign off an annotate slide
+- [x] TASK-014 · Check and sign off an annotate slide
   Each assigned expert marks a slide checked, or checked with "nothing to mark" when it is empty, and can uncheck it until sign-off. The task owner signs a slide off once every assigned expert has checked it and, when the task's sign-off rule asks for it, every AI object in the check scope is checked (TASK-015), with a warning for open threads (COLLAB-012). After sign-off the shared layer is locked, and a change by the owner goes to the change log (ADJ-005).
   Done when API tests cover checking, nothing to mark, unchecking, a refused sign-off with an unchecked expert, sign-off, a refused edit after it and an owner change with its log entry, and E2E checks two slides and signs one off.
   Depends on TASK-013, ANN-030, ADJ-004. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
