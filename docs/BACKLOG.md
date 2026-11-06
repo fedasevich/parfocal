@@ -3154,7 +3154,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-002. Refs docs 14, 15.
   Size: M.
 
-- [ ] AISEG-004 · Inference worker
+- [x] AISEG-004 · Inference worker
   Sequential session creation, provider choice by adapter request, inputs driven by graph metadata, serialised prompts that drop stale answers.
   Done when tests confirm stale answers are dropped and two sessions never initialise concurrently.
   Depends on AISEG-003. Refs doc 14.
