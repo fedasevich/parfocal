@@ -491,6 +491,33 @@ export {
   overlayOrderStep,
   overlayStack,
 } from "./overlay/z-order.ts";
+export {
+  createPatchReader,
+  defaultPatchCacheSize,
+  locatePatch,
+  type Patch,
+  type PatchCacheStats,
+  type PatchQuery,
+  type PatchRead,
+  type PatchReader,
+  PatchReaderClosedError,
+  type PatchSource,
+  type PatchSourceInfo,
+  patchHoldsPoint,
+  patchMarginShare,
+  planesToRgb,
+  UnsupportedPatchError,
+} from "./patch/patch-reader.ts";
+export type { PatchReply, PatchRequest } from "./patch/protocol.ts";
+export {
+  createWorkerPatchReader,
+  type PatchBytePorts,
+  type PatchWorker,
+  PatchWorkerError,
+  spawnPatchWorker,
+  type WorkerPatchReaderOptions,
+} from "./patch/worker-client.ts";
+export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
 export type {
   CoverageGrid,
