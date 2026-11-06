@@ -327,3 +327,28 @@ def test_another_workspace_sees_no_tasks(api: ApiAs, database: str) -> None:
     assert stranger.get(s.tasks).status_code == 404
     assert stranger.get(f"/api/review-tasks/{task['id']}").status_code == 404
     assert stranger.patch(f"/api/review-tasks/{task['id']}", json={"name": "x"}).status_code == 404
+
+
+def test_a_new_task_takes_the_project_defaults_unless_it_names_its_own(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    templates = api(s.people["owner"]).get("/api/study-templates").json()
+    template = templates[0]["id"]
+    changed = api(s.people["owner"]).patch(
+        f"/api/projects/{s.project}",
+        json={"blinded": False, "ai_hidden_first_read": True, "study_template_id": template},
+    )
+    assert changed.status_code == 200, changed.text
+    preset = create(api, s).json()
+    assert (preset["blinded"], preset["ai_hidden_first_read"], preset["study_template_id"]) == (
+        False,
+        True,
+        template,
+    )
+    own = create(api, s, blinded=True, ai_hidden_first_read=False, study_template_id=None).json()
+    assert (own["blinded"], own["ai_hidden_first_read"], own["study_template_id"]) == (
+        True,
+        False,
+        None,
+    )

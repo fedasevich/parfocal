@@ -16,6 +16,7 @@ import type {
   MyStatus,
   MyTask,
   Project,
+  ProjectChange,
   ProjectRef,
   ProjectRole,
   Session,
@@ -25,6 +26,13 @@ import type {
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
 import { linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
+import {
+  changeProjectDefaults,
+  clinicalRoleOf,
+  clinicalSignOutOf,
+  projectDefaultsOf,
+  setClinicalSignOut,
+} from "./project-settings.ts";
 import { storedResume } from "./resume-handlers.ts";
 import {
   type PersonKey,
@@ -110,18 +118,23 @@ export const toProject = (project: ScenarioProject): Project => ({
   privacy_mode: project.privacy,
   template: project.template,
   viewer_parts: viewerPartsOf(project.template),
+  ...projectDefaultsOf(project),
   archived_at: null,
   created_at: project.createdAt,
-  my_role: roleIn(project, fakeView().viewer),
+  my_role: clinicalRoleOf(project, fakeView().viewer) ?? roleIn(project, fakeView().viewer),
   members: project.members.map((key) => {
-    const role = roleIn(project, key) ?? "viewer";
+    const clinical = clinicalRoleOf(project, key);
+    const role = clinical ?? roleIn(project, key) ?? "viewer";
     return {
       user_id: people[key].id,
       role,
-      sign_out: signOutIn(project, role),
+      sign_out: clinical === null ? signOutIn(project, role) : clinicalSignOutOf(key),
     };
   }),
 });
+
+const projectNamed = (projectId: string) =>
+  projects.find((candidate) => candidate.id === projectId || candidate.code === projectId);
 
 export const toProjectRef = (
   project: Pick<ScenarioProject, "id" | "code" | "name">,
@@ -360,10 +373,27 @@ export function scenarioHandlers(): RequestHandler[] {
     }),
     getListTenantMembersMockHandler(toMembers()),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
-      const project = projects.find(
-        (candidate) => candidate.id === params.projectId || candidate.code === params.projectId,
-      );
+      const project = projectNamed(params.projectId);
       return project === undefined ? projectNotFound() : HttpResponse.json(toProject(project));
     }),
+    http.patch<{ projectId: string }>("*/api/projects/:projectId", async ({ params, request }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      changeProjectDefaults(project, (await request.json()) as ProjectChange);
+      return HttpResponse.json(toProject(project));
+    }),
+    http.put<{ projectId: string; userId: string }>(
+      "*/api/projects/:projectId/members/:userId/sign-out",
+      async ({ params, request }) => {
+        const project = projectNamed(params.projectId);
+        const key = project?.members.find((member) => people[member].id === params.userId);
+        if (project === undefined || key === undefined) return projectNotFound();
+        const { sign_out } = (await request.json()) as { sign_out: SignOutRight };
+        setClinicalSignOut(key, sign_out);
+        const shown = toProject(project);
+        const nobody = shown.members.every((member) => member.sign_out === "never");
+        return HttpResponse.json({ project: shown, warning: nobody ? "no-one-signs-out" : null });
+      },
+    ),
   ];
 }

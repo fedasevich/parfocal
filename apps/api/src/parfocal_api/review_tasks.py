@@ -622,6 +622,18 @@ async def form_version(
     return int(version)
 
 
+async def live_default(
+    connection: AsyncConnection, template_id: uuid.UUID | None
+) -> uuid.UUID | None:
+    if template_id is None:
+        return None
+    return await connection.scalar(
+        select(study_templates.c.id).where(
+            study_templates.c.id == template_id, study_templates.c.retired_at.is_(None)
+        )
+    )
+
+
 async def pinned_template(
     connection: AsyncConnection, template_id: uuid.UUID | None, wanted: int | None
 ) -> int | None:
@@ -829,15 +841,15 @@ async def create_review_task(
     slide_ids = [slide.id for slide in task_slides]
     pairs = assignments_for(draft, slide_ids)
     version = await form_version(connection, project_id, draft.opinion_form_version)
-    template_version = await pinned_template(
-        connection, draft.study_template_id, draft.study_template_version
+    given = draft.model_fields_set
+    template_id = (
+        draft.study_template_id
+        if "study_template_id" in given
+        else await live_default(connection, project.study_template_id)
     )
-    decision = draft.decision or await preset_decision(
-        connection, draft.study_template_id, template_version
-    )
-    display = draft.display or await preset_display(
-        connection, draft.study_template_id, template_version
-    )
+    template_version = await pinned_template(connection, template_id, draft.study_template_version)
+    decision = draft.decision or await preset_decision(connection, template_id, template_version)
+    display = draft.display or await preset_display(connection, template_id, template_version)
     await check_sets(connection, project_id, display.defaults)
     annotating = draft.kind is TaskKind.ANNOTATE
     snapshot = (
@@ -867,12 +879,16 @@ async def create_review_task(
             scope_score=None if scope.score is None else stored_score(scope.score),
             extra_scopes=stored_parts(draft.extra_scopes, []),
             opinion_form_version=version,
-            blinded=draft.blinded,
-            ai_hidden_first_read=draft.ai_hidden_first_read,
+            blinded=draft.blinded if "blinded" in given else project.blinded,
+            ai_hidden_first_read=(
+                draft.ai_hidden_first_read
+                if "ai_hidden_first_read" in given
+                else project.ai_hidden_first_read
+            ),
             start_mode=draft.start_mode,
             due_on=draft.due_on,
             reminder_days=sorted(set(draft.reminder_days), reverse=True),
-            study_template_id=draft.study_template_id,
+            study_template_id=template_id,
             study_template_version=template_version,
             **decision_values(decision),
             display=stored_display(display),
@@ -951,9 +967,9 @@ async def create_review_task(
         )
         | (
             {}
-            if draft.study_template_id is None
+            if template_id is None
             else {
-                "study_template_id": str(draft.study_template_id),
+                "study_template_id": str(template_id),
                 "study_template_version": template_version,
             }
         ),

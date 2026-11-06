@@ -21,6 +21,7 @@ from parfocal_api.realtime import RealtimeClient
 from parfocal_api.security_contact import require_security_contact
 from parfocal_api.tables import (
     AnalysisTemplate,
+    ClinicalTemplate,
     PrivacyMode,
     ProjectRole,
     Role,
@@ -29,6 +30,7 @@ from parfocal_api.tables import (
     memberships,
     project_members,
     projects,
+    study_templates,
     users,
 )
 from parfocal_common.db import CURRENT_TENANT
@@ -37,6 +39,8 @@ type ProjectName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)
 ]
 type Colour = Annotated[int, Field(ge=0, le=11)]
+type MatchIou = Annotated[float, Field(gt=0, le=1)]
+type MatchDistance = Annotated[float, Field(gt=0, le=50)]
 
 
 class ProjectDraft(BaseModel):
@@ -51,6 +55,12 @@ class ProjectChange(BaseModel):
     name: ProjectName | None = None
     colour: Colour | None = None
     template: AnalysisTemplate | None = None
+    blinded: bool | None = None
+    ai_hidden_first_read: bool | None = None
+    study_template_id: uuid.UUID | None = None
+    clinical_template: ClinicalTemplate | None = None
+    match_iou: MatchIou | None = None
+    match_distance_um: MatchDistance | None = None
 
 
 class ProjectMember(BaseModel):
@@ -72,6 +82,12 @@ class Project(BaseModel):
     privacy_mode: PrivacyMode
     template: AnalysisTemplate
     viewer_parts: list[ViewerPart]
+    blinded: bool
+    ai_hidden_first_read: bool
+    study_template_id: uuid.UUID | None
+    clinical_template: ClinicalTemplate | None
+    match_iou: float
+    match_distance_um: float
     archived_at: datetime | None
     created_at: datetime
     sample: bool
@@ -97,6 +113,16 @@ class ProjectArchivedError(ConflictError):
 class PrivacyChange(BaseModel):
     privacy_mode: PrivacyMode
     reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=5, max_length=500)]
+
+
+class ClinicalTemplateOnlyError(ConflictError):
+    code = "clinical-template-only"
+    title = "Only a clinical project has a clinical report template"
+
+
+class StudyTemplateUnknownError(BadRequestError):
+    code = "study-template-unknown"
+    title = "Pick a study template of this workspace that is not retired"
 
 
 class ProjectHoldsPatientsError(ConflictError):
@@ -183,6 +209,16 @@ async def project_of(
         privacy_mode=privacy_mode,
         template=template,
         viewer_parts=viewer_parts(template),
+        blinded=row.blinded,
+        ai_hidden_first_read=row.ai_hidden_first_read,
+        study_template_id=row.study_template_id,
+        clinical_template=(
+            ClinicalTemplate(row.clinical_template)
+            if privacy_mode is PrivacyMode.CLINICAL
+            else None
+        ),
+        match_iou=row.match_iou,
+        match_distance_um=row.match_distance_um,
         archived_at=row.archived_at,
         created_at=row.created_at,
         sample=row.sample,
@@ -314,6 +350,16 @@ async def get_project(
     return await project_of(connection, principal, project_id)
 
 
+async def require_live_template(connection: AsyncConnection, template_id: uuid.UUID) -> None:
+    found = await connection.scalar(
+        select(study_templates.c.id).where(
+            study_templates.c.id == template_id, study_templates.c.retired_at.is_(None)
+        )
+    )
+    if found is None:
+        raise StudyTemplateUnknownError
+
+
 @router.patch(
     "/{project_id}",
     operation_id="updateProject",
@@ -328,6 +374,10 @@ async def update_project(
     row = await owned(connection, principal, project_id)
     if row.archived_at is not None:
         raise ProjectArchivedError
+    if change.clinical_template is not None and row.privacy_mode != PrivacyMode.CLINICAL:
+        raise ClinicalTemplateOnlyError
+    if change.study_template_id is not None:
+        await require_live_template(connection, change.study_template_id)
     values = {
         field: value
         for field, value in change.model_dump(exclude_none=True).items()

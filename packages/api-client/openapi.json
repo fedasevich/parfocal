@@ -40510,6 +40510,16 @@
         ],
         "title": "Marked"
       },
+      "MatchDistance": {
+        "type": "number",
+        "maximum": 50.0,
+        "exclusiveMinimum": 0.0
+      },
+      "MatchIou": {
+        "type": "number",
+        "maximum": 1.0,
+        "exclusiveMinimum": 0.0
+      },
       "Me": {
         "properties": {
           "user_id": {
@@ -43199,6 +43209,44 @@
             "type": "array",
             "title": "Viewer Parts"
           },
+          "blinded": {
+            "type": "boolean",
+            "title": "Blinded"
+          },
+          "ai_hidden_first_read": {
+            "type": "boolean",
+            "title": "Ai Hidden First Read"
+          },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "clinical_template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_iou": {
+            "type": "number",
+            "title": "Match Iou"
+          },
+          "match_distance_um": {
+            "type": "number",
+            "title": "Match Distance Um"
+          },
           "archived_at": {
             "anyOf": [
               {
@@ -43248,6 +43296,12 @@
           "privacy_mode",
           "template",
           "viewer_parts",
+          "blinded",
+          "ai_hidden_first_read",
+          "study_template_id",
+          "clinical_template",
+          "match_iou",
+          "match_distance_um",
           "archived_at",
           "created_at",
           "sample",
@@ -43282,6 +43336,70 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/AnalysisTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blinded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blinded"
+          },
+          "ai_hidden_first_read": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Hidden First Read"
+          },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "clinical_template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_iou": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchIou"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_distance_um": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchDistance"
               },
               {
                 "type": "null"
