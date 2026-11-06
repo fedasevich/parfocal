@@ -1,4 +1,4 @@
-# XXXX. Each execution provider loads its own PathoSAM encoder, and both load the int8 weight-only AIS decoder
+# 0250. Each execution provider loads its own PathoSAM encoder, and both load the int8 weight-only AIS decoder
 
 - Date: 2026-11-06
 - Status: Accepted
