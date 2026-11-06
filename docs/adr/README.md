@@ -217,3 +217,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0251](0251-browser-model-cache-in-cache-storage.md) | Browser models are cached in Cache Storage, checked by header, and revalidated by ETag in the background | Accepted | 2026-11-06 |
 | [0252](0252-clinical-report-storage-per-case.md) | A clinical report is stored per case in columns, with deposits in rows, signed versions as snapshots and the node taken from the slide's block | Accepted | 2026-11-06 |
 | [0253](0253-sam-inference-worker.md) | One inference worker creates sessions one at a time and answers only the latest prompt | Accepted | 2026-11-06 |
+| [0254](0254-project-defaults-as-columns.md) | Project defaults for new tasks and ID matching are typed columns on projects, changed through the project PATCH | Accepted | 2026-11-06 |

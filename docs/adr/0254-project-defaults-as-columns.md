@@ -1,4 +1,4 @@
-# XXXX. Project defaults for new tasks and ID matching are typed columns on projects, changed through the project PATCH
+# 0254. Project defaults for new tasks and ID matching are typed columns on projects, changed through the project PATCH
 
 - Date: 2026-11-06
 - Status: Accepted
