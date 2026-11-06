@@ -1,4 +1,4 @@
-# XXXX. Smart select keeps each object as a pending proposal in one model run and takes the best of four candidate masks
+# 0255. Smart select keeps each object as a pending proposal in one model run and takes the best of four candidate masks
 
 - Date: 2026-11-06
 - Status: Accepted
