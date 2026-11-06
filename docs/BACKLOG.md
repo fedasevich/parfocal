@@ -3172,7 +3172,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-005, AISEG-007. Refs doc 15.
   Size: M.
 
-- [ ] AISEG-007 · Embedding prewarm
+- [x] AISEG-007 · Embedding prewarm
   Encode the view after 350 ms of camera stillness, embedding LRU of 6, pause while moving.
   Done when tests confirm the first click on a prewarmed view is under 150 ms.
   Depends on AISEG-004. Refs doc 14.
