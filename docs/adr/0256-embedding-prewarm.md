@@ -1,4 +1,4 @@
-# XXXX. The smart session encodes the view centre after 350 ms of stillness and shares one encode per patch
+# 0256. The smart session encodes the view centre after 350 ms of stillness and shares one encode per patch
 
 - Date: 2026-11-06
 - Status: Accepted
