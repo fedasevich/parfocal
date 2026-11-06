@@ -2577,7 +2577,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover the conflict path.
   Size: M.
 
-- [ ] ANN-023 · Import GeoJSON and own JSON
+- [x] ANN-023 · Import GeoJSON and own JSON
   Merge into a new group by default, never replace silently. Undoable. Reads QuPath GeoJSON and the app's own export.
   In an annotate task the import lands on the task's shared layer, where each object gets the origin `human`, the importing expert as author and the file name in its history, so colleagues see where it came from ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md)).
   Done when round-trip tests export and re-import with no loss, including groups, comments and review state, and an API test imports a file into an annotate task and finds the objects on the shared layer with their origin and history.
