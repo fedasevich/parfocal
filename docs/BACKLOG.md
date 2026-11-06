@@ -4057,7 +4057,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-002, PROJ-004, ADAPT-005. Refs mock: newcase.
   Size: M.
 
-- [ ] PROJ-008 · Project settings
+- [x] PROJ-008 · Project settings
   Privacy mode, review defaults (blind review, hide the AI for a first read), the default study template (EVAL-007) with the decision style and the display defaults and locks it presets for new tasks (GUIDE-015, TASK-011, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks), the analysis template, the taxonomy, the opinion form (GUIDE-006), automatic imports (REMOTE-002), the ID matching thresholds (IoU for regions, distance for cells, [ADR 0071](adr/0071-object-id-grammar.md)) and members with project roles. In a clinical project the settings also pick the clinical report template, and the Members zone gains a "Can sign out" column with Own cases, Any case or Never per member (PROJ-009). Viewers show Never, dim, with "Viewers cannot sign out", and setting Never for the last member who could sign out shows the warning that every report would go for co-sign ([ADR 0134](adr/0134-clinical-report-per-case-with-sign-out-and-co-sign.md), clinical report per case with sign-out and co-sign).
   Done when component and API tests cover each setting and its audit entry, and component tests cover the Can sign out column with a viewer and the last-member warning.
   Depends on PROJ-003, PROJ-004, PROJ-005, GUIDE-006, PROJ-009, REPORT-024. Refs mock: project/settings, doc 43, doc 44.
