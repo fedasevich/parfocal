@@ -92,6 +92,14 @@ REPORT_MESSAGES: Mapping[str, str] = {
     "report.empty.comparison": "Pick a review task to compare with.",
     "report.empty.compared-missing": "The review task to compare with is not available.",
     "report.sample": "This report covers a sample of the slides.",
+    "report.changes": "Changes after sign-off",
+    "report.changes.flag": (
+        "Changed after sign-off. The checksum is of the evaluation as signed, "
+        "and the numbers include the changes listed at the end."
+    ),
+    "report.changes.change": "Change",
+    "report.changes.by": "Changed by",
+    "report.changes.on": "Date",
 }
 
 LABELS: Mapping[str, Mapping[str, str]] = {
@@ -209,6 +217,16 @@ class ReportDecision:
 
 
 @dataclass(frozen=True)
+class ReportChange:
+    object_id: str
+    slide: str
+    change: str
+    reason: str
+    by: str
+    on: date
+
+
+@dataclass(frozen=True)
 class ReportCompared:
     task_name: str
     headline: Mapping[str, float | None]
@@ -252,6 +270,7 @@ class ReportData:
     decision_style: str = ""
     counts_as: tuple[str, ...] = ()
     signed_by: str = ""
+    changes: tuple[ReportChange, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -616,6 +635,33 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
             ),
             "",
         ]
+        if data.changes:
+            lines += [
+                f"== {typst_text(messages['report.changes'])}",
+                *table(
+                    (
+                        messages["report.object"],
+                        messages["report.slide"],
+                        messages["report.changes.change"],
+                        messages["report.reason"],
+                        messages["report.changes.by"],
+                        messages["report.changes.on"],
+                    ),
+                    [
+                        (
+                            change.object_id,
+                            change.slide,
+                            change.change,
+                            change.reason,
+                            change.by,
+                            day_text(data, change.on, locale),
+                        )
+                        for change in data.changes
+                    ],
+                    "report.missing",
+                ),
+                "",
+            ]
         if data.format.signature:
             signer = data.signed_by or "_" * 24
             lines += [
@@ -683,6 +729,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         f"{typst_text(messages['report.version'])}: {typst_text(str(data.version))} \\",
         f"{typst_text(messages['report.checksum'])}: {typst_text(data.checksum)} \\",
         signed,
+        *(["", typst_text(messages["report.changes.flag"])] if data.changes else []),
         *(["", typst_text(messages["report.sample"])] if data.sample else []),
         "",
         *body,

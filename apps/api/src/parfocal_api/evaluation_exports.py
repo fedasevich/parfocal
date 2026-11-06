@@ -28,6 +28,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ProblemError
 from parfocal_api.report_template import (
     RenderedReport,
+    ReportChange,
     ReportCompared,
     ReportDecision,
     ReportObject,
@@ -47,10 +48,13 @@ from parfocal_api.study_templates import BUILT_INS, template_at
 from parfocal_api.tables import (
     BuiltInTemplate,
     annotations,
+    evaluation_changes,
     evaluation_versions,
     projects,
     result_sets,
     review_task_slides,
+    slides,
+    users,
     verdicts,
 )
 from parfocal_api.task_kinds import review_only
@@ -123,12 +127,14 @@ class Version:
     number: int
     checksum: str
     signed_at: datetime | None
+    changes: tuple[ReportChange, ...] = ()
 
     def stamp(self) -> dict[str, Any]:
         return {
             "version": self.number,
             "checksum": self.checksum,
             "signed": self.signed_at is not None,
+            "changes_after_sign_off": len(self.changes),
         }
 
 
@@ -158,10 +164,45 @@ async def signed_row(connection: AsyncConnection, task: Any) -> Any | None:
     ).one_or_none()
 
 
+async def changes_since(
+    connection: AsyncConnection, task_id: uuid.UUID, version: int
+) -> tuple[ReportChange, ...]:
+    rows = await connection.execute(
+        select(
+            evaluation_changes.c.object_id,
+            evaluation_changes.c.change,
+            evaluation_changes.c.reason,
+            evaluation_changes.c.changed_at,
+            slides.c.label,
+            users.c.display_name,
+        )
+        .join(slides, slides.c.id == evaluation_changes.c.slide_id)
+        .outerjoin(users, users.c.id == evaluation_changes.c.changed_by_user_id)
+        .where(evaluation_changes.c.task_id == task_id, evaluation_changes.c.version == version)
+        .order_by(evaluation_changes.c.changed_at, evaluation_changes.c.id)
+    )
+    return tuple(
+        ReportChange(
+            object_id=row.object_id,
+            slide=row.label or "",
+            change=row.change,
+            reason=row.reason,
+            by=row.display_name or "",
+            on=row.changed_at.date(),
+        )
+        for row in rows
+    )
+
+
 async def version_of(connection: AsyncConnection, task: Any, evaluation: Evaluation) -> Version:
     stored = await signed_row(connection, task)
     if stored is not None:
-        return Version(number=stored.number, checksum=stored.checksum, signed_at=stored.signed_at)
+        return Version(
+            number=stored.number,
+            checksum=stored.checksum,
+            signed_at=stored.signed_at,
+            changes=await changes_since(connection, task.id, stored.number),
+        )
     return Version(number=1, checksum=checksum_of(evaluation), signed_at=task.signed_off_at)
 
 
@@ -447,6 +488,7 @@ async def rendered_report(
         if "decisions" in report_format.appendices
         else (),
         compared=await compared_tasks(connection, principal, blocks),
+        changes=version.changes,
     )
     return render_report(data, locale)
 

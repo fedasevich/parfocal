@@ -87,6 +87,7 @@ def test_every_export_carries_the_same_checksum(api: ApiAs, database: str) -> No
         "version": 1,
         "checksum": checksum,
         "signed": False,
+        "changes_after_sign_off": 0,
     }
     geojson = json.loads(exported(api, r, "annotations.geojson").text)
     assert geojson["parfocal"]["evaluation"]["checksum"] == checksum

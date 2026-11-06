@@ -40,6 +40,7 @@ import type {
   ErasedPatient,
   ErasedPerson,
   Evaluation,
+  EvaluationChanges,
   EvaluationVersionStarted,
   ExportReviewedLayer200,
   FirstRead,
@@ -7950,6 +7951,29 @@ export const getStartEvaluationVersionResponseMock = (
   ...overrideResponse,
 });
 
+export const getListEvaluationChangesResponseMock = (
+  overrideResponse: Partial<Extract<EvaluationChanges, object>> = {},
+): EvaluationChanges => ({
+  task_id: faker.string.uuid(),
+  signed_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  checksum: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  changes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      version: faker.number.int(),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getGetSignOffSummaryResponseMock = (
   overrideResponse: Partial<Extract<SignOffSummary, object>> = {},
 ): SignOffSummary => ({
@@ -8010,6 +8034,7 @@ export const getGetSignOffSummaryResponseMock = (
   ]),
   changes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
+      version: faker.number.int(),
       by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       at: faker.date.past().toISOString().slice(0, 19) + "Z",
       object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -15989,6 +16014,30 @@ export const getStartEvaluationVersionMockHandler = (
   );
 };
 
+export const getListEvaluationChangesMockHandler = (
+  overrideResponse?:
+    | EvaluationChanges
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<EvaluationChanges> | EvaluationChanges),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation-changes",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListEvaluationChangesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetSignOffSummaryMockHandler = (
   overrideResponse?:
     | SignOffSummary
@@ -17659,6 +17708,7 @@ export const getParfocalAPIMock = () => [
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
   getStartEvaluationVersionMockHandler(),
+  getListEvaluationChangesMockHandler(),
   getGetSignOffSummaryMockHandler(),
   getCreateReportLinkMockHandler(),
   getListReportLinksMockHandler(),
