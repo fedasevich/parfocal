@@ -1,10 +1,11 @@
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -28,6 +29,8 @@ from parfocal_api.tables import (
     adjudication_objects,
     adjudications,
     disagreement_decisions,
+    evaluation_changes,
+    evaluation_versions,
     review_assignments,
     review_edits,
     review_task_slides,
@@ -39,6 +42,9 @@ from parfocal_common.disagreements import Why, why_queued
 from parfocal_common.object_ids import Letter, ObjectId
 
 type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
+type ChangeReason = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)
+]
 type Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
 
 
@@ -98,10 +104,22 @@ class DecisionDraft(BaseModel):
     answer: Answer
     answer_class_id: uuid.UUID | None = None
     note: Note | None = None
+    reason: ChangeReason | None = None
 
 
 class NoteDraft(BaseModel):
     note: Note | None = None
+    reason: ChangeReason | None = None
+
+
+@dataclass(frozen=True)
+class Late:
+    reason: str | None
+
+
+class ChangeReasonNeededError(ConflictError):
+    code = "change-reason-needed"
+    title = "A change after sign-off needs a reason"
 
 
 class NotQueuedError(NotFoundError):
@@ -326,13 +344,16 @@ async def decidable(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     object_id: str,
+    late: Late | None = None,
 ) -> tuple[Any, ObjectId, QueuedObject]:
     task, _ = await readable_task(connection, principal, task_id)
     review_only(task.kind)
     if await role_in(connection, principal, task.project_id) is not ProjectRole.OWNER:
         raise DecidersOnlyError
-    if task.signed_off_at is not None:
+    if task.signed_off_at is not None and late is None:
         raise TaskSignedOffError
+    if task.signed_off_at is not None and late is not None and not late.reason:
+        raise ChangeReasonNeededError
     found = ai_object(object_id)
     item = await queued_item(connection, task_id, slide_id, found)
     if item is None:
@@ -427,6 +448,43 @@ async def audit(
     )
 
 
+async def signed_version(connection: AsyncConnection, task_id: uuid.UUID) -> int:
+    number = await connection.scalar(
+        select(func.max(evaluation_versions.c.number)).where(
+            evaluation_versions.c.task_id == task_id,
+            evaluation_versions.c.signed_at.is_not(None),
+        )
+    )
+    return number or 1
+
+
+async def changed_after_sign_off(
+    connection: AsyncConnection,
+    principal: Principal,
+    task: Any,
+    slide_id: uuid.UUID,
+    found: ObjectId,
+    change: str,
+    reason: str | None,
+) -> dict[str, Any]:
+    if task.signed_off_at is None or reason is None:
+        return {}
+    version = await signed_version(connection, task.id)
+    await connection.execute(
+        insert(evaluation_changes).values(
+            tenant_id=task.tenant_id,
+            task_id=task.id,
+            version=version,
+            slide_id=slide_id,
+            object_id=found.text(ascii=True),
+            change=change,
+            reason=reason,
+            changed_by_user_id=decider(principal),
+        )
+    )
+    return {"after_sign_off": True, "evaluation_version": version}
+
+
 async def refreshed(
     connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID, found: ObjectId
 ) -> QueuedObject:
@@ -479,7 +537,9 @@ async def decide_disagreement(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> QueuedObject:
-    task, found, item = await decidable(connection, principal, task_id, slide_id, object_id)
+    task, found, item = await decidable(
+        connection, principal, task_id, slide_id, object_id, Late(draft.reason)
+    )
     if item.looking_again:
         raise LookingAgainError
     if item.with_adjudicator():
@@ -494,6 +554,9 @@ async def decide_disagreement(
         "decided_by_user_id": decider(principal),
     }
     await store(connection, task, slide_id, found, values, values)
+    late = await changed_after_sign_off(
+        connection, principal, task, slide_id, found, f"Decided {value.value}", draft.reason
+    )
     await audit(
         connection,
         principal,
@@ -501,7 +564,7 @@ async def decide_disagreement(
         task,
         slide_id,
         found,
-        {"style": task.decision_style, "answer": draft.answer, "value": value.value},
+        {"style": task.decision_style, "answer": draft.answer, "value": value.value, **late},
     )
     return await refreshed(connection, task_id, slide_id, found)
 
@@ -519,7 +582,9 @@ async def leave_disagreement_open(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> QueuedObject:
-    task, found, item = await decidable(connection, principal, task_id, slide_id, object_id)
+    task, found, item = await decidable(
+        connection, principal, task_id, slide_id, object_id, Late(draft.reason)
+    )
     if item.looking_again:
         raise LookingAgainError
     if item.with_adjudicator():
@@ -530,6 +595,9 @@ async def leave_disagreement_open(
         "decided_by_user_id": decider(principal),
     }
     await store(connection, task, slide_id, found, values, values)
+    late = await changed_after_sign_off(
+        connection, principal, task, slide_id, found, "Left open", draft.reason
+    )
     await audit(
         connection,
         principal,
@@ -537,7 +605,7 @@ async def leave_disagreement_open(
         task,
         slide_id,
         found,
-        {"noted": bool(draft.note)},
+        {"noted": bool(draft.note), **late},
     )
     return await refreshed(connection, task_id, slide_id, found)
 

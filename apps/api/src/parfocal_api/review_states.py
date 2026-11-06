@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -15,6 +15,12 @@ from parfocal_api.blinding import first_read_open
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import left_open_count, open_by_slide, open_count, queue_of
+from parfocal_api.evaluation_versions import (
+    SignOffConfirmation,
+    VersionDraft,
+    record_signature,
+    start_next_version,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -476,7 +482,7 @@ async def reopen_slide_review(
 
 async def task_move(
     connection: AsyncConnection, principal: Principal, task_id: uuid.UUID, move: Move
-) -> TaskStates:
+) -> Any:
     task = await task_of(connection, task_id)
     await visible(connection, principal, task.project_id)
     states = await states_of(connection, task)
@@ -492,33 +498,54 @@ async def task_move(
             else 0
         ),
     )
-    action = AuditAction.TASK_SIGNED_OFF if move is Move.SIGN_OFF else AuditAction.TASK_REOPENED
-    await apply(connection, principal, task, move, facts, action, {})
-    signing = move is Move.SIGN_OFF
-    await connection.execute(
-        update(review_tasks)
-        .where(review_tasks.c.id == task_id)
-        .values(
-            signed_off_at=func.now() if signing else None,
-            signed_off_by_user_id=user_of(principal) if signing else None,
-        )
-    )
-    return await states_of(connection, await task_of(connection, task_id))
+    refused = check_move(move, facts)
+    if refused is not None:
+        raise problem_for(refused)
+    if task.project_archived_at is not None:
+        raise ProjectArchivedError
+    return task
 
 
 @router.post(
     "/sign-off", operation_id="signOffReviewTask", **require(Permission.CREATE_CASES, write=True)
 )
 async def sign_off_review_task(
-    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    task_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
+    confirmation: SignOffConfirmation | None = None,
 ) -> TaskStates:
-    return await task_move(connection, principal, task_id, Move.SIGN_OFF)
+    task = await task_move(connection, principal, task_id, Move.SIGN_OFF)
+    confirmed_with = (confirmation or SignOffConfirmation()).confirmed_with
+    await connection.execute(
+        update(review_tasks)
+        .where(review_tasks.c.id == task_id)
+        .values(signed_off_at=func.now(), signed_off_by_user_id=user_of(principal))
+    )
+    number = await record_signature(connection, principal, task, confirmed_with, http, background)
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.TASK_SIGNED_OFF,
+        AuditTarget.REVIEW_TASK,
+        task_id,
+        tenant_id=task.tenant_id,
+        details={"version": number, "confirmed_with": confirmed_with},
+    )
+    return await states_of(connection, await task_of(connection, task_id))
 
 
 @router.post(
     "/reopen", operation_id="reopenReviewTask", **require(Permission.CREATE_CASES, write=True)
 )
 async def reopen_review_task(
-    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    task_id: uuid.UUID,
+    draft: VersionDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
 ) -> TaskStates:
-    return await task_move(connection, principal, task_id, Move.REOPEN_TASK)
+    await task_move(connection, principal, task_id, Move.REOPEN_TASK)
+    await start_next_version(connection, principal, task_id, draft.reason)
+    return await states_of(connection, await task_of(connection, task_id))

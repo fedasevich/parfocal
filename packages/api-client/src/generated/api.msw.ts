@@ -37,6 +37,7 @@ import type {
   ErasedPatient,
   ErasedPerson,
   Evaluation,
+  EvaluationVersionStarted,
   ExportReviewedLayer200,
   FirstRead,
   FormVersion,
@@ -120,6 +121,7 @@ import type {
   SharedReport,
   SignedPart,
   SigningKey,
+  SignOffSummary,
   SignOutSet,
   SiteValidation,
   SlideArea,
@@ -6557,6 +6559,96 @@ export const getGetTaskEvaluationResponseMock = (
       objects: faker.number.int(),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getStartEvaluationVersionResponseMock = (
+  overrideResponse: Partial<Extract<EvaluationVersionStarted, object>> = {},
+): EvaluationVersionStarted => ({
+  version: faker.number.int(),
+  reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getGetSignOffSummaryResponseMock = (
+  overrideResponse: Partial<Extract<SignOffSummary, object>> = {},
+): SignOffSummary => ({
+  task_id: faker.string.uuid(),
+  version: faker.number.int(),
+  reviewer_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  reviews: {
+    slides: faker.number.int(),
+    submitted: faker.number.int(),
+    total: faker.number.int(),
+    opinion_forms: faker.number.int(),
+    behind: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({ user_id: faker.string.uuid(), slides_left: faker.number.int() }),
+    ),
+  },
+  queue: {
+    total: faker.number.int(),
+    resolved: faker.number.int(),
+    by_researcher: faker.number.int(),
+    by_adjudicator: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({ user_id: faker.string.uuid(), count: faker.number.int() })),
+    with_adjudicator: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => ({ user_id: faker.string.uuid(), count: faker.number.int() })),
+    left_open: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+  },
+  open_threads: {
+    total: faker.number.int(),
+    slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        count: faker.number.int(),
+      }),
+    ),
+  },
+  result_set: {
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    objects: faker.number.int(),
+    added: faker.number.int(),
+  },
+  signature: faker.helpers.arrayElement([
+    {
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      checksum: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  changes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  next_version: faker.helpers.arrayElement([
+    {
+      version: faker.number.int(),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -14105,6 +14197,54 @@ export const getExportTaskEvaluationMockHandler = (
   );
 };
 
+export const getStartEvaluationVersionMockHandler = (
+  overrideResponse?:
+    | EvaluationVersionStarted
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<EvaluationVersionStarted> | EvaluationVersionStarted),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/evaluation-versions",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartEvaluationVersionResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSignOffSummaryMockHandler = (
+  overrideResponse?:
+    | SignOffSummary
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SignOffSummary> | SignOffSummary),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/sign-off-summary",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSignOffSummaryResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateReportLinkMockHandler = (
   overrideResponse?:
     | CreatedReportLink
@@ -15733,6 +15873,8 @@ export const getParfocalAPIMock = () => [
   getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
+  getStartEvaluationVersionMockHandler(),
+  getGetSignOffSummaryMockHandler(),
   getCreateReportLinkMockHandler(),
   getListReportLinksMockHandler(),
   getRevokeReportLinkMockHandler(),

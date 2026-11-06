@@ -2581,3 +2581,72 @@ report_links = Table(
         info=OPERATIONAL,
     ),
 )
+
+
+def task_owned_ids() -> list[Column[uuid.UUID]]:
+    return [
+        *owned_ids(),
+        Column(
+            "task_id",
+            Uuid[uuid.UUID](),
+            ForeignKey("review_tasks.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            info=OPERATIONAL,
+        ),
+    ]
+
+
+def person_column(name: str) -> Column[uuid.UUID]:
+    return Column(name, Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=True, info=PERSONAL)
+
+
+evaluation_versions = Table(
+    "evaluation_versions",
+    metadata,
+    *task_owned_ids(),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column("reason", String(500), nullable=True, info=PHI),
+    person_column("started_by_user_id"),
+    Column(
+        "started_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("signed_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    person_column("signed_by_user_id"),
+    Column("confirmed_with", String(10), nullable=True, info=OPERATIONAL),
+    Column("checksum", String(80), nullable=True, info=OPERATIONAL),
+    Column("evaluation", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column("blocks", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column("format", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    UniqueConstraint("task_id", "number"),
+    CheckConstraint("number >= 1", name="number"),
+    CheckConstraint(
+        "confirmed_with IS NULL OR confirmed_with IN ('sso', 'password')", name="confirmed_with"
+    ),
+    CheckConstraint("(signed_at IS NULL) = (checksum IS NULL)", name="signed"),
+)
+
+evaluation_changes = Table(
+    "evaluation_changes",
+    metadata,
+    *task_owned_ids(),
+    Column("version", Integer, nullable=False, info=OPERATIONAL),
+    Column(
+        "slide_id", Uuid[uuid.UUID](), ForeignKey("slides.id"), nullable=False, info=OPERATIONAL
+    ),
+    Column("object_id", String(40), nullable=False, info=OPERATIONAL),
+    Column("change", String(200), nullable=False, info=OPERATIONAL),
+    Column("reason", String(500), nullable=False, info=PHI),
+    person_column("changed_by_user_id"),
+    Column(
+        "changed_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)

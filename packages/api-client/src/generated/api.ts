@@ -541,7 +541,7 @@ export interface ExportedEvent {
   reason: string | null;
 }
 
-export interface Signature {
+export interface ParfocalApiAuditTrailSignature {
   algorithm?: "Ed25519";
   key_id: string;
   value: string;
@@ -555,7 +555,7 @@ export interface AuditExport {
   filters: AuditExportFilters;
   chain_head: ChainHead | null;
   events: ExportedEvent[];
-  signature: Signature;
+  signature: ParfocalApiAuditTrailSignature;
 }
 
 export type AuditTarget = (typeof AuditTarget)[keyof typeof AuditTarget];
@@ -835,6 +835,12 @@ export const Certainty = {
   likely: "likely",
 } as const;
 
+/**
+ * @minLength 1
+ * @maxLength 500
+ */
+export type ChangeReason = string;
+
 export type ChartStyle = (typeof ChartStyle)[keyof typeof ChartStyle];
 
 export const ChartStyle = {
@@ -1092,6 +1098,11 @@ export const ConfidenceShown = {
   hidden: "hidden",
 } as const;
 
+/**
+ * @pattern ^(sso|password)$
+ */
+export type ConfirmedWith = string;
+
 export type ConfusionMatrixWidth = (typeof ConfusionMatrixWidth)[keyof typeof ConfusionMatrixWidth];
 
 export const ConfusionMatrixWidth = {
@@ -1238,6 +1249,7 @@ export interface DecisionDraft {
   answer: Answer;
   answer_class_id?: string | null;
   note?: ParfocalApiDisagreementsNote | null;
+  reason?: ChangeReason | null;
 }
 
 /**
@@ -1532,6 +1544,22 @@ export interface Evaluation {
   opinions: OpinionOut[];
   display: TaskDisplaySettings;
   presets: PresetUse[];
+}
+
+export interface EvaluationChange {
+  by_user_id: string | null;
+  at: string;
+  object: string;
+  slide_label: string;
+  text: string;
+  reason: string;
+}
+
+export interface EvaluationVersionStarted {
+  version: number;
+  reason: string;
+  by_user_id: string | null;
+  started_at: string;
 }
 
 export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
@@ -2087,6 +2115,11 @@ export interface LayerSummary {
   added: number;
 }
 
+export interface LeftOpenObject {
+  object: string;
+  slide_label: string;
+}
+
 export interface LegalHold {
   id: string;
   project_id: string | null;
@@ -2492,6 +2525,7 @@ export interface Neighbours {
 
 export interface NoteDraft {
   note?: ParfocalApiDisagreementsNote | null;
+  reason?: ChangeReason | null;
 }
 
 export interface Nudge {
@@ -2523,6 +2557,16 @@ export interface ObjectResolution {
   reviewer_id: string;
   object: string;
   current: string[];
+}
+
+export interface SlideThreads {
+  slide_label: string;
+  count: number;
+}
+
+export interface OpenThreads {
+  total: number;
+  slides: SlideThreads[];
 }
 
 export interface OpenUpload {
@@ -2713,6 +2757,11 @@ export interface PatientData {
   age_years: number | null;
   cases: PatientCase[];
   slides: PatientSlide[];
+}
+
+export interface PersonCount {
+  user_id: string;
+  count: number;
 }
 
 export type PersonalDataProfile = { [key: string]: unknown };
@@ -2960,6 +3009,15 @@ export interface QueueDecision {
   value: VerdictValue;
   choice: Decision | null;
   decided_by_user_id: string | null;
+}
+
+export interface QueueSummary {
+  total: number;
+  resolved: number;
+  by_researcher: number;
+  by_adjudicator: PersonCount[];
+  with_adjudicator: PersonCount[];
+  left_open: LeftOpenObject[];
 }
 
 export interface ReviewerVerdict {
@@ -3412,6 +3470,12 @@ export interface ResultSetDraft {
   classes?: ParfocalApiResultSetsName[];
 }
 
+export interface ResultSetFacts {
+  name: string;
+  objects: number;
+  added: number;
+}
+
 export interface ResultsFile {
   /** @maxLength 20000000 */
   content: string;
@@ -3552,6 +3616,11 @@ export interface ReviewedLayer {
   summary: LayerSummary;
 }
 
+export interface ReviewerLeft {
+  user_id: string;
+  slides_left: number;
+}
+
 export type State = (typeof State)[keyof typeof State];
 
 export const State = {
@@ -3571,6 +3640,14 @@ export interface ReviewerState {
   user_id: string;
   state: State;
   submitted_at: string | null;
+}
+
+export interface Reviews {
+  slides: number;
+  submitted: number;
+  total: number;
+  opinion_forms: number;
+  behind: ReviewerLeft[];
 }
 
 export interface RoleChange {
@@ -3775,6 +3852,29 @@ export interface SharedReport {
   task_name: string;
   expires_at: string;
   evaluation: SharedEvaluation;
+}
+
+export interface SignOffConfirmation {
+  confirmed_with?: ConfirmedWith;
+}
+
+export interface ParfocalApiEvaluationVersionsSignature {
+  by_user_id: string | null;
+  at: string;
+  checksum: string;
+}
+
+export interface SignOffSummary {
+  task_id: string;
+  version: number;
+  reviewer_ids: string[];
+  reviews: Reviews;
+  queue: QueueSummary;
+  open_threads: OpenThreads;
+  result_set: ResultSetFacts;
+  signature: ParfocalApiEvaluationVersionsSignature | null;
+  changes: EvaluationChange[];
+  next_version: EvaluationVersionStarted | null;
 }
 
 export interface SignOutChange {
@@ -4349,6 +4449,16 @@ export interface VerdictDraft {
 export interface VersionCheck {
   /** @minimum 1 */
   version: number;
+}
+
+/**
+ * @minLength 10
+ * @maxLength 500
+ */
+export type VersionReason = string;
+
+export interface VersionDraft {
+  reason: VersionReason;
 }
 
 export interface WorkspaceChoice {
@@ -29878,11 +29988,33 @@ export const getSignOffReviewTaskUrl = (taskId: string) => {
  */
 export const signOffReviewTask = async (
   taskId: string,
+  signOffConfirmationNull?: SignOffConfirmation | null,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<signOffReviewTaskResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
   return apiFetch<signOffReviewTaskResponse>(getSignOffReviewTaskUrl(taskId), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(signOffConfirmationNull),
   });
 };
 
@@ -29916,9 +30048,9 @@ export const getSignOffReviewTaskMutationOptions = <
     Awaited<ReturnType<typeof signOffReviewTask>>,
     SignOffReviewTaskMutationVariables
   > = (props) => {
-    const { taskId } = props ?? {};
+    const { taskId, data } = props ?? {};
 
-    return signOffReviewTask(taskId, requestOptions);
+    return signOffReviewTask(taskId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -29927,9 +30059,12 @@ export const getSignOffReviewTaskMutationOptions = <
 export type SignOffReviewTaskMutationResult = NonNullable<
   Awaited<ReturnType<typeof signOffReviewTask>>
 >;
-
+export type SignOffReviewTaskMutationBody = SignOffConfirmation | null | undefined;
 export type SignOffReviewTaskMutationError = Problem;
-export type SignOffReviewTaskMutationVariables = { taskId: string };
+export type SignOffReviewTaskMutationVariables = {
+  taskId: string;
+  data?: SignOffConfirmation | null;
+};
 
 /**
  * @summary Sign Off Review Task
@@ -30028,11 +30163,33 @@ export const getReopenReviewTaskUrl = (taskId: string) => {
  */
 export const reopenReviewTask = async (
   taskId: string,
+  versionDraft: VersionDraft,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<reopenReviewTaskResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
   return apiFetch<reopenReviewTaskResponse>(getReopenReviewTaskUrl(taskId), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(versionDraft),
   });
 };
 
@@ -30063,9 +30220,9 @@ export const getReopenReviewTaskMutationOptions = <TError = Problem, TContext = 
     Awaited<ReturnType<typeof reopenReviewTask>>,
     ReopenReviewTaskMutationVariables
   > = (props) => {
-    const { taskId } = props ?? {};
+    const { taskId, data } = props ?? {};
 
-    return reopenReviewTask(taskId, requestOptions);
+    return reopenReviewTask(taskId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -30074,9 +30231,9 @@ export const getReopenReviewTaskMutationOptions = <TError = Problem, TContext = 
 export type ReopenReviewTaskMutationResult = NonNullable<
   Awaited<ReturnType<typeof reopenReviewTask>>
 >;
-
+export type ReopenReviewTaskMutationBody = VersionDraft;
 export type ReopenReviewTaskMutationError = Problem;
-export type ReopenReviewTaskMutationVariables = { taskId: string };
+export type ReopenReviewTaskMutationVariables = { taskId: string; data: VersionDraft };
 
 /**
  * @summary Reopen Review Task
@@ -36401,6 +36558,369 @@ export function useExportTaskEvaluation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTaskEvaluationQueryOptions(taskId, kind, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type startEvaluationVersionResponse201 = {
+  data: EvaluationVersionStarted;
+  status: 201;
+};
+
+export type startEvaluationVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startEvaluationVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startEvaluationVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startEvaluationVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startEvaluationVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startEvaluationVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startEvaluationVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startEvaluationVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startEvaluationVersionResponseSuccess = startEvaluationVersionResponse201 & {
+  headers: Headers;
+};
+export type startEvaluationVersionResponseError = (
+  | startEvaluationVersionResponse400
+  | startEvaluationVersionResponse401
+  | startEvaluationVersionResponse403
+  | startEvaluationVersionResponse404
+  | startEvaluationVersionResponse409
+  | startEvaluationVersionResponse422
+  | startEvaluationVersionResponse429
+  | startEvaluationVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type startEvaluationVersionResponse =
+  | startEvaluationVersionResponseSuccess
+  | startEvaluationVersionResponseError;
+
+export const getStartEvaluationVersionUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation-versions`;
+};
+
+/**
+ * @summary Start Evaluation Version
+ */
+export const startEvaluationVersion = async (
+  taskId: string,
+  versionDraft: VersionDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startEvaluationVersionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<startEvaluationVersionResponse>(getStartEvaluationVersionUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(versionDraft),
+  });
+};
+
+export const getStartEvaluationVersionMutationKey = () => ["startEvaluationVersion"] as const;
+
+export const getStartEvaluationVersionMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startEvaluationVersion>>,
+    TError,
+    StartEvaluationVersionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startEvaluationVersion>>,
+  TError,
+  StartEvaluationVersionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartEvaluationVersionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startEvaluationVersion>>,
+    StartEvaluationVersionMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return startEvaluationVersion(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartEvaluationVersionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof startEvaluationVersion>>
+>;
+export type StartEvaluationVersionMutationBody = VersionDraft;
+export type StartEvaluationVersionMutationError = Problem;
+export type StartEvaluationVersionMutationVariables = { taskId: string; data: VersionDraft };
+
+/**
+ * @summary Start Evaluation Version
+ */
+export const useStartEvaluationVersion = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startEvaluationVersion>>,
+      TError,
+      StartEvaluationVersionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startEvaluationVersion>>,
+  TError,
+  StartEvaluationVersionMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartEvaluationVersionMutationOptions(options), queryClient);
+};
+
+export type getSignOffSummaryResponse200 = {
+  data: SignOffSummary;
+  status: 200;
+};
+
+export type getSignOffSummaryResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSignOffSummaryResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSignOffSummaryResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSignOffSummaryResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSignOffSummaryResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSignOffSummaryResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSignOffSummaryResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSignOffSummaryResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSignOffSummaryResponseSuccess = getSignOffSummaryResponse200 & {
+  headers: Headers;
+};
+export type getSignOffSummaryResponseError = (
+  | getSignOffSummaryResponse400
+  | getSignOffSummaryResponse401
+  | getSignOffSummaryResponse403
+  | getSignOffSummaryResponse404
+  | getSignOffSummaryResponse409
+  | getSignOffSummaryResponse422
+  | getSignOffSummaryResponse429
+  | getSignOffSummaryResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSignOffSummaryResponse =
+  | getSignOffSummaryResponseSuccess
+  | getSignOffSummaryResponseError;
+
+export const getGetSignOffSummaryUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/sign-off-summary`;
+};
+
+/**
+ * @summary Get Sign Off Summary
+ */
+export const getSignOffSummary = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSignOffSummaryResponse> => {
+  return apiFetch<getSignOffSummaryResponse>(getGetSignOffSummaryUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSignOffSummaryQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/sign-off-summary`] as const;
+};
+
+export const getGetSignOffSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSignOffSummary>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSignOffSummaryQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSignOffSummary>>> = ({ signal }) =>
+    getSignOffSummary(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSignOffSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSignOffSummary>>
+>;
+export type GetSignOffSummaryQueryError = Problem;
+
+export function useGetSignOffSummary<
+  TData = Awaited<ReturnType<typeof getSignOffSummary>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSignOffSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getSignOffSummary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSignOffSummary<
+  TData = Awaited<ReturnType<typeof getSignOffSummary>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSignOffSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getSignOffSummary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSignOffSummary<
+  TData = Awaited<ReturnType<typeof getSignOffSummary>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Sign Off Summary
+ */
+
+export function useGetSignOffSummary<
+  TData = Awaited<ReturnType<typeof getSignOffSummary>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSignOffSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSignOffSummaryQueryOptions(taskId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

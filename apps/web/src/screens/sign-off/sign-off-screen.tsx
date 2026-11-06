@@ -101,9 +101,9 @@ function SignOffModal({
   const signature = useSignature({
     failed: scene === "ssofail",
     email: me?.email ?? "",
-    onSign: (_method, done) =>
+    onSign: (method, done) =>
       sign.mutate(
-        { taskId },
+        { taskId, data: { confirmed_with: method } },
         {
           onSuccess: () => {
             done(true);
@@ -155,7 +155,11 @@ function SignOffModal({
           >
             <KeyValueList
               rows={[
-                { icon: "user", label: "Signed by", value: nameOf(signed.by_user_id) },
+                {
+                  icon: "user",
+                  label: "Signed by",
+                  value: signed.by_user_id ? nameOf(signed.by_user_id) : "",
+                },
                 { icon: "calendar", label: "When", value: longDate(signed.at) },
                 {
                   icon: "shield",

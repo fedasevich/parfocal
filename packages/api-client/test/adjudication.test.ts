@@ -46,6 +46,12 @@ const { people, reviewTasks } = scenario;
 const rt14 = reviewTasks.find((task) => task.code === "RT-14")?.id ?? "";
 const open = { ...defaultFakeQueueScene, stage: "open" as const };
 
+const summaryOf = async (taskId: string) => {
+  const response = await getSignOffSummary(taskId);
+  assert.ok(response.status === 200);
+  return response.data;
+};
+
 test("the queue holds the mock's seven objects with five where reviewers differ", async () => {
   setFakeQueueScene(open);
   const queue = (await getDisagreementQueue(rt14)).data;
@@ -61,7 +67,7 @@ test("the queue holds the mock's seven objects with five where reviewers differ"
 test("the queue is locked until Simona submits her last 8 slides", async () => {
   const queue = (await getDisagreementQueue(rt14)).data;
   assert.deepEqual(queue.locked, { user_id: people.SM.id, slides_left: 8 });
-  const summary = (await getSignOffSummary(rt14)).data;
+  const summary = await summaryOf(rt14);
   assert.equal(summary.reviews.total - summary.reviews.submitted, 13);
   assert.equal(summary.queue.resolved, 0);
 });
@@ -88,14 +94,14 @@ test("objects sent to Anna reach her anonymously and her decisions resolve them"
     object: first.object,
     data: { raw: "disagree" },
   });
-  const summary = (await getSignOffSummary(rt14)).data;
+  const summary = await summaryOf(rt14);
   assert.deepEqual(summary.queue.by_adjudicator, [{ user_id: people.AK.id, count: 1 }]);
   assert.deepEqual(summary.queue.with_adjudicator, [{ user_id: people.AK.id, count: 2 }]);
 });
 
 test("deciding and leaving open count as resolved, and signing freezes the task", async () => {
   setFakeQueueScene({ ...defaultFakeQueueScene, stage: "resolved" });
-  const summary = (await getSignOffSummary(rt14)).data;
+  const summary = await summaryOf(rt14);
   assert.equal(summary.queue.resolved, 7);
   assert.equal(summary.queue.by_researcher, 2);
   assert.deepEqual(
@@ -106,13 +112,10 @@ test("deciding and leaving open count as resolved, and signing freezes the task"
   assert.ok(states.status === 200 && states.data.signed_off_at);
   const after = await getReviewTaskStates(rt14);
   assert.ok(after.status === 200 && after.data.signed_off_at);
-  const signed = (await getSignOffSummary(rt14)).data;
+  const signed = await summaryOf(rt14);
   assert.equal(signed.signature?.checksum, "sha256:8c1f…a90e");
-  await startEvaluationVersion({
-    taskId: rt14,
-    data: { reason: "Measured again on deeper levels" },
-  });
-  assert.equal((await getSignOffSummary(rt14)).data.next_version?.version, 2);
+  await startEvaluationVersion(rt14, { reason: "Measured again on deeper levels" });
+  assert.equal((await summaryOf(rt14)).next_version?.version, 2);
 });
 
 test("a decision in the queue is stored next to both reviewers", async () => {

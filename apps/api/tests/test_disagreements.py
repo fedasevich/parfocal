@@ -88,7 +88,9 @@ def test_decisions_close_the_queue_and_lock_at_sign_off(api: ApiAs, database: st
     api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "agree"})
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
     late = api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "disagree"})
-    assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")
+    assert (late.status_code, late.json()["code"]) == (409, "change-reason-needed")
+    cleared = api(r.people["owner"]).delete(f"{decide}/T2")
+    assert (cleared.status_code, cleared.json()["code"]) == (409, "task-signed-off")
     actions = owner(
         database, f"SELECT action FROM audit_events WHERE target_id = '{r.task}' ORDER BY seq"
     )
@@ -231,7 +233,7 @@ def test_leaving_open_counts_as_settled_for_sign_off_and_can_be_undone(
     signed = api(r.people["owner"]).post(f"{task}/sign-off")
     assert (signed.status_code, signed.json()["left_open"]) == (200, 1)
     late = api(r.people["owner"]).put(f"{decide}/T2/left-open", json={})
-    assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")
+    assert (late.status_code, late.json()["code"]) == (409, "change-reason-needed")
     actions = owner(
         database, f"SELECT action FROM audit_events WHERE target_id = '{r.task}' ORDER BY seq"
     )
