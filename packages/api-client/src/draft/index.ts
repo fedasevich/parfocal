@@ -262,3 +262,4 @@ export * from "./project.ts";
 export * from "./report-layout.ts";
 export * from "./set-my-shortcuts.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";
+export * from "./type-outlines.ts";

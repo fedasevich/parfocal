@@ -4,6 +4,7 @@ import {
   type Geometry,
   type GroupId,
   InvalidShapeError,
+  type OutlineTyping,
   type Provenance,
   type ReviewState,
   type RunId,
@@ -215,6 +216,18 @@ export function updateShape(doc: AnnotationDocument, id: ShapeId, patch: ShapePa
     reviewState: patch.reviewState ?? current.reviewState,
     provenance,
   };
+  return { document: withShape(doc, shape), shape };
+}
+
+export function typeShape(
+  doc: AnnotationDocument,
+  id: ShapeId,
+  typing: OutlineTyping,
+  classKey: string | null,
+): ShapeChange {
+  const current = requireShape(doc, id);
+  if (current.provenance.kind !== "model") return { document: doc, shape: current };
+  const shape: Shape = { ...current, classKey, provenance: { ...current.provenance, typing } };
   return { document: withShape(doc, shape), shape };
 }
 

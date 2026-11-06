@@ -32,7 +32,18 @@ export type Provenance =
       readonly piece: number;
       readonly confidence: number | null;
       readonly edited: boolean;
+      readonly typing?: OutlineTyping;
     };
+
+export interface OutlineTyping {
+  readonly typer: string;
+  readonly version: string;
+  readonly probabilities: Readonly<Record<string, number>>;
+  readonly type: string;
+  readonly alternatives: readonly string[];
+  readonly foreground: number;
+  readonly mayNotBeNucleus: boolean;
+}
 
 export interface Geometry {
   readonly points: Float32Array;

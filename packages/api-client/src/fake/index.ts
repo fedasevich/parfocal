@@ -162,7 +162,13 @@ export {
   setFakeAiStreaming,
   setFakeViewerScene,
 } from "./viewer-scene.ts";
-export { toAnnotationLayers, toModelTiers } from "./viewer-tools-handlers.ts";
+export {
+  fakeTypedOutline,
+  fakeTyper,
+  toAnnotationLayers,
+  toModelTiers,
+  toOutlineTypes,
+} from "./viewer-tools-handlers.ts";
 export {
   bulkSlideRows,
   searchScenario,
