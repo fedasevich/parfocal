@@ -40,6 +40,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           "overlay-worker": fileURLToPath(new URL("./page/overlay-worker.html", import.meta.url)),
           "overlay-holes": fileURLToPath(new URL("./page/overlay-holes.html", import.meta.url)),
           lifecycle: fileURLToPath(new URL("./page/lifecycle.html", import.meta.url)),
+          "nuclei-paging": fileURLToPath(new URL("./page/nuclei-paging.html", import.meta.url)),
           "same-origin": fileURLToPath(new URL("./page/same-origin.html", import.meta.url)),
           "trace-recorder": fileURLToPath(new URL("./page/trace-recorder.html", import.meta.url)),
         },
