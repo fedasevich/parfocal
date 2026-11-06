@@ -48,3 +48,9 @@ def test_quantised_encoders_stay_close_to_pytorch(report, graph: str) -> None:
     encoder = next(encoder for encoder in report.encoders if encoder.graph == graph)
     assert encoder.passed
     assert encoder.mean_iou >= QUANTISED_MIN_IOU
+
+
+@pytest.mark.parametrize("graph", [GRAPHS.ais_decoder_uint8, GRAPHS.ais_decoder_int8_weights])
+def test_quantised_ais_decoders_keep_the_foreground(report, graph: str) -> None:
+    ais = next(ais for ais in report.quantised_ais if ais.graph == graph)
+    assert ais.passed, ais.summary()

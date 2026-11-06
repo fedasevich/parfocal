@@ -519,6 +519,15 @@ export {
 } from "./patch/worker-client.ts";
 export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
+export {
+  graphRunsOn,
+  type SamGraph,
+  type SamProvider,
+  type SamVariant,
+  samGraphs,
+  samProvider,
+  samVariant,
+} from "./sam/variants.ts";
 export type {
   CoverageGrid,
   CoverageRaster,

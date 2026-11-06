@@ -20,6 +20,7 @@ from segment_anything import SamPredictor
 from parfocal_ml.datasets import Sample, samples
 from parfocal_ml.sam_contract import (
     AIS_MAX_ABS,
+    AIS_QUANTISED_MIN_IOU,
     FP32_MIN_IOU,
     FP32_NOISE_LOGIT,
     GRAPHS,
@@ -62,6 +63,27 @@ class EncoderReport:
 
 
 @dataclass
+class AisReport:
+    graph: str
+    max_abs: float = 0.0
+    foreground_ious: list[float] = field(default_factory=list[float])
+    decode_ms: list[float] = field(default_factory=list[float])
+
+    @property
+    def passed(self) -> bool:
+        return float(np.mean(self.foreground_ious)) >= AIS_QUANTISED_MIN_IOU
+
+    def summary(self) -> dict[str, object]:
+        return {
+            "graph": self.graph,
+            "max_abs": float(f"{self.max_abs:.3g}"),
+            "min_foreground_iou": round(min(self.foreground_ious), 4),
+            "mean_foreground_iou": round(float(np.mean(self.foreground_ious)), 4),
+            "decode_ms": round(float(np.median(self.decode_ms))),
+        }
+
+
+@dataclass
 class Report:
     patches: int
     clicks: int
@@ -72,6 +94,7 @@ class Report:
     batch_score_max_abs: float
     ais_max_abs: float
     ais_foreground_iou: list[float]
+    quantised_ais: list[AisReport]
     versions: dict[str, str]
 
     @property
@@ -80,6 +103,7 @@ class Report:
             all(encoder.passed for encoder in self.encoders)
             and min(self.batch_ious) >= FP32_MIN_IOU
             and self.ais_max_abs < AIS_MAX_ABS
+            and all(report.passed for report in self.quantised_ais)
         )
 
     def summary(self) -> dict[str, object]:
@@ -106,6 +130,7 @@ class Report:
             "batch_score_max_abs": float(f"{self.batch_score_max_abs:.3g}"),
             "ais_max_abs": float(f"{self.ais_max_abs:.3g}"),
             "ais_min_foreground_iou": round(min(self.ais_foreground_iou), 4),
+            "quantised_ais": [report.summary() for report in self.quantised_ais],
             "versions": self.versions,
             "passed": self.passed,
         }
@@ -253,6 +278,19 @@ def check_encoder(
     gc.collect()
 
 
+def check_ais(report: AisReport, references: list[Reference], folder: Path) -> AisReport:
+    graph = session(folder, report.graph)
+    for reference in references:
+        expected = reference.maps
+        assert expected is not None
+        got, elapsed = timed(partial(graph.run, None, {"image_embeddings": reference.embeddings}))
+        report.decode_ms.append(elapsed)
+        report.max_abs = max(report.max_abs, float(np.abs(expected - got[0]).max()))
+        report.foreground_ious.append(iou(expected[0, 0] > 0.5, got[0][0, 0] > 0.5))
+    del graph
+    return report
+
+
 def verify(patches: list[Sample], clicks_per_patch: int, folder: Path | None = None) -> Report:
     folder = folder or onnx_dir()
     torch_encode_ms: list[float] = []
@@ -299,6 +337,10 @@ def verify(patches: list[Sample], clicks_per_patch: int, folder: Path | None = N
         ais_max_abs = max(ais_max_abs, float(np.abs(expected - got).max()))
         ais_foreground_iou.append(iou(expected[0, 0] > 0.5, got[0, 0] > 0.5))
     del ais
+    quantised_ais = [
+        check_ais(AisReport(graph), references, folder)
+        for graph in (GRAPHS.ais_decoder_uint8, GRAPHS.ais_decoder_int8_weights)
+    ]
     gc.collect()
 
     return Report(
@@ -311,6 +353,7 @@ def verify(patches: list[Sample], clicks_per_patch: int, folder: Path | None = N
         batch_score_max_abs=batch_score_max_abs,
         ais_max_abs=ais_max_abs,
         ais_foreground_iou=ais_foreground_iou,
+        quantised_ais=quantised_ais,
         versions={
             "torch": torch.__version__,
             "onnxruntime": ort.__version__,

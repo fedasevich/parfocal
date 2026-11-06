@@ -19,6 +19,7 @@ FP32_MIN_IOU = 1.0
 FP32_NOISE_LOGIT = 1e-3
 AIS_MAX_ABS = 1e-3
 QUANTISED_MIN_IOU = 0.96
+AIS_QUANTISED_MIN_IOU = 0.96
 CHUNK = 1 << 20
 
 
@@ -50,6 +51,8 @@ class Graphs:
     batch_decoder: str = "pathosam.decoder_batch.onnx"
     ais_decoder: str = "pathosam.ais_decoder.onnx"
     ais_decoder_full: str = "pathosam.ais_decoder_full.onnx"
+    ais_decoder_uint8: str = "pathosam.ais_decoder_uint8.onnx"
+    ais_decoder_int8_weights: str = "pathosam.ais_decoder_int8_weights.onnx"
 
 
 GRAPHS = Graphs()
