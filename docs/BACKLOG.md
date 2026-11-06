@@ -4695,7 +4695,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-004, HOME-002. Refs mock: home/new.
   Size: S.
 
-- [ ] ONB-007 · Sample slide files
+- [x] ONB-007 · Sample slide files
   The four CAMELYON16 slides of the sample project open in the viewer: their originals sit once in storage, each sample slide row points at them with size and checksum, and the edge serves them under the tile token ([ADR 0139](adr/0139-sample-project-flag-and-soft-delete.md), the sample project).
   Done when an API test shows a seeded sample slide gets a tile token and an E2E test opens one.
   Depends on ONB-005, TILES-001.
