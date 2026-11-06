@@ -1886,7 +1886,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when API tests cover each aggregate with tenant isolation.
   Depends on HOME-000, HOME-011. Refs [ADR 0085](adr/0085-home-aggregate-api.md).
 
-- [ ] HOME-002 · Launchpad home
+- [x] HOME-002 · Launchpad home
   A greeting with the date and what is due, then a large continue card with the slide image, the task, slide n of N, progress and the due date, with Continue and Open in the full viewer. Start something tiles with one line each (Upload, Run a model, New review task, Find an object, New project), the projects as cards with a strip of their slides and review dots, and a side column with the week in numbers, coming up and announcements. A first-week variant leads with the sample project and the getting-started checklist (ONB-006).
   Done when component tests cover each block with seeded data and E2E continues at the exact saved slide and object.
   Refs mock: home, doc 39, [ADR 0053](adr/0053-ai-results-review-direction.md).

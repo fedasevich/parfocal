@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-06
 
+- HOME-002 (launchpad home) found the screen already ported and wired to the API client, moved the Continue targets into a tested module and added a 9-spec browser suite, one per block, with the first-week variant and Continue at the exact slide and object. Mock diff 17.5% on home/launch and 12.9% on home/new.
 - AISEG-015 (browser patch reader in microns) reads 128 µm RGB patches in a worker with an LRU of 8, an absent-region flag and an eighth-edge margin that re-centres the patch, tested on SVS, OME-Zarr and generic TIFF. The NDPI fixture test skips until VIEW-013 (native NDPI reader) registers its reader and then runs unchanged, so the task is ticked now to unblock smart select. One verify run failed on a timing-limited sidecar test under load from parallel agents and passed on rerun.
 - AINUC-005 (chunk paging in the client) added a viewer-engine nuclei reader with an LRU of 4M vertices, view plus 25% margin nearest first, paging above 200k nuclei and edits kept by cell number. 1.6M synthetic nuclei were usable in 110 ms at 75.4 MiB, with a result file, an ADR and two perf budgets.
 - AIP-006 (GPU worker pool) added five Modal pools per model family with tested limits and scale to zero. A staging check on a CPU stand-in saw 1 container at queue depth 1 and 3 at depth 6, the cap. Cloud cost $0.00020497 in Modal staging, app stopped, nothing deployed. The 60 s idle shutdown for batch pools is a TODO guess in the ADR.
