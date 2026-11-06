@@ -9,16 +9,7 @@ import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
-import {
-  cases,
-  checklist,
-  people,
-  projectByCode,
-  reviewTasks,
-  sampleProject,
-  slideByIndex,
-  threads,
-} from "./scenario.ts";
+import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
 import { settingsDraftOperations } from "./settings-handlers.ts";
 import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
@@ -26,7 +17,6 @@ import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 import { viewerDraftOperations } from "./viewer-handlers.ts";
 import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
-import { inScenarioWorkspace } from "./workspace-scene.ts";
 
 export {
   getDecideAdjudicationMockHandler,

@@ -31,7 +31,6 @@ import { signedOf, valuesOfParts } from "./case-report.ts";
 import { ReasonModal, SignModal } from "./modals.tsx";
 import {
   andJoin,
-  type Category,
   type CosignScene,
   categoryOptions,
   depositMm,
