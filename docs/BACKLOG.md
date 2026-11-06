@@ -3142,7 +3142,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs [`poc/server/tools/export_pathosam_onnx.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/export_pathosam_onnx.py), `verify_pathosam.py`, doc 12.
   Size: L.
 
-- [ ] AISEG-002 · Quantised variants per execution provider
+- [x] AISEG-002 · Quantised variants per execution provider
   4-bit MatMulNBits for WebGPU and uint8 for WASM. No fp16, which doc 14 found refused and larger than 4-bit. Never load the uint8 graph on WebGPU, where it ran 43 times slower. Try a quantised AIS decoder (44 MB in fp32).
   Done when the browser test measures encode and decode times per variant and records them.
   Depends on AISEG-001. Refs doc 14.
