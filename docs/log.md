@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-06
 
+- AIP-006 (GPU worker pool) added five Modal pools per model family with tested limits and scale to zero. A staging check on a CPU stand-in saw 1 container at queue depth 1 and 3 at depth 6, the cap. Cloud cost $0.00020497 in Modal staging, app stopped, nothing deployed. The 60 s idle shutdown for batch pools is a TODO guess in the ADR.
 - AIP-009 (resumable whole-slide jobs) added tissue-masked tiling with a halo, centre ownership, tumour-first order and one chunk per tile that resumes from recorded tiles, with a kill-and-resume test giving byte-identical chunks and an ADR for one working chunk per tile. Local only, no cloud runs. The adapter to the real job engine and Postgres is left to AINUC-001 (detector runner).
 - CI repair on PR 7, second pass: browser (web) was down to 2 failed and 1 flaky. outline-modes opens a real slide twice and reloads under the 30 s default test limit, now 90 s like review-popovers. job-window read the Jobs tray while it was still closing after Undo and never reopened it, so it now waits for the closing tray to leave. review-popovers read the Full viewer link from the prototype index a second time, and that link follows the resume slide, which Next slide had just moved to A2. It now reuses the A1 address. The three specs passed 64 of 64 with 2 workers and 4 repeats.
 

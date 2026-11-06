@@ -3045,7 +3045,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on MLEVAL-008.
   Size: M.
 
-- [ ] AIP-006 · GPU worker pool
+- [x] AIP-006 · GPU worker pool
   Modal GPU functions per model family with GPU type, memory caps, concurrency and container limits, scaling to zero when idle ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when tests confirm the limits and that containers scale with queue depth in staging.
   Refs docs 17, 19.
