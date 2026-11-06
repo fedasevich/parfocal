@@ -38,6 +38,7 @@ type ReviewTopProps = {
   primaryTitle?: string | undefined;
   onWholeSlide?: (() => void) | undefined;
   object?: string | undefined;
+  onHowItWorks?: (() => void) | undefined;
 };
 
 export function ReviewTop({
@@ -52,6 +53,7 @@ export function ReviewTop({
   primaryTitle,
   onWholeSlide,
   object,
+  onHowItWorks,
 }: ReviewTopProps) {
   const popovers = useReviewTopPopovers({ mode, session, counts, onWholeSlide });
   const me = okData(useGetMe().data);
@@ -82,7 +84,12 @@ export function ReviewTop({
         onPrimary={onSubmit}
         slidesPopover={popovers.slidesPopover}
         progressPopover={popovers.progressPopover}
-        moreItems={popovers.moreItems}
+        moreItems={
+          popovers.moreItems ??
+          (onHowItWorks
+            ? [{ icon: "help", label: "How guided review works", onSelect: onHowItWorks }]
+            : undefined)
+        }
         backHref={destinations.myWork()}
         renderLink={renderLink}
         onModeChange={(next) => {
