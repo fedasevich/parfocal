@@ -21,6 +21,12 @@ import { okData } from "../placeholder.tsx";
 import { AddClassModal } from "./add-class-modal.tsx";
 import type { NewClass } from "./model.ts";
 import { usePeople } from "./people.ts";
+import {
+  ClinicalMembersZone,
+  IdMatchingZone,
+  ReportTemplateZone,
+  useProjectChange,
+} from "./settings-zones.tsx";
 
 const kindText = { scale: "1 to 5", choice: "choice", yesno: "yes or no", text: "text" } as const;
 
@@ -36,20 +42,21 @@ const studyKindText: Record<string, string> = {
 function ToggleRow({
   title,
   detail,
-  defaultOn,
+  on,
+  onChange,
 }: {
   title: string;
   detail: string;
-  defaultOn: boolean;
+  on: boolean;
+  onChange: (on: boolean) => void;
 }) {
-  const [on, setOn] = useState(defaultOn);
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4 py-1.5">
       <span className="grid gap-0.5">
         <b className="text-body-sm font-semibold text-fg">{title}</b>
         <small className="text-body-sm text-fg-dim">{detail}</small>
       </span>
-      <Switch checked={on} onCheckedChange={setOn} aria-label={title} />
+      <Switch checked={on} onCheckedChange={onChange} aria-label={title} />
     </label>
   );
 }
@@ -90,9 +97,9 @@ export function SettingsTab({
   );
   const form = okData(useGetOpinionForm(project.id).data);
   const imports = useGetProjectImports(project.id).data?.data;
-  const [template, setTemplate] = useState<string | undefined>(undefined);
+  const { value, change } = useProjectChange(project, toast);
   const [extra, setExtra] = useState<NewClass[]>([]);
-  const chosen = template ?? overview?.study_template_id ?? templates[0]?.id ?? "";
+  const chosen = value.study_template_id ?? overview?.study_template_id ?? templates[0]?.id ?? "";
   const clinical = project.privacy_mode === "clinical";
   const taxonomy = project.template === "cell-review" ? "PanNuke" : "Sentinel node";
   const owner = project.members.find((member) => member.role === "owner");
@@ -132,12 +139,14 @@ export function SettingsTab({
             <ToggleRow
               title="Blind review"
               detail="Reviewers see each other only after they submit."
-              defaultOn
+              on={value.blinded}
+              onChange={(blinded) => change({ blinded })}
             />
             <ToggleRow
               title="Hide the AI for a first read"
               detail="Reviewers mark the slide first, then the AI result is shown."
-              defaultOn={false}
+              on={value.ai_hidden_first_read}
+              onChange={(hidden) => change({ ai_hidden_first_read: hidden })}
             />
           </div>
         </Zone>
@@ -145,7 +154,7 @@ export function SettingsTab({
           <RadioGroup
             aria-label="Study template"
             value={chosen}
-            onValueChange={(value) => setTemplate(String(value))}
+            onValueChange={(next) => change({ study_template_id: String(next) })}
           >
             {templates.map((item) => (
               <label
@@ -163,6 +172,7 @@ export function SettingsTab({
             ))}
           </RadioGroup>
         </Zone>
+        {clinical ? <ReportTemplateZone value={value.clinical_template} onChange={change} /> : null}
         <Zone
           title="Automatic imports"
           sub="Slides and results can arrive from a webhook, the API or a watched folder, with the same checks as an upload."
@@ -194,6 +204,11 @@ export function SettingsTab({
             </Button>
           </div>
         </Zone>
+        <IdMatchingZone
+          iou={value.match_iou}
+          distance={value.match_distance_um}
+          onChange={change}
+        />
       </Zones>
       <Zones>
         <Zone
@@ -249,25 +264,29 @@ export function SettingsTab({
             ))}
           </ol>
         </Zone>
-        <Zone
-          title="Members"
-          end={
-            <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-              Invite people
-            </Link>
-          }
-        >
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {project.members.map((member) => (
-              <Person
-                key={member.user_id}
-                person={people.byId(member.user_id)}
-                size={28}
-                sub={member.user_id === owner?.user_id ? "Owner" : "Reviewer"}
-              />
-            ))}
-          </div>
-        </Zone>
+        {clinical ? (
+          <ClinicalMembersZone project={project} toast={toast} />
+        ) : (
+          <Zone
+            title="Members"
+            end={
+              <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
+                Invite people
+              </Link>
+            }
+          >
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {project.members.map((member) => (
+                <Person
+                  key={member.user_id}
+                  person={people.byId(member.user_id)}
+                  size={28}
+                  sub={member.user_id === owner?.user_id ? "Owner" : "Reviewer"}
+                />
+              ))}
+            </div>
+          </Zone>
+        )}
       </Zones>
       <AddClassModal
         open={addClass}

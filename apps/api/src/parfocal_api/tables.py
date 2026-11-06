@@ -735,8 +735,10 @@ projects = Table(
         nullable=True,
         info=OPERATIONAL,
     ),
-    Column("match_iou", Float, nullable=False, server_default="0.5", info=OPERATIONAL),
-    Column("match_distance_um", Float, nullable=False, server_default="4", info=OPERATIONAL),
+    Column("match_iou", Float[float](), nullable=False, server_default="0.5", info=OPERATIONAL),
+    Column(
+        "match_distance_um", Float[float](), nullable=False, server_default="4", info=OPERATIONAL
+    ),
     CheckConstraint("match_iou > 0 AND match_iou <= 1", name="match_iou"),
     CheckConstraint("match_distance_um > 0 AND match_distance_um <= 50", name="match_distance_um"),
     UniqueConstraint("tenant_id", "number"),
