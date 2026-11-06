@@ -1,7 +1,7 @@
-# XXXX. Link imports are fetched by the worker behind an address check
+# 0245. Link imports are fetched by the worker behind an address check
 
 - Date: 2026-11-06
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas, agent
 - Backlog: INGEST-025 (import slides from a link)
 

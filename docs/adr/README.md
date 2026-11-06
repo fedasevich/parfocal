@@ -208,3 +208,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0242](0242-client-chunk-paging-for-large-nuclei-sets.md) | The client keeps the summary whole and pages full chunks under a vertex budget | Accepted | 2026-11-06 |
 | [0243](0243-patch-reader-in-the-viewer-engine.md) | Patch reader in the viewer engine | Accepted | 2026-11-06 |
 | [0244](0244-evaluation-versions-and-changes-after-sign-off.md) | Evaluation versions are stored rows, and owner changes after sign-off need a reason | Accepted | 2026-11-06 |
+| [0245](0245-link-imports-fetched-by-the-worker-behind-an-address-check.md) | Link imports are fetched by the worker behind an address check | Accepted | 2026-11-06 |
