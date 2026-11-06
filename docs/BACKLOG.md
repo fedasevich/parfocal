@@ -2459,7 +2459,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock §2.2.
   Size: M.
 
-- [ ] ANN-003 · Context bar
+- [x] ANN-003 · Context bar
   One floating bar with the active tool's options and Discard and Accept, replacing conditional rows.
   Wire the class swatch strip and `useClassKeys` (apps/web/src/annotations/class-keys.ts, ANN-011) into the Annotate workspace.
   Done when component tests render the context bar for every tool per the mock CTX table.
