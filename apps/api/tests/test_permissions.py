@@ -41,6 +41,10 @@ from parfocal_api.tables import (
     annotations,
     announcements,
     api_tokens,
+    cases,
+    clinical_deposits,
+    clinical_report_versions,
+    clinical_reports,
     display_presets,
     invitations,
     jobs,
@@ -250,6 +254,14 @@ class Call:
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
 NEEDS_A_TASK = frozenset(
     {
+        "createCaseReport",
+        "updateCaseReport",
+        "addCaseReportDeposit",
+        "removeCaseReportDeposit",
+        "sendCaseReportForCosign",
+        "returnCaseReport",
+        "signCaseReport",
+        "amendCaseReport",
         "createAnnotation",
         "createAnnotations",
         "changeAnnotation",
@@ -309,6 +321,130 @@ def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     link_site_serving()
     trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
     monkeypatch.setattr(api.app, "settings", trusted)
+
+
+def seeded(w: Workspace, name: str) -> uuid.UUID:
+    return uuid.uuid5(w.tenant_id, name)
+
+
+def case_report(w: Workspace, name: str | None = None) -> str:
+    case = seeded(w, name) if name else w.case
+    return f"/api/projects/{w.project}/cases/{case}/clinical-report"
+
+
+REPORT_VALUES = {
+    "specimen": "Matrix specimen",
+    "category": "none",
+    "nodes_examined": 1,
+    "extranodal": "na",
+    "diagnosis": "Matrix diagnosis",
+}
+
+
+async def seed_case_reports(
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    case_id: uuid.UUID,
+    lead: uuid.UUID,
+    cosigner: uuid.UUID,
+) -> None:
+    def named(name: str) -> uuid.UUID:
+        return uuid.uuid5(tenant_id, name)
+
+    await connection.execute(
+        update(project_members)
+        .where(project_members.c.project_id == project_id, project_members.c.user_id == lead)
+        .values(sign_out="any")
+    )
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            user_id=cosigner,
+            role="reviewer",
+            sign_out="any",
+        )
+    )
+    states = {"fresh": None, "send": "draft", "sign": "draft", "sent": "sent", "signed": "signed"}
+    await connection.execute(
+        insert(cases),
+        [
+            {
+                "id": named(f"report-{name}"),
+                "tenant_id": tenant_id,
+                "project_id": project_id,
+                "label": f"Matrix report {name}",
+                "source": "manual",
+            }
+            for name in states
+        ],
+    )
+    reports = [(case_id, "draft", None, None, 0)] + [
+        (
+            named(f"report-{name}"),
+            state,
+            lead if state == "sent" else None,
+            cosigner if state == "sent" else None,
+            1 if state == "signed" else 0,
+        )
+        for name, state in states.items()
+        if state
+    ]
+    for report_case, state, cosigner_id, sent_by, version in reports:
+        await connection.execute(
+            insert(clinical_reports).values(
+                id=named(f"clinical-{report_case}"),
+                tenant_id=tenant_id,
+                project_id=project_id,
+                case_id=report_case,
+                template="sentinel-node",
+                template_version=1,
+                state=state,
+                cosigner_user_id=cosigner_id,
+                sent_by_user_id=sent_by,
+                version=version,
+                **REPORT_VALUES,
+            )
+        )
+    await connection.execute(
+        insert(slides).values(
+            id=named("report-slide"),
+            tenant_id=tenant_id,
+            project_id=project_id,
+            case_id=case_id,
+            label="Matrix report slide",
+        )
+    )
+    await connection.execute(
+        insert(clinical_deposits).values(
+            id=named("report-deposit"),
+            tenant_id=tenant_id,
+            report_id=named(f"clinical-{case_id}"),
+            slide_id=named("report-slide"),
+            size_mm=0.1,
+        )
+    )
+    staging = {
+        "largest_mm": None,
+        "suggested_category": "none",
+        "suggested_pn": "pN0(sn)",
+        "nodes_positive": 0,
+        "contradicts": False,
+        "confirmed": True,
+    }
+    await connection.execute(
+        insert(clinical_report_versions).values(
+            tenant_id=tenant_id,
+            report_id=named(f"clinical-{named('report-signed')}"),
+            number=1,
+            content={
+                "values": {**REPORT_VALUES, "microscopic": None, "comment": None, "deposits": []},
+                "staging": staging,
+            },
+            signed_by_user_id=lead,
+        )
+    )
 
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
@@ -471,6 +607,32 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", f"/api/projects/{w.project}/members/{w.colleague}/sign-out", {"sign_out": "never"}
     ),
     "getCase": lambda w: Call("GET", f"/api/cases/{w.case}"),
+    "createCaseReport": lambda w: Call("POST", case_report(w, "report-fresh")),
+    "getCaseReport": lambda w: Call("GET", case_report(w)),
+    "getCaseReportVersion": lambda w: Call("GET", f"{case_report(w, 'report-signed')}/versions/1"),
+    "updateCaseReport": lambda w: Call("PATCH", case_report(w), {"comment": "Matrix"}),
+    "addCaseReportDeposit": lambda w: Call(
+        "POST",
+        f"{case_report(w)}/deposits",
+        {"slide_id": str(seeded(w, "report-slide")), "size_mm": 1.0},
+    ),
+    "removeCaseReportDeposit": lambda w: Call(
+        "DELETE", f"{case_report(w)}/deposits/{seeded(w, 'report-deposit')}"
+    ),
+    "sendCaseReportForCosign": lambda w: Call(
+        "POST",
+        f"{case_report(w, 'report-send')}/send",
+        {"cosigner_user_id": str(w.deputy)},
+    ),
+    "returnCaseReport": lambda w: Call(
+        "POST", f"{case_report(w, 'report-sent')}/return", {"note": "Matrix return note"}
+    ),
+    "signCaseReport": lambda w: Call("POST", f"{case_report(w, 'report-sign')}/sign"),
+    "amendCaseReport": lambda w: Call(
+        "POST",
+        f"{case_report(w, 'report-signed')}/amendments",
+        {"reason": "Matrix amendment", "change": {"comment": "Matrix"}},
+    ),
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
@@ -1618,6 +1780,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         (adjudicator, "viewer"),
                     )
                 ],
+            )
+            await seed_case_reports(
+                connection, tenant_id, case.project_id, case.case_id, people[lead], deputy
             )
             queued_run, paused_run, failed_run = await seed_runs(
                 connection, tenant_id, case.project_id, case.loose_slide_id

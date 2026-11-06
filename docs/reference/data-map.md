@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 35 |
-| `personal` | 79 |
+| `phi` | 43 |
+| `personal` | 84 |
 | `secret` | 10 |
-| `operational` | 639 |
+| `operational` | 667 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -188,6 +188,61 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `project_id` | operational |
 | `source_name` | operational |
 | `class_id` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## clinical_deposits
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `report_id` | operational |
+| `slide_id` | operational |
+| `object_id` | operational |
+| `size_mm` | operational |
+| `note` | phi |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## clinical_report_versions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `report_id` | operational |
+| `number` | operational |
+| `content` | phi |
+| `reason` | phi |
+| `signed_by_user_id` | personal |
+| `reported_by_user_id` | personal |
+| `signed_at` | operational |
+
+## clinical_reports
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `case_id` | operational |
+| `template` | operational |
+| `template_version` | operational |
+| `state` | operational |
+| `specimen` | phi |
+| `category` | operational |
+| `confirmed_against` | operational |
+| `nodes_examined` | operational |
+| `extranodal` | operational |
+| `diagnosis` | phi |
+| `microscopic` | phi |
+| `comment` | phi |
+| `cosigner_user_id` | personal |
+| `sent_by_user_id` | personal |
+| `return_note` | phi |
+| `version` | operational |
+| `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -582,6 +637,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `archived_at` | operational |
 | `created_by_user_id` | personal |
 | `sample` | operational |
+| `clinical_template` | operational |
 
 ## rate_counters
 

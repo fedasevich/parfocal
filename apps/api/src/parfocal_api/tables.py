@@ -570,6 +570,11 @@ class PrivacyMode(StrEnum):
     CLINICAL = "clinical"
 
 
+class ClinicalTemplate(StrEnum):
+    SENTINEL_NODE = "sentinel-node"
+    LYMPH_NODE_EXCISION = "lymph-node-excision"
+
+
 class AnalysisTemplate(StrEnum):
     NONE = "none"
     SENTINEL_NODE = "sentinel-node"
@@ -708,6 +713,13 @@ projects = Table(
         info=PERSONAL,
     ),
     Column("sample", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    Column(
+        "clinical_template",
+        String(30),
+        nullable=False,
+        server_default=ClinicalTemplate.SENTINEL_NODE.value,
+        info=OPERATIONAL,
+    ),
     UniqueConstraint("tenant_id", "number"),
     UniqueConstraint("id", "tenant_id"),
     UniqueConstraint("id", "privacy_mode"),
@@ -721,6 +733,7 @@ projects = Table(
     CheckConstraint("colour BETWEEN 0 AND 11", name="colour"),
     one_of("privacy_mode", PrivacyMode),
     one_of("template", AnalysisTemplate),
+    one_of("clinical_template", ClinicalTemplate),
 )
 
 project_members = Table(
@@ -2662,4 +2675,113 @@ evaluation_changes = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
+)
+
+
+class CaseReportState(StrEnum):
+    DRAFT = "draft"
+    SENT = "sent"
+    RETURNED = "returned"
+    SIGNED = "signed"
+    AMENDED = "amended"
+
+
+class NodeCategory(StrEnum):
+    NONE = "none"
+    ITC = "itc"
+    MICRO = "micro"
+    MACRO = "macro"
+
+
+class Extranodal(StrEnum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    NOT_APPLICABLE = "na"
+
+
+clinical_reports = Table(
+    "clinical_reports",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("case_id", Uuid[uuid.UUID](), nullable=False, unique=True, info=OPERATIONAL),
+    Column("template", String(30), nullable=False, info=OPERATIONAL),
+    Column("template_version", SmallInteger, nullable=False, info=OPERATIONAL),
+    Column("state", String(10), nullable=False, info=OPERATIONAL),
+    Column("specimen", String(200), nullable=True, info=PHI),
+    Column("category", String(10), nullable=True, info=OPERATIONAL),
+    Column("confirmed_against", String(10), nullable=True, info=OPERATIONAL),
+    Column("nodes_examined", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column("extranodal", String(10), nullable=True, info=OPERATIONAL),
+    Column("diagnosis", String(2000), nullable=True, info=PHI),
+    Column("microscopic", String(5000), nullable=True, info=PHI),
+    Column("comment", String(2000), nullable=True, info=PHI),
+    person_column("cosigner_user_id"),
+    person_column("sent_by_user_id"),
+    Column("return_note", String(300), nullable=True, info=PHI),
+    Column("version", Integer, nullable=False, server_default="0", info=OPERATIONAL),
+    person_column("created_by_user_id"),
+    *timestamps(),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
+    one_of("template", ClinicalTemplate),
+    one_of("state", CaseReportState),
+    one_of("category", NodeCategory),
+    one_of("confirmed_against", NodeCategory),
+    one_of("extranodal", Extranodal),
+    CheckConstraint("template_version >= 1", name="template_version"),
+    CheckConstraint("nodes_examined IS NULL OR nodes_examined >= 0", name="nodes_examined"),
+    CheckConstraint("version >= 0", name="version"),
+)
+
+clinical_deposits = Table(
+    "clinical_deposits",
+    metadata,
+    *owned_ids(),
+    Column(
+        "report_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("clinical_reports.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "slide_id", Uuid[uuid.UUID](), ForeignKey("slides.id"), nullable=False, info=OPERATIONAL
+    ),
+    Column("object_id", String(40), nullable=True, info=OPERATIONAL),
+    Column("size_mm", Float[float](), nullable=True, info=OPERATIONAL),
+    Column("note", String(300), nullable=True, info=PHI),
+    *timestamps(),
+    CheckConstraint("size_mm IS NULL OR size_mm > 0", name="size_mm"),
+    CheckConstraint("object_id IS NOT NULL OR size_mm IS NOT NULL", name="source"),
+)
+
+clinical_report_versions = Table(
+    "clinical_report_versions",
+    metadata,
+    *owned_ids(),
+    Column(
+        "report_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("clinical_reports.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column("content", JSONB(none_as_null=True), nullable=False, info=PHI),
+    Column("reason", String(300), nullable=True, info=PHI),
+    person_column("signed_by_user_id"),
+    person_column("reported_by_user_id"),
+    Column(
+        "signed_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    UniqueConstraint("report_id", "number"),
+    CheckConstraint("number >= 1", name="number"),
+    CheckConstraint("(number = 1) = (reason IS NULL)", name="reason"),
 )
