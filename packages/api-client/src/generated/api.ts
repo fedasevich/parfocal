@@ -419,6 +419,7 @@ export interface AnnotationVersion {
   class_id: string | null;
   changed_by_user_id: string | null;
   changed_at: string;
+  file_name?: string | null;
 }
 
 export type AnnouncementKind = (typeof AnnouncementKind)[keyof typeof AnnouncementKind];
@@ -2297,6 +2298,17 @@ export const Layer = {
   reviewed: "reviewed",
 } as const;
 
+export type LayerImportContent = { [key: string]: unknown } | unknown[];
+
+export interface LayerImport {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  file_name: string;
+  content: LayerImportContent;
+}
+
 export type LayerObjectGeometry = { [key: string]: unknown };
 
 export interface LayerObject {
@@ -2315,6 +2327,18 @@ export interface LayerObject {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+export interface SkippedFeature {
+  index: number;
+  reason: string;
+}
+
+export interface LayerImportResult {
+  file_name: string;
+  objects: LayerObject[];
+  skipped: SkippedFeature[];
+  unknown_classes: string[];
 }
 
 export interface LayerSummary {
@@ -4913,6 +4937,10 @@ export type DeleteSharedObjectParams = {
    * @minimum 1
    */
   version: number;
+  reason?: string | null;
+};
+
+export type ImportSharedObjectsParams = {
   reason?: string | null;
 };
 
@@ -25742,6 +25770,201 @@ export function useListSharedObjectHistory<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type importSharedObjectsResponse201 = {
+  data: LayerImportResult;
+  status: 201;
+};
+
+export type importSharedObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type importSharedObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type importSharedObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type importSharedObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type importSharedObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type importSharedObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type importSharedObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type importSharedObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type importSharedObjectsResponseSuccess = importSharedObjectsResponse201 & {
+  headers: Headers;
+};
+export type importSharedObjectsResponseError = (
+  | importSharedObjectsResponse400
+  | importSharedObjectsResponse401
+  | importSharedObjectsResponse403
+  | importSharedObjectsResponse404
+  | importSharedObjectsResponse409
+  | importSharedObjectsResponse422
+  | importSharedObjectsResponse429
+  | importSharedObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type importSharedObjectsResponse =
+  | importSharedObjectsResponseSuccess
+  | importSharedObjectsResponseError;
+
+export const getImportSharedObjectsUrl = (
+  taskId: string,
+  slideId: string,
+  params?: ImportSharedObjectsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/imports?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/imports`;
+};
+
+/**
+ * @summary Import Shared Objects
+ */
+export const importSharedObjects = async (
+  taskId: string,
+  slideId: string,
+  layerImport: LayerImport,
+  params?: ImportSharedObjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<importSharedObjectsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<importSharedObjectsResponse>(getImportSharedObjectsUrl(taskId, slideId, params), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(layerImport),
+  });
+};
+
+export const getImportSharedObjectsMutationKey = () => ["importSharedObjects"] as const;
+
+export const getImportSharedObjectsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importSharedObjects>>,
+    TError,
+    ImportSharedObjectsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importSharedObjects>>,
+  TError,
+  ImportSharedObjectsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportSharedObjectsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importSharedObjects>>,
+    ImportSharedObjectsMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data, params } = props ?? {};
+
+    return importSharedObjects(taskId, slideId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportSharedObjectsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importSharedObjects>>
+>;
+export type ImportSharedObjectsMutationBody = LayerImport;
+export type ImportSharedObjectsMutationError = Problem;
+export type ImportSharedObjectsMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: LayerImport;
+  params?: ImportSharedObjectsParams;
+};
+
+/**
+ * @summary Import Shared Objects
+ */
+export const useImportSharedObjects = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importSharedObjects>>,
+      TError,
+      ImportSharedObjectsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importSharedObjects>>,
+  TError,
+  ImportSharedObjectsMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportSharedObjectsMutationOptions(options), queryClient);
+};
 
 export type getAnnotateSlideStatusResponse200 = {
   data: AnnotateSlideStatus;

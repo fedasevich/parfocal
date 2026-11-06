@@ -57,6 +57,7 @@ import type {
   IssuedToken,
   Job,
   LabSettings,
+  LayerImportResult,
   LayerObject,
   LegalHold,
   LineStringGeometry,
@@ -3533,6 +3534,10 @@ export const getListAnnotationHistoryResponseMock = (): AnnotationVersion[] =>
     class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    file_name: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
   }));
 
 export const getCreateResultSetResponseMock = (
@@ -5133,7 +5138,53 @@ export const getListSharedObjectHistoryResponseMock = (): AnnotationVersion[] =>
     class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    file_name: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
   }));
+
+export const getImportSharedObjectsResponseMock = (
+  overrideResponse: Partial<Extract<LayerImportResult, object>> = {},
+): LayerImportResult => ({
+  file_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+      number: faker.number.int(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+      source: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      geometry: {},
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      version: faker.number.int(),
+      created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      deleted_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
+  skipped: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      index: faker.number.int(),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  unknown_classes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+  ...overrideResponse,
+});
 
 export const getGetAnnotateSlideStatusResponseMock = (
   overrideResponse: Partial<Extract<AnnotateSlideStatus, object>> = {},
@@ -14028,6 +14079,30 @@ export const getListSharedObjectHistoryMockHandler = (
   );
 };
 
+export const getImportSharedObjectsMockHandler = (
+  overrideResponse?:
+    | LayerImportResult
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LayerImportResult> | LayerImportResult),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/imports",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getImportSharedObjectsResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetAnnotateSlideStatusMockHandler = (
   overrideResponse?:
     | AnnotateSlideStatus
@@ -17414,6 +17489,7 @@ export const getParfocalAPIMock = () => [
   getChangeSharedObjectMockHandler(),
   getDeleteSharedObjectMockHandler(),
   getListSharedObjectHistoryMockHandler(),
+  getImportSharedObjectsMockHandler(),
   getGetAnnotateSlideStatusMockHandler(),
   getCheckAnnotateSlideMockHandler(),
   getUncheckAnnotateSlideMockHandler(),

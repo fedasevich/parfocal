@@ -286,6 +286,7 @@ NEEDS_A_TASK = frozenset(
         "reopenThread",
         "deleteThread",
         "createSharedObject",
+        "importSharedObjects",
         "changeAiObject",
         "addRunToTaskSlide",
         "changeSharedObject",
@@ -697,6 +698,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "createSharedObject": lambda w: Call(
         "POST", f"{w.shared_layer}/objects", {"kind": "region", "geometry": SQUARE}
+    ),
+    "importSharedObjects": lambda w: Call(
+        "POST",
+        f"{w.shared_layer}/imports",
+        {"file_name": "case.geojson", "content": {"type": "Feature", "geometry": SQUARE}},
     ),
     "changeAiObject": lambda w: Call("PUT", f"{w.shared_layer}/ai/T1", {"deleted": True}),
     "addRunToTaskSlide": lambda w: Call(

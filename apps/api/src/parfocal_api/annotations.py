@@ -168,6 +168,7 @@ class AnnotationVersion(BaseModel):
     class_id: uuid.UUID | None
     changed_by_user_id: uuid.UUID | None
     changed_at: datetime
+    file_name: str | None = None
 
 
 class AnnotatingNotAllowedError(ForbiddenError):

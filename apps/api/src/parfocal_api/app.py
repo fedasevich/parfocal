@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from parfocal_api import (
     adjudications,
+    annotate_import,
     annotate_layer,
     annotate_sign_off,
     annotation_exports,
@@ -207,6 +208,7 @@ def create_app(
     app.include_router(task_changes.router)
     app.include_router(reviewed_layer.router)
     app.include_router(annotate_layer.router)
+    app.include_router(annotate_import.router)
     app.include_router(annotate_sign_off.router)
     app.include_router(task_runs.router)
     app.include_router(review_order.router)

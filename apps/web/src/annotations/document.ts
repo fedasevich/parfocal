@@ -165,6 +165,31 @@ export function addShape(doc: AnnotationDocument, input: NewShape): ShapeChange 
   };
 }
 
+export function addRestoredShape(
+  doc: AnnotationDocument,
+  input: NewShape,
+  provenance: Provenance,
+  threadIds: readonly string[],
+): ShapeChange {
+  requireGroup(doc, input.groupId ?? null);
+  const shape = buildShape(doc.nextShapeId, input, provenance, threadIds);
+  return {
+    document: { ...withShape(doc, shape), nextShapeId: shape.id + 1 },
+    shape,
+  };
+}
+
+export function placePin(
+  doc: AnnotationDocument,
+  threadId: string,
+  pin: PinPlacement,
+): AnnotationDocument {
+  if (pin.shapeId !== null) requireShape(doc, pin.shapeId);
+  const pins = new Map(doc.pins);
+  pins.set(threadId, pin);
+  return { ...doc, pins };
+}
+
 export function updateShape(doc: AnnotationDocument, id: ShapeId, patch: ShapePatch): ShapeChange {
   const current = requireShape(doc, id);
   if (patch.groupId !== undefined) requireGroup(doc, patch.groupId);
