@@ -102,6 +102,28 @@ export function SmartLayer({
   const session = useRef<Promise<SmartSession> | null>(null);
   const built = useRef(false);
 
+  const shown = useRef<SmartSnapshot>(idle);
+  const syncRun = useCallback((next: SmartSnapshot, classKey: string | null) => {
+    const pieces = next.kept.length + (next.live?.ring ? 1 : 0);
+    if (pieces === 0 && runId.current === null) return;
+    const current = latest.current;
+    if (runId.current === null) runId.current = nextRunId(current.doc);
+    built.current = pieces > 0;
+    const changed = withSmartRun(current.doc, runId.current, classKey, next);
+    if (pieces === 0) runId.current = null;
+    if (changed === current.doc) return;
+    current.doc = changed;
+    current.onDocumentChange(changed);
+  }, []);
+  const show = useCallback(
+    (next: SmartSnapshot) => {
+      shown.current = next;
+      setSnapshot(next);
+      syncRun(next, latest.current.activeClass);
+    },
+    [syncRun],
+  );
+
   const sessionPromise = useCallback((): Promise<SmartSession> => {
     if (session.current === null) {
       const slide = latest.current.engine.getSlide();
@@ -115,12 +137,12 @@ export function SmartLayer({
           slideId,
           reader: loaded.reader,
           sam: loaded.sam,
-          onChange: setSnapshot,
+          onChange: show,
           onHover: setHoverRing,
         }),
       );
       session.current.catch((error: unknown) =>
-        setSnapshot({
+        show({
           ...idle,
           phase: "failed",
           message: error instanceof Error ? error.message : "Smart select could not start",
@@ -128,7 +150,7 @@ export function SmartLayer({
       );
     }
     return session.current;
-  }, [slideId]);
+  }, [slideId, show]);
 
   useEffect(
     () => () => {
@@ -143,15 +165,8 @@ export function SmartLayer({
   );
 
   useEffect(() => {
-    const pieces = snapshot.kept.length + (snapshot.live?.ring ? 1 : 0);
-    if (pieces === 0 && runId.current === null) return;
-    const current = latest.current;
-    if (runId.current === null) runId.current = nextRunId(current.doc);
-    built.current = pieces > 0;
-    const next = withSmartRun(current.doc, runId.current, activeClass, snapshot);
-    if (pieces === 0) runId.current = null;
-    if (next !== current.doc) current.onDocumentChange(next);
-  }, [snapshot, activeClass]);
+    syncRun(shown.current, activeClass);
+  }, [activeClass, syncRun]);
 
   useEffect(() => {
     const id = runId.current;

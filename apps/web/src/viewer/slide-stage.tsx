@@ -336,14 +336,20 @@ function OpenedSlide({
     discard: discardProposals,
   } = proposals;
   const proposalCount = pendingProposals.length;
+  const proposalNow = useRef({ proposalCount, acceptProposals, discardProposals });
+  proposalNow.current = { proposalCount, acceptProposals, discardProposals };
   useEffect(
-    () => escRegistry.add("run", { open: () => proposalCount > 0, peel: discardProposals }),
-    [escRegistry, proposalCount, discardProposals],
+    () =>
+      escRegistry.add("run", {
+        open: () => proposalNow.current.proposalCount > 0,
+        peel: () => proposalNow.current.discardProposals(),
+      }),
+    [escRegistry],
   );
   useEffect(() => {
-    if (proposalCount === 0) return;
     const onEnter = (event: KeyboardEvent) => {
       if (event.key !== "Enter" || event.defaultPrevented) return;
+      if (proposalNow.current.proposalCount === 0) return;
       const target = event.target;
       if (
         target instanceof HTMLElement &&
@@ -352,11 +358,11 @@ function OpenedSlide({
         return;
       if ((draftControl.current?.depth() ?? 0) > 0) return;
       event.preventDefault();
-      acceptProposals();
+      proposalNow.current.acceptProposals();
     };
     window.addEventListener("keydown", onEnter);
     return () => window.removeEventListener("keydown", onEnter);
-  }, [proposalCount, acceptProposals]);
+  }, []);
   const closeShape = useCallback(
     (points: Float32Array) => saved.savePolygon(points, activeClass),
     [saved.savePolygon, activeClass],
