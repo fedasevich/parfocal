@@ -32,6 +32,7 @@ import { useSlideProgress } from "../slide-progress.ts";
 import { coverTile, lookUrl } from "../thumbnails.ts";
 import { Announcements } from "./announcements.tsx";
 import { DotRow, SideCard } from "./cards.tsx";
+import { continueTo, openInFullViewer } from "./continue-to.ts";
 import {
   type HomeBlock,
   homeBlocks,
@@ -46,19 +47,6 @@ const Section = ({ children }: { children: ReactNode }) => (
 
 const shortName = (task: { task_name?: string; name?: string }) =>
   (task.task_name ?? task.name ?? "").split(" · ")[0] ?? "";
-
-export function continueTo(resume: ResumeTarget) {
-  const object = resume.object_id ?? undefined;
-  if (resume.mode === "viewer")
-    return destinations.slide(
-      resume.project.id,
-      resume.slide_id,
-      resume.task_id,
-      object,
-      resume.camera ?? {},
-    );
-  return destinations.guided(resume.task_id, resume.slide_id, object, resume.camera ?? null);
-}
 
 function ResumeHero({ resume }: { resume: ResumeTarget }) {
   const goTo = useGoTo();
@@ -101,18 +89,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           <Button variant="primary" onClick={() => void goTo(continueHref)}>
             Continue <Keycap keys="↵" />
           </Button>
-          <Button
-            onClick={() =>
-              void goTo(
-                destinations.slide(
-                  resume.project.id,
-                  resume.slide_id,
-                  resume.task_id,
-                  resume.object_id ?? undefined,
-                ),
-              )
-            }
-          >
+          <Button onClick={() => void goTo(openInFullViewer(resume))}>
             Open in the full viewer
           </Button>
         </div>
