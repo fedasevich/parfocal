@@ -3220,7 +3220,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ---
 
-- [ ] AISEG-015 · Browser patch reader in microns
+- [x] AISEG-015 · Browser patch reader in microns
   Read RGB patches in a worker at the level nearest the preset's microns per pixel, 128 µm wide, with an LRU cache, sparse-region awareness and an edge margin of an eighth of the patch.
   Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures, a repeat read hits the cache, and a click near the edge moves the patch.
   Depends on AISEG-012. Refs docs 10, 11, 14, 15.
