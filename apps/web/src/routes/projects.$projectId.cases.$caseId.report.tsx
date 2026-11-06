@@ -9,7 +9,7 @@ const clinicalReportSearch = z.object({
   modal: z.enum(["deposit", "sign", "amend"]).optional(),
 });
 
-export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/report")({
+export const Route = createFileRoute("/projects/$projectId/cases/$caseId/report")({
   validateSearch: clinicalReportSearch,
   component: ClinicalReport,
 });
@@ -21,8 +21,8 @@ function ClinicalReport() {
   return (
     <ReportScreen
       projectId={params.projectId}
-      slideId={params.slideId}
-      scene={search.scene ?? "findings"}
+      caseId={params.caseId}
+      scene={search.scene}
       step={search.step}
       modal={search.modal}
       keep={search.scene === undefined}

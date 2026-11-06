@@ -57,7 +57,7 @@ test("a box opens its screen in its scene as the lane's persona, and Back to the
     {
       box: "crcosign",
       heading: "Clinical report",
-      url: /\/slides\/[0-9a-f-]+\/report\?scene=cosign&as=TB$/,
+      url: /\/cases\/[0-9a-f-]+\/report\?scene=cosign&as=TB$/,
       persona: "Tomáš Beneš",
     },
   ];

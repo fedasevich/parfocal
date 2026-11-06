@@ -72,7 +72,7 @@ const screens: { name: string; path: string; ready: (page: Page) => Promise<void
   },
   {
     name: "clinical report deposits",
-    path: `/projects/${p03}/slides/${a1}/report?scene=deposits`,
+    path: `/projects/${p03}/cases/00000000-0000-4000-8004-000000000006/report?scene=deposits`,
     ready: (page) => expect(page.locator("[data-deposit]").first()).toBeVisible(),
   },
   {

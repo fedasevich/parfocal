@@ -9,6 +9,7 @@ export type ScenarioIds = {
   task: string;
   slide: string;
   clinicalSlide: string;
+  clinicalCase: string;
 };
 
 export type TargetOptions = {
@@ -120,8 +121,8 @@ export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetO
       });
     case "creport":
       return linkOptions({
-        to: "/projects/$projectId/slides/$slideId/report",
-        params: clinicalSlide,
+        to: "/projects/$projectId/cases/$caseId/report",
+        params: { projectId: ids.clinicalProject, caseId: ids.clinicalCase },
         search: { scene: sceneIn("creport", scene), as },
       });
     case "cosign":

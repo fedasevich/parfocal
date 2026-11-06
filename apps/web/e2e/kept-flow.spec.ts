@@ -84,7 +84,7 @@ test("New review task comes back on its step with the name kept", async ({ page 
 });
 
 test("Clinical report comes back on its step with the staging choice kept", async ({ page }) => {
-  const report = `/projects/${p03}/slides/${a1}/report`;
+  const report = `/projects/${p03}/cases/00000000-0000-4000-8004-000000000006/report`;
   await page.goto(report);
   const flow = page.getByTestId("clinical-report");
   await flow.getByRole("button", { name: "Next" }).click();

@@ -6,6 +6,7 @@ const idsSchema = z.object({
   task: z.string(),
   slide: z.string(),
   clinicalSlide: z.string(),
+  clinicalCase: z.string(),
 });
 
 const originSchema = z.discriminatedUnion("kind", [

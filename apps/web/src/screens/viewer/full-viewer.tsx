@@ -7,6 +7,7 @@ import {
   useGetResultSetTyper,
   useGetSlideAiProgress,
   useGetSlideResultStats,
+  useListCases,
   useListSlideResultSets,
   useSubmitSlideReview,
   type ViewerPart,
@@ -206,6 +207,12 @@ function ViewerBody({
   template,
 }: BodyProps) {
   const format = useFormat();
+  const projectCases = okData(
+    useListCases({ project_id: projectId }, { query: { enabled: clinical } }).data,
+  );
+  const reportCaseId = (
+    projectCases?.find((item) => item.label === session.caseLabel) ?? projectCases?.[0]
+  )?.id;
   const scene = search.scene;
   const setup = viewerSetup(scene);
   const navigator = isNavigatorScene(scene) ? scene : null;
@@ -1065,9 +1072,10 @@ function ViewerBody({
             primaryLabel: "Open report",
             primaryTitle: "Open the clinical report of this case",
             onSubmit: () =>
+              reportCaseId !== undefined &&
               void navigate({
-                to: "/projects/$projectId/slides/$slideId/report",
-                params: { projectId, slideId },
+                to: "/projects/$projectId/cases/$caseId/report",
+                params: { projectId, caseId: reportCaseId },
               }),
           }
         : {

@@ -11,6 +11,12 @@ export type Extranodal = "present" | "absent" | "na";
 
 export const stepKeys: StepKey[] = ["findings", "staging", "text", "sign"];
 
+export const nodeStandards: [string, string][] = [
+  ["ICCR", "Surgically removed lymph nodes for breast tumours, 1st ed. v1.2"],
+  ["CAP", "Synoptic format and element names, Breast Invasive Resection 4.11"],
+  ["TNM", "UICC and AJCC 8th edition, pN with (sn) and (i+)"],
+];
+
 export type Dep = {
   id: string;
   slide: string;
@@ -18,6 +24,7 @@ export type Dep = {
   size: string;
   note: string;
   unmeasured?: boolean;
+  serverId?: string;
 };
 
 export type Values = {
@@ -346,10 +353,19 @@ const extraDeposit: Dep = {
   note: "Subcapsular, deeper level",
 };
 
+const extraDepositOn = (data: ReportData): Dep => ({
+  ...extraDeposit,
+  slide: data.slides.find((slide) => slide.short === extraDeposit.slide)?.key ?? extraDeposit.slide,
+});
+
 export const signedAt = "15 Oct 11:42";
 
-export function sceneReport(data: ReportData, scene: ReportScene): Report {
-  const values = toValues(data, data.values);
+export function sceneReport(
+  data: ReportData,
+  scene: ReportScene,
+  base: Values = toValues(data, data.values),
+): Report {
+  const values = base;
   const report: Report = {
     values,
     mode: "sign",
@@ -390,7 +406,7 @@ export function sceneReport(data: ReportData, scene: ReportScene): Report {
     case "deposits":
       staging();
       set({
-        deposits: [...report.values.deposits, extraDeposit],
+        deposits: [...report.values.deposits, extraDepositOn(data)],
         category: "macro",
         extranodal: "absent",
       });
@@ -442,7 +458,7 @@ export function sceneReport(data: ReportData, scene: ReportScene): Report {
       break;
     case "amended":
       sign();
-      set({ deposits: [...report.values.deposits, extraDeposit] });
+      set({ deposits: [...report.values.deposits, extraDepositOn(data)] });
       report.values = withDiagnosis(data, report.values);
       report.amend = {
         why: "A deposit in node 2 was missed, measured by hand on a deeper level of A2 at 0.9 mm",
@@ -502,11 +518,11 @@ export function factsOf(data: ReportData, values: Values): Fact[] {
   const yes = decisions.filter((item) => item.counts_as === "agree");
   const no = decisions.filter((item) => item.counts_as === "disagree");
   const unsure = decisions.filter((item) => item.counts_as === "unsure");
-  const whys = [...new Set(no.map((item) => item.why))].map(
+  const whys = [...new Set(no.map((item) => item.why).filter(Boolean))].map(
     (why) =>
       `${andJoin(no.filter((item) => item.why === why).map((item) => item.object_id))}, ${why}`,
   );
-  const regionLine = `${plural(decisions.length, "tumor region")}, ${yes.length || "none"} confirmed as tumor by you${no.length ? `, ${no.length} marked not tumor (${whys.join(" and ")})` : ""}${unsure.length ? `, ${unsure.length} not sure` : ""}`;
+  const regionLine = `${plural(decisions.length, "tumor region")}, ${yes.length || "none"} confirmed as tumor by you${no.length ? `, ${no.length} marked not tumor${whys.length ? ` (${whys.join(" and ")})` : ""}` : ""}${unsure.length ? `, ${unsure.length} not sure` : ""}`;
   const first = yes[0] ?? decisions[0];
   const deposits = values.deposits;
   const big = deposits[largestIndex(deposits)];
