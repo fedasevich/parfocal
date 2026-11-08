@@ -29,7 +29,7 @@ const answerActions: Record<StyleKind, string[]> = {
   blind: ["dclass", "dunsure"],
 };
 
-const everyStyleActions = ["drest", "dnote", "dnext", "dprev", "dnear", "dadd", "dsubmit"];
+const everyStyleActions = ["drest", "dnote", "dnext", "dprev", "dnear", "dpan", "dadd", "dsubmit"];
 
 export const decisionKeyActions = (kind: StyleKind) => [
   ...answerActions[kind],

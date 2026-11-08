@@ -47,7 +47,7 @@ export const typeOptions: readonly TypeOption[] = [
     label: "Other",
     key: "4",
     action: "dclass:4",
-    hint: "Benign epithelium, necrotic and apoptotic cells and any other cell",
+    hint: "Benign epithelium, necrotic and apoptotic cells, and any other cell",
   },
   {
     id: "notcell",

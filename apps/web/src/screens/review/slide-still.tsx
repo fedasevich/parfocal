@@ -349,7 +349,7 @@ export function SlideStill({
                       : "var(--c-tumor)"));
               const dotted = drawAs === "dots" && !current;
               return (
-                <g key={id}>
+                <g key={id} data-object={id}>
                   {ringed ? (
                     <circle
                       cx={cell.x}

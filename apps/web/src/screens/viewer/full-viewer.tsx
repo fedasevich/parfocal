@@ -1417,7 +1417,7 @@ function ViewerBody({
             underlay={
               running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
             }
-            onCellPick={pick}
+            onCellPick={search.tool === undefined ? pick : undefined}
             onPointPick={(point) => {
               const placed = pinForClick(search.tool, point);
               if (placed === null) return;
@@ -1429,13 +1429,14 @@ function ViewerBody({
               return (
                 <>
                   {canvasNotice}
-                  {onCell && tab === "objects" && current && !buttonsOff && !running ? (
+                  {onCell && tab === "objects" && current && !running ? (
                     <TypeBar
                       object={current.object}
                       centre={cellCentre(current.object, still.camera, still.size)}
                       scale={still.camera.scale}
                       size={still.size}
                       chosen={chosenType(style, current, session.classes, answer(current.object))}
+                      disabledReason={buttonsOff}
                       onChoose={(option) => decideType(option.id)}
                     />
                   ) : null}
