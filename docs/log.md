@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- CMD-004 (key conflict check) added a web test inside verify that fails when two actions in one active scope share a key, for every preset on seven screen scope sets and each decision style. Shift+L for the arrow tool and the compare link is resolved by scope. No worklist preview action exists in the keymap yet, so the P against polygon case waits for it.
 - INGEST-031 (skipped status for a duplicate in a link import) added a neutral skipped status. The API returns skipped with the reason duplicate instead of failed, the wizard reads Skipped, already in this project, and a count helper keeps skipped slides out of the failed count. No screen yet maps the real API status onto the new component, because the wizard still runs on prototype data.
 - CMP-007 (compare entry points and per-side layers): Side by side on a slides popover row opens that slide on the right of the compare screen through a new with link parameter, Compare slides opens it with the right picker open, and E2E tests cover both entry points and the tumor outline on one side only. The per-side layer check is a DOM assertion on the outline path, not a pixel golden image.
 - CMD-005 (key presets) gave the QuPath-like and Figma-like presets their tool keys in the settings keymap. Presets change tool keys only, and a test asserts that review and global keys stay the same in every preset.

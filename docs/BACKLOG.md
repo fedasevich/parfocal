@@ -3575,7 +3575,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs mock 21, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: S.
 
-- [ ] CMD-004 · Key conflict check
+- [x] CMD-004 · Key conflict check
   CI fails when two actions in overlapping scopes share a key. Resolves the Shift+L conflict between arrow and compare unlink, and P between polygon and worklist preview by scope.
   Done when the check runs in CI and the known conflicts are resolved.
   Size: S.
